@@ -11,7 +11,7 @@ import { maintainEndOfStream } from "../core/init/utils/end_of_stream";
 import MediaSourceDurationUpdater from "../core/init/utils/media_source_duration_updater";
 import { MediaError, SourceBufferError } from "../errors";
 import log from "../log";
-import assertUnreachable from "../utils/assert_unreachable";
+import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import objectAssign from "../utils/object_assign";
@@ -196,7 +196,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    *
    * `null` if no known operation is pending.
    */
-  private _currentOperation: ISbiQueuedOperation | null;
+  private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
 
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
@@ -215,7 +215,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._canceller = new TaskCanceller();
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
-    this._currentOperation = null;
+    this._currentOperations = [];
 
     const onError = (evt: Event) => {
       let error : Error;
@@ -226,34 +226,35 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       } else {
         error = new Error("Unknown SourceBuffer Error");
       }
-      const currentOp = this._currentOperation;
-      this._currentOperation = null;
-      if (currentOp === null) {
+      const currentOps = this._currentOperations;
+      this._currentOperations = [];
+      if (currentOps.length === 0) {
         log.error("SBI: error for an unknown operation", error);
       } else {
         const rejected = new SourceBufferError(error.name,
                                                error.message,
                                                error.name === "QuotaExceededError");
-        currentOp.reject(rejected);
+        for (const op of currentOps) {
+          op.reject(rejected);
+        }
       }
-      this._performNextOperation();
     };
     const onUpdateEnd = () => {
-      const currentOp = this._currentOperation;
-      this._currentOperation = null;
-      if (currentOp === null) {
-        log.warn("SBI: updateend for an unknown operation");
-      } else {
-        try {
-          currentOp.resolve(convertToRanges(this._sourceBuffer.buffered));
-        } catch (err) {
+      const currentOps = this._currentOperations;
+      this._currentOperations = [];
+      try {
+        for (const op of currentOps) {
+          op.resolve(convertToRanges(this._sourceBuffer.buffered));
+        }
+      } catch (err) {
+        for (const op of currentOps) {
           if (err instanceof Error && err.name === "InvalidStateError") {
             // Most likely the SourceBuffer just has been removed from the
             // `MediaSource`.
             // Just return an empty buffered range.
-            currentOp.resolve([]);
+            op.resolve([]);
           } else {
-            currentOp.reject(err);
+            op.reject(err);
           }
         }
       }
@@ -321,9 +322,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
   private _emptyCurrentQueue(): void {
     const error = new CancellationError();
-    if (this._currentOperation !== null) {
-      this._currentOperation.reject(error);
-      this._currentOperation = null;
+    if (this._currentOperations.length > 0) {
+      this._currentOperations.forEach((op) => {
+        op.reject(error);
+      });
+      this._currentOperations = [];
     }
     if (this._operationQueue.length > 0) {
       this._operationQueue.forEach((op) => {
@@ -338,7 +341,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   ): Promise<IRange[]> {
     return new Promise<IRange[]>((resolve, reject) => {
       const shouldRestartQueue = this._operationQueue.length === 0 &&
-                                 this._currentOperation === null;
+                                 this._currentOperations.length === 0;
       const queueItem = objectAssign({ resolve, reject },
                                      operation) as ISbiQueuedOperation;
       this._operationQueue.push(queueItem);
@@ -349,41 +352,94 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _performNextOperation(): void {
-    if (this._currentOperation !== null || this._sourceBuffer.updating) {
+    if (this._currentOperations.length !== 0 || this._sourceBuffer.updating) {
       return;
     }
     const nextElem = this._operationQueue.shift();
     if (nextElem === undefined) {
       return;
-    }
-    this._currentOperation = nextElem;
-    try {
-      switch (nextElem.operationName) {
+    } else if (nextElem.operationName === SbiOperationName.Push) {
+      this._currentOperations = [{ operationName: SbiOperationName.Push,
+                                   resolve: nextElem.resolve,
+                                   reject: nextElem.reject }];
+      const ogData = nextElem.params[0];
+      const params = nextElem.params[1];
+      let segmentData: BufferSource = ogData;
 
-        case SbiOperationName.Push:
-          const [segmentData, params] = nextElem.params;
-          try {
-            this._appendBufferNow(segmentData, params);
-          } catch (err) {
-            nextElem.reject(err);
+      // In some cases with very poor performances, tens of appendBuffer
+      // requests could be waiting for their turn here.
+      //
+      // Instead of pushing each one, one by one, waiting in-between for each
+      // one's `"updateend"` event (which would probably have lot of time
+      // overhead involved, even more considering that we're probably
+      // encountering performance issues), the idea is to concatenate all
+      // similar push operations into one huge segment.
+      //
+      // This seems to have a very large positive effect on the more
+      // extreme scenario, such as low-latency CMAF with very small chunks and
+      // huge CPU usage in the thread doing the push operation.
+      //
+      // Because this should still be relatively rare, we pre-check here
+      // the condition.
+      if (
+        this._operationQueue.length > 0 &&
+        this._operationQueue[0].operationName === SbiOperationName.Push
+      ) {
+        const toConcat = [
+          ogData instanceof ArrayBuffer ? new Uint8Array(ogData) :
+          ogData instanceof Uint8Array  ? ogData :
+                                          new Uint8Array(ogData.buffer),
+        ];
+        while (this._operationQueue[0]?.operationName === SbiOperationName.Push) {
+          const followingElem = this._operationQueue[0];
+          const cAw = params.appendWindow ?? [undefined, undefined];
+          const fAw = followingElem.params[1].appendWindow ?? [undefined, undefined];
+          const cTo = params.timestampOffset ?? 0;
+          const fTo = followingElem.params[1].timestampOffset ?? 0;
+          if (
+            cAw[0] === fAw[0] && cAw[1] === fAw[1] &&
+            params.codec === followingElem.params[1].codec &&
+            cTo === fTo
+          ) {
+            const newData = followingElem.params[0];
+            toConcat.push(
+              newData instanceof ArrayBuffer ? new Uint8Array(newData) :
+              newData instanceof Uint8Array  ? newData :
+                                              new Uint8Array(newData.buffer)
+            );
+            this._operationQueue.splice(0, 1);
+            this._currentOperations.push({ operationName: SbiOperationName.Push,
+                                           resolve: followingElem.resolve,
+                                           reject: followingElem.reject });
+          } else {
+            break;
           }
-          break;
-
-        case SbiOperationName.Remove:
-          const [ start, end ] = nextElem.params;
-          log.debug("SBI: removing data from SourceBuffer", this.type, start, end);
-          try {
-            this._sourceBuffer.remove(start, end);
-          } catch (err) {
-            nextElem.reject(err);
-          }
-          break;
-
-        default:
-          assertUnreachable(nextElem);
+        }
+        if (toConcat.length > 1) {
+          log.info(`MMSI: Merging ${toConcat.length} segments together for perf`,
+                   this.type);
+          segmentData = concat(...toConcat);
+        }
       }
-    } catch (e) {
-      nextElem.reject(e);
+      try {
+        this._appendBufferNow(segmentData, params);
+      } catch (err) {
+        this._currentOperations.forEach(op => {
+          op.reject(err);
+        });
+        this._currentOperations = [];
+      }
+    } else {
+      // TODO merge contiguous removes?
+      this._currentOperations = [nextElem];
+      const [ start, end ] = nextElem.params;
+      log.debug("SBI: removing data from SourceBuffer", this.type, start, end);
+      try {
+        this._sourceBuffer.remove(start, end);
+      } catch (err) {
+        nextElem.reject(err);
+        this._currentOperations = [];
+      }
     }
   }
 
