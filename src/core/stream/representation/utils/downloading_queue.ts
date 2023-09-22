@@ -509,7 +509,7 @@ export interface IDownloadingQueueEvent<T> {
    * multiple `IParsedSegmentEvent` for a single segment, if that segment is
    * divided into multiple decodable chunks.
    * You will know that all `IParsedSegmentEvent` have been loaded for a given
-   * segment once you received the `IEndOfSegmentEvent` for that segment.
+   * segment once you received the corresponding event.
    */
   parsedMediaSegment : IParsedSegmentPayload<T>;
   /** Notify that a media or initialization segment has been fully-loaded. */
