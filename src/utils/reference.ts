@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import arrayFindIndex from "./array_find_index";
+import noop from "./noop";
 import { CancellationSignal } from "./task_canceller";
 
 /**
@@ -131,6 +133,19 @@ export interface ISharedReference<T> {
    * `ISharedReference`.
    */
   finish() : void;
+
+  /**
+   * Allows to register a callback for when the Shared Reference is "finished".
+   *
+   * This function is mostly there for implementing operators on the shared
+   * reference and isn't meant to be used by regular code, hence it being
+   * prefixed by `_`.
+   * @param {Function} cb - Callback to be called once the reference is
+   * finished.
+   * @param {Object} cancelSignal - Allows to provide a CancellationSignal which
+   * will unregister the callback when it emits.
+   */
+  _onFinished(cb: () => void, cancelSignal: CancellationSignal) : () => void;
 }
 
 /**
@@ -159,7 +174,8 @@ export type IReadOnlySharedReference<T> =
   Pick<ISharedReference<T>,
        "getValue" |
        "onUpdate" |
-       "waitUntilDefined">;
+       "waitUntilDefined" |
+       "_onFinished">;
 
 /**
  * Create an `ISharedReference` object encapsulating the mutable `initialValue`
@@ -203,6 +219,9 @@ export default function createSharedReference<T>(
                       hasBeenCleared : boolean; }> = [];
 
   let isFinished = false;
+
+  const onFinishCbs : Array<{ trigger : () => void;
+                              hasBeenCleared : boolean; }> = [];
 
   if (cancelSignal !== undefined) {
     cancelSignal.register(finish);
@@ -336,6 +355,38 @@ export default function createSharedReference<T>(
     },
 
     /**
+     * Allows to register a callback for when the Shared Reference is "finished".
+     *
+     * This function is mostly there for implementing operators on the shared
+     * reference and isn't meant to be used by regular code, hence it being
+     * prefixed by `_`.
+     * @param {Function} cb - Callback to be called once the reference is
+     * finished.
+     * @param {Object} onFinishCancelSignal - Allows to provide a
+     * CancellationSignal which will unregister the callback when it emits.
+     */
+    _onFinished(cb: () => void, onFinishCancelSignal: CancellationSignal) : () => void {
+      if (onFinishCancelSignal.isCancelled()) {
+        return noop;
+      }
+      const trigger = () => {
+        cleanUp();
+        cb();
+      };
+      const deregisterCancellation = onFinishCancelSignal.register(cleanUp);
+      onFinishCbs.push({ trigger, hasBeenCleared: false });
+      return deregisterCancellation;
+
+      function cleanUp() {
+        const indexOf = arrayFindIndex(onFinishCbs, (x) => x.trigger === trigger);
+        if (indexOf >= 0) {
+          onFinishCbs[indexOf].hasBeenCleared = true;
+          onFinishCbs.splice(indexOf, 1);
+        }
+      }
+    },
+
+    /**
      * Indicate that no new values will be emitted.
      * Allows to automatically free all listeners linked to this reference.
      */
@@ -358,12 +409,26 @@ export default function createSharedReference<T>(
       }
     }
     cbs.length = 0;
+    if (onFinishCbs.length > 0) {
+      const clonedFinishedCbs = onFinishCbs.slice();
+      for (const cbObj of clonedFinishedCbs) {
+        try {
+          if (!cbObj.hasBeenCleared) {
+            cbObj.trigger();
+            cbObj.hasBeenCleared = true;
+          }
+        } catch (_) {
+          /* nothing */
+        }
+      }
+      onFinishCbs.length = 0;
+    }
   }
 }
 
 /**
  * Create a new `ISharedReference` based on another one by mapping over its
- * referenced value each time it is updated.
+ * referenced value each time it is updated and finishing once it finishes.
  * @param {Object} originalRef - The Original `ISharedReference` you wish to map
  * over.
  * @param {Function} mappingFn - The mapping function which will receives
@@ -383,8 +448,9 @@ export function createMappedReference<T, U>(
     newRef.setValue(mappingFn(x));
   }, { clearSignal: cancellationSignal });
 
-  // TODO nothing is done if `originalRef` is finished, though the returned
-  // reference could also be finished in that case. To do?
+  originalRef._onFinished(() => {
+    newRef.finish();
+  }, cancellationSignal);
 
   return newRef;
 }
