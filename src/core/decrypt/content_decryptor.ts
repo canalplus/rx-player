@@ -61,9 +61,7 @@ import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataValuesContainer from "./utils/init_data_values_container";
 import {
   areAllKeyIdsContainedIn,
-  areKeyIdsEqual,
   areSomeKeyIdsContainedIn,
-  isKeyIdContainedIn,
 } from "./utils/key_id_comparison";
 import KeySessionRecord from "./utils/key_session_record";
 
@@ -422,9 +420,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             // from `createdSess`'s `keyStatuses` and to update the content's
             // decipherability.
             for (const innerKid of periodKeysArr) {
-              if (!isKeyIdContainedIn(innerKid, createdSess.keyStatuses.whitelisted) &&
-                  !isKeyIdContainedIn(innerKid, createdSess.keyStatuses.blacklisted))
-              {
+              if (
+                !createdSess.keyStatuses.whitelisted
+                  .some(k => areArraysOfNumbersEqual(k, innerKid)) &&
+                !createdSess.keyStatuses.blacklisted
+                  .some(k => areArraysOfNumbersEqual(k, innerKid))
+              ) {
                 createdSess.keyStatuses.blacklisted.push(innerKid);
               }
             }
@@ -855,17 +856,17 @@ function updateDecipherability(
     if (contentKIDs !== undefined) {
       for (const elt of contentKIDs) {
         for (const blacklistedKeyId of blacklistedKeyIds) {
-          if (areKeyIdsEqual(blacklistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
             return false;
           }
         }
         for (const whitelistedKeyId of whitelistedKeyIds) {
-          if (areKeyIdsEqual(whitelistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
             return true;
           }
         }
         for (const delistedKeyId of delistedKeyIds) {
-          if (areKeyIdsEqual(delistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
             return undefined;
           }
         }
@@ -969,7 +970,7 @@ function getKeyIdsLinkedToSession(
   // `usableKeyIds` nor in `unusableKeyIds`
   const allKnownKeyIds = keySessionRecord.getAssociatedKeyIds();
   for (const kid of allKnownKeyIds) {
-    if (!associatedKeyIds.some(ak => areKeyIdsEqual(ak, kid))) {
+    if (!associatedKeyIds.some(ak => areArraysOfNumbersEqual(ak, kid))) {
       if (log.hasLevel("DEBUG")) {
         log.debug("DRM: KeySessionRecord's key missing in the license, blacklisting it",
                   bytesToHex(kid));
@@ -996,7 +997,7 @@ function getKeyIdsLinkedToSession(
             content } = initializationData;
     if (expectedKeyIds !== undefined) {
       const missingKeyIds = expectedKeyIds.filter(expected => {
-        return !associatedKeyIds.some(k => areKeyIdsEqual(k, expected));
+        return !associatedKeyIds.some(k => areArraysOfNumbersEqual(k, expected));
       });
       if (missingKeyIds.length > 0) {
         if (log.hasLevel("DEBUG")) {
@@ -1026,7 +1027,7 @@ function getKeyIdsLinkedToSession(
           } else {
             const periodKeysArr = Array.from(periodKeys);
             for (const kid of periodKeysArr) {
-              const isFound = associatedKeyIds.some(k => areKeyIdsEqual(k, kid));
+              const isFound = associatedKeyIds.some(k => areArraysOfNumbersEqual(k, kid));
               if (isFound) {
                 mergeKeyIdSetIntoArray(periodKeys, associatedKeyIds);
                 break;
@@ -1054,7 +1055,7 @@ function mergeKeyIdSetIntoArray(
 ) {
   const setArr = Array.from(set.values());
   for (const kid of setArr) {
-    const isFound = arr.some(k => areKeyIdsEqual(k, kid));
+    const isFound = arr.some(k => areArraysOfNumbersEqual(k, kid));
     if (!isFound) {
       arr.push(kid);
     }

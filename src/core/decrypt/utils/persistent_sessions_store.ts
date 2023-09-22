@@ -29,7 +29,6 @@ import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import { IProcessedProtectionData } from "../types";
 import areInitializationValuesCompatible from "./are_init_values_compatible";
 import { IFormattedInitDataValue } from "./init_data_values_container";
-import { areKeyIdsEqual } from "./key_id_comparison";
 import SerializableBytes from "./serializable_bytes";
 
 /**
@@ -256,9 +255,7 @@ export default class PersistentSessionsStore {
                     if (keyIdB64 === entryKid) {
                       return true;
                     }
-                  } else if (areKeyIdsEqual(entryKid.initData,
-                                            keyId))
-                  {
+                  } else if (areArraysOfNumbersEqual(entryKid.initData, keyId)) {
                     return true;
                   }
                 }
