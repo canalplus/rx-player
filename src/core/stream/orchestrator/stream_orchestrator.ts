@@ -332,6 +332,9 @@ export default function StreamOrchestrator(
       /** Remove from the `SegmentBuffer` all the concerned time ranges. */
       for (const { start, end } of [...undecipherableRanges, ...rangesToRemove]) {
         if (start < end) {
+          if (orchestratorCancelSignal.isCancelled()) {
+            return;
+          }
           await segmentBuffer.removeBuffer(start, end, orchestratorCancelSignal);
         }
       }
