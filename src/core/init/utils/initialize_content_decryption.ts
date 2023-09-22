@@ -61,12 +61,13 @@ export default function initializeContentDecryption(
     drmSystemId: undefined,
   }, cancelSignal);
 
-  log.debug("Init: Creating ContentDecryptor");
   const ContentDecryptor = features.decrypt;
 
   if (!ContentDecryptor.hasEmeApis()) {
     return createEmeDisabledReference("EME API not available on the current page.");
   }
+
+  log.debug("Init: Creating ContentDecryptor");
   const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
 
   contentDecryptor.addEventListener("stateChange", (state) => {
