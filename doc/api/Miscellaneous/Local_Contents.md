@@ -419,6 +419,7 @@ For audio tracks, it can looks like:
   bitrate: 200000,
   mimeType: "audio/mp4",
   codecs: "mp4a.40.5",
+  isSpatialAudio: false,
   index: {
     loadInitSegment(callbacks) { /* ... */  },
     loadSegment(segment, callbacks) { /* ... */,
@@ -469,6 +470,16 @@ We'll now explain what each property is for, before going deeper into the
 
 - height (`number|undefined`): When relevant (mostly video contents), the
   height of the media, in pixels
+
+- isSpatialAudio (`boolean|undefined`): When relevant (mostly audio contents),
+  it can be set to `true` if the corresponding media is linked to a spatial
+  audio technology, for example a content relying on Dolby Atmos technology.
+
+  If set to `false`, it means that it is known that this media does not contain
+  any spatial audio.
+
+  For cases where you don't know and for cases where no audio is contained, this
+  can just be left undefined.
 
 - index (`object`): Object allowing the RxPlayer to know the list of segments
   as well as to fetch them. Described in the next chapter.

@@ -84,6 +84,18 @@ export function generateRepresentationChildrenParser(
         break;
       }
 
+      case TagName.SupplementalProperty: {
+        const supplementalProperty = {};
+        if (childrenObj.supplementalProperties === undefined) {
+          childrenObj.supplementalProperties = [];
+        }
+        childrenObj.supplementalProperties.push(supplementalProperty);
+        const attributeParser = generateSchemeAttrParser(supplementalProperty,
+                                                         linearMemory);
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        break;
+      }
+
       case TagName.SegmentBase: {
         const segmentBaseObj = {};
         childrenObj.segmentBase = segmentBaseObj;
