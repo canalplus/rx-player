@@ -54,12 +54,7 @@ export default function getTimeRangesForContent(
       const { bufferedStart, bufferedEnd } = chunk;
       if (bufferedStart === undefined || bufferedEnd === undefined) {
         log.warn("SO: No buffered start or end found from a segment.");
-        const buffered = segmentBuffer.getBufferedRanges();
-        const len = buffered.length;
-        if (len === 0) {
-          return [];
-        }
-        return [{ start: buffered.start(0), end: buffered.end(len - 1) }];
+        return [{ start: 0, end: Number.MAX_VALUE }];
       }
 
       const previousLastElement = accumulator[accumulator.length - 1];
