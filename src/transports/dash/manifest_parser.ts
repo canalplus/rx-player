@@ -117,7 +117,8 @@ export default function generateManifestParser(
      * If it is not defined, throws.
      * @returns {Object|Promise.<Object>}
      */
-    function runDefaultJsParser() {
+    function runDefaultJsParser(
+    ) : IManifestParserResult | Promise<IManifestParserResult> {
       if (parsers.js === null) {
         throw new Error("No MPD parser is imported");
       }
