@@ -197,6 +197,9 @@ export default function RepresentationStream<TSegmentDataType>(
     includeLastObservation: false,
     clearSignal: segmentsLoadingCanceller.signal,
   });
+  content.manifest.addEventListener("manifestUpdate",
+                                    checkStatus,
+                                    segmentsLoadingCanceller.signal);
   bufferGoal.onUpdate(checkStatus, {
     emitCurrentValue: false,
     clearSignal: segmentsLoadingCanceller.signal ,
