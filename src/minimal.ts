@@ -22,10 +22,6 @@
  */
 
 import Player from "./core/api";
-import {
-  addFeatures,
-  IFeature,
-} from "./features";
 import logger from "./log";
 
 if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
@@ -34,15 +30,4 @@ if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 
-/**
- * Minimal Player for which you can features at will:
- *   - start with no features
- *   - Allow to only load features wanted
- *
- * @class MinimalPlayer
- */
-export default class MinimalPlayer extends Player {
-  static addFeatures(featureList : IFeature[]) : void {
-    addFeatures(featureList);
-  }
-}
+export default Player;

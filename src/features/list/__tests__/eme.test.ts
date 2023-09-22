@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
 import ContentDecryptor from "../../../core/decrypt";
+import { IFeaturesObject } from "../../types";
 import addEMEFeature from "../eme";
-
-jest.mock("../../../core/decrypt", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
 
 describe("Features list - EME", () => {
   it("should add the ContentDecryptor in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = {};
+    const featureObject = {} as unknown as IFeaturesObject;
     addEMEFeature(featureObject);
     expect(featureObject).toEqual({ decrypt: ContentDecryptor });
     expect(featureObject.decrypt).toBe(ContentDecryptor);

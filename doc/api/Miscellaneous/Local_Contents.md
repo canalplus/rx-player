@@ -59,37 +59,20 @@ More infos on the `manifestLoader` can be found
 
 The `"LOCAL_MANIFEST"` feature is not included in the default RxPlayer build.
 
-There's two way you can import it, depending on if you're relying on the minimal
-version or if you prefer to make use of environment variables and build the
-player manually.
-
-#### Through the minimal version of the RxPlayer
-
-If you're using the "minimal" version of the RxPlayer (through the
-`"rx-player/minimal"` import), you will need to import the `LOCAL_MANIFEST`
-experimental feature:
-
+You will need to import the `LOCAL_MANIFEST` experimental feature:
 ```js
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
+
+// Import the `LOCAL_MANIFEST` feature
 import { LOCAL_MANIFEST } from "rx-player/experimental/features";
 
 RxPlayer.addFeatures([LOCAL_MANIFEST]);
 ```
 
-#### Through environment variables
-
-If you don't want to go the minimal version's route and you have no problem with
-building yourself a new version of the RxPlayer, you can make use of environment
-variables to activate it.
-
-This can be done through the `RXP_LOCAL_MANIFEST` environment variable, which
-you have to set to `true`:
-
-```sh
-RXP_LOCAL_MANIFEST=true npm run build:min
-```
-
-More information about any of that can be found in the [minimal player documentation](../../Getting_Started/Minimal_Player.md).
+More information on features [in the corresponding documentation
+page](../RxPlayer_Features.md).
 
 ## The Manifest format
 
