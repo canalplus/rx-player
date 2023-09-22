@@ -795,10 +795,10 @@ export interface ITransportOptions {
   checkMediaSegmentIntegrity? : boolean | undefined;
   lowLatencyMode : boolean;
   manifestLoader?: IManifestLoader | undefined;
-  manifestUpdateUrl? : string | undefined;
   referenceDateTime? : number | undefined;
   representationFilter? : IRepresentationFilter | undefined;
   segmentLoader? : ICustomSegmentLoader | undefined;
   serverSyncInfos? : IServerSyncInfos | undefined;
+  __priv_manifestUpdateUrl? : string | undefined;
   __priv_patchLastSegmentInSidx? : boolean | undefined;
 }
