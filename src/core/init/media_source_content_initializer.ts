@@ -70,7 +70,7 @@ import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
 import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 import RebufferingController from "./utils/rebuffering_controller";
-import streamEventsEmitter from "./utils/stream_events_emitter";
+import StreamEventsEmitter from "./utils/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
 
 /**
@@ -436,12 +436,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     initialPlayPerformed.onUpdate((isPerformed, stopListening) => {
       if (isPerformed) {
         stopListening();
-        streamEventsEmitter(manifest,
-                            mediaElement,
-                            playbackObserver,
-                            (evt) => this.trigger("streamEvent", evt),
-                            (evt) => this.trigger("streamEventSkip", evt),
-                            cancelSignal);
+        const streamEventsEmitter = new StreamEventsEmitter(manifest,
+                                                            mediaElement,
+                                                            playbackObserver);
+        streamEventsEmitter.addEventListener("event", (payload) => {
+          this.trigger("streamEvent", payload);
+        }, cancelSignal);
+        streamEventsEmitter.addEventListener("eventSkip", (payload) => {
+          this.trigger("streamEventSkip", payload);
+        }, cancelSignal);
+        streamEventsEmitter.start();
+        cancelSignal.register(() => {
+          streamEventsEmitter.stop();
+        });
       }
     }, { clearSignal: cancelSignal, emitCurrentValue: true });
 
