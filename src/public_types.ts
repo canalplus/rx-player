@@ -759,6 +759,7 @@ export interface IBifObject { fileFormat : string;
  * RxPlayer.
  */
 export interface IAudioRepresentation { id : string|number;
+                                        isSpatialAudio? : boolean | undefined;
                                         bitrate : number;
                                         codec? : string | undefined; }
 
