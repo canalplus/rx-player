@@ -86,14 +86,15 @@ export default function performInitialSeekAndPlay(
   const initialPlayPerformed = createSharedReference(false, cancelSignal);
 
   mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
-    onLoadedMetadata();
-  }
 
   const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
     rejectAutoPlay(err);
   });
+
+  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
+    onLoadedMetadata();
+  }
 
   return { autoPlayResult, initialPlayPerformed, initialSeekPerformed };
 
