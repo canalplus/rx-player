@@ -16,6 +16,7 @@
 
 import log from "../../../log";
 import { ISegment } from "../../../manifest";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import { getIndexSegmentEnd } from "../utils/index_helpers";
 import updateSegmentTimeline from "../utils/update_segment_timeline";
@@ -50,9 +51,9 @@ export default class SharedSmoothSegmentTimeline {
   public timescale : number;
 
   /**
-   * Defines the earliest time - in terms of `performance.now()` - when the
-   * timeline was known to be valid (that is, when all segments declared in it
-   * are available).
+   * Defines the earliest time - expressed in the RxPlayer's
+   * monotonically-raising timestamp unit - when the timeline was known to be
+   * valid (that is, when all segments declared in it are available).
    *
    * This is either:
    *   - the Manifest downloading time, if known
@@ -69,7 +70,7 @@ export default class SharedSmoothSegmentTimeline {
     const { timeline, timescale, timeShiftBufferDepth, manifestReceivedTime } = args;
     this.timeline = timeline;
     this.timescale = timescale;
-    const estimatedReceivedTime = manifestReceivedTime ?? performance.now();
+    const estimatedReceivedTime = manifestReceivedTime ?? getMonotonicTimeStamp();
     this.validityTime = estimatedReceivedTime;
     this._timeShiftBufferDepth = timeShiftBufferDepth;
 
@@ -91,7 +92,7 @@ export default class SharedSmoothSegmentTimeline {
       return;
     }
     const timeShiftBufferDepth = this._timeShiftBufferDepth;
-    const timeSinceLastRealUpdate = (performance.now() -
+    const timeSinceLastRealUpdate = (getMonotonicTimeStamp() -
                                      this.validityTime) / 1000;
     const lastPositionEstimate = timeSinceLastRealUpdate +
                                  this._initialScaledLastPosition / this.timescale;

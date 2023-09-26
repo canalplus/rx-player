@@ -25,6 +25,7 @@ import {
 import arrayFind from "../utils/array_find";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
+import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import warnOnce from "../utils/warn_once";
 import Adaptation from "./adaptation";
 import Period, {
@@ -186,8 +187,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
   public publishTime: number | undefined;
 
   /*
-   * Difference between the server's clock in milliseconds and the return of the
-   * JS function `performance.now`.
+   * Difference between the server's clock in milliseconds and the
+   * monotonically-raising timestamp used by the RxPlayer.
    * This property allows to calculate the server time at any moment.
    * `undefined` if we did not obtain the server's time
    */
@@ -275,8 +276,8 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
        */
       maximumSafePosition : number;
       /**
-       * `Performance.now()` output at the time both `maximumSafePosition` and
-       * `livePosition` were calculated.
+       * `Monotically-increasing timestamp used by the RxPlayer at the time both
+       * `maximumSafePosition` and `livePosition` were calculated.
        * This can be used to retrieve a new maximum position from them when they
        * linearly evolves over time (see `isLinear` property).
        */
@@ -453,7 +454,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     if (!windowData.maximumTimeData.isLinear) {
       maximumTime = maximumTimeData.maximumSafePosition;
     } else {
-      const timeDiff = performance.now() - maximumTimeData.time;
+      const timeDiff = getMonotonicTimeStamp() - maximumTimeData.time;
       maximumTime = maximumTimeData.maximumSafePosition + timeDiff / 1000;
     }
     const theoricalMinimum = maximumTime - windowData.timeshiftDepth;
@@ -473,7 +474,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     if (!maximumTimeData.isLinear) {
       return maximumTimeData.livePosition;
     }
-    const timeDiff = performance.now() - maximumTimeData.time;
+    const timeDiff = getMonotonicTimeStamp() - maximumTimeData.time;
     return maximumTimeData.livePosition + timeDiff / 1000;
   }
 
@@ -487,7 +488,7 @@ export default class Manifest extends EventEmitter<IManifestEvents> {
     if (!maximumTimeData.isLinear) {
       return maximumTimeData.maximumSafePosition;
     }
-    const timeDiff = performance.now() - maximumTimeData.time;
+    const timeDiff = getMonotonicTimeStamp() - maximumTimeData.time;
     return maximumTimeData.maximumSafePosition + timeDiff / 1000;
   }
 
