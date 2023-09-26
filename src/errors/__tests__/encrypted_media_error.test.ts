@@ -26,7 +26,7 @@ describe("errors - EncryptedMediaError", () => {
     expect(encryptedMediaError.code).toBe("KEY_LOAD_TIMEOUT");
     expect(encryptedMediaError.fatal).toBe(false);
     expect(encryptedMediaError.message)
-      .toBe("EncryptedMediaError (KEY_LOAD_TIMEOUT) test");
+      .toBe("KEY_LOAD_TIMEOUT: test");
   });
 
   it("should be able to set it as fatal", () => {
@@ -40,6 +40,6 @@ describe("errors - EncryptedMediaError", () => {
     expect(encryptedMediaError.code).toBe("INCOMPATIBLE_KEYSYSTEMS");
     expect(encryptedMediaError.fatal).toBe(true);
     expect(encryptedMediaError.message)
-      .toBe("EncryptedMediaError (INCOMPATIBLE_KEYSYSTEMS) test");
+      .toBe("INCOMPATIBLE_KEYSYSTEMS: test");
   });
 });
