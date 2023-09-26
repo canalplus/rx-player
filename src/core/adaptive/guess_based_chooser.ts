@@ -17,6 +17,7 @@
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import { estimateRequestBandwidth } from "./network_analyzer";
 import LastEstimateStorage, {
   ABRAlgorithmType,
@@ -151,7 +152,7 @@ export default class GuessBasedChooser {
     if (shouldStopGuess) {
       // Block guesses for a time
       this._consecutiveWrongGuesses++;
-      this._blockGuessesUntil = performance.now() +
+      this._blockGuessesUntil = getMonotonicTimeStamp() +
         Math.min(this._consecutiveWrongGuesses * 15000, 120000);
       return getPreviousRepresentation(representations, currentRepresentation);
     } else if (scoreData === undefined) {
@@ -182,7 +183,7 @@ export default class GuessBasedChooser {
     { score, confidenceLevel } : IRepresentationMaintainabilityScore
   ) : boolean {
     return isFinite(bufferGap) && bufferGap >= 2.5 &&
-           performance.now() > this._blockGuessesUntil &&
+           getMonotonicTimeStamp() > this._blockGuessesUntil &&
            confidenceLevel === ScoreConfidenceLevel.HIGH &&
            score / speed > 1.01;
   }
@@ -212,7 +213,7 @@ export default class GuessBasedChooser {
       return req.content.representation.id === lastGuess.id;
     });
 
-    const now = performance.now();
+    const now = getMonotonicTimeStamp();
     for (const req of guessedRepresentationRequests) {
       const requestElapsedTime = now - req.requestTimestamp;
       if (req.content.segment.isInit) {
