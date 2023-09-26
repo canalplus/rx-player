@@ -37,7 +37,10 @@ import {
   IErrorType,
   MediaError,
 } from "../../errors";
-import features from "../../features";
+import features, {
+  addFeatures,
+  IFeature,
+} from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -100,7 +103,6 @@ import {
   getCurrentKeySystem,
 } from "../decrypt";
 import { ContentInitializer } from "../init";
-import MediaSourceContentInitializer from "../init/media_source_content_initializer";
 import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -338,6 +340,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
   static set LogLevel(logLevel : string) {
     log.setLevel(logLevel);
+  }
+
+  /**
+   * Add feature(s) to the RxPlayer.
+   * @param {Array.<Object>} featureList - Features wanted.
+   */
+  static addFeatures(featureList : IFeature[]) : void {
+    addFeatures(featureList);
   }
 
   /**
@@ -672,6 +682,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
+      if (features.mediaSourceInit === null) {
+        throw new Error("MediaSource streaming not supported");
+      }
+
       const transportPipelines = transportFn(transportOptions);
 
       const { offlineRetry,
@@ -761,7 +775,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                       requestTimeout: segmentRequestTimeout,
                                       maxRetryOffline: offlineRetry };
 
-      initializer = new MediaSourceContentInitializer({
+      initializer = new features.mediaSourceInit({
         adaptiveOptions,
         autoPlay,
         bufferOptions,
