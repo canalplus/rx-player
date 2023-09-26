@@ -68,9 +68,11 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `HTML_TTML_PARSER` [2]      | Parse TTML text tracks for the `"html"` `textTrackMode`   |
 | `HTML_SAMI_PARSER` [2]      | Parse SAMI text tracks for the `"html"` `textTrackMode`   |
 | `DEBUG_ELEMENT` [3]         | Allows to use the `createDebugElement` RxPlayer method    |
-| `DASH_WASM` [1] [4] [5]     | Enable DASH playback using a WebAssembly-based MPD parser |
+| `DASH_WASM` [1] [4]         | Enable DASH playback using a WebAssembly-based MPD parser |
 | `LOCAL_MANIFEST` [4]        | Enable playback of "local" contents                       |
 | `METAPLAYLIST` [4]          | Enable playback of "metaplaylist" contents                |
+| `NATIVE_TEXT_BUFFER` [5]    | (Deprecated) Base for the `"native"` `textTrackMode`.     |
+| `HTML_TEXT_BUFFER` [5]      | (Deprecated) Base for the `"html"` `textTrackMode`.       |
 
 ---
 
@@ -101,6 +103,10 @@ To help you choose between those two:
 
 **[4]**: The `DASH_WASM` feature has its own setup, detailed in the
 [corresponding documentation page](../api/Miscellaneous/DASH_WASM_Parser.md).
+
+**[5]**: Both the `NATIVE_TEXT_BUFFER` and `HTML_TEXT_BUFFER` features are
+deprecated. They are already implicitly imported when parsing any of the
+corresponding text parsers.
 
 ---
 
