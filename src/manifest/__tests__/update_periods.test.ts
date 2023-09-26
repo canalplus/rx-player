@@ -410,7 +410,7 @@ describe("Manifest - updatePeriods", () => {
     expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
     expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: not enough data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data"
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p1");
@@ -511,7 +511,7 @@ describe("Manifest - updatePeriods", () => {
     expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
     expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: incoherent data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: incoherent data"
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
@@ -602,7 +602,7 @@ describe("Manifest - updatePeriods", () => {
     expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
     expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: not enough data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data"
     );
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p0");
@@ -674,7 +674,7 @@ describe("Manifest - updatePeriods", () => {
     expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
     expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MediaError (MANIFEST_UPDATE_ERROR) Cannot perform partial update: incoherent data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: incoherent data"
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p1");

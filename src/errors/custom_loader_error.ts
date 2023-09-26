@@ -50,4 +50,3 @@ export default class CustomLoaderError extends Error {
     this.xhr = xhr;
   }
 }
-
