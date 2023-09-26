@@ -15,16 +15,17 @@
  */
 
 import log from "../../../../log";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 
 /**
- * Get difference between the server's clock, in milliseconds and the return of
- * the JS function `performance.now`.
+ * Get difference between the server's clock, in milliseconds, and the
+ * monotonically-raising timestamp used by the RxPlayer.
  * This property allows to calculate the server time at any moment.
  *
  * `undefined` if we could not define such offset (in which case, you could have
  * to rely on the user's clock instead).
  *
- * For example, a response of 1000 would mean that performance.now() is 1 second
+ * For example, a response of 1000 would mean that the timestamp is 1 second
  * behind the server's time.
  * @param {string} serverClock
  * @returns {number|undefined}
@@ -32,7 +33,7 @@ import log from "../../../../log";
 export default function getClockOffset(
   serverClock: string
 ): number | undefined {
-  const httpOffset = Date.parse(serverClock) - performance.now();
+  const httpOffset = Date.parse(serverClock) - getMonotonicTimeStamp();
   if (isNaN(httpOffset)) {
     log.warn("DASH Parser: Invalid clock received: ", serverClock);
     return undefined;

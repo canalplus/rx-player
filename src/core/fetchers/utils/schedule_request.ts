@@ -24,6 +24,7 @@ import log from "../../../log";
 import { ICdnMetadata } from "../../../parsers/manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
+import getTimestamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller, {
   CancellationSignal,
@@ -248,7 +249,7 @@ export async function scheduleRequestWithCdns<T>(
         const delay = Math.min(baseDelay * Math.pow(2, errorCounter - 1),
                                maxDelay);
         const fuzzedDelay = getFuzzedDelay(delay);
-        missedAttemptsObj.blockedUntil = performance.now() + fuzzedDelay;
+        missedAttemptsObj.blockedUntil = getTimestamp() + fuzzedDelay;
       }
 
       return retryWithNextCdn(error);
@@ -303,7 +304,7 @@ export async function scheduleRequestWithCdns<T>(
       return requestCdn(nextWantedCdn);
     }
 
-    const now = performance.now();
+    const now = getTimestamp();
     const blockedFor = nextCdnAttemptObj.blockedUntil - now;
     if (blockedFor <= 0) {
       return requestCdn(nextWantedCdn);
@@ -360,7 +361,7 @@ export async function scheduleRequestWithCdns<T>(
     if (missedAttempts.size === 0) {
       return sortedCdns[0];
     }
-    const now = performance.now();
+    const now = getTimestamp();
     return sortedCdns
       .filter(c =>  missedAttempts.get(c)?.isBlacklisted !== true)
       .reduce((
@@ -427,8 +428,8 @@ interface ICdnAttemptMetadata {
    */
   errorCounter : number;
   /**
-   * Timestamp, in terms of `performance.now()`, until which it should be
-   * forbidden to request this CDN.
+   * Monotonically-raising timestamp, until which it should be forbidden to
+   * request this CDN.
    * Enforcing this delay allows to prevent making too much requests to a given
    * CDN.
    *
