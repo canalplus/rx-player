@@ -293,8 +293,8 @@ export interface IParsedManifest {
   /** Base time from which the segments are generated. */
   availabilityStartTime? : number | undefined;
   /**
-   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
-   * has relatively to the server's
+   * Difference between the server's clock, in milliseconds, and the
+   * monotonically-raising timestamp used by the RxPlayer.
    */
   clockOffset? : number | undefined;
   /** If set, the Manifest needs to be updated when that Promise resolves. */
@@ -373,8 +373,8 @@ export interface IParsedManifest {
        */
       maximumSafePosition : number;
       /**
-       * `Performance.now()` output at the time both `maximumSafePosition` and
-       * `maximumPositionWithMediaData` were calculated.
+       * Monotonically-raising timestamp at the time both `maximumSafePosition`
+       * and `maximumPositionWithMediaData` were calculated.
        * This can be used to retrieve a new maximum position from them when they
        * linearly evolves over time (see `isLinear` property).
        */

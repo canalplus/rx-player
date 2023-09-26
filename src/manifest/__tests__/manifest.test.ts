@@ -15,6 +15,7 @@
  */
 
 import type { IPlayerError } from "../../public_types";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -289,7 +290,7 @@ describe("Manifest - Manifest", () => {
   it("should correctly parse every manifest information given", () => {
     const oldPeriod1 = generateParsedPeriod("0", 4, undefined);
     const oldPeriod2 = generateParsedPeriod("1", 12, undefined);
-    const time = performance.now();
+    const time = getMonotonicTimeStamp();
     const oldManifestArgs = { availabilityStartTime: 5,
                               duration: 12,
                               id: "man",

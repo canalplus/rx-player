@@ -24,6 +24,7 @@ import {
 } from "../../../../../../manifest";
 import { IPlayerError } from "../../../../../../public_types";
 import assert from "../../../../../../utils/assert";
+import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp";
 import { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
 import {
@@ -162,8 +163,7 @@ export interface ITimelineIndexContextArgument {
   /** Whether the corresponding Manifest can be updated and changed. */
   isDynamic : boolean;
   /**
-   * Time (in terms of `performance.now`) at which the XML file containing this
-   * index was received
+   * Time at which the XML file containing this index was received.
    */
   receivedTime? : number | undefined;
   /** ID of the Representation concerned. */
@@ -200,7 +200,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   /** Underlying structure to retrieve segment information. */
   protected _index : ITimelineIndex;
 
-  /** Time, in terms of `performance.now`, of the last Manifest update. */
+  /**
+   * Time of the last Manifest update.
+   * The unit is the monotonically-raising timestamp used by the RxPlayer.
+   */
   private _lastUpdate : number;
 
   /** Absolute start of the period, timescaled and converted to index time. */
@@ -272,7 +275,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._isLastPeriod = isLastPeriod;
     this._lastUpdate = context.receivedTime == null ?
-                                 performance.now() :
+                                 getMonotonicTimeStamp() :
                                  context.receivedTime;
 
     this._unsafelyBaseOnPreviousIndex = null;

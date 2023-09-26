@@ -16,6 +16,7 @@
 
 import config from "../../config";
 import log from "../../log";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
@@ -455,7 +456,10 @@ export interface IRebufferingStatus {
   reason : "seeking" | // Building buffer after seeking
            "not-ready" | // Building buffer after low readyState
            "buffering"; // Other cases
-  /** `performance.now` at the time the rebuffering happened. */
+  /**
+   * Monotonically-raising timestamp at the time the rebuffering happened on the
+   * main thread.
+   */
   timestamp : number;
   /**
    * Position, in seconds, at which data is awaited.
@@ -471,7 +475,10 @@ export interface IRebufferingStatus {
  * an unknown reason.
  */
 export interface IFreezingStatus {
-  /** `performance.now` at the time the freezing started to be detected. */
+  /**
+   * Monotonically-raising timestamp at the time the freezing started to be
+   * detected.
+   */
   timestamp : number;
 }
 
@@ -819,7 +826,7 @@ function getRebufferingStatus(
                position: rebufferEndPosition };
     }
     return { reason,
-             timestamp: performance.now(),
+             timestamp: getMonotonicTimeStamp(),
              position: rebufferEndPosition };
   }
   return null;
@@ -860,7 +867,7 @@ function getFreezingStatus(
          currentInfo.readyState >= 1 &&
          currentInfo.playbackRate !== 0 &&
          currentInfo.position === prevObservation.position ?
-           { timestamp: performance.now() } :
+           { timestamp: getMonotonicTimeStamp() } :
            null;
 }
 
