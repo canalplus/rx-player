@@ -19,6 +19,7 @@ import Manifest from "../../../../manifest";
 import flatMap from "../../../../utils/flat_map";
 import idGenerator from "../../../../utils/id_generator";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import objectValues from "../../../../utils/object_values";
 import { utf8ToStr } from "../../../../utils/string_parsing";
 import {
@@ -144,7 +145,7 @@ export default function parsePeriods(
         }
       } else {
         if (typeof lastPosition === "number") {
-          const positionTime = performance.now() / 1000;
+          const positionTime = getMonotonicTimeStamp() / 1000;
           manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
         } else {
           const guessedLastPositionFromClock =
@@ -173,12 +174,13 @@ export default function parsePeriods(
 
 /**
  * Try to guess the "last position", which is the last position
- * available in the manifest in seconds, and the "position time", the time
- * (`performance.now()`) in which the last position was collected.
+ * available in the manifest in seconds, and the "position time", the
+ * monotonically-raising timestamp used by the RxPlayer, at which the
+ * last position was collected.
  *
  * These values allows to retrieve at any time in the future the new last
  * position, by substracting the position time to the last position, and
- * adding to it the new value returned by `performance.now`.
+ * adding to it the new monotonically-raising timestamp.
  *
  * The last position and position time are returned by this function if and only if
  * it would indicate a last position superior to the `minimumTime` given.
@@ -205,7 +207,7 @@ function guessLastPositionFromClock(
   if (!isNullOrUndefined(context.clockOffset)) {
     const lastPosition = context.clockOffset / 1000 -
       context.availabilityStartTime;
-    const positionTime = performance.now() / 1000;
+    const positionTime = getMonotonicTimeStamp() / 1000;
     const timeInSec = positionTime + lastPosition;
     if (timeInSec >= minimumTime) {
       return [timeInSec, positionTime];
@@ -216,7 +218,7 @@ function guessLastPositionFromClock(
       log.warn("DASH Parser: no clock synchronization mechanism found." +
                " Using the system clock instead.");
       const lastPosition = now - context.availabilityStartTime;
-      const positionTime = performance.now() / 1000;
+      const positionTime = getMonotonicTimeStamp() / 1000;
       return [lastPosition, positionTime];
     }
   }
@@ -331,6 +333,10 @@ function generateStreamEvents(
 /** Context needed when calling `parsePeriods`. */
 export interface IPeriodContext extends IInheritedAdaptationContext {
   availabilityStartTime : number;
+  /**
+   * Difference between the server's clock, in milliseconds, and the
+   * monotonically-raising timestamp used by the RxPlayer.
+   */
   clockOffset? : number | undefined;
   /** Duration (mediaPresentationDuration) of the whole MPD, in seconds. */
   duration? : number | undefined;

@@ -21,6 +21,7 @@ import {
 } from "../../errors";
 import log from "../../log";
 import isNullOrUndefined from "../is_null_or_undefined";
+import getMonotonicTimeStamp from "../monotonic_timestamp";
 import {
   CancellationError,
   CancellationSignal,
@@ -30,9 +31,9 @@ import {
 export interface IFetchedStreamComplete {
   /** Duration of the whole request, in milliseconds. */
   requestDuration : number;
-  /** Result of `performance.now()` at the time the request was received. */
+  /** Monotonically-raising timestamp at the time the request was received. */
   receivedTime : number;
-  /** Result of `performance.now()` at the time the request was started. */
+  /** Monotonically-raising timestamp at the time the request was started. */
   sendingTime : number;
   /** Size of the entire emitted data, in bytes. */
   size : number;
@@ -44,7 +45,7 @@ export interface IFetchedStreamComplete {
 
 /** Object emitted by `fetchRequest` when a new chunk of the data is available. */
 export interface IFetchedDataObject {
-  /** Result of `performance.now()` at the time this data was recuperated. */
+  /** Monotonically-raising timestamp at the time this data was recuperated. */
   currentTime : number;
   /** Duration of the request until `currentTime`, in milliseconds. */
   duration : number;
@@ -52,7 +53,7 @@ export interface IFetchedDataObject {
   chunkSize : number;
   /** Cumulated size of the received data by the request until now. */
   size : number;
-  /** Result of `performance.now()` at the time the request began. */
+  /** Monotonically-raising timestamp at the time the request began. */
   sendingTime : number;
   /** URL of the recuperated data (post-redirection if one). */
   url : string;
@@ -128,7 +129,7 @@ export default function fetchRequest(
   log.debug("Fetch: Called with URL", options.url);
   let cancellation : CancellationError | null = null;
   let timeouted = false;
-  const sendingTime = performance.now();
+  const sendingTime = getMonotonicTimeStamp();
   const abortController: AbortController | null =
     !isNullOrUndefined(_AbortController) ? new _AbortController() :
                                            null;
@@ -199,7 +200,7 @@ export default function fetchRequest(
 
       if (!data.done && !isNullOrUndefined(data.value)) {
         size += data.value.byteLength;
-        const currentTime = performance.now();
+        const currentTime = getMonotonicTimeStamp();
         const dataInfo = { url: response.url,
                            currentTime,
                            duration: currentTime - sendingTime,
@@ -212,7 +213,7 @@ export default function fetchRequest(
         return readBufferAndSendEvents();
       } else if (data.done) {
         deregisterCancelLstnr();
-        const receivedTime = performance.now();
+        const receivedTime = getMonotonicTimeStamp();
         const requestDuration = receivedTime - sendingTime;
         return { requestDuration,
                  receivedTime,
