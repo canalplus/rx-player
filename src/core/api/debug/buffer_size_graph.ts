@@ -1,3 +1,5 @@
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+
 /**
  * Maximum history of the buffer size that will be displayed, in milliseconds.
  * For example, a value of `3000` indicates that we will just show at most the
@@ -30,7 +32,7 @@ export default class BufferSizeGraph {
   }
 
   public pushBufferSize(bufferSize : number) : void {
-    const now = performance.now();
+    const now = getMonotonicTimeStamp();
     this._history.push({ timestamp: now, bufferSize });
     if (this._history.length > 0) {
       const minimumTime = now - TIME_SAMPLES_MS;
