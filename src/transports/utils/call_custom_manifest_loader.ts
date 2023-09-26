@@ -19,6 +19,7 @@ import {
   IManifestLoader,
   ILoadedManifestFormat,
 } from "../../public_types";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import {
   CancellationError,
   CancellationSignal,
@@ -47,7 +48,7 @@ export default function callCustomManifestLoader(
     cancelSignal : CancellationSignal
   ) : Promise< IRequestedData<ILoadedManifestFormat> > => {
     return new Promise((res, rej) => {
-      const timeAPIsDelta = Date.now() - performance.now();
+      const timeAPIsDelta = Date.now() - getMonotonicTimeStamp();
       /** `true` when the custom segmentLoader should not be active anymore. */
       let hasFinished = false;
 

@@ -18,6 +18,7 @@ import config from "../../../../config";
 import log from "../../../../log";
 import Manifest from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
 import { IParsedManifest } from "../../types";
 import {
@@ -42,11 +43,14 @@ import resolveBaseURLs, {
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {
   /**
-   * If set, offset to add to `performance.now()` to obtain the current server's
-   * time.
+   * If set, offset to add to the monotonically-raising timestamp used by the
+   * RxPlayer to obtain the current server's time.
    */
   externalClockOffset? : number | undefined;
-  /** Time, in terms of `performance.now` at which this MPD was received. */
+  /**
+   * Time at which this MPD was received.
+   * The unit is the monotonically-raising timestamp used by the RxPlayer.
+   */
   manifestReceivedTime? : number | undefined;
   /** Default base time, in seconds. */
   referenceDateTime? : number | undefined;
@@ -290,7 +294,7 @@ function parseCompleteIntermediateRepresentation(
   const { minimumSafePosition,
           maximumSafePosition,
           maximumUnsafePosition } = getMinimumAndMaximumPositions(parsedPeriods);
-  const now = performance.now();
+  const now = getMonotonicTimeStamp();
 
   if (!isDynamic) {
     minimumTime = minimumSafePosition !== undefined     ? minimumSafePosition :
@@ -327,7 +331,7 @@ function parseCompleteIntermediateRepresentation(
         log.warn("DASH Parser: use system clock to define maximum position");
         finalMaximumSafePosition = (Date.now() / 1000) - availabilityStartTime;
       } else {
-        const serverTime = performance.now() + externalClockOffset;
+        const serverTime = getMonotonicTimeStamp() + externalClockOffset;
         finalMaximumSafePosition = (serverTime / 1000) - availabilityStartTime;
       }
     }
