@@ -9,6 +9,10 @@
       "displayName": "Creating a Player"
     },
     {
+      "path": "./RxPlayer_Features.md",
+      "displayName": "Feature switching"
+    },
+    {
       "path": "./Loading_a_Content.md",
       "displayName": "Loading a Content"
     },

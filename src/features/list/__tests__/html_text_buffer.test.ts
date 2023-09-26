@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+// eslint-disable-next-line max-len
+import HtmlTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
+import { IFeaturesObject } from "../../types";
+import addHtmlTextBuffer from "../native_text_buffer";
 
-/* eslint-disable max-len */
-import htmlTextTracksBuffer from "../../../core/segment_buffers/implementations/text/html";
-/* eslint-enable max-len */
-import addHTMLTextBuffer from "../html_text_buffer";
-
-jest.mock("../../../core/segment_buffers/implementations/text/html", () => ({
-  __esModule: true as const,
-  default: jest.fn(),
-}));
-
-describe("Features list - HTML Text Buffer", () => {
-  it("should add an HTML Text Buffer in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featureObject : any = {};
-    addHTMLTextBuffer(featureObject);
-    expect(featureObject).toEqual({ htmlTextTracksBuffer });
-    expect(featureObject.htmlTextTracksBuffer).toBe(htmlTextTracksBuffer);
+describe("Features list - native Text Buffer", () => {
+  it("should add an native Text Buffer in the current features", () => {
+    const featureObject = {} as unknown as IFeaturesObject;
+    addHtmlTextBuffer(featureObject);
+    expect(featureObject).toEqual({ nativeTextTracksBuffer: HtmlTextSegmentBuffer });
+    expect(featureObject.nativeTextTracksBuffer).toBe(HtmlTextSegmentBuffer);
   });
 });
