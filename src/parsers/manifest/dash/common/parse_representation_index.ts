@@ -157,8 +157,8 @@ export interface IRepresentationIndexContext {
    */
   parentSegmentTemplates : ISegmentTemplateIntermediateRepresentation[];
   /**
-   * Time (in terms of `performance.now`) at which the XML file containing this
-   * Representation was received.
+   * Time (as the monotonically-raising timestamp used by the RxPlayer) at which
+   * the XML file containing this Representation was received.
    */
   receivedTime? : number | undefined;
   /** Start time of the current period, in seconds. */
