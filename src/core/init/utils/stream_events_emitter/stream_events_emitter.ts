@@ -16,7 +16,7 @@
 
 import config from "../../../../config";
 import Manifest from "../../../../manifest";
-import createSharedReference from "../../../../utils/reference";
+import SharedReference from "../../../../utils/reference";
 import TaskCanceller, { CancellationSignal } from "../../../../utils/task_canceller";
 import { IPlaybackObservation, IReadOnlyPlaybackObserver } from "../../../api";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
@@ -47,9 +47,9 @@ export default function streamEventsEmitter(
 ) : void {
   const eventsBeingPlayed =
     new WeakMap<IStreamEventPayload|INonFiniteStreamEventPayload, true>();
-  const scheduledEventsRef = createSharedReference(refreshScheduledEventsList([],
-                                                                              manifest),
-                                                   cancelSignal);
+  const scheduledEventsRef = new SharedReference(refreshScheduledEventsList([],
+                                                                            manifest),
+                                                 cancelSignal);
   manifest.addEventListener("manifestUpdate", () => {
     const prev = scheduledEventsRef.getValue();
     scheduledEventsRef.setValue(refreshScheduledEventsList(prev, manifest));

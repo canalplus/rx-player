@@ -15,7 +15,7 @@
  */
 
 import Manifest from "../../../manifest";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
@@ -70,8 +70,8 @@ export default function createStreamPlaybackObserver(
     const canceller = new TaskCanceller();
     canceller.linkToSignal(parentObserverCancelSignal);
     canceller.linkToSignal(fnCancelSignal);
-    const newRef = createSharedReference(constructStreamPlaybackObservation(),
-                                         canceller.signal);
+    const newRef = new SharedReference(constructStreamPlaybackObservation(),
+                                       canceller.signal);
 
     speed.onUpdate(emitStreamPlaybackObservation, {
       clearSignal: canceller.signal,

@@ -17,7 +17,7 @@
 import config from "../../config";
 import { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
 import { CancellationSignal } from "../../utils/task_canceller";
@@ -115,8 +115,8 @@ export function constructPlayerStateReference(
   playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<IPlayerState> {
-  const playerStateRef = createSharedReference<IPlayerState>(PLAYER_STATES.LOADING,
-                                                             cancelSignal);
+  const playerStateRef = new SharedReference<IPlayerState>(PLAYER_STATES.LOADING,
+                                                           cancelSignal);
   initializer.addEventListener("loaded", () => {
     if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
       playerStateRef.setValue(PLAYER_STATES.LOADED);

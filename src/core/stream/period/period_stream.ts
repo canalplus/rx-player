@@ -27,7 +27,7 @@ import {
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
@@ -103,7 +103,7 @@ export default function PeriodStream(
    * `null` when no Adaptation is chosen (e.g. no subtitles)
    * `undefined` at the beginning (it can be ignored.).
    */
-  const adaptationRef = createSharedReference<Adaptation|null|undefined>(
+  const adaptationRef = new SharedReference<Adaptation|null|undefined>(
     undefined,
     parentCancelSignal
   );
@@ -401,8 +401,8 @@ function createAdaptationStreamPlaybackObserver(
     observationRef : IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
     cancellationSignal : CancellationSignal
   ) : IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
-    const newRef = createSharedReference(constructAdaptationStreamPlaybackObservation(),
-                                         cancellationSignal);
+    const newRef = new SharedReference(constructAdaptationStreamPlaybackObservation(),
+                                       cancellationSignal);
 
     observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
       clearSignal: cancellationSignal,

@@ -22,7 +22,7 @@ import {
 /* eslint-disable-next-line max-len */
 import hasIssuesWithHighMediaSourceDuration from "../../../compat/has_issues_with_high_media_source_duration";
 import log from "../../../log";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
@@ -235,7 +235,7 @@ const enum MediaSourceDurationUpdateStatus {
 }
 
 /**
- * Returns an `ISharedReference` wrapping a boolean that tells if all the
+ * Returns a `SharedReference` wrapping a boolean that tells if all the
  * SourceBuffers ended all pending updates.
  * @param {SourceBufferList} sourceBuffers
  * @param {Object} cancelSignal
@@ -246,12 +246,12 @@ function createSourceBuffersUpdatingReference(
   cancelSignal : CancellationSignal
 ) : IReadOnlySharedReference<boolean> {
   if (sourceBuffers.length === 0) {
-    const notOpenedRef = createSharedReference(false);
+    const notOpenedRef = new SharedReference(false);
     notOpenedRef.finish();
     return notOpenedRef;
   }
 
-  const areUpdatingRef = createSharedReference(false, cancelSignal);
+  const areUpdatingRef = new SharedReference(false, cancelSignal);
   reCheck();
 
   for (let i = 0; i < sourceBuffers.length; i++) {
@@ -279,7 +279,7 @@ function createSourceBuffersUpdatingReference(
 }
 
 /**
- * Returns an `ISharedReference` wrapping a boolean that tells if the media
+ * Returns a `SharedReference` wrapping a boolean that tells if the media
  * source is opened or not.
  * @param {MediaSource} mediaSource
  * @param {Object} cancelSignal
@@ -289,8 +289,8 @@ function createMediaSourceOpenReference(
   mediaSource : MediaSource,
   cancelSignal : CancellationSignal
 ): IReadOnlySharedReference<boolean> {
-  const isMediaSourceOpen = createSharedReference(mediaSource.readyState === "open",
-                                                  cancelSignal);
+  const isMediaSourceOpen = new SharedReference(mediaSource.readyState === "open",
+                                                cancelSignal);
   onSourceOpen(mediaSource, () => {
     log.debug("Init: Reacting to MediaSource open in duration updater");
     isMediaSourceOpen.setValueIfChanged(true);

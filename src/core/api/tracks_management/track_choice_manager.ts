@@ -41,26 +41,26 @@ import arrayIncludes from "../../../utils/array_includes";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../../utils/languages";
 import objectAssign from "../../../utils/object_assign";
-import { ISharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
 import takeFirstSet from "../../../utils/take_first_set";
 
 /** Audio information stored for a single Period. */
 interface ITMPeriodAudioInfos {
   adaptations : Adaptation[];
-  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+  adaptationRef : SharedReference<Adaptation|null|undefined>;
 }
 
 /** Text information stored for a single Period. */
 interface ITMPeriodTextInfos {
   adaptations : Adaptation[];
-  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+  adaptationRef : SharedReference<Adaptation|null|undefined>;
 }
 
 /** Video information stored for a single Period. */
 interface ITMPeriodVideoInfos {
   adaptations : Adaptation[];
-  adaptationRef : ISharedReference<Adaptation|null|undefined>;
+  adaptationRef : SharedReference<Adaptation|null|undefined>;
 }
 
 /** Every information stored for a single Period. */
@@ -264,7 +264,7 @@ export default class TrackChoiceManager {
   public addPeriod(
     bufferType : "audio" | "text"| "video",
     period : Period,
-    adaptationRef : ISharedReference<Adaptation|null|undefined>
+    adaptationRef : SharedReference<Adaptation|null|undefined>
   ) : void {
     const periodItem = getPeriodItem(this._periods, period);
     const adaptations = period.getSupportedAdaptations(bufferType);

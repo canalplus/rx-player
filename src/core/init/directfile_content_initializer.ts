@@ -27,7 +27,7 @@ import {
   IPlayerError,
 } from "../../public_types";
 import assert from "../../utils/assert";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
@@ -99,7 +99,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
      * Create dummy encryption data emitter, as those are not sent from the
      * RxPlayer for directfile contents.
      */
-    const decryptionRef = createSharedReference(null);
+    const decryptionRef = new SharedReference(null);
     decryptionRef.finish();
 
     const drmInitRef =

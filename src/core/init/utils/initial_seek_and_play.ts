@@ -19,8 +19,7 @@ import { READY_STATES } from "../../../compat/browser_compatibility_types";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
-import {
-  createSharedReference,
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import { CancellationError, CancellationSignal } from "../../../utils/task_canceller";
@@ -82,8 +81,8 @@ export default function performInitialSeekAndPlay(
     rejectAutoPlay = rej;
   });
 
-  const initialSeekPerformed = createSharedReference(false, cancelSignal);
-  const initialPlayPerformed = createSharedReference(false, cancelSignal);
+  const initialSeekPerformed = new SharedReference(false, cancelSignal);
+  const initialPlayPerformed = new SharedReference(false, cancelSignal);
 
   mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
 

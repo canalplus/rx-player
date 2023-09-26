@@ -5,9 +5,8 @@ import {
   IKeySystemOption,
   IPlayerError,
 } from "../../../public_types";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
@@ -56,7 +55,7 @@ export default function initializeContentDecryption(
 
   const decryptorCanceller = new TaskCanceller();
   decryptorCanceller.linkToSignal(cancelSignal);
-  const drmStatusRef = createSharedReference<IDrmInitializationStatus>({
+  const drmStatusRef = new SharedReference<IDrmInitializationStatus>({
     initializationState: { type: "uninitialized", value: null },
     drmSystemId: undefined,
   }, cancelSignal);
@@ -73,7 +72,7 @@ export default function initializeContentDecryption(
   contentDecryptor.addEventListener("stateChange", (state) => {
     if (state === ContentDecryptorState.WaitingForAttachment) {
 
-      const isMediaLinked = createSharedReference(false);
+      const isMediaLinked = new SharedReference(false);
       isMediaLinked.onUpdate((isAttached, stopListening) => {
         if (isAttached) {
           stopListening();
@@ -124,7 +123,7 @@ export default function initializeContentDecryption(
       const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
       callbacks.onError(err);
     }, { clearSignal: cancelSignal });
-    const ref = createSharedReference({
+    const ref = new SharedReference({
       initializationState: { type: "initialized" as const, value: null },
       drmSystemId: undefined });
     ref.finish(); // We know that no new value will be triggered
@@ -156,7 +155,7 @@ type IDecryptionInitializationState =
    * The `MediaSource` or media url has to be linked to the `HTMLMediaElement`
    * before continuing.
    * Once it has been linked with success (e.g. the `MediaSource` has "opened"),
-   * the `isMediaLinked` `ISharedReference` should be set to `true`.
+   * the `isMediaLinked` `SharedReference` should be set to `true`.
    *
    * In the `MediaSource` case, you should wait until the `"initialized"`
    * state before pushing segment.
@@ -165,7 +164,7 @@ type IDecryptionInitializationState =
    * skipped to directly `"initialized"` instead.
    */
   { type: "awaiting-media-link";
-    value: { isMediaLinked : ISharedReference<boolean> }; } |
+    value: { isMediaLinked : SharedReference<boolean> }; } |
   /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.

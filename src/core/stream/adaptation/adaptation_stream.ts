@@ -22,9 +22,8 @@ import { Representation } from "../../../manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
-import {
+import SharedReference, {
   createMappedReference,
-  createSharedReference,
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import TaskCanceller, {
@@ -103,7 +102,7 @@ export default function AdaptationStream<T>(
    * Emit the currently chosen `Representation`.
    * `null` if no Representation is chosen for now.
    */
-  const currentRepresentation = createSharedReference<Representation | null>(
+  const currentRepresentation = new SharedReference<Representation | null>(
     null,
     adapStreamCanceller.signal
   );
@@ -208,7 +207,7 @@ export default function AdaptationStream<T>(
      * Emit when the current RepresentationStream should be terminated to make
      * place for a new one (e.g. when switching quality).
      */
-    const terminateCurrentStream = createSharedReference<ITerminationOrder | null>(
+    const terminateCurrentStream = new SharedReference<ITerminationOrder | null>(
       null,
       repStreamTerminatingCanceller.signal
     );
@@ -240,7 +239,7 @@ export default function AdaptationStream<T>(
      * Set to `undefined` to indicate that there's no threshold (anything can be
      * replaced by higher-quality segments).
      */
-    const fastSwitchThreshold = createSharedReference<number | undefined>(0);
+    const fastSwitchThreshold = new SharedReference<number | undefined>(0);
     if (options.enableFastSwitching) {
       estimateRef.onUpdate((estimate) => {
         fastSwitchThreshold.setValueIfChanged(estimate?.knownStableBitrate);
@@ -315,7 +314,7 @@ export default function AdaptationStream<T>(
     }, terminatingRepStreamCanceller.signal);
     const maxBufferSize = adaptation.type === "video" ?
       maxVideoBufferSize :
-      createSharedReference(Infinity);
+      new SharedReference(Infinity);
 
     log.info("Stream: changing representation",
              adaptation.type,

@@ -21,7 +21,7 @@ import Manifest, {
   Representation,
 } from "../../../../manifest";
 import { IPlayerError } from "../../../../public_types";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
@@ -66,7 +66,7 @@ export default function getRepresentationEstimate(
       abrCallbacks : IRepresentationEstimatorCallbacks; }
 {
   const { manifest, adaptation } = content;
-  const representations = createSharedReference<Representation[]>(
+  const representations = new SharedReference<Representation[]>(
     [],
     cancellationSignal);
   updateRepresentationsReference();

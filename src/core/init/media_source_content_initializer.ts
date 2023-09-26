@@ -27,9 +27,8 @@ import { ITransportPipelines } from "../../transports";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import objectAssign from "../../utils/object_assign";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
@@ -160,7 +159,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                        this._initCanceller.signal);
 
     /** Send content protection initialization data to the decryption logic. */
-    const protectionRef = createSharedReference<IContentProtection | null>(
+    const protectionRef = new SharedReference<IContentProtection | null>(
       null,
       this._initCanceller.signal
     );
@@ -265,7 +264,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     initialMediaSource : MediaSource,
     playbackObserver : PlaybackObserver,
     drmSystemId : string | undefined,
-    protectionRef : ISharedReference<IContentProtection | null>,
+    protectionRef : SharedReference<IContentProtection | null>,
     initialMediaSourceCanceller : TaskCanceller
   ) : Promise<void> {
     const { adaptiveOptions,
@@ -839,7 +838,7 @@ interface IBufferingMediaSettings {
    * Reference through which decryption initialization information can be
    * communicated.
    */
-  protectionRef : ISharedReference<IContentProtection | null>;
+  protectionRef : SharedReference<IContentProtection | null>;
   /** `MediaSource` element on which the media will be buffered. */
   mediaSource : MediaSource;
   /** The initial position to seek to in media time, in seconds. */

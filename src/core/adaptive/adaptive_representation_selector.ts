@@ -24,9 +24,8 @@ import Manifest, {
 } from "../../manifest";
 import noop from "../../utils/noop";
 import { getLeftSizeOfRange } from "../../utils/ranges";
-import createSharedReference, {
+import SharedReference, {
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../utils/reference";
 import takeFirstSet from "../../utils/take_first_set";
 import TaskCanceller, {
@@ -52,19 +51,19 @@ import selectOptimalRepresentation from "./utils/select_optimal_representation";
 
 // Create default shared references
 
-const manualBitrateDefaultRef = createSharedReference(-1);
+const manualBitrateDefaultRef = new SharedReference(-1);
 manualBitrateDefaultRef.finish();
 
-const minAutoBitrateDefaultRef = createSharedReference(0);
+const minAutoBitrateDefaultRef = new SharedReference(0);
 minAutoBitrateDefaultRef.finish();
 
-const maxAutoBitrateDefaultRef = createSharedReference(Infinity);
+const maxAutoBitrateDefaultRef = new SharedReference(Infinity);
 maxAutoBitrateDefaultRef.finish();
 
-const limitWidthDefaultRef = createSharedReference(undefined);
+const limitWidthDefaultRef = new SharedReference(undefined);
 limitWidthDefaultRef.finish();
 
-const throttleBitrateDefaultRef = createSharedReference(Infinity);
+const throttleBitrateDefaultRef = new SharedReference(Infinity);
 throttleBitrateDefaultRef.finish();
 
 /**
@@ -224,7 +223,7 @@ function getEstimateReference(
   let currentEstimatesCanceller = new TaskCanceller();
   currentEstimatesCanceller.linkToSignal(stopAllEstimates);
 
-  // Create `ISharedReference` on which estimates will be emitted.
+  // Create `SharedReference` on which estimates will be emitted.
   const estimateRef = createEstimateReference(representationsRef.getValue(),
                                               currentEstimatesCanceller.signal);
   representationsRef.onUpdate(restartEstimatesProductionFromCurrentConditions,
@@ -235,10 +234,10 @@ function getEstimateReference(
   function createEstimateReference(
     representations : Representation[],
     innerCancellationSignal : CancellationSignal
-  ) : ISharedReference<IABREstimate> {
+  ) : SharedReference<IABREstimate> {
     if (representations.length === 0) {
       // No Representation given, return `null` as documented
-      return createSharedReference({
+      return new SharedReference<IABREstimate>({
         representation: null,
         bitrate: undefined,
         knownStableBitrate: undefined,
@@ -248,11 +247,11 @@ function getEstimateReference(
     }
     if (representations.length === 1) {
       // There's only a single Representation. Just choose it.
-      return createSharedReference({ bitrate: undefined,
-                                     representation: representations[0],
-                                     manual: false,
-                                     urgent: true,
-                                     knownStableBitrate: undefined });
+      return new SharedReference<IABREstimate>({ bitrate: undefined,
+                                                 representation: representations[0],
+                                                 manual: false,
+                                                 urgent: true,
+                                                 knownStableBitrate: undefined });
     }
 
     /** If true, Representation estimates based on the buffer health might be used. */
@@ -281,7 +280,7 @@ function getEstimateReference(
     let lastPlaybackObservation = playbackObserver.getReference().getValue();
 
     /** Reference through which estimates are emitted. */
-    const innerEstimateRef = createSharedReference<IABREstimate>(getCurrentEstimate());
+    const innerEstimateRef = new SharedReference<IABREstimate>(getCurrentEstimate());
 
     // Listen to playback observations
     playbackObserver.listen((obs) => {

@@ -84,10 +84,9 @@ import {
   getPlayedSizeOfRange,
   getSizeOfRange,
 } from "../../utils/ranges";
-import createSharedReference, {
+import SharedReference, {
   createMappedReference,
   IReadOnlySharedReference,
-  ISharedReference,
 } from "../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
@@ -179,24 +178,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * done.
    * A new content cannot be launched until it stores `false`.
    */
-  private readonly _priv_contentLock : ISharedReference<boolean>;
+  private readonly _priv_contentLock : SharedReference<boolean>;
 
   /**
    * The speed that should be applied to playback.
    * Used instead of videoElement.playbackRate to allow more flexibility.
    */
-  private readonly _priv_speed : ISharedReference<number>;
+  private readonly _priv_speed : SharedReference<number>;
 
   /** Store buffer-related options used needed when initializing a content. */
   private readonly _priv_bufferOptions : {
     /** Last wanted buffer goal. */
-    wantedBufferAhead : ISharedReference<number>;
+    wantedBufferAhead : SharedReference<number>;
     /** Maximum kept buffer ahead in the current position, in seconds. */
-    maxBufferAhead : ISharedReference<number>;
+    maxBufferAhead : SharedReference<number>;
     /** Maximum kept buffer behind in the current position, in seconds. */
-    maxBufferBehind : ISharedReference<number>;
+    maxBufferBehind : SharedReference<number>;
     /** Maximum size of video buffer , in kiloBytes */
-    maxVideoBufferSize : ISharedReference<number>;
+    maxVideoBufferSize : SharedReference<number>;
   };
 
   /** Information on the current bitrate settings. */
@@ -211,16 +210,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                      image? : number; };
 
     /** Store last wanted minAutoBitrates for the adaptive logic. */
-    minAutoBitrates : { audio : ISharedReference<number>;
-                        video : ISharedReference<number>; };
+    minAutoBitrates : { audio : SharedReference<number>;
+                        video : SharedReference<number>; };
 
     /** Store last wanted maxAutoBitrates for the adaptive logic. */
-    maxAutoBitrates : { audio : ISharedReference<number>;
-                        video : ISharedReference<number>; };
+    maxAutoBitrates : { audio : SharedReference<number>;
+                        video : SharedReference<number>; };
 
     /** Store last wanted manual bitrates for the adaptive logic. */
-    manualBitrates : { audio : ISharedReference<number>;
-                       video : ISharedReference<number>; };
+    manualBitrates : { audio : SharedReference<number>;
+                       video : SharedReference<number>; };
   };
 
   /**
@@ -435,37 +434,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                          destroyCanceller.signal);
     }
 
-    this._priv_speed = createSharedReference(videoElement.playbackRate,
-                                             this._destroyCanceller.signal);
+    this._priv_speed = new SharedReference(videoElement.playbackRate,
+                                           this._destroyCanceller.signal);
     this._priv_preferTrickModeTracks = false;
-    this._priv_contentLock = createSharedReference<boolean>(
+    this._priv_contentLock = new SharedReference<boolean>(
       false,
       this._destroyCanceller.signal);
 
     this._priv_bufferOptions = {
-      wantedBufferAhead: createSharedReference(wantedBufferAhead,
-                                               this._destroyCanceller.signal),
-      maxBufferAhead: createSharedReference(maxBufferAhead,
-                                            this._destroyCanceller.signal),
-      maxBufferBehind: createSharedReference(maxBufferBehind,
+      wantedBufferAhead: new SharedReference(wantedBufferAhead,
                                              this._destroyCanceller.signal),
-      maxVideoBufferSize: createSharedReference(maxVideoBufferSize,
-                                                this._destroyCanceller.signal),
+      maxBufferAhead: new SharedReference(maxBufferAhead,
+                                          this._destroyCanceller.signal),
+      maxBufferBehind: new SharedReference(maxBufferBehind,
+                                           this._destroyCanceller.signal),
+      maxVideoBufferSize: new SharedReference(maxVideoBufferSize,
+                                              this._destroyCanceller.signal),
     };
 
     this._priv_bitrateInfos = {
       lastBitrates: { audio: initialAudioBitrate,
                       video: initialVideoBitrate },
-      minAutoBitrates: { audio: createSharedReference(minAudioBitrate,
-                                                      this._destroyCanceller.signal),
-                         video: createSharedReference(minVideoBitrate,
-                                                      this._destroyCanceller.signal) },
-      maxAutoBitrates: { audio: createSharedReference(maxAudioBitrate,
-                                                      this._destroyCanceller.signal),
-                         video: createSharedReference(maxVideoBitrate,
-                                                      this._destroyCanceller.signal) },
-      manualBitrates: { audio: createSharedReference(-1, this._destroyCanceller.signal),
-                        video: createSharedReference(-1, this._destroyCanceller.signal) },
+      minAutoBitrates: { audio: new SharedReference(minAudioBitrate,
+                                                    this._destroyCanceller.signal),
+                         video: new SharedReference(minVideoBitrate,
+                                                    this._destroyCanceller.signal) },
+      maxAutoBitrates: { audio: new SharedReference(maxAudioBitrate,
+                                                    this._destroyCanceller.signal),
+                         video: new SharedReference(maxVideoBitrate,
+                                                    this._destroyCanceller.signal) },
+      manualBitrates: { audio: new SharedReference(-1, this._destroyCanceller.signal),
+                        video: new SharedReference(-1, this._destroyCanceller.signal) },
     };
 
     this._priv_throttleWhenHidden = throttleWhenHidden;
@@ -2621,7 +2620,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     value : {
       type : IBufferType;
       period : Period;
-      adaptationRef : ISharedReference<Adaptation|null|undefined>;
+      adaptationRef : SharedReference<Adaptation|null|undefined>;
     }
   ) : void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {

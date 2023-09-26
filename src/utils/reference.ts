@@ -21,18 +21,18 @@ import { CancellationSignal } from "./task_canceller";
 /**
  * A value behind a shared reference, meaning that any update to its value from
  * anywhere can be retrieved from any other parts of the code in possession of
- * the same `ISharedReference`.
+ * the same `SharedReference`.
  *
  * @example
  * ```ts
  * const myVal = 1;
- * const myRef : ISharedReference<number> = createSharedReference(1);
+ * const myRef : SharedReference<number> = new SharedReference(1);
  *
  * function setValTo2(num : number) {
  *   num = 2;
  * }
  *
- * function setRefTo2(num : ISharedReference<number>) {
+ * function setRefTo2(num : SharedReference<number>) {
  *   num.setValue(2);
  * }
  *
@@ -54,18 +54,104 @@ import { CancellationSignal } from "./task_canceller";
  * This type was added because we found that the usage of an explicit type for
  * those use cases makes the intent of the corresponding code clearer.
  */
-export interface ISharedReference<T> {
+class SharedReference<T> {
+  /** Current value referenced by this `SharedReference`. */
+  private _value : T;
+
   /**
-   * Get the last set value for this shared reference.
+   * Attributes each linked to a single registered callbacks which listen to the
+   * referenced value's updates.
+   *
+   * Contains the following properties:
+   *   - `trigger`: Function which will be called with the new reference's value
+   *     once it changes
+   *   - `complete`: Allows to clean-up the listener, will be called once the
+   *     reference is finished.
+   *   - `hasBeenCleared`: becomes `true` when the reference is
+   *     removed from the `cbs` array.
+   *     Adding this property allows to detect when a previously-added
+   *     listener has since been removed e.g. as a side-effect during a
+   *     function call.
+   *   - `complete`: Callback to call when the current Reference is "finished".
+   */
+  private _listeners : Array<{ trigger : (a: T, stopListening: () => void) => void;
+                               complete : () => void;
+                               hasBeenCleared : boolean; }>;
+  /**
+   * Set to `true` when this `SharedReference` is finished in which case it
+   * cannot be updated nor emit values anymore.
+   */
+  private _isFinished : boolean;
+
+  /**
+   * Callbacks triggered when the `SharedReference` is finished.
+   */
+  private _onFinishCbs : Array<{ trigger : () => void;
+                                 hasBeenCleared : boolean; }>;
+
+  /**
+   * Store a reference to the callback allowing to finish the `SharedReference`
+   * on some event. Allows to remove the logic when it's not needed anymore.
+   */
+  private _deregisterCancellation: (() => void) | undefined;
+
+  /**
+   * Create a `SharedReference` object encapsulating the mutable `initialValue`
+   * value of type T.
+   * @param {*} initialValue
+   * @param {Object|undefined} [cancelSignal] - If set, the created shared
+   * reference will be automatically "finished" once that signal emits.
+   * Finished references won't be able to update their value anymore, and will
+   * also automatically have their listeners (callbacks linked to value change)
+   * removed - as they cannot be triggered anymore, thus providing a security
+   * against memory leaks.
+   */
+  constructor(initialValue: T, cancelSignal?: CancellationSignal) {
+    this._value = initialValue;
+    this._listeners = [];
+    this._isFinished = false;
+    this._onFinishCbs = [];
+    if (cancelSignal !== undefined) {
+      this._deregisterCancellation = cancelSignal.register(() => this.finish());
+    }
+  }
+
+  /**
+   * Returns the current value of this shared reference.
    * @returns {*}
    */
-  getValue() : T;
+  public getValue() : T {
+    return this._value;
+  }
 
   /**
    * Update the value of this shared reference.
    * @param {*} newVal
    */
-  setValue(newVal : T) : void;
+  public setValue(newVal : T) : void {
+    if (this._isFinished) {
+      if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+        /* eslint-disable-next-line no-console */
+        console.error("Finished shared references cannot be updated");
+      }
+      return;
+    }
+    this._value = newVal;
+
+    if (this._listeners.length === 0) {
+      return;
+    }
+    const clonedCbs = this._listeners.slice();
+    for (const cbObj of clonedCbs) {
+      try {
+        if (!cbObj.hasBeenCleared) {
+          cbObj.trigger(newVal, cbObj.complete);
+        }
+      } catch (_) {
+        /* nothing */
+      }
+    }
+  }
 
   /**
    * Update the value of this shared reference only if the value changed.
@@ -75,27 +161,63 @@ export interface ISharedReference<T> {
    * thus be considered different.
    * @param {*} newVal
    */
-  setValueIfChanged(newVal : T) : void;
+  public setValueIfChanged(newVal : T) : void {
+    if (newVal !== this._value) {
+      this.setValue(newVal);
+    }
+  }
 
   /**
    * Allows to register a callback to be called each time the value inside the
    * reference is updated.
    * @param {Function} cb - Callback to be called each time the reference is
    * updated. Takes as first argument its new value and in second argument a
-   * function allowing to unregister the update listening callback.
-   * @param {Object} [options]
-   * @param {Object} [options.clearSignal] - Allows to provide a
+   * callback allowing to unregister the callback.
+   * @param {Object|undefined} [options]
+   * @param {Object|undefined} [options.clearSignal] - Allows to provide a
    * CancellationSignal which will unregister the callback when it emits.
-   * @param {boolean} [options.emitCurrentValue] - If `true`, the callback will
-   * also be immediately (synchronously) called with the current value.
+   * @param {boolean|undefined} [options.emitCurrentValue] - If `true`, the
+   * callback will also be immediately called with the current value.
    */
-  onUpdate(
+  public onUpdate(
     cb : (val : T, stopListening : () => void) => void,
     options? : {
       clearSignal?: CancellationSignal | undefined;
       emitCurrentValue?: boolean | undefined;
-    } | undefined,
-  ) : void;
+    } | undefined
+  ) : void {
+    const unlisten = (): void => {
+      if (options?.clearSignal !== undefined) {
+        options.clearSignal.deregister(unlisten);
+      }
+      if (cbObj.hasBeenCleared) {
+        return;
+      }
+      cbObj.hasBeenCleared = true;
+      const indexOf = this._listeners.indexOf(cbObj);
+      if (indexOf >= 0) {
+        this._listeners.splice(indexOf, 1);
+      }
+    };
+
+    const cbObj = { trigger: cb,
+                    complete: unlisten,
+                    hasBeenCleared: false };
+    this._listeners.push(cbObj);
+
+    if (options?.emitCurrentValue === true) {
+      cb(this._value, unlisten);
+    }
+
+    if (this._isFinished || cbObj.hasBeenCleared) {
+      unlisten();
+      return ;
+    }
+    if (options?.clearSignal === undefined) {
+      return;
+    }
+    options.clearSignal.register(unlisten);
+  }
 
   /**
    * Variant of `onUpdate` which will only call the callback once, once the
@@ -117,22 +239,22 @@ export interface ISharedReference<T> {
    * ```
    * @param {Function} cb - Callback to be called each time the reference is
    * updated. Takes the new value in argument.
-   * @param {Object} [options]
-   * @param {Object} [options.clearSignal] - Allows to provide a
+   * @param {Object | undefined} [options]
+   * @param {Object | undefined} [options.clearSignal] - Allows to provide a
    * CancellationSignal which will unregister the callback when it emits.
    */
-  waitUntilDefined(
+  public waitUntilDefined(
     cb : (val : Exclude<T, undefined>) => void,
     options? : { clearSignal?: CancellationSignal | undefined } |
-               undefined,
-  ) : void;
-
-  /**
-   * Indicate that no new values will be emitted.
-   * Allows to automatically close all listeners listening to this
-   * `ISharedReference`.
-   */
-  finish() : void;
+               undefined
+  ) : void {
+    this.onUpdate((val : T, stopListening) => {
+      if (val !== undefined) {
+        stopListening();
+        cb(this._value as Exclude<T, undefined>);
+      }
+    }, { clearSignal: options?.clearSignal, emitCurrentValue: true });
+  }
 
   /**
    * Allows to register a callback for when the Shared Reference is "finished".
@@ -142,23 +264,82 @@ export interface ISharedReference<T> {
    * prefixed by `_`.
    * @param {Function} cb - Callback to be called once the reference is
    * finished.
-   * @param {Object} cancelSignal - Allows to provide a CancellationSignal which
-   * will unregister the callback when it emits.
+   * @param {Object} onFinishCancelSignal - Allows to provide a
+   * CancellationSignal which will unregister the callback when it emits.
    */
-  _onFinished(cb: () => void, cancelSignal: CancellationSignal) : () => void;
+  public _onFinished(
+    cb: () => void,
+    onFinishCancelSignal: CancellationSignal
+  ) : () => void {
+    if (onFinishCancelSignal.isCancelled()) {
+      return noop;
+    }
+    const cleanUp = (): void => {
+      const indexOf = arrayFindIndex(this._onFinishCbs, (x) => x.trigger === trigger);
+      if (indexOf >= 0) {
+        this._onFinishCbs[indexOf].hasBeenCleared = true;
+        this._onFinishCbs.splice(indexOf, 1);
+      }
+    };
+    const trigger = () => {
+      cleanUp();
+      cb();
+    };
+    const deregisterCancellation = onFinishCancelSignal.register(cleanUp);
+    this._onFinishCbs.push({ trigger, hasBeenCleared: false });
+    return deregisterCancellation;
+
+  }
+
+  /**
+   * Indicate that no new values will be emitted.
+   * Allows to automatically free all listeners linked to this reference.
+   */
+  public finish() {
+    if (this._deregisterCancellation !== undefined) {
+      this._deregisterCancellation();
+    }
+    this._isFinished = true;
+    const clonedCbs = this._listeners.slice();
+    for (const cbObj of clonedCbs) {
+      try {
+        if (!cbObj.hasBeenCleared) {
+          cbObj.complete();
+          cbObj.hasBeenCleared = true;
+        }
+      } catch (_) {
+        /* nothing */
+      }
+    }
+    this._listeners.length = 0;
+    if (this._onFinishCbs.length > 0) {
+      const clonedFinishedCbs = this._onFinishCbs.slice();
+      for (const cbObj of clonedFinishedCbs) {
+        try {
+          if (!cbObj.hasBeenCleared) {
+            cbObj.trigger();
+            cbObj.hasBeenCleared = true;
+          }
+        } catch (_) {
+          /* nothing */
+        }
+      }
+      this._onFinishCbs.length = 0;
+    }
+  }
 }
 
 /**
- * An `ISharedReference` which can only be read and not updated.
+ * A `SharedReference` which can only be read and not updated.
  *
- * Because an `ISharedReference` is structurally compatible to a
+ * Because a `SharedReference` is structurally compatible to a
  * `IReadOnlySharedReference`, and because of TypeScript variance rules, it can
  * be upcasted into a `IReadOnlySharedReference` at any time to make it clear in
  * the code that some logic is not supposed to update the referenced value.
  *
  * @example
  * ```ts
- * const myReference : ISharedReference<number> = createSharedReference(4);
+ * const myReference : SharedReference<number> = new SharedReference(4);
  *
  * function shouldOnlyReadIt(roRef : IReadOnlySharedReference<number>) {
  *   console.log("current value:", roRef.getValue());
@@ -171,265 +352,16 @@ export interface ISharedReference<T> {
  * ```
  */
 export type IReadOnlySharedReference<T> =
-  Pick<ISharedReference<T>,
+  Pick<SharedReference<T>,
        "getValue" |
        "onUpdate" |
        "waitUntilDefined" |
        "_onFinished">;
 
 /**
- * Create an `ISharedReference` object encapsulating the mutable `initialValue`
- * value of type T.
- *
- * @see ISharedReference
- * @param {*} initialValue
- * @param {Object|undefined} [cancelSignal] - If set, the created shared
- * reference will be automatically "finished" once that signal emits.
- * Finished references won't be able to update their value anymore, and will
- * also automatically have their listeners (callbacks linked to value change)
- * removed - as they cannot be triggered anymore, thus providing a security
- * against memory leaks.
- * @returns {Object}
- */
-export default function createSharedReference<T>(
-  initialValue : T,
-  cancelSignal? : CancellationSignal
-) : ISharedReference<T> {
-  /** Current value referenced by this `ISharedReference`. */
-  let value = initialValue;
-
-  /**
-   * Attributes each linked to a single registered callbacks which listen to the
-   * referenced value's updates.
-   *
-   * Contains the following properties:
-   *   - `trigger`: Function which will be called with the new reference's value
-   *     once it changes
-   *   - `complete`: Allows to clean-up the listener, will be called once the
-   *     reference is finished.
-   *   - `hasBeenCleared`: becomes `true` when the reference is
-   *     removed from the `cbs` array.
-   *     Adding this property allows to detect when a previously-added
-   *     listener has since been removed e.g. as a side-effect during a
-   *     function call.
-   *   - `complete`: Callback to call when the current Reference is "finished".
-   */
-  const cbs : Array<{ trigger : (a: T, stopListening: () => void) => void;
-                      complete : () => void;
-                      hasBeenCleared : boolean; }> = [];
-
-  let isFinished = false;
-
-  const onFinishCbs : Array<{ trigger : () => void;
-                              hasBeenCleared : boolean; }> = [];
-
-  if (cancelSignal !== undefined) {
-    cancelSignal.register(finish);
-  }
-
-  return {
-    /**
-     * Returns the current value of this shared reference.
-     * @returns {*}
-     */
-    getValue() : T {
-      return value;
-    },
-
-    /**
-     * Update the value of this shared reference.
-     * @param {*} newVal
-     */
-    setValue(newVal : T) : void {
-      if (isFinished) {
-        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
-          /* eslint-disable-next-line no-console */
-          console.error("Finished shared references cannot be updated");
-        }
-        return;
-      }
-      value = newVal;
-
-      if (cbs.length === 0) {
-        return;
-      }
-      const clonedCbs = cbs.slice();
-      for (const cbObj of clonedCbs) {
-        try {
-          if (!cbObj.hasBeenCleared) {
-            cbObj.trigger(newVal, cbObj.complete);
-          }
-        } catch (_) {
-          /* nothing */
-        }
-      }
-    },
-
-    /**
-     * Update the value of this shared reference only if it changed.
-     * @param {*} newVal
-     */
-    setValueIfChanged(newVal : T) : void {
-      if (newVal !== value) {
-        this.setValue(newVal);
-      }
-    },
-
-    /**
-     * Allows to register a callback to be called each time the value inside the
-     * reference is updated.
-     * @param {Function} cb - Callback to be called each time the reference is
-     * updated. Takes as first argument its new value and in second argument a
-     * callback allowing to unregister the callback.
-     * @param {Object|undefined} [options]
-     * @param {Object|undefined} [options.clearSignal] - Allows to provide a
-     * CancellationSignal which will unregister the callback when it emits.
-     * @param {boolean|undefined} [options.emitCurrentValue] - If `true`, the
-     * callback will also be immediately called with the current value.
-     */
-    onUpdate(
-      cb : (val : T, stopListening : () => void) => void,
-      options? : {
-        clearSignal?: CancellationSignal | undefined;
-        emitCurrentValue?: boolean | undefined;
-      } | undefined
-    ) : void {
-      const cbObj = { trigger: cb,
-                      complete: unlisten,
-                      hasBeenCleared: false };
-      cbs.push(cbObj);
-
-      if (options?.emitCurrentValue === true) {
-        cb(value, unlisten);
-      }
-
-      if (isFinished || cbObj.hasBeenCleared) {
-        unlisten();
-        return ;
-      }
-      if (options?.clearSignal === undefined) {
-        return;
-      }
-      options.clearSignal.register(unlisten);
-
-      function unlisten() : void {
-        if (options?.clearSignal !== undefined) {
-          options.clearSignal.deregister(unlisten);
-        }
-        if (cbObj.hasBeenCleared) {
-          return;
-        }
-        cbObj.hasBeenCleared = true;
-        const indexOf = cbs.indexOf(cbObj);
-        if (indexOf >= 0) {
-          cbs.splice(indexOf, 1);
-        }
-      }
-    },
-
-    /**
-     * Variant of `onUpdate` which will only call the callback once, once the
-     * value inside the reference is different from `undefined`.
-     * The callback is called synchronously if the value already isn't set to
-     * `undefined`.
-     *
-     * This method can be used as a lighter weight alternative to `onUpdate`
-     * when just waiting that the stored value becomes defined.
-     * @param {Function} cb - Callback to be called each time the reference is
-     * updated. Takes the new value in argument.
-     * @param {Object} [options]
-     * @param {Object} [options.clearSignal] - Allows to provide a
-     * CancellationSignal which will unregister the callback when it emits.
-     */
-    waitUntilDefined(
-      cb : (val : Exclude<T, undefined>) => void,
-      options? : { clearSignal?: CancellationSignal | undefined } |
-                 undefined
-    ) : void {
-      this.onUpdate((val : T, stopListening) => {
-        if (val !== undefined) {
-          stopListening();
-          cb(value as Exclude<T, undefined>);
-        }
-      }, { clearSignal: options?.clearSignal, emitCurrentValue: true });
-    },
-
-    /**
-     * Allows to register a callback for when the Shared Reference is "finished".
-     *
-     * This function is mostly there for implementing operators on the shared
-     * reference and isn't meant to be used by regular code, hence it being
-     * prefixed by `_`.
-     * @param {Function} cb - Callback to be called once the reference is
-     * finished.
-     * @param {Object} onFinishCancelSignal - Allows to provide a
-     * CancellationSignal which will unregister the callback when it emits.
-     */
-    _onFinished(cb: () => void, onFinishCancelSignal: CancellationSignal) : () => void {
-      if (onFinishCancelSignal.isCancelled()) {
-        return noop;
-      }
-      const trigger = () => {
-        cleanUp();
-        cb();
-      };
-      const deregisterCancellation = onFinishCancelSignal.register(cleanUp);
-      onFinishCbs.push({ trigger, hasBeenCleared: false });
-      return deregisterCancellation;
-
-      function cleanUp() {
-        const indexOf = arrayFindIndex(onFinishCbs, (x) => x.trigger === trigger);
-        if (indexOf >= 0) {
-          onFinishCbs[indexOf].hasBeenCleared = true;
-          onFinishCbs.splice(indexOf, 1);
-        }
-      }
-    },
-
-    /**
-     * Indicate that no new values will be emitted.
-     * Allows to automatically free all listeners linked to this reference.
-     */
-    finish,
-  };
-  function finish() {
-    if (cancelSignal !== undefined) {
-      cancelSignal.deregister(finish);
-    }
-    isFinished = true;
-    const clonedCbs = cbs.slice();
-    for (const cbObj of clonedCbs) {
-      try {
-        if (!cbObj.hasBeenCleared) {
-          cbObj.complete();
-          cbObj.hasBeenCleared = true;
-        }
-      } catch (_) {
-        /* nothing */
-      }
-    }
-    cbs.length = 0;
-    if (onFinishCbs.length > 0) {
-      const clonedFinishedCbs = onFinishCbs.slice();
-      for (const cbObj of clonedFinishedCbs) {
-        try {
-          if (!cbObj.hasBeenCleared) {
-            cbObj.trigger();
-            cbObj.hasBeenCleared = true;
-          }
-        } catch (_) {
-          /* nothing */
-        }
-      }
-      onFinishCbs.length = 0;
-    }
-  }
-}
-
-/**
- * Create a new `ISharedReference` based on another one by mapping over its
+ * Create a new `SharedReference` based on another one by mapping over its
  * referenced value each time it is updated and finishing once it finishes.
- * @param {Object} originalRef - The Original `ISharedReference` you wish to map
+ * @param {Object} originalRef - The Original `SharedReference` you wish to map
  * over.
  * @param {Function} mappingFn - The mapping function which will receives
  * `originalRef`'s value and outputs this new reference's value.
@@ -442,8 +374,8 @@ export function createMappedReference<T, U>(
   mappingFn : (x : T) => U,
   cancellationSignal : CancellationSignal
 ) : IReadOnlySharedReference<U> {
-  const newRef = createSharedReference(mappingFn(originalRef.getValue()),
-                                       cancellationSignal);
+  const newRef = new SharedReference(mappingFn(originalRef.getValue()),
+                                     cancellationSignal);
   originalRef.onUpdate(function mapOriginalReference(x) {
     newRef.setValue(mappingFn(x));
   }, { clearSignal: cancellationSignal });
@@ -455,4 +387,4 @@ export function createMappedReference<T, U>(
   return newRef;
 }
 
-export { createSharedReference };
+export default SharedReference;

@@ -27,7 +27,7 @@ import config from "../../../config";
 import log from "../../../log";
 import { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import { createSharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
 import TaskCanceller, {
   CancellationError,
   CancellationSignal,
@@ -116,7 +116,7 @@ export default function RepresentationStream<TSegmentDataType>(
   };
 
   /** Emit the last scheduled downloading queue for segments. */
-  const lastSegmentQueue = createSharedReference<IDownloadQueueItem>({
+  const lastSegmentQueue = new SharedReference<IDownloadQueueItem>({
     initSegment: null,
     segmentQueue: [],
   }, segmentsLoadingCanceller.signal);
