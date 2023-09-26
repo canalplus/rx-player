@@ -38,6 +38,7 @@ import arrayIncludes from "../../../utils/array_includes";
 import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import getTimestamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import {
   CancellationError,
@@ -179,7 +180,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
           lifecycleCallbacks.onProgress?.({ duration: info.duration,
                                             size: info.size,
                                             totalSize: info.totalSize,
-                                            timestamp: performance.now(),
+                                            timestamp: getTimestamp(),
                                             id: requestId });
         }
       },
@@ -205,7 +206,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     }
 
     log.debug("SF: Beginning request", segmentIdString);
-    lifecycleCallbacks.onRequestBegin?.({ requestTimestamp: performance.now(),
+    lifecycleCallbacks.onRequestBegin?.({ requestTimestamp: getTimestamp(),
                                           id: requestId,
                                           content });
 
