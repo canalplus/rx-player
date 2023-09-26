@@ -18,6 +18,7 @@ import config from "../../../config";
 import log from "../../../log";
 import Manifest from "../../../manifest";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 
 /**
  * All possible initial time options that can be set.
@@ -134,7 +135,8 @@ export default function getInitialTime(
       const ast = manifest.availabilityStartTime === undefined ?
         0 :
         manifest.availabilityStartTime;
-      const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
+      const clockRelativeLiveTime =
+        (getMonotonicTimeStamp() + clockOffset) / 1000 - ast;
       liveTime = Math.min(maximumPosition,
                           clockRelativeLiveTime);
     }

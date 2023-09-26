@@ -23,6 +23,7 @@ import {
   itobe4,
 } from "../../../utils/byte_parsing";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
@@ -618,7 +619,7 @@ function createSmoothStreamingParser(
       maximumTimeData = { isLinear: true,
                           maximumSafePosition,
                           livePosition,
-                          time: performance.now() };
+                          time: getMonotonicTimeStamp() };
       timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
       minimumTime = safeMinimumTime ?? 0;
@@ -628,7 +629,7 @@ function createSmoothStreamingParser(
       maximumTimeData = { isLinear: false,
                           maximumSafePosition: maximumTime,
                           livePosition: undefined,
-                          time: performance.now() };
+                          time: getMonotonicTimeStamp() };
     }
 
     const periodStart = isLive ? 0 :

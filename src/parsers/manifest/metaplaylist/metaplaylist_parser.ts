@@ -20,6 +20,7 @@ import Manifest, {
 } from "../../../manifest";
 import { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import {
   IParsedAdaptation,
@@ -300,7 +301,7 @@ function createManifest(
     periods.push(...manifestPeriods);
   }
 
-  const time = performance.now();
+  const time = getMonotonicTimeStamp();
   const isLastPeriodKnown = !isDynamic ||
                             mplData.pollInterval === undefined &&
                             (manifests.length <= 0 ||
