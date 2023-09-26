@@ -22,6 +22,7 @@ import {
 } from "../../../manifest";
 import { IPlayerError } from "../../../public_types";
 import assert from "../../../utils/assert";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import {
   checkDiscontinuity,
   getIndexSegmentEnd,
@@ -159,9 +160,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   /**
    * Value only calculated for live contents.
    *
-   * Calculates the difference, in timescale, between the current time (as
-   * calculated via performance.now()) and the time of the last segment known
-   * to have been generated on the server-side.
+   * Calculates the difference, in timescale, between the monotonically-raising
+   * timestamp used by the RxPlayer and the time of the last segment known to
+   * have been generated on the server-side.
    * Useful to know if a segment present in the timeline has actually been
    * generated on the server-side
    */
@@ -265,7 +266,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
     const maxPosition = this._scaledLiveGap === undefined ?
       undefined :
-      ((performance.now() / 1000) * timescale) - this._scaledLiveGap;
+      ((getMonotonicTimeStamp() / 1000) * timescale) - this._scaledLiveGap;
 
     for (let i = 0; i < timelineLength; i++) {
       const segmentRange = timeline[i];
@@ -383,7 +384,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
     for (let i = timeline.length - 1; i >= 0; i--) {
       const timelineElt = timeline[i];
-      const timescaledNow = (performance.now() / 1000) * timescale;
+      const timescaledNow = (getMonotonicTimeStamp() / 1000) * timescale;
       const { start, duration, repeatCount } = timelineElt;
       for (let j = repeatCount; j >= 0; j--) {
         const end = start + (duration * (j + 1));
