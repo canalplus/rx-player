@@ -95,7 +95,7 @@ export default class MediaError extends Error {
     this.type = ErrorTypes.MEDIA_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, reason);
+    this.message = errorMessage(this.code, reason);
     this.fatal = false;
     const adaptations = context?.adaptations;
     if (adaptations !== undefined && adaptations.length > 0) {

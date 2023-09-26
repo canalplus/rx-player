@@ -18,6 +18,6 @@ import errorMessage from "../error_message";
 
 describe("Errors - generateErrorMessage", () => {
   it("should format a readable error message", () => {
-    expect(errorMessage("foo", "bar", "baz")).toBe("foo (bar) baz");
+    expect(errorMessage("bar", "baz")).toBe("bar: baz");
   });
 });
