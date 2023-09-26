@@ -21,6 +21,7 @@
  * This is the class used from a regular build.
  */
 
+import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import Player from "./core/api";
 import initializeFeatures from "./features/initialize_features";
 import logger from "./log";
@@ -28,7 +29,7 @@ import logger from "./log";
 // set initial features according to environment variables
 initializeFeatures();
 
-if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
+if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG");
 } else if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);

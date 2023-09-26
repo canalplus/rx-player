@@ -21,6 +21,7 @@
  * import only features that is needed.
  */
 
+import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import Player from "./core/api";
 import {
   addFeatures,
@@ -28,7 +29,7 @@ import {
 } from "./features";
 import logger from "./log";
 
-if (typeof __RX_PLAYER_DEBUG_MODE__ === "boolean" && __RX_PLAYER_DEBUG_MODE__) {
+if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG");
 } else if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
