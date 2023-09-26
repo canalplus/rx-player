@@ -30,6 +30,7 @@ import {
 } from "../../../transports";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
@@ -282,7 +283,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     parserOptions : IManifestFetcherParserOptions,
     requestUrl : string | undefined
   ) : Promise<IManifestFetcherParsedResult> {
-    const parsingTimeStart = performance.now();
+    const parsingTimeStart = getMonotonicTimeStamp();
     const cancelSignal = this._canceller.signal;
     const trigger = this.trigger.bind(this);
     const { sendingTime, receivedTime } = loaded;
@@ -361,7 +362,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       warnings: IPlayerError[]
     ) : IManifestFetcherParsedResult {
       onWarnings(warnings);
-      const parsingTime = performance.now() - parsingTimeStart;
+      const parsingTime = getMonotonicTimeStamp() - parsingTimeStart;
       log.info(`MF: Manifest parsed in ${parsingTime}ms`);
 
       return { manifest,
@@ -435,7 +436,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     /** Time elapsed since the beginning of the Manifest request, in milliseconds. */
     const timeSinceRequest = sendingTime === undefined ?
       0 :
-      performance.now() - sendingTime;
+      getMonotonicTimeStamp() - sendingTime;
 
     /** Minimum update delay we should not go below, in milliseconds. */
     const minInterval = Math.max(this._settings.minimumManifestUpdateInterval -
@@ -458,7 +459,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       // (to avoid asking for it too often).
       const timeSinceLastRefresh = sendingTime === undefined ?
                                      0 :
-                                     performance.now() - sendingTime;
+                                     getMonotonicTimeStamp() - sendingTime;
       const _minInterval = Math.max(this._settings.minimumManifestUpdateInterval -
                                       timeSinceLastRefresh,
                                     0);
@@ -598,7 +599,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         const { manifest: newManifest,
                 sendingTime: newSendingTime,
                 parsingTime } = res;
-        const updateTimeStart = performance.now();
+        const updateTimeStart = getMonotonicTimeStamp();
 
         if (fullRefresh) {
           manifest.replace(newManifest);
@@ -615,8 +616,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
             // The value allows to set a delay relatively to the last Manifest refresh
             // (to avoid asking for it too often).
             const timeSinceLastRefresh = newSendingTime === undefined ?
-                                           0 :
-                                           performance.now() - newSendingTime;
+              0 :
+              getMonotonicTimeStamp() - newSendingTime;
             const _minInterval = Math.max(this._settings.minimumManifestUpdateInterval -
                                             timeSinceLastRefresh,
                                           0);
@@ -635,7 +636,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
             return;
           }
         }
-        const updatingTime = performance.now() - updateTimeStart;
+        const updatingTime = getMonotonicTimeStamp() - updateTimeStart;
         this._recursivelyRefreshManifest(manifest, { sendingTime: newSendingTime,
                                                      parsingTime,
                                                      updatingTime });
@@ -670,11 +671,11 @@ interface IManifestFetcherParsedResult {
   /** The resulting Manifest */
   manifest : Manifest;
   /**
-   * The time (`performance.now()`) at which the request was started (at which
-   * the JavaScript call was done).
+   * Monotonically-raising timestamp (common one used by the RxPlayer's logic)
+   * at which the request was started (at which the JavaScript call was done).
    */
   sendingTime? : number | undefined;
-  /** The time (`performance.now()`) at which the request was fully received. */
+  /** Monotonically-raising timestamp at which the request was fully received. */
   receivedTime? : number | undefined;
   /* The time taken to parse the Manifest through the corresponding parse function. */
   parsingTime? : number | undefined;
@@ -689,8 +690,8 @@ interface IManifestFetcherResponse {
 
 interface IManifestFetcherParserOptions {
   /**
-   * If set, offset to add to `performance.now()` to obtain the current
-   * server's time.
+   * If set, offset to add to the monotonically-raising timestamp used by the
+   * RxPlayer to obtain the current server's time.
    */
   externalClockOffset? : number | undefined;
   /** The previous value of the Manifest (when updating). */

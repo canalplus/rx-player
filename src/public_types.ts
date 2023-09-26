@@ -165,10 +165,7 @@ export interface ILoadVideoOptions {
 export interface IServerSyncInfos {
   /** The server timestamp at a given time. */
   serverTimestamp : number;
-  /**
-   * The client monotonic clock (performance.now) at which `serverTimestamp`
-   * was valid.
-   */
+  /** The client's monotonic clock at which `serverTimestamp` was valid. */
   clientTime : number;
 }
 

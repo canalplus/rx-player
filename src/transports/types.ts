@@ -270,8 +270,8 @@ export type ISegmentParser<
 
 export interface IManifestParserOptions {
   /**
-   * If set, offset to add to `performance.now()` to obtain the current
-   * server's time.
+   * If set, offset to add to the used monotonically-raising timestamp (common
+   * to the RxPlayer's code), to obtain the current server's time.
    */
   externalClockOffset : number | undefined;
   /** Original URL used for the full version of the Manifest. */
@@ -578,13 +578,15 @@ export interface IChunkCompleteInformation {
    */
   url? : string | undefined;
   /**
-   * Time at which the request began in terms of `performance.now`.
+   * Time at which the request began in terms of the monotonically-raising
+   * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
   sendingTime? : number | undefined;
   /**
-   * Time at which the request ended in terms of `performance.now`.
+   * Time at which the request ended in terms of the monotonically-raising
+   * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
@@ -776,13 +778,15 @@ export interface IRequestedData<T> {
    */
   url? : string | undefined;
   /**
-   * Time at which the request began in terms of `performance.now`.
+   * Time at which the request began in terms of the monotonically-raising
+   * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
   sendingTime? : number | undefined;
   /**
-   * Time at which the request ended in terms of `performance.now`.
+   * Time at which the request ended in terms of the monotonically-raising
+   * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
