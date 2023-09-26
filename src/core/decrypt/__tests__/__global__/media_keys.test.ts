@@ -71,7 +71,7 @@ describe("core - decrypt - global tests - media key system access", () => {
                                                         ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual(
-      "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
+      "CREATE_MEDIA_KEYS_ERROR: No non no"
     );
     expect(error.name).toEqual("EncryptedMediaError");
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
@@ -100,7 +100,7 @@ describe("core - decrypt - global tests - media key system access", () => {
                                                         ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual(
-      "EncryptedMediaError (CREATE_MEDIA_KEYS_ERROR) No non no"
+      "CREATE_MEDIA_KEYS_ERROR: No non no"
     );
     expect(error.name).toEqual("EncryptedMediaError");
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");

@@ -107,8 +107,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     expect((err as { type? : string }).type).toEqual("MEDIA_ERROR");
     expect((err as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(err.message)
-      .toEqual("MediaError (MANIFEST_UPDATE_ERROR) Cannot perform " +
-               "partial update: not enough data");
+      .toEqual("MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data");
     expect(oldTimeline1).toEqual(oldTimeline1Cloned);
     expect(mockLogWarn).not.toHaveBeenCalled();
   });
