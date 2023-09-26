@@ -25,7 +25,7 @@ describe("errors - MediaError", () => {
     expect(mediaError.type).toBe("MEDIA_ERROR");
     expect(mediaError.code).toBe("MEDIA_TIME_BEFORE_MANIFEST");
     expect(mediaError.fatal).toBe(false);
-    expect(mediaError.message).toBe("MediaError (MEDIA_TIME_BEFORE_MANIFEST) test");
+    expect(mediaError.message).toBe("MEDIA_TIME_BEFORE_MANIFEST: test");
   });
 
   it("should be able to set it as fatal", () => {
@@ -37,7 +37,7 @@ describe("errors - MediaError", () => {
     expect(mediaError.type).toBe("MEDIA_ERROR");
     expect(mediaError.code).toBe("MEDIA_TIME_AFTER_MANIFEST");
     expect(mediaError.fatal).toBe(true);
-    expect(mediaError.message).toBe("MediaError (MEDIA_TIME_AFTER_MANIFEST) test");
+    expect(mediaError.message).toBe("MEDIA_TIME_AFTER_MANIFEST: test");
   });
 
   it("should filter in a valid error code", () => {
@@ -50,6 +50,6 @@ describe("errors - MediaError", () => {
     expect(mediaError.type).toBe("MEDIA_ERROR");
     expect(mediaError.code).toBe("MEDIA_ERR_NETWORK");
     expect(mediaError.fatal).toBe(true);
-    expect(mediaError.message).toBe("MediaError (MEDIA_ERR_NETWORK) test");
+    expect(mediaError.message).toBe("MEDIA_ERR_NETWORK: test");
   });
 });
