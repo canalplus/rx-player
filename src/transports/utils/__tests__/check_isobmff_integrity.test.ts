@@ -72,7 +72,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
     expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
     expect((error as typeof OtherError).message)
-      .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `ftyp` box");
+      .toEqual("INTEGRITY_ERROR: Incomplete `ftyp` box");
   });
 
   it("should throw an other error if an init segment is missing a complete moov", () => {
@@ -95,7 +95,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
     expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
     expect((error as typeof OtherError).message)
-      .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moov` box");
+      .toEqual("INTEGRITY_ERROR: Incomplete `moov` box");
   });
 
   /* eslint-disable max-len */
@@ -119,7 +119,7 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
     expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
     expect((error as typeof OtherError).message)
-      .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `moof` box");
+      .toEqual("INTEGRITY_ERROR: Incomplete `moof` box");
   });
 
   /* eslint-disable max-len */
@@ -143,6 +143,6 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
     expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
     expect((error as typeof OtherError).message)
-      .toEqual("OtherError (INTEGRITY_ERROR) Incomplete `mdat` box");
+      .toEqual("INTEGRITY_ERROR: Incomplete `mdat` box");
   });
 });

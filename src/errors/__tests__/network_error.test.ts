@@ -29,7 +29,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(networkError.fatal).toBe(false);
     expect(networkError.message)
-      .toBe("NetworkError (PIPELINE_LOAD_ERROR) The request timed out");
+      .toBe("PIPELINE_LOAD_ERROR: The request timed out");
   });
 
   it("should filter in a valid error code", () => {
@@ -44,7 +44,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(networkError.fatal).toBe(true);
     expect(networkError.message)
-      .toBe("NetworkError (PIPELINE_LOAD_ERROR) An HTTP status code " +
+      .toBe("PIPELINE_LOAD_ERROR: An HTTP status code " +
             "indicating failure was received: 403");
   });
 

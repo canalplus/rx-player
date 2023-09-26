@@ -16,15 +16,10 @@
 
 /**
  * Generate a normalized error message.
- * @param {string} name
  * @param {string} code
  * @param {Error|string|Event|null} [reason]
  * @returns {string}
  */
-export default function errorMessage(
-  name : string,
-  code : string,
-  reason : string
-) : string {
-  return `${name} (${code}) ${reason}`;
+export default function errorMessage(code : string, reason : string) : string {
+  return `${code}: ${reason}`;
 }
