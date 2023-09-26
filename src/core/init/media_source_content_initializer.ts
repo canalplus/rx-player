@@ -445,13 +445,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       }
     }, { clearSignal: cancelSignal, emitCurrentValue: true });
 
-    const streamObserver = createStreamPlaybackObserver(manifest,
-                                                        playbackObserver,
+    const streamObserver = createStreamPlaybackObserver(playbackObserver,
                                                         { autoPlay,
+                                                          manifest,
                                                           initialPlayPerformed,
                                                           initialSeekPerformed,
                                                           speed,
-                                                          startTime: initialTime });
+                                                          startTime: initialTime },
+                                                        cancelSignal);
 
     const rebufferingController = this._createRebufferingController(playbackObserver,
                                                                     manifest,
