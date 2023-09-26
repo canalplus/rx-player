@@ -745,7 +745,7 @@ Behavior taken by the player when switching to either an audio or video track
 which has a codec "incompatible" with the previous one (for example going from
 avc, a.k.a h264 to hevc, a.k.a. h265).
 
-This switch can either after the user switches from one track to another or
+This switch comes either after the user switches from one track to another or
 after encountering a new Period in some transport technologies (concept existing
 for DASH, "local" and MetaPlaylist contents).
 
