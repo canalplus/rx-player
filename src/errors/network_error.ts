@@ -56,7 +56,7 @@ export default class NetworkError extends Error {
     this.errorType = baseError.type;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, baseError.message);
+    this.message = errorMessage(this.code, baseError.message);
     this.fatal = false;
   }
 
