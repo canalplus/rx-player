@@ -23,6 +23,7 @@ import Manifest, {
 } from "../../../manifest";
 import { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getNextRangeGap } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
@@ -67,9 +68,9 @@ export default class RebufferingController
   private _canceller : TaskCanceller;
 
   /**
-   * If set to something else than `null`, this is the DOMHighResTimestamp as
-   * outputed by `performance.now()` when playback begin to seem to not start
-   * despite having decipherable data in the buffer(s).
+   * If set to something else than `null`, this is the monotonically-raising
+   * timestamp when playback begin to seem to not start despite having
+   * decipherable data in the buffer(s).
    *
    * If enough time in that condition is spent, special considerations are
    * taken at which point `_currentFreezeTimestamp` is reset to `null`.
@@ -162,7 +163,7 @@ export default class RebufferingController
         lastSeekingPosition !== null && observation.position < lastSeekingPosition)
       {
         log.debug("Init: the device appeared to have seeked back by itself.");
-        const now = performance.now();
+        const now = getMonotonicTimeStamp();
         ignoredStallTimeStamp = now;
       }
 
@@ -175,7 +176,7 @@ export default class RebufferingController
       }
 
       if (freezing !== null) {
-        const now = performance.now();
+        const now = getMonotonicTimeStamp();
 
         const referenceTimestamp = prevFreezingState === null ?
           freezing.timestamp :
@@ -228,7 +229,7 @@ export default class RebufferingController
         rebuffering.reason;
 
       if (ignoredStallTimeStamp !== null) {
-        const now = performance.now();
+        const now = getMonotonicTimeStamp();
         if (now - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
           playbackRateUpdater.stopRebuffering();
           log.debug("Init: letting the device get out of a stall by itself");
@@ -402,6 +403,8 @@ export default class RebufferingController
   private _checkDecipherabilityFreeze(
     observation : IPlaybackObservation
   ): boolean {
+    // XXX TODO allow this in in-worker configuration
+
     const { readyState,
             rebuffering,
             freezing } = observation;
@@ -418,7 +421,7 @@ export default class RebufferingController
       return false;
     }
 
-    const now = performance.now();
+    const now = getMonotonicTimeStamp();
     if (this._currentFreezeTimestamp === null) {
       this._currentFreezeTimestamp = now;
     }
@@ -429,7 +432,7 @@ export default class RebufferingController
 
     if (
       (rebufferingForTooLong || frozenForTooLong) &&
-      performance.now() - this._currentFreezeTimestamp > 4000
+      getMonotonicTimeStamp() - this._currentFreezeTimestamp > 4000
     ) {
       const statusAudio = this._segmentBuffersStore.getStatus("audio");
       const statusVideo = this._segmentBuffersStore.getStatus("video");

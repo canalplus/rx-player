@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
+
 /**
  * This class allows to easily calculate the first and last available positions
  * in a content at any time.
@@ -37,7 +39,10 @@
 export default class ManifestBoundsCalculator {
   /** Value of MPD@timeShiftBufferDepth. */
   private _timeShiftBufferDepth : number | null;
-  /** Value of `performance.now` at the time `lastPosition` was calculated. */
+  /**
+   * Monotonically-raising timestamp (the one used by the RxPlayer) when
+   * `lastPosition` was calculated.
+   */
   private _positionTime : number | undefined;
   /** Last position calculated at a given moment (itself indicated by `_positionTime`. */
   private _lastPosition : number | undefined;
@@ -58,14 +63,15 @@ export default class ManifestBoundsCalculator {
   }
 
   /**
-   * Set the last position and the position time (the value of `performance.now()`
-   * at the time that position was true converted into seconds).
+   * Set the last position and the position time (the value of the RxPlayer's
+   * monotonically-raising timestamp at the time that position was true
+   * converted into seconds).
    *
    * @example
    * Example if you trust `Date.now()` to give you a reliable offset:
    * ```js
    * const lastPosition = Date.now();
-   * const positionTime = performance.now() / 1000;
+   * const positionTime = getMonotonicTimeStamp() / 1000;
    * manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
    * ```
    *
@@ -119,7 +125,7 @@ export default class ManifestBoundsCalculator {
         this._lastPosition != null)
     {
       return Math.max((this._lastPosition - this._positionTime) +
-                        (performance.now() / 1000),
+                        (getMonotonicTimeStamp() / 1000),
                       0);
     }
     return this._lastPosition;

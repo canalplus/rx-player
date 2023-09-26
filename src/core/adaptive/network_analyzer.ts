@@ -18,6 +18,7 @@ import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import {
   IRepresentationEstimatorPlaybackObservation,
 } from "./adaptive_representation_selector";
@@ -161,7 +162,7 @@ function estimateStarvationModeBitrate(
   }
 
   const concernedRequest = concernedRequests[0];
-  const now = performance.now();
+  const now = getMonotonicTimeStamp();
 
   let minimumRequestTime = concernedRequest.content.segment.duration * 1.5;
   minimumRequestTime = Math.min(minimumRequestTime, 3000);
@@ -245,7 +246,7 @@ function shouldDirectlySwitchToLowBitrate(
     return true;
   }
 
-  const now = performance.now();
+  const now = getMonotonicTimeStamp();
   const lastProgressEvent = nextRequest.progress.length > 0 ?
     nextRequest.progress[nextRequest.progress.length - 1] :
     undefined;

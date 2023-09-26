@@ -17,6 +17,7 @@
 import { RequestError } from "../../errors";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
+import getMonotonicTimeStamp from "../monotonic_timestamp";
 import {
   CancellationError,
   CancellationSignal,
@@ -111,7 +112,7 @@ export default function request<T>(
       }
     }
 
-    const sendingTime = performance.now();
+    const sendingTime = getMonotonicTimeStamp();
 
     // Handle request cancellation
     let deregisterCancellationListener : (() => void) | null = null;
@@ -142,7 +143,7 @@ export default function request<T>(
 
     if (onProgress !== undefined) {
       xhr.onprogress = function onXHRProgress(event) {
-        const currentTime = performance.now();
+        const currentTime = getMonotonicTimeStamp();
         onProgress({ url,
                      duration: currentTime - sendingTime,
                      sendingTime,
@@ -156,7 +157,7 @@ export default function request<T>(
       if (xhr.readyState === 4) {
         clearCancellingProcess();
         if (xhr.status >= 200 && xhr.status < 300) {
-          const receivedTime = performance.now();
+          const receivedTime = getMonotonicTimeStamp();
           const totalSize = xhr.response instanceof
                               ArrayBuffer ? xhr.response.byteLength :
                                             event.total;
