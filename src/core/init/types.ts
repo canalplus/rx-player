@@ -16,7 +16,6 @@
 
 import Manifest, {
   Adaptation,
-  ISegment,
   Period,
   Representation,
 } from "../../manifest";
@@ -218,17 +217,6 @@ export interface IContentInitializerEvents {
      */
     representation : Representation |
                      null;
-  };
-  /** Emitted after a new segment has been succesfully added to the SegmentBuffer */
-  addedSegment: {
-    /** Context about the content that has been added. */
-    content: { period : Period;
-               adaptation : Adaptation;
-               representation : Representation; };
-    /** The concerned Segment. */
-    segment : ISegment;
-    /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
-    buffered : TimeRanges;
   };
   /**
    * Event emitted when one or multiple inband events (i.e. events inside a
