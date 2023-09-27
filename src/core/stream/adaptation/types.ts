@@ -23,7 +23,7 @@ import {
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IAdaptationStreamCallbacks
-  extends Omit<IRepresentationStreamCallbacks, "terminating">
+  extends Omit<IRepresentationStreamCallbacks, "terminating" | "addedSegment">
 {
   /** Called as new bitrate estimates are done. */
   bitrateEstimateChange(payload : IBitrateEstimateChangePayload) : void;
