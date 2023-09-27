@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import imageBuffer from "../../../core/segment_buffers/implementations/image";
 import bifParser from "../../../parsers/images/bif";
 import { IFeaturesObject } from "../../types";
 import addBIFParserFeature from "../bif_parser";
@@ -22,7 +23,8 @@ describe("Features list - BIF Parser", () => {
   it("should add the BIF Parser in the current features", () => {
     const featureObject = {} as unknown as IFeaturesObject;
     addBIFParserFeature(featureObject);
-    expect(featureObject).toEqual({ imageParser: bifParser });
+    expect(featureObject).toEqual({ imageParser: bifParser, imageBuffer });
     expect(featureObject.imageParser).toBe(bifParser);
+    expect(featureObject.imageBuffer).toBe(imageBuffer);
   });
 });
