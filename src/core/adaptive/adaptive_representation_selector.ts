@@ -23,7 +23,7 @@ import Manifest, {
   Representation,
 } from "../../manifest";
 import noop from "../../utils/noop";
-import { getLeftSizeOfRange } from "../../utils/ranges";
+import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
@@ -254,7 +254,7 @@ function getEstimateReference(
       }
       const { position, speed } = lastPlaybackObservation;
       const timeRanges = val.buffered;
-      const bufferGap = getLeftSizeOfRange(timeRanges, position.last);
+      const bufferGap = getLeftSizeOfBufferedTimeRange(timeRanges, position.last);
       const { representation } = val.content;
       const currentScore = scoreCalculator.getEstimate(representation);
       const currentBitrate = representation.bitrate;
