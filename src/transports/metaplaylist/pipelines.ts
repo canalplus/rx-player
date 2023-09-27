@@ -55,7 +55,7 @@ import generateManifestLoader from "./manifest_loader";
 
 /**
  * Get base - real - content from an offseted metaplaylist content.
- * @param {Object} segment
+ * @param {Object} mplContext
  * @returns {Object}
  */
 function getOriginalContext(
