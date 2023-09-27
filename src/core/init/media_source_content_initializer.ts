@@ -634,8 +634,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         bitrateEstimateChange: (value) =>
           self.trigger("bitrateEstimateChange", value),
 
-        addedSegment: (value) => self.trigger("addedSegment", value),
-
         needsMediaSourceReload: (payload) => {
           const lastObservation = streamObserver.getReference().getValue();
           const currentPosition = lastObservation.position.pending ??
