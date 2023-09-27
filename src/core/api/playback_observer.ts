@@ -19,7 +19,7 @@ import log from "../../log";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
-import { getRange } from "../../utils/ranges";
+import { getBufferedTimeRange } from "../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
@@ -667,7 +667,7 @@ function getMediaInfos(
     currentRange = undefined;
     bufferGap = undefined;
   } else {
-    currentRange = getRange(buffered, currentTime);
+    currentRange = getBufferedTimeRange(buffered, currentTime);
     bufferGap = currentRange !== null ? currentRange.end - currentTime :
                                         // TODO null/0 would probably be
                                         // more appropriate

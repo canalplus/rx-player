@@ -24,7 +24,7 @@ import Manifest, {
 import { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { getNextRangeGap } from "../../../utils/ranges";
+import { getNextBufferedTimeRangeGap } from "../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
 import {
@@ -284,7 +284,7 @@ export default class RebufferingController
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
-      const nextBufferRangeGap = getNextRangeGap(buffered, freezePosition);
+      const nextBufferRangeGap = getNextBufferedTimeRangeGap(buffered, freezePosition);
       if (
         this._speed.getValue() > 0 &&
         nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
