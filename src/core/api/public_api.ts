@@ -89,7 +89,7 @@ import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Logger from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
-import { getLeftSizeOfRange } from "../../utils/ranges";
+import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
 import SharedReference, {
   createMappedReference,
   IReadOnlySharedReference,
@@ -1078,7 +1078,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("Disposed player");
     }
     const videoElement = this.videoElement;
-    const bufferGap = getLeftSizeOfRange(videoElement.buffered, videoElement.currentTime);
+    const bufferGap = getLeftSizeOfBufferedTimeRange(videoElement.buffered,
+                                                     videoElement.currentTime);
     if (bufferGap === Infinity) {
       return 0;
     }
