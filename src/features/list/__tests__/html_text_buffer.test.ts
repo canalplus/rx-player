@@ -15,15 +15,15 @@
  */
 
 // eslint-disable-next-line max-len
-import HtmlTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
+import HtmlTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import { IFeaturesObject } from "../../types";
-import addHtmlTextBuffer from "../native_text_buffer";
+import addHtmlTextBuffer from "../html_text_buffer";
 
-describe("Features list - native Text Buffer", () => {
-  it("should add an native Text Buffer in the current features", () => {
+describe("Features list - html Text Buffer", () => {
+  it("should add an html Text Buffer in the current features", () => {
     const featureObject = {} as unknown as IFeaturesObject;
     addHtmlTextBuffer(featureObject);
-    expect(featureObject).toEqual({ nativeTextTracksBuffer: HtmlTextSegmentBuffer });
-    expect(featureObject.nativeTextTracksBuffer).toBe(HtmlTextSegmentBuffer);
+    expect(featureObject).toEqual({ htmlTextTracksBuffer: HtmlTextSegmentBuffer });
+    expect(featureObject.htmlTextTracksBuffer).toBe(HtmlTextSegmentBuffer);
   });
 });
