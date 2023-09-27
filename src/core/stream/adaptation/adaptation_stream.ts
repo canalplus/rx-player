@@ -300,10 +300,6 @@ export default function AdaptationStream(
       },
       addedSegment(segmentInfo) {
         abrCallbacks.addedSegment(segmentInfo);
-        if (adapStreamCanceller.isUsed()) {
-          return;
-        }
-        callbacks.addedSegment(segmentInfo);
       },
       terminating() {
         if (repStreamTerminatingCanceller.isUsed()) {
