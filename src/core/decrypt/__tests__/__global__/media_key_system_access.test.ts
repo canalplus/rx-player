@@ -48,7 +48,7 @@ export function requestMediaKeySystemAccessNoMediaKeys(
 }
 
 const incompatibleMKSAErrorMessage =
-  "EncryptedMediaError (INCOMPATIBLE_KEYSYSTEMS) No key system compatible " +
+  "INCOMPATIBLE_KEYSYSTEMS: No key system compatible " +
   "with your wanted configuration has been found in the current browser.";
 
 /**
