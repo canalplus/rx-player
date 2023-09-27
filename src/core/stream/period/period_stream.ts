@@ -26,7 +26,7 @@ import {
   Period,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
-import { getLeftSizeOfRange } from "../../../utils/ranges";
+import { getLeftSizeOfBufferedTimeRange } from "../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -444,7 +444,8 @@ function createAdaptationStreamPlaybackObserver(
     ) : IAdaptationStreamPlaybackObservation {
       const baseObservation = observationRef.getValue();
       const buffered = segmentBuffer.getBufferedRanges();
-      const bufferGap = getLeftSizeOfRange(buffered, baseObservation.position.last);
+      const bufferGap = getLeftSizeOfBufferedTimeRange(buffered,
+                                                       baseObservation.position.last);
       return objectAssign({}, baseObservation, { bufferGap });
     }
 
