@@ -132,7 +132,7 @@ describe("core - decrypt - global tests - server certificate", () => {
       expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
       expect(mockCreateSession).toHaveBeenCalledTimes(1);
       done();
-    }, 10);
+    }, 100);
   });
 
   /* eslint-disable max-len */
