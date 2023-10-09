@@ -2387,6 +2387,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns the current position for live contents.
+   *
+   * Returns `null` if no content is loaded or if the current loaded content is
+   * not considered as a live content.
+   * Returns `undefined` if that live position is currently unknown.
+   * @returns {number}
+   */
+  getLivePosition() : number | undefined |null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    const { isDirectFile, manifest } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return undefined;
+    }
+    if (manifest?.isLive !== true) {
+      return null;
+    }
+    return manifest.getLivePosition();
+  }
+
+  /**
    * Get maximum seek-able position.
    * @returns {number}
    */
