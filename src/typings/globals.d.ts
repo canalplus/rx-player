@@ -78,3 +78,6 @@ declare const enum ENVIRONMENT_ENUM {
 declare const __LOGGER_LEVEL__ : {
   CURRENT_LEVEL : string;
 };
+
+// eslint-disable-next-line
+declare const require: (path: string) => any;

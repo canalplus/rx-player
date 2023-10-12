@@ -13,7 +13,7 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "types": ["node", "jest"],
+    "types": ["jest"],
     "moduleResolution": "node",
     "module": "es2015",
     "typeRoots": [
