@@ -19,48 +19,6 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-declare const __FEATURES__ : {
-  IS_DISABLED : 0;
-  IS_ENABLED : 1;
-
-  DASH : 0 | 1;
-  DIRECTFILE : 0 | 1;
-  EME : 0 | 1;
-  HTML_SAMI : 0 | 1;
-  HTML_SRT : 0 | 1;
-  HTML_TTML : 0 | 1;
-  HTML_VTT : 0 | 1;
-  LOCAL_MANIFEST : 0 | 1;
-  METAPLAYLIST : 0 | 1;
-  DEBUG_ELEMENT : 0 | 1;
-  NATIVE_SAMI : 0 | 1;
-  NATIVE_SRT : 0 | 1;
-  NATIVE_TTML : 0 | 1;
-  NATIVE_VTT : 0 | 1;
-  SMOOTH : 0 | 1;
-} | typeof FEATURES_ENUM;
-
-declare const enum FEATURES_ENUM {
-  IS_DISABLED,
-  IS_ENABLED,
-
-  DASH,
-  DIRECTFILE,
-  EME,
-  HTML_SAMI,
-  HTML_SRT,
-  HTML_TTML,
-  HTML_VTT,
-  LOCAL_MANIFEST,
-  METAPLAYLIST,
-  DEBUG_ELEMENT,
-  NATIVE_SAMI,
-  NATIVE_SRT,
-  NATIVE_TTML,
-  NATIVE_VTT,
-  SMOOTH,
-}
-
 declare const __ENVIRONMENT__ : {
   CURRENT_ENV : 0 | 1;
   DEV : 0;
@@ -76,6 +34,3 @@ declare const enum ENVIRONMENT_ENUM {
 declare const __LOGGER_LEVEL__ : {
   CURRENT_LEVEL : string;
 };
-
-// eslint-disable-next-line
-declare const require: (path: string) => any;
