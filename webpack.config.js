@@ -1,7 +1,7 @@
 /* eslint-env node */
 
 /**
- * This file exports a configuration used to generate our "legacy" builds in
+ * This file exports a configuration used to generate our "legacy" bundles in
  * dist/rx-player.js and dist/rx-player.min (depending on if the minify option
  * is set) by using Webpack.
  *
@@ -14,14 +14,14 @@ const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 /**
- * Generate the Webpack config used to generate the RxPlayer's legacy builds.
+ * Generate the Webpack config used to generate the RxPlayer's legacy bundles.
  * @param {Object} env - Arguments. When Webpack is called through the CLI,
  * those are created implicitely based on flags.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.production] - If `true`, the code will be compiled
  * in "production" mode, which contains between other things less runtime
  * assertions.
- * @param {boolean} [options.shouldReportSize] - If `true`, a bunle size report
+ * @param {boolean} [options.shouldReportSize] - If `true`, a bundle size report
  * will be generated after the build.
  * @returns {Object} - The Webpack configuration
  */
@@ -32,28 +32,6 @@ module.exports = (env) => {
 
   const plugins = [
     new webpack.DefinePlugin({
-      "__FEATURES__": {
-        IS_DISABLED: +(false), // === 0 (wrote this way to be explicit)
-        IS_ENABLED: +(true), // === 1 (wrote this way to be explicit)
-
-        // Each following feature is compared to IS_ENABLED or IS_DISABLED in
-        // code to check whether the feature is enabled or not.
-        SMOOTH: +(true),
-        DASH: +(true),
-        LOCAL_MANIFEST: +(false),
-        METAPLAYLIST: +(false),
-        DEBUG_ELEMENT: +(false),
-        DIRECTFILE: +(true),
-        NATIVE_TTML: +(true),
-        NATIVE_SAMI: +(true),
-        NATIVE_VTT: +(true),
-        NATIVE_SRT: +(true),
-        HTML_TTML: +(true),
-        HTML_SAMI: +(true),
-        HTML_VTT: +(true),
-        HTML_SRT: +(true),
-        EME: +(true),
-      },
       __ENVIRONMENT__: {
         PRODUCTION: 0,
         DEV: 1,
