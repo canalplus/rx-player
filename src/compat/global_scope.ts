@@ -1,6 +1,8 @@
 import isNode from "./is_node";
 import isWorker from "./is_worker";
 
+declare const global: typeof self;
+
 /**
  * The current environment's global object, written in such a way to maximize
  * compatibility.
