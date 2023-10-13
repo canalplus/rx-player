@@ -81,7 +81,7 @@ export default function request<T>(
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
-    let timeoutId : undefined | number | NodeJS.Timeout;
+    let timeoutId : undefined | number;
     if (timeout !== undefined) {
       xhr.timeout = timeout;
 

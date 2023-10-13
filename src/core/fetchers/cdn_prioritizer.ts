@@ -56,7 +56,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
      * `metadata` array which is used considerably more than the `timeouts`
      * array.
      */
-    timeouts : Array<number | NodeJS.Timeout>;
+    timeouts : number[];
   };
 
   /**
