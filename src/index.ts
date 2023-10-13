@@ -21,11 +21,36 @@
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import Player from "./core/api";
-import initializeFeatures from "./features/initialize_features";
+import {
+  DASH,
+  DIRECTFILE,
+  EME,
+  HTML_SAMI_PARSER,
+  HTML_SRT_PARSER,
+  HTML_TTML_PARSER,
+  HTML_VTT_PARSER,
+  NATIVE_SAMI_PARSER,
+  NATIVE_SRT_PARSER,
+  NATIVE_TTML_PARSER,
+  NATIVE_VTT_PARSER,
+  SMOOTH,
+} from "./features/list";
 import logger from "./log";
 
-initializeFeatures();
-
+Player.addFeatures([
+  SMOOTH,
+  DASH,
+  DIRECTFILE,
+  EME,
+  NATIVE_TTML_PARSER,
+  NATIVE_SAMI_PARSER,
+  NATIVE_VTT_PARSER,
+  NATIVE_SRT_PARSER,
+  HTML_TTML_PARSER,
+  HTML_SAMI_PARSER,
+  HTML_VTT_PARSER,
+  HTML_SRT_PARSER,
+]);
 if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG");
 } else if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
