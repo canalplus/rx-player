@@ -6,7 +6,7 @@
  * generate_build.js
  * =================
  *
- * This file allows to produce the main RxPlayer's [modular] build.
+ * This file allows to produce the main RxPlayer's builds.
  *
  * To run it, just call this file through your node.js binary:
  * ```sh

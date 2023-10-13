@@ -205,27 +205,6 @@ npm install
 ```
 
 
-### Build ######################################################################
-
-We use npm scripts to bundle, lint and test the player. Here are some examples:
-```sh
-# build the player in dist/rx-player.js
-npm run build
-
-# lint the code in src/ with eslint
-npm run lint
-
-# launch the demo on a local server (http://127.0.0.1:8000)
-npm run start
-
-# launch our test suite on various browsers
-npm run test
-
-# list all available npm scripts
-npm run list
-```
-
-
 ## Why a new player? ###########################################################
 
 ### A need for an advanced media player ########################################
