@@ -146,7 +146,7 @@ export default function fetchRequest(
     abortController.abort();
   }
 
-  let timeout : number | NodeJS.Timeout | undefined;
+  let timeout : number | undefined;
   if (options.timeout !== undefined) {
     timeout = setTimeout(() => {
       timeouted = true;
