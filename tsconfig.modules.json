@@ -29,8 +29,6 @@
   ],
   "exclude":[
     "./src/**/*.test.ts",
-    "./src/typings/globals.d.ts",
-    "./src/features/initialize_features.ts",
-    "./src/index.ts"
+    "./src/typings/globals.d.ts"
   ]
 }
