@@ -92,7 +92,7 @@ describe("BufferBasedChooser", () => {
   /* eslint-disable max-len */
   it("should log an error and return the first bitrate if the given bitrate does not exist", () => {
   /* eslint-enable max-len */
-    const logger = { debug: jest.fn(), error: jest.fn() };
+    const logger = { debug: jest.fn(), info: jest.fn() };
     jest.mock("../../../log", () => ({ __esModule: true as const,
                                        default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
@@ -105,8 +105,8 @@ describe("BufferBasedChooser", () => {
       currentScore: undefined,
     });
     expect(bbc.getLastEstimate()).toEqual(10);
-    expect(logger.error).toHaveBeenCalledTimes(1);
-    expect(logger.error)
+    expect(logger.info).toHaveBeenCalledTimes(1);
+    expect(logger.info)
       .toHaveBeenCalledWith("ABR: Current Bitrate not found in the calculated levels");
   });
 
