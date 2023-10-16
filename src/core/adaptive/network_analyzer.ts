@@ -18,6 +18,7 @@ import config from "../../config";
 import log from "../../log";
 import { Representation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import {
   IRepresentationEstimatorPlaybackObservation,
@@ -359,10 +360,10 @@ export default class NetworkAnalyzer {
                                                         this._lowLatencyMode,
                                                         lastEstimatedBitrate);
 
-      if (bandwidthEstimate != null) {
+      if (bandwidthEstimate !== undefined) {
         log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
         bandwidthEstimator.reset();
-        newBitrateCeil = currentRepresentation == null ?
+        newBitrateCeil = isNullOrUndefined(currentRepresentation) ?
           bandwidthEstimate :
           Math.min(bandwidthEstimate, currentRepresentation.bitrate);
       }
@@ -372,11 +373,11 @@ export default class NetworkAnalyzer {
     if (newBitrateCeil == null) {
       bandwidthEstimate = bandwidthEstimator.getEstimate();
 
-      if (bandwidthEstimate != null) {
+      if (bandwidthEstimate !== undefined) {
         newBitrateCeil = bandwidthEstimate *
           (this._inStarvationMode ? localConf.starvationBitrateFactor :
                                     localConf.regularBitrateFactor);
-      } else if (lastEstimatedBitrate != null) {
+      } else if (lastEstimatedBitrate !== undefined) {
         newBitrateCeil = lastEstimatedBitrate *
           (this._inStarvationMode ? localConf.starvationBitrateFactor :
                                     localConf.regularBitrateFactor);
