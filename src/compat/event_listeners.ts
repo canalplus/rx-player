@@ -188,26 +188,26 @@ function getDocumentVisibilityRef(
   let prefix : string|undefined;
 
   const doc = document as ICompatDocument;
-  if (doc.hidden != null) {
+  if (!isNullOrUndefined(doc.hidden)) {
     prefix = "";
-  } else if (doc.mozHidden != null) {
+  } else if (!isNullOrUndefined(doc.mozHidden)) {
     prefix = "moz";
-  } else if (doc.msHidden != null) {
+  } else if (!isNullOrUndefined(doc.msHidden)) {
     prefix = "ms";
-  } else if (doc.webkitHidden != null) {
+  } else if (!isNullOrUndefined(doc.webkitHidden)) {
     prefix = "webkit";
   }
 
-  const hidden = isNonEmptyString(prefix) ? prefix + "Hidden" :
+  const hidden = isNonEmptyString(prefix) ? (prefix + "Hidden" as "hidden") :
                                             "hidden";
   const visibilityChangeEvent = isNonEmptyString(prefix) ? prefix + "visibilitychange" :
                                                            "visibilitychange";
 
-  const isHidden = document[hidden as "hidden"];
+  const isHidden = document[hidden];
   const ref = new SharedReference(!isHidden, stopListening);
 
   addEventListener(document, visibilityChangeEvent, () => {
-    const isVisible = !(document[hidden as "hidden"]);
+    const isVisible = !(document[hidden]);
     ref.setValueIfChanged(isVisible);
   }, stopListening);
 
