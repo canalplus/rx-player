@@ -209,7 +209,8 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
 
       // Check if Locked Representations have changed
       const oldRef = reference.getValue();
-      const sortedReps = playableRepresentations.slice().sort();
+      const sortedReps = playableRepresentations.slice()
+        .sort((ra, rb) => ra.bitrate - rb.bitrate);
       if (sortedReps.length !== oldRef.representations.length) {
         reference.setValue({ representations: sortedReps, switchingMode });
         return;
