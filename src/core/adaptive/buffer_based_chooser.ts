@@ -153,7 +153,7 @@ export default class BufferBasedChooser {
     }
 
     if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
-      log.error("ABR: Current Bitrate not found in the calculated levels");
+      log.info("ABR: Current Bitrate not found in the calculated levels");
       this._currentEstimate = bitrates[0];
       return ;
     }
