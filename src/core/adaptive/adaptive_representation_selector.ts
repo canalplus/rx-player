@@ -200,20 +200,38 @@ function getEstimateReference(
 
   return { estimates: estimateRef, callbacks };
 
+  /**
+   * Emit the ABR estimates on various events through the returned
+   * `SharedReference`.
+   * @param {Array.<Object>} unsortedRepresentations - All `Representation` that
+   * the ABR logic can choose from.
+   * @param {Object} innerCancellationSignal - When this `CancellationSignal`
+   * emits, all events registered to to emit new estimates will be unregistered.
+   * Note that the returned reference may still be used to produce new estimates
+   * in the future if you want to even after this signal emits.
+   * @returns {Object} - `SharedReference` through which ABR estimates will be
+   * produced.
+   */
   function createEstimateReference(
-    representations : Representation[],
+    unsortedRepresentations : Representation[],
     innerCancellationSignal : CancellationSignal
   ) : SharedReference<IABREstimate> {
-    if (representations.length <= 1) {
+    if (unsortedRepresentations.length <= 1) {
       // There's only a single Representation. Just choose it.
-      return new SharedReference<IABREstimate>({ bitrate: undefined,
-                                                 representation: representations[0],
-                                                 urgent: true,
-                                                 knownStableBitrate: undefined });
+      return new SharedReference<IABREstimate>({
+        bitrate: undefined,
+        representation: unsortedRepresentations[0],
+        urgent: true,
+        knownStableBitrate: undefined,
+      });
     }
 
     /** If true, Representation estimates based on the buffer health might be used. */
     let allowBufferBasedEstimates = false;
+
+    /** Ensure `Representation` objects are sorted by bitrates and only rely on this. */
+    const sortedRepresentations = unsortedRepresentations
+      .sort((ra, rb) => ra.bitrate - rb.bitrate);
 
     /**
      * Module calculating the optimal Representation based on the current
@@ -221,7 +239,7 @@ function getEstimateReference(
      * buffer size etc.).
      */
     const bufferBasedChooser = new BufferBasedChooser(
-      representations.map(r => r.bitrate)
+      sortedRepresentations.map(r => r.bitrate)
     );
 
     /** Store the previous estimate made here. */
@@ -282,7 +300,7 @@ function getEstimateReference(
       const bitrateThrottle = filters.throttleBitrate.getValue();
       const currentRepresentationVal = currentRepresentation.getValue();
 
-      const filteredReps = getFilteredRepresentations(representations,
+      const filteredReps = getFilteredRepresentations(sortedRepresentations,
                                                       resolutionLimit,
                                                       bitrateThrottle);
       const requests = requestsStore.getRequests();
@@ -372,7 +390,7 @@ function getEstimateReference(
           maximumPosition - position.last < 40)
       {
         chosenRepFromGuessMode = guessBasedChooser
-          .getGuess(representations,
+          .getGuess(sortedRepresentations,
                     lastPlaybackObservation,
                     currentRepresentationVal,
                     currentBestBitrate,
