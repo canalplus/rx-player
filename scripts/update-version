@@ -29,10 +29,7 @@ sed -i.bak -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" s
 echo $version > VERSION
 
 npm install
-npm run build
-npm run build:min
-npm run build:wasm:release
-npm run build:modular
+npm run build:all
 
 echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts

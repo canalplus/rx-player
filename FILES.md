@@ -22,10 +22,6 @@ At the time of writing, there are two distinct demos:
 
 The `demo/` directory stores the player builds of the last version released.
 
-Contains the minified (``rx-player.min.js``) and the non-minified files
-(``rx-player.js``). Both are automatically generated with scripts at every new
-release.
-
 Two directories, namely ``_esm5.raw`` and ``_esm5.processed`` can also be
 generated in here if the right scripts are called.
 These allow to publish more modular codebases to npm.
