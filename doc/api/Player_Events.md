@@ -179,6 +179,22 @@ The array emitted contains object describing each available audio track:
 
   This information is usually set only if the current Manifest contains one.
 
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+    seconds.
+
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
+
 This event only concerns the currently-playing Period.
 
 ### availableVideoTracksChange
@@ -294,6 +310,18 @@ properties:
   the user interface providing a choice between audio tracks.
 
   This information is usually set only if the current Manifest contains one.
+
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
+  attributes:
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+    seconds.
+  - `codec` (`string|undefined`): The audio codec the Representation is
+    in, as announced in the corresponding Manifest.
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
+    has spatial audio.
 
 This event only concerns the currently-playing Period.
 
