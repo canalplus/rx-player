@@ -253,6 +253,7 @@ export interface IRepresentationChildren {
   segmentBase? : ISegmentBaseIntermediateRepresentation;
   segmentList? : ISegmentListIntermediateRepresentation;
   segmentTemplate? : ISegmentTemplateIntermediateRepresentation;
+  supplementalProperties? : IScheme[] | undefined;
 }
 
 /* Intermediate representation for A Representation node's attributes. */

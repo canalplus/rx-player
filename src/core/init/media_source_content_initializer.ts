@@ -69,7 +69,7 @@ import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
 import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 import RebufferingController from "./utils/rebuffering_controller";
-import streamEventsEmitter from "./utils/stream_events_emitter";
+import StreamEventsEmitter from "./utils/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
 
 /**
@@ -435,12 +435,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     initialPlayPerformed.onUpdate((isPerformed, stopListening) => {
       if (isPerformed) {
         stopListening();
-        streamEventsEmitter(manifest,
-                            mediaElement,
-                            playbackObserver,
-                            (evt) => this.trigger("streamEvent", evt),
-                            (evt) => this.trigger("streamEventSkip", evt),
-                            cancelSignal);
+        const streamEventsEmitter = new StreamEventsEmitter(manifest,
+                                                            mediaElement,
+                                                            playbackObserver);
+        streamEventsEmitter.addEventListener("event", (payload) => {
+          this.trigger("streamEvent", payload);
+        }, cancelSignal);
+        streamEventsEmitter.addEventListener("eventSkip", (payload) => {
+          this.trigger("streamEventSkip", payload);
+        }, cancelSignal);
+        streamEventsEmitter.start();
+        cancelSignal.register(() => {
+          streamEventsEmitter.stop();
+        });
       }
     }, { clearSignal: cancelSignal, emitCurrentValue: true });
 
@@ -621,19 +628,41 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         addedSegment: (value) => self.trigger("addedSegment", value),
 
-        needsMediaSourceReload: (value) => onReloadOrder(value),
+        needsMediaSourceReload: (payload) => {
+          const lastObservation = streamObserver.getReference().getValue();
+          const currentPosition = lastObservation.position.pending ??
+                                  streamObserver.getCurrentTime();
+          const isPaused = lastObservation.paused.pending ??
+                           streamObserver.getIsPaused();
+          let position = currentPosition + payload.timeOffset;
+          if (payload.minimumPosition !== undefined) {
+            position = Math.max(payload.minimumPosition, position);
+          }
+          if (payload.maximumPosition !== undefined) {
+            position = Math.min(payload.maximumPosition, position);
+          }
+          onReloadOrder({ position, autoPlay: !isPaused });
+        },
 
-        needsDecipherabilityFlush(value) {
+        needsDecipherabilityFlush() {
           const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-            onReloadOrder(value);
+            const lastObservation = streamObserver.getReference().getValue();
+            const position = lastObservation.position.pending ??
+                             streamObserver.getCurrentTime();
+            const isPaused = lastObservation.paused.pending ??
+                             streamObserver.getIsPaused();
+            onReloadOrder({ position, autoPlay: !isPaused });
           } else {
+            const lastObservation = streamObserver.getReference().getValue();
+            const position = lastObservation.position.pending ??
+                             streamObserver.getCurrentTime();
             // simple seek close to the current position
             // to flush the buffers
-            if (value.position + 0.001 < value.duration) {
+            if (position + 0.001 < lastObservation.duration) {
               playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
             } else {
-              playbackObserver.setCurrentTime(value.position);
+              playbackObserver.setCurrentTime(position);
             }
           }
         },

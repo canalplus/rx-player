@@ -27,13 +27,17 @@ Using one directly defined in the RxPlayer API instead allows to:
 This feature is not present in default builds to prevent adding unnecessary code
 to codebases that don't need it.
 
-As such, to add it, you will need to rely on the [minimal](../../Getting_Started/Minimal_Player.md)
-build of the RxPlayer and you will need to add the
-`DEBUG_ELEMENT` experimental feature:
+As such, to add it, you will need  to add the `DEBUG_ELEMENT` experimental
+feature:
 ```js
+// Import the RxPlayer
+// (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
+
+// Import the feature
 import { DEBUG_ELEMENT } from "rx-player/experimental/features";
 
+// Attach the feature to imported RxPlayer
 RxPlayer.addFeatures([DEBUG_ELEMENT]);
 ```
 

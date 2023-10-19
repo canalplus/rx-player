@@ -37,6 +37,7 @@ The following properties methods and events have been deprecated:
 - the `imageTrackUpdate` event
 - the `getImageTrackData` method
 - the `supplementaryImageTracks` loadVideo option
+- the `IMAGE_BUFFER` feature
 
 This is because most code linked to image management will be moved outside the
 RxPlayer. Doing that will both be more flexible for users and much easier to
@@ -58,6 +59,15 @@ multiple reasons:
    part that know where the user wants to seek)
 4. The biggest part of the code related to it was a simple BIF parser, that
    can easily be re-implemented by any application.
+
+## Features
+
+Both the `NATIVE_TEXT_BUFFER` feature and the `HTML_TEXT_BUFFER` features, which
+are the arguments of the `addFeatures` static method, have been deprecated as
+they are now unneeded.
+
+They're basically optional now that importing a text parser for the
+corresponding type of buffer is going to implicitely add the feature anyway.
 
 ## RxPlayer Methods
 

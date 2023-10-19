@@ -21,9 +21,18 @@
 import features from "./features_object";
 
 /**
- * Selects the features to include based on environment variables.
+ * Selects the features to include.
  */
 export default function initializeFeaturesObject() : void {
+  const HAS_MEDIA_SOURCE =
+    __FEATURES__.SMOOTH as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.DASH as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.LOCAL_MANIFEST as number === __FEATURES__.IS_ENABLED as number ||
+    __FEATURES__.METAPLAYLIST as number === __FEATURES__.IS_ENABLED as number;
+  if (HAS_MEDIA_SOURCE) {
+    features.mediaSourceInit = require("../core/init/media_source_content_initializer.ts")
+      .default;
+  }
   if (__FEATURES__.EME as number === __FEATURES__.IS_ENABLED as number) {
     features.decrypt = require("../core/decrypt/index.ts").default;
   }

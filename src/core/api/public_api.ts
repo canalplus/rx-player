@@ -37,7 +37,10 @@ import {
   IErrorType,
   MediaError,
 } from "../../errors";
-import features from "../../features";
+import features, {
+  addFeatures,
+  IFeature,
+} from "../../features";
 import log from "../../log";
 import Manifest, {
   Adaptation,
@@ -100,7 +103,6 @@ import {
   getCurrentKeySystem,
 } from "../decrypt";
 import { ContentInitializer } from "../init";
-import MediaSourceContentInitializer from "../init/media_source_content_initializer";
 import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -341,6 +343,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Add feature(s) to the RxPlayer.
+   * @param {Array.<Object>} featureList - Features wanted.
+   */
+  static addFeatures(featureList : IFeature[]) : void {
+    addFeatures(featureList);
+  }
+
+  /**
    * @constructor
    * @param {Object} options
    */
@@ -369,7 +379,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */"3.31.0";
+    this.version = /* PLAYER_VERSION */"3.32.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -672,6 +682,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(`transport "${transport}" not supported`);
       }
 
+      if (features.mediaSourceInit === null) {
+        throw new Error("MediaSource streaming not supported");
+      }
+
       const transportPipelines = transportFn(transportOptions);
 
       const { offlineRetry,
@@ -761,7 +775,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                       requestTimeout: segmentRequestTimeout,
                                       maxRetryOffline: offlineRetry };
 
-      initializer = new MediaSourceContentInitializer({
+      initializer = new features.mediaSourceInit({
         adaptiveOptions,
         autoPlay,
         bufferOptions,
@@ -3089,7 +3103,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return mediaElementTrackChoiceManager;
   }
 }
-Player.version = /* PLAYER_VERSION */"3.31.0";
+Player.version = /* PLAYER_VERSION */"3.32.0";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {

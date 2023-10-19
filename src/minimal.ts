@@ -23,10 +23,6 @@
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import Player from "./core/api";
-import {
-  addFeatures,
-  IFeature,
-} from "./features";
 import logger from "./log";
 
 if (isDebugModeEnabled()) {
@@ -35,15 +31,4 @@ if (isDebugModeEnabled()) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
 
-/**
- * Minimal Player for which you can features at will:
- *   - start with no features
- *   - Allow to only load features wanted
- *
- * @class MinimalPlayer
- */
-export default class MinimalPlayer extends Player {
-  static addFeatures(featureList : IFeature[]) : void {
-    addFeatures(featureList);
-  }
-}
+export default Player;
