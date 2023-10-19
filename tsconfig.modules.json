@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist/_esm5.raw",
     "declaration": true,
-    "target": "es5",
+    "target": "es2017",
     "lib": ["es2017", "dom"],
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,7 +15,7 @@
     "noUnusedLocals": true,
     "types": ["jest"],
     "moduleResolution": "node",
-    "module": "es2015",
+    "module": "commonjs",
     "typeRoots": [
       "./scripts/build/constants.d.ts",
       "./src/typings/next-tick.d.ts",
