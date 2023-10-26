@@ -86,10 +86,10 @@ function regularSegmentLoader(
  */
 const generateSegmentLoader = ({
   checkMediaSegmentIntegrity,
-  customSegmentLoader,
+  segmentLoader,
 } : {
   checkMediaSegmentIntegrity? : boolean | undefined;
-  customSegmentLoader? : ICustomSegmentLoader | undefined;
+  segmentLoader? : ICustomSegmentLoader | undefined;
 }) => (
   url : string | null,
   context : ISegmentContext,
@@ -154,7 +154,7 @@ const generateSegmentLoader = ({
     return Promise.resolve({ resultType: "segment-created" as const,
                              resultData: null });
   } else {
-    if (typeof customSegmentLoader !== "function") {
+    if (typeof segmentLoader !== "function") {
       return regularSegmentLoader(url,
                                   context,
                                   callbacks,
@@ -266,7 +266,7 @@ const generateSegmentLoader = ({
                      byteRanges,
                      trackType: context.type,
                      url };
-      const abort = customSegmentLoader(args, customCallbacks);
+      const abort = segmentLoader(args, customCallbacks);
 
       cancelSignal.register(abortCustomLoader);
 
