@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { stub } from "sinon";
 import RxPlayer from "../../../src";
-import XHRMock from "../../utils/request_mock";
 import launchTestsForContent from "../utils/launch_tests_for_content.js";
 import sleep from "../../utils/sleep.js";
 import waitForPlayerState from "../../utils/waitForPlayerState";
@@ -54,7 +53,6 @@ describe("DASH content CENC wrong version in MPD", function () {
             (bytes[offset + 3]));
   }
   let player;
-  let xhrMock;
   let stubs = [];
   beforeEach(() => {
   });
@@ -62,10 +60,6 @@ describe("DASH content CENC wrong version in MPD", function () {
     if (player !== undefined) {
       player.dispose();
       player = undefined;
-    }
-    if (xhrMock !== undefined) {
-      xhrMock.restore();
-      xhrMock = undefined;
     }
     stubs.forEach(declaredStub => declaredStub.restore());
     stubs = [];
@@ -82,8 +76,6 @@ describe("DASH content CENC wrong version in MPD", function () {
     let foundCencV1 = false;
     let foundOtherCencVersion = false;
     player = new RxPlayer();
-    xhrMock = new XHRMock();
-    xhrMock.lock();
     const generateRequestStub = stub(window.MediaKeySession.prototype, "generateRequest")
       .callsFake((_initDataType, initData) => {
         let offset = 0;
@@ -144,11 +136,7 @@ describe("DASH content CENC wrong version in MPD", function () {
                            },
                          },
                        ] });
-    await sleep(50);
-    xhrMock.flush(); // MPD request
     await sleep(200);
-    xhrMock.flush(); // init segment requests
-    await sleep(50);
     expect(generateRequestStub.called).to.equal(true,
                                                 "generateRequest was not called");
     expect(foundCencV1).to.equal(true,
@@ -171,97 +159,126 @@ describe("DASH non-linear content with a \"broken\" sidx", function() {
     }
 
     const player = new RxPlayer();
+
+    const requestedManifests = [];
+    const requestedSegments = [];
+    const manifestLoader = (man, callbacks) => {
+      requestedManifests.push(man.url);
+      callbacks.fallback();
+    };
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info);
+      callbacks.fallback();
+    };
+
     player.setWantedBufferAhead(1);
 
-    const xhrMock = new XHRMock();
-
     // Play a first time without the option
-
-    player.loadVideo({ url: brokenSidxManifestInfos.url,
-                       transport: brokenSidxManifestInfos.transport,
-                       checkMediaSegmentIntegrity: true,
-                       autoPlay: false });
+    player.loadVideo({
+      url: brokenSidxManifestInfos.url,
+      transport: brokenSidxManifestInfos.transport,
+      checkMediaSegmentIntegrity: true,
+      autoPlay: false,
+      manifestLoader,
+      segmentLoader,
+    });
     await waitForPlayerState(player, "LOADED");
 
-    xhrMock.lock();
+    requestedSegments.length = 0;
     player.seekTo(player.getMaximumPosition() - 1);
+    await sleep(10);
+    player.setWantedBufferAhead(30);
     await sleep(50);
 
-    let lockedXhrs = xhrMock.getLockedXHR();
-    expect(lockedXhrs.length).to.equal(2);
-    const foundTruncatedVideoSegment = lockedXhrs
+    expect(requestedSegments.length).to.be.at.least(2);
+    const foundTruncatedVideoSegment = requestedSegments
       .some(seg => {
         return isBrokenVideoSegment(seg.url) &&
-               seg.requestHeadersSet.some(requestHeaderSet =>
-                 requestHeaderSet[0].toLowerCase() === "range" &&
-                 requestHeaderSet[1].toLowerCase() === "bytes=696053-746228");
+               seg.byteRanges.some(byteRange =>
+                 byteRange[0] === 696053 &&
+                 byteRange[1] === 746228);
       });
     expect(foundTruncatedVideoSegment)
       .to.equal(true,
                 "should have requested the video segment with a bad range initially");
-    xhrMock.unlock();
+
+    player.setWantedBufferAhead(1);
 
     // Play a second time with the option
-    player.loadVideo({ url: brokenSidxManifestInfos.url,
-                       transport: brokenSidxManifestInfos.transport,
-                       checkMediaSegmentIntegrity: true,
-                       __priv_patchLastSegmentInSidx: true,
-                       autoPlay: false });
+    player.loadVideo({
+      url: brokenSidxManifestInfos.url,
+      transport: brokenSidxManifestInfos.transport,
+      checkMediaSegmentIntegrity: true,
+      __priv_patchLastSegmentInSidx: true,
+      autoPlay: false,
+      manifestLoader,
+      segmentLoader,
+    });
     await waitForPlayerState(player, "LOADED");
 
-    xhrMock.lock();
+    requestedSegments.length = 0;
     player.seekTo(player.getMaximumPosition() - 1);
+    await sleep(10);
+    player.setWantedBufferAhead(30);
     await sleep(50);
 
-    lockedXhrs = xhrMock.getLockedXHR();
-    expect(lockedXhrs.length).to.equal(2);
-    const foundFixedVideoSegment = lockedXhrs
+    expect(requestedSegments.length).to.be.at.least(2);
+    const foundFixedVideoSegment = requestedSegments
       .some(seg => {
         return isBrokenVideoSegment(seg.url) &&
-               seg.requestHeadersSet.some(requestHeaderSet =>
-                 requestHeaderSet[0].toLowerCase() === "range" &&
-                 requestHeaderSet[1].toLowerCase() === "bytes=696053-");
+               seg.byteRanges.some(byteRange =>
+                 byteRange[0] === 696053 &&
+                 byteRange[1] === Infinity);
       });
 
     expect(foundFixedVideoSegment)
       .to.equal(true,
                 "should have fixed the video segment with a bad range");
-    xhrMock.restore();
     player.dispose();
   });
 });
 
 describe("DASH non-linear content with number-based SegmentTimeline", function () {
-  let xhrMock;
   let player;
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   it("should correctly parse DASH number-based SegmentTimeline", async function () {
-    xhrMock.lock();
+    const requestedManifests = [];
+    const requestedSegments = [];
+    const manifestLoader = (man, callbacks) => {
+      requestedManifests.push(man.url);
+      callbacks.fallback();
+    };
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+    };
+    player.loadVideo({
+      url: numberBasedTimelineManifestInfos.url,
+      transport: numberBasedTimelineManifestInfos.transport,
+      manifestLoader,
+      segmentLoader,
+    });
 
-    player.loadVideo({ url: numberBasedTimelineManifestInfos.url,
-                       transport: numberBasedTimelineManifestInfos.transport });
-
-    // should only have the manifest for now
-    await sleep(1);
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
-    expect(xhrMock.getLockedXHR()[0].url)
+    expect(requestedManifests).to.have.length(1);
+    expect(requestedSegments).to.be.empty;
+    expect(requestedManifests[0])
       .to.equal(numberBasedTimelineManifestInfos.url);
-
-    await xhrMock.flush(); // only wait for the manifest request
-    await sleep(10);
-
     expect(player.getPlayerState()).to.equal("LOADING");
 
+    await sleep(100);
+
     // segment requests should be pending
-    expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
+    expect(requestedSegments.length).to.be.at.least(1);
+    expect(requestedSegments).to
+      .include("http://127.0.0.1:3000/DASH_static_number_based_SegmentTimeline/media/video_190_avc-1.mp4");
+    expect(requestedSegments).to
+      .include("http://127.0.0.1:3000/DASH_static_number_based_SegmentTimeline/media/audio_64_aaclc_fra-1.ts");
   });
 });
