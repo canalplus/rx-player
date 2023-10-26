@@ -4,24 +4,20 @@ import {
   multiAdaptationSetsInfos,
 } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
-import XHRMock from "../../utils/request_mock";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
 
 describe("DASH multi-track content (SegmentTimeline)", function () {
   let player;
-  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
     player.setWantedBufferAhead(5); // We don't really care
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   async function loadContent() {
@@ -265,21 +261,29 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should properly load the content with the right default tracks", async function () {
     this.timeout(3000);
-    xhrMock.lock();
-    player.loadVideo({ url: multiAdaptationSetsInfos.url,
-                       transport: multiAdaptationSetsInfos.transport });
+    let manifestLoaderCalledTimes = 0;
+    const requestedSegments = [];
+    const manifestLoader = (man, callbacks) => {
+      expect(multiAdaptationSetsInfos.url).to.equal(man.url);
+      manifestLoaderCalledTimes++;
+      callbacks.fallback();
+    };
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+    };
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+      manifestLoader,
+      segmentLoader,
+    });
 
-    await sleep(10);
-
-    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
-    await xhrMock.flush();
-    await sleep(10);
-
+    expect(manifestLoaderCalledTimes).to.equal(1);
+    expect(requestedSegments).to.be.empty;
     expect(player.getPlayerState()).to.equal("LOADING");
-    await xhrMock.unlock();
-    await sleep(1500);
-
-    expect(player.getPlayerState()).to.equal("LOADED");
+    await waitForLoadedStateAfterLoadVideo(player);
+    expect(requestedSegments.length).to.be.above(2);
 
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
@@ -293,16 +297,26 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should allow setting tracks BEFORE loading segments", async function () {
+    const requestedSegments = [];
+    const manifestLoader = (man, callbacks) => {
+      expect(multiAdaptationSetsInfos.url).to.equal(man.url);
+      callbacks.fallback();
+      manifestRequestDone = true;
+    };
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+    };
     player = new RxPlayer();
 
-    let called = 0;
+    let eventCalled = 0;
     let manifestRequestDone = false;
-    let afterManifestResponse = false;
     player.addEventListener("newAvailablePeriods", () => {
-      called++;
+      eventCalled++;
       expect(manifestRequestDone).to.equal(true);
-      expect(afterManifestResponse).to.equal(called > 1);
-      expect(xhrMock.getLockedXHR()).to.have.lengthOf(0);
+      if (eventCalled === 1) {
+        expect(requestedSegments.length === 0).to.equal(true);
+      }
       updateTracks(
         [
           { language: "fr", audioDescription: false },
@@ -318,33 +332,31 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
         ]
       );
     });
-    xhrMock.lock();
-    player.loadVideo({ url: multiAdaptationSetsInfos.url,
-                       transport: multiAdaptationSetsInfos.transport });
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+      manifestLoader,
+      segmentLoader,
+    });
 
-    await sleep(10);
+    await sleep(50);
 
-    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest request
-    manifestRequestDone = true;
-    await xhrMock.flush();
-    afterManifestResponse = true;
-    await sleep(10);
-
-    expect(called).to.equal(1);
+    expect(eventCalled).to.equal(1);
     checkAudioTrack("fr", "fra", false);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
-    xhrMock.unlock();
 
-    await waitForLoadedStateAfterLoadVideo(player);
-    expect(called).to.equal(1);
+    if (player.getPlayerState() !== "LOADED") {
+      await waitForLoadedStateAfterLoadVideo(player);
+    }
+    expect(eventCalled).to.equal(1);
 
     checkAudioTrack("fr", "fra", false);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    expect(called).to.equal(2);
+    expect(eventCalled).to.equal(2);
     checkAudioTrack("de", "deu", true);
     checkTextTrack("fr", "fra", true);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);

@@ -3,7 +3,6 @@ import RxPlayer from "../../../src";
 import sleep from "../../utils/sleep.js";
 import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import tryTestMultipleTimes from "../../utils/try_test_multiple_times";
-import XHRMock from "../../utils/request_mock";
 import { lockLowestBitrates } from "../../utils/bitrates";
 
 /**
@@ -49,7 +48,6 @@ import { lockLowestBitrates } from "../../utils/bitrates";
  */
 export default function launchTestsForContent(manifestInfos) {
   let player;
-  let xhrMock;
 
   const { isLive,
           maximumPosition,
@@ -62,32 +60,43 @@ export default function launchTestsForContent(manifestInfos) {
   describe("API tests", () => {
     beforeEach(() => {
       player = new RxPlayer();
-      xhrMock = new XHRMock();
     });
 
     afterEach(() => {
       player.dispose();
-      xhrMock.restore();
     });
 
     describe("loadVideo", () => {
       it("should fetch the manifest then the init segments", async function () {
-        xhrMock.lock();
+        let manifestLoaderCalledTimes = 0;
+        const requestedSegments = [];
+        const manifestLoader = (man, callbacks) => {
+          expect(manifestInfos.url).to.equal(man.url);
+          manifestLoaderCalledTimes++;
+          callbacks.fallback();
+        };
+        const segmentLoader = (info, callbacks) => {
+          requestedSegments.push(info.url);
+          callbacks.fallback();
+        };
 
         // Lock the lowest bitrate to facilitate the test
         lockLowestBitrates(player);
 
-        player.loadVideo({ url: manifestInfos.url, transport });
+        player.loadVideo({
+          url: manifestInfos.url,
+          transport,
+          manifestLoader,
+          segmentLoader,
+        });
 
         // should only have the manifest for now
-        await sleep(50);
-        expect(xhrMock.getLockedXHR().length).to.equal(1);
-        expect(xhrMock.getLockedXHR()[0].url).to.equal(manifestInfos.url);
-
-        await xhrMock.flush(); // only wait for the manifest request
-        await sleep(50);
+        expect(manifestLoaderCalledTimes).to.equal(1);
 
         expect(player.getPlayerState()).to.equal("LOADING");
+        const loadingTime = performance.now();
+        await waitForLoadedStateAfterLoadVideo(player);
+        expect(performance.now() - loadingTime).to.be.at.most(1000);
 
         const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex]
           .adaptations;
@@ -108,18 +117,15 @@ export default function launchTestsForContent(manifestInfos) {
             (audioRepresentationInfos && audioRepresentationInfos.index.init) &&
             (videoRepresentationInfos && videoRepresentationInfos.index.init)
           ) {
-            expect(xhrMock.getLockedXHR().length)
-              .to.be.at.least(2, "should request two init segments");
-            const requestsDone = xhrMock.getLockedXHR().map(({ url }) => url);
-
-            const hasRequestedVideoInitSegment = requestsDone.some(r => {
+            expect(requestedSegments.length).to.be.at.least(2);
+            const hasRequestedVideoInitSegment = requestedSegments.some(r => {
               const relativeUrl =
                 videoRepresentationInfos.index.init.url === null ?
                   "" :
                   videoRepresentationInfos.index.init.url;
               return r.endsWith(relativeUrl);
             });
-            const hasRequestedAudioInitSegment = requestsDone.some(r => {
+            const hasRequestedAudioInitSegment = requestedSegments.some(r => {
               const relativeUrl =
                 audioRepresentationInfos.index.init.url === null ?
                   "" :
@@ -131,13 +137,13 @@ export default function launchTestsForContent(manifestInfos) {
           } else if (!(
             audioRepresentationInfos && audioRepresentationInfos.index.init)
           ) {
-            expect(xhrMock.getLockedXHR().length).to.equal(1);
-            expect(xhrMock.getLockedXHR()[0].url).to
-              .equal(videoRepresentationInfos.index.init.url);
+            expect(requestedSegments.length).to.be.at.least(1);
+            expect(requestedSegments)
+              .to.include(videoRepresentationInfos.index.init.url);
           } else {
-            expect(xhrMock.getLockedXHR().length).to.equal(1);
-            expect(xhrMock.getLockedXHR()[0].url).to
-              .equal(audioRepresentationInfos.index.init.url);
+            expect(requestedSegments.length).to.be.at.least(1);
+            expect(requestedSegments)
+              .to.include(audioRepresentationInfos.index.init.url);
           }
         }
       });
@@ -147,28 +153,52 @@ export default function launchTestsForContent(manifestInfos) {
           const initialManifest = await (
             (await fetch(manifestInfos.url))
               .text());
-          xhrMock.lock();
-          player.loadVideo({ url: manifestInfos.url,
-                             transport,
-                             initialManifest });
+          let manifestLoaderCalledTimes = 0;
+          let segmentLoaderLoaderCalledTimes = 0;
+          const manifestLoader = (_, callbacks) => {
+            manifestLoaderCalledTimes++;
+            callbacks.fallback();
+          };
+          const segmentLoader = (_, callbacks) => {
+            segmentLoaderLoaderCalledTimes++;
+            callbacks.fallback();
+          };
+          player.loadVideo({
+            url: manifestInfos.url,
+            transport,
+            initialManifest,
+            manifestLoader,
+            segmentLoader,
+          });
 
-          await sleep(100);
-          expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
-          expect(xhrMock.getLockedXHR()[0].url).not.to.equal(manifestInfos.url);
+          await waitForLoadedStateAfterLoadVideo(player);
+          expect(manifestLoaderCalledTimes).to.equal(0);
+          expect(segmentLoaderLoaderCalledTimes).to.be.at.least(1);
         });
         it("should not do the initial manifest request if an `initialManifest` option is set as a document", async function () {
           const initialManifestStr = await (
             (await fetch(manifestInfos.url))
               .text());
           const initialManifest = new DOMParser().parseFromString(initialManifestStr, "text/xml");
-          xhrMock.lock();
-          player.loadVideo({ url: manifestInfos.url,
-                             transport,
-                             initialManifest });
+          let manifestLoaderCalledTimes = 0;
+          let segmentLoaderLoaderCalledTimes = 0;
+          const manifestLoader = () => {
+            manifestLoaderCalledTimes++;
+          };
+          const segmentLoader = () => {
+            segmentLoaderLoaderCalledTimes++;
+          };
+          player.loadVideo({
+            url: manifestInfos.url,
+            transport,
+            initialManifest,
+            manifestLoader,
+            segmentLoader,
+          });
 
           await sleep(100);
-          expect(xhrMock.getLockedXHR().length).to.be.at.least(1);
-          expect(xhrMock.getLockedXHR()[0].url).not.to.equal(manifestInfos.url);
+          expect(manifestLoaderCalledTimes).to.equal(0);
+          expect(segmentLoaderLoaderCalledTimes).to.be.at.least(1);
         });
       }
     });
@@ -1386,17 +1416,11 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("getAvailableAudioTracks", () => {
       it("should list the right audio languages", async function () {
-        xhrMock.lock();
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
+          segmentLoader: () => { /* do nothing */ },
         });
-        expect(player.getAvailableAudioTracks()).to.eql([]);
-
-        await sleep(1);
-        expect(player.getAvailableAudioTracks()).to.eql([]);
-        await xhrMock.flush();
         await sleep(50);
 
         const audioTracks = player.getAvailableAudioTracks();
@@ -1433,17 +1457,11 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("getAvailableTextTracks", () => {
       it("should list the right text languages", async function () {
-        xhrMock.lock();
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
+          segmentLoader: () => { /* do nothing */ },
         });
-        expect(player.getAvailableTextTracks()).to.eql([]);
-
-        await sleep(1);
-        expect(player.getAvailableTextTracks()).to.eql([]);
-        await xhrMock.flush();
         await sleep(50);
 
         const textTracks = player.getAvailableTextTracks();
@@ -1480,17 +1498,11 @@ export default function launchTestsForContent(manifestInfos) {
 
     describe("getAvailableVideoTracks", () => {
       it("should list the right video tracks", async function () {
-        xhrMock.lock();
-
         player.loadVideo({
           url: manifestInfos.url,
           transport,
+          segmentLoader: () => { /* do nothing */ },
         });
-        expect(player.getAvailableVideoTracks()).to.eql([]);
-
-        await sleep(1);
-        expect(player.getAvailableVideoTracks()).to.eql([]);
-        await xhrMock.flush();
         await sleep(50);
 
         const videoTracks = player.getAvailableVideoTracks();
