@@ -3,14 +3,12 @@ import RxPlayer from "../../../src";
 import {
   forcedSubtitles,
 } from "../../contents/DASH_static_SegmentTimeline";
-import XHRMock from "../../utils/request_mock";
 import {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
 
 describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   let player;
-  let xhrMock;
 
   async function loadContent() {
     player.loadVideo({ url: forcedSubtitles.url,
@@ -44,12 +42,10 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   beforeEach(() => {
     player = new RxPlayer();
     player.setWantedBufferAhead(5); // We don't really care
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   it("should use the forced text track linked to the default audio track by default", async function () {
