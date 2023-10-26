@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../src";
-import XHRMock from "../../utils/request_mock";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import {
@@ -10,17 +9,14 @@ import {
 } from "../../utils/bitrates";
 
 let player;
-let xhrMock;
 
 describe("Fast-switching", function () {
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   const { url, transport } = manifestInfos;
