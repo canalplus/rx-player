@@ -220,4 +220,9 @@ export default [
     path: path.join(currentDirectory, "./media/V300/776759079.m4s"),
     contentType: "audio/mp4",
   },
+  {
+    url: "/time",
+    data: "2019-05-25T13:49:08.014Z",
+    contentType: "text/plain",
+  },
 ];

@@ -21,20 +21,16 @@ import sleep from "../../utils/sleep.js";
 import /* waitForState, */ {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
-import XHRMock from "../../utils/request_mock";
 
 describe("loadVideo Options", () => {
   let player;
-  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   describe("url", () => {
@@ -48,17 +44,28 @@ describe("loadVideo Options", () => {
     });
 
     it("should request the URL if one is given", async () => {
-      xhrMock.lock();
+      let manifestLoaderCalledTimes = 0;
+      let segmentLoaderLoaderCalledTimes = 0;
+      const manifestLoader = (man, callbacks) => {
+        expect(manifestInfos.url).to.equal(man.url);
+        manifestLoaderCalledTimes++;
+        callbacks.fallback();
+      };
+      const segmentLoader = () => {
+        segmentLoaderLoaderCalledTimes++;
+      };
       player.loadVideo({
         url: manifestInfos.url,
         transport: "dash",
         autoPlay: true,
+        manifestLoader,
+        segmentLoader,
       });
 
       await sleep(0);
 
-      expect(xhrMock.getLockedXHR().length).to.equal(1);
-      expect(xhrMock.getLockedXHR()[0].url).to.equal(manifestInfos.url);
+      expect(manifestLoaderCalledTimes).to.equal(1);
+      expect(segmentLoaderLoaderCalledTimes).to.equal(0);
     });
   });
 
