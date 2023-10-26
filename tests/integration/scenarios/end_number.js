@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import XHRMock from "../../utils/request_mock";
 import {
   manifestInfosEndNumber as numberBasedManifestInfos,
 } from "../../contents/DASH_static_number_based_SegmentTimeline";
@@ -17,20 +16,16 @@ import {lockLowestBitrates} from "../../utils/bitrates";
 let player;
 
 describe("end number", function () {
-  let xhrMock;
   beforeEach(() => {
     player = new RxPlayer({ stopAtEnd: false });
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   it("should calculate the right duration according to endNumber on a number-based SegmentTemplate", async function () {
     this.timeout(3000);
-    xhrMock.lock();
     lockLowestBitrates(player);
     player.setWantedBufferAhead(15);
     const { url, transport } = templateManifestinfos;
@@ -40,9 +35,6 @@ describe("end number", function () {
       transport,
       autoPlay: false,
     });
-    await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
-    await xhrMock.flush();
     await sleep(500);
     expect(player.getMinimumPosition()).to.eql(0);
     expect(player.getMaximumPosition()).to.eql(120 + 30);
@@ -50,40 +42,40 @@ describe("end number", function () {
 
   it("should not load segment later than the end number on a time-based SegmentTimeline", async function () {
     this.timeout(15000);
-    xhrMock.lock();
     lockLowestBitrates(player);
-    player.setWantedBufferAhead(15);
     const { url, transport } = timeBasedManifestInfos;
 
+    const requestedSegments = [];
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+    };
+    player.setWantedBufferAhead(1);
     player.loadVideo({
       url,
       transport,
-      autoPlay: true,
+      autoPlay: false,
+      segmentLoader,
     });
     await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(1); // Manifest
-    await xhrMock.flush();
-    await sleep(50);
     expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
-    expect(xhrMock.getLockedXHR().length).to.equal(4); // Init + media of audio
-                                                       // + video
-    await xhrMock.flush();
-    await waitForLoadedStateAfterLoadVideo(player);
-
-    await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // next audio + video
-    xhrMock.flush();
+    expect(requestedSegments.length).to.equal(4); // Init+media of audio+video
+    if (player.getPlayerState() !== "LOADED") {
+      await waitForLoadedStateAfterLoadVideo(player);
+    }
     player.seekTo(19);
+    player.play();
+    await sleep(10);
+    player.setWantedBufferAhead(Infinity);
+    expect(requestedSegments.length).to.equal(6); // + last audio + video
     await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(2); // last audio + video
-    xhrMock.flush();
+    expect(requestedSegments.length).to.equal(6); // + last audio + video
     await waitForState(player, "ENDED", ["BUFFERING", "RELOADING", "PLAYING"]);
     expect(player.getPosition()).to.be.closeTo(20, 1);
   });
 
   it("should calculate the right duration on a number-based SegmentTimeline", async function () {
     this.timeout(10000);
-    xhrMock.lock();
     lockLowestBitrates(player);
     player.setWantedBufferAhead(15);
     const { url, transport } = numberBasedManifestInfos;
@@ -93,10 +85,7 @@ describe("end number", function () {
       transport,
       autoPlay: true,
     });
-    await sleep(50);
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
-    await xhrMock.flush();
-    await sleep(50);
+    await sleep(100);
     expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
   });
 });
