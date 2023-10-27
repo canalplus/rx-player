@@ -184,6 +184,10 @@ function parseRepresentationAttributes(
                                  dashName: "qualityRanking" });
         break;
 
+      case "scte214:supplementalCodecs":
+        attributes.supplementalCodecs = attr.value;
+        break;
+
       case "segmentProfiles":
         attributes.segmentProfiles = attr.value;
         break;

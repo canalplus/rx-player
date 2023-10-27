@@ -232,6 +232,7 @@ export interface IAdaptationSetAttributes {
   segmentAlignment? : number|boolean;
   segmentProfiles? : string;
   subsegmentAlignment? : number|boolean;
+  supplementalCodecs?: string;
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
@@ -271,6 +272,7 @@ export interface IRepresentationAttributes {
   profiles? : string;
   qualityRanking? : number;
   segmentProfiles? : string;
+  supplementalCodecs?: string;
   width? : number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;

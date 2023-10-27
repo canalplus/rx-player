@@ -112,6 +112,12 @@ class Representation {
   public codec : string | undefined;
 
   /**
+   * Supplemental codecs are defined as backwards-compatible codecs enhancing
+   * the experience of a base layer codec
+   */
+  public supplementalCodec?: string | undefined;
+
+  /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain
    * undefined if we do not know.
@@ -160,6 +166,10 @@ class Representation {
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
+
+    if (args.supplementalCodecs !== undefined) {
+      this.supplementalCodec = args.supplementalCodecs;
+    }
 
     if (args.isSpatialAudio !== undefined) {
       this.isSpatialAudio = args.isSpatialAudio;

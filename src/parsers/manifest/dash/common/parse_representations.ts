@@ -213,6 +213,17 @@ export default function parseRepresentations(
       codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
       parsedRepresentation.codecs = codecs;
     }
+
+    let supplementalCodecs: string | undefined;
+    if (representation.attributes.supplementalCodecs != null) {
+      supplementalCodecs = representation.attributes.supplementalCodecs;
+    } else if (adaptation.attributes.supplementalCodecs != null) {
+      supplementalCodecs = adaptation.attributes.supplementalCodecs;
+    }
+    if (supplementalCodecs != null) {
+      parsedRepresentation.supplementalCodecs = supplementalCodecs;
+    }
+
     if (representation.attributes.frameRate != null) {
       parsedRepresentation.frameRate =
         representation.attributes.frameRate;
