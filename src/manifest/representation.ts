@@ -117,6 +117,8 @@ class Representation {
    */
   public supplementalCodec?: string | undefined;
 
+
+  public isSupplementalCodecSupported: boolean;
   /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain
@@ -201,6 +203,15 @@ class Representation {
 
     this.cdnMetadata = args.cdnMetadata;
 
+    if (this.supplementalCodec !== undefined) {
+      const supplementalCodecMimeTypeStr =
+       `${this.mimeType ?? ""};codecs="${this.supplementalCodec ?? ""}"`;
+      const isSupplementalCodecSupported = isCodecSupported(supplementalCodecMimeTypeStr);
+      this.isSupplementalCodecSupported = isSupplementalCodecSupported;
+    } else {
+      this.isSupplementalCodecSupported = false;
+    }
+
     this.index = args.index;
     if (opts.type === "audio" || opts.type === "video") {
       const mimeTypeStr = this.getMimeTypeString();
@@ -220,7 +231,11 @@ class Representation {
    * @returns {string}
    */
   public getMimeTypeString() : string {
-    return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
+    if (this.isSupplementalCodecSupported) {
+      return `${this.mimeType ?? ""};codecs="${this.supplementalCodec ?? ""}"`;
+    } else {
+      return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
+    }
   }
 
   /**
