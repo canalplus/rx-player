@@ -22,8 +22,7 @@ At the time of writing, there are two distinct demos:
 
 The `demo/` directory stores the player builds of the last version released.
 
-Two directories, namely ``_esm5.raw`` and ``_esm5.processed`` can also be
-generated in here if the right scripts are called.
+Directories can also be generated in here if the right scripts are called.
 These allow to publish more modular codebases to npm.
 
 
