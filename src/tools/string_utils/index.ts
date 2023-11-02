@@ -14,23 +14,11 @@
  * limitations under the License.
  */
 
-// Compile-time globals
-// Should be all replaced once the lib built.
-
-/* eslint-disable @typescript-eslint/naming-convention */
-
-declare const __ENVIRONMENT__ : {
-  CURRENT_ENV : 0 | 1;
-  DEV : 0;
-  PRODUCTION : 1;
-} | typeof ENVIRONMENT_ENUM;
-
-declare const enum ENVIRONMENT_ENUM {
-  CURRENT_ENV,
-  DEV,
-  PRODUCTION,
-}
-
-declare const __LOGGER_LEVEL__ : {
-  CURRENT_LEVEL : string;
-};
+export {
+  beUtf16ToStr,
+  utf16LEToStr,
+  strToBeUtf16,
+  strToUtf16LE,
+  strToUtf8,
+  utf8ToStr,
+} from "../../utils/string_parsing";

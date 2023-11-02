@@ -1,18 +1,18 @@
+#!/usr/bin/env node
 /**
- * # fast_demo_build.js
+ * # build_demo.mjs
  *
- * This file allows to perform a "fast" build of the RxPlayer's demo, by using
- * esbuild.
+ * This file allows to build the demo of the RxPlayer, by using esbuild.
  *
- * You can either run it directly as a script (run `node fast_demo_build.js -h`
+ * You can either run it directly as a script (run `node build_demo.mjs -h`
  * to see the different options) or by requiring it as a node module.
  * If doing the latter you will obtain a function you will have to run with the
  * right options.
  */
 
-const path = require("path");
-const esbuild = require("esbuild");
-const getHumanReadableHours = require("./utils/get_human_readable_hours");
+import path from "path";
+import esbuild from "esbuild";
+import getHumanReadableHours from "./utils/get_human_readable_hours";
 
 // If true, this script is called directly
 if (require.main === module) {
@@ -25,7 +25,7 @@ if (require.main === module) {
   const shouldMinify = argv.includes("-m") || argv.includes("--minify");
   const production = argv.includes("-p") || argv.includes("--production-mode");
   const includeWasmParser = argv.includes("--include-wasm");
-  fastDemoBuild({
+  buildDemo({
     watch: shouldWatch,
     minify: shouldMinify,
     includeWasmParser,
@@ -33,7 +33,7 @@ if (require.main === module) {
   });
 } else {
   // This script is loaded as a module
-  module.exports = fastDemoBuild;
+  module.exports = buildDemo;
 }
 
 /**
@@ -47,7 +47,7 @@ if (require.main === module) {
  * @param {boolean} [options.includeWasmParser] - If `true`, the WebAssembly MPD
  * parser of the RxPlayer will be used (if it can be requested).
  */
-function fastDemoBuild(options) {
+function buildDemo(options) {
   const minify = !!options.minify;
   const watch = !!options.watch;
   const isDevMode = !options.production;
@@ -117,7 +117,7 @@ function displayHelp() {
   /* eslint-disable no-console */
   console.log(
   /* eslint-disable indent */
-`Usage: node generate_full_demo.js [options]
+`Usage: node build_demo.mjs [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
