@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import StringUtils from "../__BUILD_DIR__/tools/string_utils/index";
-export * from "../__BUILD_DIR__/tools/string_utils/index";
-export default StringUtils;
+import parseBIFThumbnails from "../../__BUILD_DIR__/experimental/tools/parseBIFThumbnails/index.js";
+export * from "../../__BUILD_DIR__/experimental/tools/parseBIFThumbnails/index.js";
+export default parseBIFThumbnails;
