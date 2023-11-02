@@ -14,3 +14,7 @@ respective "normal" directory in the RxPlayer code, to then be imported through
 this directory.
 This last step is mainly to confine the "library path" of that feature to the
 `rx-player/experimental/features` subdirectory.
+
+Note that tools NEED to be declared in their own directory inside a
+`./tools/<TOOL_NAME>` directory, with their inner `index.js` file exporting
+them, as that's a requirement from our exporting strategy.
