@@ -13,12 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-export {
-  beUtf16ToStr,
-  utf16LEToStr,
-  strToBeUtf16,
-  strToUtf16LE,
-  strToUtf8,
-  utf8ToStr,
-} from "../utils/string_parsing";
+import createMetaplaylist from "../../__BUILD_DIR__/experimental/tools/createMetaplaylist/index";
+export * from "../../__BUILD_DIR__/experimental/tools/createMetaplaylist/index";
+export default createMetaplaylist;

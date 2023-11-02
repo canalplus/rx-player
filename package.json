@@ -3,7 +3,103 @@
   "author": "Canal+",
   "version": "4.0.0-beta.3",
   "description": "Canal+ HTML5 Video Player",
-  "main": "./dist/_esm5.processed/index.js",
+  "main": "./dist/commonjs/index.js",
+  "module": "./dist/es2017/index.js",
+  "browser": "./dist/es2017/index.js",
+  "exports": {
+    ".": {
+      "node": "./dist/commonjs/index.js",
+      "es2015": "./dist/es2017/index.js",
+      "require": "./dist/commonjs/index.js",
+      "import": "./dist/es2017/index.js",
+      "default": "./dist/es2017/index.js"
+    },
+    "./experimental": {
+      "node": "./dist/commonjs/experimental/index.js",
+      "es2015": "./dist/es2017/experimental/index.js",
+      "require": "./dist/commonjs/experimental/index.js",
+      "import": "./dist/es2017/experimental/index.js",
+      "default": "./dist/es2017/experimental/index.js"
+    },
+    "./experimental/features": {
+      "node": "./dist/commonjs/experimental/features/index.js",
+      "es2015": "./dist/es2017/experimental/features/index.js",
+      "require": "./dist/commonjs/experimental/features/index.js",
+      "import": "./dist/es2017/experimental/features/index.js",
+      "default": "./dist/es2017/experimental/features/index.js"
+    },
+    "./experimental/features/*": {
+      "node": "./dist/commonjs/experimental/features/*.js",
+      "es2015": "./dist/es2017/experimental/features/*.js",
+      "require": "./dist/commonjs/experimental/features/*.js",
+      "import": "./dist/es2017/experimental/features/*.js",
+      "default": "./dist/es2017/experimental/features/*.js"
+    },
+    "./experimental/tools": {
+      "node": "./dist/commonjs/experimental/tools/index.js",
+      "es2015": "./dist/es2017/experimental/tools/index.js",
+      "require": "./dist/commonjs/experimental/tools/index.js",
+      "import": "./dist/es2017/experimental/tools/index.js",
+      "default": "./dist/es2017/experimental/tools/index.js"
+    },
+    "./experimental/tools/*": {
+      "node": "./dist/commonjs/experimental/tools/*/index.js",
+      "es2015": "./dist/es2017/experimental/tools/*/index.js",
+      "require": "./dist/commonjs/experimental/tools/*/index.js",
+      "import": "./dist/es2017/experimental/tools/*/index.js",
+      "default": "./dist/es2017/experimental/tools/*/index.js"
+    },
+    "./features": {
+      "node": "./dist/commonjs/features/list/index.js",
+      "es2015": "./dist/es2017/features/list/index.js",
+      "require": "./dist/commonjs/features/list/index.js",
+      "import": "./dist/es2017/features/list/index.js",
+      "default": "./dist/es2017/features/list/index.js"
+    },
+    "./features/*": {
+      "node": "./dist/commonjs/features/list/*.js",
+      "es2015": "./dist/es2017/features/list/*.js",
+      "require": "./dist/commonjs/features/list/*.js",
+      "import": "./dist/es2017/features/list/*.js",
+      "default": "./dist/es2017/features/list/*.js"
+    },
+    "./logger": {
+      "node": "./dist/commonjs/log.js",
+      "es2015": "./dist/es2017/log.js",
+      "require": "./dist/commonjs/log.js",
+      "import": "./dist/es2017/log.js",
+      "default": "./dist/es2017/log.js"
+    },
+    "./minimal": {
+      "node": "./dist/commonjs/minimal.js",
+      "es2015": "./dist/es2017/minimal.js",
+      "require": "./dist/commonjs/minimal.js",
+      "import": "./dist/es2017/minimal.js",
+      "default": "./dist/es2017/minimal.js"
+    },
+    "./tools": {
+      "node": "./dist/commonjs/tools/index.js",
+      "es2015": "./dist/es2017/tools/index.js",
+      "require": "./dist/commonjs/tools/index.js",
+      "import": "./dist/es2017/tools/index.js",
+      "default": "./dist/es2017/tools/index.js"
+    },
+    "./tools/*": {
+      "node": "./dist/commonjs/tools/*/index.js",
+      "es2015": "./dist/es2017/tools/*/index.js",
+      "require": "./dist/commonjs/tools/*/index.js",
+      "import": "./dist/es2017/tools/*/index.js",
+      "default": "./dist/es2017/tools/*/index.js"
+    },
+    "./types": {
+      "node": "./dist/commonjs/types/index.js",
+      "es2015": "./dist/es2017/types/index.js",
+      "require": "./dist/commonjs/types/index.js",
+      "import": "./dist/es2017/types/index.js",
+      "default": "./dist/es2017/types/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "dash",
     "eme",
@@ -17,7 +113,6 @@
     "typescript",
     "video"
   ],
-  "browser": "./dist/_esm5.processed/index.js",
   "homepage": "https://github.com/canalplus/rx-player",
   "bugs": "https://github.com/canalplus/rx-player/issues",
   "license": "Apache-2.0",
@@ -42,9 +137,9 @@
     "check:types:watch": "tsc --noEmit --watch --project .",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/full",
-    "demo": "node ./scripts/generate_full_demo.js --production-mode",
-    "demo:min": "node ./scripts/generate_full_demo.js --production-mode --minify",
-    "demo:watch": "node ./scripts/generate_full_demo.js --watch --production-mode",
+    "demo": "node ./scripts/build_demo.mjs --production-mode",
+    "demo:min": "node ./scripts/build_demo.mjs --production-mode --minify",
+    "demo:watch": "node ./scripts/build_demo.mjs --watch --production-mode",
     "doc": "readme.doc doc/ doc/generated \"$(cat VERSION)\"",
     "lint": "eslint src -c .eslintrc.js",
     "lint:demo": "eslint -c demo/full/.eslintrc.js demo/full/scripts",
@@ -53,10 +148,8 @@
     "prepublishOnly": "npm run build:all",
     "releases:dev": "./scripts/make-dev-releases",
     "standalone": "node ./scripts/run_standalone_demo.js",
-    "start": "node ./scripts/start_demo_web_server.js",
-    "start:wasm": "node ./scripts/start_demo_web_server.js --include-wasm",
-    "s": "node ./scripts/start_demo_web_server.js --fast",
-    "s:wasm": "node ./scripts/start_demo_web_server.js --fast --include-wasm",
+    "start": "node ./scripts/start_demo_web_server.mjs",
+    "sart:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
     "wasm-strip": "node scripts/wasm-strip.js dist/mpd-parser.wasm",
     "test:appveyor": "npm run test:unit && npm run test:memory",
     "test:integration": "node tests/integration/run.js --bchromehl --bfirefoxhl",
@@ -137,8 +230,6 @@
     "Build a demo page (e.g. to test a code change)": {
       "start": "Build the \"full\" demo (with a UI) with the non-minified RxPlayer and serve it on a local server. Re-build on file updates.",
       "start:wasm": "Build the \"full\" demo (with a UI) with the non-minified RxPlayer including the DASH WebAssembly MPD parser and serve it on a local server. Re-build on file updates.",
-      "s": "Very fast version of `start` which does not perform type-checking. This script can be useful for quick testing",
-      "s:wasm": "Very fast version of `start:wasm` which does not perform type-checking. This script can be useful for quick testing",
       "demo": "Build the demo in demo/bundle.js",
       "demo:min": "Build the demo and minify it in demo/bundle.js",
       "demo:watch": "Build the demo in demo/bundle.js each times the files update.",
