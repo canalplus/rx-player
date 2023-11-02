@@ -56,6 +56,7 @@ export type IParsedStartAtOption = { position : number } |
                                    { wallClockTime : number } |
                                    { percentage : number } |
                                    { fromLastPosition : number } |
+                                   { fromLivePosition : number } |
                                    { fromFirstPosition : number };
 
 export interface IParsedTransportOptions {

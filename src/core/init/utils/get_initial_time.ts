@@ -42,10 +42,19 @@ export interface IInitialTimeOptions {
    */
   fromFirstPosition? : number | null | undefined;
   /**
-   * If set, we should begin at this position relative to the content's end,
-   * in seconds.
+   * If set, we should begin at this position relative to the content's maximum
+   * seekable position, in seconds.
    */
   fromLastPosition? : number | null | undefined;
+  /**
+   * If set, we should begin at this position relative to the content's live
+   * edge if it makes sense, in seconds.
+   *
+   * If the live edge is unknown or if it does not make sense for the current
+   * content, that position is relative to the content's maximum position
+   * instead.
+   */
+  fromLivePosition? : number | null | undefined;
   /** If set, we should begin at this position relative to the whole duration of
    * the content, in percentage.
    */
@@ -72,13 +81,7 @@ export default function getInitialTime(
 ) : number {
   if (!isNullOrUndefined(startAt)) {
     const min = manifest.getMinimumSafePosition();
-    let max;
-    if (manifest.isLive) {
-      max = manifest.getLivePosition();
-    }
-    if (max === undefined) {
-      max = manifest.getMaximumSafePosition();
-    }
+    const max = manifest.getMaximumSafePosition();
     if (!isNullOrUndefined(startAt.position)) {
       log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
@@ -96,12 +99,17 @@ export default function getInitialTime(
       const { fromFirstPosition } = startAt;
       return fromFirstPosition <= 0 ? min :
                                       Math.min(max, min + fromFirstPosition);
-    }
-    else if (!isNullOrUndefined(startAt.fromLastPosition)) {
+    } else if (!isNullOrUndefined(startAt.fromLastPosition)) {
       log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
       return fromLastPosition >= 0 ? max :
                                      Math.max(min, max + fromLastPosition);
+    } else if (!isNullOrUndefined(startAt.fromLivePosition)) {
+      log.debug("Init: using startAt.fromLivePosition");
+      const livePosition = manifest.getLivePosition() ?? max;
+      const { fromLivePosition } = startAt;
+      return fromLivePosition >= 0 ? livePosition :
+                                     Math.max(min, livePosition + fromLivePosition);
     } else if (!isNullOrUndefined(startAt.percentage)) {
       log.debug("Init: using startAt.percentage");
       const { percentage } = startAt;
