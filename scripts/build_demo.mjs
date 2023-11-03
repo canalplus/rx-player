@@ -10,12 +10,14 @@
  * right options.
  */
 
-import path from "path";
+import { join } from "path";
+import { pathToFileURL } from "url";
 import esbuild from "esbuild";
-import getHumanReadableHours from "./utils/get_human_readable_hours";
+import rootDirectory from "./utils/project_root_directory.mjs";
+import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 
 // If true, this script is called directly
-if (require.main === module) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { argv } = process;
   if (argv.includes("-h") || argv.includes("--help")) {
     displayHelp();
@@ -31,9 +33,6 @@ if (require.main === module) {
     includeWasmParser,
     production,
   });
-} else {
-  // This script is loaded as a module
-  module.exports = buildDemo;
 }
 
 /**
@@ -47,7 +46,7 @@ if (require.main === module) {
  * @param {boolean} [options.includeWasmParser] - If `true`, the WebAssembly MPD
  * parser of the RxPlayer will be used (if it can be requested).
  */
-function buildDemo(options) {
+export default function buildDemo(options) {
   const minify = !!options.minify;
   const watch = !!options.watch;
   const isDevMode = !options.production;
@@ -75,13 +74,15 @@ function buildDemo(options) {
     },
   };
 
+  const meth = watch ? "context" : "build";
+
   // Create a context for incremental builds
-  esbuild.context({
-    entryPoints: [path.join(__dirname, "../demo/full/scripts/index.tsx")],
+  esbuild[meth]({
+    entryPoints: [join(rootDirectory, "demo/full/scripts/index.tsx")],
     bundle: true,
     target: "es2017",
     minify,
-    outfile: path.join(__dirname, "../demo/full/bundle.js"),
+    outfile: join(rootDirectory, "demo/full/bundle.js"),
     plugins: [consolePlugin],
     define: {
       "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
