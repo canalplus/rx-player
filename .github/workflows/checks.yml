@@ -51,7 +51,7 @@ jobs:
     - run: npm install
     # Firefox seems to have issue with integration tests on GitHub actions only
     # TODO to check
-    - run: node tests/integration/run.js --bchromehl
+    - run: node tests/integration/run.mjs --bchromehl
     - run: npm run test:memory
 
   # Windows seems to be a lot less stable for some reason.
@@ -75,7 +75,7 @@ jobs:
   #   - run: npm install
   #   # Firefox seems to have issue with integration tests on GitHub actions only
   #   # TODO to check
-  #   - run: node tests/integration/run.js --bchromehl
+  #   - run: node tests/integration/run.mjs --bchromehl
   #   - run: npm run test:memory
 
   # MacOS seems to be a lot less stable for some reason.
