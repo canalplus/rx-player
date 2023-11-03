@@ -17,6 +17,7 @@
 import shouldUnsetMediaKeys from "../../compat/should_unset_media_keys";
 import log from "../../log";
 import disposeDecryptionResources from "./dispose_decryption_resources";
+import cleanOldLoadedSessions from "./utils/clean_old_loaded_sessions";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
@@ -39,6 +40,11 @@ export default function clearOnStop(mediaElement: HTMLMediaElement): Promise<unk
   ) {
     log.info("DRM: closing all current sessions.");
     return currentState.loadedSessionsStore.closeAllSessions();
+  } else if (currentState !== null &&
+             currentState.keySystemOptions.maxSessionCacheSize !== undefined)
+  {
+    return cleanOldLoadedSessions(currentState.loadedSessionsStore,
+                                  currentState.keySystemOptions.maxSessionCacheSize);
   }
   log.info(
     "DRM: Nothing to clear. Returning right away. No state =",

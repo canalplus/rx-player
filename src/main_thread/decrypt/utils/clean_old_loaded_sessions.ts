@@ -28,7 +28,7 @@ import type LoadedSessionsStore from "./loaded_sessions_store";
  */
 export default async function cleanOldLoadedSessions(
   loadedSessionsStore: LoadedSessionsStore,
-  limit: number,
+  limit: number
 ): Promise<void> {
   if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
     return;
