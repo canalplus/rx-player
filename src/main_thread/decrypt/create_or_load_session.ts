@@ -82,7 +82,7 @@ export default async function createOrLoadSession(
     }
   }
 
-  await cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize);
+  await cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize - 1);
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError; // stop here if cancelled since
   }
