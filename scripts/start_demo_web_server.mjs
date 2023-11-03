@@ -14,9 +14,10 @@
  * full demo file or one of the library file is updated.
  */
 
-import path from "path";
-import fastBuild from "./fast_demo_build";
-import launchStaticServer from "./launch_static_server";
+import { join } from "path";
+import buildDemo from "./build_demo.mjs";
+import projectRootDirectory from "./utils/project_root_directory.mjs";
+import launchStaticServer from "./launch_static_server.mjs";
 
 if (process.argv.includes("-h") || process.argv.includes("--help")) {
   displayHelp();
@@ -27,14 +28,14 @@ const includeWasmParser = process.argv.includes("--include-wasm");
 const production = process.argv.includes("--production-mode");
 const shouldMinify = process.argv.includes("--minify");
 
-fastBuild({ watch: true,
+buildDemo({ watch: true,
             minify: shouldMinify,
             production,
            includeWasmParser });
 
-launchStaticServer(path.join(__dirname, "../demo/full/"),
-                   { certificatePath: path.join(__dirname, "../localhost.crt"),
-                     keyPath: path.join(__dirname, "../localhost.key"),
+launchStaticServer(join(projectRootDirectory, "demo/full/"),
+                   { certificatePath: join(projectRootDirectory, "localhost.crt"),
+                     keyPath: join(projectRootDirectory, "localhost.key"),
                      verbose: true,
                      httpPort: 8000,
                      httpsPort: 8443 });
