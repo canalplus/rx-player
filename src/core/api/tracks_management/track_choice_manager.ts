@@ -43,7 +43,6 @@ import normalizeLanguage from "../../../utils/languages";
 import objectAssign from "../../../utils/object_assign";
 import SharedReference from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
-import takeFirstSet from "../../../utils/take_first_set";
 
 /** Audio information stored for a single Period. */
 interface ITMPeriodAudioInfos {
@@ -1092,8 +1091,7 @@ function createTextPreferenceMatcher(
    * @returns {boolean}
    */
   return function matchTextPreference(textAdaptation : Adaptation) : boolean {
-    return takeFirstSet<string>(textAdaptation.normalizedLanguage,
-                                "") === preferredTextTrack.normalized &&
+    return (textAdaptation.normalizedLanguage ?? "") === preferredTextTrack.normalized &&
     (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true :
                                         textAdaptation.isClosedCaption !== true) &&
     (preferredTextTrack.forced === true ? textAdaptation.isForcedSubtitles === true :

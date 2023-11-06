@@ -26,7 +26,6 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
-import takeFirstSet from "../../../utils/take_first_set";
 import { createBox } from "../../containers/isobmff";
 import {
   IContentProtectionKID,
@@ -258,7 +257,7 @@ function createSmoothStreamingParser(
                  customAttributes,
                  mimeType: fourCC !== undefined ? MIME_TYPES[fourCC] :
                                                   fourCC,
-                 codecPrivateData: takeFirstSet<string>(codecPrivateData, "") };
+                 codecPrivateData: codecPrivateData ?? "" };
       }
 
       default:

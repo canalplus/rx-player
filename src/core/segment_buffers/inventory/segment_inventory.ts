@@ -23,7 +23,6 @@ import {
   Period,
   Representation,
 } from "../../../manifest";
-import takeFirstSet from "../../../utils/take_first_set";
 import BufferedHistory, {
   IBufferedHistoryEntry,
 } from "./buffered_history";
@@ -219,7 +218,7 @@ export default class SegmentInventory {
       // skip until first segment with at least `MINIMUM_SEGMENT_SIZE` past the
       // start of that range.
       while (thisSegment !== undefined &&
-             (takeFirstSet<number>(thisSegment.bufferedEnd, thisSegment.end)
+             ((thisSegment.bufferedEnd ?? thisSegment.end)
                - rangeStart) < MINIMUM_SEGMENT_SIZE)
       {
         thisSegment = inventory[++inventoryIndex];
@@ -239,8 +238,7 @@ export default class SegmentInventory {
           inventory[indexBefore + numberOfSegmentToDelete - 1];
 
         lastDeletedSegmentInfos = {
-          end: takeFirstSet<number>(lastDeletedSegment.bufferedEnd,
-                                    lastDeletedSegment.end),
+          end: lastDeletedSegment.bufferedEnd ?? lastDeletedSegment.end,
           precizeEnd: lastDeletedSegment.precizeEnd,
         };
         log.debug(`SI: ${numberOfSegmentToDelete} segments GCed.`, bufferType);
@@ -259,8 +257,7 @@ export default class SegmentInventory {
 
       // If the current segment is actually completely outside that range (it
       // is contained in one of the next one), skip that part.
-      if (rangeEnd -
-          takeFirstSet<number>(thisSegment.bufferedStart, thisSegment.start)
+      if (rangeEnd - (thisSegment.bufferedStart ?? thisSegment.start)
             >= MINIMUM_SEGMENT_SIZE
       ) {
         guessBufferedStartFromRangeStart(thisSegment,
@@ -278,10 +275,8 @@ export default class SegmentInventory {
         thisSegment = inventory[++inventoryIndex];
 
         // Make contiguous until first segment outside that range
-        let thisSegmentStart = takeFirstSet<number>(thisSegment.bufferedStart,
-                                                    thisSegment.start);
-        let thisSegmentEnd =  takeFirstSet<number>(thisSegment.bufferedEnd,
-                                                   thisSegment.end);
+        let thisSegmentStart = thisSegment.bufferedStart ?? thisSegment.start;
+        let thisSegmentEnd = thisSegment.bufferedEnd ?? thisSegment.end;
         const nextRangeStart = i < rangesLength - 1 ? buffered.start(i + 1) :
                                                       undefined;
         while (thisSegment !== undefined &&
@@ -303,10 +298,8 @@ export default class SegmentInventory {
           thisSegment.bufferedStart = prevSegment.bufferedEnd;
           thisSegment = inventory[++inventoryIndex];
           if (thisSegment !== undefined) {
-            thisSegmentStart = takeFirstSet<number>(thisSegment.bufferedStart,
-                                                    thisSegment.start);
-            thisSegmentEnd =  takeFirstSet<number>(thisSegment.bufferedEnd,
-                                                   thisSegment.end);
+            thisSegmentStart = thisSegment.bufferedStart ?? thisSegment.start;
+            thisSegmentEnd =  thisSegment.bufferedEnd ?? thisSegment.end;
           }
         }
       }
