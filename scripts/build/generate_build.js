@@ -24,15 +24,13 @@ const os = require("os");
 const path = require("path");
 const { rimraf } = require("rimraf");
 
-const BUILD_DIR_FROM_ROOT = "dist/_esm5.processed";
+const BUILD_DIR_FROM_ROOT_FOR_TEMPLATES = "dist/es2017";
 
 const ROOT_DIR = path.join(__dirname, "../../");
 const TEMPLATE_DIR = path.join(__dirname, "../../scripts/build/templates");
-const TMP_BUILD_DIR = path.join(ROOT_DIR, "dist/_esm5.raw");
-const BUILD_DIR = path.join(ROOT_DIR, BUILD_DIR_FROM_ROOT);
 const BUILD_ARTEFACTS_TO_REMOVE = [
-  "dist/_esm5.processed",
-  "dist/_esm5.raw",
+  "dist/commonjs",
+  "dist/es2017",
   "features",
   "minimal",
   "experimental",
@@ -53,9 +51,6 @@ async function generateBuild() {
 
     console.log(" ⚙️  Compiling project with TypeScript...");
     await compile();
-
-    console.log(" 🚚 Moving built code to its final directory...");
-    await fs.rename(TMP_BUILD_DIR, BUILD_DIR);
 
     console.log(" 📦 Generating imported files from templates...");
     await generateImportFilesFromTemplates();
@@ -86,15 +81,22 @@ async function removePreviousBuildArtefacts() {
  * @returns {Promise}
  */
 async function compile() {
-    // Sadly TypeScript compiler API seems to be sub-par.
-    // I did not find for example how to exclude some files (our unit tests)
-    // easily by running typescript directly from NodeJS.
-    // So we just spawn a separate process running tsc:
-    await spawnProm(
+  // Sadly TypeScript compiler API seems to be sub-par.
+  // I did not find for example how to exclude some files (our unit tests)
+  // easily by running typescript directly from NodeJS.
+  // So we just spawn a separate process running tsc:
+  await Promise.all([
+    spawnProm(
       "npx tsc -p",
-      [path.join(ROOT_DIR, "tsconfig.modules.json")],
-      (code) => new Error(`Compilation process exited with code ${code}`),
-    );
+      [path.join(ROOT_DIR, "tsconfig.json")],
+      (code) => new Error(`CommonJS compilation process exited with code ${code}`),
+    ),
+    spawnProm(
+      "npx tsc -p",
+      [path.join(ROOT_DIR, "tsconfig.commonjs.json")],
+      (code) => new Error(`es2018 compilation process exited with code ${code}`),
+    )
+  ]);
 }
 
 /**
@@ -165,7 +167,7 @@ async function copyDir(src, dest) {
  * @returns {Promise}
  */
 async function replaceTokensInTemplates(fileDest) {
-  const sedDir = BUILD_DIR_FROM_ROOT.replace(/\//g, "\\/");
+  const sedDir = BUILD_DIR_FROM_ROOT_FOR_TEMPLATES.replace(/\//g, "\\/");
   switch (os.type()) {
     case "Darwin":
       await spawnProm(
