@@ -418,8 +418,17 @@ class Representation {
    * @returns {Object}
    */
   public toAudioRepresentation(): IAudioRepresentation {
-    const { id, isSpatialAudio, bitrate, codec } = this;
-    return { id, isSpatialAudio, bitrate, codec };
+    const { id,
+            isSpatialAudio,
+            bitrate,
+            codec,
+            supplementalCodec,
+            isSupplementalCodecSupported,
+    } = this;
+    // Depending if the device can play the supplemental codec or not
+    // We return as codec the codec that WILL be played if this representation is chosen
+    const codecInUse = isSupplementalCodecSupported ? supplementalCodec : codec;
+    return { id, isSpatialAudio, bitrate, codec: codecInUse };
   }
 
   /**
@@ -427,8 +436,19 @@ class Representation {
    * @returns {Object}
    */
   public toVideoRepresentation(): IVideoRepresentation {
-    const { id, bitrate, frameRate, width, height, codec, hdrInfo } = this;
-    return { id, bitrate, frameRate, width, height, codec, hdrInfo };
+    const { id,
+            bitrate,
+            frameRate,
+            width,
+            height,
+            codec,
+            hdrInfo,             supplementalCodec,
+            isSupplementalCodecSupported,
+    } = this;
+    // Depending if the device can play the supplemental codec or not
+    // We return as codec the codec that WILL be played if this representation is chosen
+    const codecInUse = isSupplementalCodecSupported ? supplementalCodec : codec;
+    return { id, bitrate, frameRate, width, height, codec: codecInUse, hdrInfo };
   }
 }
 
