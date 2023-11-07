@@ -114,11 +114,17 @@ class Representation {
   /**
    * Supplemental codecs are defined as backwards-compatible codecs enhancing
    * the experience of a base layer codec
+   * Optional attribute, a representation may not have supplemental codecs
    */
   public supplementalCodec?: string | undefined;
 
-
+  /**
+   * `true` if the Supplemental codec is in a supported codec
+   * `false` if there is no supplemental codec or
+   * if the supplemental codec is not supported
+   */
   public isSupplementalCodecSupported: boolean;
+
   /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain
