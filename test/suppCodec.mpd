@@ -13,7 +13,8 @@
           schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
       </Representation>
     </AdaptationSet>
-    <AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1">
+    <AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1" 
+    scte214:supplementalCodecs="avc1.42C01F" scte214:supplementalProfiles="db1p">
       <SegmentTemplate duration="3000" initialization="https://www.bok.net/dash/tears_of_steel/cleartext/$RepresentationID$/init.mp4"
         media="https://www.bok.net/dash/tears_of_steel/cleartext/$RepresentationID$/seg-$Number$.m4f" startNumber="1" timescale="1000" />
       <!-- <Representation bandwidth="686685" codecs="avc1.42C015" frameRate="24" height="214"
@@ -21,7 +22,8 @@
       <Representation bandwidth="1116150" codecs="avc1.42C016" frameRate="24" height="294"
         id="video/2" scanType="progressive" width="704" /> -->
       <Representation bandwidth="686685" codecs="avc1.42C015"
-        scte214:supplementalCodecs="avc1.42C01F" scte214:supplementalProfiles="db1p" frameRate="24"
+        scte214:supplementalCodecs="avc1.42C014"
+        frameRate="24"
         height="214"
         id="video/3" scanType="progressive" width="512"  />
       <!-- <Representation bandwidth="1929169" codecs="avc1.42C01F" frameRate="24" height="428"
