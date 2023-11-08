@@ -28,6 +28,41 @@ const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 const rangeRe = /([0-9]+)-([0-9]+)/;
 
+
+const supplementalCodecSeparator = /([,]? +)/g;
+/**
+ * Parse SCTE 214 supplemental codec string into RFC4281 codec string
+ *
+ * The returned value is a tuple of two elements where:
+ *   1. the first value is the parsed value - or `undefined` if the value is empty
+ *   2. the second value is a possible error encountered while parsing this
+ *      value - set to `null` if no error was encountered.
+ *
+ * SCTE 214 defines supplemental codecs as a whitespace-separated multiple list of
+ * codec strings
+ *
+ * RFC4281 defines codecs as a comma-separated list of codec strings.
+ *
+ * This two syntax differs and this parser is used to convert SCTE214
+ * to be compliant with what MSE APIs expect
+ *
+ * @param {string} val - The codec string to parse
+ * @returns { Array.<string | undefined | null>}
+ */
+function parseSupplementalCodec(
+  val: string
+) : [string ,
+      MPDError | null] {
+
+  if (isNonEmptyString(val)) {
+    const parsedValue = val
+      .trim()
+      .replace(supplementalCodecSeparator, ", ");
+    return [parsedValue, null];
+  }
+  return ["", null];
+}
+
 /**
  * Parse MPD boolean attributes.
  *
@@ -373,6 +408,7 @@ export {
   MPDError,
   ValueParser,
   parseBase64,
+  parseSupplementalCodec,
   parseBoolean,
   parseByteRange,
   parseDateTime,
