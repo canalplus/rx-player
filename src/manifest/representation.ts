@@ -175,10 +175,6 @@ class Representation {
     this.bitrate = args.bitrate;
     this.codec = args.codecs;
 
-    if (args.supplementalCodecs !== undefined) {
-      this.supplementalCodec = args.supplementalCodecs;
-    }
-
     if (args.isSpatialAudio !== undefined) {
       this.isSpatialAudio = args.isSpatialAudio;
     }
@@ -209,6 +205,10 @@ class Representation {
 
     this.cdnMetadata = args.cdnMetadata;
 
+    if (args.supplementalCodecs !== undefined) {
+      this.supplementalCodec = args.supplementalCodecs;
+    }
+
     if (this.supplementalCodec !== undefined) {
       const supplementalCodecMimeTypeStr =
        `${this.mimeType ?? ""};codecs="${this.supplementalCodec ?? ""}"`;
@@ -219,7 +219,12 @@ class Representation {
     }
 
     this.index = args.index;
-    if (opts.type === "audio" || opts.type === "video") {
+
+    if (this.isSupplementalCodecSupported) {
+    // The supplemental codec being supported indicate that the base codec will also
+    // be supported as the supplemental codec is backwards compatible with base codec
+      this.isSupported = true;
+    } else if (opts.type === "audio" || opts.type === "video") {
       const mimeTypeStr = this.getMimeTypeString();
       const isSupported = isCodecSupported(mimeTypeStr);
       if (!isSupported) {
@@ -442,7 +447,8 @@ class Representation {
             width,
             height,
             codec,
-            hdrInfo,             supplementalCodec,
+            hdrInfo,
+            supplementalCodec,
             isSupplementalCodecSupported,
     } = this;
     // Depending if the device can play the supplemental codec or not
