@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import config from "../../../config";
 import {
   formatError,
@@ -26,6 +25,7 @@ import {
   Period,
 } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
+import queueMicrotask from "../../../utils/queue_microtask";
 import { getLeftSizeOfBufferedTimeRange } from "../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
@@ -362,7 +362,7 @@ export default function PeriodStream(
     // is actually received.
     // It can happen when `askForMediaSourceReload` is called as a side-effect of
     // the same event that triggers the playback observation to be emitted.
-    nextTick(() => {
+    queueMicrotask(() => {
       playbackObserver.listen(() => {
         if (cancelSignal.isCancelled()) {
           return;
