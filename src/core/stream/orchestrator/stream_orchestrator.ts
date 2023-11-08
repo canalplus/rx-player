@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
@@ -22,6 +21,7 @@ import Manifest, {
   IDecipherabilityUpdateElement,
   Period,
 } from "../../../manifest";
+import queueMicrotask from "../../../utils/queue_microtask";
 import {
   createMappedReference,
   IReadOnlySharedReference,
@@ -350,7 +350,7 @@ export default function StreamOrchestrator(
       // Schedule micro task before checking the last playback observation
       // to reduce the risk of race conditions where the next observation
       // was going to be emitted synchronously.
-      nextTick(() => {
+      queueMicrotask(() => {
         if (orchestratorCancelSignal.isCancelled()) {
           return ;
         }
@@ -558,7 +558,7 @@ export default function StreamOrchestrator(
               // conditions where the inner logic would be called synchronously before
               // the next observation (which may reflect very different playback
               // conditions) is actually received.
-              return nextTick(() => {
+              return queueMicrotask(() => {
                 if (innerCancelSignal.isCancelled()) {
                   return;
                 }
