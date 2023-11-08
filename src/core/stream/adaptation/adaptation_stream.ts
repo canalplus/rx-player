@@ -1,4 +1,3 @@
-import nextTick from "next-tick";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
@@ -7,6 +6,7 @@ import assertUnreachable from "../../../utils/assert_unreachable";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
+import queueMicrotask from "../../../utils/queue_microtask";
 import SharedReference, {
   createMappedReference,
   IReadOnlySharedReference,
@@ -192,7 +192,7 @@ export default function AdaptationStream(
         // conditions where the inner logic would be called synchronously before
         // the next observation (which may reflect very different playback conditions)
         // is actually received.
-        return nextTick(() => {
+        return queueMicrotask(() => {
           playbackObserver.listen(() => {
             if (fnCancelSignal.isCancelled()) {
               return;
