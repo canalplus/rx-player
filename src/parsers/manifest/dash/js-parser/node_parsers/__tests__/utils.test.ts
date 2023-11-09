@@ -94,7 +94,7 @@ describe("dash parser helpers", function() {
         parseSupplementalCodec("avc1.4d400d avc1.4d4015"))
         .toEqual(["avc1.4d400d, avc1.4d4015", null]);
     });
-    it("should return comma-separated value if input is alreadu comma-separated" , () => {
+    it("should return comma-separated value if input is already comma-separated" , () => {
       expect(
         parseSupplementalCodec("avc1.4d400d, avc1.4d4015"))
         .toEqual(["avc1.4d400d, avc1.4d4015", null]);

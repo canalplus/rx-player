@@ -215,14 +215,11 @@ export default function parseRepresentations(
       parsedRepresentation.codecs = codecs;
     }
 
-    let supplementalCodecs: string | undefined;
     if (!isNullOrUndefined(representation.attributes.supplementalCodecs)) {
-      supplementalCodecs = representation.attributes.supplementalCodecs;
+      parsedRepresentation.supplementalCodecs =
+        representation.attributes.supplementalCodecs;
     } else if (!isNullOrUndefined(adaptation.attributes.supplementalCodecs)) {
-      supplementalCodecs = adaptation.attributes.supplementalCodecs;
-    }
-    if (!isNullOrUndefined(supplementalCodecs)) {
-      parsedRepresentation.supplementalCodecs = supplementalCodecs;
+      parsedRepresentation.supplementalCodecs = adaptation.attributes.supplementalCodecs;
     }
 
     if (!isNullOrUndefined(representation.attributes.frameRate)) {
