@@ -31,6 +31,7 @@ import {
   IContentProtectionIntermediateRepresentation,
 } from "../node_parser_types";
 import { getWEBMHDRInformation } from "./get_hdr_information";
+import { convertSupplementalCodecsToRFC6381 } from "./indexes/utils";
 import parseRepresentationIndex, {
   IRepresentationIndexContext,
 } from "./parse_representation_index";
@@ -215,11 +216,15 @@ export default function parseRepresentations(
       parsedRepresentation.codecs = codecs;
     }
 
+    let supplementalCodecs: string | undefined;
     if (!isNullOrUndefined(representation.attributes.supplementalCodecs)) {
-      parsedRepresentation.supplementalCodecs =
-        representation.attributes.supplementalCodecs;
+      supplementalCodecs = representation.attributes.supplementalCodecs;
     } else if (!isNullOrUndefined(adaptation.attributes.supplementalCodecs)) {
-      parsedRepresentation.supplementalCodecs = adaptation.attributes.supplementalCodecs;
+      supplementalCodecs = adaptation.attributes.supplementalCodecs;
+    }
+    if (!isNullOrUndefined(supplementalCodecs)) {
+      parsedRepresentation.supplementalCodecs =
+        convertSupplementalCodecsToRFC6381(supplementalCodecs);
     }
 
     if (!isNullOrUndefined(representation.attributes.frameRate)) {

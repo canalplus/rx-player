@@ -34,7 +34,6 @@ import {
   parseMPDFloat,
   parseMPDInteger,
   parseScheme,
-  parseSupplementalCodec,
   ValueParser,
 } from "./utils";
 
@@ -298,9 +297,7 @@ function parseAdaptationSetAttributes(
         break;
 
       case "scte214:supplementalCodecs":
-        parseValue(attribute.value,  { asKey: "supplementalCodecs",
-                                       parser: parseSupplementalCodec,
-                                       dashName: "scte214:supplementalCodecs" });
+        parsedAdaptation.supplementalCodecs = attribute.value;
         break;
 
       case "codingDependency":

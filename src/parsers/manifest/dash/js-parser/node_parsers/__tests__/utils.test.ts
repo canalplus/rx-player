@@ -17,7 +17,6 @@
 import {
   MPDError,
   parseBoolean,
-  parseSupplementalCodec,
   parseByteRange,
   parseDateTime,
   parseDuration,
@@ -77,41 +76,6 @@ describe("dash parser helpers", function() {
         "`ab` property is not a boolean nor an integer but \"\"");
       expect(parsed2[1]?.message).toEqual(
         "`ba` property is not a boolean nor an integer but \"foo\"");
-    });
-  });
-
-  describe("parseSupplementalCodec", () => {
-    it("should return the codec unchanged if there is only one codec", () => {
-      expect(parseSupplementalCodec("avc1.4d400d")).toEqual(["avc1.4d400d", null]);
-    });
-    it("should trim starting and ending whitespace",  () => {
-      expect(
-        parseSupplementalCodec("  avc1.4d400d  "))
-        .toEqual(["avc1.4d400d", null]);
-    });
-    it("should return comma-separated list if input is whitespace-separated" , () => {
-      expect(
-        parseSupplementalCodec("avc1.4d400d avc1.4d4015"))
-        .toEqual(["avc1.4d400d, avc1.4d4015", null]);
-    });
-    it("should return comma-separated value if input is already comma-separated" , () => {
-      expect(
-        parseSupplementalCodec("avc1.4d400d, avc1.4d4015"))
-        .toEqual(["avc1.4d400d, avc1.4d4015", null]);
-    });
-
-    it("should return comma-separated value if input as missplaced whitespace" , () => {
-      expect(
-        parseSupplementalCodec("avc1.4d400d  ,  avc1.4d4015 "))
-        .toEqual(["avc1.4d400d, avc1.4d4015", null]);
-    });
-
-    it(`should return comma-separated value if input is mix of comma and 
-    whitespace separated list`
-    , () => {
-      expect(
-        parseSupplementalCodec("avc1.4d400d avc1.4d4015, avc1.4d401f"))
-        .toEqual(["avc1.4d400d, avc1.4d4015, avc1.4d401f", null]);
     });
   });
 

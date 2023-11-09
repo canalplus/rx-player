@@ -30,7 +30,6 @@ import {
   parseMPDFloat,
   parseMPDInteger,
   parseScheme,
-  parseSupplementalCodec,
   ValueParser,
 } from "./utils";
 
@@ -186,9 +185,7 @@ function parseRepresentationAttributes(
         break;
 
       case "scte214:supplementalCodecs":
-        parseValue(attr.value,  { asKey: "supplementalCodecs",
-                                  parser: parseSupplementalCodec,
-                                  dashName: "scte214:supplementalCodecs" });
+        attributes.supplementalCodecs = attr.value;
         break;
 
       case "segmentProfiles":
