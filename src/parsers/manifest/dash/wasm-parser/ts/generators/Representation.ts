@@ -165,6 +165,10 @@ export function generateRepresentationAttrParser(
         representationAttrs.codecs =
           parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
+      case AttributeName.SupplementalCodecs:
+        representationAttrs.supplementalCodecs =
+        parseString(textDecoder, linearMemory.buffer, ptr, len);
+        break;
       case AttributeName.CodingDependency:
         representationAttrs.codingDependency =
           new DataView(linearMemory.buffer).getUint8(0) === 0;
