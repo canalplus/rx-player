@@ -41,7 +41,7 @@ const supplementalCodecSeparator = /[, ]+/g;
  * SCTE 214 defines supplemental codecs as a whitespace-separated multiple list of
  * codec strings
  *
- * RFC4281 defines codecs as a comma-separated list of codec strings.
+ * RFC6381 defines codecs as a comma-separated list of codec strings.
  *
  * This two syntax differs and this parser is used to convert SCTE214
  * to be compliant with what MSE APIs expect
