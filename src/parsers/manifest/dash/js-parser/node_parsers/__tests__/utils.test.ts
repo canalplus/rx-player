@@ -100,6 +100,12 @@ describe("dash parser helpers", function() {
         .toEqual(["avc1.4d400d, avc1.4d4015", null]);
     });
 
+    it("should return comma-separated value if input as missplaced whitespace" , () => {
+      expect(
+        parseSupplementalCodec("avc1.4d400d  ,  avc1.4d4015 "))
+        .toEqual(["avc1.4d400d, avc1.4d4015", null]);
+    });
+
     it(`should return comma-separated value if input is mix of comma and 
     whitespace separated list`
     , () => {

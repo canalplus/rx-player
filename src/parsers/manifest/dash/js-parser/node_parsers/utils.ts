@@ -29,7 +29,7 @@ const iso8601Duration =
 const rangeRe = /([0-9]+)-([0-9]+)/;
 
 
-const supplementalCodecSeparator = /([,]? +)/g;
+const supplementalCodecSeparator = /[, ]+/g;
 /**
  * Parse SCTE 214 supplemental codec string into RFC4281 codec string
  *
