@@ -112,20 +112,6 @@ class Representation {
   public codec : string | undefined;
 
   /**
-   * Supplemental codecs are defined as backwards-compatible codecs enhancing
-   * the experience of a base layer codec
-   * Optional attribute, a representation may not have supplemental codecs
-   */
-  public supplementalCodec?: string | undefined;
-
-  /**
-   * `true` if the Supplemental codec is in a supported codec
-   * `false` if there is no supplemental codec or
-   * if the supplemental codec is not supported
-   */
-  public isSupplementalCodecSupported: boolean;
-
-  /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain
    * undefined if we do not know.
@@ -204,35 +190,30 @@ class Representation {
     }
 
     this.cdnMetadata = args.cdnMetadata;
-
-    if (args.supplementalCodecs !== undefined) {
-      this.supplementalCodec = args.supplementalCodecs;
-    }
-
-    if (this.supplementalCodec !== undefined) {
-      const supplementalCodecMimeTypeStr =
-       `${this.mimeType ?? ""};codecs="${this.supplementalCodec ?? ""}"`;
-      const isSupplementalCodecSupported = isCodecSupported(supplementalCodecMimeTypeStr);
-      this.isSupplementalCodecSupported = isSupplementalCodecSupported;
-    } else {
-      this.isSupplementalCodecSupported = false;
-    }
-
     this.index = args.index;
 
-    if (this.isSupplementalCodecSupported) {
-    // The supplemental codec being supported indicate that the base codec will also
-    // be supported as the supplemental codec is backwards compatible with base codec
-      this.isSupported = true;
-    } else if (opts.type === "audio" || opts.type === "video") {
-      const mimeTypeStr = this.getMimeTypeString();
-      const isSupported = isCodecSupported(mimeTypeStr);
-      if (!isSupported) {
-        log.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+    this.isSupported = false;
+    // Supplemental codecs are defined as backwards-compatible codecs enhancing
+    // the experience of a base layer codec
+    if (args.supplementalCodecs !== undefined) {
+      const supplementalCodecMimeTypeStr =
+        `${this.mimeType ?? ""};codecs="${args.supplementalCodecs}"`;
+      if (isCodecSupported(supplementalCodecMimeTypeStr)) {
+        this.codec = args.supplementalCodecs;
+        this.isSupported = true;
       }
-      this.isSupported = isSupported;
-    } else {
-      this.isSupported = true; // TODO for other types
+    }
+    if (!this.isSupported) {
+      if (opts.type === "audio" || opts.type === "video") {
+        const mimeTypeStr = this.getMimeTypeString();
+        const isSupported = isCodecSupported(mimeTypeStr);
+        if (!isSupported) {
+          log.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+        }
+        this.isSupported = isSupported;
+      } else {
+        this.isSupported = true; // TODO for other types
+      }
     }
   }
 
@@ -242,11 +223,7 @@ class Representation {
    * @returns {string}
    */
   public getMimeTypeString() : string {
-    if (this.isSupplementalCodecSupported) {
-      return `${this.mimeType ?? ""};codecs="${this.supplementalCodec ?? ""}"`;
-    } else {
-      return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
-    }
+    return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
   }
 
   /**
@@ -423,17 +400,8 @@ class Representation {
    * @returns {Object}
    */
   public toAudioRepresentation(): IAudioRepresentation {
-    const { id,
-            isSpatialAudio,
-            bitrate,
-            codec,
-            supplementalCodec,
-            isSupplementalCodecSupported,
-    } = this;
-    // Depending if the device can play the supplemental codec or not
-    // We return as codec the codec that WILL be played if this representation is chosen
-    const codecInUse = isSupplementalCodecSupported ? supplementalCodec : codec;
-    return { id, isSpatialAudio, bitrate, codec: codecInUse };
+    const { id, isSpatialAudio, bitrate, codec } = this;
+    return { id, isSpatialAudio, bitrate, codec };
   }
 
   /**
@@ -441,20 +409,8 @@ class Representation {
    * @returns {Object}
    */
   public toVideoRepresentation(): IVideoRepresentation {
-    const { id,
-            bitrate,
-            frameRate,
-            width,
-            height,
-            codec,
-            hdrInfo,
-            supplementalCodec,
-            isSupplementalCodecSupported,
-    } = this;
-    // Depending if the device can play the supplemental codec or not
-    // We return as codec the codec that WILL be played if this representation is chosen
-    const codecInUse = isSupplementalCodecSupported ? supplementalCodec : codec;
-    return { id, bitrate, frameRate, width, height, codec: codecInUse, hdrInfo };
+    const { id, bitrate, frameRate, width, height, codec, hdrInfo } = this;
+    return { id, bitrate, frameRate, width, height, codec, hdrInfo };
   }
 }
 
