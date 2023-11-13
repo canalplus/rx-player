@@ -160,6 +160,8 @@ export interface IParsedRepresentation {
   hdrInfo?: IHDRInformation | undefined;
   /** `true` if audio has Dolby Atmos. */
   isSpatialAudio?: boolean | undefined;
+
+  supplementalCodecs? : string | undefined;
 }
 
 /** Every possible types an Adaptation can have. */

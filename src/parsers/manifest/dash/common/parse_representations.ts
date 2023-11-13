@@ -29,6 +29,7 @@ import {
   IScheme,
   IContentProtectionIntermediateRepresentation,
 } from "../node_parser_types";
+import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs";
 import { getWEBMHDRInformation } from "./get_hdr_information";
 import parseRepresentationIndex, {
   IRepresentationIndexContext,
@@ -120,19 +121,19 @@ export default function parseRepresentations(
   const parsedRepresentations : IParsedRepresentation[] = [];
   for (const representation of representationsIR) {
     // Compute Representation ID
-    let representationID = representation.attributes.id != null ?
+    let representationID = representation.attributes.id !== undefined ?
       representation.attributes.id :
       (String(representation.attributes.bitrate) +
-         (representation.attributes.height != null ?
+         (representation.attributes.height !== undefined ?
             (`-${representation.attributes.height}`) :
             "") +
-         (representation.attributes.width != null ?
+         (representation.attributes.width !== undefined ?
             (`-${representation.attributes.width}`) :
             "") +
-         (representation.attributes.mimeType != null ?
+         (representation.attributes.mimeType !== undefined ?
             (`-${representation.attributes.mimeType}`) :
             "") +
-         (representation.attributes.codecs != null ?
+         (representation.attributes.codecs !== undefined ?
             (`-${representation.attributes.codecs}`) :
             ""));
 
@@ -167,7 +168,7 @@ export default function parseRepresentations(
 
     // Find bitrate
     let representationBitrate : number;
-    if (representation.attributes.bitrate == null) {
+    if (representation.attributes.bitrate === undefined) {
       log.warn("DASH: No usable bitrate found in the Representation.");
       representationBitrate = 0;
     } else {
@@ -204,40 +205,52 @@ export default function parseRepresentations(
 
     // Add optional attributes
     let codecs : string|undefined;
-    if (representation.attributes.codecs != null) {
+    if (representation.attributes.codecs !== undefined) {
       codecs = representation.attributes.codecs;
-    } else if (adaptation.attributes.codecs != null) {
+    } else if (adaptation.attributes.codecs !== undefined) {
       codecs = adaptation.attributes.codecs;
     }
-    if (codecs != null) {
+    if (codecs !== undefined) {
       codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
       parsedRepresentation.codecs = codecs;
     }
-    if (representation.attributes.frameRate != null) {
+
+    let supplementalCodecs: string | undefined;
+    if (representation.attributes.supplementalCodecs !== undefined) {
+      supplementalCodecs = representation.attributes.supplementalCodecs;
+    } else if (adaptation.attributes.supplementalCodecs !== undefined) {
+      supplementalCodecs = adaptation.attributes.supplementalCodecs;
+    }
+    if (supplementalCodecs !== undefined) {
+      parsedRepresentation.supplementalCodecs =
+        convertSupplementalCodecsToRFC6381(supplementalCodecs);
+    }
+
+    if (representation.attributes.frameRate !== undefined) {
       parsedRepresentation.frameRate =
         representation.attributes.frameRate;
-    } else if (adaptation.attributes.frameRate != null) {
+    } else if (adaptation.attributes.frameRate !== undefined) {
       parsedRepresentation.frameRate =
         adaptation.attributes.frameRate;
     }
-    if (representation.attributes.height != null) {
+    if (representation.attributes.height !== undefined) {
       parsedRepresentation.height =
         representation.attributes.height;
-    } else if (adaptation.attributes.height != null) {
+    } else if (adaptation.attributes.height !== undefined) {
       parsedRepresentation.height =
         adaptation.attributes.height;
     }
-    if (representation.attributes.mimeType != null) {
+    if (representation.attributes.mimeType !== undefined) {
       parsedRepresentation.mimeType =
         representation.attributes.mimeType;
-    } else if (adaptation.attributes.mimeType != null) {
+    } else if (adaptation.attributes.mimeType !== undefined) {
       parsedRepresentation.mimeType =
         adaptation.attributes.mimeType;
     }
-    if (representation.attributes.width != null) {
+    if (representation.attributes.width !== undefined) {
       parsedRepresentation.width =
         representation.attributes.width;
-    } else if (adaptation.attributes.width != null) {
+    } else if (adaptation.attributes.width !== undefined) {
       parsedRepresentation.width =
         adaptation.attributes.width;
     }

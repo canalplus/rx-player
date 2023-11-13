@@ -190,15 +190,28 @@ class Representation {
     }
 
     this.cdnMetadata = args.cdnMetadata;
-
     this.index = args.index;
+
     if (opts.type === "audio" || opts.type === "video") {
-      const mimeTypeStr = this.getMimeTypeString();
-      const isSupported = isCodecSupported(mimeTypeStr);
-      if (!isSupported) {
-        log.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+      this.isSupported = false;
+        // Supplemental codecs are defined as backwards-compatible codecs enhancing
+        // the experience of a base layer codec
+      if (args.supplementalCodecs !== undefined) {
+        const supplementalCodecMimeTypeStr =
+            `${this.mimeType ?? ""};codecs="${args.supplementalCodecs}"`;
+        if (isCodecSupported(supplementalCodecMimeTypeStr)) {
+          this.codec = args.supplementalCodecs;
+          this.isSupported = true;
+        }
       }
-      this.isSupported = isSupported;
+      if (!this.isSupported) {
+        const mimeTypeStr = this.getMimeTypeString();
+        const isSupported = isCodecSupported(mimeTypeStr);
+        if (!isSupported) {
+          log.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+        }
+        this.isSupported = isSupported;
+      }
     } else {
       this.isSupported = true; // TODO for other types
     }
