@@ -139,4 +139,24 @@ describe("flattenOverlappingPeriods", function() {
     expect(mockLog).toHaveBeenCalledTimes(99);
     mockLog.mockRestore();
   });
+
+  //      [ Period 1 ][ Period 2 ]       ------>  [  Period 3  ]
+  //  [            Period 3           ]
+  it("should handle when a Period overlaps all previous periods", () => {
+    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+
+    const periods = [
+      { id: "1", start: 40, duration: 20, adaptations: {} },
+      { id: "2", start: 60, duration: 20, adaptations: {} },
+      { id: "3", start: 20, duration: 100, adaptations: {} },
+    ];
+
+    const flattenPeriods = flattenOverlappingPeriods(periods);
+    expect(flattenPeriods.length).toBe(1);
+    expect(flattenPeriods[0].start).toBe(20);
+    expect(flattenPeriods[0].duration).toBe(100);
+    expect(flattenPeriods[0].id).toBe("3");
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    mockLog.mockRestore();
+  });
 });
