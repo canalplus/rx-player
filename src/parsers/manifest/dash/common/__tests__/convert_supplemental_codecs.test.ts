@@ -1,4 +1,4 @@
-import { convertSupplementalCodecsToRFC6381 } from "../utils";
+import { convertSupplementalCodecsToRFC6381 } from "../convert_supplemental_codecs";
 
 describe("parseSupplementalCodec", () => {
   it("should return the codec unchanged if there is only one codec", () => {
