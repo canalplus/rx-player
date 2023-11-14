@@ -153,7 +153,7 @@ export default function getBufferStatus(
    * needed segments for this Representation until the end of the Period.
    */
   const hasFinishedLoading = representation.index.isInitialized() &&
-                             representation.index.isFinished() &&
+                             !representation.index.isStillAwaitingFutureSegments() &&
                              neededRange.hasReachedPeriodEnd &&
                              prioritizedNeededSegments.length === 0 &&
                              segmentsOnHold.length === 0;
@@ -221,7 +221,7 @@ function getRangeOfNeededSegments(
       SegmentBuffersStore.isNative(content.adaptation.type) &&
       initialWantedTime >= lastIndexPosition &&
       representationIndex.isInitialized() &&
-      representationIndex.isFinished() &&
+      !representationIndex.isStillAwaitingFutureSegments() &&
       isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime))
   {
     wantedStartPosition = lastIndexPosition - 1;
@@ -233,7 +233,7 @@ function getRangeOfNeededSegments(
 
   let hasReachedPeriodEnd;
   if (!representation.index.isInitialized() ||
-      !representation.index.isFinished() ||
+      representation.index.isStillAwaitingFutureSegments() ||
       period.end === undefined)
   {
     hasReachedPeriodEnd = false;
