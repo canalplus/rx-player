@@ -8,8 +8,8 @@ in argument.
 The debugging information will then be regularly updated until the `dispose`
 method of the returned object is called.
 
-This method can only be called if the `DEBUG_ELEMENT` experimental feature has
-been added to the RxPlayer.
+This method can only be called if the `DEBUG_ELEMENT` feature has been added to
+the RxPlayer.
 
 You can have more information on this feature [in the Debug Element
 documentation page](../Miscellaneous/Debug_Element.md).

@@ -29,10 +29,13 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * Dispose of the MediaKeys instance attached to the given media element, if
  * one.
  * @param {Object} mediaElement
+ * @returns {Promise}
  */
-export function disableMediaKeys(mediaElement : HTMLMediaElement): void {
+export function disableMediaKeys(
+  mediaElement : HTMLMediaElement
+): Promise<unknown> {
   MediaKeysInfosStore.setState(mediaElement, null);
-  eme.setMediaKeys(mediaElement, null)
+  return eme.setMediaKeys(mediaElement, null)
     .then(() => {
       log.info("DRM: MediaKeys disabled with success");
     })

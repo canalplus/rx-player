@@ -15,7 +15,7 @@
  */
 
 import isNullOrUndefined from "../utils/is_null_or_undefined";
-import isNode from "./is_node";
+import globalScope from "./global_scope";
 
 /** Regular MediaKeys type + optional functions present in IE11. */
 interface ICompatMediaKeysConstructor {
@@ -60,15 +60,8 @@ interface ICompatTextTrack extends TextTrack {
  * functions for some "old" browsers.
  */
 interface ICompatDocument extends Document {
-  fullscreenElement : Element | null;
-  mozCancelFullScreen? : () => void;
-  mozFullScreenElement? : HTMLElement;
   mozHidden? : boolean;
-  msExitFullscreen? : () => void;
-  msFullscreenElement? : Element | null;
   msHidden? : boolean;
-  webkitExitFullscreen : () => void;
-  webkitFullscreenElement : Element | null;
   webkitHidden? : boolean;
 }
 
@@ -171,23 +164,16 @@ export interface ICompatPictureInPictureWindow
   extends EventTarget { width: number;
                         height: number; }
 
-interface WindowsWithMediaSourceImplems extends Window {
-  MediaSource? : typeof MediaSource;
-  MozMediaSource? : typeof MediaSource;
-  WebKitMediaSource? : typeof MediaSource;
-  MSMediaSource? : typeof MediaSource;
-}
-
-const win : WindowsWithMediaSourceImplems | undefined = isNode ? undefined :
-                                                                 window;
-
+/* eslint-disable */
 /** MediaSource implementation, including vendored implementations. */
+const gs = globalScope as any;
 const MediaSource_ : typeof MediaSource | undefined =
-  win === undefined                            ? undefined :
-  !isNullOrUndefined(win.MediaSource)          ? win.MediaSource :
-  !isNullOrUndefined(win.MozMediaSource)       ? win.MozMediaSource :
-  !isNullOrUndefined(win.WebKitMediaSource)    ? win.WebKitMediaSource :
-                                                 win.MSMediaSource;
+  gs === undefined                            ? undefined :
+  !isNullOrUndefined(gs.MediaSource)          ? gs.MediaSource :
+  !isNullOrUndefined(gs.MozMediaSource)       ? gs.MozMediaSource :
+  !isNullOrUndefined(gs.WebKitMediaSource)    ? gs.WebKitMediaSource :
+                                                gs.MSMediaSource;
+/* eslint-enable */
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
 const READY_STATES = { HAVE_NOTHING: 0,

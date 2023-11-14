@@ -23,6 +23,7 @@ import {
   IDashParserResponse,
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
+import { IPlayerError } from "../../public_types";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
@@ -48,8 +49,7 @@ export default function generateManifestParser(
     scheduleRequest : IManifestParserRequestScheduler
   ) => IManifestParserResult | Promise<IManifestParserResult>
 {
-  const { aggressiveMode,
-          referenceDateTime } = options;
+  const { referenceDateTime } = options;
   const serverTimeOffset = options.serverSyncInfos !== undefined ?
     options.serverSyncInfos.serverTimestamp - options.serverSyncInfos.clientTime :
     undefined;
@@ -64,13 +64,11 @@ export default function generateManifestParser(
     const argClockOffset = parserOptions.externalClockOffset;
     const url = manifestData.url ?? parserOptions.originalUrl;
 
-    const optAggressiveMode = aggressiveMode === true;
     const externalClockOffset = serverTimeOffset ?? argClockOffset;
     const unsafelyBaseOnPreviousManifest = parserOptions.unsafeMode ?
       parserOptions.previousManifest :
       null;
-    const dashParserOpts = { aggressiveMode: optAggressiveMode,
-                             unsafelyBaseOnPreviousManifest,
+    const dashParserOpts = { unsafelyBaseOnPreviousManifest,
                              url,
                              referenceDateTime,
                              externalClockOffset };
@@ -143,8 +141,9 @@ export default function generateManifestParser(
         if (cancelSignal.isCancelled()) {
           return Promise.reject(cancelSignal.cancellationError);
         }
-        const manifest = new Manifest(parserResponse.value.parsed, options);
-        return { manifest, url };
+        const warnings : IPlayerError[] = [];
+        const manifest = new Manifest(parserResponse.value.parsed, options, warnings);
+        return { manifest, url, warnings };
       }
 
       const { value } = parserResponse;
@@ -152,14 +151,20 @@ export default function generateManifestParser(
       const externalResources = value.urls.map(resourceUrl => {
         return scheduleRequest(() => {
           const defaultTimeout = config.getCurrent().DEFAULT_REQUEST_TIMEOUT;
+          const defaultConnectionTimeout = config.getCurrent().DEFAULT_CONNECTION_TIMEOUT;
+
           return value.format === "string" ? request({ url: resourceUrl,
                                                        responseType: "text",
                                                        timeout: defaultTimeout,
+                                                       connectionTimeout:
+                                                        defaultConnectionTimeout,
                                                        cancelSignal }) :
 
                                              request({ url: resourceUrl,
                                                        responseType: "arraybuffer",
                                                        timeout: defaultTimeout,
+                                                       connectionTimeout:
+                                                        defaultConnectionTimeout,
                                                        cancelSignal });
         }).then((res) => {
           if (value.format === "string") {
