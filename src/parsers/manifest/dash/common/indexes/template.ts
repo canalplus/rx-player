@@ -118,9 +118,15 @@ export interface ITemplateIndexIndexArgument {
 
 /** Aditional context needed by a SegmentTemplate RepresentationIndex. */
 export interface ITemplateIndexContextArgument {
-  aggressiveMode : boolean;
-  /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
-  availabilityTimeOffset : number;
+  /**
+   * availability time offset of the concerned Adaptation.
+   *
+   * If `undefined`, the corresponding property was not set in the MPD and it is
+   * thus assumed to be equal to `0`.
+   * It might however be semantically different than `0` in the RxPlayer as it
+   * means that the packager didn't include that information in the MPD.
+   */
+  availabilityTimeOffset : number | undefined;
   /** Allows to obtain the minimum and maximum positions of a content. */
   manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
@@ -145,11 +151,6 @@ export interface ITemplateIndexContextArgument {
 export default class TemplateRepresentationIndex implements IRepresentationIndex {
   /** Underlying structure to retrieve segment information. */
   private _index : ITemplateIndex;
-  /**
-   * Whether the "aggressiveMode" is enabled. If enabled, segments can be
-   * requested in advance.
-   */
-  private _aggressiveMode : boolean;
   /** Retrieve the maximum and minimum position of the whole content. */
   private _manifestBoundsCalculator : ManifestBoundsCalculator;
   /** Absolute start of the Period, in seconds. */
@@ -171,8 +172,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     index : ITemplateIndexIndexArgument,
     context : ITemplateIndexContextArgument
   ) {
-    const { aggressiveMode,
-            availabilityTimeOffset,
+    const { availabilityTimeOffset,
             manifestBoundsCalculator,
             isDynamic,
             periodEnd,
@@ -185,7 +185,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._availabilityTimeOffset = availabilityTimeOffset;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
-    this._aggressiveMode = aggressiveMode;
     const presentationTimeOffset = index.presentationTimeOffset != null ?
                                      index.presentationTimeOffset :
                                      0;
@@ -389,14 +388,26 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { timescale } = this._index;
     const segmentTimeRounding = getSegmentTimeRoundingError(timescale);
     const scaledPeriodStart = this._periodStart * timescale;
-    const scaledRelativeEnd = end * timescale - scaledPeriodStart;
+    const scaledRelativeStart = (start * timescale) - scaledPeriodStart;
+    const scaledRelativeEnd = (end * timescale) - scaledPeriodStart;
+    const lastSegmentStart = this._getLastSegmentStart();
+    if (isNullOrUndefined(lastSegmentStart)) {
+      const relativeScaledIndexEnd = this._estimateRelativeScaledEnd();
+      if (relativeScaledIndexEnd === undefined) {
+        return scaledRelativeEnd + segmentTimeRounding >= 0;
+      }
+      return scaledRelativeEnd + segmentTimeRounding >= 0 &&
+             scaledRelativeStart < relativeScaledIndexEnd - segmentTimeRounding;
+
+    }
+    const lastSegmentEnd = lastSegmentStart + this._index.duration;
 
     const relativeScaledIndexEnd = this._estimateRelativeScaledEnd();
     if (relativeScaledIndexEnd === undefined) {
-      return (scaledRelativeEnd + segmentTimeRounding) >= 0;
+      return scaledRelativeEnd > lastSegmentEnd - segmentTimeRounding;
     }
-    const scaledRelativeStart = start * timescale - scaledPeriodStart;
-    return (scaledRelativeStart - segmentTimeRounding) < relativeScaledIndexEnd;
+    return scaledRelativeEnd > lastSegmentEnd - segmentTimeRounding &&
+           scaledRelativeStart < relativeScaledIndexEnd - segmentTimeRounding;
   }
 
   /**
@@ -446,20 +457,20 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * Returns `true` if the last segments in this index have already been
+   * Returns `false` if the last segments in this index have already been
    * generated so that we can freely go to the next period.
-   * Returns `false` if the index is still waiting on future segments to be
+   * Returns `true` if the index is still waiting on future segments to be
    * generated.
    * @returns {Boolean}
    */
-  isFinished() : boolean {
+  isStillAwaitingFutureSegments() : boolean {
     if (!this._isDynamic) {
-      return true;
+      return false;
     }
 
     const scaledRelativeIndexEnd = this._estimateRelativeScaledEnd();
     if (scaledRelativeIndexEnd === undefined) {
-      return false;
+      return true;
     }
 
     const { timescale } = this._index;
@@ -468,11 +479,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     // As last segment start is null if live time is before
     // current period, consider the index not to be finished.
     if (isNullOrUndefined(lastSegmentStart)) {
-      return false;
+      return true;
     }
     const lastSegmentEnd = lastSegmentStart + this._index.duration;
     const segmentTimeRounding = getSegmentTimeRoundingError(timescale);
-    return (lastSegmentEnd + segmentTimeRounding) >= scaledRelativeIndexEnd;
+    return (lastSegmentEnd + segmentTimeRounding) < scaledRelativeIndexEnd;
   }
 
   /**
@@ -487,7 +498,6 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   _replace(newIndex : TemplateRepresentationIndex) : void {
     this._index = newIndex._index;
-    this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
     this._scaledRelativePeriodEnd = newIndex._scaledRelativePeriodEnd;
@@ -520,8 +530,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const maximumBound = this._manifestBoundsCalculator.estimateMaximumBound();
-      if (maximumBound !== undefined && maximumBound < this._periodStart) {
+      const maximumSegmentTime =
+        this._manifestBoundsCalculator.getEstimatedMaximumPosition(
+          this._availabilityTimeOffset ?? 0
+        );
+      if (maximumSegmentTime !== undefined && maximumSegmentTime < this._periodStart) {
         // Maximum position is before this period.
         // No segment is yet available here
         return null;
@@ -529,7 +542,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     const { duration, timescale } = this._index;
-    const firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
+    const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
     if (firstPosition === undefined) {
       return undefined;
     }
@@ -551,15 +564,12 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { duration, timescale, endNumber, startNumber = 1 } = this._index;
 
     if (this._isDynamic) {
-      const lastPos = this._manifestBoundsCalculator.estimateMaximumBound();
-      if (lastPos === undefined) {
-        return undefined;
-      }
-      const agressiveModeOffset = this._aggressiveMode ? (duration / timescale) :
-                                                         0;
-      if (this._scaledRelativePeriodEnd !== undefined &&
-          this._scaledRelativePeriodEnd <
-            (lastPos + agressiveModeOffset - this._periodStart) * this._index.timescale) {
+      const liveEdge = this._manifestBoundsCalculator.getEstimatedLiveEdge();
+      if (liveEdge !== undefined &&
+          this._scaledRelativePeriodEnd !== undefined &&
+          this._scaledRelativePeriodEnd < liveEdge - (this._periodStart *
+                                                      this._index.timescale))
+      {
 
         let numberOfSegments = Math.ceil(this._scaledRelativePeriodEnd / duration);
         if (endNumber !== undefined && (endNumber - startNumber + 1) < numberOfSegments) {
@@ -567,10 +577,16 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         }
         return (numberOfSegments - 1)  * duration;
       }
+      const lastPosition = this._manifestBoundsCalculator
+        .getEstimatedMaximumPosition(this._availabilityTimeOffset ?? 0);
+      if (lastPosition === undefined) {
+        return undefined;
+      }
+
       // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const scaledLastPosition = (lastPos - this._periodStart) * timescale;
+      const scaledLastPosition = (lastPosition - this._periodStart) * timescale;
 
       // Maximum position is before this period.
       // No segment is yet available here
@@ -578,13 +594,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         return null;
       }
 
-      const availabilityTimeOffset =
-        ((this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0) +
-          agressiveModeOffset) * timescale;
-
-      let numberOfSegmentsAvailable =
-        Math.floor((scaledLastPosition + availabilityTimeOffset) / duration);
-
+      let numberOfSegmentsAvailable = Math.floor(scaledLastPosition / duration);
       if (endNumber !== undefined &&
           (endNumber - startNumber + 1) < numberOfSegmentsAvailable) {
         numberOfSegmentsAvailable = endNumber - startNumber + 1;

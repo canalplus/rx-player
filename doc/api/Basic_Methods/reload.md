@@ -35,6 +35,17 @@ The options argument is an object containing :
   content was playing the last time it was played and stay in the `"LOADED"`
   state (and paused) if it was paused last time it was played.
 
+- _keySystems_ (`Array.<Object> | undefined`): If set, a new configuration will
+  be set on this reloaded content regarding its decryption.
+
+  The value of this property follows the exact same structure than for the
+  original `loadVideo` call, it is described in the [decryption options
+  documentation page](../Decryption_Options.md).
+
+  You might for example want to update that way the `keySystems` option compared
+  to the one of the original `loadVideo` call when you suspect that there is a
+  decryption-related issue with the original `keySystems` given.
+
 Note that despite this method's name, the player will not go through the
 `RELOADING` state while reloading the content but through the regular `LOADING`
 state - as if `loadVideo` was called on that same content again.

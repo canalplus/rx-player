@@ -187,7 +187,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       }
       this._buffered.insert(start, end);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
       }
     } catch (err) {
       return Promise.reject(err);

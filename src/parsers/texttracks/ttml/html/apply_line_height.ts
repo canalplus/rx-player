@@ -27,10 +27,12 @@ export default function applyLineHeight(
   lineHeight : string
 ) : void {
   const trimmedLineHeight = lineHeight.trim();
+  const splittedLineHeight = trimmedLineHeight.split(" ");
+
   if (trimmedLineHeight === "auto") {
     return;
   }
-  const firstLineHeight = REGXP_LENGTH.exec(trimmedLineHeight[0]);
+  const firstLineHeight = REGXP_LENGTH.exec(splittedLineHeight[0]);
   if (firstLineHeight === null) {
     return;
   }
