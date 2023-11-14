@@ -10,45 +10,23 @@ documentation](../api/Overview.md) for when you're already familiar with it.
 API are splitted here in multiple categories depending on if they are
 properties, methods, events and so on.
 
+
 ## Constructor
 
   - [`new RxPlayer()`](../api/Creating_a_Player.md#instantiation):
     Create a new RxPlayer.
+
 
 ## Constructor options
 
   - [`videoElement`](../api/Creating_a_Player.md#videoElement): specifies the
     media element on which the content will play.
 
-  - [`initialVideoBitrate`](../api/Creating_a_Player.md#initialvideobitrate):
-    Ceil value for the initial video bitrate wanted.
-
-  - [`initialAudioBitrate`](../api/Creating_a_Player.md#initialaudiobitrate):
-    Ceil value for the initial audio bitrate wanted.
-
-  - [`minVideoBitrate`](../api/Creating_a_Player.md#minvideobitrate):
-    Minimum video bitrate reachable through adaptive streaming.
-
-  - [`minAudioBitrate`](../api/Creating_a_Player.md#minaudiobitrate):
-    Minimum audio bitrate reachable through adaptive streaming.
-
-  - [`maxVideoBitrate`](../api/Creating_a_Player.md#maxvideobitrate):
-    Maximum video bitrate reachable through adaptive streaming.
-
-  - [`maxAudioBitrate`](../api/Creating_a_Player.md#maxaudiobitrate):
-    Maximum audio bitrate reachable through adaptive streaming.
+  - [`baseBandwidth`](../api/Creating_a_Player.md#basebandwidth):
+    Base value for the bandwidth calculated by the RxPlayer.
 
   - [`wantedBufferAhead`](../api/Creating_a_Player.md#wantedbufferahead):
     Set the default buffering goal.
-
-  - [`preferredAudioTracks`](../api/Creating_a_Player.md#preferredaudiotracks):
-    Set default audio tracks preferences based on tracks characteristics.
-
-  - [`preferredTextTracks`](../api/Creating_a_Player.md#preferredtexttracks):
-    Set default text tracks preferences based on tracks characteristics.
-
-  - [`preferredVideoTracks`](../api/Creating_a_Player.md#preferredvideotracks):
-    Set default video tracks preferences based on tracks characteristics.
 
   - [`maxBufferAhead`](../api/Creating_a_Player.md#maxbufferahead):
     Set the default maximum kept buffer ahead of the current position, in seconds.
@@ -60,19 +38,14 @@ properties, methods, events and so on.
     Set the default maximum size the video buffer can take in the memory, in
     kilobytes (kb).
 
-  - [`limitVideoWidth`](../api/Creating_a_Player.md#limitvideowidth):
-    Limit the maximum video width according to the video element's current width.
+  - [`videoResolutionLimit`](../api/Creating_a_Player.md#videoresolutionlimit):
+    Limit the maximum video resolution according to the element's or screen's
+    resolution.
 
   - [`throttleVideoBitrateWhenHidden`](../api/Creating_a_Player.md#throttlevideobitratewhenhidden):
     Limit the maximum video bitrate when the current video is hidden to the
     user.
 
-  - [`stopAtEnd`](../api/Creating_a_Player.md#stopatend):
-    Stop automatically when the end of a content is reached.
-
-  - [`throttleWhenHidden`](../api/Creating_a_Player.md#throttlewhenhidden):
-    [Deprecated] Limit the maximum video bitrate when the current video is
-    hidden to the user.
 
 ## `loadVideo` options
 
@@ -98,14 +71,17 @@ properties, methods, events and so on.
       Eventual certificate encrypting exchanges between the CDM and license
       server.
 
-    - [`keySystems[].persistentLicense`](../api/Decryption_Options.md#persistentlicense):
+    - [`keySystems[].persistentLicenseConfig`](../api/Decryption_Options.md#persistentLicenseConfig):
       Allows to ask for the DRM session to persist the license.
 
-    - [`keySystems[].licenseStorage`](../api/Decryption_Options.md#licensestorage):
-      Allows to ask for the DRM session to persist the license.
+    - [`keySystems[].onKeyExpiration`](../api/Decryption_Options.md#onkeyexpiration):
+      Behavior when a key has an `"expired"` status.
 
-    - [`keySystems[].fallbackOn`](../api/Decryption_Options.md#fallbackon):
-      Allows to fallback to another quality when a key is refused.
+    - [`keySystems[].onKeyOutputRestricted`](../api/Decryption_Options.md#onkeyoutputrestricted):
+      Behavior when a key has an `"output-restricted"` status.
+
+    - [`keySystems[].onKeyInternalError`](../api/Decryption_Options.md#onkeyinternalerror):
+      Behavior when a key has an `"internal-error"` status.
 
     - [`keySystems[].maxSessionCacheSize`](../api/Decryption_Options.md#maxsessioncachesize):
       Maximum number of DRM sessions cached by the RxPlayer.
@@ -121,21 +97,23 @@ properties, methods, events and so on.
       Disable a lock that may cause the RxPlayer to deadlock on encrypted
       contents on some peculiar devices.
 
-    - [`keySystems[].distinctiveIdentifierRequired`](../api/Decryption_Options.md#distinctiveidentifierrequired):
+    - [`keySystems[].distinctiveIdentifier`](../api/Decryption_Options.md#distinctiveidentifier):
       Allows the configuration of the [Distinctive
       Indentifier(s)](https://www.w3.org/TR/encrypted-media/#distinctive-identifier)
       property.
 
-    - [`keySystems[].persistentStateRequired`](../api/Decryption_Options.md#persistentstaterequired):
+    - [`keySystems[].persistentState`](../api/Decryption_Options.md#persistentstate):
       Allows the configuration of the [persistentState](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate)
       property.
 
-    - [`keySystems[].throwOnLicenseExpiration`](../api/Decryption_Options.md#throwonlicenseexpiration):
-      Allows to stop or not when the current license has expired.
+    - [`keySystems[].audioCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+      Allows the configuration of the [`audioCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-audiocapabilities)
+      property.
 
-    - [`keySystems[].onKeyStatusesChange`](../api/Decryption_Options.md#onkeystatuseschange):
-      Callback triggered when on of the key's [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-      is updated.
+    - [`keySystems[].videoCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+      Allows the configuration of the [`videoCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-videocapabilities)
+      property.
+
 
   - [`autoPlay`](../api/Loading_a_Content.md#autoplay):
     Allows to automatically play after a content is loaded.
@@ -143,41 +121,26 @@ properties, methods, events and so on.
   - [`startAt`](../api/Loading_a_Content.md#startat):
     Define the position at which the RxPlayer should start.
 
-  - [`transportOptions`](../api/Loading_a_Content.md#transportoptions):
-    Options relative to the current "transport".
+  - [`requestConfig`](../api/Loading_a_Content.md#requestconfig):
+    Configuration linked to the Manifest and segment requests.
 
-    - [`transportOptions.minimumManifestUpdateInterval`](../api/Loading_a_Content.md#transportoptions):
-      Allows to limit the frequency of Manifest updates.
+    - [`requestConfig.segment.maxRetry`](../api/Loading_a_Content.md#requestconfig):
+      Maximum number of retries when a segment request fails.
 
-    - [`transportOptions.initialManifest`](../api/Loading_a_Content.md#transportoptions):
-      Allows to provide an initial Manifest to speed-up the content loading
+    - [`requestConfig.segment.timeout`](../api/Loading_a_Content.md#requestconfig):
+      Timeout after which segment requests are aborted.
 
-    - [`transportOptions.manifestUpdateUrl`](../api/Loading_a_Content.md#transportoptions):
-      Provide another URL, potentially to a shorter Manifest, used only for
-      Manifest updates
+    - [`requestConfig.segment.connectionTimeout`](../api/Loading_a_Content.md#requestconfig):
+      Connection timeout after which segment requests are aborted.
 
-    - [`transportOptions.representationFilter`](../api/Loading_a_Content.md#transportoptions):
-      Filter out qualities from the Manifest based on its characteristics.
+    - [`requestConfig.manifest.maxRetry`](../api/Loading_a_Content.md#requestconfig):
+      Maximum number of retries when a Manifest request fails.
 
-    - [`transportOptions.segmentLoader`](../api/Loading_a_Content.md#transportoptions):
-      Provide a custom logic to fetch segments.
+    - [`requestConfig.manifest.timeout`](../api/Loading_a_Content.md#requestconfig):
+      Timeout after which manifest requests are aborted.
 
-    - [`transportOptions.manifestLoader`](../api/Loading_a_Content.md#transportoptions):
-      Provide a custom logic to fetch the Manifest.
-
-    - [`transportOptions.checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#transportoptions):
-      Enable supplementary checks to retry a request if a segment appears
-      corrupted.
-
-    - [`transportOptions.serverSyncInfos`](../api/Loading_a_Content.md#transportoptions):
-      Provide time synchronization mechanism between the client and server.
-
-    - [`transportOptions.aggressiveMode`](../api/Loading_a_Content.md#transportoptions):
-      Allows to ask to download the segments early.
-
-    - [`transportOptions.referenceDateTime`](../api/Loading_a_Content.md#transportoptions):
-      Default offset to add to the segment's time to obtain a live time. This is
-      in most cases not needed.
+    - [`requestConfig.manifest.connectionTimeout`](../api/Loading_a_Content.md#requestconfig):
+      Connection timeout after which manifest requests are aborted.
 
   - [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode):
     The way in which the text tracks should be displayed.
@@ -185,55 +148,50 @@ properties, methods, events and so on.
   - [`textTrackElement`](../api/Loading_a_Content.md#texttrackelement):
     `HTMLElement` in which text tracks should be displayed.
 
-  - [`audioTrackSwitchingMode`](../api/Loading_a_Content.md#audiotrackswitchingmode):
-    Behavior when switching the audio track.
+  - [`minimumManifestUpdateInterval`](../api/Loading_a_Content.md#minimummanifestupdateinterval):
+    Allows to limit the frequency of Manifest updates.
 
-  - [`manualBitrateSwitchingMode`](../api/Loading_a_Content.md#manualbitrateswitchingmode):
-    Behavior when switching manually the video or audio quality.
+  - [`initialManifest`](../api/Loading_a_Content.md#initialmanifest):
+    Allows to provide an initial Manifest to speed-up the content loading
+
+  - [`representationFilter`](../api/Loading_a_Content.md#representationfilter):
+    Filter out qualities from the Manifest based on its characteristics.
+
+  - [`segmentLoader`](../api/Loading_a_Content.md#segmentloader):
+    Provide a custom logic to fetch segments.
+
+  - [`manifestLoader`](../api/Loading_a_Content.md#manifestloader):
+    Provide a custom logic to fetch the Manifest.
 
   - [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch):
     Behavior when the codec changes between incompatible ones.
 
+  - [`defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode):
+    Default behavior when switching the audio track.
+
   - [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode):
     Allows to play low-latency contents efficiently.
-
-  - [`networkConfig`](../api/Loading_a_Content.md#networkconfig):
-    Configuration linked to the Manifest and segment requests.
-
-    - [`networkConfig.segmentRetry`](../api/Loading_a_Content.md#networkconfig):
-      Maximum number of retries when a segment request fails.
-
-    - [`networkConfig.manifestRetry`](../api/Loading_a_Content.md#networkconfig):
-      Maximum number of retries when a Manifest request fails.
-
-    - [`networkConfig.offlineRetry`](../api/Loading_a_Content.md#networkconfig):
-      Maximum number of retries when a Manifest or segment request fails due to
-      the user being offline.
-
-    - [`networkConfig.manifestRequestTimeout`](../api/Loading_a_Content.md#networkconfig):
-      Timeout after which manifest requests are aborted.
-
-    - [`networkConfig.segmentRequestTimeout`](../api/Loading_a_Content.md#networkconfig):
-      Timeout after which segment requests are aborted.
 
   - [`enableFastSwitching`](../api/Loading_a_Content.md#enablefastswitching):
     Enable or disable an optimization replacing segments of poor quality with
     segments of a better quality.
 
-  - [`hideNativeSubtitle`](../api/Loading_a_Content.md#hidenativesubtitle):
-    [Deprecated] hide subtitles in `<track>` elements.
+  - [`checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#checkmediasegmentintegrity):
+    Enable supplementary checks to retry a request if a segment appears
+    corrupted.
 
-  - [`supplementaryImageTracks`](../api/Loading_a_Content.md#supplementaryimagetracks):
-    [Deprecated] Add supplementary tracks in the content for thumbnails.
+  - [`serverSyncInfos`](../api/Loading_a_Content.md#serversyncinfos):
+    Provide time synchronization mechanism between the client and server.
 
-  - [`supplementaryTextTracks`](../api/Loading_a_Content.md#supplementarytexttracks):
-    [Deprecated] Add supplementary tracks in the content for text.
+  - [`referenceDateTime`](../api/Loading_a_Content.md#referencedatetime):
+    Default offset to add to the segment's time to obtain a live time. This is
+    in most cases not needed.
 
-  - [`defaultAudioTrack`](../api/Loading_a_Content.md#defaultaudioTrack):
-    [Deprecated] Default characteristics wanted for the audio track.
 
-  - [`defaultTextTrack`](../api/Loading_a_Content.md#defaulttexttrack):
-    [Deprecated] Default characteristics wanted for the text track.
+## Static methods
+
+  - [`addFeatures`](../api/RxPlayer_Features.md):
+    Add features to the RxPlayer (e.g.: multithreading, offline playback etc.).
 
 ## Methods
 
@@ -268,7 +226,7 @@ properties, methods, events and so on.
   - [`getMaximumPosition`](../api/Basic_Methods/getMaximumPosition.md): Get the
     maximum seekable position.
 
-  - [`getVideoDuration`](../api/Basic_Methods/getVideoDuration.md): Get the
+  - [`getMediaDuration`](../api/Basic_Methods/getMediaDuration.md): Get the
     duration linked to the media element.
 
   - [`getError`](../api/Basic_Methods/getError.md): Returns the current "fatal"
@@ -282,6 +240,12 @@ properties, methods, events and so on.
 
   - [`reload`](../api/Basic_Methods/reload.md): Reload the last loade content as
     fast as possible.
+
+  - [`getAvailablePeriods`](../api/Basic_Methods/getAvailablePeriods.md): Returns
+    the list of available Periods for the current content.
+
+  - [`getCurrentPeriod`](../api/Basic_Methods/getCurrentPeriod.md): Returns
+    information on the Period being currently played.
 
   - [`getAudioTrack`](../api/Track_Selection/getAudioTrack.md): Get information on
     the current audio track.
@@ -316,74 +280,42 @@ properties, methods, events and so on.
   - [`disableVideoTrack`](../api/Track_Selection/disableVideoTrack.md):
     Disable the current video track.
 
-  - [`setPreferredAudioTracks`](../api/Track_Selection/setPreferredAudioTracks.md):
-    Update the current audio tracks preferences.
+  - [`getVideoRepresentation`](../api/Representation_Selection/getVideoRepresentation.md):
+    Returns the currently-loading video Representation.
 
-  - [`setPreferredTextTracks`](../api/Track_Selection/setPreferredTextTracks.md):
-    Update the current text tracks preferences.
+  - [`getAudioRepresentation`](../api/Representation_Selection/getAudioRepresentation.md):
+    Returns the currently-loading audio Representation.
 
-  - [`setPreferredVideoTracks`](../api/Track_Selection/setPreferredVideoTracks.md):
-    Update the current video tracks preferences.
+  - [`lockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Select video Representations (a.k.a. qualities) that should the only one
+    being played.
 
-  - [`getPreferredAudioTracks`](../api/Track_Selection/getPreferredAudioTracks.md):
-    Return the current audio tracks preferences.
+  - [`lockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Select audio Representations (a.k.a. qualities) that should the only one
+    being played.
 
-  - [`getPreferredTextTracks`](../api/Track_Selection/getPreferredTextTracks.md):
-    Return the current text tracks preferences.
+  - [`unlockVideoRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
+    Disable a lock previously set with `lockVideoRepresentations`.
 
-  - [`getPreferredVideoTracks`](../api/Track_Selection/getPreferredVideoTracks.md):
-    Return the current video tracks preferences.
+  - [`unlockAudioRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
+    Disable a lock previously set with `lockAudioRepresentations`.
+
+  - [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Get the list of currently "locked" video Representations (a.k.a. qualities).
+
+  - [`getLockedAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Get the list of currently "locked" audio Representations (a.k.a. qualities).
+
+  - [`unlockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Deactivate potential pending video Representations (a.k.a. qualities) lock,
+    thus re-allowing any Representation to being played.
+
+  - [`unlockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+    Deactivate potential pending audio Representations (a.k.a. qualities) lock,
+    thus re-allowing any Representation to being played.
 
   - [`isTrickModeEnabled`](../api/Track_Selection/isTrickModeEnabled.md):
     Returns `true` if trick mode tracks are currently enabled by default.
-
-  - [`getVideoBitrate`](../api/Bitrate_Selection/getVideoBitrate.md):
-    Returns the bitrate of the current video quality.
-
-  - [`getAudioBitrate`](../api/Bitrate_Selection/getAudioBitrate.md):
-    Returns the bitrate of the current audio quality.
-
-  - [`getAvailableVideoBitrates`](../api/Bitrate_Selection/getAvailableVideoBitrates.md):
-    Returns all available bitrates for the current video track.
-
-  - [`getAvailableAudioBitrates`](../api/Bitrate_Selection/getAvailableAudioBitrates.md):
-    Returns all available bitrates for the current audio track.
-
-  - [`setVideoBitrate`](../api/Bitrate_Selection/setVideoBitrate.md):
-    Set the bitrate for the current video track.
-
-  - [`setAudioBitrate`](../api/Bitrate_Selection/setAudioBitrate.md):
-    Set the bitrate for the current audio track.
-
-  - [`getManualVideoBitrate`](../api/Bitrate_Selection/getManualVideoBitrate.md):
-    Returns the last video bitrate manually set.
-
-  - [`getManualAudioBitrate`](../api/Bitrate_Selection/getManualAudioBitrate.md):
-    Returns the last audio bitrate manually set.
-
-  - [`setMinVideoBitrate`](../api/Bitrate_Selection/setMinVideoBitrate.md):
-    Set the minimum video bitrate reachable through adaptive streaming.
-
-  - [`setMinAudioBitrate`](../api/Bitrate_Selection/setMinAudioBitrate.md):
-    Set the minimum audio bitrate reachable through adaptive streaming.
-
-  - [`setMaxVideoBitrate`](../api/Bitrate_Selection/setMaxVideoBitrate.md):
-    Set the maximum video bitrate reachable through adaptive streaming.
-
-  - [`setMaxAudioBitrate`](../api/Bitrate_Selection/setMaxAudioBitrate.md):
-    Set the maximum audio bitrate reachable through adaptive streaming.
-
-  - [`getMinVideoBitrate`](../api/Bitrate_Selection/getMinVideoBitrate.md):
-    Returns the minimum video bitrate reachable through adaptive streaming.
-
-  - [`getMinAudioBitrate`](../api/Bitrate_Selection/getMinAudioBitrate.md):
-    Returns the minimum audio bitrate reachable through adaptive streaming.
-
-  - [`getMaxVideoBitrate`](../api/Bitrate_Selection/getMaxVideoBitrate.md):
-    Returns the maximum video bitrate reachable through adaptive streaming.
-
-  - [`getMaxAudioBitrate`](../api/Bitrate_Selection/getMaxAudioBitrate.md):
-    Returns the maximum audio bitrate reachable through adaptive streaming.
 
   - [`setPlaybackRate`](../api/Speed_Control/setPlaybackRate.md):
     Update the speed at which the content is played.
@@ -435,9 +367,6 @@ properties, methods, events and so on.
     Get the maximum memory the video buffer can take up in the memory, in
     kilobytes.
 
-  - [`getUrl`](../api/Playback_Information/getUrl.md):
-    Get URL of the currently-played content.
-
   - [`updateContentUrls`](../api/Playback_Information/updateContentUrls.md):
     Update URL(s) of the content currently being played.
 
@@ -448,58 +377,27 @@ properties, methods, events and so on.
     Returns information on the key system currently attached to the
     HTMLMediaElement linked to the RxPlayer.
 
-  - [`getVideoBufferGap`](../api/Playback_Information/getVideoBufferGap.md):
+  - [`getCurrentBufferGap`](../api/Playback_Information/getCurrentBufferGap.md):
     Returns in seconds the difference between the current position and the end
     of the current media time range.
 
-  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
-    Returns `true` if a content is loaded.
-  
+  - [`getContentUrls`](../api/Playback_Information/getContentUrls.md):
+    Get URLs of the currently-played content.
+
   - [`isBuffering`](../api/Playback_Information/isBuffering.md):
     Returns `true` if the player is buffering.
-  
+
   - [`isPaused`](../api/Playback_Information/isPaused.md):
     Returns `true` if the `<video>` element is paused.
 
+  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
+    Returns `true` if a content is loaded.
+
   - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
-    Returns the last stored content position, in seconds. 
+    Returns the last stored content position, in seconds.
 
-  - [`getVideoLoadedTime`](../api/Deprecated/getVideoLoadedTime.md):
-    [Deprecated] Returns in seconds the difference between the start and the end
-    of the current media time range.
-
-  - [`getVideoPlayedTime`](../api/Deprecated/getVideoPlayedTime.md):
-    [Deprecated] Returns in seconds the difference between the start of the
-    current media time range and the current position.
-
-  - [`getCurrentKeySystem`](../api/Deprecated/getCurrentKeySystem.md):
-    [Deprecated] Returns the name of the current key system.
-
-  - [`getManifest`](../api/Deprecated/getManifest.md):
-    [Deprecated] Information on the current Manifest.
-
-  - [`getCurrentAdaptations`](../api/Deprecated/getCurrentAdaptations.md):
-    [Deprecated] Information on the current Adaptations.
-
-  - [`getCurrentRepresentations`](../api/Deprecated/getCurrentRepresentations.md):
-    [Deprecated] Information on the current Representations.
-
-  - [`setFullscreen`](../api/Deprecated/setFullscreen.md):
-    [Deprecated] Switch media element into fullscreen mode.
-
-  - [`isFullscreen`](../api/Deprecated/isFullscreen.md):
-    [Deprecated] Returns `true` if the current media element is in fullscreen
-    mode.
-
-  - [`exitFullscreen`](../api/Deprecated/exitFullscreen.md):
-    [Deprecated] Exit fullscreen mode.
-
-  - [`getImageTrackData`](../api/Deprecated/getImageTrackData.md):
-    [Deprecated] Returns the data of the current image track.
-
-  - [`getNativeTextTrack`](../api/Deprecated/getNativeTextTrack.md):
-    [Deprecated] Returns the first `<track>` element attached to the media
-    element.
+  - [`createDebugElement`](../api/Miscellaneous/Debug_Element.md):
+    Display a RxPlayer-specialized debugging element.
 
 ## Static Properties
 
@@ -553,26 +451,28 @@ properties, methods, events and so on.
   - [`textTrackChange`](../api/Player_Events.md#texttrackchange):
     The current text track changed.
 
-  - [`availableAudioBitratesChange`](../api/Player_Events.md#availableaudiobitrateschange):
-    The list of available audio bitrates changed.
-
-  - [`availableVideoBitratesChange`](../api/Player_Events.md#availablevideobitrateschange):
-    The list of available video bitrates changed.
-
-  - [`audioBitrateChange`](../api/Player_Events.md#audiobitratechange):
-    The current audio bitrate changed.
-
-  - [`videoBitrateChange`](../api/Player_Events.md#videobitratechange):
-    The current video track changed.
-
-  - [`bitrateEstimationChange`](../api/Player_Events.md#bitrateestimationchange):
-    A new bitrate estimate is available.
-
   - [`periodChange`](../api/Player_Events.md#periodchange):
     A new Period begins.
 
-  - [`decipherabilityUpdate`](../api/Player_Events.md#decipherabilityupdate):
-    A Representation's decipherability status has been updated.
+  - [`newAvailablePeriods`](../api/Player_Events.md#newavailableperiods):
+    New Periods associated to the current content are known. It is also now
+    possible to change their respective tracks and qualities.
+
+  - [`volumeChange`](../api/Player_Events.md#volumechange):
+    Characteristics of the currently set volume changed.
+
+  - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
+    Representations previously being locked was automatically unlocked by the
+    RxPlayer.
+
+  - [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch):
+    A track previously set was automatically changed by the RxPlayer.
+
+  - [`play`](../api/Player_Events.md#play):
+    Emitted when playback is no longer consider paused.
+
+  - [`pause`](../api/Player_Events.md#pause):
+    Emitted when playback is now consider paused.
 
   - [`inbandEvents`](../api/Player_Events.md#inbandevents):
     Events in the media have been encountered.
@@ -582,15 +482,6 @@ properties, methods, events and so on.
 
   - [`streamEventSkip`](../api/Player_Events.md#streameventskip):
     A "stream event" was just skipped.
-
-  - [`imageTrackUpdate`](../api/Player_Events.md#imagetrackupdate):
-    [Deprecated] The current image track changed.
-
-  - [`fullscreenChange`](../api/Player_Events.md#fullscreenchange):
-    [Deprecated] The player went into or exited fullscreen mode.
-
-  - [`nativeTextTracksChange`](../api/Player_Events.md#nativetexttrackschange):
-    [Deprecated] A `<track>` element is added or removed to the media element.
 
 ## Error types
 
@@ -611,14 +502,14 @@ properties, methods, events and so on.
   - [`TextTrackRenderer`](../api/Tools/TextTrackRenderer.md):
     Render external text tracks on top of the video.
 
-  - [`VideoThumbnailLoader`](../api/Tools/VideoThumbnailLoader.md):
-    Display seeking preview thumbnails from trick mode video tracks.
-
   - [`StringUtils`](../api/Tools/StringUtils.md):
     Various string conversion utils.
 
   - [`parseBifThumbnails`](../api/Tools/parseBifThumbnails.md):
     Parse thumbnails in the "BIF" format.
+
+  - [`VideoThumbnailLoader`](../api/Tools/VideoThumbnailLoader.md):
+    Display seeking preview thumbnails from trick mode video tracks.
 
   - [`MediaCapabilitiesProber`](../api/Tools/MediaCapabilitiesProber.md):
     Tool to probe several media-related browser APIs.

@@ -15,6 +15,7 @@
  */
 
 import idGenerator from "../../../utils/id_generator";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import {
   IContentProtections,
   IContentProtectionInitData,
@@ -65,7 +66,7 @@ export default function parseLocalManifest(
                          maximumTimeData: { isLinear: false,
                                             maximumSafePosition: maximumPosition,
                                             livePosition: undefined,
-                                            time: performance.now() } },
+                                            time: getMonotonicTimeStamp() } },
            periods: parsedPeriods };
 }
 

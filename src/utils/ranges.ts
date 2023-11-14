@@ -182,14 +182,31 @@ function convertToRanges(timeRanges : TimeRanges) : IRange[] {
  * @param {TimeRanges} timeRanges
  * @returns {Object}
  */
-function getRange(timeRanges : TimeRanges, time : number) : IRange|null {
+function getBufferedTimeRange(timeRanges : TimeRanges, time : number) : IRange|null {
   for (let i = timeRanges.length - 1; i >= 0; i--) {
     const start = timeRanges.start(i);
     if (time >= start) {
       const end = timeRanges.end(i);
       if (time < end) {
-        return { start,
-                 end };
+        return { start, end };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Get range object of a specific time in a `IRange` object.
+ * @param {Array.<Object>} ranges
+ * @returns {Object}
+ */
+function getRange(ranges : IRange[], time : number) : IRange|null {
+  for (let i = ranges.length - 1; i >= 0; i--) {
+    const start = ranges[i].start;
+    if (time >= start) {
+      const end = ranges[i].end;
+      if (time < end) {
+        return ranges[i];
       }
     }
   }
@@ -202,7 +219,7 @@ function getRange(timeRanges : TimeRanges, time : number) : IRange|null {
  * @param {Number} time
  * @returns {Number}
  */
-function getNextRangeGap(timeRanges : TimeRanges, time : number) : number {
+function getNextBufferedTimeRangeGap(timeRanges : TimeRanges, time : number) : number {
   const len = timeRanges.length;
   for (let i = 0; i < len; i++) {
     const start = timeRanges.start(i);
@@ -221,7 +238,7 @@ function getNextRangeGap(timeRanges : TimeRanges, time : number) : number {
  *     given time.
  *   - innerRange {Object|null}: the range which contain the given time.
  */
-function getInnerAndOuterTimeRanges(
+function getInnerAndOuterRangesFromBufferedTimeRanges(
   timeRanges : TimeRanges,
   time : number
 ) : { innerRange : IRange|null; outerRanges : IRange[] } {
@@ -240,17 +257,43 @@ function getInnerAndOuterTimeRanges(
 }
 
 /**
- * Get "size" (difference between end and start) of the range containing the
+ * @param {Array.<Object>} ranges
+ * @param {Number} time
+ * @returns {Object} - Object with two properties:
+ *   - outerRanges {Array.<Object>}: every ranges which does not contain the
+ *     given time.
+ *   - innerRange {Object|null}: the range which contain the given time.
+ */
+function getInnerAndOuterRanges(
+  ranges : IRange[],
+  time : number
+) : { innerRange : IRange|null; outerRanges : IRange[] } {
+  let innerRange : IRange|null = null;
+  const outerRanges : IRange[] = [];
+  for (let i = 0; i < ranges.length; i++) {
+    const start = ranges[i].start;
+    const end = ranges[i].end;
+    if (time < start || time >= end) {
+      outerRanges.push({ start, end });
+    } else {
+      innerRange = { start, end };
+    }
+  }
+  return { outerRanges, innerRange };
+}
+
+/**
+ * Get "size" (difference between end and start) of the TimeRange containing the
  * given time. 0 if the range is not found.
  * @param {TimeRanges} timeRanges
  * @param {Number} currentTime
  * @returns {Number}
  */
-function getSizeOfRange(
+function getSizeOfBufferedTimeRange(
   timeRanges : TimeRanges,
   currentTime : number
 ) : number {
-  const range = getRange(timeRanges, currentTime);
+  const range = getBufferedTimeRange(timeRanges, currentTime);
   return range !== null ? range.end - range.start :
                           0;
 }
@@ -262,11 +305,11 @@ function getSizeOfRange(
  * @param {Number} currentTime
  * @returns {Number}
  */
-function getPlayedSizeOfRange(
+function getPlayedSizeOfBufferedTimeRange(
   timeRanges : TimeRanges,
   currentTime : number
 ) : number {
-  const range = getRange(timeRanges, currentTime);
+  const range = getBufferedTimeRange(timeRanges, currentTime);
   return range !== null ? currentTime - range.start :
                           0;
 }
@@ -278,11 +321,59 @@ function getPlayedSizeOfRange(
  * @param {Number} currentTime
  * @returns {Number}
  */
-function getLeftSizeOfRange(
+function getLeftSizeOfBufferedTimeRange(
   timeRanges : TimeRanges,
   currentTime : number
 ) : number {
-  const range = getRange(timeRanges, currentTime);
+  const range = getBufferedTimeRange(timeRanges, currentTime);
+  return range !== null ? range.end - currentTime :
+                          Infinity;
+}
+
+/**
+ * Get "size" (difference between end and start) of the range containing the
+ * given time. 0 if the range is not found.
+ * @param {Array.<Object>} ranges
+ * @param {Number} currentTime
+ * @returns {Number}
+ */
+function getSizeOfRange(
+  ranges : IRange[],
+  currentTime : number
+) : number {
+  const range = getRange(ranges, currentTime);
+  return range !== null ? range.end - range.start :
+                          0;
+}
+
+/**
+ * Get "currently played" (difference between time given and start) of the
+ * range containing the given time. 0 if the range is not found.
+ * @param {Array.<Object>} ranges
+ * @param {Number} currentTime
+ * @returns {Number}
+ */
+function getPlayedSizeOfRange(
+  ranges : IRange[],
+  currentTime : number
+) : number {
+  const range = getRange(ranges, currentTime);
+  return range !== null ? currentTime - range.start :
+                          0;
+}
+
+/**
+ * Get "left to play" (difference between end and time given) of the range
+ * containing the given time. Infinity if the range is not found.
+ * @param {Array.<Object>} ranges
+ * @param {Number} currentTime
+ * @returns {Number}
+ */
+function getLeftSizeOfRange(
+  ranges : IRange[],
+  currentTime : number
+) : number {
+  const range = getRange(ranges, currentTime);
   return range !== null ? range.end - currentTime :
                           Infinity;
 }
@@ -480,10 +571,15 @@ function isTimeInTimeRanges(
 export {
   convertToRanges,
   excludeFromRanges,
-  getInnerAndOuterTimeRanges,
+  getInnerAndOuterRangesFromBufferedTimeRanges,
+  getInnerAndOuterRanges,
   getLeftSizeOfRange,
-  getNextRangeGap,
+  getNextBufferedTimeRangeGap,
+  getSizeOfBufferedTimeRange,
+  getPlayedSizeOfBufferedTimeRange,
+  getLeftSizeOfBufferedTimeRange,
   getPlayedSizeOfRange,
+  getBufferedTimeRange,
   getRange,
   getSizeOfRange,
   insertInto,

@@ -17,6 +17,7 @@
 import log from "../log";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import { ICompatVTTCue } from "./browser_compatibility_types";
+import globalScope from "./global_scope";
 
 /**
  * Creates a cue using the best platform-specific interface available.
@@ -40,8 +41,8 @@ export default function makeCue(
     return null;
   }
 
-  if (isNullOrUndefined(window.VTTCue)) {
-    if (isNullOrUndefined(window.TextTrackCue)) {
+  if (isNullOrUndefined(globalScope.VTTCue)) {
+    if (isNullOrUndefined(globalScope.TextTrackCue)) {
       throw new Error("VTT cues not supported in your target");
     }
     return new (TextTrackCue as unknown as typeof VTTCue)(startTime, endTime, payload);

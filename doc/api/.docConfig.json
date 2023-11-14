@@ -41,8 +41,8 @@
       "displayName": "Track Selection"
     },
     {
-      "path": "./Bitrate_Selection",
-      "displayName": "Bitrate Selection"
+      "path": "./Representation_Selection",
+      "displayName": "Representation Selection"
     },
     {
       "path": "./Speed_Control",
@@ -75,10 +75,6 @@
     {
       "path": "./Miscellaneous",
       "displayName": "Miscellaneous"
-    },
-    {
-      "path": "./Deprecated",
-      "displayName": "Deprecated Methods"
     }
   ]
 }

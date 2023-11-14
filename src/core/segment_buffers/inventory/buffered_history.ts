@@ -15,6 +15,7 @@
  */
 
 import { areSameContent } from "../../../manifest";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { IChunkContext } from "./types";
 
 /**
@@ -23,7 +24,7 @@ import { IChunkContext } from "./types";
  * low-latency streaming usages) in the buffer becomes known.
  */
 export interface IBufferedHistoryEntry {
-  /** `performance.now()` when the event happened. */
+  /** The RxPlayer's monotonically-raising timestamp when the event happened. */
   date : number;
 
   /**
@@ -86,7 +87,7 @@ export default class BufferedHistory {
     context : IChunkContext,
     buffered : { start: number; end: number } | null
   ) : void {
-    const now = performance.now();
+    const now = getMonotonicTimeStamp();
     this._history.push({ date: now,
                          buffered,
                          context });
@@ -107,7 +108,7 @@ export default class BufferedHistory {
   /**
    * If the current history does not satisfy `_lifetime` or `_maxHistoryLength`,
    * clear older entries until it does.
-   * @param {number} now - Current `performance.now()` result.
+   * @param {number} now - Current monotonically-raising timestamp.
    */
   private _cleanHistory(now : number) {
     const historyEarliestLimit = now - this._lifetime;

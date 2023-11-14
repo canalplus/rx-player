@@ -17,12 +17,13 @@
 import {
   convertToRanges,
   excludeFromRanges,
-  getInnerAndOuterTimeRanges,
-  getLeftSizeOfRange,
-  getNextRangeGap,
-  getPlayedSizeOfRange,
-  getRange,
-  getSizeOfRange,
+  getInnerAndOuterRanges,
+  getInnerAndOuterRangesFromBufferedTimeRanges,
+  getLeftSizeOfBufferedTimeRange,
+  getNextBufferedTimeRangeGap,
+  getPlayedSizeOfBufferedTimeRange,
+  getBufferedTimeRange,
+  getSizeOfBufferedTimeRange,
   insertInto,
   isAfter,
   isBefore,
@@ -31,6 +32,11 @@ import {
   keepRangeIntersection,
   mergeContiguousRanges,
   removeEmptyRanges,
+  IRange,
+  getLeftSizeOfRange,
+  getPlayedSizeOfRange,
+  getRange,
+  getSizeOfRange,
 } from "../ranges";
 
 /**
@@ -39,7 +45,7 @@ import {
  * @param {Array.<Array.<number>>} base
  * @returns {Object}
  */
-function constructTimeRanges(base: Array<[number, number]>) : TimeRanges {
+function constructBufferedTimeRanges(base: Array<[number, number]>) : TimeRanges {
   const starts : number[] = [];
   const ends : number[] = [];
   const timeRanges = {
@@ -67,6 +73,16 @@ function constructTimeRanges(base: Array<[number, number]>) : TimeRanges {
   return timeRanges;
 }
 
+/**
+ * Construct `IRange` implementation from Array of tuples:
+ * [ start : number, end : number ]
+ * @param {Array.<Array.<number>>} base
+ * @returns {Object}
+ */
+function constructRanges(base: Array<[number, number]>) : IRange[] {
+  return base.map(([start, end]) => ({ start, end }));
+}
+
 describe("utils - ranges", () => {
   describe("convertToRanges", () => {
     it("should convert TimeRanges to custom Ranges implementation", () => {
@@ -76,7 +92,7 @@ describe("utils - ranges", () => {
         [50, 70],
       ];
 
-      const timeRanges = constructTimeRanges(times);
+      const timeRanges = constructBufferedTimeRanges(times);
       const ranges = convertToRanges(timeRanges);
       expect(ranges).toEqual([
         {
@@ -97,22 +113,22 @@ describe("utils - ranges", () => {
     it("should return empty array if no timerange is given", () => {
       const times : Array<[number, number]> = [];
 
-      const timeRanges = constructTimeRanges(times);
+      const timeRanges = constructBufferedTimeRanges(times);
       const ranges = convertToRanges(timeRanges);
       expect(ranges).toEqual([]);
     });
   });
 
-  describe("getInnerAndOuterTimeRanges", () => {
+  describe("getInnerAndOuterRangesFromRanges", () => {
     /* eslint-disable max-len */
     it("should get inner range and outer ranges with the given TimeRanges and number", () => {
     /* eslint-enable max-len */
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
       ]);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 0))
+      expect(getInnerAndOuterRanges(timeRanges, 0))
         .toEqual({
           outerRanges: [
             {
@@ -129,7 +145,7 @@ describe("utils - ranges", () => {
             end: 10,
           },
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 9))
+      expect(getInnerAndOuterRanges(timeRanges, 9))
         .toEqual({
           outerRanges: [
             {
@@ -146,7 +162,7 @@ describe("utils - ranges", () => {
             end: 10,
           },
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 29))
+      expect(getInnerAndOuterRanges(timeRanges, 29))
         .toEqual({
           outerRanges: [
             {
@@ -166,12 +182,12 @@ describe("utils - ranges", () => {
     });
 
     it("should return a null innerRange if the number given isn't in any range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
       ]);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 10))
+      expect(getInnerAndOuterRanges(timeRanges, 10))
         .toEqual({
           outerRanges: [
             {
@@ -189,7 +205,7 @@ describe("utils - ranges", () => {
           ],
           innerRange: null,
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 80))
+      expect(getInnerAndOuterRanges(timeRanges, 80))
         .toEqual({
           outerRanges: [
             {
@@ -212,10 +228,10 @@ describe("utils - ranges", () => {
     /* eslint-disable max-len */
     it("should return an empty outerRanges if the number given is in the single range given", () => {
     /* eslint-enable max-len */
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [20, 30],
       ]);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 20))
+      expect(getInnerAndOuterRanges(timeRanges, 20))
         .toEqual({
           outerRanges: [],
           innerRange: {
@@ -227,13 +243,151 @@ describe("utils - ranges", () => {
 
     it("should return null ane empty array if no timerange is given", () => {
       const times : Array<[number, number]> = [];
-      const timeRanges = constructTimeRanges(times);
-      expect(getInnerAndOuterTimeRanges(timeRanges, 0))
+      const timeRanges = constructRanges(times);
+      expect(getInnerAndOuterRanges(timeRanges, 0))
         .toEqual({
           outerRanges: [],
           innerRange: null,
         });
-      expect(getInnerAndOuterTimeRanges(timeRanges, 0))
+      expect(getInnerAndOuterRanges(timeRanges, 0))
+        .toEqual({
+          outerRanges: [],
+          innerRange: null,
+        });
+    });
+  });
+
+  describe("getInnerAndOuterRangesFromBufferedTimeRanges", () => {
+    /* eslint-disable max-len */
+    it("should get inner range and outer ranges with the given TimeRanges and number", () => {
+    /* eslint-enable max-len */
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 0))
+        .toEqual({
+          outerRanges: [
+            {
+              start: 20,
+              end: 30,
+            },
+            {
+              start: 50,
+              end: 70,
+            },
+          ],
+          innerRange: {
+            start: 0,
+            end: 10,
+          },
+        });
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 9))
+        .toEqual({
+          outerRanges: [
+            {
+              start: 20,
+              end: 30,
+            },
+            {
+              start: 50,
+              end: 70,
+            },
+          ],
+          innerRange: {
+            start: 0,
+            end: 10,
+          },
+        });
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 29))
+        .toEqual({
+          outerRanges: [
+            {
+              start: 0,
+              end: 10,
+            },
+            {
+              start: 50,
+              end: 70,
+            },
+          ],
+          innerRange: {
+            start: 20,
+            end: 30,
+          },
+        });
+    });
+
+    it("should return a null innerRange if the number given isn't in any range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 10))
+        .toEqual({
+          outerRanges: [
+            {
+              start: 0,
+              end: 10,
+            },
+            {
+              start: 20,
+              end: 30,
+            },
+            {
+              start: 50,
+              end: 70,
+            },
+          ],
+          innerRange: null,
+        });
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 80))
+        .toEqual({
+          outerRanges: [
+            {
+              start: 0,
+              end: 10,
+            },
+            {
+              start: 20,
+              end: 30,
+            },
+            {
+              start: 50,
+              end: 70,
+            },
+          ],
+          innerRange: null,
+        });
+    });
+
+    /* eslint-disable max-len */
+    it("should return an empty outerRanges if the number given is in the single range given", () => {
+    /* eslint-enable max-len */
+      const timeRanges = constructBufferedTimeRanges([
+        [20, 30],
+      ]);
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 20))
+        .toEqual({
+          outerRanges: [],
+          innerRange: {
+            start: 20,
+            end: 30,
+          },
+        });
+    });
+
+    it("should return null ane empty array if no timerange is given", () => {
+      const times : Array<[number, number]> = [];
+      const timeRanges = constructBufferedTimeRanges(times);
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 0))
+        .toEqual({
+          outerRanges: [],
+          innerRange: null,
+        });
+      expect(getInnerAndOuterRangesFromBufferedTimeRanges(timeRanges, 0))
         .toEqual({
           outerRanges: [],
           innerRange: null,
@@ -243,7 +397,7 @@ describe("utils - ranges", () => {
 
   describe("getLeftSizeOfRange", () => {
     it("should return the left time to play in the current time range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -254,7 +408,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return Infinity if the given time is at the edge of a range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -265,7 +419,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return Infinity if the given time is not in any range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -277,55 +431,91 @@ describe("utils - ranges", () => {
     });
   });
 
-  describe("getNextRangeGap", () => {
-    /* eslint-disable max-len */
-    it("should return gap until next range if the given number is not in any range", () => {
-    /* eslint-enable max-len */
-      const timeRanges = constructTimeRanges([
+  describe("getLeftSizeOfBufferedTimeRange", () => {
+    it("should return the left time to play in the current time range", () => {
+      const timeRanges = constructBufferedTimeRanges([
         [0, 10],
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, 15.6)).toBe(20 - 15.6);
-      expect(getNextRangeGap(timeRanges, 30)).toBe(50 - 30);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 0)).toBe(10 - 0);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 9.9)).toBe(10 - 9.9);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 54.6)).toBe(70 - 54.6);
+    });
+
+    it("should return Infinity if the given time is at the edge of a range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 10)).toBe(Infinity);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 30)).toBe(Infinity);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 70)).toBe(Infinity);
+    });
+
+    it("should return Infinity if the given time is not in any range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 15)).toBe(Infinity);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, 38)).toBe(Infinity);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, -Infinity)).toBe(Infinity);
+      expect(getLeftSizeOfBufferedTimeRange(timeRanges, Infinity)).toBe(Infinity);
+    });
+  });
+
+  describe("getNextBufferedTimeRangeGap", () => {
+    /* eslint-disable max-len */
+    it("should return gap until next range if the given number is not in any range", () => {
+    /* eslint-enable max-len */
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 15.6)).toBe(20 - 15.6);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 30)).toBe(50 - 30);
     });
 
     /* eslint-disable max-len */
     it("should return gap until next range if the given number is in a range", () => {
     /* eslint-enable max-len */
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructBufferedTimeRanges([
         [0, 10],
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, 0)).toBe(20 - 0);
-      expect(getNextRangeGap(timeRanges, 20.5)).toBe(50 - 20.5);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 0)).toBe(20 - 0);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 20.5)).toBe(50 - 20.5);
     });
 
     it("should return Infinity when we are in the last time range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructBufferedTimeRanges([
         [0, 10],
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, 50)).toBe(Infinity);
-      expect(getNextRangeGap(timeRanges, 58.5)).toBe(Infinity);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 50)).toBe(Infinity);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 58.5)).toBe(Infinity);
     });
 
     it("should return Infinity when we are after the last time range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructBufferedTimeRanges([
         [0, 10],
         [20, 30],
         [50, 70],
       ]);
-      expect(getNextRangeGap(timeRanges, Infinity)).toBe(Infinity);
-      expect(getNextRangeGap(timeRanges, 70)).toBe(Infinity);
+      expect(getNextBufferedTimeRangeGap(timeRanges, Infinity)).toBe(Infinity);
+      expect(getNextBufferedTimeRangeGap(timeRanges, 70)).toBe(Infinity);
     });
   });
 
   describe("getPlayedSizeOfRange", () => {
     it("should return the time before the current time in the current range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -336,7 +526,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return 0 if the given time is at the edge of a range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -347,7 +537,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return 0 if the given time is not in any range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -359,9 +549,45 @@ describe("utils - ranges", () => {
     });
   });
 
+  describe("getPlayedSizeOfBufferedTimeRange", () => {
+    it("should return the time before the current time in the current range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 0)).toBe(0 - 0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 9.9)).toBe(9.9 - 0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 54.6)).toBe(54.6 - 50);
+    });
+
+    it("should return 0 if the given time is at the edge of a range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 10)).toBe(0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 30)).toBe(0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 70)).toBe(0);
+    });
+
+    it("should return 0 if the given time is not in any range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 15)).toBe(0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, 38)).toBe(0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, -Infinity)).toBe(0);
+      expect(getPlayedSizeOfBufferedTimeRange(timeRanges, Infinity)).toBe(0);
+    });
+  });
+
   describe("getRange", () => {
     it("should return the current range from the TimeRanges given", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -381,7 +607,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return null if the given time is at the edge of a range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -392,7 +618,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return null if the given time is not in any range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -404,9 +630,54 @@ describe("utils - ranges", () => {
     });
   });
 
+  describe("getBufferedTimeRange", () => {
+    it("should return the current range from the TimeRanges given", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getBufferedTimeRange(timeRanges, 0)).toEqual({
+        start: 0,
+        end: 10,
+      });
+      expect(getBufferedTimeRange(timeRanges, 9.9)).toEqual({
+        start: 0,
+        end: 10,
+      });
+      expect(getBufferedTimeRange(timeRanges, 54.6)).toEqual({
+        start: 50,
+        end: 70,
+      });
+    });
+
+    it("should return null if the given time is at the edge of a range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getBufferedTimeRange(timeRanges, 10)).toEqual(null);
+      expect(getBufferedTimeRange(timeRanges, 30)).toEqual(null);
+      expect(getBufferedTimeRange(timeRanges, 70)).toEqual(null);
+    });
+
+    it("should return null if the given time is not in any range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getBufferedTimeRange(timeRanges, 15)).toEqual(null);
+      expect(getBufferedTimeRange(timeRanges, 38)).toEqual(null);
+      expect(getBufferedTimeRange(timeRanges, -Infinity)).toEqual(null);
+      expect(getBufferedTimeRange(timeRanges, Infinity)).toEqual(null);
+    });
+  });
+
   describe("getSizeOfRange", () => {
     it("should return the size of the current range from the TimeRanges given", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -417,7 +688,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return 0 if the given time is at the edge of a range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -428,7 +699,7 @@ describe("utils - ranges", () => {
     });
 
     it("should return null if the given time is not in any range", () => {
-      const timeRanges = constructTimeRanges([
+      const timeRanges = constructRanges([
         [0, 10],
         [20, 30],
         [50, 70],
@@ -437,6 +708,42 @@ describe("utils - ranges", () => {
       expect(getSizeOfRange(timeRanges, 38)).toBe(0);
       expect(getSizeOfRange(timeRanges, -Infinity)).toBe(0);
       expect(getSizeOfRange(timeRanges, Infinity)).toBe(0);
+    });
+  });
+
+  describe("getSizeOfBufferedTimeRange", () => {
+    it("should return the size of the current range from the TimeRanges given", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 0)).toBe(10);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 9.9)).toBe(10);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 54.6)).toBe(20);
+    });
+
+    it("should return 0 if the given time is at the edge of a range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 10)).toBe(0);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 30)).toBe(0);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 70)).toBe(0);
+    });
+
+    it("should return null if the given time is not in any range", () => {
+      const timeRanges = constructBufferedTimeRanges([
+        [0, 10],
+        [20, 30],
+        [50, 70],
+      ]);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 15)).toBe(0);
+      expect(getSizeOfBufferedTimeRange(timeRanges, 38)).toBe(0);
+      expect(getSizeOfBufferedTimeRange(timeRanges, -Infinity)).toBe(0);
+      expect(getSizeOfBufferedTimeRange(timeRanges, Infinity)).toBe(0);
     });
   });
 

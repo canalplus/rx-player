@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
+import { getInnerAndOuterRangesFromBufferedTimeRanges } from "../../utils/ranges";
 import { IReadOnlySharedReference } from "../../utils/reference";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../api";
@@ -54,7 +54,7 @@ export default function BufferGarbageCollector(
 ) : void {
   let lastPosition : number;
   playbackObserver.listen((o) => {
-    lastPosition = o.position.pending ?? o.position.last;
+    lastPosition = o.position.getWanted();
     clean();
   }, { includeLastObservation: true, clearSignal: cancellationSignal });
   function clean() {
@@ -105,8 +105,8 @@ async function clearBuffer(
   const cleanedupRanges : Array<{ start : number;
                                   end: number; }> = [];
   const { innerRange, outerRanges } =
-    getInnerAndOuterTimeRanges(segmentBuffer.getBufferedRanges(),
-                               position);
+    getInnerAndOuterRangesFromBufferedTimeRanges(segmentBuffer.getBufferedRanges(),
+                                                 position);
 
   const collectBufferBehind = () => {
     if (!isFinite(maxBufferBehind)) {

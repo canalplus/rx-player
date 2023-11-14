@@ -16,7 +16,7 @@ rx-player, which is exactly the point of this page.
 
 ## List of possible states
 
-Today the player can have one of these 9 possible states:
+Today the player can have one of these 10 possible states:
 
 - `STOPPED`
 - `LOADING`
@@ -24,6 +24,7 @@ Today the player can have one of these 9 possible states:
 - `PLAYING`
 - `PAUSED`
 - `BUFFERING`
+- `FREEZING`
 - `SEEKING`
 - `ENDED`
 - `RELOADING`
@@ -77,9 +78,28 @@ Indicates that the player is currently paused in the content.
 
 ### The BUFFERING state
 
-The content is paused because it needs to build buffer.
+The player is paused because it needs to build buffer.
+
+TThe player cannot play the content despite having enough data, due to an
+unknown reason.
 
 The player will not play until it gets out of this state.
+
+### The FREEZING state
+
+TThe player cannot play the content despite having enough data, due to an
+unknown reason.
+
+This state might be due to either:
+  - poor performance
+  - an issue with the current device
+  - the key of an encrypted content not being loaded soon enough
+
+The player will not play until it gets out of this state.
+
+In most of those cases, the RxPlayer will be able to continue playback by itself,
+after some time.
+As such, most `FREEZING` cases can be treated exactly like a `BUFFERING` state.
 
 ### The SEEKING state
 
@@ -91,13 +111,7 @@ The player will not play until it gets out of this state.
 ### The ENDED state
 
 The player reached the end of the content.
-
-If the `stopAtEnd` [player option](./Creating_a_Player.md) has been set to
-`true` or not set, the player will immediately stop the content. In that case,
-the `ENDED` state can be considered like the `STOPPED` state - in terms of what
-you can do.
-
-Else, it should now be paused at the last frame if a video content is available
+It should now be paused at the last frame if a video content is available
 at this time and this state acts like what you can expect from HTML5 playback:
 
 - when seeking when the content is ended, you will be paused (even if you
@@ -109,19 +123,6 @@ at this time and this state acts like what you can expect from HTML5 playback:
 
 This state indicates that the player needs to "re-load" then content.
 
-This can happen for different reasons:
-
-- When you switch the video track for another one, when the previous one was
-  currently decoding.
-
-- When you update manually the audio and video bitrate through respectively
-  the `setAudioBitrate` and `setVideoBitrate` APIs
-  (Only if you set the `manualBitrateSwitchingMode` loadVideo option to
-  `"direct"`).
-
-- When the current audio or video codec changes and you had set the
-  `onCodecSwitch` `loadVideo` option to `"reload"`.
-
 In those cases, we need to stop and reload the content on the browser-side, due
 to browser limitation.
 
@@ -129,9 +130,7 @@ While this state is active, multiple player API are unavailable:
 
 - you cannot play or pause
 - you cannot seek
-- you cannot obtain the position or duration
-- you cannot get or switch the available video, text or audio tracks.
-- you cannot get or switch the available video or audio bitrates.
+- you cannot obtain the last playing position or the content duration
 
 This is why we sometime recommend to manage this state as if it was the
 `LOADING` state (where those APIs - and other - are also not available).
