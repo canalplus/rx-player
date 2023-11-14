@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+  - Add `getLivePosition` RxPlayer method [#1300]
+  - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
+  - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
+
+### Bug fixes
+
+  - Fix subtitles "blinking" in some specific conditions, especially with some DASH low-latency contents [#1314]
+  - DASH: Fix Period overlap resolution logic for when the first Period is removed [#1311]
+  - TTML: Fix handling of the `tts:lineHeight` attribute [#1320]
+  - Fix import of the `LOCAL_MANIFEST` experimental feature
+  - Avoid very rarely skipping segments which initially were too big to be pushed due to memory limitations [#1323]
+  - Fix issue arising when using track APIs at the exact last possible position of a Period with no consecutive Period [#1337]
+  - Starting at the end (through a `startAt` `loadVideo` option) or reloading at the end led to the restart of the content [#1338]
+  - DRM/Safari: also perform Safari DRM work-arounds when the page is launched from the dock [#1351, #1356]
+
+### Other improvements
+
+  - DASH: rely on SCTE214 `supplementalCodecs` instead of `codecs` if it's supported to better support backward compatible Dolby Vision contents [#1307]
+  - DASH: Provide better support of the `availabilityTimeOffset` attribute [#1300]
+  - DEBUG_ELEMENT: Add unsupported and undecipherable bitrates to the debug element [#1321]
+  - DEBUG_ELEMENT: update buffer graph maximum size so it becomes more readable for lengthy contents [#1316]
+  - DEBUG_ELEMENT: always synchronize inventory of segments before rendering it [#1317]
+  - Remove remaining RxPlayer dependency removing possibility of some application-side bundling errors [#1312]
+  - Add exception to text Garbage collection logic to avoid unnecessarily reload text segments frequently [#1325]
+  - Avoid logging too much the buffer's content when our debugging UI or the demo is used [#1341]
+  - Demo: Fix reporting of live position in demo page [#1313]
+
+
 ## v3.32.1 (2023-10-19)
 
 ### Features
