@@ -28,6 +28,27 @@ import BufferedHistory, {
 } from "./buffered_history";
 import { IChunkContext } from "./types";
 
+/** Categorization of a given chunk in the `SegmentInventory`. */
+export const enum ChunkStatus {
+  /**
+   * This chunk is only a part of a partially-pushed segment for now, meaning
+   * that it is only a sub-part of a requested segment that was not yet
+   * fully-loaded and pushed.
+   *
+   * Once and if the corresponding segment is fully-pushed, its `ChunkStatus`
+   * switches to `Complete`.
+   */
+  PartiallyPushed = 0,
+  /** This chunk corresponds to a fully-loaded segment. */
+  Complete = 1,
+  /**
+   * This chunk's push operation failed, in this scenario there is no certitude
+   * about the presence of that chunk in the buffer: it may not be present,
+   * partially-present, or fully-present depending on why that push operation
+   * failed, which is generally only known by the lower-level code.
+   */
+  Failed = 2,
+}
 
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
@@ -82,14 +103,10 @@ export interface IBufferedChunk {
   /** Information on what that chunk actually contains. */
   infos : IChunkContext;
   /**
-   * If `true`, this chunk is only a partial chunk of a whole segment.
-   *
-   * Inversely, if `false`, this chunk is a whole segment whose inner chunks
-   * have all been fully pushed.
-   * In that condition, the `start` and `end` properties refer to that fully
-   * pushed segment.
+   * Status of this chunk.
+   * @see ChunkStatus
    */
-  partiallyPushed : boolean;
+  status : ChunkStatus;
   /**
    * If `true`, the segment as a whole is divided into multiple parts in the
    * buffer, with other segment(s) between them.
@@ -244,7 +261,11 @@ export default class SegmentInventory {
         log.debug(`SI: ${numberOfSegmentToDelete} segments GCed.`, bufferType);
         const removed = inventory.splice(indexBefore, numberOfSegmentToDelete);
         for (const seg of removed) {
-          if (seg.bufferedStart === undefined && seg.bufferedEnd === undefined) {
+          if (
+            seg.bufferedStart === undefined &&
+            seg.bufferedEnd === undefined &&
+            seg.status !== ChunkStatus.Failed
+          ) {
             this._bufferedHistory.addBufferedSegment(seg.infos, null);
           }
         }
@@ -318,7 +339,11 @@ export default class SegmentInventory {
                 bufferType, inventoryIndex, inventory.length);
       const removed = inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
       for (const seg of removed) {
-        if (seg.bufferedStart === undefined && seg.bufferedEnd === undefined) {
+        if (
+          seg.bufferedStart === undefined &&
+          seg.bufferedEnd === undefined &&
+          seg.status !== ChunkStatus.Failed
+        ) {
           this._bufferedHistory.addBufferedSegment(seg.infos, null);
         }
       }
@@ -343,7 +368,8 @@ export default class SegmentInventory {
       segment,
       chunkSize,
       start,
-      end } : IInsertedChunkInfos
+      end } : IInsertedChunkInfos,
+    succeed: boolean
   ) : void {
     if (segment.isInit) {
       return;
@@ -357,7 +383,8 @@ export default class SegmentInventory {
     }
 
     const inventory = this._inventory;
-    const newSegment = { partiallyPushed: true,
+    const newSegment = { status: succeed ? ChunkStatus.PartiallyPushed :
+                                           ChunkStatus.Failed,
                          chunkSize,
                          splitted: false,
                          start,
@@ -565,7 +592,7 @@ export default class SegmentInventory {
               //  ===>         : |--|====|-|
               log.warn("SI: Segment pushed is contained in a previous one",
                        bufferType, start, end, segmentI.start, segmentI.end);
-              const nextSegment = { partiallyPushed: segmentI.partiallyPushed,
+              const nextSegment = { status: segmentI.status,
                                     /**
                                      * Note: this sadly means we're doing as if
                                      * that chunk is present two times.
@@ -743,7 +770,9 @@ export default class SegmentInventory {
           this._inventory.splice(firstI + 1, length);
           i -= length;
         }
-        this._inventory[firstI].partiallyPushed = false;
+        if (this._inventory[firstI].status === ChunkStatus.PartiallyPushed) {
+          this._inventory[firstI].status = ChunkStatus.Complete;
+        }
         this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
         this._inventory[firstI].bufferedEnd = lastBufferedEnd;
@@ -760,8 +789,11 @@ export default class SegmentInventory {
       this.synchronizeBuffered(newBuffered);
       for (const seg of resSegments) {
         if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
-          this._bufferedHistory.addBufferedSegment(seg.infos, { start: seg.bufferedStart,
-                                                                end: seg.bufferedEnd });
+          if (seg.status !== ChunkStatus.Failed) {
+            this._bufferedHistory.addBufferedSegment(seg.infos,
+                                                     { start: seg.bufferedStart,
+                                                       end: seg.bufferedEnd });
+          }
         } else {
           log.debug("SI: buffered range not known after sync. Skipping history.",
                     seg.start,
@@ -810,7 +842,7 @@ function bufferedStartLooksCoherent(
   thisSegment : IBufferedChunk
 ) : boolean {
   if (thisSegment.bufferedStart === undefined ||
-      thisSegment.partiallyPushed)
+      thisSegment.status !== ChunkStatus.Complete)
   {
     return false;
   }
@@ -837,7 +869,7 @@ function bufferedEndLooksCoherent(
   thisSegment : IBufferedChunk
 ) : boolean {
   if (thisSegment.bufferedEnd === undefined ||
-      thisSegment.partiallyPushed)
+      thisSegment.status !== ChunkStatus.Complete)
   {
     return false;
   }

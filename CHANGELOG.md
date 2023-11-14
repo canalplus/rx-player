@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+  - Add `getLivePosition` RxPlayer method [#1300]
+  - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
+  - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
+
+### Bug Fixes
+
+  - Fix subtitles "blinking" in some specific conditions, especially with some DASH low-latency contents [#1314]
+  - DASH: Fix Period overlap resolution logic for when the first Period is removed [#1311]
+  - Fix export of the `LOCAL_MANIFEST` experimental feature [#1305]
+
+### Other improvements
+
+  - DASH: rely on SCTE214 `supplementalCodecs` instead of `codecs` if it's supported to better support backward compatible Dolby Vision contents [#1307]
+  - DASH: Provide better support of the `availabilityTimeOffset` attribute [#1300]
+  - DEBUG_ELEMENT: Add unsupported and undecipherable bitrates to the debug element [#1321]
+  - DEBUG_ELEMENT: update buffer graph maximum size so it becomes more readable for lengthy contents [#1316]
+  - DEBUG_ELEMENT: always synchronize inventory of segments before rendering it [#1317]
+
+
 ## v3.32.1 (2023-10-19)
 
 ### Features
