@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "allowJs": true,
+    "outDir": "./dist/es2017",
+    "declaration": true,
     "target": "es2017",
     "lib": ["es2017", "dom"],
+    "types": ["jest"],
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
@@ -13,16 +14,19 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "types": ["jest"],
     "moduleResolution": "node",
+    "module": "esnext",
     "typeRoots": [
-      "./src/typings/next-tick.d.ts",
-      "./src/typings/object-assign.d.ts",
-      "./src/typings/globals.d.ts",
+      "./src/typings/",
+      "./src/globals.prod.d.ts",
       "./node_modules/@types"
     ]
   },
   "include": [
     "./src/**/*.ts"
+  ],
+  "exclude":[
+    "./src/**/*.test.ts",
+    "./src/globals.dev.d.ts"
   ]
 }

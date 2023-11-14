@@ -61,7 +61,7 @@ export default class MediaError extends Error {
   public readonly type : "MEDIA_ERROR";
   public readonly message : string;
   public readonly code : IMediaErrorCode;
-  public readonly trackInfo : IMediaErrorTrackContext | undefined;
+  public readonly tracksInfo : IMediaErrorTrackContext[] | undefined;
   public fatal : boolean;
 
   /**
@@ -73,7 +73,7 @@ export default class MediaError extends Error {
     code : ICodeWithAdaptationType,
     reason : string,
     context: {
-      adaptation : Adaptation;
+      adaptations : Adaptation[] | undefined;
     }
   );
   constructor(
@@ -84,7 +84,7 @@ export default class MediaError extends Error {
     code : IMediaErrorCode,
     reason : string,
     context? : {
-      adaptation? : Adaptation | undefined;
+      adaptations? : Adaptation[] | undefined;
     } | undefined
   ) {
     super();
@@ -95,24 +95,30 @@ export default class MediaError extends Error {
     this.type = ErrorTypes.MEDIA_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, reason);
+    this.message = errorMessage(this.code, reason);
     this.fatal = false;
-    const adaptation = context?.adaptation;
-    if (adaptation !== undefined) {
-      switch (adaptation.type) {
-        case "audio":
-          this.trackInfo = { type: "audio",
-                             track: adaptation.toAudioTrack() };
-          break;
-        case "video":
-          this.trackInfo = { type: "video",
-                             track: adaptation.toVideoTrack() };
-          break;
-        case "text":
-          this.trackInfo = { type: "text",
-                             track: adaptation.toTextTrack() };
-          break;
-      }
+    const adaptations = context?.adaptations;
+    if (adaptations !== undefined && adaptations.length > 0) {
+      this.tracksInfo = adaptations.reduce((
+        acc: IMediaErrorTrackContext[],
+        adaptation: Adaptation
+      ) => {
+        switch (adaptation.type) {
+          case "audio":
+            acc.push({ type: "audio",
+                       track: adaptation.toAudioTrack(false) });
+            break;
+          case "video":
+            acc.push({ type: "video",
+                       track: adaptation.toVideoTrack(false) });
+            break;
+          case "text":
+            acc.push({ type: "text",
+                       track: adaptation.toTextTrack() });
+            break;
+        }
+        return acc;
+      }, []);
     }
   }
 }

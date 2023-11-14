@@ -23,15 +23,13 @@ import {
 } from "../parsers/manifest";
 import {
   IAudioRepresentation,
+  ITrackType,
   IHDRInformation,
   IVideoRepresentation,
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../utils/id_generator";
 import { IRepresentationIndex } from "./representation_index";
-import {
-  IAdaptationType,
-} from "./types";
 
 const generateRepresentationUniqueId = idGenerator();
 
@@ -90,7 +88,7 @@ class Representation {
    * Frame-rate, when it can be applied, of this Representation, in any textual
    * indication possible (often under a ratio form).
    */
-  public frameRate? : string;
+  public frameRate? : number;
 
   /**
    * `true` if this `Representation` is linked to a spatial audio technology.
@@ -155,7 +153,7 @@ class Representation {
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
+  constructor(args : IParsedRepresentation, opts : { type : ITrackType }) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
@@ -326,7 +324,7 @@ class Representation {
    * @param {Uint8Array} data
    * @returns {boolean}
    */
-  public _addProtectionData(
+  public addProtectionData(
     initDataType : string,
     keyId: Uint8Array | undefined,
     data : Array<{
@@ -400,8 +398,13 @@ class Representation {
    * @returns {Object}
    */
   public toAudioRepresentation(): IAudioRepresentation {
-    const { id, isSpatialAudio, bitrate, codec } = this;
-    return { id, isSpatialAudio, bitrate, codec };
+    const { id, bitrate, codec, isSpatialAudio, isSupported, decipherable } = this;
+    return { id,
+             bitrate,
+             codec,
+             isSpatialAudio,
+             isCodecSupported: isSupported,
+             decipherable };
   }
 
   /**
@@ -409,8 +412,33 @@ class Representation {
    * @returns {Object}
    */
   public toVideoRepresentation(): IVideoRepresentation {
-    const { id, bitrate, frameRate, width, height, codec, hdrInfo } = this;
-    return { id, bitrate, frameRate, width, height, codec, hdrInfo };
+    const { id,
+            bitrate,
+            frameRate,
+            width,
+            height,
+            codec,
+            hdrInfo,
+            isSupported,
+            decipherable } = this;
+    return { id,
+             bitrate,
+             frameRate,
+             width,
+             height,
+             codec,
+             hdrInfo,
+             isCodecSupported: isSupported,
+             decipherable };
+  }
+
+  /**
+   * Returns `true` if this Representation can be played (that is: not
+   * undecipherable and with a supported codec).
+   * @returns {Array.<Representation>}
+   */
+  public isPlayable() : boolean {
+    return this.isSupported && this.decipherable !== false;
   }
 }
 
