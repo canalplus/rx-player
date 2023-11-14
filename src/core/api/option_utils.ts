@@ -397,6 +397,8 @@ function parseConstructorOptions(
  */
 function checkReloadOptions(options?: {
   reloadAt?: { position?: number; relative?: number };
+  keySystems?: IKeySystemOption[];
+  autoPlay?: boolean;
 }): void {
   if (options === null ||
       (typeof options !== "object" && options !== undefined)) {
@@ -413,6 +415,12 @@ function checkReloadOptions(options?: {
   if (typeof options?.reloadAt?.relative !== "number" &&
       options?.reloadAt?.relative !== undefined) {
     throw new Error("API: reload - Invalid 'reloadAt.relative' option format.");
+  }
+  if (!Array.isArray(options?.keySystems) && options?.keySystems !== undefined) {
+    throw new Error("API: reload - Invalid 'keySystems' option format.");
+  }
+  if (options?.autoPlay !== undefined && typeof options.autoPlay !== "boolean") {
+    throw new Error("API: reload - Invalid 'autoPlay' option format.");
   }
 }
 
