@@ -50,6 +50,21 @@ import {
  * Setting a value too high might lead to two segments targeting different times
  * to be wrongly believed to target the same time. In worst case scenarios, this
  * could lead to wanted text tracks being removed.
+ *
+ * When comparing 2 segments s1 and s2, you may want to take into account the duration
+ * of the segments:
+ *   - if s1 is [0, 2] and s2 is [0, 2.1] s1 and s2 can be considered as nearly equal as
+ *     there is a relative difference of: (2.1-2) / 2 = 5%;
+ *     Formula: (end_s1 - end_s2) / duration_s2 = relative_difference
+ *   - if s1 is [0, 0.04] and s2 is [0.04, 0.08] s1 and s2 may not considered as nearly
+ *     equal as there is a relative difference of: (0.04-0.08) / 0.04 = 100%
+ *
+ * To compare relatively to the duration of a segment you can provide and additional
+ * parameter "delta" that remplace MAX_DELTA_BUFFER_TIME.
+ * If parameter "delta" is higher than MAX_DELTA_BUFFER_TIME, MAX_DELTA_BUFFER_TIME
+ * is used instead of delta. This ensure that segments are nearly equal when comparing
+ * relatively AND absolutely.
+ *
  * @type Number
  */
 const MAX_DELTA_BUFFER_TIME = 0.2;
@@ -58,10 +73,12 @@ const MAX_DELTA_BUFFER_TIME = 0.2;
  * @see MAX_DELTA_BUFFER_TIME
  * @param {Number} a
  * @param {Number} b
+ * @param {Number} delta
  * @returns {Boolean}
  */
-export function areNearlyEqual(a : number, b : number) : boolean {
-  return Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
+export function areNearlyEqual(
+  a : number, b : number, delta: number = MAX_DELTA_BUFFER_TIME) : boolean {
+  return Math.abs(a - b) <= Math.min(delta, MAX_DELTA_BUFFER_TIME);
 }
 
 /**
