@@ -26,10 +26,22 @@ import {
   removeCuesInfosBetween,
 } from "./utils";
 
-const DELTA_CUES_GROUP = 1e-3; // 1ms
+/**
+ * first or last IHTMLCue in a group can have a slighlty different start
+ * or end time than the start or end time of the ICuesGroup due to parsing
+ * approximation.
+ * DELTA_CUES_GROUP defines the tolerance level when comparing the start/end
+ * of a IHTMLCue to the start/end of a ICuesGroup.
+ * Having this value too high may lead to have unwanted subtitle displayed
+ * Having this value too low may lead to have subtitles not displayed
+ */
+const DELTA_CUES_GROUP = 1e-3;
 
-// segment_duration / RELATIVE_DELTA_RATIO = relative_delta
-// relative_delta is the tolerance to determine if two segements are the same
+/**
+ * segment_duration / RELATIVE_DELTA_RATIO = relative_delta
+ *
+ * relative_delta is the tolerance to determine if two segements are the same
+ */
 const RELATIVE_DELTA_RATIO = 5;
 /**
  * Manage the buffer of the HTMLTextSegmentBuffer.
@@ -358,11 +370,15 @@ export default class TextTrackCuesStore {
     if (cuesBuffer.length) {
       const lastCue = cuesBuffer[cuesBuffer.length - 1];
       if (areNearlyEqual(lastCue.end, start, relativeDelta)) {
-           // Match the end of the previous cue to the start of
-           // the following one if they are close enough
-           //   ours:                   |AAAAA|
-           //   the current one: |BBBBB|...
-           //   Result:          |BBBBBBBAAAAA|
+        // Match the end of the previous cue to the start of the following one
+        // if they are close enough. If there is a small gap between two segments
+        // it can lead to having no subtitles for a short time, this is noticeable when
+        // two successive segments displays the same text, making it diseappear
+        // and reappear quickly, which gives the impression of blinking
+        //
+        //   ours:                   |AAAAA|
+        //   the current one: |BBBBB|...
+        //   Result:          |BBBBBBBAAAAA|
         lastCue.end  = start;
       }
     }
