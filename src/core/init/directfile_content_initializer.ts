@@ -27,6 +27,7 @@ import {
   IPlayerError,
 } from "../../public_types";
 import assert from "../../utils/assert";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../utils/reference";
@@ -122,6 +123,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
      */
     const rebufferingController = new RebufferingController(playbackObserver,
                                                             null,
+                                                            null,
                                                             speed);
     rebufferingController.addEventListener("stalled", (evt) =>
       this.trigger("stalled", evt));
@@ -206,14 +208,14 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       log.debug("Init: Initial time calculated:", initTime);
       return initTime;
     };
-    performInitialSeekAndPlay(
-      mediaElement,
-      playbackObserver,
-      initialTime,
-      autoPlay,
-      (err) => this.trigger("warning", err),
-      cancelSignal
-    ).autoPlayResult
+    performInitialSeekAndPlay({ mediaElement,
+                                playbackObserver,
+                                startTime: initialTime,
+                                mustAutoPlay: autoPlay,
+                                onWarning: (err) => this.trigger("warning", err),
+                                isDirectfile: true },
+                              cancelSignal)
+      .autoPlayResult
       .then(() =>
         getLoadedReference(playbackObserver, mediaElement, true, cancelSignal)
           .onUpdate((isLoaded, stopListening) => {
@@ -240,11 +242,11 @@ function getDirectFileInitialTime(
   mediaElement : HTMLMediaElement,
   startAt? : IInitialTimeOptions
 ) : number {
-  if (startAt == null) {
+  if (isNullOrUndefined(startAt)) {
     return 0;
   }
 
-  if (startAt.position != null) {
+  if (!isNullOrUndefined(startAt.position)) {
     return startAt.position;
   } else if (startAt.wallClockTime != null) {
     return startAt.wallClockTime;
@@ -253,15 +255,30 @@ function getDirectFileInitialTime(
   }
 
   const duration = mediaElement.duration;
-  if (duration == null || !isFinite(duration)) {
-    log.warn("startAt.fromLastPosition set but no known duration, " +
-             "beginning at 0.");
-    return 0;
-  }
 
   if (typeof startAt.fromLastPosition === "number") {
+    if (isNullOrUndefined(duration) || !isFinite(duration)) {
+      log.warn("startAt.fromLastPosition set but no known duration, " +
+               "beginning at 0.");
+      return 0;
+    }
     return Math.max(0, duration + startAt.fromLastPosition);
+  } else if (typeof startAt.fromLivePosition === "number") {
+    const livePosition = mediaElement.seekable.length > 0 ?
+      mediaElement.seekable.end(0) :
+      duration;
+    if (isNullOrUndefined(livePosition)) {
+      log.warn("startAt.fromLivePosition set but no known live position, " +
+               "beginning at 0.");
+      return 0;
+    }
+    return Math.max(0, livePosition + startAt.fromLivePosition);
   } else if (startAt.percentage != null) {
+    if (isNullOrUndefined(duration) || !isFinite(duration)) {
+      log.warn("startAt.percentage set but no known duration, " +
+               "beginning at 0.");
+      return 0;
+    }
     const { percentage } = startAt;
     if (percentage >= 100) {
       return duration;

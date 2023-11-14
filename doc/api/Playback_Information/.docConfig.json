@@ -1,8 +1,8 @@
 {
   "pages": [
     {
-      "path": "./getUrl.md",
-      "displayName": "getUrl"
+      "path": "./getContentUrls.md",
+      "displayName": "getContentUrls"
     },
     {
       "path": "./updateContentUrls.md",
@@ -21,8 +21,8 @@
       "displayName": "createDebugElement"
     },
     {
-      "path": "./getVideoBufferGap.md",
-      "displayName": "getVideoBufferGap"
+      "path": "./getCurrentBufferGap.md",
+      "displayName": "getCurrentBufferGap"
     },
     {
       "path": "./isContentLoaded.md",

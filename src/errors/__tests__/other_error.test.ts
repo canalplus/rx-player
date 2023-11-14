@@ -24,7 +24,7 @@ describe("errors - OtherError", () => {
     expect(otherError.type).toBe("OTHER_ERROR");
     expect(otherError.code).toBe("NONE");
     expect(otherError.fatal).toBe(false);
-    expect(otherError.message).toBe("OtherError (NONE) tata");
+    expect(otherError.message).toBe("NONE: tata");
   });
 
   it("should be able to set it as fatal", () => {
@@ -36,7 +36,7 @@ describe("errors - OtherError", () => {
     expect(otherError.type).toBe("OTHER_ERROR");
     expect(otherError.code).toBe("NONE");
     expect(otherError.fatal).toBe(true);
-    expect(otherError.message).toBe("OtherError (NONE) test");
+    expect(otherError.message).toBe("NONE: test");
   });
 
   it("should filter in a valid error code", () => {
@@ -48,6 +48,6 @@ describe("errors - OtherError", () => {
     expect(otherError.type).toBe("OTHER_ERROR");
     expect(otherError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(otherError.fatal).toBe(true);
-    expect(otherError.message).toBe("OtherError (PIPELINE_LOAD_ERROR) test");
+    expect(otherError.message).toBe("PIPELINE_LOAD_ERROR: test");
   });
 });

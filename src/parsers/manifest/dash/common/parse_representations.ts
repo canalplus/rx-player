@@ -153,9 +153,15 @@ export default function parseRepresentations(
     const availabilityTimeComplete =
       representation.attributes.availabilityTimeComplete ??
       context.availabilityTimeComplete;
-    const availabilityTimeOffset =
-      (representation.attributes.availabilityTimeOffset ?? 0) +
-      context.availabilityTimeOffset;
+
+    let availabilityTimeOffset: number | undefined;
+    if (
+      representation.attributes.availabilityTimeOffset !== undefined ||
+      context.availabilityTimeOffset !== undefined
+    ) {
+      availabilityTimeOffset = (representation.attributes.availabilityTimeOffset ?? 0) +
+                               (context.availabilityTimeOffset ?? 0);
+    }
     const reprIndexCtxt = objectAssign({},
                                        context,
                                        { availabilityTimeOffset,

@@ -378,15 +378,11 @@ key and to instead fallback on another, decipherable, quality.
 
 That's exactly what the RxPlayer does, when the right options are set:
 
-1. when it detects a quality to be un-decipherable, it first emit a
-   `decipherabilityUpdate` event through its API, to signal to an application
-   which qualities have been blacklisted.
-
-2. it automatically removes from the current media buffer the data linked to
+1. it automatically removes from the current media buffer the data linked to
    the un-decipherable quality and put it in a black list: we will not load
    this quality for the current content anymore.
 
-3. it switches to another, hopefully decipherable, quality.
+2. it switches to another, hopefully decipherable, quality.
 
 Let's now talk about the API.
 
@@ -407,39 +403,47 @@ concerned previous part of this tutorial.
 Please note that this option does not concern every errors linked to a refused
 key. It only concerns issues when the license server refuse to deliver a
 license.
-On most cases you will also need the API documented in the next part,
-`fallbackOn`.
+On most cases you will also need the API documented in the next part.
 
-### fallbackOn
+### `onKeyInternalError`, `onKeyOutputRestricted` and `onKeyExpiration`
 
-Where `fallbackOnLastTry` really is about the failure of a license request, the
-`fallbackOn` is about the refused keys themselves.
+Where `fallbackOnLastTry` really is about the failure of a license request, those
+options is about the refused keys themselves.
 
 As an example, the Content Decryption Module in the browser might decide that
 your current device cannot provide a high enough guarantee that the content
 cannot be copied. It might thus refuse to use one of the decryption key found in
 a license, especially the one needed for the higher content qualities.
 
-The `fallbackOn` object allows to fallback when this happens.
-There is two possible sub-properties in it:
-
-- `keyInternalError`: fallback when the corresponding key has the
+Those options then allows to fallback when this happens.
+- `onKeyInternalError`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   `"internal-error"`. We found that most widevine implementation use
   this error when a key is refused.
-- `keyOutputRestricted`: fallback when the corresponding key has the
+
+  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  Representations when this status is received.
+
+- `onKeyOutputRestricted`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   `"output-restricted"`. This is the proper status for a key refused due
   to output restrictions.
 
-Both are booleans, and for the moment we recommend to set both to true in most
-cases.
+  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  Representations when this status is received.
+
+- `onKeyOutputRestricted`: Behavior to set when the corresponding key has the
+  [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+  `"expired"`.
+
+  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  Representations when this status is received.
 
 For people on embedded devices with specific key systems, you can look a little
 more into what [MediaKeyStatus](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
-is set when a key is refused, and just set one of both.
+is set when a key is refused.
 
-Here is an example:
+Here is an example which would be adapted to most cases:
 
 ```js
 rxPlayer.loadVideo({
@@ -449,31 +453,12 @@ rxPlayer.loadVideo({
     {
       type: "widevine",
       getLicense,
-      fallbackOn: {
-        keyInternalError: true,
-        keyOutputRestricted: true,
-      },
+      onKeyOutputRestricted: "fallback",
+      onKeyInternalError: "fallback",
     },
   ],
 });
 ```
-
-### decipherabilityUpdate event
-
-When the RxPlayer detects a quality to be un-decipherable (which can only
-happens when one of the properties explained here is set), it sends a
-`decipherabilityUpdate` event.
-
-This event allows an application to know that some key or license could not be
-used by the RxPlayer.
-
-The application could then infer that other contents from the same right holders
-will have the same issues.
-In that case, an optimization is possible by using the `representationFilter`
-API which is part of the `transportOptions` `loadVideo` option, [documented
-here](../../api/Loading_a_Content.md#transportoptions). By using this API, we
-can filter out un-decipherable quality to avoid downloading them in the first
-place.
 
 ## Server certificate
 
@@ -522,13 +507,9 @@ the user is offline.
 After loading a persistent license, it is automatically stored on the browser's
 side, but the RxPlayer still has to store an ID to be able to retrieve the right
 session when reloading the same content later.
-Because of that, persistent-license management comes in two part in the RxPlayer
-API (as usual here, those should be set in `keySystems`):
 
-1. You'll have to set the `persistentLicense` boolean to `true`
-
-2. You'll have to provide a license storage mechanism and set it as the
-   `licenseStorage` property.
+Because of that, you'll have to provide a storage mechanism and set it as a
+`persistentLicenseConfig` property of `loadVideo`'s `keySystems` option:
 
 ```js
 rxPlayer.loadVideo({
@@ -538,17 +519,16 @@ rxPlayer.loadVideo({
     {
       type: "widevine",
       getLicense,
-      persistentLicense: true,
-      licenseStorage,
+      persistentLicenseConfig,
     },
   ],
 });
 ```
 
-### licenseStorage property
+### persistentLicenseConfig property
 
-The `licenseStorage` property is an object allowing the RxPlayer to load and
-saved stored IDs.
+The `persistentLicenseConfig` property is an object allowing the RxPlayer to
+load and saved stored session identifiers, to be able to retrieve them later.
 
 It needs to contain two functions:
 
@@ -574,13 +554,12 @@ rxPlayer.loadVideo({
     {
       type: "widevine",
       getLicense,
-      persistentLicense: true,
-      licenseStorage: {
+      persistentLicenseConfig: {
         save(data) {
-          localStorage.setItem("RxPlayer-licenseStorage", JSON.stringify(data));
+          localStorage.setItem("RxPlayer-persistent-storage", JSON.stringify(data));
         },
         load() {
-          const item = localStorage.getItem("RxPlayer-licenseStorage");
+          const item = localStorage.getItem("RxPlayer-persistent-storage");
           return item === null ? [] : JSON.parse(item);
         },
       },

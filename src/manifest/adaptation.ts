@@ -18,22 +18,19 @@ import log from "../log";
 import { IParsedAdaptation } from "../parsers/manifest";
 import {
   IAudioTrack,
+  ITrackType,
   IRepresentationFilter,
   ITextTrack,
   IVideoTrack,
+  IRepresentationFilterRepresentation,
 } from "../public_types";
 import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import normalizeLanguage from "../utils/languages";
-import uniq from "../utils/uniq";
 import Representation from "./representation";
-import { IAdaptationType } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
-export const SUPPORTED_ADAPTATIONS_TYPE: IAdaptationType[] = [ "audio",
-                                                               "video",
-                                                               "text",
-                                                               "image" ];
+export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text"];
 
 /**
  * Normalized Adaptation structure.
@@ -54,7 +51,7 @@ export default class Adaptation {
   public readonly representations : Representation[];
 
   /** Type of this Adaptation. */
-  public readonly type : IAdaptationType;
+  public readonly type : ITrackType;
 
   /** Whether this track contains an audio description for the visually impaired. */
   public isAudioDescription? : boolean;
@@ -155,16 +152,35 @@ export default class Adaptation {
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(argsRepresentations[i],
                                                 { type: this.type });
-      const shouldAdd =
-        isNullOrUndefined(representationFilter) ||
-        representationFilter(representation,
-                             { bufferType: this.type,
-                               language: this.language,
-                               normalizedLanguage: this.normalizedLanguage,
-                               isClosedCaption: this.isClosedCaption,
-                               isDub: this.isDub,
-                               isAudioDescription: this.isAudioDescription,
-                               isSignInterpreted: this.isSignInterpreted });
+      let shouldAdd = true;
+      if (!isNullOrUndefined(representationFilter)) {
+        const reprObject : IRepresentationFilterRepresentation = {
+          id: representation.id,
+          bitrate: representation.bitrate,
+          codecs: representation.codec === undefined ? [] :
+                                                       [representation.codec],
+          height: representation.height,
+          width: representation.width,
+          frameRate: representation.frameRate,
+          hdrInfo: representation.hdrInfo,
+        };
+        if (representation.contentProtections !== undefined) {
+          reprObject.contentProtections = {};
+          if (representation.contentProtections.keyIds !== undefined) {
+            const keyIds = representation.contentProtections.keyIds
+              .map(({ keyId }) => keyId);
+            reprObject.contentProtections.keyIds = keyIds;
+          }
+        }
+        shouldAdd = representationFilter(reprObject,
+                                         { trackType: this.type,
+                                           language: this.language,
+                                           normalizedLanguage: this.normalizedLanguage,
+                                           isClosedCaption: this.isClosedCaption,
+                                           isDub: this.isDub,
+                                           isAudioDescription: this.isAudioDescription,
+                                           isSignInterpreted: this.isSignInterpreted });
+      }
       if (shouldAdd) {
         representations.push(representation);
         if (!isSupported && representation.isSupported) {
@@ -188,29 +204,12 @@ export default class Adaptation {
   }
 
   /**
-   * Returns unique bitrate for every Representation in this Adaptation.
-   * @returns {Array.<Number>}
-   */
-  getAvailableBitrates() : number[] {
-    const bitrates : number[] = [];
-    for (let i = 0; i < this.representations.length; i ++) {
-      const representation = this.representations[i];
-      if (representation.decipherable !== false) {
-        bitrates.push(representation.bitrate);
-      }
-    }
-    return uniq(bitrates);
-  }
-
-  /**
    * Returns all Representation in this Adaptation that can be played (that is:
    * not undecipherable and with a supported codec).
    * @returns {Array.<Representation>}
    */
   getPlayableRepresentations() : Representation[] {
-    return this.representations.filter(rep => {
-      return rep.isSupported && rep.decipherable !== false;
-    });
+    return this.representations.filter(rep => rep.isPlayable());
   }
 
   /**
@@ -224,15 +223,21 @@ export default class Adaptation {
 
   /**
    * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
+   * @param {boolean} filterPlayable - If `true` only "playable" Representation
+   * will be returned.
    * @returns {Object}
    */
-  public toAudioTrack() : IAudioTrack {
+  public toAudioTrack(filterPlayable: boolean) : IAudioTrack {
     const formatted : IAudioTrack = {
       language: this.language ?? "",
       normalized: this.normalizedLanguage ?? "",
       audioDescription: this.isAudioDescription === true,
       id: this.id,
-      representations: this.representations.map(r => r.toAudioRepresentation()),
+      representations: (
+        filterPlayable ?
+          this.getPlayableRepresentations() :
+          this.representations
+      ).map(r => r.toAudioRepresentation()),
       label: this.label,
     };
     if (this.isDub === true) {
@@ -258,13 +263,18 @@ export default class Adaptation {
 
   /**
    * Format an `Adaptation`, generally of type `"video"`, as an `IAudioTrack`.
+   * @param {boolean} filterPlayable - If `true` only "playable" Representation
+   * will be returned.
    * @returns {Object}
    */
-  public toVideoTrack() : IVideoTrack {
+  public toVideoTrack(filterPlayable: boolean) : IVideoTrack {
     const trickModeTracks = this.trickModeTracks !== undefined ?
       this.trickModeTracks.map((trickModeAdaptation) => {
-        const representations = trickModeAdaptation.representations
-          .map(r => r.toVideoRepresentation());
+        const representations = (
+          filterPlayable ?
+            trickModeAdaptation.getPlayableRepresentations() :
+            trickModeAdaptation.representations
+        ).map(r => r.toVideoRepresentation());
         const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
                                           representations,
                                           isTrickModeTrack: true };
@@ -277,7 +287,11 @@ export default class Adaptation {
 
     const videoTrack: IVideoTrack = {
       id: this.id,
-      representations: this.representations.map(r => r.toVideoRepresentation()),
+      representations: (
+        filterPlayable ?
+          this.getPlayableRepresentations() :
+          this.representations
+      ).map(r => r.toVideoRepresentation()),
       label: this.label,
     };
     if (this.isSignInterpreted === true) {

@@ -114,7 +114,7 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
   },
   {
     "name": "Multi Video Tracks",
-    "url": "https://utils.ssl.cdn.cra.cz/dash/1/manifest.mpd",
+    "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd",
     "transport": "dash",
     "live": false,
   },

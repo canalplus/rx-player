@@ -23,6 +23,7 @@ import {
   itobe4,
 } from "../../../utils/byte_parsing";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
@@ -45,16 +46,10 @@ import parseProtectionNode, {
   IKeySystem,
 } from "./parse_protection_node";
 import RepresentationIndex from "./representation_index";
+import SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
 import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
-
-/**
- * Default value for the aggressive `mode`.
- * In this mode, segments will be returned even if we're not sure those had time
- * to be generated.
- */
-const DEFAULT_AGGRESSIVE_MODE = false;
 
 interface IAdaptationParserArguments { root : Element;
                                        baseUrl : string;
@@ -66,8 +61,7 @@ interface IAdaptationParserArguments { root : Element;
 
 type IAdaptationType = "audio" |
                        "video" |
-                       "text" |
-                       "image";
+                       "text";
 
 const DEFAULT_MIME_TYPES : Partial<Record<string, string>> = {
   audio: "audio/mp4",
@@ -84,7 +78,6 @@ const MIME_TYPES : Partial<Record<string, string>> = {
 };
 
 export interface IHSSParserConfiguration {
-  aggressiveMode? : boolean | undefined;
   suggestedPresentationDelay? : number | undefined;
   referenceDateTime? : number | undefined;
   minRepresentationBitrate? : number | undefined;
@@ -331,8 +324,12 @@ function createSmoothStreamingParser(
         return res;
       }, { qualityLevels: [], cNodes: [] });
 
-    const index = { timeline: parseCNodes(cNodes),
-                    timescale: _timescale };
+    const sharedSmoothTimeline = new SharedSmoothSegmentTimeline({
+      timeline: parseCNodes(cNodes),
+      timescale: _timescale,
+      timeShiftBufferDepth,
+      manifestReceivedTime,
+    });
 
     // we assume that all qualityLevels have the same
     // codec and mimeType
@@ -344,13 +341,9 @@ function createSmoothStreamingParser(
                                                        "");
 
     const representations = qualityLevels.map((qualityLevel) => {
-      const repIndex = {
-        timeline: index.timeline,
-        timescale: index.timescale,
-        media: replaceRepresentationSmoothTokens(UrlPathWithTokens,
-                                                 qualityLevel.bitrate,
-                                                 qualityLevel.customAttributes),
-      };
+      const media = replaceRepresentationSmoothTokens(UrlPathWithTokens,
+                                                      qualityLevel.bitrate,
+                                                      qualityLevel.customAttributes);
       const mimeType = isNonEmptyString(qualityLevel.mimeType) ?
         qualityLevel.mimeType :
         DEFAULT_MIME_TYPES[adaptationType];
@@ -382,6 +375,8 @@ function createSmoothStreamingParser(
                                     codecPrivateData: qualityLevel.codecPrivateData,
                                     packetSize: qualityLevel.packetSize,
                                     samplingRate: qualityLevel.samplingRate,
+                                    height: qualityLevel.height,
+                                    width: qualityLevel.width,
 
                                     // TODO set multiple protections here
                                     // instead of the first one
@@ -389,14 +384,10 @@ function createSmoothStreamingParser(
                                       keyId: firstProtection.keyId,
                                     } : undefined };
 
-      const aggressiveMode = parserOptions.aggressiveMode == null ?
-        DEFAULT_AGGRESSIVE_MODE :
-        parserOptions.aggressiveMode;
-      const reprIndex = new RepresentationIndex(repIndex, { aggressiveMode,
-                                                            isLive,
-                                                            manifestReceivedTime,
-                                                            segmentPrivateInfos,
-                                                            timeShiftBufferDepth });
+      const reprIndex = new RepresentationIndex({ isLive,
+                                                  sharedSmoothTimeline,
+                                                  media,
+                                                  segmentPrivateInfos });
       const representation : IParsedRepresentation = objectAssign({},
                                                                   qualityLevel,
                                                                   { index: reprIndex,
@@ -627,7 +618,7 @@ function createSmoothStreamingParser(
       maximumTimeData = { isLinear: true,
                           maximumSafePosition,
                           livePosition,
-                          time: performance.now() };
+                          time: getMonotonicTimeStamp() };
       timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
       minimumTime = safeMinimumTime ?? 0;
@@ -637,7 +628,7 @@ function createSmoothStreamingParser(
       maximumTimeData = { isLinear: false,
                           maximumSafePosition: maximumTime,
                           livePosition: undefined,
-                          time: performance.now() };
+                          time: getMonotonicTimeStamp() };
     }
 
     const periodStart = isLive ? 0 :

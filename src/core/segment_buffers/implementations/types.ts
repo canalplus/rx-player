@@ -66,7 +66,7 @@ import SegmentInventory, {
  * array.
  */
 export abstract class SegmentBuffer {
-  /** "Type" of the buffer (e.g. "audio", "video", "text", "image"). */
+  /** "Type" of the buffer (e.g. "audio", "video", "text"). */
   public readonly abstract bufferType : IBufferType;
 
   /** Default implementation of an inventory of segment metadata. */
@@ -169,10 +169,15 @@ export abstract class SegmentBuffer {
    * This methods allow to manually trigger a synchronization. It should be
    * called before retrieving Segment information from it (e.g. with
    * `getInventory`).
+   * @param {boolean} [skipLog] - This method may trigger a voluminous debug
+   * log once synchronization is finished if debug logs are enabled.
+   * As this method might be called very often in some specific debugging
+   * situations, setting this value to `true` allows to prevent the call from
+   * triggering a log.
    */
-  public synchronizeInventory() : void {
+  public synchronizeInventory(skipLog? : boolean) : void {
     // The default implementation just use the SegmentInventory
-    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
+    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges(), skipLog);
   }
 
   /**
@@ -227,8 +232,7 @@ export abstract class SegmentBuffer {
 /** Every SegmentBuffer types. */
 export type IBufferType = "audio" |
                           "video" |
-                          "text" |
-                          "image";
+                          "text";
 
 /**
  * Content of the `data` property when pushing a new chunk.

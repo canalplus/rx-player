@@ -35,7 +35,7 @@ export default function createSegmentBufferSizeGraph(
       clearInterval(intervalId);
       return;
     }
-    const bufferGap = instance.getVideoBufferGap();
+    const bufferGap = instance.getCurrentBufferGap();
     if (bufferGap === Infinity) {
       bufferSizeGraph.pushBufferSize(0);
     } else {

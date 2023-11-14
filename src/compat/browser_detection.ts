@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
+import globalScope from "./global_scope";
 import isNode from "./is_node";
 
-interface IIE11WindowObject extends Window {
+type GlobalScope = typeof globalScope;
+
+interface IIE11WindowObject extends GlobalScope {
   MSInputMethodContext? : unknown;
 }
 
 interface IIE11Document extends Document {
   documentMode? : unknown;
+}
+
+interface ISafariWindowObject extends GlobalScope {
+  safari? : { pushNotification? : { toString() : string } };
 }
 
 /** Edge Chromium, regardless of the device */
@@ -70,7 +77,7 @@ let isPlayStation5 = false;
 
   // 1 - Find out browser between IE/Edge Legacy/Edge Chromium/Firefox/Safari
 
-  if (typeof (window as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
+  if (typeof (globalScope as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
       typeof (document as IIE11Document).documentMode !== "undefined")
   {
     isIE11 = true;
@@ -90,9 +97,23 @@ let isPlayStation5 = false;
   {
     isSafariMobile = true;
   } else if (
-    Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
-    (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
-      "[object SafariRemoteNotification]"
+    // the following statement check if the window.safari contains the method
+    // "pushNotification", this condition is not met when using web app from the dock
+    // on macOS, this is why we also check userAgent.
+    Object.prototype.toString.call(globalScope.HTMLElement).indexOf("Constructor") >= 0 ||
+    (globalScope as ISafariWindowObject).safari?.pushNotification?.toString() ===
+      "[object SafariRemoteNotification]" ||
+    // browsers are lying: Chrome reports both as Chrome and Safari in user
+    // agent string, So to detect Safari we have to check for the Safari string
+    // and the absence of the Chrome string
+    // eslint-disable-next-line max-len
+    // @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent#which_part_of_the_user_agent_contains_the_information_you_are_looking_for
+    ((/Safari\/(\d+)/).test(navigator.userAgent) &&
+    // Safari should contain Version/ in userAgent
+    (/Version\/(\d+)/).test(navigator.userAgent) &&
+    (navigator.vendor?.indexOf("Apple") !== -1) &&
+    !(/Chrome\/(\d+)/).test(navigator.userAgent) &&
+    !(/Chromium\/(\d+)/).test(navigator.userAgent))
   ) {
     isSafariDesktop = true;
   }
@@ -130,10 +151,6 @@ let isPlayStation5 = false;
     isPanasonic = true;
   }
 })());
-
-interface ISafariWindowObject extends Window {
-  safari? : { pushNotification? : { toString() : string } };
-}
 
 export {
   isEdgeChromium,

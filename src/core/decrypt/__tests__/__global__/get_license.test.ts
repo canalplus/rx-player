@@ -133,7 +133,7 @@ describe("core - decrypt - global tests - getLicense", () => {
                             ignoreLicenseRequests: true });
   });
 
-  it("should be able to retry one time and succeed after a time with a resolved license", async () => {
+  it("should be able to retry two times and succeed after a time with a resolved license", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: true,
                             configuredRetries: undefined,
                             configuredTimeout: undefined,
@@ -142,7 +142,7 @@ describe("core - decrypt - global tests - getLicense", () => {
                             ignoreLicenseRequests: false });
   });
 
-  it("should be able to retry one time and succeed after a time with a returned license", async () => {
+  it("should be able to retry two times and succeed after a time with a returned license", async () => {
     await checkGetLicense({ isGetLicensePromiseBased: false,
                             configuredRetries: undefined,
                             configuredTimeout: undefined,
