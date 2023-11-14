@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import nextTick from "next-tick";
 import EventEmitter from "../utils/event_emitter";
+import queueMicrotask from "../utils/queue_microtask";
 import globalScope from "./global_scope";
 import isNode from "./is_node";
 
@@ -57,7 +57,7 @@ export default function patchWebkitSourceBuffer() : void {
 
     sourceBufferWebkitProto._emitUpdate =
       function(eventName : string, val : unknown) {
-        nextTick(() => {
+        queueMicrotask(() => {
           /* eslint-disable no-invalid-this */
           this.trigger(eventName, val);
           this.updating = false;
