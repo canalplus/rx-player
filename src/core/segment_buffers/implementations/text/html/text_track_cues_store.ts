@@ -93,11 +93,13 @@ export default class TextTrackCuesStore {
         // or end time than the start or end time of the ICuesGroup due to parsing
         // approximation.
         // Add a tolerance of 1ms to fix this issue
-        if (ret.length === 0 && cues.length) {
-          if (areNearlyEqual(time, cues[0].start, DELTA_CUES_GROUP)) {
-            ret.push(cues[0].element);
-          } else if (areNearlyEqual(time, cues[cues.length - 1].end, DELTA_CUES_GROUP)) {
-            ret.push(cues[cues.length - 1].element);
+        if (ret.length === 0 && cues.length > 0) {
+          for (let j = 0; j < cues.length; j++) {
+            if (areNearlyEqual(time, cues[j].start, DELTA_CUES_GROUP)
+            || areNearlyEqual(time, cues[j].end, DELTA_CUES_GROUP)
+            ) {
+              ret.push(cues[j].element);
+            }
           }
         }
         return ret;
