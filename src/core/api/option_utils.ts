@@ -646,9 +646,8 @@ function parseLoadVideoOptions(
   }
 
   if (!isNullOrUndefined(options.startAt)) {
-    // TODO Better way to express that in TypeScript?
-    if ((options.startAt as { wallClockTime? : Date|number }).wallClockTime
-           instanceof Date
+    if ("wallClockTime" in options.startAt
+    && options.startAt.wallClockTime instanceof Date
     ) {
       const wallClockTime = (options.startAt as { wallClockTime : Date })
         .wallClockTime.getTime() / 1000;
