@@ -138,6 +138,16 @@ export default function performInitialSeekAndPlay(
       initialPlayPerformed.finish();
       deregisterCancellation();
       return resolveAutoPlay({ type: "skipped" as const });
+    } else if (mediaElement.ended) {
+      // the video has ended state to true, executing VideoElement.play() will
+      // restart the video from the start, which is not wanted in most cases.
+      // returning "skipped" prevents the call to play() and fix the issue
+      log.warn("Init: autoplay is enabled but the video is ended. " +
+        "Skipping autoplay to prevent video to start again");
+      initialPlayPerformed.setValue(true);
+      initialPlayPerformed.finish();
+      deregisterCancellation();
+      return resolveAutoPlay({ type: "skipped" as const });
     }
 
     let playResult : Promise<unknown>;

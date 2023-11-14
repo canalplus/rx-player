@@ -376,7 +376,15 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
                       err :
                       new Error("An unknown error occured when doing operations " +
                                 "on the SourceBuffer");
-      this._pendingTask.reject(error);
+      const task = this._pendingTask;
+      if (task.type === SegmentBufferOperation.Push &&
+          task.data.length === 0 &&
+          task.inventoryData !== null)
+      {
+        this._segmentInventory.insertChunk(task.inventoryData, false);
+      }
+      this._pendingTask = null;
+      task.reject(error);
     }
   }
 
@@ -429,7 +437,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
         switch (task.type) {
           case SegmentBufferOperation.Push:
             if (task.inventoryData !== null) {
-              this._segmentInventory.insertChunk(task.inventoryData);
+              this._segmentInventory.insertChunk(task.inventoryData, true);
             }
             break;
           case SegmentBufferOperation.EndOfSegment:

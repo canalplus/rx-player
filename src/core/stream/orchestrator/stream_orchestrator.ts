@@ -108,7 +108,8 @@ export default function StreamOrchestrator(
           wantedBufferAhead,
           maxVideoBufferSize } = options;
 
-  const { MAXIMUM_MAX_BUFFER_AHEAD,
+  const { MINIMUM_MAX_BUFFER_AHEAD,
+          MAXIMUM_MAX_BUFFER_AHEAD,
           MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
 
   // Keep track of a unique BufferGarbageCollector created per
@@ -116,12 +117,8 @@ export default function StreamOrchestrator(
   const garbageCollectors =
     new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
       const { bufferType } = segmentBuffer;
-      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
-                                 MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :
-                                 Infinity;
-      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
-                                MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
-                                Infinity;
+      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ?? Infinity;
+      const maxAheadHigherBound = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ?? Infinity;
       return (gcCancelSignal : CancellationSignal) => {
         BufferGarbageCollector(
           { segmentBuffer,
@@ -130,10 +127,11 @@ export default function StreamOrchestrator(
                                                    (val) =>
                                                      Math.min(val, defaultMaxBehind),
                                                    gcCancelSignal),
-            maxBufferAhead: createMappedReference(maxBufferAhead,
-                                                  (val) =>
-                                                    Math.min(val, defaultMaxAhead),
-                                                  gcCancelSignal) },
+            maxBufferAhead: createMappedReference(maxBufferAhead, (val) => {
+              const lowerBound = Math.max(val,
+                                          MINIMUM_MAX_BUFFER_AHEAD[bufferType] ?? 0);
+              return Math.min(lowerBound, maxAheadHigherBound);
+            }, gcCancelSignal) },
           gcCancelSignal
         );
       };
@@ -194,6 +192,7 @@ export default function StreamOrchestrator(
                          manifest.getNextPeriod(time);
       if (nextPeriod === undefined) {
         log.warn("Stream: The wanted position is not found in the Manifest.");
+        enableOutOfBoundsCheck = true;
         return;
       }
       launchConsecutiveStreamsForPeriod(nextPeriod);
@@ -271,7 +270,7 @@ export default function StreamOrchestrator(
 
     /**
      * React to a Manifest's decipherability updates.
-     * @param {Array.<Object>}
+     * @param {Array.<Object>} updates
      * @returns {Promise}
      */
     async function onDecipherabilityUpdates(
@@ -438,9 +437,14 @@ export default function StreamOrchestrator(
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
     playbackObserver.listen(({ position }, stopListeningObservations) => {
-      if (basePeriod.end !== undefined &&
-          (position.pending ?? position.last) >= basePeriod.end)
-      {
+      const wantedPosition = position.pending ?? position.last;
+      if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
+        const nextPeriod = manifest.getPeriodAfter(basePeriod);
+
+        // Handle special wantedPosition === basePeriod.end cases
+        if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
+          return;
+        }
         log.info("Stream: Destroying PeriodStream as the current playhead moved above it",
                  bufferType,
                  basePeriod.start,
