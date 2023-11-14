@@ -189,10 +189,23 @@ export default class Period {
   /**
    * Returns true if the give time is in the time boundaries of this `Period`.
    * @param {number} time
+   * @param {object|null} nextPeriod - Period coming chronologically just
+   * after in the same Manifest. `null` if this instance is the last `Period`.
    * @returns {boolean}
    */
-  containsTime(time : number) : boolean {
-    return time >= this.start && (this.end === undefined ||
-                                  time < this.end);
+  containsTime(time : number, nextPeriod : Period | null) : boolean {
+    if (time >= this.start && (this.end === undefined || time < this.end)) {
+      return true;
+    } else if (time === this.end && (nextPeriod === null ||
+                                     nextPeriod.start > this.end))
+    {
+      // The last possible timed position of a Period is ambiguous as it is
+      // frequently in common with the start of the next one: is it part of
+      // the current or of the next Period?
+      // Here we only consider it part of the current Period if it is the
+      // only one with that position.
+      return true;
+    }
+    return false;
   }
 }

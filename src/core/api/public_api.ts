@@ -59,6 +59,7 @@ import {
   IConstructorOptions,
   IDecipherabilityUpdateContent,
   IKeySystemConfigurationOutput,
+  IKeySystemOption,
   ILoadVideoOptions,
   IPeriod,
   IPlayerError,
@@ -577,6 +578,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   reload(reloadOpts?: {
     reloadAt?: { position?: number; relative?: number };
+    keySystems?: IKeySystemOption[];
     autoPlay?: boolean;
   }): void {
     const { options,
@@ -609,6 +611,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       autoPlay = !reloadInPause;
     }
 
+    let keySystems : IKeySystemOption[] | undefined;
+    if (reloadOpts?.keySystems !== undefined) {
+      keySystems = reloadOpts.keySystems;
+    } else if (this._priv_reloadingMetadata.options?.keySystems !== undefined) {
+      keySystems = this._priv_reloadingMetadata.options.keySystems;
+    }
+
     const newOptions = { ...options,
                          initialManifest: manifest };
     if (startAt !== undefined) {
@@ -616,6 +625,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (autoPlay !== undefined) {
       newOptions.autoPlay = autoPlay;
+    }
+    if (keySystems !== undefined) {
+      newOptions.keySystems = keySystems;
     }
     this._priv_initializeContentPlayback(newOptions);
   }
@@ -626,7 +638,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (features.createDebugElement === null) {
       throw new Error("Feature `DEBUG_ELEMENT` not added to the RxPlayer");
     }
-    const canceller = new TaskCanceller() ;
+    const canceller = new TaskCanceller();
     features.createDebugElement(element, this, canceller.signal);
     return {
       dispose() {
@@ -2387,6 +2399,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns the current position for live contents.
+   *
+   * Returns `null` if no content is loaded or if the current loaded content is
+   * not considered as a live content.
+   * Returns `undefined` if that live position is currently unknown.
+   * @returns {number}
+   */
+  getLivePosition() : number | undefined |null {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+
+    const { isDirectFile, manifest } = this._priv_contentInfos;
+    if (isDirectFile) {
+      return undefined;
+    }
+    if (manifest?.isLive !== true) {
+      return null;
+    }
+    return manifest.getLivePosition();
+  }
+
+  /**
    * Get maximum seek-able position.
    * @returns {number}
    */
@@ -2429,9 +2464,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const segmentBufferStatus = this._priv_contentInfos
       .segmentBuffersStore.getStatus(bufferType);
-    return segmentBufferStatus.type === "initialized" ?
-      segmentBufferStatus.value.getInventory() :
-      null;
+    if (segmentBufferStatus.type === "initialized") {
+      segmentBufferStatus.value.synchronizeInventory(true);
+      return segmentBufferStatus.value.getInventory();
+    }
+    return null;
   }
 
   /**

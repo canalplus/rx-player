@@ -201,6 +201,23 @@ const DEFAULT_CONFIG = {
   } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
     /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+  /**
+   * Minimum possible buffer ahead for each type of buffer, to avoid Garbage
+   * Collecting too much data when it would have adverse effects.
+   * Equal to `0` if not defined here.
+   * @type {Object}
+   */
+  MINIMUM_MAX_BUFFER_AHEAD: {
+    // Text segments are both much lighter on resources and might
+    // actually be much larger than other types of segments in terms
+    // of duration. Let's make an exception here by authorizing a
+    // larger text buffer ahead, to avoid unnecesarily reloading the
+    // same text track.
+    text: 2 * 60,
+  } as Partial<Record<"audio"|"video"|"image"|"text", number>>,
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
+
     /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer behind for each type of buffer, to avoid too much

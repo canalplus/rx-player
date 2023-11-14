@@ -27,6 +27,23 @@ import {
 } from "./utils";
 
 /**
+ * first or last IHTMLCue in a group can have a slighlty different start
+ * or end time than the start or end time of the ICuesGroup due to parsing
+ * approximation.
+ * DELTA_CUES_GROUP defines the tolerance level when comparing the start/end
+ * of a IHTMLCue to the start/end of a ICuesGroup.
+ * Having this value too high may lead to have unwanted subtitle displayed
+ * Having this value too low may lead to have subtitles not displayed
+ */
+const DELTA_CUES_GROUP = 1e-3;
+
+/**
+ * segment_duration / RELATIVE_DELTA_RATIO = relative_delta
+ *
+ * relative_delta is the tolerance to determine if two segements are the same
+ */
+const RELATIVE_DELTA_RATIO = 5;
+/**
  * Manage the buffer of the HTMLTextSegmentBuffer.
  * Allows to add, remove and recuperate cues at given times.
  * @class TextTrackCuesStore
@@ -70,6 +87,19 @@ export default class TextTrackCuesStore {
         for (let j = 0; j < cues.length; j++) {
           if (time >= cues[j].start && time < cues[j].end) {
             ret.push(cues[j].element);
+          }
+        }
+        // first or last IHTMLCue in a group can have a slighlty different start
+        // or end time than the start or end time of the ICuesGroup due to parsing
+        // approximation.
+        // Add a tolerance of 1ms to fix this issue
+        if (ret.length === 0 && cues.length > 0) {
+          for (let j = 0; j < cues.length; j++) {
+            if (areNearlyEqual(time, cues[j].start, DELTA_CUES_GROUP)
+            || areNearlyEqual(time, cues[j].end, DELTA_CUES_GROUP)
+            ) {
+              ret.push(cues[j].element);
+            }
           }
         }
         return ret;
@@ -163,6 +193,11 @@ export default class TextTrackCuesStore {
   insert(cues : IHTMLCue[], start : number, end : number) : void {
     const cuesBuffer = this._cuesBuffer;
     const cuesInfosToInsert = { start, end, cues };
+    // it's preferable to have a delta depending on the duration of the segment
+    // if the delta is one fifth of the length of the segment:
+    // a segment of [0, 2] is the "same" segment as [0, 2.1]
+    // but [0, 0.04] is not the "same" segement as [0,04, 0.08]
+    const relativeDelta = Math.abs(start - end) / RELATIVE_DELTA_RATIO;
 
     /**
      * Called when we found the index of the next cue relative to the cue we
@@ -175,7 +210,7 @@ export default class TextTrackCuesStore {
     function onIndexOfNextCueFound(indexOfNextCue : number) : void {
       const nextCue = cuesBuffer[indexOfNextCue];
       if (nextCue === undefined || // no cue
-          areNearlyEqual(cuesInfosToInsert.end, nextCue.end)) // samey end
+          areNearlyEqual(cuesInfosToInsert.end, nextCue.end, relativeDelta)) // samey end
       {
         //   ours:            |AAAAA|
         //   the current one: |BBBBB|
@@ -210,8 +245,8 @@ export default class TextTrackCuesStore {
     for (let cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
       let cuesInfos = cuesBuffer[cueIdx];
       if (start < cuesInfos.end) {
-        if (areNearlyEqual(start, cuesInfos.start)) {
-          if (areNearlyEqual(end, cuesInfos.end)) {
+        if (areNearlyEqual(start, cuesInfos.start, relativeDelta)) {
+          if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             // exact same segment
             //   ours:            |AAAAA|
             //   the current one: |BBBBB|
@@ -257,7 +292,7 @@ export default class TextTrackCuesStore {
             //   - add ours before the current one
             cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
-          } else if (areNearlyEqual(end, cuesInfos.start)) {
+          } else if (areNearlyEqual(end, cuesInfos.start, relativeDelta)) {
             // our cue goes just before the current one:
             //   ours:            |AAAAAAA|
             //   the current one:         |BBBB|
@@ -268,7 +303,7 @@ export default class TextTrackCuesStore {
             cuesInfos.start = end;
             cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
-          } else if (areNearlyEqual(end, cuesInfos.end)) {
+          } else if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             //   ours:            |AAAAAAA|
             //   the current one:    |BBBB|
             //   Result:          |AAAAAAA|
@@ -297,7 +332,7 @@ export default class TextTrackCuesStore {
         }
         // else -> start > cuesInfos.start
 
-        if (areNearlyEqual(cuesInfos.end, end)) {
+        if (areNearlyEqual(cuesInfos.end, end, relativeDelta)) {
           //   ours:              |AAAAAA|
           //   the current one: |BBBBBBBB|
           //   Result:          |BBAAAAAA|
@@ -331,6 +366,22 @@ export default class TextTrackCuesStore {
           onIndexOfNextCueFound(nextCueIdx);
           return;
         }
+      }
+    }
+
+    if (cuesBuffer.length) {
+      const lastCue = cuesBuffer[cuesBuffer.length - 1];
+      if (areNearlyEqual(lastCue.end, start, relativeDelta)) {
+        // Match the end of the previous cue to the start of the following one
+        // if they are close enough. If there is a small gap between two segments
+        // it can lead to having no subtitles for a short time, this is noticeable when
+        // two successive segments displays the same text, making it diseappear
+        // and reappear quickly, which gives the impression of blinking
+        //
+        //   ours:                   |AAAAA|
+        //   the current one: |BBBBB|...
+        //   Result:          |BBBBBBBAAAAA|
+        lastCue.end  = start;
       }
     }
     // no cues group has the end after our current start.
