@@ -46,16 +46,11 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
 
   /**
    * @param {HTMLMediaElement} videoElement
-   * @param {Boolean} hideNativeSubtitle
    */
-  constructor(
-    videoElement : HTMLMediaElement,
-    hideNativeSubtitle : boolean
-  ) {
+  constructor(videoElement : HTMLMediaElement) {
     log.debug("NTSB: Creating NativeTextSegmentBuffer");
     super();
-    const { track,
-            trackElement } = addTextTrack(videoElement, hideNativeSubtitle);
+    const { track, trackElement } = addTextTrack(videoElement);
 
     this.bufferType = "text";
 
@@ -187,7 +182,7 @@ export default class NativeTextSegmentBuffer extends SegmentBuffer {
       }
       this._buffered.insert(start, end);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
       }
     } catch (err) {
       return Promise.reject(err);

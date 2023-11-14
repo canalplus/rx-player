@@ -59,22 +59,20 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `DASH` [1]                  | Enable DASH playback using a JavaScript-based MPD parser  |
 | `DIRECTFILE`                | Enable playback of "directfile" contents                  |
 | `EME`                       | Enable playback of encrypted contents                     |
-| `NATIVE_SRT_PARSER` [2]     | Parse SRT text tracks for the `"native"` `textTrackMode`  |
-| `NATIVE_VTT_PARSER` [2]     | Parse VTT text tracks for the `"native"` `textTrackMode`  |
-| `NATIVE_TTML_PARSER` [2]    | Parse TTML text tracks for the `"native"` `textTrackMode` |
-| `NATIVE_SAMI_PARSER` [2]    | Parse SAMI text tracks for the `"native"` `textTrackMode` |
 | `HTML_SRT_PARSER` [2]       | Parse SRT text tracks for the `"html"` `textTrackMode`    |
 | `HTML_VTT_PARSER` [2]       | Parse VTT text tracks for the `"html"` `textTrackMode`    |
 | `HTML_TTML_PARSER` [2]      | Parse TTML text tracks for the `"html"` `textTrackMode`   |
 | `HTML_SAMI_PARSER` [2]      | Parse SAMI text tracks for the `"html"` `textTrackMode`   |
-| `BIF_PARSER`                | Parse BIF image tracks for the image buffer               |
-| `DEBUG_ELEMENT` [3]         | Allows to use the `createDebugElement` RxPlayer method    |
-| `DASH_WASM` [1] [3] [4]     | Enable DASH playback using a WebAssembly-based MPD parser |
+| `NATIVE_SRT_PARSER` [2]     | Parse SRT text tracks for the `"native"` `textTrackMode`  |
+| `NATIVE_VTT_PARSER` [2]     | Parse VTT text tracks for the `"native"` `textTrackMode`  |
+| `NATIVE_TTML_PARSER` [2]    | Parse TTML text tracks for the `"native"` `textTrackMode` |
+| `NATIVE_SAMI_PARSER` [2]    | Parse SAMI text tracks for the `"native"` `textTrackMode` |
+| `DEBUG_ELEMENT`             | Allows to use the `createDebugElement` RxPlayer method    |
+| `DASH_WASM` [1] [4]         | Enable DASH playback using a WebAssembly-based MPD parser |
 | `LOCAL_MANIFEST` [3]        | Enable playback of "local" contents                       |
 | `METAPLAYLIST` [3]          | Enable playback of "metaplaylist" contents                |
 | `NATIVE_TEXT_BUFFER` [5]    | (Deprecated) Base for the `"native"` `textTrackMode`.     |
 | `HTML_TEXT_BUFFER` [5]      | (Deprecated) Base for the `"html"` `textTrackMode`.       |
-| `IMAGE_BUFFER` [5]          | Allow to display thumbnails through the image buffer      |
 
 ---
 
@@ -148,141 +146,3 @@ RxPlayer.addFeatures([
     HTML_TTML_PARSER,
 ]);
 ```
-## Building with environment variables (not recommended)
-
-### How it works
-
-If you don't want to or can't rely on tree shaking for your use-case but still
-would like to remove features you don't want, you can also build yourself an
-RxPlayer while only enabling specific features through environment variables.
-The code related to the unwanted features should be removed when the final code
-is minified (as the corresponding code is made unreachable).
-
-To be able to do this, you will need to:
-  1. pull the RxPlayer's repository (for example, through a `git clone`)
-  2. install its dependencies (for example by calling `npm install` in that
-     repository),
-  3. run its bundling script (`npm run build:min`) with the right environment
-     variables.
-
-To avoid any conflict with other environment variables, they all are named
-`RXP_<FEATURE-NAME>`.
-
-For example, the following will remove all code related to Microsoft Smooth
-Streaming from the build:
-
-```sh
-RXP_SMOOTH=false npm run build:min
-```
-
-### List of environment variables
-
-#### RXP_SMOOTH
-
-True by default. If set to "false", all code relative to HSS streaming will be
-ignored during a build.
-
-#### RXP_DASH
-
-True by default. If set to "false", all code relative to DASH streaming will be
-ignored during a build.
-
-#### RXP_DIRECTFILE
-
-True by default. If set to "false", all code relative to directfile streaming
-will be ignored during a build.
-
-#### RXP_LOCAL_MANIFEST
-
-False by default. If set to "true", all code relative to the "local" transport
-(to be able to play content offline for example) will be included during a
-build.
-
-#### RXP_METAPLAYLIST
-
-False by default. If set to "true", all code relative to metaplaylist streaming
-will be included during a build.
-
-#### RXP_DEBUG_ELEMENT
-
-False by default. If set to "true", the method RxPlayer's `createDebugElement`
-method will be callable.
-
-#### RXP_EME
-
-True by default. If set to "false", all code relative to encrypted contents will
-be ignored during a build.
-
-#### RXP_NATIVE_TTML
-
-True by default. If set to "false", all code relative to TTML parsing for native
-text tracks will be ignored during a build.
-
-#### RXP_NATIVE_SAMI
-
-True by default. If set to "false", all code relative to SAMI parsing for native
-text tracks will be ignored during a build.
-
-#### RXP_NATIVE_VTT
-
-True by default. If set to "false", all code relative to VTT parsing for native
-text tracks will be ignored during a build.
-
-#### RXP_NATIVE_SRT
-
-True by default. If set to "false", all code relative to SRT parsing for native
-text tracks will be ignored during a build.
-
-#### RXP_HTML_TTML
-
-True by default. If set to "false", all code relative to TTML parsing for html
-text tracks [1] will be ignored during a build.
-
-#### RXP_HTML_SAMI
-
-True by default. If set to "false", all code relative to SAMI parsing for html
-text tracks [1] will be ignored during a build.
-
-#### RXP_HTML_VTT
-
-True by default. If set to "false", all code relative to VTT parsing for html
-text tracks [1] will be ignored during a build.
-
-#### RXP_HTML_SRT
-
-True by default. If set to "false", all code relative to SRT parsing for html
-text tracks [1] will be ignored during a build.
-
-#### RXP_BIF_PARSER
-
-True by default. If set to "false", all code relative to BIF image parsing will
-be ignored during a build.
-
-#### RXP_BAREBONE
-
-If set to true, no feature is activated by default and all other environment
-variables are considered as false by default (unless set).
-
-For example, to only activate DASH, you could do:
-
-```sh
-RXP_BAREBONE=true RXP_DASH=true npm run build:min
-```
-
-#### RXP_ENV
-
-Either "production" or "development". "production" as a default.
-In the "development" case:
-
-- logs will be activated
-- the code will be less tolerant towards unwanted behavior
-- the code will be less optimized
-
----
-
-**Notes**:
-
-DOM element instead of a `<track>` (the latter here being called "native") tag
-for a richer formatting.
-
----

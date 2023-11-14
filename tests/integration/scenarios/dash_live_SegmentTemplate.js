@@ -1,168 +1,73 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import {
   manifestInfos,
   noTimeShiftBufferDepthManifestInfos,
 } from "../../contents/DASH_dynamic_SegmentTemplate";
 import sleep from "../../utils/sleep.js";
-import XHRMock from "../../utils/request_mock";
 
 describe("DASH live content (SegmentTemplate)", function() {
   let player;
-  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   it("should fetch and parse the manifest", async function() {
-    xhrMock.lock();
-
+    let manifestLoaderCalledTimes = 0;
+    const requestedSegments = [];
+    const manifestLoader = (man, callbacks) => {
+      expect(manifestInfos.url).to.equal(man.url);
+      manifestLoaderCalledTimes++;
+      callbacks.fallback();
+    };
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+      // do nothing else
+    };
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
+      manifestLoader,
+      segmentLoader,
+      requestConfig: {
+        segment: {
+          maxRetry: Infinity,
+        },
+      },
     });
 
-    await sleep(1);
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
-    await xhrMock.flush();
-    await sleep(1);
+    expect(manifestLoaderCalledTimes).to.equal(1);
+    expect(player.getPlayerState()).to.equal("LOADING");
+    await sleep(100);
+    expect(manifestLoaderCalledTimes).to.equal(1);
+    expect(player.getPlayerState()).to.equal("LOADING");
 
-    const manifest = player.getManifest();
-    expect(manifest).not.to.equal(null);
-    expect(typeof manifest).to.equal("object");
-    expect(manifest.transport)
-      .to.equal(manifestInfos.transport);
-    expect(typeof manifest.id).to.equal("string");
-    expect(manifest.isDynamic).to.equal(true);
-    expect(manifest.isLive).to.equal(true);
-    expect(manifest.getUrl()).to.equal(manifestInfos.url);
+    expect(player.isLive()).to.equal(true);
+    expect(player.getContentUrls()).to.eql([manifestInfos.url]);
 
-    const adaptations = manifest.periods[0].adaptations;
-    const firstPeriodAdaptationsInfos = manifestInfos.periods[0].adaptations;
-
-    expect(adaptations.audio.length)
-      .to.equal(firstPeriodAdaptationsInfos.audio.length);
-    expect(adaptations.video.length)
-      .to.equal(firstPeriodAdaptationsInfos.video.length);
-
-    const firstAudioAdaptationInfos = firstPeriodAdaptationsInfos.audio[0];
-    expect(!!adaptations.audio[0].isAudioDescription)
-      .to.equal(firstAudioAdaptationInfos.isAudioDescription);
-    expect(adaptations.audio[0].language)
-      .to.equal(firstAudioAdaptationInfos.language);
-    expect(adaptations.audio[0].normalizedLanguage)
-      .to.equal(firstAudioAdaptationInfos.normalizedLanguage);
-    expect(adaptations.audio[0].type).to.equal("audio");
-    expect(typeof adaptations.audio[0].id).to.equal("string");
-    expect(adaptations.audio[0].id).to.not.equal(adaptations.video[0].id);
-    expect(adaptations.audio[0].representations.length)
-      .to.equal(firstAudioAdaptationInfos.representations.length);
-    expect(adaptations.audio[0].getAvailableBitrates())
-      .to.eql(firstAudioAdaptationInfos.representations
-        .map(representation => representation.bitrate));
-
-    const firstVideoAdaptationInfos = firstPeriodAdaptationsInfos.video[0];
-    expect(adaptations.video[0].type).to.equal("video");
-    expect(adaptations.video[0].getAvailableBitrates())
-      .to.eql(firstVideoAdaptationInfos.representations
-        .map(representation => representation.bitrate));
-
-    const audioRepresentation = adaptations.audio[0].representations[0];
-    const audioRepresentationInfos = firstAudioAdaptationInfos
-      .representations[0];
-    expect(audioRepresentation.bitrate)
-      .to.equal(audioRepresentationInfos.bitrate);
-    expect(audioRepresentation.codec)
-      .to.equal(audioRepresentationInfos.codec);
-    expect(typeof audioRepresentation.id).to.equal("string");
-    expect(audioRepresentation.mimeType)
-      .to.equal(audioRepresentationInfos.mimeType);
-    expect(typeof audioRepresentation.index).to.equal("object");
-
-    const audioRepresentationIndex = audioRepresentation.index;
-    const audioRepresentationIndexInfos = audioRepresentationInfos.index;
-    const initAudioSegment = audioRepresentationIndex.getInitSegment();
-    expect(typeof initAudioSegment.id).to.equal("string");
-    expect(initAudioSegment.url).to
-      .equal(audioRepresentationIndexInfos.init.url);
-
-    const videoRepresentation = adaptations.video[0].representations[0];
-    const videoRepresentationInfos = firstVideoAdaptationInfos
-      .representations[0];
-
-    expect(videoRepresentation.bitrate)
-      .to.equal(videoRepresentationInfos.bitrate);
-    expect(videoRepresentation.codec)
-      .to.equal(videoRepresentationInfos.codec);
-    expect(typeof videoRepresentation.id).to.equal("string");
-    expect(videoRepresentation.height)
-      .to.equal(videoRepresentationInfos.height);
-    expect(videoRepresentation.width)
-      .to.equal(videoRepresentationInfos.width);
-    expect(videoRepresentation.mimeType)
-      .to.equal(videoRepresentationInfos.mimeType);
-    expect(typeof videoRepresentation.index)
-      .to.equal("object");
-
-    const videoRepresentationIndex = videoRepresentation.index;
-    const videoRepresentationIndexInfos = videoRepresentationInfos.index;
-
-    const initVideoSegment = videoRepresentationIndex.getInitSegment();
-    expect(typeof initVideoSegment.id).to.equal("string");
-    expect(initVideoSegment.url)
-      .to.equal(videoRepresentationIndexInfos.init.url);
-
-    expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
-    const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
-
-    const hasRequestedVideoInitSegment = requestsDone.some(r => {
-      return r.endsWith(videoRepresentationIndexInfos.init.url);
-    });
-    const hasRequestedAudioInitSegment = requestsDone.some(r => {
-      return r.endsWith(audioRepresentationIndexInfos.init.url);
-    });
-    expect(hasRequestedVideoInitSegment).to.equal(true);
-    expect(hasRequestedAudioInitSegment).to.equal(true);
-  });
-
-  it("should list the right bitrates", async function () {
-    xhrMock.lock();
-
-    player.loadVideo({
-      url: manifestInfos.url,
-      transport: manifestInfos.transport,
-    });
-
-    await sleep(1);
-    await xhrMock.flush();
-    await sleep(1);
-
-    expect(player.getAvailableAudioBitrates()).to.eql([48000]);
-    expect(player.getAvailableVideoBitrates()).to.eql([300000]);
+    expect(requestedSegments.length).to.be.at.least(2);
   });
 
   describe("getAvailableAudioTracks", () => {
     it("should list the right audio languages", async function () {
-      xhrMock.lock();
-
       player.loadVideo({
         url: manifestInfos.url,
         transport: manifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
       expect(player.getAvailableAudioTracks()).to.eql([]);
 
-      await sleep(1);
-      expect(player.getAvailableAudioTracks()).to.eql([]);
-      await xhrMock.flush();
-      await sleep(1);
-
+      await sleep(100);
       const audioTracks = player.getAvailableAudioTracks();
 
       const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
@@ -198,19 +103,18 @@ describe("DASH live content (SegmentTemplate)", function() {
 
   describe("getAvailableTextTracks", () => {
     it("should list the right text languages", async function () {
-      xhrMock.lock();
-
       player.loadVideo({
         url: manifestInfos.url,
         transport: manifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
       expect(player.getAvailableTextTracks()).to.eql([]);
 
-      await sleep(1);
-      expect(player.getAvailableTextTracks()).to.eql([]);
-      await xhrMock.flush();
-      await sleep(1);
-
+      await sleep(100);
       const textTracks = player.getAvailableTextTracks();
 
       const textAdaptations = manifestInfos.periods[0].adaptations.text;
@@ -246,18 +150,17 @@ describe("DASH live content (SegmentTemplate)", function() {
 
   describe("getAvailableVideoTracks", () => {
     it("should list the right video tracks", async function () {
-      xhrMock.lock();
-
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
       expect(player.getAvailableVideoTracks()).to.eql([]);
-
-      await sleep(1);
-      expect(player.getAvailableVideoTracks()).to.eql([]);
-      await xhrMock.flush();
-      await sleep(1);
+      await sleep(100);
 
       const videoTracks = player.getAvailableVideoTracks();
 
@@ -305,32 +208,31 @@ describe("DASH live content (SegmentTemplate)", function() {
 
   describe("getMinimumPosition", () => {
     it("should return the last position minus the TimeShift window", async () => {
-      xhrMock.lock();
-
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
 
-      await sleep(1);
-      await xhrMock.flush();
-      await sleep(1);
+      expect(player.getMinimumPosition()).to.eql(null);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 1);
     });
   });
 
   describe("getMaximumPosition", () => {
     it("should return the last playable position", async () => {
-      xhrMock.lock();
-
       player.loadVideo({
         url: manifestInfos.url,
         transport:manifestInfos.transport,
       });
 
-      await sleep(1);
-      await xhrMock.flush();
-      await sleep(1);
+      expect(player.getMaximumPosition()).to.eql(null);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 1);
     });
   });
@@ -338,160 +240,64 @@ describe("DASH live content (SegmentTemplate)", function() {
 
 describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", function() {
   let player;
-  let xhrMock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    xhrMock = new XHRMock();
   });
 
   afterEach(() => {
     player.dispose();
-    xhrMock.restore();
   });
 
   it("should fetch and parse the manifest", async function() {
-    xhrMock.lock();
-
+    let manifestLoaderCalledTimes = 0;
+    const requestedSegments = [];
+    const manifestLoader = (man, callbacks) => {
+      expect(man.url).to.equal(noTimeShiftBufferDepthManifestInfos.url);
+      manifestLoaderCalledTimes++;
+      callbacks.fallback();
+    };
+    const segmentLoader = (info, callbacks) => {
+      requestedSegments.push(info.url);
+      callbacks.fallback();
+      // do nothing else
+    };
     player.loadVideo({
       url: noTimeShiftBufferDepthManifestInfos.url,
       transport: noTimeShiftBufferDepthManifestInfos.transport,
+      manifestLoader,
+      segmentLoader,
+      requestConfig: {
+        segment: {
+          maxRetry: Infinity,
+        },
+      },
     });
 
-    await sleep(1);
-    expect(xhrMock.getLockedXHR().length).to.equal(1);
-    await xhrMock.flush();
-    await sleep(1);
-
-    const manifest = player.getManifest();
-    expect(manifest).not.to.equal(null);
-    expect(typeof manifest).to.equal("object");
-    expect(manifest.transport)
-      .to.equal(noTimeShiftBufferDepthManifestInfos.transport);
-    expect(typeof manifest.id).to.equal("string");
-    expect(manifest.isLive).to.equal(true);
-    expect(manifest.getUrl()).to.equal(noTimeShiftBufferDepthManifestInfos.url);
-
-    const adaptations = manifest.periods[0].adaptations;
-    const firstPeriodAdaptationsInfos =
-      noTimeShiftBufferDepthManifestInfos.periods[0].adaptations;
-
-    expect(adaptations.audio.length)
-      .to.equal(firstPeriodAdaptationsInfos.audio.length);
-    expect(adaptations.video.length)
-      .to.equal(firstPeriodAdaptationsInfos.video.length);
-
-    const firstAudioAdaptationInfos = firstPeriodAdaptationsInfos.audio[0];
-    expect(!!adaptations.audio[0].isAudioDescription)
-      .to.equal(firstAudioAdaptationInfos.isAudioDescription);
-    expect(adaptations.audio[0].language)
-      .to.equal(firstAudioAdaptationInfos.language);
-    expect(adaptations.audio[0].normalizedLanguage)
-      .to.equal(firstAudioAdaptationInfos.normalizedLanguage);
-    expect(adaptations.audio[0].type).to.equal("audio");
-    expect(typeof adaptations.audio[0].id).to.equal("string");
-    expect(adaptations.audio[0].id).to.not.equal(adaptations.video[0].id);
-    expect(adaptations.audio[0].representations.length)
-      .to.equal(firstAudioAdaptationInfos.representations.length);
-    expect(adaptations.audio[0].getAvailableBitrates())
-      .to.eql(firstAudioAdaptationInfos.representations
-        .map(representation => representation.bitrate));
-
-    const firstVideoAdaptationInfos = firstPeriodAdaptationsInfos.video[0];
-    expect(adaptations.video[0].type).to.equal("video");
-    expect(adaptations.video[0].getAvailableBitrates())
-      .to.eql(firstVideoAdaptationInfos.representations
-        .map(representation => representation.bitrate));
-
-    const audioRepresentation = adaptations.audio[0].representations[0];
-    const audioRepresentationInfos = firstAudioAdaptationInfos
-      .representations[0];
-    expect(audioRepresentation.bitrate)
-      .to.equal(audioRepresentationInfos.bitrate);
-    expect(audioRepresentation.codec)
-      .to.equal(audioRepresentationInfos.codec);
-    expect(typeof audioRepresentation.id).to.equal("string");
-    expect(audioRepresentation.mimeType)
-      .to.equal(audioRepresentationInfos.mimeType);
-    expect(typeof audioRepresentation.index).to.equal("object");
-
-    const audioRepresentationIndex = audioRepresentation.index;
-    const audioRepresentationIndexInfos = audioRepresentationInfos.index;
-    const initAudioSegment = audioRepresentationIndex.getInitSegment();
-    expect(typeof initAudioSegment.id).to.equal("string");
-    expect(initAudioSegment.url).to
-      .equal(audioRepresentationIndexInfos.init.url);
-
-    const videoRepresentation = adaptations.video[0].representations[0];
-    const videoRepresentationInfos = firstVideoAdaptationInfos
-      .representations[0];
-
-    expect(videoRepresentation.bitrate)
-      .to.equal(videoRepresentationInfos.bitrate);
-    expect(videoRepresentation.codec)
-      .to.equal(videoRepresentationInfos.codec);
-    expect(typeof videoRepresentation.id).to.equal("string");
-    expect(videoRepresentation.height)
-      .to.equal(videoRepresentationInfos.height);
-    expect(videoRepresentation.width)
-      .to.equal(videoRepresentationInfos.width);
-    expect(videoRepresentation.mimeType)
-      .to.equal(videoRepresentationInfos.mimeType);
-    expect(typeof videoRepresentation.index)
-      .to.equal("object");
-
-    const videoRepresentationIndex = videoRepresentation.index;
-    const videoRepresentationIndexInfos = videoRepresentationInfos.index;
-
-    const initVideoSegment = videoRepresentationIndex.getInitSegment();
-    expect(typeof initVideoSegment.id).to.equal("string");
-    expect(initVideoSegment.url)
-      .to.equal(videoRepresentationIndexInfos.init.url);
-
-    expect(xhrMock.getLockedXHR().length).to.be.at.least(2);
-    const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
-
-    const hasRequestedVideoInitSegment = requestsDone.some(r => {
-      return r.endsWith(videoRepresentationIndexInfos.init.url);
-    });
-    const hasRequestedAudioInitSegment = requestsDone.some(r => {
-      return r.endsWith(audioRepresentationIndexInfos.init.url);
-    });
-    expect(hasRequestedVideoInitSegment).to.equal(true);
-    expect(hasRequestedAudioInitSegment).to.equal(true);
-  });
-
-  it("should list the right bitrates", async function () {
-    xhrMock.lock();
-
-    player.loadVideo({
-      url: noTimeShiftBufferDepthManifestInfos.url,
-      transport: noTimeShiftBufferDepthManifestInfos.transport,
-    });
-
-    await sleep(1);
-    await xhrMock.flush();
-    await sleep(1);
-
-    expect(player.getAvailableAudioBitrates()).to.eql([48000]);
-    expect(player.getAvailableVideoBitrates()).to.eql([300000]);
+    expect(manifestLoaderCalledTimes).to.equal(1);
+    expect(player.getPlayerState()).to.equal("LOADING");
+    await sleep(100);
+    expect(manifestLoaderCalledTimes).to.equal(1);
+    expect(player.isLive()).to.equal(true);
+    expect(player.getContentUrls())
+      .to.eql([noTimeShiftBufferDepthManifestInfos.url]);
+    expect(requestedSegments.length).to.be.at.least(2);
   });
 
   describe("getAvailableAudioTracks", () => {
     it("should list the right audio languages", async function () {
-      xhrMock.lock();
-
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
         transport: noTimeShiftBufferDepthManifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
       expect(player.getAvailableAudioTracks()).to.eql([]);
 
-      await sleep(1);
-      expect(player.getAvailableAudioTracks()).to.eql([]);
-      await xhrMock.flush();
-      await sleep(1);
-
+      await sleep(100);
       const audioTracks = player.getAvailableAudioTracks();
 
       const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
@@ -527,19 +333,18 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
   describe("getAvailableTextTracks", () => {
     it("should list the right text languages", async function () {
-      xhrMock.lock();
 
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
         transport: noTimeShiftBufferDepthManifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
       expect(player.getAvailableTextTracks()).to.eql([]);
-
-      await sleep(1);
-      expect(player.getAvailableTextTracks()).to.eql([]);
-      await xhrMock.flush();
-      await sleep(1);
-
+      await sleep(100);
       const textTracks = player.getAvailableTextTracks();
 
       const textAdaptations = manifestInfos.periods[0].adaptations.text;
@@ -575,19 +380,18 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
   describe("getAvailableVideoTracks", () => {
     it("should list the right video tracks", async function () {
-      xhrMock.lock();
-
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
         transport:noTimeShiftBufferDepthManifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
       expect(player.getAvailableVideoTracks()).to.eql([]);
 
-      await sleep(1);
-      expect(player.getAvailableVideoTracks()).to.eql([]);
-      await xhrMock.flush();
-      await sleep(1);
-
+      await sleep(100);
       const videoTracks = player.getAvailableVideoTracks();
 
       const videoAdaptations = manifestInfos.periods[0].adaptations.video;
@@ -634,32 +438,36 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
   describe("getMinimumPosition", () => {
     it("should return the period start if one", async () => {
-      xhrMock.lock();
-
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
         transport:noTimeShiftBufferDepthManifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
 
-      await sleep(1);
-      await xhrMock.flush();
-      await sleep(1);
+      expect(player.getMinimumPosition()).to.eql(null);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.equal(1553515200);
     });
   });
 
   describe("getMaximumPosition", () => {
     it("should return the last playable position", async () => {
-      xhrMock.lock();
-
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
         transport:noTimeShiftBufferDepthManifestInfos.transport,
+        requestConfig: {
+          segment: {
+            maxRetry: Infinity,
+          },
+        },
       });
 
-      await sleep(1);
-      await xhrMock.flush();
-      await sleep(1);
+      expect(player.getMaximumPosition()).to.eql(null);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553521448, 3);
     });

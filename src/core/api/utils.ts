@@ -28,6 +28,7 @@ import {
 import {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
+  SeekingState,
 } from "./playback_observer";
 
 /**
@@ -52,7 +53,8 @@ export function emitSeekEvents(
     return ;
   }
 
-  let wasSeeking = playbackObserver.getReference().getValue().seeking;
+  let wasSeeking =
+    playbackObserver.getReference().getValue().seeking === SeekingState.External;
   if (wasSeeking) {
     onSeeking();
     if (cancelSignal.isCancelled()) {
@@ -106,6 +108,7 @@ export const enum PLAYER_STATES {
   ENDED = "ENDED",
   BUFFERING = "BUFFERING",
   SEEKING = "SEEKING",
+  FREEZING = "FREEZING",
   RELOADING = "RELOADING",
 }
 
@@ -126,8 +129,10 @@ export function constructPlayerStateReference(
           playerStateRef.setValue(newState);
         }
       }
+    } else if (playerStateRef.getValue() === PLAYER_STATES.RELOADING) {
+      playerStateRef.setValue(getLoadedContentState(mediaElement, null));
     } else {
-      playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+      updateStateIfLoaded(null);
     }
   }, cancelSignal);
 
@@ -144,31 +149,37 @@ export function constructPlayerStateReference(
   let prevStallReason : IStallingSituation | null = null;
   initializer.addEventListener("stalled", (s) => {
     if (s !== prevStallReason) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, s));
-      }
+      updateStateIfLoaded(s);
       prevStallReason = s;
     }
   }, cancelSignal);
   initializer.addEventListener("unstalled", () => {
     if (prevStallReason !== null) {
-      if (isLoadedState(playerStateRef.getValue())) {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
-      }
+      updateStateIfLoaded(null);
       prevStallReason = null;
     }
   }, cancelSignal);
 
   playbackObserver.listen((observation) => {
-    if (isLoadedState(playerStateRef.getValue()) &&
-        arrayIncludes(["seeking", "ended", "play", "pause"], observation.event))
-    {
-      playerStateRef.setValueIfChanged(
-        getLoadedContentState(mediaElement, prevStallReason)
-      );
+    if (arrayIncludes(["seeking", "ended", "play", "pause"], observation.event)) {
+      updateStateIfLoaded(prevStallReason);
     }
   }, { clearSignal: cancelSignal });
   return playerStateRef;
+
+  function updateStateIfLoaded(stallRes : IStallingSituation | null) : void {
+    if (!isLoadedState(playerStateRef.getValue())) {
+      return;
+    }
+    const newState = getLoadedContentState(mediaElement, stallRes);
+    const prevState = playerStateRef.getValue();
+
+    // Some safety checks to avoid having nonsense state switches
+    if (prevState === PLAYER_STATES.LOADED && newState === PLAYER_STATES.PAUSED) {
+      return;
+    }
+    playerStateRef.setValueIfChanged(newState);
+  }
 }
 
 /**
@@ -202,8 +213,9 @@ export function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus === "seeking" ? PLAYER_STATES.SEEKING :
-                                         PLAYER_STATES.BUFFERING;
+    return stalledStatus === "seeking"  ? PLAYER_STATES.SEEKING :
+           stalledStatus === "freezing" ? PLAYER_STATES.FREEZING :
+                                          PLAYER_STATES.BUFFERING;
   }
   return mediaElement.paused ? PLAYER_STATES.PAUSED :
                                PLAYER_STATES.PLAYING;

@@ -16,6 +16,7 @@
 
 import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import getBufferLevels from "./utils/get_buffer_levels";
 import {
   IRepresentationMaintainabilityScore,
@@ -94,8 +95,8 @@ export default class BufferBasedChooser {
   private _currentEstimate: number | undefined;
 
   /**
-   * Laast timestamp, in terms of `performance.now`, at which the current
-   * quality was seen as too high by this algorithm.
+   * Last monotonically-raising timestamp (as defined by the RxPlayer), at which
+   * the current quality was seen as too high by this algorithm.
    * Begins at `undefined`.
    */
   private _lastUnsuitableQualityTimestamp: number | undefined;
@@ -152,7 +153,7 @@ export default class BufferBasedChooser {
     }
 
     if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
-      log.error("ABR: Current Bitrate not found in the calculated levels");
+      log.info("ABR: Current Bitrate not found in the calculated levels");
       this._currentEstimate = bitrates[0];
       return ;
     }
@@ -166,7 +167,7 @@ export default class BufferBasedChooser {
       bufferGap :
       0;
 
-    const now = performance.now();
+    const now = getMonotonicTimeStamp();
 
     if (
       actualBufferGap < bufferLevels[currentBitrateIndex] ||

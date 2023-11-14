@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../../compat/global_scope";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -67,7 +69,7 @@ describe("base64ToBytes", () => {
       .toEqual(new Uint8Array([ 36, 101, 120, 112, 101, 99, 116, 40, 98, 97,
                                 115, 101, 54, 52, 84, 111, 85, 105, 110, 116,
                                 56, 65, 114, 114, 97, 121, 40, 34, 34, 41 ]));
-    expect(base64ToBytes(window.btoa("toto")))
+    expect(base64ToBytes(globalScope.btoa("toto")))
       .toEqual(new Uint8Array([ 116, 111, 116, 111 ]));
     expect(logWarn).not.toHaveBeenCalled();
 
@@ -141,7 +143,7 @@ describe("bytesToBase64", () => {
                                           56, 65, 114, 114, 97, 121, 40, 34, 34, 41 ])))
       .toEqual("JGV4cGVjdChiYXNlNjRUb1VpbnQ4QXJyYXkoIiIp");
     expect(bytesToBase64(new Uint8Array([ 116, 111, 116, 111 ])))
-      .toEqual(window.btoa("toto"));
+      .toEqual(globalScope.btoa("toto"));
     expect(logWarn).not.toHaveBeenCalled();
   });
 });

@@ -16,7 +16,6 @@
 
 import Manifest, {
   Adaptation,
-  ISegment,
   Period,
   Representation,
 } from "../../manifest";
@@ -27,7 +26,10 @@ import { PlaybackObserver } from "../api";
 import SegmentBuffersStore, {
   IBufferType,
 } from "../segment_buffers";
-import { IInbandEvent } from "../stream";
+import {
+  IAdaptationChoice,
+  IInbandEvent,
+} from "../stream";
 import {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
@@ -135,16 +137,6 @@ export interface IContentInitializerEvents {
    * From this point on, the user can reliably play/pause/resume the stream.
    */
   loaded : { segmentBuffersStore: SegmentBuffersStore | null };
-  /**
-   * Event sent after updating the decipherability status of at least one
-   * Manifest's Representation.
-   * This generally means that some Representation(s) were detected to be
-   * undecipherable on the current device.
-   */
-  decipherabilityUpdate: Array<{ manifest : Manifest;
-                                 period : Period;
-                                 adaptation : Adaptation;
-                                 representation : Representation; }>;
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent |
                IPublicNonFiniteStreamEvent;
@@ -162,6 +154,8 @@ export interface IContentInitializerEvents {
   periodStreamReady: {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type : IBufferType;
+    /** The `Manifest` linked to the `PeriodStream` we have created. */
+    manifest : Manifest;
     /** The `Period` linked to the `PeriodStream` we have created. */
     period : Period;
     /**
@@ -175,7 +169,7 @@ export interface IContentInitializerEvents {
      * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
      * yourself.
      */
-    adaptationRef : SharedReference<Adaptation|null|undefined>;
+    adaptationRef : SharedReference<IAdaptationChoice|null|undefined>;
   };
   /**
    * A `PeriodStream` has been removed.
@@ -202,7 +196,7 @@ export interface IContentInitializerEvents {
   /** Emitted when a new `Adaptation` is being considered. */
   adaptationChange: IAdaptationChangeEventPayload;
   /** Emitted as new bitrate estimates are done. */
-  bitrateEstimationChange: {
+  bitrateEstimateChange: {
     /** The type of buffer for which the estimation is done. */
     type : IBufferType;
     /**
@@ -223,19 +217,6 @@ export interface IContentInitializerEvents {
      */
     representation : Representation |
                      null;
-  };
-  /** Emitted after a new segment has been succesfully added to the SegmentBuffer */
-  addedSegment: {
-    /** Context about the content that has been added. */
-    content: { period : Period;
-               adaptation : Adaptation;
-               representation : Representation; };
-    /** The concerned Segment. */
-    segment : ISegment;
-    /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
-    buffered : TimeRanges;
-    /* The data pushed */
-    segmentData : unknown;
   };
   /**
    * Event emitted when one or multiple inband events (i.e. events inside a

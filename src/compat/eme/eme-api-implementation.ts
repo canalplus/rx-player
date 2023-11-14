@@ -5,6 +5,7 @@ import { CancellationSignal } from "../../utils/task_canceller";
 import { ICompatHTMLMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import { createCompatibleEventListener, IEventTargetLike } from "../event_listeners";
+import globalScope from "../global_scope";
 import isNode from "../is_node";
 import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
@@ -188,7 +189,7 @@ function getEmeApiImplementation(
         implementation = "moz";
       } else {
         onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
-        const MK = window.MediaKeys as unknown as typeof MediaKeys & {
+        const MK = globalScope.MediaKeys as unknown as typeof MediaKeys & {
           isTypeSupported? : (keyType : string) => boolean;
           new(keyType? : string) : ICustomMediaKeys;
         };

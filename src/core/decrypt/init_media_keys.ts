@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { isWebOs } from "../../compat/browser_detection";
 import log from "../../log";
 import { IKeySystemOption } from "../../public_types";
+import noop from "../../utils/noop";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { disableMediaKeys } from "./attach_media_keys";
 import getMediaKeysInfos, {
@@ -45,7 +47,14 @@ export default async function initMediaKeys(
 
   if (shouldDisableOldMediaKeys) {
     log.debug("DRM: Disabling old MediaKeys");
-    disableMediaKeys(mediaElement);
+    // TODO should we be awaiting always?
+    // Should be tested on all devices, we may want to wait for another
+    // version to make this important change.
+    if (isWebOs) {
+      await disableMediaKeys(mediaElement);
+    } else {
+      disableMediaKeys(mediaElement).catch(noop);
+    }
   }
   return mediaKeysInfo;
 }
