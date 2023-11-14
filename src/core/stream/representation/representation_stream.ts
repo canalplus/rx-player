@@ -89,7 +89,7 @@ export default function RepresentationStream<TSegmentDataType>(
     segmentBuffer,
     segmentFetcher,
     terminate } : IRepresentationStreamArguments<TSegmentDataType>,
-  callbacks : IRepresentationStreamCallbacks<TSegmentDataType>,
+  callbacks : IRepresentationStreamCallbacks,
   parentCancelSignal : CancellationSignal
 ) : void {
   const { period, adaptation, representation } = content;
@@ -230,8 +230,7 @@ export default function RepresentationStream<TSegmentDataType>(
       return ; // Stop all buffer status checking if load operations are stopped
     }
     const observation = playbackObserver.getReference().getValue();
-    const initialWantedTime = observation.position.pending ??
-                              observation.position.last;
+    const initialWantedTime = observation.position.getWanted();
     const status = getBufferStatus(content,
                                    initialWantedTime,
                                    playbackObserver,
@@ -251,8 +250,7 @@ export default function RepresentationStream<TSegmentDataType>(
         log.warn("Stream: Uninitialized index with an already loaded " +
                  "initialization segment");
       } else {
-        const wantedStart = observation.position.pending ??
-                            observation.position.last;
+        const wantedStart = observation.position.getWanted();
         neededInitSegment = { segment: initSegmentState.segment,
                               priority: getSegmentPriority(period.start,
                                                            wantedStart) };
@@ -307,7 +305,7 @@ export default function RepresentationStream<TSegmentDataType>(
     }
 
     callbacks.streamStatusUpdate({ period,
-                                   position: observation.position.last,
+                                   position: observation.position.getWanted(),
                                    bufferType,
                                    imminentDiscontinuity: status.imminentDiscontinuity,
                                    isEmptyStream: false,
@@ -345,23 +343,41 @@ export default function RepresentationStream<TSegmentDataType>(
       // is not running anymore.
       return ;
     }
-    if (evt.segmentType === "init") {
-      initSegmentState.isLoaded = true;
 
-      // Now that the initialization segment has been parsed - which may have
-      // included encryption information - take care of the encryption event
-      // if not already done.
-      if (!hasSentEncryptionData) {
-        const allEncryptionData = representation.getAllEncryptionData();
-        if (allEncryptionData.length > 0) {
-          callbacks.encryptionDataEncountered(
-            allEncryptionData.map(p => objectAssign({ content }, p))
-          );
-          if (globalCanceller.isUsed()) {
-            return ; // previous callback has stopped everything by side-effect
-          }
+    // Supplementary encryption information might have been parsed.
+    for (const protInfo of evt.protectionData) {
+      // TODO better handle use cases like key rotation by not always grouping
+      // every protection data together? To check.
+      representation.addProtectionData(protInfo.initDataType,
+                                       protInfo.keyId,
+                                       protInfo.initData);
+    }
+
+    // Now that the initialization segment has been parsed - which may have
+    // included encryption information - take care of the encryption event
+    // if not already done.
+    if (!hasSentEncryptionData) {
+      const allEncryptionData = representation.getAllEncryptionData();
+      if (allEncryptionData.length > 0) {
+        callbacks.encryptionDataEncountered(
+          allEncryptionData.map(p => objectAssign({ content }, p))
+        );
+        hasSentEncryptionData = true;
+
+        // previous callback could have lead to cancellation
+        if (globalCanceller.isUsed()) {
+          return ;
         }
       }
+    }
+
+    if (evt.segmentType === "init") {
+      if (!representation.index.isInitialized() &&
+          evt.segmentList !== undefined)
+      {
+        representation.index.initialize(evt.segmentList);
+      }
+      initSegmentState.isLoaded = true;
 
       if (evt.initializationData !== null) {
         const initSegmentUniqueId = representation.uniqueId;
@@ -386,23 +402,13 @@ export default function RepresentationStream<TSegmentDataType>(
       // Sometimes the segment list is only known once the initialization segment
       // is parsed. Thus we immediately re-check if there's new segments to load.
       checkStatus();
+      return;
     } else {
       const { inbandEvents,
-              needsManifestRefresh,
-              protectionDataUpdate } = evt;
-
-      // TODO better handle use cases like key rotation by not always grouping
-      // every protection data together? To check.
-      if (!hasSentEncryptionData && protectionDataUpdate) {
-        const allEncryptionData = representation.getAllEncryptionData();
-        if (allEncryptionData.length > 0) {
-          callbacks.encryptionDataEncountered(
-            allEncryptionData.map(p => objectAssign({ content }, p))
-          );
-          if (globalCanceller.isUsed()) {
-            return ; // previous callback has stopped everything by side-effect
-          }
-        }
+              predictedSegments,
+              needsManifestRefresh } = evt;
+      if (predictedSegments !== undefined) {
+        representation.index.addPredictedSegments(predictedSegments, evt.segment);
       }
 
       if (needsManifestRefresh === true) {

@@ -135,9 +135,9 @@ export interface IParsedRepresentation {
   contentProtections? : IContentProtections | undefined;
   /**
    * Frame rate (images per seconds) associated with this Representation.
-   * Not set if unknown or if it makes no sense (e.g. for subtitles).
+   * Not set if unknown or if it makes no sense.
    */
-  frameRate?: string | undefined;
+  frameRate?: number | undefined;
   /**
    * Height (top to bottom) in pixels this Representation has.
    * Not set if unknown or if it makes no sense (e.g. for audio).
@@ -167,8 +167,7 @@ export interface IParsedRepresentation {
 /** Every possible types an Adaptation can have. */
 export type IParsedAdaptationType = "audio" |
                                     "video" |
-                                    "text" |
-                                    "image";
+                                    "text";
 
 /**
  * Collection of multiple `Adaptation`, regrouped by type, as used by a
@@ -296,8 +295,8 @@ export interface IParsedManifest {
   /** Base time from which the segments are generated. */
   availabilityStartTime? : number | undefined;
   /**
-   * Offset, in milliseconds, the client's clock (in terms of `performance.now`)
-   * has relatively to the server's
+   * Difference between the server's clock, in milliseconds, and the
+   * monotonically-raising timestamp used by the RxPlayer.
    */
   clockOffset? : number | undefined;
   /** If set, the Manifest needs to be updated when that Promise resolves. */
@@ -376,8 +375,8 @@ export interface IParsedManifest {
        */
       maximumSafePosition : number;
       /**
-       * `Performance.now()` output at the time both `maximumSafePosition` and
-       * `maximumPositionWithMediaData` were calculated.
+       * Monotonically-raising timestamp at the time both `maximumSafePosition`
+       * and `maximumPositionWithMediaData` were calculated.
        * This can be used to retrieve a new maximum position from them when they
        * linearly evolves over time (see `isLinear` property).
        */

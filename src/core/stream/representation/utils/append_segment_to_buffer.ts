@@ -58,10 +58,10 @@ export default async function appendSegmentToBuffer<T>(
         "An unknown error happened when pushing content";
       throw new MediaError("BUFFER_APPEND_ERROR",
                            reason,
-                           { adaptation: dataInfos.inventoryInfos.adaptation });
+                           { adaptations: [dataInfos.inventoryInfos.adaptation] });
     }
     const { position } = playbackObserver.getReference().getValue();
-    const currentPos = position.pending ?? position.last;
+    const currentPos = position.getWanted();
     try {
       await forceGarbageCollection(currentPos, segmentBuffer, cancellationSignal);
       await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
@@ -71,7 +71,7 @@ export default async function appendSegmentToBuffer<T>(
 
       throw new MediaError("BUFFER_FULL_ERROR",
                            reason,
-                           { adaptation: dataInfos.inventoryInfos.adaptation });
+                           { adaptations: [dataInfos.inventoryInfos.adaptation] });
     }
   }
 }

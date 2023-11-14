@@ -29,15 +29,9 @@ import tryToChangeSourceBufferType, {
 import clearElementSrc from "./clear_element_src";
 import enableAudioTrack from "./enable_audio_track";
 import * as events from "./event_listeners";
-import {
-  exitFullscreen,
-  isFullscreen,
-  requestFullscreen,
-} from "./fullscreen";
 import getStartDate from "./get_start_date";
 import isCodecSupported from "./is_codec_supported";
 import isNode from "./is_node";
-import isOffline from "./is_offline";
 import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
 import onHeightWidthChange from "./on_height_width_change";
@@ -63,20 +57,16 @@ export {
   clearElementSrc,
   enableAudioTrack,
   events,
-  exitFullscreen,
   getStartDate,
   ICompatTextTrack,
   ICompatVTTCue,
   ICompatSourceBuffer,
   isCodecSupported,
-  isFullscreen,
   isNode,
-  isOffline,
   isVTTCue,
   makeVTTCue,
   MediaSource_,
   onHeightWidthChange,
-  requestFullscreen,
   shouldReloadMediaSourceOnDecipherabilityUpdate,
   shouldRenewMediaKeySystemAccess,
   shouldUnsetMediaKeys,

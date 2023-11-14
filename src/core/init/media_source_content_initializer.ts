@@ -51,11 +51,11 @@ import SegmentBuffersStore, {
   ITextTrackSegmentBufferOptions,
 } from "../segment_buffers";
 import StreamOrchestrator, {
-  IAudioTrackSwitchingMode,
   IStreamOrchestratorOptions,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorPlaybackObservation,
 } from "../stream";
+import { INeedsBufferFlushPayload } from "../stream/adaptation";
 import { ContentInitializer } from "./types";
 import ContentTimeBoundariesObserver from "./utils/content_time_boundaries_observer";
 import openMediaSource from "./utils/create_media_source";
@@ -289,9 +289,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     manifest.addEventListener("manifestUpdate", () => {
       this.trigger("manifestUpdate", null);
     }, initCanceller.signal);
-    manifest.addEventListener("decipherabilityUpdate", (args) => {
-      this.trigger("decipherabilityUpdate", args);
-    }, initCanceller.signal);
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -420,12 +417,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentBuffersStore.disposeAll();
     });
 
-    const { autoPlayResult, initialPlayPerformed, initialSeekPerformed } =
-      performInitialSeekAndPlay(mediaElement,
-                                playbackObserver,
-                                initialTime,
-                                autoPlay,
-                                (err) => this.trigger("warning", err),
+    const { autoPlayResult, initialPlayPerformed } =
+      performInitialSeekAndPlay({ mediaElement,
+                                  playbackObserver,
+                                  startTime: initialTime,
+                                  mustAutoPlay: autoPlay,
+                                  onWarning: (err) => { this.trigger("warning", err); },
+                                  isDirectfile: false },
                                 cancelSignal);
 
     if (cancelSignal.isCancelled()) {
@@ -455,16 +453,30 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                         { autoPlay,
                                                           manifest,
                                                           initialPlayPerformed,
-                                                          initialSeekPerformed,
-                                                          speed,
-                                                          startTime: initialTime },
+                                                          speed },
                                                         cancelSignal);
 
     const rebufferingController = this._createRebufferingController(playbackObserver,
                                                                     manifest,
+                                                                    segmentBuffersStore,
                                                                     speed,
                                                                     cancelSignal);
+    rebufferingController.addEventListener("needsReload", () => {
+      let position: number;
+      const lastObservation = playbackObserver.getReference().getValue();
+      if (lastObservation.position.isAwaitingFuturePosition()) {
+        position = lastObservation.position.getWanted();
+      } else {
+        position = playbackObserver.getCurrentTime();
+      }
 
+      // NOTE couldn't both be always calculated at event destination?
+      // Maybe there are exceptions?
+      const autoplay = initialPlayPerformed.getValue() ?
+        !playbackObserver.getIsPaused() :
+        autoPlay;
+      onReloadOrder({ position, autoPlay: autoplay });
+    }, cancelSignal);
     const contentTimeBoundariesObserver = this
       ._createContentTimeBoundariesObserver(manifest,
                                             mediaSource,
@@ -512,9 +524,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        needsBufferFlush: () => {
-          const seekedTime = mediaElement.currentTime + 0.001;
-          playbackObserver.setCurrentTime(seekedTime);
+        needsBufferFlush: (payload? : INeedsBufferFlushPayload) => {
+          let wantedSeekingTime: number;
+          const currentTime = playbackObserver.getCurrentTime();
+          const relativeResumingPosition = payload?.relativeResumingPosition ?? 0;
+          const canBeApproximateSeek = Boolean(payload?.relativePosHasBeenDefaulted);
+
+          if (relativeResumingPosition === 0 && canBeApproximateSeek) {
+            // in case relativeResumingPosition is 0, we still perform
+            // a tiny seek to be sure that the browser will correclty reload the video.
+            wantedSeekingTime = currentTime + 0.001;
+          } else {
+            wantedSeekingTime = currentTime + relativeResumingPosition;
+          }
+          playbackObserver.setCurrentTime(wantedSeekingTime);
 
           // Seek again once data begins to be buffered.
           // This is sadly necessary on some browsers to avoid decoding
@@ -534,11 +557,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (
               // Data is buffered around the current position
               obs.currentRange !== null ||
-              // Or, for whatever reason, playback is already advancing
-              obs.position > seekedTime + 0.1
+              // Or, for whatever reason, we have no buffer but we're already advancing
+              obs.position.getPolled() > wantedSeekingTime + 0.1
             ) {
               stopListening();
-              playbackObserver.setCurrentTime(obs.position + 0.001);
+              playbackObserver.setCurrentTime(obs.position.getWanted() + 0.001);
             }
           }, { includeLastObservation: false, clearSignal: cancelSignal });
         },
@@ -623,15 +646,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           self.trigger("periodStreamCleared", value);
         },
 
-        bitrateEstimationChange: (value) =>
-          self.trigger("bitrateEstimationChange", value),
-
-        addedSegment: (value) => self.trigger("addedSegment", value),
+        bitrateEstimateChange: (value) =>
+          self.trigger("bitrateEstimateChange", value),
 
         needsMediaSourceReload: (payload) => {
           const lastObservation = streamObserver.getReference().getValue();
-          const currentPosition = lastObservation.position.pending ??
-                                  streamObserver.getCurrentTime();
+          const currentPosition = lastObservation.position.isAwaitingFuturePosition() ?
+            lastObservation.position.getWanted() :
+            streamObserver.getCurrentTime();
           const isPaused = lastObservation.paused.pending ??
                            streamObserver.getIsPaused();
           let position = currentPosition + payload.timeOffset;
@@ -648,15 +670,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
             const lastObservation = streamObserver.getReference().getValue();
-            const position = lastObservation.position.pending ??
-                             streamObserver.getCurrentTime();
+            const position = lastObservation.position.isAwaitingFuturePosition() ?
+              lastObservation.position.getWanted() :
+              streamObserver.getCurrentTime();
             const isPaused = lastObservation.paused.pending ??
                              streamObserver.getIsPaused();
             onReloadOrder({ position, autoPlay: !isPaused });
           } else {
             const lastObservation = streamObserver.getReference().getValue();
-            const position = lastObservation.position.pending ??
-                             streamObserver.getCurrentTime();
+            const position = lastObservation.position.isAwaitingFuturePosition() ?
+              lastObservation.position.getWanted() :
+              streamObserver.getCurrentTime();
             // simple seek close to the current position
             // to flush the buffers
             if (position + 0.001 < lastObservation.duration) {
@@ -723,9 +747,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     contentTimeBoundariesObserver.addEventListener("periodChange", (period) => {
       this.trigger("activePeriodChanged", { period });
     });
-    contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
-      mediaSourceDurationUpdater.updateDuration(newDuration.duration, newDuration.isEnd);
-    });
+    contentTimeBoundariesObserver.addEventListener(
+      "endingPositionChange",
+      (x) => mediaSourceDurationUpdater.updateDuration(x.endingPosition, x.isEnd)
+    );
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
         endOfStreamCanceller = new TaskCanceller();
@@ -741,9 +766,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         endOfStreamCanceller = null;
       }
     });
-    const currentDuration = contentTimeBoundariesObserver.getCurrentDuration();
-    mediaSourceDurationUpdater.updateDuration(currentDuration.duration,
-                                              currentDuration.isEnd);
+    const endInfo = contentTimeBoundariesObserver.getCurrentEndingTime();
+    mediaSourceDurationUpdater.updateDuration(endInfo.endingPosition, endInfo.isEnd);
     return contentTimeBoundariesObserver;
   }
 
@@ -768,11 +792,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _createRebufferingController(
     playbackObserver : PlaybackObserver,
     manifest : Manifest,
+    segmentBuffersStore : SegmentBuffersStore,
     speed : IReadOnlySharedReference<number>,
     cancelSignal : CancellationSignal
   ) : RebufferingController {
     const rebufferingController = new RebufferingController(playbackObserver,
                                                             manifest,
+                                                            segmentBuffersStore,
                                                             speed);
     // Bubble-up events
     rebufferingController.addEventListener("stalled",
@@ -803,15 +829,11 @@ export interface IInitializeArguments {
     maxBufferAhead : IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
     maxBufferBehind : IReadOnlySharedReference<number>;
-    /** Strategy when switching the current bitrate manually (smooth vs reload). */
-    manualBitrateSwitchingMode : "seamless" | "direct";
     /**
      * Enable/Disable fastSwitching: allow to replace lower-quality segments by
      * higher-quality ones to have a faster transition.
      */
     enableFastSwitching : boolean;
-    /** Strategy when switching of audio track. */
-    audioTrackSwitchingMode : IAudioTrackSwitchingMode;
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch : "continue" | "reload";
   };
@@ -832,10 +854,14 @@ export interface IInitializeArguments {
      * `-1` indicates no timeout.
      */
     requestTimeout : number | undefined;
+    /**
+     * Amount of time, in milliseconds, after which a request that hasn't receive
+     * the headers and status code should be aborted and optionnaly retried,
+     * depending on the maxRetry configuration.
+     */
+    connectionTimeout : number | undefined;
     /** Maximum number of time a request on error will be retried. */
-    maxRetryRegular : number | undefined;
-    /** Maximum number of time a request be retried when the user is offline. */
-    maxRetryOffline : number | undefined;
+    maxRetry : number | undefined;
   };
   /** Emit the playback rate (speed) set by the user. */
   speed : IReadOnlySharedReference<number>;

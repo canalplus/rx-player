@@ -59,6 +59,7 @@ export default class CatchUpModeController {
         playerState === "PLAYING" ||
         playerState === "PAUSED" ||
         playerState === "BUFFERING" ||
+        playerState === "FREEZING" ||
         playerState === "SEEKING";
       if (!this._rxPlayer.isLive()) {
         // Catch-up is only authorized for live contents
@@ -69,19 +70,19 @@ export default class CatchUpModeController {
         this._state.updateBulk({ isCatchingUp: false, playbackRate: 1 });
       } else {
         const checkCatchUp = () => {
-          const maximumPosition = this._rxPlayer.getMaximumPosition();
-          if (maximumPosition === null) {
+          const livePos = this._rxPlayer.getLivePosition() ??
+                          this._rxPlayer.getMaximumPosition();
+          if (livePos === null) {
             this._rxPlayer.setPlaybackRate(1);
             this._state.updateBulk({ isCatchingUp: false, playbackRate: 1 });
             return;
           }
           const position = this._rxPlayer.getPosition();
-          const liveGap = maximumPosition - position;
+          const liveGap = livePos - position;
           if (liveGap >= CATCH_UP_SEEKING_STEP) {
             // If we're too far from the live to just change the playback rate,
             // seek directly close to live
-            this._rxPlayer
-              .seekTo(maximumPosition - LIVE_GAP_GOAL_WHEN_CATCHING_UP);
+            this._rxPlayer.seekTo(livePos - LIVE_GAP_GOAL_WHEN_CATCHING_UP);
             this._rxPlayer.setPlaybackRate(1);
             this._state.updateBulk({ isCatchingUp: false, playbackRate: 1 });
             return;

@@ -1,9 +1,14 @@
 import * as React from "react";
-import type { IRepresentation } from "../../../../src/public_types";
+import type {
+  IAudioRepresentation,
+  IVideoRepresentation,
+} from "../../../../src/public_types";
 import capitalizeFirstLetter from "../lib/capitalizeFirstLetter";
 import shuffleArray from "../lib/shuffleArray";
 import type { IBufferedData } from "../modules/player/index";
 import ToolTip from "./ToolTip";
+
+type IRepresentation = IAudioRepresentation | IVideoRepresentation;
 
 const {
   useEffect,
@@ -258,12 +263,14 @@ export default function BufferContentGraph({
 
         let newTipText = "";
         switch (adaptation.type) {
-          case "video":
-            newTipText += `width: ${representation.width ?? "?"}` + "\n" +
-                          `height: ${representation.height ?? "?"}` + "\n" +
+          case "video": {
+            const rep = representation as IVideoRepresentation;
+            newTipText += `width: ${rep.width ?? "?"}` + "\n" +
+                          `height: ${rep.height ?? "?"}` + "\n" +
                           `codec: ${representation.codec ?? "?"}` + "\n" +
                           `bitrate: ${representation.bitrate ?? "?"}` + "\n";
             break;
+          }
           case "audio":
             newTipText += `language: ${adaptation.language ?? "?"}` + "\n" +
                           `audioDescription: ${

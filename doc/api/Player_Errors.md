@@ -84,20 +84,11 @@ Among its properties, you have:
 
   This string can either be:
 
-  - `"TIMEOUT"`: The request timeouted.
+  - `"TIMEOUT"`: The request timed out.
   - `"ERROR_EVENT"`: The XMLHttpRequest has sent an error event
   - `"PARSE_ERROR"`: No data could have been extracted from this request
   - `"ERROR_HTTP_CODE"`: The request finished with a status code not in
     the 2xx range.
-
-- `xhr` (`XMLHttpRequest|undefined`): The xhr associated with the request.
-  Not defined if the current content has been launched in `lowLatencyMode`.
-
-<div class="warning">
-This last property is deprecated. It will disappear in the next major
-release, the `v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
-APIs</a>).
-</div>
 
 ### MEDIA_ERROR
 
@@ -108,7 +99,8 @@ parsing) or from the browser itself (content playback).
 They all have a `type` property equal to `"MEDIA_ERROR"`.
 
 Depending on its `code` property (listed below), a `MEDIA_ERROR` may also have
-a supplementary `trackInfo` property, describing the track related to the issue.
+a supplementary `tracksInfo` property, describing the track(s) related to the
+issue.
 The format of that property is decribed in the chapter below listed codes, and
 the codes for which it is set are indicated in the corresponding code's
 description below.
@@ -120,27 +112,27 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
 - `"BUFFER_APPEND_ERROR"`: A media segment could not have been added to the
   corresponding media buffer. This often happens with malformed segments.
 
-  For those errors, you may be able to know the characteristics of the track
-  linked to that segment by inspecting the error's `trackInfo` property,
+  For those errors, you may be able to know the characteristics of the track(s)
+  linked to that segment by inspecting the error's `tracksInfo` property,
   described below.
 
 - `"BUFFER_FULL_ERROR"`: The needed segment could not have been added
   because the corresponding media buffer was full.
 
-  For those errors, you may be able to know the characteristics of the track
-  linked to that segment by inspecting the error's `trackInfo` property,
+  For those errors, you may be able to know the characteristics of the track(s)
+  linked to that segment by inspecting the error's `tracksInfo` property,
   described below.
 
 - `"BUFFER_TYPE_UNKNOWN"`: The type of buffer considered (e.g. "audio" /
   "video" / "text") has no media buffer implementation in your build.
 
-- `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: An
-  [Adaptation](../Getting_Started/Glossary.md#adaptation) (or track) has none of its
-  [Representations](../Getting_Started/Glossary.md#representation) (read quality) in a supported
-  codec.
+- `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: One or multiple
+  [Adaptation](../Getting_Started/Glossary.md#adaptation) (or track) parsed from
+  the Manifest has none of its [Representations](../Getting_Started/Glossary.md#representation)
+  (read: quality) in a supported codec.
 
-  For those errors, you may be able to know the characteristics of the track
-  linked to that codec by inspecting the error's `trackInfo` property, described below.
+  For those errors, you may be able to know the characteristics of the track(s)
+  linked to that codec by inspecting the error's `tracksInfo` property, described below.
 
 - `"MANIFEST_PARSE_ERROR"`: Generic error to signal than the
   [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object) could not be parsed.
@@ -215,8 +207,8 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
   Representation has been blacklisted due to encryption limitations.
 
   For those errors, you may be able to know the characteristics of the
-  corresponding track by inspecting the error's `trackInfo` property, described
-  below.
+  corresponding track(s) by inspecting the error's `tracksInfo` property,
+  described below.
 
 - `"MANIFEST_UPDATE_ERROR"`: This error should never be emitted as it is
   handled internally by the RxPlayer. Please open an issue if you encounter
@@ -232,28 +224,37 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
   It is triggered when a time we initially thought to be in the bounds of the
   Manifest actually does not link to any "Period" of the Manifest.
 
-#### `trackInfo` property
+#### `tracksInfo` property
 
 As described in the corresponding code's documentation, A aupplementary
-`trackInfo` property may be set on `MEDIA_ERROR` depending on its `code`
+`tracksInfo` property may be set on `MEDIA_ERROR` depending on its `code`
 property.
 
-That `trackInfo` describes, when it makes sense, the characteristics of the track
-linked to an error. For example, you may want to know which video track led to a
+Note that even if the code may be linked to a `tracksInfo` property, that
+property may well also be unset.
+
+That `tracksInfo` describes, when it makes sense, the characteristics of the
+track(s) linked to an error.
+
+For example, you may want to know which video track led to a
 `BUFFER_APPEND_ERROR` and thus might be linked to corrupted segments.
 
-The `trackInfo` property has itself two sub-properties:
+The `tracksInfo` property is an array of objects, each describing a track for
+which that error applies (in many case, the error only applies to one track and
+thus there is only one object inside that array).
+
+Each object has two sub-properties:
 
   - `type`: The type of track: `"audio"` for an audio track, `"text"` for a text
     track, or `"video"` for a video track.
 
   - `track`: Characteristics of the track. Its format depends on the
-    `trackInfo`'s `type` property and is described below.
+    `type` property and is described below.
 
 ##### For video tracks
 
-When `trackInfo.type` is set to `"video"`, `track` describes a video track. It
-contains the following properties:
+When `tracksInfo[].type` is set to `"video"`, `track` describes a video track.
+It contains the following properties:
 
   - `id` (`string`): The id used to identify this track. No other
     video track for the same [Period](../Getting_Started/Glossary.md#period)
@@ -287,6 +288,15 @@ contains the following properties:
       characteristics of the track.
       (see [HDR support documentation](./Miscellaneous/hdr.md#hdrinfo))
 
+    - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+      Representation is supported by the current platform.
+
+      `undefined` (or not set) if support of that Representation is unknown or
+      if does not make sense here.
+
+    - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+       deciphered (in the eventuality it had DRM-related protection).
+
   - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is
     known to contain an interpretation in sign language.
     If set to `false`, the track is known to not contain that type of content.
@@ -309,8 +319,8 @@ contains the following properties:
 
 ##### For audio tracks
 
-When `trackInfo.type` is set to `"audio"`, `track` describes an audio track. It
-contains the following properties:
+When `tracksInfo[].type` is set to `"audio"`, `track` describes an audio track.
+It contains the following properties:
 
 - `id` (`Number|string`): The id used to identify this track. No other
   audio track for the same [Period](../Getting_Started/Glossary.md#period)
@@ -355,9 +365,20 @@ contains the following properties:
   - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
     has spatial audio.
 
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    `undefined` (or not set) if support of that Representation is unknown or
+    if does not make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+    deciphered (in the eventuality it had DRM-related protection).
+    If `false`, it cannot.
+    If `undefined` or not set, it is unknown if it can or cannot be deciphered.
+
 ##### For text tracks
 
-When `trackInfo.type` is set to `"text"`, `track` describes a text track. It
+When `tracksInfo[].type` is set to `"text"`, `track` describes a text track. It
 contains the following properties:
 
 - `id` (`string`): The id used to identify this track. No other
@@ -491,7 +512,7 @@ An error of `type` `OTHER_ERROR` can have the following codes (`code` property):
 
 - `"INTEGRITY_ERROR"`: An integrity-checking mechanism in the RxPlayer
   detected that there was an error with some loaded data. Such mechanism can
-  be triggered for example when the `checkMediaSegmentIntegrity`
-  `transportOptions` is set to `loadVideo`.
+  be triggered for example when the `checkMediaSegmentIntegrity` option
+  is set on the `loadVideo` call.
 
 - `"NONE"`: The error cannot be characterized.

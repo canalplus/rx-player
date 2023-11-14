@@ -41,8 +41,10 @@ Each of the objects in the returned array have the following properties:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in
+    bits per seconds.
+
+    `undefined` if unknown.
 
   - `codec` (`string|undefined`): The audio codec the Representation is
     in, as announced in the corresponding Manifest.
@@ -50,13 +52,34 @@ Each of the objects in the returned array have the following properties:
   - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
     has spatial audio.
 
-<div class="note">
-Note for multi-Period contents:
-<br>
-This method will only return the available tracks of the
-<a href="../../Getting_Started/Glossary.md#period">Period</a> that is currently
-playing.
-</div>
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    Note that because elements of the `representations` array only contains
+    playable Representation, this value here cannot be set to `false` when
+    in this array.
+
+    `undefined` (or not set) if support of that Representation is unknown or
+    if does not make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+     deciphered (in the eventuality it had DRM-related protection).
+
+    Note that because elements of the `representations` array only contains
+    playable Representation, this value here cannot be set to `false` when
+    in this array.
+
+You can also get the list of available audio tracks for a specific Period by
+calling `getAvailableAudioTracks` with the corresponding Period's id in
+argument.
+Such id can be obtained through the `getAvailablePeriods` method, the
+`newAvailablePeriods` event or the `periodChange` event.
+
+```js
+// example: getting the audio track list for the first Period
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getAvailableAudioTracks(periods[0].id);
+```
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -68,7 +91,18 @@ method will return an empty Array.
 ## Syntax
 
 ```js
+// Get list of available audio tracks for the currently-playing Period
 const audioTracks = player.getAvailableAudioTracks();
+
+// Get list of available audio tracks for a specific Period
+const audioTrack = player.getAvailableAudioTracks(periodId);
 ```
+
+ - **arguments**:
+
+   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+      to get the list of available audio tracks.
+      If not defined, this method will return the list of audio tracks for the
+      currently-playing Period.
 
  - **return value** `Array.<Object>`

@@ -16,7 +16,7 @@
 
 import wrapInPromise from "../../../utils/wrapInPromise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
-import isNode from "../../is_node";
+import globalScope from "../../global_scope";
 import { ICustomMediaKeys } from "./types";
 
 interface IMozMediaKeysConstructor {
@@ -25,20 +25,18 @@ interface IMozMediaKeysConstructor {
 }
 
 let MozMediaKeysConstructor: IMozMediaKeysConstructor|undefined;
-if (!isNode) {
-  const { MozMediaKeys } = (window as Window & {
-    MozMediaKeys? : IMozMediaKeysConstructor;
-  });
-  if (
-    MozMediaKeys !== undefined &&
-    MozMediaKeys.prototype !== undefined &&
-    typeof MozMediaKeys.isTypeSupported === "function" &&
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    typeof MozMediaKeys.prototype.createSession === "function"
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  ) {
-    MozMediaKeysConstructor = MozMediaKeys;
-  }
+const { MozMediaKeys } = (globalScope as typeof globalThis & {
+  MozMediaKeys? : IMozMediaKeysConstructor;
+});
+if (
+  MozMediaKeys !== undefined &&
+  MozMediaKeys.prototype !== undefined &&
+  typeof MozMediaKeys.isTypeSupported === "function" &&
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  typeof MozMediaKeys.prototype.createSession === "function"
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+) {
+  MozMediaKeysConstructor = MozMediaKeys;
 }
 export { MozMediaKeysConstructor };
 

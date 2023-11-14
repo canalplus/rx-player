@@ -36,12 +36,8 @@ export interface IStreamPlaybackObserverArguments {
   manifest : Manifest;
   /** Becomes `true` after the initial play has been taken care of. */
   initialPlayPerformed : IReadOnlySharedReference<boolean>;
-  /** Becomes `true` after the initial seek has been taken care of. */
-  initialSeekPerformed : IReadOnlySharedReference<boolean>;
   /** The last speed requested by the user. */
   speed : IReadOnlySharedReference<number>;
-  /** The time the player will seek when `initialSeekPerformed` becomes `true`. */
-  startTime : number;
 }
 
 /**
@@ -57,10 +53,8 @@ export default function createStreamPlaybackObserver(
   srcPlaybackObserver : PlaybackObserver,
   { autoPlay,
     initialPlayPerformed,
-    initialSeekPerformed,
     manifest,
-    speed,
-    startTime } : IStreamPlaybackObserverArguments,
+    speed } : IStreamPlaybackObserverArguments,
   fnCancelSignal : CancellationSignal
 ) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
   return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
@@ -87,10 +81,8 @@ export default function createStreamPlaybackObserver(
     function constructStreamPlaybackObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
-      let pendingPosition : number | undefined;
-      if (!initialSeekPerformed.getValue()) {
-        pendingPosition = startTime;
-      } else if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
+
+      if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
         // HACK: When the position is actually further than the maximum
         // position for a finished content, we actually want to be loading
         // the last segment before ending.
@@ -98,21 +90,28 @@ export default function createStreamPlaybackObserver(
         // want to seek one second before the period's end (despite never
         // doing it).
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (lastPeriod !== undefined &&
-            lastPeriod.end !== undefined &&
-            observation.position > lastPeriod.end)
-        {
-          pendingPosition = lastPeriod.end - 1;
+        if (lastPeriod !== undefined && lastPeriod.end !== undefined) {
+          const wantedPosition = observation.position.getWanted();
+          if (wantedPosition >= lastPeriod.start &&
+              wantedPosition >= lastPeriod.end - 1)
+          {
+            // We're after the end of the last Period, check if `buffered`
+            // indicates that the last segment is probably not loaded, in which
+            // case act as if we want to load one second before the end.
+            const buffered = observation.buffered;
+            if (buffered.length === 0 ||
+                buffered.end(buffered.length - 1) < observation.duration - 1)
+            {
+              observation.position.forceWantedPosition(lastPeriod.end - 1);
+            }
+          }
         }
       }
 
       return {
         // TODO more exact according to the current Adaptation chosen?
         maximumPosition: manifest.getMaximumSafePosition(),
-        position: {
-          last: observation.position,
-          pending: pendingPosition,
-        },
+        position: observation.position,
         duration: observation.duration,
         paused: {
           last: observation.paused,

@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+import parseBifThumbnails from "./parseBIFThumbnails";
 export * as StringUtils from "./string_utils";
 import TextTrackRenderer from "./TextTrackRenderer";
 
-export { TextTrackRenderer };
+export {
+  parseBifThumbnails,
+  TextTrackRenderer,
+};
