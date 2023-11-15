@@ -988,12 +988,6 @@ export function getLastRequestableSegmentInfo(
     const element = index.timeline[i];
     const endOfFirstOccurence = element.start + element.duration;
     if (fromIndexTime(endOfFirstOccurence, index) <= adjustedMaxSeconds) {
-      if (element.repeatCount <= 1) {
-        return { isLastOfTimeline: i === index.timeline.length - 1,
-                 timelineIdx: i,
-                 newRepeatCount: element.repeatCount,
-                 end: endOfFirstOccurence };
-      }
       const endTime = getIndexSegmentEnd(element, index.timeline[i + 1], scaledPeriodEnd);
       if (fromIndexTime(endTime, index) <= adjustedMaxSeconds) {
         return { isLastOfTimeline: i === index.timeline.length - 1,

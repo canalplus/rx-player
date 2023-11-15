@@ -44,18 +44,23 @@ export interface IInitialTimeOptions {
   /**
    * If set, we should begin at this position relative to the content's maximum
    * seekable position, in seconds.
+   *
+   * It should consequently in most cases be a negative value.
    */
   fromLastPosition? : number | null | undefined;
   /**
    * If set, we should begin at this position relative to the content's live
    * edge if it makes sense, in seconds.
    *
+   * It should consequently in most cases be a negative value.
+   *
    * If the live edge is unknown or if it does not make sense for the current
    * content, that position is relative to the content's maximum position
    * instead.
    */
   fromLivePosition? : number | null | undefined;
-  /** If set, we should begin at this position relative to the whole duration of
+  /**
+   * If set, we should begin at this position relative to the whole duration of
    * the content, in percentage.
    */
   percentage? : number | null | undefined;

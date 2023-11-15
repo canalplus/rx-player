@@ -388,8 +388,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const { timescale } = this._index;
     const segmentTimeRounding = getSegmentTimeRoundingError(timescale);
     const scaledPeriodStart = this._periodStart * timescale;
-    const scaledRelativeStart = start * timescale - scaledPeriodStart;
-    const scaledRelativeEnd = end * timescale - scaledPeriodStart;
+    const scaledRelativeStart = (start * timescale) - scaledPeriodStart;
+    const scaledRelativeEnd = (end * timescale) - scaledPeriodStart;
     const lastSegmentStart = this._getLastSegmentStart();
     if (isNullOrUndefined(lastSegmentStart)) {
       const relativeScaledIndexEnd = this._estimateRelativeScaledEnd();
@@ -567,8 +567,8 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       const liveEdge = this._manifestBoundsCalculator.getEstimatedLiveEdge();
       if (liveEdge !== undefined &&
           this._scaledRelativePeriodEnd !== undefined &&
-          this._scaledRelativePeriodEnd <
-            liveEdge - this._periodStart * this._index.timescale)
+          this._scaledRelativePeriodEnd < liveEdge - (this._periodStart *
+                                                      this._index.timescale))
       {
 
         let numberOfSegments = Math.ceil(this._scaledRelativePeriodEnd / duration);
@@ -577,16 +577,16 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         }
         return (numberOfSegments - 1)  * duration;
       }
-      const maxPosition = this._manifestBoundsCalculator
+      const lastPosition = this._manifestBoundsCalculator
         .getEstimatedMaximumPosition(this._availabilityTimeOffset ?? 0);
-      if (maxPosition === undefined) {
+      if (lastPosition === undefined) {
         return undefined;
       }
 
       // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      const scaledLastPosition = (maxPosition - this._periodStart) * timescale;
+      const scaledLastPosition = (lastPosition - this._periodStart) * timescale;
 
       // Maximum position is before this period.
       // No segment is yet available here

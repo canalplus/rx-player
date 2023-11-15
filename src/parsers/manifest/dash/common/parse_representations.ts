@@ -153,7 +153,7 @@ export default function parseRepresentations(
       representation.attributes.availabilityTimeComplete ??
       context.availabilityTimeComplete;
 
-    let availabilityTimeOffset;
+    let availabilityTimeOffset: number | undefined;
     if (
       representation.attributes.availabilityTimeOffset !== undefined ||
       context.availabilityTimeOffset !== undefined
