@@ -267,40 +267,32 @@ export type IStartAtOption =
     fromFirstPosition : number;
   };
 
+export interface RequestRetryParameters {
+  /**
+   * The amount of time maximum we should retry a request before failing on Error.
+   * Set to `Infinity` for an infinite number of requests.
+   */
+  maxRetry? : number | undefined;
+  /**
+   * Amount of time, in milliseconds, after which a request should be
+   * aborted and optionally retried, depending on the current configuration.
+   *
+   * Setting it to `-1` allows to disable any timeout.
+   * `undefined` means that a default, large, timeout will be used instead.
+   */
+  timeout? : number | undefined;
+}
+
 /** Value for the `requestConfig` option of the `loadVideo` method. */
 export interface IRequestConfig {
-  manifest? : {
-    /**
-     * The amount of time maximum we should retry a Manifest or Manifest-related
-     * request before failing on Error.
-     * Set to `Infinity` for an infinite number of requests.
-     */
-    maxRetry? : number | undefined;
-    /**
-     * Amount of time, in milliseconds, after which a manifest request should be
-     * aborted and optionally retried, depending on the current configuration.
-     *
-     * Setting it to `-1` allows to disable any timeout.
-     * `undefined` means that a default, large, timeout will be used instead.
-     */
-    timeout? : number | undefined;
-  } | undefined;
-  segment? : {
-    /**
-     * The amount of time maximum we should retry a segment or segment-related
-     * request before failing on Error.
-     * Set to `Infinity` for an infinite number of requests.
-     */
-    maxRetry? : number | undefined;
-    /**
-     * Amount of time, in milliseconds, after which a segment request should be
-     * aborted and optionally retried, depending on the current configuration.
-     *
-     * Setting it to `-1` allows to disable any timeout.
-     * `undefined` means that a default, large, timeout will be used instead.
-     */
-    timeout? : number | undefined;
-  } | undefined;
+  /**
+   * Defines the retry parameters when requesting manifest
+   */
+  manifest? : RequestRetryParameters | undefined;
+  /**
+   * Defines the retry parameters when requesting a segment
+   */
+  segment? : RequestRetryParameters | undefined;
 }
 
 export type ISegmentLoader = (
