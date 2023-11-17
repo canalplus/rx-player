@@ -1,7 +1,7 @@
 import { Representation } from "../../../manifest";
 import { IBufferedChunk } from "../../segment_buffers";
 
-const BUFFER_WIDTH_IN_SECONDS = 10000;
+const BUFFER_WIDTH_IN_SECONDS = 30 * 60;
 
 const COLORS = [
   "#2ab7ca",
@@ -96,8 +96,8 @@ export default class SegmentBufferGraph {
     let maximumPosition;
     if (maximumPoint - minimumPoint > BUFFER_WIDTH_IN_SECONDS) {
       if (currentTime === undefined) {
-        minimumPosition = minimumPoint;
         maximumPosition = maximumPoint;
+        minimumPosition = maximumPoint - BUFFER_WIDTH_IN_SECONDS;
       } else if (maximumPoint - currentTime < BUFFER_WIDTH_IN_SECONDS / 2) {
         maximumPosition = maximumPoint;
         minimumPosition = maximumPoint - BUFFER_WIDTH_IN_SECONDS;
