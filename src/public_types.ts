@@ -275,12 +275,18 @@ export interface RequestRetryParameters {
   maxRetry? : number | undefined;
   /**
    * Amount of time, in milliseconds, after which a request should be
-   * aborted and optionally retried, depending on the current configuration.
+   * aborted and optionally retried, depending on the maxRetry configuration.
    *
    * Setting it to `-1` allows to disable any timeout.
    * `undefined` means that a default, large, timeout will be used instead.
    */
   timeout? : number | undefined;
+  /**
+   * Amount of time, in milliseconds, after which a request that hasn't receive
+   * the headers and status code should be aborted and optionnaly retried,
+   * depending on the maxRetry configuration.
+   */
+  connectionTimeout?: number | undefined;
 }
 
 /** Value for the `requestConfig` option of the `loadVideo` method. */
