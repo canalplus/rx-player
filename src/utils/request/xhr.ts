@@ -120,7 +120,7 @@ export default function request<T>(
       deregisterCancellationListener = cancelSignal
         .register(function abortRequest(err : CancellationError) {
           clearCancellingProcess();
-          if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
+          if (!isNullOrUndefined(xhr) && xhr.readyState !== XMLHttpRequest.DONE) {
             xhr.abort();
           }
           reject(err);
@@ -154,7 +154,7 @@ export default function request<T>(
     }
 
     xhr.onload = function onXHRLoad(event : ProgressEvent) {
-      if (xhr.readyState === 4) {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
         clearCancellingProcess();
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = getMonotonicTimeStamp();
