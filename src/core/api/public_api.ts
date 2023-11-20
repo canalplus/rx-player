@@ -2429,9 +2429,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     const segmentBufferStatus = this._priv_contentInfos
       .segmentBuffersStore.getStatus(bufferType);
-    return segmentBufferStatus.type === "initialized" ?
-      segmentBufferStatus.value.getInventory() :
-      null;
+    if (segmentBufferStatus.type === "initialized") {
+      segmentBufferStatus.value.synchronizeInventory();
+      return segmentBufferStatus.value.getInventory();
+    }
+    return null;
   }
 
   /**
