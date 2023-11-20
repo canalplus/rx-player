@@ -53,6 +53,7 @@ function Player(): JSX.Element {
 
   const videoElementRef = useRef<HTMLVideoElement>(null);
   const textTrackElementRef = useRef<HTMLDivElement>(null);
+  const debugElementRef = useRef<HTMLDivElement>(null);
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
 
   const onOptionToggle = useCallback(() => {
@@ -143,7 +144,8 @@ function Player(): JSX.Element {
   const createNewPlayerModule = useCallback(() => {
     if (
       videoElementRef.current === null ||
-      textTrackElementRef.current === null
+      textTrackElementRef.current === null ||
+      debugElementRef.current === null
     ) {
       return;
     }
@@ -153,6 +155,7 @@ function Player(): JSX.Element {
         {
           videoElement: videoElementRef.current,
           textTrackElement: textTrackElementRef.current,
+          debugElement: debugElementRef.current,
         },
         playerOpts
       )
@@ -217,7 +220,7 @@ function Player(): JSX.Element {
     setPlayerOpts(cb);
   }, []);
 
-  const updateDefaultAudioRepresentationsSwitchingMode = React.useCallback(
+  const updateDefaultAudioRepresentationsSwitchingMode = useCallback(
     (mod: IAudioRepresentationsSwitchingMode) => {
       if (playerModule === null) {
         setDefaultAudioRepresentationsSwitchingMode(mod);
@@ -228,7 +231,7 @@ function Player(): JSX.Element {
     [playerModule]
   );
 
-  const updateDefaultVideoRepresentationsSwitchingMode = React.useCallback(
+  const updateDefaultVideoRepresentationsSwitchingMode = useCallback(
     (mod: IVideoRepresentationsSwitchingMode) => {
       if (playerModule === null) {
         setDefaultVideoRepresentationsSwitchingMode(mod);
@@ -297,6 +300,10 @@ function Player(): JSX.Element {
               <div
                 className="text-track"
                 ref={textTrackElementRef}
+              />
+              <div
+                className="debug-element"
+                ref={debugElementRef}
               />
               <video ref={videoElementRef} />
 
