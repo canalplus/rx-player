@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import hasWebassembly from "../../../../../compat/has_webassembly";
 import log from "../../../../../log";
 import { assertUnreachable } from "../../../../../utils/assert";
 import globalScope from "../../../../../utils/global_scope";
@@ -32,6 +31,7 @@ import type {
 } from "../../parsers_types";
 import { generateRootChildrenParser } from "./generators";
 import { generateXLinkChildrenParser } from "./generators/XLink";
+import nextem from "./nextem";
 import ParsersStack from "./parsers_stack";
 import type { AttributeName, TagName } from "./types";
 import { CustomEventType } from "./types";
@@ -132,7 +132,7 @@ export default class DashWasmParser {
     return this._initProm ?? Promise.reject("No initialization performed yet.");
   }
 
-  public async initialize(opts: IDashWasmParserOptions): Promise<void> {
+  public async initialize(_opts: IDashWasmParserOptions): Promise<void> {
     if (this.status !== "uninitialized") {
       return Promise.reject(new Error("DashWasmParser already initialized."));
     } else if (!this.isCompatible()) {
@@ -154,8 +154,6 @@ export default class DashWasmParser {
       env: {
         memoryBase: 0,
         tableBase: 0,
-        memory: new WebAssembly.Memory({ initial: 10 }),
-        table: new WebAssembly.Table({ initial: 1, element: "anyfunc" }),
         onTagOpen,
         onCustomEvent,
         onAttribute,
@@ -165,47 +163,17 @@ export default class DashWasmParser {
     };
 
     let objectUrl: string | null = null;
-    let fetchedWasm: Promise<Response>;
-    if (typeof opts.wasmUrl === "string") {
-      fetchedWasm = fetch(opts.wasmUrl);
-    } else {
-      objectUrl = URL.createObjectURL(
-        new Blob([opts.wasmUrl], { type: "application/wasm" }),
-      );
-      fetchedWasm = fetch(objectUrl);
-    }
-
-    const streamingProm =
-      typeof WebAssembly.instantiateStreaming === "function"
-        ? WebAssembly.instantiateStreaming(fetchedWasm, imports)
-        : Promise.reject("`WebAssembly.instantiateStreaming` API not available");
-
-    this._initProm = streamingProm
-      .catch(async (e) => {
-        if (objectUrl !== null) {
-          URL.revokeObjectURL(objectUrl);
-          objectUrl = null;
-        }
-        log.warn(
-          "Unable to call `instantiateStreaming` on WASM",
-          e instanceof Error ? e : "",
-        );
-        const res = await fetchedWasm;
-        if (res.status < 200 || res.status >= 300) {
-          throw new Error("WebAssembly request failed. status: " + String(res.status));
-        }
-        const resAb = await res.arrayBuffer();
-        return WebAssembly.instantiate(resAb, imports);
-      })
+    this._initProm = Promise.resolve(nextem(imports))
       .then((instanceWasm) => {
         if (objectUrl !== null) {
           URL.revokeObjectURL(objectUrl);
           objectUrl = null;
         }
-        this._instance = instanceWasm;
+        /* eslint-disable */
+        this._instance = { instance: { exports: instanceWasm } } as any;
 
         // TODO better types?
-        this._linearMemory = this._instance.instance.exports.memory as WebAssembly.Memory;
+        this._linearMemory = (this._instance as any).instance.exports.memory as WebAssembly.Memory;
 
         this.status = "initialized";
       })
@@ -327,8 +295,8 @@ export default class DashWasmParser {
    * for the `DashWasmParser`.
    * @returns {boolean}
    */
-  public isCompatible(): boolean {
-    return hasWebassembly && typeof globalScope.TextDecoder === "function";
+  public isCompatible() : boolean {
+    return typeof globalScope.TextDecoder === "function";
   }
 
   private _parseMpd(mpd: ArrayBuffer): [IMPDIntermediateRepresentation | null, Error[]] {

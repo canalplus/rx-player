@@ -28,8 +28,6 @@ import {
   getScreenResolutionRef,
 } from "../../compat/event_listeners";
 import getStartDate from "../../compat/get_start_date";
-import hasMseInWorker from "../../compat/has_mse_in_worker";
-import hasWebassembly from "../../compat/has_webassembly";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import type {
   IAdaptationChoice,
@@ -427,12 +425,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
         );
       }
-      if (!hasWebassembly) {
-        log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
-        return rej(
-          new WorkerInitializationError("INCOMPATIBLE_ERROR", "WebAssembly unavailable"),
-        );
-      }
       if (typeof workerSettings.workerUrl === "string") {
         this._priv_worker = new Worker(workerSettings.workerUrl);
       } else {
@@ -483,18 +475,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_worker.addEventListener("message", handleInitMessages);
 
       log.debug("---> Sending To Worker:", MainThreadMessageType.Init);
-      this._priv_worker.postMessage({
-        type: MainThreadMessageType.Init,
-        value: {
-          dashWasmUrl: workerSettings.dashWasmUrl,
-          logLevel: log.getLevel(),
-          sendBackLogs: isDebugModeEnabled(),
-          date: Date.now(),
-          timestamp: getMonotonicTimeStamp(),
-          hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
-          hasMseInWorker,
-        },
-      });
       log.addEventListener(
         "onLogLevelChange",
         (logLevel) => {
