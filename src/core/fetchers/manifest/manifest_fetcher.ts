@@ -29,7 +29,6 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller from "../../../utils/task_canceller";
@@ -231,7 +230,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     ) : Promise<IRequestedData<ILoadedManifestFormat>> {
       const { loadManifest } = pipelines;
       let requestTimeout : number | undefined =
-        isNullOrUndefined(settings.requestTimeout) ?
+        (settings.requestTimeout === undefined) ?
           config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
           settings.requestTimeout;
 

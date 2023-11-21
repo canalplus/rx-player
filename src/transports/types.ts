@@ -223,6 +223,12 @@ export interface ISegmentLoaderOptions {
    * `undefined` means that no timeout will be enforced.
    */
   timeout? : number | undefined;
+  /**
+   * Connection timeout, in milliseconds, after which the request is canceled
+   * if the responses headers has not being received.
+   * Do not set or set to "undefined" to disable it.
+   */
+  connectionTimeout? : number | undefined;
 }
 
 /**
