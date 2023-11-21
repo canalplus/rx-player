@@ -54,6 +54,7 @@ function shouldRetry(error : unknown) : boolean {
              error.status === 412;
     }
     return error.type === NetworkErrorTypes.TIMEOUT ||
+           error.type === NetworkErrorTypes.CONNECTION_TIMEOUT ||
            error.type === NetworkErrorTypes.ERROR_EVENT;
   } else if (error instanceof CustomLoaderError) {
     if (typeof error.canRetry === "boolean") {
