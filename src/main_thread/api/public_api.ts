@@ -796,12 +796,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           isNullOrUndefined(options[option]),
         ) &&
         typeof options.representationFilter !== "function";
-      console.warn("MULTITHREAD", features.multithread !== null,
+      console.warn("22 MULTITHREAD", features.multithread !== null,
                    "WORKER", this._priv_worker !== null,
                    "OPTIONS manloa", isNullOrUndefined(options.manifestLoader),
                    "OPTIONS segLoa", isNullOrUndefined(options.segmentLoader),
                    "repfilt", typeof options.representationFilter !== "function");
       if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
+        console.warn("RUNNING AS MAIN", mode, canRunInMultiThread);
         if (features.mainThreadMediaSourceInit === null) {
           throw new Error(
             "Cannot load video, neither in a WebWorker nor with the " +
@@ -848,6 +849,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           url,
         });
       } else {
+        console.warn("RUNNING AS MULTITHREAD");
         if (features.multithread === null) {
           throw new Error(
             "Cannot load video in multithread mode: `MULTI_THREAD` " +
