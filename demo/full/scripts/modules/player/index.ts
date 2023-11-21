@@ -204,12 +204,16 @@ const PlayerModule = declareModule(
     videoThumbnailLoader: null,
   }),
   (
-    initOpts: IConstructorOptions & { textTrackElement? : HTMLElement },
+    initOpts: IConstructorOptions & {
+      textTrackElement? : HTMLElement,
+      debugElement : HTMLElement,
+    },
     state,
     abortSignal
   ) => {
-    const { textTrackElement, ...constructorOpts } = initOpts;
+    const { debugElement, textTrackElement, ...constructorOpts } = initOpts;
     const player = new RxPlayer(constructorOpts);
+    let debugEltInstance : { dispose(): void } | undefined;
 
     // facilitate DEV mode
     /* eslint-disable */
@@ -223,6 +227,9 @@ const PlayerModule = declareModule(
     // dispose of the RxPlayer when destroyed
     abortSignal.addEventListener("abort", () => {
       player.dispose();
+      if (debugEltInstance !== undefined) {
+        debugEltInstance.dispose();
+      }
     });
 
     return {
@@ -389,6 +396,22 @@ const PlayerModule = declareModule(
       disableLiveCatchUp() {
         catchUpModeController.stopCatchUp();
       },
+
+      showDebugElement() {
+        if (debugEltInstance !== undefined) {
+          debugEltInstance.dispose();
+        }
+        debugEltInstance = player.createDebugElement(debugElement);
+      },
+      hideDebugElement() {
+        if (debugEltInstance !== undefined) {
+          debugEltInstance.dispose();
+          debugEltInstance = undefined;
+        }
+      },
+      isDebugElementShown() {
+        return debugEltInstance !== undefined;
+      }
     };
 
     function dettachVideoThumbnailLoader() {
