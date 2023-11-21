@@ -797,7 +797,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         ) &&
         typeof options.representationFilter !== "function";
       console.warn("MULTITHREAD", features.multithread !== null,
-                   "WORKER", this._priv_initializeContentPlayback !== null,
+                   "WORKER", this._priv_worker !== null,
                    "OPTIONS manloa", isNullOrUndefined(options.manifestLoader),
                    "OPTIONS segLoa", isNullOrUndefined(options.segmentLoader),
                    "repfilt", typeof options.representationFilter !== "function");
