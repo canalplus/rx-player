@@ -796,6 +796,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           isNullOrUndefined(options[option]),
         ) &&
         typeof options.representationFilter !== "function";
+      console.warn("MULTITHREAD", features.multithread !== null,
+                   "WORKER", this._priv_initializeContentPlayback !== null,
+                   "OPTIONS manloa", isNullOrUndefined(options.manifestLoader),
+                   "OPTIONS segLoa", isNullOrUndefined(options.segmentLoader),
+                   "repfilt", typeof options.representationFilter !== "function");
       if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
         if (features.mainThreadMediaSourceInit === null) {
           throw new Error(
