@@ -95,10 +95,7 @@ export default class SegmentBufferGraph {
     let minimumPosition;
     let maximumPosition;
     if (maximumPoint - minimumPoint > BUFFER_WIDTH_IN_SECONDS) {
-      if (currentTime === undefined) {
-        maximumPosition = maximumPoint;
-        minimumPosition = maximumPoint - BUFFER_WIDTH_IN_SECONDS;
-      } else if (maximumPoint - currentTime < BUFFER_WIDTH_IN_SECONDS / 2) {
+      if (maximumPoint - currentTime < BUFFER_WIDTH_IN_SECONDS / 2) {
         maximumPosition = maximumPoint;
         minimumPosition = maximumPoint - BUFFER_WIDTH_IN_SECONDS;
       } else if (currentTime - minimumPoint < BUFFER_WIDTH_IN_SECONDS / 2) {
