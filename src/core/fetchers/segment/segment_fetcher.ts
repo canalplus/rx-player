@@ -93,6 +93,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   const requestOptions = {
     timeout: options.requestTimeout < 0 ? undefined :
                                           options.requestTimeout,
+    connectionTimeout: options.connectionTimeout === undefined ? undefined :
+                  options.connectionTimeout < 0 ? undefined : options.connectionTimeout,
   };
 
   /**

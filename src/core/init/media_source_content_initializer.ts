@@ -835,6 +835,12 @@ export interface IInitializeArguments {
      * `-1` indicates no timeout.
      */
     requestTimeout : number | undefined;
+    /**
+     * Amount of time, in milliseconds, after which a request that hasn't receive
+     * the headers and status code should be aborted and optionnaly retried,
+     * depending on the maxRetry configuration.
+     */
+    connectionTimeout : number | undefined;
     /** Maximum number of time a request on error will be retried. */
     maxRetry : number | undefined;
   };

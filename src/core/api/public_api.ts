@@ -611,7 +611,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                         maxRetry : requestConfig.manifest?.maxRetry,
                                         requestTimeout:  requestConfig.manifest?.timeout,
                                         connectionTimeout:
-                                          requestConfig?.manifest?.connectionTimeout,
+                                          requestConfig.manifest?.connectionTimeout,
                                         minimumManifestUpdateInterval,
                                         initialManifest };
 
@@ -672,7 +672,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
                                       requestTimeout: requestConfig.segment?.timeout,
                                       connectionTimeout:
                                         requestConfig.segment?.connectionTimeout };
-
       initializer = new features.mediaSourceInit({
         adaptiveOptions,
         autoPlay,

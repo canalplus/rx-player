@@ -124,4 +124,5 @@ export interface ISegmentFetcherCreatorBackoffOptions {
    * `undefined` will lead to a default, large, timeout being used.
    */
   requestTimeout : number | undefined;
+  connectionTimeout : number | undefined;
 }
