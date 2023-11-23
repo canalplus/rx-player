@@ -157,23 +157,28 @@ export default function constructDebugGeneralInfo(
         ]);
         adaptationsElt.appendChild(textAdaps);
       }
-      const videoBitrates = instance.getVideoTrack()?.representations.map(r => {
-        return r.bitrate;
-      }).filter(bitrate => bitrate !== undefined) ?? [];
-      const audioBitrates = instance.getAudioTrack()?.representations.map(r => {
-        return r.bitrate;
-      }).filter(bitrate => bitrate !== undefined) ?? [];
+      const adaptations = instance.__priv_getCurrentAdaptation();
+      const videoBitratesStr = adaptations?.video?.representations.map((r) => {
+        return String(r.bitrate ?? "N/A") +
+               (r.isSupported ? "" : " U!") +
+               (r.decipherable === false ? "" : " E!");
+      }) ?? [];
+      const audioBitratesStr = adaptations?.video?.representations.map((r) => {
+        return String(r.bitrate ?? "N/A") +
+               (r.isSupported ? "" : " U!") +
+               (r.decipherable === false ? "" : " E!");
+      }) ?? [];
       representationsElt.innerHTML = "";
-      if (videoBitrates.length > 0) {
+      if (videoBitratesStr.length > 0) {
         representationsElt.appendChild(createMetricTitle("vb"));
         representationsElt.appendChild(createElement("span", {
-          textContent: videoBitrates.join(" ") + " ",
+          textContent: videoBitratesStr.join(" ") + " ",
         }));
       }
-      if (audioBitrates.length > 0) {
+      if (audioBitratesStr.length > 0) {
         representationsElt.appendChild(createMetricTitle("ab"));
         representationsElt.appendChild(createElement("span", {
-          textContent: audioBitrates.join(" ") + " ",
+          textContent: audioBitratesStr.join(" ") + " ",
         }));
       }
     } else {

@@ -98,8 +98,20 @@ reflect exactly what's going on at a particular point in time.
     - **vt**: _Video tracks_. List of the video tracks' `id` property. The line begins with a number indicating the number of available video tracks, followed by `:`, followed by each video track's id separated by a space. The current video track is prepended by a `*` character.
     - **at**: _Audio tracks_. List of the audio tracks' `id` property. The line begins with a number indicating the number of available audio tracks, followed by `:`, followed by each audio track's id separated by a space. The current audio track is prepended by a `*` character.
     - **tt**: _Text tracks_. List of the text tracks' `id` property. The line begins with a number indicating the number of available text tracks, followed by `:`, followed by each text track's id separated by a space. The current text track is prepended by a `*` character.
-    - **vb**: _Video Bitrates_. The available video bitrates in the current video track, separated by a space.
-    - **ab**: _Audio Bitrates_. The available audio bitrates in the current audio track, separated by a space.
+    - **vb**: _Video Bitrates_. The available video bitrates in the current
+      video track, separated by a space.
+      Each bitrate value can optionally be followed by an "`U!`", in which case
+      the codec of the corresponding Representation is unsupported, and/or be
+      followed by an "`E!`", in which case it is undecipherable currently.
+      In both of those cases the corresponding video Representation won't be
+      played by the RxPlayer.
+    - **ab**: _Audio Bitrates_. The available audio bitrates in the current
+      audio track, separated by a space.
+      Each bitrate value can optionally be followed by an "`U!`", in which case
+      the codec of the corresponding Representation is unsupported, and/or be
+      followed by an "`E!`", in which case it is undecipherable currently.
+      In both of those cases the corresponding audio Representation won't be
+      played by the RxPlayer.
 
   - Buffer information
     - **vbuf**: _Graphical representation of the video buffer_. The red rectangle indicates the current position, the different colors indicate different video qualities in the buffer.
