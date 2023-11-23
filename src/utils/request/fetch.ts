@@ -258,7 +258,7 @@ export default function fetchRequest(
       throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
     } else if (isConnectionTimedOut) {
       log.warn("Fetch: Request connection timed out.");
-      throw new RequestError(options.url, 0, NetworkErrorTypes.CONNECTION_TIMEOUT);
+      throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
     } else if (err instanceof RequestError) {
       throw err;
     }

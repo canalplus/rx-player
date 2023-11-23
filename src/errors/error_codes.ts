@@ -70,7 +70,6 @@ export type IErrorCode = INetworkErrorCode |
                          IOtherErrorCode;
 
 export type INetworkErrorType = "TIMEOUT" |
-                                "CONNECTION_TIMEOUT" |
                                 "ERROR_EVENT" |
                                 "PARSE_ERROR" |
                                 "ERROR_HTTP_CODE";
@@ -84,7 +83,6 @@ const ErrorTypes = {
 
 const NetworkErrorTypes : Record<INetworkErrorType, INetworkErrorType> = {
   TIMEOUT: "TIMEOUT",
-  CONNECTION_TIMEOUT : "CONNECTION_TIMEOUT",
   ERROR_EVENT: "ERROR_EVENT",
   ERROR_HTTP_CODE: "ERROR_HTTP_CODE",
   PARSE_ERROR: "PARSE_ERROR",

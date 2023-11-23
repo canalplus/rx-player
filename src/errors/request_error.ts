@@ -55,9 +55,6 @@ export default class RequestError extends Error {
       case "TIMEOUT":
         this.message = "The request timed out";
         break;
-      case "CONNECTION_TIMEOUT":
-        this.message = "The request connection timed out";
-        break;
       case "ERROR_EVENT":
         this.message = "An error prevented the request to be performed successfully";
         break;
