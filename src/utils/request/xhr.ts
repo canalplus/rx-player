@@ -68,7 +68,7 @@ export default function request<T>(
     url: options.url,
     headers: options.headers,
     responseType: isNullOrUndefined(options.responseType) ? DEFAULT_RESPONSE_TYPE :
-                                                              options.responseType,
+                                                            options.responseType,
     timeout: options.timeout,
     connectionTimeout: options.connectionTimeout,
   };
@@ -132,7 +132,7 @@ export default function request<T>(
       deregisterCancellationListener = cancelSignal
         .register(function abortRequest(err : CancellationError) {
           clearCancellingProcess();
-          if (!isNullOrUndefined(xhr) && xhr.readyState !== XMLHttpRequest.DONE) {
+          if (xhr.readyState !== XMLHttpRequest.DONE) {
             xhr.abort();
           }
           reject(err);
