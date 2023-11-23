@@ -104,7 +104,7 @@ export default function request<T>(
     if (connectionTimeout !== undefined) {
       connectionTimeoutId = setTimeout(() => {
         clearCancellingProcess();
-        if (!isNullOrUndefined(xhr) && xhr.readyState !== XMLHttpRequest.DONE) {
+        if (xhr.readyState !== XMLHttpRequest.DONE) {
           xhr.abort();
         }
         reject(new RequestError(url, xhr.status, NetworkErrorTypes.CONNECTION_TIMEOUT));

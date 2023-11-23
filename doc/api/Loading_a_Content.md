@@ -320,6 +320,9 @@ This object can take the following properties (all are optional):
       that the client can wait for receiving the responses headers and status code.
       If they are not received within the specified timeout, segment requests are aborted and,
       depending on other options, retried.
+      It differs from `timeout` option as `connectionTimeout` will not time out if the download
+      of the response body took too long.
+      The `connectionTimeout` should be lower than `timeout`
 
       To set to `-1` for no timeout.
 
@@ -353,6 +356,9 @@ This object can take the following properties (all are optional):
       that the client can wait for receiving the responses headers and status code.
       If they are not received within the specified timeout, manifest requests are aborted and,
       depending on other options, retried.
+      It differs from `timeout` option as `connectionTimeout` will not time out if the download
+      of the response body took too long.
+      The `connectionTimeout` should be lower than `timeout`
 
       To set to `-1` for no timeout.
 
