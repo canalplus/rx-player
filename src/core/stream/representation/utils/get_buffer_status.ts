@@ -23,6 +23,7 @@ import Manifest, {
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import SegmentBuffersStore, {
+  ChunkStatus,
   IBufferedChunk,
   IEndOfSegmentOperation,
   SegmentBuffer,
@@ -299,7 +300,7 @@ function getPlayableBufferedSegments(
     const eltInventory = segmentInventory[i];
 
     const { representation } = eltInventory.infos;
-    if (!eltInventory.partiallyPushed &&
+    if (eltInventory.status === ChunkStatus.Complete &&
         representation.decipherable !== false &&
         representation.isSupported)
     {
