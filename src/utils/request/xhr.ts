@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { RequestError } from "../../errors";
+import { NetworkErrorTypes, RequestError } from "../../errors";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
 import getMonotonicTimeStamp from "../monotonic_timestamp";
@@ -30,14 +30,14 @@ const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
  * Perform an HTTP request, according to the options given.
  *
  * Several errors can be rejected. Namely:
- *   - RequestErrorTypes.TIMEOUT_ERROR: the request timeouted (took too long to
- *     respond).
- *   - RequestErrorTypes.PARSE_ERROR: the browser APIs used to parse the
+ *   - NetworkErrorTypes.TIMEOUT: the request timed out (took too long)
+ *
+ *   - NetworkErrorTypes.PARSE_ERROR: the browser APIs used to parse the
  *                                    data failed.
- *   - RequestErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
+ *   - NetworkErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
  *                                        was not in the 200-299 (included)
  *                                        range.
- *   - RequestErrorTypes.ERROR_EVENT: The XHR had an error event before the
+ *   - NetworkErrorTypes.ERROR_EVENT: The XHR had an error event before the
  *                                    response could be fetched.
  * @param {Object} options
  * @returns {Promise.<Object>}
@@ -70,6 +70,7 @@ export default function request<T>(
     responseType: isNullOrUndefined(options.responseType) ? DEFAULT_RESPONSE_TYPE :
                                                             options.responseType,
     timeout: options.timeout,
+    connectionTimeout: options.connectionTimeout,
   };
 
   return new Promise((resolve, reject) => {
@@ -77,7 +78,8 @@ export default function request<T>(
     const { url,
             headers,
             responseType,
-            timeout } = requestOptions;
+            timeout,
+            connectionTimeout } = requestOptions;
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
@@ -93,8 +95,18 @@ export default function request<T>(
       // is more precise, it might also be more efficient.
       timeoutId = setTimeout(() => {
         clearCancellingProcess();
-        reject(new RequestError(url, xhr.status, "TIMEOUT"));
+        reject(new RequestError(url, xhr.status, NetworkErrorTypes.TIMEOUT));
       }, timeout + 3000);
+    }
+    let connectionTimeoutId: undefined | number;
+    if (connectionTimeout !== undefined) {
+      connectionTimeoutId = setTimeout(() => {
+        clearCancellingProcess();
+        if (xhr.readyState !== XMLHttpRequest.DONE) {
+          xhr.abort();
+        }
+        reject(new RequestError(url, xhr.status, NetworkErrorTypes.TIMEOUT));
+      }, connectionTimeout);
     }
 
     xhr.responseType = responseType;
@@ -120,7 +132,7 @@ export default function request<T>(
       deregisterCancellationListener = cancelSignal
         .register(function abortRequest(err : CancellationError) {
           clearCancellingProcess();
-          if (!isNullOrUndefined(xhr) && xhr.readyState !== 4) {
+          if (xhr.readyState !== XMLHttpRequest.DONE) {
             xhr.abort();
           }
           reject(err);
@@ -133,13 +145,22 @@ export default function request<T>(
 
     xhr.onerror = function onXHRError() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, "ERROR_EVENT"));
+      reject(new RequestError(url, xhr.status, NetworkErrorTypes.ERROR_EVENT));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, "TIMEOUT"));
+      reject(new RequestError(url, xhr.status, NetworkErrorTypes.TIMEOUT));
     };
+
+
+    if (connectionTimeout !== undefined) {
+      xhr.onreadystatechange = function clearConnectionTimeout() {
+        if (xhr.readyState >= XMLHttpRequest.HEADERS_RECEIVED) {
+          clearTimeout(connectionTimeoutId);
+        }
+      };
+    }
 
     if (onProgress !== undefined) {
       xhr.onprogress = function onXHRProgress(event) {
@@ -154,7 +175,7 @@ export default function request<T>(
     }
 
     xhr.onload = function onXHRLoad(event : ProgressEvent) {
-      if (xhr.readyState === 4) {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
         clearCancellingProcess();
         if (xhr.status >= 200 && xhr.status < 300) {
           const receivedTime = getMonotonicTimeStamp();
@@ -179,7 +200,7 @@ export default function request<T>(
           }
 
           if (isNullOrUndefined(responseData)) {
-            reject(new RequestError(url, xhr.status, "PARSE_ERROR"));
+            reject(new RequestError(url, xhr.status, NetworkErrorTypes.PARSE_ERROR));
             return;
           }
 
@@ -193,7 +214,7 @@ export default function request<T>(
                     responseData });
 
         } else {
-          reject(new RequestError(url, xhr.status, "ERROR_HTTP_CODE"));
+          reject(new RequestError(url, xhr.status, NetworkErrorTypes.ERROR_HTTP_CODE));
         }
       }
     };
@@ -206,6 +227,10 @@ export default function request<T>(
     function clearCancellingProcess() {
       if (timeoutId !== undefined) {
         clearTimeout(timeoutId);
+      }
+
+      if (connectionTimeoutId !== undefined) {
+        clearTimeout(connectionTimeoutId);
       }
       if (deregisterCancellationListener !== null) {
         deregisterCancellationListener();
@@ -241,6 +266,12 @@ export interface IRequestOptions<ResponseType> {
    * To not set or to set to `undefined` for disable.
    */
   timeout? : number | undefined;
+  /**
+   * Optional connection timeout, in milliseconds, after which the request is canceled
+   * if the responses headers has not being received.
+   * Do not set or set to "undefined" to disable it.
+   */
+  connectionTimeout? : number | undefined;
   /**
    * "Cancelation token" used to be able to cancel the request.
    * When this token is "cancelled", the request will be aborted and the Promise

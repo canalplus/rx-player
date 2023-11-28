@@ -84,7 +84,7 @@ Among its properties, you have:
 
   This string can either be:
 
-  - `"TIMEOUT"`: The request timeouted.
+  - `"TIMEOUT"`: The request timed out.
   - `"ERROR_EVENT"`: The XMLHttpRequest has sent an error event
   - `"PARSE_ERROR"`: No data could have been extracted from this request
   - `"ERROR_HTTP_CODE"`: The request finished with a status code not in
