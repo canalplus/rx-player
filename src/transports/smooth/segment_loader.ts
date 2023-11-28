@@ -65,6 +65,7 @@ function regularSegmentLoader(
                    responseType: "arraybuffer",
                    headers,
                    timeout: loaderOptions.timeout,
+                   connectionTimeout: loaderOptions.connectionTimeout,
                    cancelSignal,
                    onProgress: callbacks.onProgress })
     .then((data) => {
