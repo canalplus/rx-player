@@ -316,8 +316,23 @@ This object can take the following properties (all are optional):
 
       Defaults to `4`.
 
-    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
-      segment requests are aborted and, depending on other options, retried.
+    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+      that the client can wait for downloading all the data of the request response.
+      If all data are not downloaded within the specified timeout, segment request are
+      aborted and, depending on other options, retried.
+
+      To set to `-1` for no timeout.
+
+      `undefined` (the default) will lead to a default, large, timeout being
+      used.
+
+    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+      that the client can wait for receiving the responses headers and status code.
+      If they are not received within the specified timeout, segment requests are aborted and,
+      depending on other options, retried.
+      It differs from `timeout` option as `connectionTimeout` will not time out if the download
+      of the response body took too long.
+      The `connectionTimeout` should be lower than `timeout`
 
       To set to `-1` for no timeout.
 
@@ -337,12 +352,28 @@ This object can take the following properties (all are optional):
 
       Defaults to `4`.
 
-    - `timeout` (`number|undefined`): Timeout, in milliseconds, after which
-      manifest requests are aborted and, depending on other options, retried.
+    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+      that the client can wait for downloading all the data of the request response.
+      If all data are not downloaded within the specified timeout, manifest requests are
+      aborted and, depending on other options, retried.
 
       To set to `-1` for no timeout.
 
-      `undefined` (the default) will lead to a default, large, timeout being used.
+      `undefined` (the default) will lead to a default, large, timeout being
+      used.
+
+    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+      that the client can wait for receiving the responses headers and status code.
+      If they are not received within the specified timeout, manifest requests are aborted and,
+      depending on other options, retried.
+      It differs from `timeout` option as `connectionTimeout` will not time out if the download
+      of the response body took too long.
+      The `connectionTimeout` should be lower than `timeout`
+
+      To set to `-1` for no timeout.
+
+      `undefined` (the default) will lead to a default, large, timeout being
+      used.
 
 [1] To retry a request, one of the following condition should be met:
 

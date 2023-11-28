@@ -177,7 +177,9 @@ export default class VideoThumbnailLoader {
         { baseDelay: 0,
           maxDelay: 0,
           maxRetry: 0,
-          requestTimeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT }
+          requestTimeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+          connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
+        }
       ) as ISegmentFetcher<ArrayBuffer | Uint8Array>;
       const initSegment = content.representation.index.getInitSegment();
       const initSegmentUniqueId = initSegment !== null ?

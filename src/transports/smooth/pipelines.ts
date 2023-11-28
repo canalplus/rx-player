@@ -203,6 +203,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
         return request({ url,
                          responseType: "text",
                          timeout: loaderOptions.timeout,
+                         connectionTimeout: loaderOptions.connectionTimeout,
                          cancelSignal,
                          onProgress: callbacks.onProgress })
           .then((data) => ({ resultType: "segment-loaded" as const,
@@ -211,6 +212,7 @@ export default function(transportOptions : ITransportOptions) : ITransportPipeli
         return request({ url,
                          responseType: "arraybuffer",
                          timeout: loaderOptions.timeout,
+                         connectionTimeout: loaderOptions.connectionTimeout,
                          cancelSignal,
                          onProgress: callbacks.onProgress })
           .then((data) => {

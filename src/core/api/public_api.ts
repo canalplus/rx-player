@@ -610,6 +610,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const manifestRequestSettings = { lowLatencyMode,
                                         maxRetry : requestConfig.manifest?.maxRetry,
                                         requestTimeout:  requestConfig.manifest?.timeout,
+                                        connectionTimeout:
+                                          requestConfig.manifest?.connectionTimeout,
                                         minimumManifestUpdateInterval,
                                         initialManifest };
 
@@ -667,8 +669,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const segmentRequestOptions = { lowLatencyMode,
                                       maxRetry: requestConfig.segment?.maxRetry,
-                                      requestTimeout: requestConfig.segment?.timeout };
-
+                                      requestTimeout: requestConfig.segment?.timeout,
+                                      connectionTimeout:
+                                        requestConfig.segment?.connectionTimeout };
       initializer = new features.mediaSourceInit({
         adaptiveOptions,
         autoPlay,

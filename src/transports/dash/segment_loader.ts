@@ -84,6 +84,7 @@ export function regularSegmentLoader(
                      { Range: byteRange(segment.range) } :
                      undefined,
                    timeout: options.timeout,
+                   connectionTimeout: options.connectionTimeout,
                    cancelSignal,
                    onProgress: callbacks.onProgress })
     .then((data) => ({ resultType: "segment-loaded",
