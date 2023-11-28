@@ -57,16 +57,19 @@ function generateRegularManifestLoader(
         return request({ url,
                          responseType: "arraybuffer",
                          timeout: loaderOptions.timeout,
+                         connectionTimeout: loaderOptions.connectionTimeout,
                          cancelSignal });
       case "text":
         return request({ url,
                          responseType: "text",
                          timeout: loaderOptions.timeout,
+                         connectionTimeout: loaderOptions.connectionTimeout,
                          cancelSignal });
       case "document":
         return request({ url,
                          responseType: "document",
                          timeout: loaderOptions.timeout,
+                         connectionTimeout: loaderOptions.connectionTimeout,
                          cancelSignal });
       default:
         assertUnreachable(preferredType);

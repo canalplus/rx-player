@@ -99,6 +99,7 @@ export default function generateTextTrackLoader(
                          { Range: byteRange(range) } :
                          null,
                        timeout: options.timeout,
+                       connectionTimeout: options.connectionTimeout,
                        onProgress: callbacks.onProgress,
                        cancelSignal })
         .then((data) => ({ resultType: "segment-loaded",
@@ -111,6 +112,7 @@ export default function generateTextTrackLoader(
                        { Range: byteRange(range) } :
                        null,
                      timeout: options.timeout,
+                     connectionTimeout: options.connectionTimeout,
                      onProgress: callbacks.onProgress,
                      cancelSignal })
       .then((data) => ({ resultType: "segment-loaded",
