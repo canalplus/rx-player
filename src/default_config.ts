@@ -24,6 +24,11 @@ const DEFAULT_CONFIG = {
   DEFAULT_REQUEST_TIMEOUT: 30 * 1000,
 
     /**
+     * Default connection time after which a request will timeout, in ms.
+     * @type {Number}
+     */
+  DEFAULT_CONNECTION_TIMEOUT: 15 * 1000,
+    /**
      * Can be either:
      *   - "native": Subtitles are all displayed in a <track> element
      *   - "html": Subtitles are all displayed in a <div> separated from the video

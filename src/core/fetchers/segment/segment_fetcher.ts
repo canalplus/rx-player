@@ -93,6 +93,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   const requestOptions = {
     timeout: options.requestTimeout < 0 ? undefined :
                                           options.requestTimeout,
+    connectionTimeout: options.connectionTimeout === undefined ? undefined :
+                  options.connectionTimeout < 0 ? undefined : options.connectionTimeout,
   };
 
   /**
@@ -457,6 +459,12 @@ export interface ISegmentFetcherOptions {
    * To set to `-1` for no timeout.
    */
   requestTimeout : number;
+  /**
+   * Connection timeout, in milliseconds, after which the request is canceled
+   * if the responses headers has not being received.
+   * Do not set or set to "undefined" to disable it.
+   */
+  connectionTimeout: number | undefined;
 }
 
 /**
@@ -467,12 +475,15 @@ export interface ISegmentFetcherOptions {
 export function getSegmentFetcherOptions(
   { maxRetry,
     lowLatencyMode,
-    requestTimeout } : { maxRetry? : number | undefined;
-                         requestTimeout? : number | undefined;
-                         lowLatencyMode : boolean; }
+    requestTimeout,
+    connectionTimeout } : { maxRetry? : number | undefined;
+                            requestTimeout? : number | undefined;
+                            connectionTimeout? : number | undefined;
+                            lowLatencyMode : boolean; }
 ) : ISegmentFetcherOptions {
   const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
           DEFAULT_REQUEST_TIMEOUT,
+          DEFAULT_CONNECTION_TIMEOUT,
           INITIAL_BACKOFF_DELAY_BASE,
           MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
   return { maxRetry: maxRetry ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
@@ -480,6 +491,9 @@ export function getSegmentFetcherOptions(
                                        INITIAL_BACKOFF_DELAY_BASE.REGULAR,
            maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
                                       MAX_BACKOFF_DELAY_BASE.REGULAR,
-           requestTimeout: isNullOrUndefined(requestTimeout) ? DEFAULT_REQUEST_TIMEOUT :
-                                                               requestTimeout };
+           requestTimeout: (requestTimeout === undefined) ? DEFAULT_REQUEST_TIMEOUT :
+                                                            requestTimeout,
+           connectionTimeout: (connectionTimeout === undefined) ?
+              DEFAULT_CONNECTION_TIMEOUT : connectionTimeout,
+  };
 }
