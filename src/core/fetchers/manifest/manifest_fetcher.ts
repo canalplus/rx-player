@@ -29,7 +29,6 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller from "../../../utils/task_canceller";
@@ -231,14 +230,27 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     ) : Promise<IRequestedData<ILoadedManifestFormat>> {
       const { loadManifest } = pipelines;
       let requestTimeout : number | undefined =
-        isNullOrUndefined(settings.requestTimeout) ?
+        (settings.requestTimeout === undefined) ?
           config.getCurrent().DEFAULT_REQUEST_TIMEOUT :
           settings.requestTimeout;
+
+      let connectionTimeout: number | undefined =
+      (settings.connectionTimeout === undefined) ?
+        config.getCurrent().DEFAULT_CONNECTION_TIMEOUT :
+        settings.connectionTimeout;
+
       if (requestTimeout < 0) {
         requestTimeout = undefined;
       }
+
+      if (connectionTimeout < 0) {
+        connectionTimeout = undefined;
+      }
       const callLoader = () => loadManifest(manifestUrl,
-                                            { timeout: requestTimeout },
+                                            {
+                                              timeout: requestTimeout,
+                                              connectionTimeout,
+                                            },
                                             cancelSignal);
       return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
     }
@@ -722,6 +734,12 @@ export interface IManifestFetcherSettings {
    * `undefined` will lead to a default, large, timeout being used.
    */
   requestTimeout : number | undefined;
+  /**
+   * Connection timeout, in milliseconds, after which the request is canceled
+   * if the responses headers has not being received.
+   * Do not set or set to "undefined" to disable it.
+   */
+  connectionTimeout: number | undefined;
   /** Limit the frequency of Manifest updates. */
   minimumManifestUpdateInterval : number;
   /**

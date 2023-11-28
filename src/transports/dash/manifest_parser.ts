@@ -151,14 +151,20 @@ export default function generateManifestParser(
       const externalResources = value.urls.map(resourceUrl => {
         return scheduleRequest(() => {
           const defaultTimeout = config.getCurrent().DEFAULT_REQUEST_TIMEOUT;
+          const defaultConnectionTimeout = config.getCurrent().DEFAULT_CONNECTION_TIMEOUT;
+
           return value.format === "string" ? request({ url: resourceUrl,
                                                        responseType: "text",
                                                        timeout: defaultTimeout,
+                                                       connectionTimeout:
+                                                        defaultConnectionTimeout,
                                                        cancelSignal }) :
 
                                              request({ url: resourceUrl,
                                                        responseType: "arraybuffer",
                                                        timeout: defaultTimeout,
+                                                       connectionTimeout:
+                                                        defaultConnectionTimeout,
                                                        cancelSignal });
         }).then((res) => {
           if (value.format === "string") {

@@ -177,7 +177,10 @@ export default function(options : ITransportOptions): ITransportPipelines {
              * Whether a ManifestLoader's timeout should be relied on here
              * is ambiguous.
              */
-            const manOpts = { timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT };
+            const manOpts = {
+              timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
+              connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
+            };
             return transport.manifest.loadManifest(resource.url, manOpts, cancelSignal);
           }
         });
