@@ -130,11 +130,17 @@ properties, methods, events and so on.
     - [`requestConfig.segment.timeout`](../api/Loading_a_Content.md#requestconfig):
       Timeout after which segment requests are aborted.
 
+    - [`requestConfig.segment.connectionTimeout`](../api/Loading_a_Content.md#requestconfig):
+      Connection timeout after which segment requests are aborted.
+
     - [`requestConfig.manifest.maxRetry`](../api/Loading_a_Content.md#requestconfig):
       Maximum number of retries when a Manifest request fails.
 
     - [`requestConfig.manifest.timeout`](../api/Loading_a_Content.md#requestconfig):
       Timeout after which manifest requests are aborted.
+
+    - [`requestConfig.manifest.connectionTimeout`](../api/Loading_a_Content.md#requestconfig):
+      Connection timeout after which manifest requests are aborted.
 
   - [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode):
     The way in which the text tracks should be displayed.
