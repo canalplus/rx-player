@@ -30,8 +30,8 @@ const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
  * Perform an HTTP request, according to the options given.
  *
  * Several errors can be rejected. Namely:
- *   - NetworkErrorTypes.TIMEOUT: the request timed out (took too long to
- *                                  download all data).
+ *   - NetworkErrorTypes.TIMEOUT: the request timed out (took too long)
+ *
  *   - NetworkErrorTypes.PARSE_ERROR: the browser APIs used to parse the
  *                                    data failed.
  *   - NetworkErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
