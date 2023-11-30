@@ -107,8 +107,6 @@ export default class Adaptation implements IAdaptationMetadata {
   /**
    * @constructor
    * @param {Object} parsedAdaptation
-   * @param {Object} codecSupportProber - Interface allowing to probe for codec
-   * support.
    * @param {Object|undefined} [options]
    */
   constructor(
