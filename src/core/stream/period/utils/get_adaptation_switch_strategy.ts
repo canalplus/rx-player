@@ -28,6 +28,7 @@ import {
   isTimeInRanges,
   keepRangeIntersection,
 } from "../../../../utils/ranges";
+import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
@@ -35,6 +36,7 @@ import {
   SegmentBuffer,
 } from "../../../segment_buffers";
 import { ITrackSwitchingMode } from "../../adaptation";
+import { IPeriodStreamPlaybackObservation } from "../types";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */
@@ -63,7 +65,7 @@ export interface IAdaptationSwitchOptions {
  * @param {Object} segmentBuffer
  * @param {Object} period
  * @param {Object} adaptation
- * @param {Object} playbackInfo
+ * @param {Object} playbackObserver
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
@@ -71,7 +73,9 @@ export default function getAdaptationSwitchStrategy(
   period : Period,
   adaptation : Adaptation,
   switchingMode : ITrackSwitchingMode,
-  playbackInfo : { currentTime : number; readyState : number },
+  playbackObserver : IReadOnlyPlaybackObserver<
+    IPeriodStreamPlaybackObservation
+  >,
   options : IAdaptationSwitchOptions
 ) : IAdaptationSwitchStrategy {
   if (segmentBuffer.codec !== undefined &&
@@ -119,18 +123,20 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  const { currentTime } = playbackInfo;
-  if (switchingMode === "reload" &&
-      // We're playing the current Period
-      isTimeInRange({ start, end }, currentTime) &&
-      // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
-        .some(rep =>
-          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
-      // We're not playing the current wanted video Adaptation
-      !isTimeInRanges(adaptationInBuffer, currentTime))
-  {
-    return { type: "needs-reload", value: undefined };
+  const currentTime = playbackObserver.getCurrentTime2();
+  const readyState = playbackObserver.getReadyState();
+  if (switchingMode === "reload" && readyState > 1) {
+    const lastObservation = playbackObserver.getReference().getValue();
+    if (lastObservation.position.pending !== undefined) {
+      // We are not at the position we want to reach (e.g. initial seek, tizen
+      // seek-back...), just reload as checks here would be too complex
+      return { type: "needs-reload", value: undefined };
+    } else if (isTimeInRange({ start, end }, currentTime) &&
+               // We're not playing the current wanted video Adaptation
+               !isTimeInRanges(adaptationInBuffer, currentTime))
+    {
+      return { type: "needs-reload", value: undefined };
+    }
   }
 
   // From here, clean-up data from the previous Adaptation, if one
@@ -216,7 +222,7 @@ function hasCompatibleCodec(
 /**
  * Returns buffered ranges of what we know correspond to the given `adaptation`
  * in the SegmentBuffer.
- * @param {Object} segmentBuffer
+ * @param {Array.<Object>} inventory
  * @param {Object} period
  * @param {Object} adaptation
  * @returns {Array.<Object>}

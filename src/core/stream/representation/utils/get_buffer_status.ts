@@ -124,7 +124,7 @@ export default function getBufferStatus(
     getPlayableBufferedSegments({ start: Math.max(neededRange.start - 0.5, 0),
                                   end: neededRange.end + 0.5 },
                                 segmentBuffer.getInventory());
-  const currentPlaybackTime = playbackObserver.getCurrentTime();
+  const currentPlaybackTime = playbackObserver.getCurrentTime2();
 
   /** Callback allowing to retrieve a segment's history in the buffer. */
   const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
