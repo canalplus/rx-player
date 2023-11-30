@@ -54,7 +54,7 @@ export default function BufferGarbageCollector(
 ) : void {
   let lastPosition : number;
   playbackObserver.listen((o) => {
-    lastPosition = o.position.pending ?? o.position.last;
+    lastPosition = o.position.getWanted();
     clean();
   }, { includeLastObservation: true, clearSignal: cancellationSignal });
   function clean() {

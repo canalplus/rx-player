@@ -15,7 +15,6 @@
  */
 
 import { shouldValidateMetadata } from "../../../compat";
-import { READY_STATES } from "../../../compat/browser_compatibility_types";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
@@ -44,12 +43,6 @@ export interface IInitialSeekAndPlayObject {
   autoPlayResult : Promise<IInitialPlayEvent>;
 
   /**
-   * Shared reference whose value becomes `true` once the initial seek has
-   * been considered / has been done by `performInitialSeekAndPlay`.
-   */
-  initialSeekPerformed : IReadOnlySharedReference<boolean>;
-
-  /**
    * Shared reference whose value becomes `true` once the initial play has
    * been considered / has been done by `performInitialSeekAndPlay`.
    */
@@ -59,126 +52,164 @@ export interface IInitialSeekAndPlayObject {
 /**
  * Seek as soon as possible at the initially wanted position and play if
  * autoPlay is wanted.
- * @param {HTMLMediaElement} mediaElement
- * @param {Object} playbackObserver
- * @param {number|Function} startTime
- * @param {boolean} mustAutoPlay
- * @param {Function} onWarning
+ * @param {Object} args
  * @param {Object} cancelSignal
  * @returns {Object}
  */
 export default function performInitialSeekAndPlay(
-  mediaElement : HTMLMediaElement,
-  playbackObserver : PlaybackObserver,
-  startTime : number|(() => number),
-  mustAutoPlay : boolean,
-  onWarning : (err : IPlayerError) => void,
+  { mediaElement,
+    playbackObserver,
+    startTime,
+    mustAutoPlay,
+    isDirectfile,
+    onWarning }: { mediaElement : HTMLMediaElement;
+                   playbackObserver : PlaybackObserver;
+                   startTime : number|(() => number);
+                   mustAutoPlay : boolean;
+                   isDirectfile: boolean;
+                   onWarning : (err : IPlayerError) => void; },
   cancelSignal : CancellationSignal
 ) : IInitialSeekAndPlayObject {
-  let resolveAutoPlay : (x : IInitialPlayEvent) => void;
-  let rejectAutoPlay : (x : unknown) => void;
-  const autoPlayResult = new Promise<IInitialPlayEvent>((res, rej) => {
-    resolveAutoPlay = res;
-    rejectAutoPlay = rej;
-  });
-
-  const initialSeekPerformed = new SharedReference(false, cancelSignal);
   const initialPlayPerformed = new SharedReference(false, cancelSignal);
-
-  mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-
-  const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
-    mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
-    rejectAutoPlay(err);
-  });
-
-  if (mediaElement.readyState >= READY_STATES.HAVE_METADATA) {
-    onLoadedMetadata();
-  }
-
-  return { autoPlayResult, initialPlayPerformed, initialSeekPerformed };
-
-  function onLoadedMetadata() {
-    mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
-    const initialTime = typeof startTime === "function" ? startTime() :
-                                                          startTime;
-    log.info("Init: Set initial time", initialTime);
-    playbackObserver.setCurrentTime(initialTime);
-    initialSeekPerformed.setValue(true);
-    initialSeekPerformed.finish();
-
-    if (shouldValidateMetadata() && mediaElement.duration === 0) {
-      const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
-                                   "Cannot load automatically: your browser " +
-                                   "falsely announced having loaded the content.");
-      onWarning(error);
-    }
-    if (cancelSignal.isCancelled()) {
-      return ;
+  const autoPlayResult = new Promise<IInitialPlayEvent>((
+    resolveAutoPlay,
+    rejectAutoPlay
+  ) => {
+    // `startTime` defined as a function might depend on metadata to make its
+    // choice, such as the content duration, minimum and/or maximum position.
+    //
+    // The RxPlayer might already know those through the Manifest file for
+    // non-Directfile contents, yet only through the `HTMLMediaElement` once a
+    // a sufficient `readyState` has been reached for directfile contents.
+    // So let's divide the two possibilities here.
+    if (!isDirectfile || typeof startTime === "number") {
+      playbackObserver.setCurrentTime(
+        typeof startTime === "number" ? startTime : startTime()
+      );
+      waitForSeekable();
+    } else {
+      playbackObserver.listen((obs, stopListening) => {
+        if (obs.readyState >= 1) {
+          stopListening();
+          playbackObserver.setCurrentTime(
+            typeof startTime === "number" ? startTime : startTime()
+          );
+          waitForSeekable();
+        }
+      }, { includeLastObservation: true, clearSignal: cancelSignal });
     }
 
-    playbackObserver.listen((observation, stopListening) => {
-      if (observation.seeking !== SeekingState.None &&
-          observation.rebuffering === null &&
-          observation.readyState >= 1)
-      {
-        stopListening();
-        onPlayable();
-      }
-    }, { includeLastObservation: true, clearSignal: cancelSignal });
-  }
+    const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
+      rejectAutoPlay(err);
+    });
 
-  function onPlayable() {
-    log.info("Init: Can begin to play content");
-    if (!mustAutoPlay) {
-      if (mediaElement.autoplay) {
-        log.warn("Init: autoplay is enabled on HTML media element. " +
-                 "Media will play as soon as possible.");
-      }
-      initialPlayPerformed.setValue(true);
-      initialPlayPerformed.finish();
-      deregisterCancellation();
-      return resolveAutoPlay({ type: "skipped" as const });
-    }
-
-    let playResult : Promise<unknown>;
-    try {
-      playResult = mediaElement.play() ?? Promise.resolve();
-    } catch (playError) {
-      deregisterCancellation();
-      return rejectAutoPlay(playError);
-    }
-    playResult
-      .then(() => {
-        if (cancelSignal.isCancelled()) {
+    /**
+     * Logic that should be run once the initial seek has been asked to the
+     * PlaybackObserver.
+     *
+     * Actually wait until the seek has been performed, wait for the right moment
+     * to perform autoplay, resolve the promise once everything has been done and
+     * potentially send warning if a minor issue is detected.
+     */
+    function waitForSeekable() {
+      playbackObserver.listen((obs, stopListening) => {
+        if (obs.seeking === SeekingState.None || obs.readyState === 0) {
           return;
+        }
+        stopListening();
+        if (shouldValidateMetadata() && mediaElement.duration === 0) {
+          const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
+                                       "Cannot load automatically: your browser " +
+                                       "falsely announced having loaded the content.");
+          onWarning(error);
+        }
+        if (cancelSignal.isCancelled()) {
+          return ;
+        }
+        waitForPlayable();
+      }, { includeLastObservation: true, clearSignal: cancelSignal });
+    }
+
+    /**
+     * Logic that should be run once the initial seek has been properly performed.
+     *
+     * Wait for the media being playable before performing the autoplay operation
+     * if asked. Potentially send warning if a minor issue has been detected while
+     * doing so.
+     */
+    function waitForPlayable() {
+      playbackObserver.listen((observation, stopListening) => {
+        if (observation.seeking === SeekingState.None &&
+            observation.rebuffering === null &&
+            observation.readyState >= 1)
+        {
+          stopListening();
+          onPlayable();
+        }
+      }, { includeLastObservation: true, clearSignal: cancelSignal });
+    }
+
+    /**
+     * Callback called once the content is considered "playable".
+     *
+     * Perform the autoplay if needed, handling potential issues and resolve the
+     * Promise when done.
+     * Might also send warnings if minor issues arise.
+     */
+    function onPlayable() {
+      log.info("Init: Can begin to play content");
+      if (!mustAutoPlay) {
+        if (mediaElement.autoplay) {
+          log.warn("Init: autoplay is enabled on HTML media element. " +
+                   "Media will play as soon as possible.");
         }
         initialPlayPerformed.setValue(true);
         initialPlayPerformed.finish();
         deregisterCancellation();
-        return resolveAutoPlay({ type: "autoplay" as const });
-      })
-      .catch((playError : unknown) => {
-        deregisterCancellation();
-        if (cancelSignal.isCancelled()) {
-          return;
-        }
-        if (playError instanceof Error && playError.name === "NotAllowedError") {
-          // auto-play was probably prevented.
-          log.warn("Init: Media element can't play." +
-                   " It may be due to browser auto-play policies.");
+        return resolveAutoPlay({ type: "skipped" as const });
+      }
 
-          const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
-                                       "Cannot trigger auto-play automatically: " +
-                                       "your browser does not allow it.");
-          onWarning(error);
+      let playResult : Promise<unknown>;
+      try {
+        playResult = mediaElement.play() ?? Promise.resolve();
+      } catch (playError) {
+        deregisterCancellation();
+        return rejectAutoPlay(playError);
+      }
+      playResult
+        .then(() => {
           if (cancelSignal.isCancelled()) {
             return;
           }
-          return resolveAutoPlay({ type: "autoplay-blocked" as const });
-        } else {
-          rejectAutoPlay(playError);
-        }
-      });
-  }
+          initialPlayPerformed.setValue(true);
+          initialPlayPerformed.finish();
+          deregisterCancellation();
+          return resolveAutoPlay({ type: "autoplay" as const });
+        })
+        .catch((playError : unknown) => {
+          deregisterCancellation();
+          if (cancelSignal.isCancelled()) {
+            return;
+          }
+          if (playError instanceof Error && playError.name === "NotAllowedError") {
+            // auto-play was probably prevented.
+            log.warn("Init: Media element can't play." +
+                     " It may be due to browser auto-play policies.");
+
+            const error = new MediaError("MEDIA_ERR_BLOCKED_AUTOPLAY",
+                                         "Cannot trigger auto-play automatically: " +
+                                         "your browser does not allow it.");
+            onWarning(error);
+            if (cancelSignal.isCancelled()) {
+              return;
+            }
+            return resolveAutoPlay({ type: "autoplay-blocked" as const });
+          } else {
+            rejectAutoPlay(playError);
+          }
+        });
+    }
+  });
+
+  return { autoPlayResult, initialPlayPerformed };
 }

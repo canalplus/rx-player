@@ -123,11 +123,11 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  const currentTime = playbackObserver.getCurrentTime2();
+  const currentTime = playbackObserver.getCurrentTime();
   const readyState = playbackObserver.getReadyState();
   if (switchingMode === "reload" && readyState > 1) {
     const lastObservation = playbackObserver.getReference().getValue();
-    if (lastObservation.position.pending !== undefined) {
+    if (lastObservation.position.isAwaitingFuturePosition()) {
       // We are not at the position we want to reach (e.g. initial seek, tizen
       // seek-back...), just reload as checks here would be too complex
       return { type: "needs-reload", value: undefined };
