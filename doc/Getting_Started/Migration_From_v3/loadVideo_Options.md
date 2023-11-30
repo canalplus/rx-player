@@ -473,6 +473,8 @@ argument updated:
     `undefined`, instead of a string.
   - `bitrate` can now be `undefined` or just not be defined as a property at
     all.
+  - `codec` has been renamed to `codecs` and is now potentially an array of
+    multiple codec strings in very rare situations.
   - The `decipherable` property has been removed.
   - The `index` property has been removed.
   - A new `contentProtections` property has been added, describing protections
