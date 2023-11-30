@@ -94,7 +94,7 @@ export default class ContentTimeBoundariesObserver
 
     const cancelSignal = this._canceller.signal;
     playbackObserver.listen(({ position }) => {
-      const wantedPosition = position.pending ?? position.last;
+      const wantedPosition = position.getWanted();
       if (wantedPosition < manifest.getMinimumSafePosition()) {
         const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
                                        "The current position is behind the " +

@@ -441,8 +441,10 @@ function createAdaptationStreamPlaybackObserver(
     ) : IAdaptationStreamPlaybackObservation {
       const baseObservation = observationRef.getValue();
       const buffered = segmentBuffer.getBufferedRanges();
-      const bufferGap = getLeftSizeOfBufferedTimeRange(buffered,
-                                                       baseObservation.position.last);
+      const bufferGap = getLeftSizeOfBufferedTimeRange(
+        buffered,
+        baseObservation.position.getWanted()
+      );
       return objectAssign({}, baseObservation, { bufferGap });
     }
 
@@ -483,15 +485,15 @@ function createEmptyAdaptationStream(
   function sendStatus() : void {
     const observation = playbackObserver.getReference().getValue();
     const wba = wantedBufferAhead.getValue();
-    const position = observation.position.last;
+    const position = observation.position.getWanted();
     if (period.end !== undefined && position + wba >= period.end) {
       log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
       hasFinishedLoading = true;
     }
     callbacks.streamStatusUpdate({ period,
                                    bufferType,
-                                   position,
                                    imminentDiscontinuity: null,
+                                   position,
                                    isEmptyStream: true,
                                    hasFinishedLoading,
                                    neededSegments: [] });

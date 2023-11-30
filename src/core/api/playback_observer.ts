@@ -70,6 +70,14 @@ export default class PlaybackObserver {
   private _lowLatencyMode : boolean;
 
   /**
+   * If set, position which could not yet be seeked to as the HTMLMediaElement
+   * had a readyState of `0`.
+   * This position should be seeked to as soon as the HTMLMediaElement is able
+   * to handle it.
+   */
+  private _pendingSeek : number | null;
+
+  /**
    * The RxPlayer usually wants to differientate when a seek was sourced from
    * the RxPlayer's internal logic vs when it was sourced from an outside
    * application code.
@@ -89,7 +97,7 @@ export default class PlaybackObserver {
   /**
    * Stores the last playback observation produced by the `PlaybackObserver`.:
    */
-  private _observationRef : IReadOnlySharedReference<IPlaybackObservation>;
+  private _observationRef : SharedReference<IPlaybackObservation>;
 
   /**
    * `TaskCanceller` allowing to free all resources and stop producing playback
@@ -131,6 +139,19 @@ export default class PlaybackObserver {
     this._canceller = new TaskCanceller();
     this._observationRef = this._createSharedReference();
     this._expectedSeekingPosition = null;
+    this._pendingSeek = null;
+
+    const onLoadedMetadata = () => {
+      if (this._pendingSeek !== null) {
+        const positionToSeekTo = this._pendingSeek;
+        this._pendingSeek = null;
+        this._actuallySetCurrentTime(positionToSeekTo);
+      }
+    };
+    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
+    this._canceller.signal.register(() => {
+      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+    });
   }
 
   /**
@@ -151,7 +172,7 @@ export default class PlaybackObserver {
    * seconds.
    * @returns {number}
    */
-  public getCurrentTime2() : number {
+  public getCurrentTime() : number {
     return this._mediaElement.currentTime;
   }
 
@@ -185,9 +206,13 @@ export default class PlaybackObserver {
    * @param {number} time
    */
   public setCurrentTime(time: number) : void {
-    this._internalSeeksIncoming.push(time);
-    log.info("API: Seeking internally", time);
-    this._mediaElement.currentTime = time;
+    if (this._mediaElement.readyState >= 1) {
+      this._actuallySetCurrentTime(time);
+    } else {
+      this._internalSeeksIncoming = [];
+      this._pendingSeek = time;
+      this._generateObservationForEvent("manual");
+    }
   }
 
   /**
@@ -269,148 +294,53 @@ export default class PlaybackObserver {
     return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
+  private _actuallySetCurrentTime(time: number) : void {
+    log.info("API: Seeking internally", time);
+    this._internalSeeksIncoming.push(time);
+    this._mediaElement.currentTime = time;
+  }
+
   /**
    * Creates the `IReadOnlySharedReference` that will generate playback
    * observations.
    * @returns {Object}
    */
-  private _createSharedReference() : IReadOnlySharedReference<IPlaybackObservation> {
+  private _createSharedReference() : SharedReference<IPlaybackObservation> {
     if (this._observationRef !== undefined) {
       return this._observationRef;
     }
 
-    let lastObservation : IPlaybackObservation | null;
     const { SAMPLING_INTERVAL_MEDIASOURCE,
             SAMPLING_INTERVAL_LOW_LATENCY,
             SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
-
-    const getCurrentObservation = (
-      event : IPlaybackObserverEventType
-    ) : IPlaybackObservation => {
-      const mediaTimings = getMediaInfos(this._mediaElement,
-                                         this._withMediaSource);
-
-      let tmpEvt: IPlaybackObserverEventType = event;
-      let isInternalSeeking = false;
-      let startedInternalSeekTime : number | undefined;
-      let pendingPosition: number | undefined;
-
-      if (tmpEvt === "seeking") {
-        if (this._internalSeeksIncoming.length > 0) {
-          isInternalSeeking = true;
-          tmpEvt = "internal-seeking";
-          startedInternalSeekTime = this._internalSeeksIncoming.shift();
-          this._expectedSeekingPosition = isSeekingApproximate ?
-            Math.max(mediaTimings.position, startedInternalSeekTime ?? 0) :
-            mediaTimings.position;
-        } else {
-          this._expectedSeekingPosition = mediaTimings.position;
-        }
-      }
-
-      if (mediaTimings.seeking) {
-        if (this._expectedSeekingPosition === null) {
-          this._expectedSeekingPosition = mediaTimings.position;
-        } else {
-          this._expectedSeekingPosition = Math.max(mediaTimings.position,
-                                                   this._expectedSeekingPosition);
-        }
-      } else if (isSeekingApproximate &&
-                 this._expectedSeekingPosition !== null &&
-                 mediaTimings.position < this._expectedSeekingPosition)
-      {
-        pendingPosition = this._expectedSeekingPosition;
-      } else {
-        this._expectedSeekingPosition = null;
-      }
-      const _lastObservation = lastObservation ?? this._generateInitialObservation();
-      let pendingInternalSeek : number | null = null;
-      if (mediaTimings.seeking) {
-        if (typeof startedInternalSeekTime === "number") {
-          pendingInternalSeek = startedInternalSeekTime;
-        } else if (_lastObservation.pendingInternalSeek !== null && event !== "seeking") {
-          pendingInternalSeek = _lastObservation.pendingInternalSeek;
-        }
-      }
-      const rebufferingStatus = getRebufferingStatus(
-        _lastObservation,
-        mediaTimings,
-        tmpEvt,
-        { lowLatencyMode: this._lowLatencyMode,
-          withMediaSource: this._withMediaSource });
-
-      const freezingStatus = getFreezingStatus(_lastObservation, mediaTimings, tmpEvt);
-
-      const seeking = isInternalSeeking    ? SeekingState.Internal :
-                      mediaTimings.seeking ? SeekingState.External :
-                                             SeekingState.None;
-      const timings: IPlaybackObservation = objectAssign(
-        {},
-        mediaTimings,
-        { position: { last: mediaTimings.position,
-                      pending: pendingPosition },
-          event: tmpEvt,
-          seeking,
-          rebuffering: rebufferingStatus,
-          freezing: freezingStatus,
-          pendingInternalSeek });
-      if (log.hasLevel("DEBUG")) {
-        log.debug("API: current media element state tick",
-                  "event", timings.event,
-                  "position", timings.position.last,
-                  "seeking", timings.seeking,
-                  "internalSeek", isInternalSeeking,
-                  "rebuffering", timings.rebuffering !== null,
-                  "freezing", timings.freezing !== null,
-                  "ended", timings.ended,
-                  "paused", timings.paused,
-                  "playbackRate", timings.playbackRate,
-                  "readyState", timings.readyState);
-      }
-      return timings;
-    };
-
-    const returnedSharedReference = new SharedReference(getCurrentObservation("init"),
-                                                        this._canceller.signal);
-
-    const generateObservationForEvent = (event : IPlaybackObserverEventType) => {
-      const newObservation = getCurrentObservation(event);
-      if (log.hasLevel("DEBUG")) {
-        log.debug("API: current playback timeline:\n" +
-                  prettyPrintBuffered(newObservation.buffered,
-                                      newObservation.position.last),
-                  `\n${event}`);
-      }
-      lastObservation = newObservation;
-      returnedSharedReference.setValue(newObservation);
-    };
-
+    const returnedSharedReference = new SharedReference(
+      this._getCurrentObservation("init"),
+      this._canceller.signal
+    );
     const interval = this._lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
                      this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
                                              SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    const onInterval = () => {
+      this._generateObservationForEvent("timeupdate");
+    };
     let intervalId = setInterval(onInterval, interval);
     const removeEventListeners = SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
-      this._mediaElement.addEventListener(eventName, onMediaEvent);
-      function onMediaEvent() {
+      const onMediaEvent = () => {
         restartInterval();
-        generateObservationForEvent(eventName);
-      }
+        this._generateObservationForEvent(eventName);
+      };
+      this._mediaElement.addEventListener(eventName, onMediaEvent);
       return () => {
         this._mediaElement.removeEventListener(eventName, onMediaEvent);
       };
     });
-
     this._canceller.signal.register(() => {
       clearInterval(intervalId);
       removeEventListeners.forEach(cb => cb());
       returnedSharedReference.finish();
     });
-
     return returnedSharedReference;
 
-    function onInterval() {
-      generateObservationForEvent("timeupdate");
-    }
 
     function restartInterval() {
       clearInterval(intervalId);
@@ -418,24 +348,119 @@ export default class PlaybackObserver {
     }
   }
 
-  private _generateInitialObservation() : IPlaybackObservation {
-    const mediaTimings = getMediaInfos(this._mediaElement,
-                                       this._withMediaSource);
-    return objectAssign(mediaTimings,
-                        { rebuffering: null,
-                          event: "init",
-                          seeking: SeekingState.None,
-                          position: { last: mediaTimings.position,
-                                      pending: undefined },
-                          freezing: null,
-                          pendingInternalSeek: null });
+  private _getCurrentObservation(
+    event : IPlaybackObserverEventType
+  ) : IPlaybackObservation {
+    /** Actual event emitted through an observation. */
+    let tmpEvt: IPlaybackObserverEventType = event;
+
+    // NOTE: `this._observationRef` may be `undefined` because we might here be
+    // called in the constructor when that property is not yet set.
+    const previousObservation = this._observationRef === undefined ?
+      getInitialObservation(this._mediaElement, this._withMediaSource) :
+      this._observationRef.getValue();
+
+    /**
+     * If `true`, there is a seek operation ongoing but it was done from the
+     * `PlaybackObserver`'s `setCurrentTime` method, not from external code.
+     */
+    let isInternalSeeking = false;
+
+    /** If set, the position for which we plan to seek to as soon as possible. */
+    let pendingPosition: number | null = this._pendingSeek;
+
+    /** Initially-polled playback observation, before adjustments. */
+    const mediaTimings = getMediaInfos(this._mediaElement, this._withMediaSource);
+
+    if (tmpEvt === "seeking") {
+      if (this._internalSeeksIncoming.length > 0) {
+        isInternalSeeking = true;
+        tmpEvt = "internal-seeking";
+        const startedInternalSeekTime = this._internalSeeksIncoming.shift();
+        this._expectedSeekingPosition = isSeekingApproximate ?
+          Math.max(mediaTimings.position, startedInternalSeekTime ?? 0) :
+          mediaTimings.position;
+      } else {
+        this._expectedSeekingPosition = mediaTimings.position;
+      }
+    }
+
+    if (mediaTimings.seeking) {
+      if (this._expectedSeekingPosition === null) {
+        this._expectedSeekingPosition = mediaTimings.position;
+      } else {
+        this._expectedSeekingPosition = Math.max(mediaTimings.position,
+                                                 this._expectedSeekingPosition);
+      }
+    } else if (isSeekingApproximate &&
+               this._expectedSeekingPosition !== null &&
+                 mediaTimings.position < this._expectedSeekingPosition)
+    {
+      pendingPosition = this._expectedSeekingPosition;
+    } else {
+      this._expectedSeekingPosition = null;
+    }
+
+    if (mediaTimings.seeking &&
+        previousObservation.seeking === SeekingState.Internal &&
+        event !== "seeking")
+    {
+      isInternalSeeking = true;
+    }
+    const rebufferingStatus = getRebufferingStatus(
+      previousObservation,
+      mediaTimings,
+      tmpEvt,
+      { lowLatencyMode: this._lowLatencyMode,
+        withMediaSource: this._withMediaSource });
+
+    const freezingStatus = getFreezingStatus(previousObservation, mediaTimings, tmpEvt);
+
+    const seeking = isInternalSeeking    ? SeekingState.Internal :
+                    mediaTimings.seeking ? SeekingState.External :
+                                           SeekingState.None;
+    const timings: IPlaybackObservation = objectAssign(
+      {},
+      mediaTimings,
+      { position: new ObservationPosition(mediaTimings.position, pendingPosition),
+        event: tmpEvt,
+        seeking,
+        rebuffering: rebufferingStatus,
+        freezing: freezingStatus });
+    if (log.hasLevel("DEBUG")) {
+      log.debug("API: current media element state tick",
+                "event", timings.event,
+                "position", timings.position.getPolled(),
+                "seeking", timings.seeking,
+                "internalSeek", isInternalSeeking,
+                "rebuffering", timings.rebuffering !== null,
+                "freezing", timings.freezing !== null,
+                "ended", timings.ended,
+                "paused", timings.paused,
+                "playbackRate", timings.playbackRate,
+                "readyState", timings.readyState);
+    }
+    return timings;
+  }
+
+  private _generateObservationForEvent(event : IPlaybackObserverEventType): void {
+    const newObservation = this._getCurrentObservation(event);
+    if (log.hasLevel("DEBUG")) {
+      log.debug("API: current playback timeline:\n" +
+                prettyPrintBuffered(newObservation.buffered,
+                                    newObservation.position.getPolled()),
+                `\n${event}`);
+    }
+    this._observationRef.setValue(newObservation);
   }
 }
 
 /** "Event" that triggered the playback observation. */
 export type IPlaybackObserverEventType =
   /** First playback observation automatically emitted. */
-  "init" | // set once on first emit
+  "init" |
+  /** Observation manually forced by the PlaybackObserver. */
+  "manual" |
   /** Regularly emitted playback observation when no event happened in a long time. */
   "timeupdate" |
   /** On the HTML5 event with the same name */
@@ -558,30 +583,16 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
   /** Current seeking state. */
   seeking : SeekingState;
   /**
+   * Information on the current position being played, the position for which
+   * media is wanted etc.
+   */
+  position : IObservationPosition;
+  /**
    * Set if the player is short on audio and/or video media data and is a such,
    * rebuffering.
    * `null` if not.
    */
   rebuffering : IRebufferingStatus | null;
-  position : {
-    /**
-     * Known position at the time the Observation was emitted, in seconds.
-     *
-     * Note that it might have changed since. If you want truly precize
-     * information, you should recuperate it from the HTMLMediaElement directly
-     * through another mean.
-     */
-    last : number;
-    /**
-     * Actually wanted position in seconds that is not yet reached.
-     *
-     * This might for example be set to the initial position when the content is
-     * loading (and thus potentially at a `0` position) but which will be seeked
-     * to a given position once possible. It may also be the position of a seek
-     * that has not been properly accounted for by the current device.
-     */
-    pending : number | undefined;
-  };
   /**
    * Set if the player is frozen, that is, stuck in place for unknown reason.
    * Note that this reason can be a valid one, such as a necessary license not
@@ -590,11 +601,103 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
    * `null` if the player is not frozen.
    */
   freezing : IFreezingStatus | null;
+}
+
+export type IObservationPosition = ObservationPosition;
+
+class ObservationPosition {
   /**
-   * If `true`, an "internal seek" (a seeking operation triggered by the
-   * RxPlayer code) is currently pending.
+   * Known position at the time the Observation was emitted, in seconds.
+   *
+   * Note that it might have changed since. If you want truly precize
+   * information, you should recuperate it from the HTMLMediaElement directly
+   * through another mean.
    */
-  pendingInternalSeek : number | null;
+  private _last: number;
+  /**
+   * Actually wanted position in seconds that is not yet reached.
+   *
+   * This might for example be set to the initial position when the content is
+   * loading (and thus potentially at a `0` position) but which will be seeked
+   * to a given position once possible. It may also be the position of a seek
+   * that has not been properly accounted for by the current device.
+   */
+  private _wanted: number | null;
+  constructor(last: number, wanted: number | null) {
+    this._last = last;
+    this._wanted = wanted;
+  }
+
+  /**
+   * Returns the playback position actually observed on the media element at
+   * the time the playback observation was made.
+   *
+   * Note that it may be different than the position for which media data is
+   * wanted in rare scenarios where the goal position is not yet set on the
+   * media element.
+   *
+   * You should use this value when you want to obtain the actual position set
+   * on the media element for browser compatibility purposes. Note that this
+   * position was calculated at observation time, it might thus not be
+   * up-to-date if what you want is milliseconds-accuracy.
+   *
+   * If what you want is the actual position which the player is intended to
+   * play, you should rely on `getWanted` instead`.
+   * @returns {number}
+   */
+  public getPolled(): number {
+    return this._last;
+  }
+
+  /**
+   * Returns the position which the player should consider to load media data
+   * at the time the observation was made.
+   *
+   * It can be different than the value returned by `getPolled` in rare
+   * scenarios:
+   *
+   *   - When the initial position has not been set yet.
+   *
+   *   - When the current device do not let the RxPlayer peform precize seeks,
+   *     usually for perfomance reasons by seeking to a previous IDR frame
+   *     instead (for now only Tizen may be like this), in which case we
+   *     prefer to generally rely on the position wanted by the player (this
+   *     e.g. prevents issues where the RxPlayer logic and the device are
+   *     seeking back and forth in a loop).
+   *
+   *   - When a wanted position has been "forced" (@see forceWantedPosition).
+   * @returns {number}
+   */
+  public getWanted(): number {
+    return this._wanted ?? this._last;
+  }
+
+  /**
+   * Method to call if you want to overwrite the currently wanted position.
+   * @param {number} pos
+   */
+  public forceWantedPosition(pos: number): void {
+    this._wanted = pos;
+  }
+
+  /**
+   * Returns `true` when the position wanted returned by `getWanted` and the
+   * actual position returned by `getPolled` may be different, meaning that
+   * we're currently not at the position we want to reach.
+   *
+   * This is a relatively rare situation which only happens when either the
+   * initial seek has not yet been performed. on specific targets where the
+   * seeking behavior is a little broken (@see getWanted) or when the wanted
+   * position has been forced (@see forceWantedPosition).
+   *
+   * In those situations, you might temporarily refrain from acting upon the
+   * actual current media position, as it may change soon.
+   *
+   * @returns {boolean}
+   */
+  public isAwaitingFuturePosition(): boolean {
+    return this._wanted !== null;
+  }
 }
 
 /**
@@ -611,7 +714,7 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
  */
 export interface IReadOnlyPlaybackObserver<TObservationType> {
   /** Get the current playing position, in seconds. */
-  getCurrentTime2() : number;
+  getCurrentTime() : number;
   /**
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
    * @returns {number}
@@ -784,6 +887,7 @@ function getMediaInfos(
  * @param {Object} currentInfo - Current set of basic information on the
  * `HTMLMediaElement`. This does not need every single property from a regular
  * playback observation.
+ * @param {string} currentEvt
  * @param {Object} options
  * @returns {Object|null}
  */
@@ -866,7 +970,7 @@ function getRebufferingStatus(
           (
             !paused &&
             currentEvt === "timeupdate" && prevEvt === "timeupdate" &&
-            currentTime === prevTime.last
+            currentTime === prevTime.getPolled()
           ) ||
           (
             currentEvt === "seeking" && (
@@ -879,7 +983,7 @@ function getRebufferingStatus(
     } else if (
       prevRebuffering !== null &&
       (
-        (currentEvt !== "seeking" && currentTime !== prevTime.last) ||
+        (currentEvt !== "seeking" && currentTime !== prevTime.getPolled()) ||
         currentEvt === "canplay" ||
         (bufferGap === undefined && readyState >= 3) ||
         (
@@ -929,6 +1033,7 @@ function getRebufferingStatus(
  * `null` if not.
  * @param {Object} prevObservation
  * @param {Object} currentInfo
+ * @param {string} currentEvt
  * @returns {Object|null}
  */
 function getFreezingStatus(
@@ -942,7 +1047,7 @@ function getFreezingStatus(
         currentInfo.paused ||
         currentInfo.readyState === 0 ||
         currentInfo.playbackRate === 0 ||
-        prevObservation.position.last !== currentInfo.position)
+        prevObservation.position.getPolled() !== currentInfo.position)
     {
       return null; // Quit freezing status
     }
@@ -956,7 +1061,7 @@ function getFreezingStatus(
          !currentInfo.paused &&
          currentInfo.readyState >= 1 &&
          currentInfo.playbackRate !== 0 &&
-         currentInfo.position === prevObservation.position.last ?
+         currentInfo.position === prevObservation.position.getPolled() ?
            { timestamp: getMonotonicTimeStamp() } :
            null;
 }
@@ -1046,8 +1151,8 @@ function generateReadOnlyObserver<TSource, TDest>(
 ) : IReadOnlyPlaybackObserver<TDest> {
   const mappedRef = transform(src.getReference(), cancellationSignal);
   return {
-    getCurrentTime2() {
-      return src.getCurrentTime2();
+    getCurrentTime() {
+      return src.getCurrentTime();
     },
     getReadyState() {
       return src.getReadyState();
@@ -1088,4 +1193,25 @@ function generateReadOnlyObserver<TSource, TDest>(
       return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
     },
   };
+}
+
+/**
+ * Generate the initial playback observation for when no event has yet been
+ * emitted to lead to one.
+ * @param {HTMLMediaElement} mediaElement
+ * @param {boolean} withMediaSource
+ * @returns {Object}
+ */
+function getInitialObservation(
+  mediaElement: HTMLMediaElement,
+  withMediaSource: boolean
+) : IPlaybackObservation {
+  const mediaTimings = getMediaInfos(mediaElement, withMediaSource);
+  return objectAssign(mediaTimings,
+                      { rebuffering: null,
+                        event: "init",
+                        seeking: SeekingState.None,
+                        position: { last: mediaTimings.position,
+                                    pending: undefined },
+                        freezing: null });
 }
