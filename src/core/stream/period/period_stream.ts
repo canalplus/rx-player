@@ -221,18 +221,15 @@ export default function PeriodStream(
         return; // Previous call has provoken cancellation by side-effect
       }
 
-      const readyState = playbackObserver.getReadyState();
       const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
                                                        bufferType,
                                                        adaptation,
                                                        options);
-      const playbackInfos = { currentTime: playbackObserver.getCurrentTime(),
-                              readyState };
       const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                    period,
                                                    adaptation,
                                                    choice.switchingMode,
-                                                   playbackInfos,
+                                                   playbackObserver,
                                                    options);
       if (strategy.type === "needs-reload") {
         return askForMediaSourceReload(relativePosAfterSwitch,

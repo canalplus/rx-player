@@ -28,6 +28,7 @@ import {
 import {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
+  SeekingState,
 } from "./playback_observer";
 
 /**
@@ -52,7 +53,8 @@ export function emitSeekEvents(
     return ;
   }
 
-  let wasSeeking = playbackObserver.getReference().getValue().seeking;
+  let wasSeeking =
+    playbackObserver.getReference().getValue().seeking === SeekingState.External;
   if (wasSeeking) {
     onSeeking();
     if (cancelSignal.isCancelled()) {
