@@ -20,6 +20,7 @@ import EventEmitter from "../../../../utils/event_emitter";
 import SharedReference from "../../../../utils/reference";
 import TaskCanceller, { CancellationSignal } from "../../../../utils/task_canceller";
 import { IPlaybackObservation, IReadOnlyPlaybackObserver } from "../../../api";
+import { SeekingState } from "../../../api/playback_observer";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import {
   INonFiniteStreamEventPayload,
@@ -127,7 +128,8 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
       });
 
       function constructObservation() {
-        const isSeeking = playbackObserver.getReference().getValue().seeking;
+        const isSeeking =
+          playbackObserver.getReference().getValue().seeking !== SeekingState.None;
         return { currentTime: mediaElement.currentTime,
                  isSeeking };
       }
