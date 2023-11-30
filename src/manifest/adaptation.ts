@@ -157,7 +157,8 @@ export default class Adaptation {
         const reprObject : IRepresentationFilterRepresentation = {
           id: representation.id,
           bitrate: representation.bitrate,
-          codec: representation.codec,
+          codecs: representation.codec === undefined ? [] :
+                                                       [representation.codec],
           height: representation.height,
           width: representation.width,
           frameRate: representation.frameRate,
