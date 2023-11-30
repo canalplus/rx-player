@@ -27,6 +27,7 @@ import SharedReference, {
 } from "../../../utils/reference";
 import { CancellationError, CancellationSignal } from "../../../utils/task_canceller";
 import { PlaybackObserver } from "../../api";
+import { SeekingState } from "../../api/playback_observer";
 
 /** Event emitted when trying to perform the initial `play`. */
 export type IInitialPlayEvent =
@@ -156,12 +157,12 @@ export default function performInitialSeekAndPlay(
      */
     let isAwaitingSeek = hasAskedForInitialSeek;
     playbackObserver.listen((observation, stopListening) => {
-      if (hasAskedForInitialSeek && observation.seeking) {
+      if (hasAskedForInitialSeek && observation.seeking !== SeekingState.None) {
         isAwaitingSeek = false;
         return;
       }
       if (!isAwaitingSeek &&
-          !observation.seeking &&
+          observation.seeking === SeekingState.None &&
           observation.rebuffering === null &&
           observation.readyState >= 1)
       {

@@ -87,7 +87,7 @@ export default function createStreamPlaybackObserver(
     function constructStreamPlaybackObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
-      let pendingPosition : number | undefined;
+      let pendingPosition : number | undefined = observation.position.pending;
       if (!initialSeekPerformed.getValue()) {
         pendingPosition = startTime;
       } else if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
@@ -98,11 +98,14 @@ export default function createStreamPlaybackObserver(
         // want to seek one second before the period's end (despite never
         // doing it).
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (lastPeriod !== undefined &&
-            lastPeriod.end !== undefined &&
-            observation.position > lastPeriod.end)
-        {
-          pendingPosition = lastPeriod.end - 1;
+        if (lastPeriod !== undefined && lastPeriod.end !== undefined) {
+          if (observation.position.pending !== undefined) {
+            if (observation.position.pending > lastPeriod.end) {
+              pendingPosition = lastPeriod.end - 1;
+            }
+          } else if (observation.position.last > lastPeriod.end) {
+            pendingPosition = lastPeriod.end - 1;
+          }
         }
       }
 
@@ -110,7 +113,7 @@ export default function createStreamPlaybackObserver(
         // TODO more exact according to the current Adaptation chosen?
         maximumPosition: manifest.getMaximumSafePosition(),
         position: {
-          last: observation.position,
+          last: observation.position.last,
           pending: pendingPosition,
         },
         duration: observation.duration,
