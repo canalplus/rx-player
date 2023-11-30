@@ -116,10 +116,10 @@ export default function StreamOrchestrator(
   const garbageCollectors =
     new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
       const { bufferType } = segmentBuffer;
-      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ?
+      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] !== undefined ?
                                  MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :
                                  Infinity;
-      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ?
+      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] !== undefined ?
                                 MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
                                 Infinity;
       return (gcCancelSignal : CancellationSignal) => {
@@ -130,10 +130,17 @@ export default function StreamOrchestrator(
                                                    (val) =>
                                                      Math.min(val, defaultMaxBehind),
                                                    gcCancelSignal),
-            maxBufferAhead: createMappedReference(maxBufferAhead,
-                                                  (val) =>
-                                                    Math.min(val, defaultMaxAhead),
-                                                  gcCancelSignal) },
+            maxBufferAhead: createMappedReference(maxBufferAhead, (val) => {
+              const actualMaxBuff = bufferType === "text" ?
+                // Text segments are both much lighter on resources and might
+                // actually be much larger than other types of segments in terms
+                // of duration. Let's make an exception here by authorizing a
+                // larger text buffer ahead, to avoid unnecesarily reloading the
+                // same text track.
+                Math.max(val, 2 * 60) :
+                val;
+              return Math.min(actualMaxBuff, defaultMaxAhead);
+            }, gcCancelSignal) },
           gcCancelSignal
         );
       };
