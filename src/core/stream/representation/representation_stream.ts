@@ -230,8 +230,7 @@ export default function RepresentationStream<TSegmentDataType>(
       return ; // Stop all buffer status checking if load operations are stopped
     }
     const observation = playbackObserver.getReference().getValue();
-    const initialWantedTime = observation.position.pending ??
-                              observation.position.last;
+    const initialWantedTime = observation.position.getWanted();
     const status = getBufferStatus(content,
                                    initialWantedTime,
                                    playbackObserver,
@@ -251,8 +250,7 @@ export default function RepresentationStream<TSegmentDataType>(
         log.warn("Stream: Uninitialized index with an already loaded " +
                  "initialization segment");
       } else {
-        const wantedStart = observation.position.pending ??
-                            observation.position.last;
+        const wantedStart = observation.position.getWanted();
         neededInitSegment = { segment: initSegmentState.segment,
                               priority: getSegmentPriority(period.start,
                                                            wantedStart) };
@@ -307,7 +305,7 @@ export default function RepresentationStream<TSegmentDataType>(
     }
 
     callbacks.streamStatusUpdate({ period,
-                                   position: observation.position.last,
+                                   position: observation.position.getWanted(),
                                    bufferType,
                                    imminentDiscontinuity: status.imminentDiscontinuity,
                                    isEmptyStream: false,

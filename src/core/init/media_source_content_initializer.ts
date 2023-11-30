@@ -416,13 +416,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentBuffersStore.disposeAll();
     });
 
-    const { autoPlayResult, initialPlayPerformed, initialSeekPerformed } =
-      performInitialSeekAndPlay(mediaElement,
-                                playbackObserver,
-                                initialTime,
-                                autoPlay,
-                                (err) => this.trigger("warning", err),
-                                true,
+    const { autoPlayResult, initialPlayPerformed } =
+      performInitialSeekAndPlay({ mediaElement,
+                                  playbackObserver,
+                                  startTime: initialTime,
+                                  mustAutoPlay: autoPlay,
+                                  onWarning: (err) => { this.trigger("warning", err); },
+                                  isDirectfile: false },
                                 cancelSignal);
 
     if (cancelSignal.isCancelled()) {
@@ -452,9 +452,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                         { autoPlay,
                                                           manifest,
                                                           initialPlayPerformed,
-                                                          initialSeekPerformed,
-                                                          speed,
-                                                          startTime: initialTime },
+                                                          speed },
                                                         cancelSignal);
 
     const rebufferingController = this._createRebufferingController(playbackObserver,
@@ -464,13 +462,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                                     cancelSignal);
     rebufferingController.addEventListener("needsReload", () => {
       let position: number;
-      const pendingPosition = playbackObserver.getReference().getValue().position.pending;
-      if (pendingPosition !== undefined) {
-        position = pendingPosition;
-      } else if (initialSeekPerformed.getValue()) {
-        position = playbackObserver.getCurrentTime2();
+      const lastObservation = playbackObserver.getReference().getValue();
+      if (lastObservation.position.isAwaitingFuturePosition()) {
+        position = lastObservation.position.getWanted();
       } else {
-        position = initialTime;
+        position = playbackObserver.getCurrentTime();
       }
 
       // NOTE couldn't both be always calculated at event destination?
@@ -550,11 +546,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               // Data is buffered around the current position
               obs.currentRange !== null ||
               // Or, for whatever reason, we have no buffer but we're already advancing
-              obs.position.last > seekedTime + 0.1
+              obs.position.getPolled() > seekedTime + 0.1
             ) {
               stopListening();
-              playbackObserver
-                .setCurrentTime(obs.position.pending ?? obs.position.last + 0.001);
+              playbackObserver.setCurrentTime(obs.position.getWanted() + 0.001);
             }
           }, { includeLastObservation: false, clearSignal: cancelSignal });
         },
@@ -644,8 +639,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         needsMediaSourceReload: (payload) => {
           const lastObservation = streamObserver.getReference().getValue();
-          const currentPosition = lastObservation.position.pending ??
-                                  streamObserver.getCurrentTime2();
+          const currentPosition = lastObservation.position.isAwaitingFuturePosition() ?
+            lastObservation.position.getWanted() :
+            streamObserver.getCurrentTime();
           const isPaused = lastObservation.paused.pending ??
                            streamObserver.getIsPaused();
           let position = currentPosition + payload.timeOffset;
@@ -662,15 +658,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
             const lastObservation = streamObserver.getReference().getValue();
-            const position = lastObservation.position.pending ??
-                             streamObserver.getCurrentTime2();
+            const position = lastObservation.position.isAwaitingFuturePosition() ?
+              lastObservation.position.getWanted() :
+              streamObserver.getCurrentTime();
             const isPaused = lastObservation.paused.pending ??
                              streamObserver.getIsPaused();
             onReloadOrder({ position, autoPlay: !isPaused });
           } else {
             const lastObservation = streamObserver.getReference().getValue();
-            const position = lastObservation.position.pending ??
-                             streamObserver.getCurrentTime2();
+            const position = lastObservation.position.isAwaitingFuturePosition() ?
+              lastObservation.position.getWanted() :
+              streamObserver.getCurrentTime();
             // simple seek close to the current position
             // to flush the buffers
             if (position + 0.001 < lastObservation.duration) {
