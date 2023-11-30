@@ -814,13 +814,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "ENDED":
           this._priv_reloadingMetadata.reloadInPause = true;
           this._priv_reloadingMetadata.reloadPosition =
-            playbackObserver.getReference().getValue().position.last;
+            playbackObserver.getReference().getValue().position.getPolled();
           break;
         default:
           const o = playbackObserver.getReference().getValue();
           this._priv_reloadingMetadata.reloadInPause = o.paused;
-          this._priv_reloadingMetadata.reloadPosition = o.position.pending ??
-                                                        o.position.last;
+          this._priv_reloadingMetadata.reloadPosition = o.position.getWanted();
           break;
       }
     };
@@ -2591,7 +2590,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
     const positionData : IPositionUpdate = {
-      position: observation.position.last,
+      position: observation.position.getPolled(),
       duration: observation.duration,
       playbackRate: observation.playbackRate,
       maximumPosition,
@@ -2605,18 +2604,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (manifest !== null &&
         manifest.isLive &&
-        observation.position.last > 0
+        observation.position.getPolled() > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
-      positionData.wallClockTime = observation.position.last + ast;
+      positionData.wallClockTime = observation.position.getPolled() + ast;
       const livePosition = manifest.getLivePosition();
       if (livePosition !== undefined) {
-        positionData.liveGap = livePosition - observation.position.last;
+        positionData.liveGap = livePosition - observation.position.getPolled();
       }
     } else if (isDirectFile && this.videoElement !== null) {
       const startDate = getStartDate(this.videoElement);
       if (startDate !== undefined) {
-        positionData.wallClockTime = startDate + observation.position.last;
+        positionData.wallClockTime = startDate + observation.position.getPolled();
       }
     }
     this.trigger("positionUpdate", positionData);
