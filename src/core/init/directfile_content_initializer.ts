@@ -208,15 +208,14 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       log.debug("Init: Initial time calculated:", initTime);
       return initTime;
     };
-    performInitialSeekAndPlay(
-      mediaElement,
-      playbackObserver,
-      initialTime,
-      autoPlay,
-      (err) => this.trigger("warning", err),
-      true,
-      cancelSignal
-    ).autoPlayResult
+    performInitialSeekAndPlay({ mediaElement,
+                                playbackObserver,
+                                startTime: initialTime,
+                                mustAutoPlay: autoPlay,
+                                onWarning: (err) => this.trigger("warning", err),
+                                isDirectfile: true },
+                              cancelSignal)
+      .autoPlayResult
       .then(() =>
         getLoadedReference(playbackObserver, mediaElement, true, cancelSignal)
           .onUpdate((isLoaded, stopListening) => {

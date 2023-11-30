@@ -128,9 +128,10 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
       });
 
       function constructObservation() {
-        const isSeeking =
-          playbackObserver.getReference().getValue().seeking !== SeekingState.None;
-        return { currentTime: mediaElement.currentTime,
+        const lastObservation = playbackObserver.getReference().getValue();
+        const currentTime = mediaElement.currentTime;
+        const isSeeking = lastObservation.seeking !== SeekingState.None;
+        return { currentTime,
                  isSeeking };
       }
     }, { emitCurrentValue: true, clearSignal: cancelSignal });

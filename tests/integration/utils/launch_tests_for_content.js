@@ -1156,6 +1156,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(0);
         player.pause();
         await waitForState(player, "PAUSED");
+        await sleep(0);
         expect(pauseEventsSent).to.equal(1);
         expect(playEventsSent).to.equal(0);
         expect(nbPausedStates).to.equal(1);
@@ -1185,6 +1186,7 @@ export default function launchTestsForContent(manifestInfos) {
         await sleep(0);
         player.play();
         await waitForState(player, "PLAYING");
+        await sleep(0);
         expect(pauseEventsSent).to.equal(0);
         expect(playEventsSent).to.equal(1);
         expect(nbPlayingStates).to.equal(1);

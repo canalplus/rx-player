@@ -139,10 +139,13 @@ export default class RebufferingController
           freezing.timestamp :
           prevFreezingState.attemptTimestamp;
 
-        if (now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
+        if (
+          !position.isAwaitingFuturePosition() &&
+          now - referenceTimestamp > UNFREEZING_SEEK_DELAY
+        ) {
           log.warn("Init: trying to seek to un-freeze player");
           this._playbackObserver.setCurrentTime(
-            this._playbackObserver.getCurrentTime2() + UNFREEZING_DELTA_POSITION);
+            this._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION);
           prevFreezingState = { attemptTimestamp: now };
         }
 
@@ -182,13 +185,13 @@ export default class RebufferingController
       // We want to separate a stall situation when a seek is due to a seek done
       // internally by the player to when its due to a regular user seek.
       const stalledReason = rebuffering.reason === "seeking" &&
-                            observation.pendingInternalSeek !== null ?
+                            observation.seeking === SeekingState.Internal ?
         "internal-seek" as const :
         rebuffering.reason;
 
-      if (position.pending !== undefined) {
+      if (position.isAwaitingFuturePosition()) {
         playbackRateUpdater.stopRebuffering();
-        log.debug("Init: letting the device get out of a stall by itself");
+        log.debug("Init: let rebuffering happen as we're awaiting a future position");
         this.trigger("stalled", stalledReason);
         return ;
       }
@@ -212,12 +215,12 @@ export default class RebufferingController
                                                                  stalledPosition);
         if (skippableDiscontinuity !== null) {
           const realSeekTime = skippableDiscontinuity + 0.001;
-          if (realSeekTime <= this._playbackObserver.getCurrentTime2()) {
+          if (realSeekTime <= this._playbackObserver.getCurrentTime()) {
             log.info("Init: position to seek already reached, no seeking",
-                     this._playbackObserver.getCurrentTime2(), realSeekTime);
-          } else if (position.pending === undefined) {
+                     this._playbackObserver.getCurrentTime(), realSeekTime);
+          } else {
             log.warn("SA: skippable discontinuity found in the stream",
-                     position.last, realSeekTime);
+                     position.getPolled(), realSeekTime);
             this._playbackObserver.setCurrentTime(realSeekTime);
             this.trigger("warning", generateDiscontinuityError(stalledPosition,
                                                                realSeekTime));
@@ -226,7 +229,7 @@ export default class RebufferingController
         }
       }
 
-      const freezePosition = stalledPosition ?? position.last;
+      const positionBlockedAt = stalledPosition ?? position.getPolled();
 
       // Is it a very short discontinuity in buffer ? -> Seek at the beginning of the
       //                                                 next range
@@ -235,17 +238,17 @@ export default class RebufferingController
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
-      const nextBufferRangeGap = getNextBufferedTimeRangeGap(buffered, freezePosition);
+      const nextBufferRangeGap = getNextBufferedTimeRangeGap(buffered, positionBlockedAt);
       if (
         this._speed.getValue() > 0 &&
         nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
       ) {
-        const seekTo = (freezePosition + nextBufferRangeGap + EPSILON);
-        if (this._playbackObserver.getCurrentTime2() < seekTo) {
+        const seekTo = (positionBlockedAt + nextBufferRangeGap + EPSILON);
+        if (this._playbackObserver.getCurrentTime() < seekTo) {
           log.warn("Init: discontinuity encountered inferior to the threshold",
-                   freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
+                   positionBlockedAt, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
           this._playbackObserver.setCurrentTime(seekTo);
-          this.trigger("warning", generateDiscontinuityError(freezePosition, seekTo));
+          this.trigger("warning", generateDiscontinuityError(positionBlockedAt, seekTo));
           return;
         }
       }
@@ -254,14 +257,14 @@ export default class RebufferingController
       //                                                next period
       for (let i = this._manifest.periods.length - 2; i >= 0; i--) {
         const period = this._manifest.periods[i];
-        if (period.end !== undefined && period.end <= freezePosition) {
-          if (this._manifest.periods[i + 1].start > freezePosition &&
+        if (period.end !== undefined && period.end <= positionBlockedAt) {
+          if (this._manifest.periods[i + 1].start > positionBlockedAt &&
               this._manifest.periods[i + 1].start >
-                this._playbackObserver.getCurrentTime2())
+                this._playbackObserver.getCurrentTime())
           {
             const nextPeriod = this._manifest.periods[i + 1];
             this._playbackObserver.setCurrentTime(nextPeriod.start);
-            this.trigger("warning", generateDiscontinuityError(freezePosition,
+            this.trigger("warning", generateDiscontinuityError(positionBlockedAt,
                                                                nextPeriod.start));
             return;
 
@@ -311,10 +314,10 @@ export default class RebufferingController
     ) {
       return;
     }
-    const currPos = observation.position.pending ?? observation.position.last;
-    const rebufferingPos = observation.rebuffering.position ?? currPos;
+    const loadedPos = observation.position.getWanted();
+    const rebufferingPos = observation.rebuffering.position ?? loadedPos;
     const lockedPeriodStart = period.start;
-    if (currPos < lockedPeriodStart &&
+    if (loadedPos < lockedPeriodStart &&
         Math.abs(rebufferingPos - lockedPeriodStart) < 1)
     {
       log.warn("Init: rebuffering because of a future locked stream.\n" +
@@ -354,8 +357,6 @@ export default class RebufferingController
   private _checkDecipherabilityFreeze(
     observation : IPlaybackObservation
   ): boolean {
-    // XXX TODO allow this in in-worker configuration
-
     const { readyState,
             rebuffering,
             freezing } = observation;
@@ -506,9 +507,8 @@ function updateDiscontinuitiesStore(
   evt : IDiscontinuityEvent,
   observation : IPlaybackObservation
 ) : void {
-  const gcTime = observation.position.pending !== undefined ?
-    Math.min(observation.position.last, observation.position.pending) :
-    observation.position.last;
+  const gcTime = Math.min(observation.position.getPolled(),
+                          observation.position.getWanted());
 
   // First, perform clean-up of old discontinuities
   while (discontinuitiesStore.length > 0 &&

@@ -8,7 +8,7 @@ import SharedReference, {
 import { CancellationSignal } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
-import { IReadOnlyPlaybackObserver } from "../../api";
+import { IObservationPosition, IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   IBufferType,
@@ -21,7 +21,6 @@ import {
   IAdaptationStreamOptions,
   IPausedPlaybackObservation,
 } from "../adaptation";
-import { IPositionPlaybackObservation } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends
@@ -86,7 +85,7 @@ export interface IPeriodStreamPlaybackObservation {
    * Information on the current media position in seconds at the time of the
    * Observation.
    */
-  position : IPositionPlaybackObservation;
+  position : IObservationPosition;
   /** `duration` property of the HTMLMediaElement. */
   duration : number;
   /** `readyState` property of the HTMLMediaElement. */
