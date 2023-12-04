@@ -27,7 +27,6 @@ import {
   checkDiscontinuity,
   getIndexSegmentEnd,
 } from "../utils/index_helpers";
-import isSegmentStillAvailable from "../utils/is_segment_still_available";
 import updateSegmentTimeline from "../utils/update_segment_timeline";
 import addSegmentInfos from "./utils/add_segment_infos";
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
@@ -493,7 +492,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    */
   awaitSegmentBetween(start: number, end: number): boolean | undefined {
     assert(start <= end);
-    if (this.isFinished()) {
+    if (this.isStillAwaitingFutureSegments()) {
       return false;
     }
     const lastAvailablePosition = this.getLastAvailablePosition();
@@ -532,7 +531,22 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     }
     this._refreshTimeline();
     const { timeline, timescale } = this._index;
-    return isSegmentStillAvailable(segment, timeline, timescale, 0);
+    for (let i = 0; i < timeline.length; i++) {
+      const tSegment = timeline[i];
+      const tSegmentTime = tSegment.start / timescale;
+      if (tSegmentTime > segment.time) {
+        return false; // We went over it without finding it
+      } else if (tSegmentTime === segment.time) {
+        return true;
+      } else { // tSegment.start < segment.time
+        if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
+          const timeDiff = tSegmentTime - tSegment.start;
+          const repeat = (timeDiff / tSegment.duration) - 1;
+          return repeat % 1 === 0 && repeat <= tSegment.repeatCount;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -628,9 +642,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
-   * Returns `true` if the last segments in this index have already been
+   * Returns `false` if the last segments in this index have already been
    * generated.
-   * Returns `false` if the index is still waiting on future segments to be
+   * Returns `true` if the index is still waiting on future segments to be
    * generated.
    *
    * For Smooth, it should only depend on whether the content is a live content
@@ -638,8 +652,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * TODO What about Smooth live content that finishes at some point?
    * @returns {boolean}
    */
-  isFinished() : boolean {
-    return !this._isLive;
+  isStillAwaitingFutureSegments() : boolean {
+    return this._isLive;
   }
 
   /**
@@ -652,8 +666,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   /**
    * Add new segments to a `SmoothRepresentationIndex`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.
-   * @param {Object} segment - Information on the segment which contained that
-   * new segment information.
+   * @param {Object} currentSegment - Information on the segment which contained
+   * that new segment information.
    */
   addNewSegments(
     nextSegments : Array<{ duration : number; time : number; timescale : number }>,
