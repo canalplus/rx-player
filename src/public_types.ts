@@ -313,6 +313,9 @@ export interface IRepresentation {
   /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo? : IHDRInformation;
   index : IRepresentationIndex;
+
+  /** NOTE: not part of the API. */
+  isSupported: boolean;
 }
 
 export interface IHDRInformation {
