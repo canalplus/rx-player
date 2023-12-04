@@ -541,7 +541,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (
               // Data is buffered around the current position
               obs.currentRange !== null ||
-              // Or, for whatever reason, playback is already advancing
+              // Or, for whatever reason, we have no buffer but we're already advancing
               obs.position > seekedTime + 0.1
             ) {
               stopListening();
