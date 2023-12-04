@@ -957,20 +957,57 @@ export interface ILockedAudioRepresentationsSettings {
 }
 
 export interface IAudioTrackSetting {
+  /** `id` of the audio track you want to set. */
   trackId : string;
+  /**
+   * `id` of the Period for which you want that setting applied.
+   * Keeping it undefined means it will apply to the currently-playing Period.
+   */
   periodId? : string | undefined;
+  /**
+   * Behavior wanted when replacing an audio track / Adaptation by another.
+   * @see IAudioTrackSwitchingMode
+   *
+   * Keeping it undefined means that the RxPlayer will automatically select
+   * the most adapted choice.
+   */
   switchingMode? : IAudioTrackSwitchingMode | undefined;
+  /**
+   * Representations (a.k.a. qualities) you want to play in that new track.
+   * Keeping it undefined means that all compatible qualities may be played.
+   */
   lockedRepresentations? : string[] | undefined;
 }
 
 export interface IVideoTrackSetting {
+  /** `id` of the video track you want to set. */
   trackId : string;
+  /**
+   * `id` of the Period for which you want that setting applied.
+   * Keeping it undefined means it will apply to the currently-playing Period.
+   */
   periodId? : string | undefined;
+  /**
+   * Behavior wanted when replacing an video track / Adaptation by another.
+   * @see IVideoTrackSwitchingMode
+   *
+   * Keeping it undefined means that the RxPlayer will automatically select
+   * the most adapted choice.
+   */
   switchingMode? : IVideoTrackSwitchingMode | undefined;
+  /**
+   * Representations (a.k.a. qualities) you want to play in that new track.
+   * Keeping it undefined means that all compatible qualities may be played.
+   */
   lockedRepresentations? : string[] | undefined;
 }
 
 export interface ITextTrackSetting {
+  /** `id` of the text track you want to set. */
   trackId : string;
+  /**
+   * `id` of the Period for which you want that setting applied.
+   * Keeping it undefined means it will apply to the currently-playing Period.
+   */
   periodId? : string | undefined;
 }
