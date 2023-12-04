@@ -202,6 +202,16 @@ can be either:
   - for VoD contents, it is the difference between the starting position and
     the end position of the content.
 
+
+- **fromLivePosition** relative position relative to the content's live edge
+  (for live contents, it is the position that is intended to be broadcasted
+  at the current time) if it makes sense, in seconds. Should be a negative
+  number.
+
+  If the live edge is unknown or if it does not make sense for the current
+  content (for example, it won't make sense for a VoD content), that setting
+  repeats the same behavior than **fromLastPosition**.
+
 - **percentage** (`Number`): percentage of the wanted position. `0` being
   the minimum position possible (0 for static content, buffer depth for
   dynamic contents) and `100` being the maximum position possible
