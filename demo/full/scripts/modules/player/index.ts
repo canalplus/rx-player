@@ -134,6 +134,7 @@ export interface IPlayerModuleState {
   liveGap: number | undefined;
   loadedVideo: ILoadVideoOptions | null;
   lowLatencyMode: boolean;
+  livePosition: null | undefined | number;
   maximumPosition: null | undefined | number;
   minimumPosition: null | undefined | number;
   playbackRate: number;
@@ -185,6 +186,7 @@ const PlayerModule = declareModule(
     liveGap: undefined,
     loadedVideo: null,
     lowLatencyMode: false,
+    livePosition: undefined,
     maximumPosition: undefined,
     minimumPosition: undefined,
     playbackRate: 1,
