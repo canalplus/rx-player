@@ -314,8 +314,8 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  isFinished() : true {
-    return true;
+  isStillAwaitingFutureSegments() : false {
+    return false;
   }
 
   /**

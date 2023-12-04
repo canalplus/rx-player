@@ -723,9 +723,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     contentTimeBoundariesObserver.addEventListener("periodChange", (period) => {
       this.trigger("activePeriodChanged", { period });
     });
-    contentTimeBoundariesObserver.addEventListener("durationUpdate", (newDuration) => {
-      mediaSourceDurationUpdater.updateDuration(newDuration.duration, newDuration.isEnd);
-    });
+    contentTimeBoundariesObserver.addEventListener(
+      "endingPositionChange",
+      (x) => mediaSourceDurationUpdater.updateDuration(x.endingPosition, x.isEnd)
+    );
     contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
       if (endOfStreamCanceller === null) {
         endOfStreamCanceller = new TaskCanceller();
@@ -741,9 +742,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         endOfStreamCanceller = null;
       }
     });
-    const currentDuration = contentTimeBoundariesObserver.getCurrentDuration();
-    mediaSourceDurationUpdater.updateDuration(currentDuration.duration,
-                                              currentDuration.isEnd);
+    const endInfo = contentTimeBoundariesObserver.getCurrentEndingTime();
+    mediaSourceDurationUpdater.updateDuration(endInfo.endingPosition, endInfo.isEnd);
     return contentTimeBoundariesObserver;
   }
 
