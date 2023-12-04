@@ -352,7 +352,7 @@ export async function scheduleRequestWithCdns<T>(
    * attempts already done for that resource.
    *
    * Returns `undefined` if there's no Cdn left to request the resource.
-   * @param {Array.<Object>}
+   * @param {Array.<Object>} sortedCdns
    * @returns {Object|undefined}
    */
   function getPrioritaryRequestableCdnFromSortedList(
