@@ -359,10 +359,20 @@ export type IStartAtOption =
     percentage : number;
   } | {
     /**
-     * If set, we should begin at this position relative to the content's end,
-     * in seconds.
+     * If set, we should begin at this position relative to the content's maximum
+     * seekable position, in seconds.
      */
     fromLastPosition : number;
+  } | {
+    /**
+     * If set, we should begin at this position relative to the content's live
+     * edge if it makes sense, in seconds.
+     *
+     * If the live edge is unknown or if it does not make sense for the current
+     * content, that position is relative to the content's maximum position
+     * instead.
+     */
+    fromLivePosition : number;
   } | {
     /**
      * If set, we should begin at this position relative to the content's start,
