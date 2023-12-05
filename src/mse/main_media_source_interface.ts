@@ -424,8 +424,15 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       try {
         this._appendBufferNow(segmentData, params);
       } catch (err) {
+        const error = err instanceof Error ?
+          new SourceBufferError(err.name,
+                                err.message,
+                                err.name === "QuotaExceededError") :
+          new SourceBufferError("Error",
+                                "Unknown SourceBuffer Error during appendBuffer",
+                                false);
         this._currentOperations.forEach(op => {
-          op.reject(err);
+          op.reject(error);
         });
         this._currentOperations = [];
       }
@@ -437,7 +444,12 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       try {
         this._sourceBuffer.remove(start, end);
       } catch (err) {
-        nextElem.reject(err);
+        const error = err instanceof Error ?
+          new SourceBufferError(err.name, err.message, false) :
+          new SourceBufferError("Error",
+                                "Unknown SourceBuffer Error during remove",
+                                false);
+        nextElem.reject(error);
         this._currentOperations = [];
       }
     }
