@@ -262,7 +262,12 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       this._pendingOperations.delete(operationId);
       mapElt.reject(formattedErr);
     }
-    this._performNextQueuedOperationIfItExists();
+
+    const cancellationError = new CancellationError();
+    for (const operation of this._queuedOperations) {
+      operation.reject(cancellationError);
+    }
+    this._queuedOperations = [];
   }
 
   public appendBuffer(
