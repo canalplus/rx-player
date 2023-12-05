@@ -185,12 +185,12 @@ export default function constructDebugGeneralInfo(
       const videoBitratesStr = adaptations?.video?.representations.map((r) => {
         return String(r.bitrate) +
                (r.isSupported ? "" : " U!") +
-               (r.decipherable === false ? "" : " E!");
+               (r.decipherable !== false ? "" : " E!");
       }) ?? [];
       const audioBitratesStr = adaptations?.video?.representations.map((r) => {
         return String(r.bitrate) +
                (r.isSupported ? "" : " U!") +
-               (r.decipherable === false ? "" : " E!");
+               (r.decipherable !== false ? "" : " E!");
       }) ?? [];
       representationsElt.innerHTML = "";
       if (videoBitratesStr.length > 0) {
