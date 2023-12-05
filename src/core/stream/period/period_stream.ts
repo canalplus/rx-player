@@ -178,11 +178,25 @@ export default function PeriodStream(
        * @see createMediaSourceReloadRequester
        */
       const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-      const relativePosAfterSwitch =
-        isFirstAdaptationSwitch ? 0 :
-        bufferType === "audio"  ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio :
-        bufferType === "video"  ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video :
-                                  DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+
+      let relativePosAfterSwitch : number;
+      if (isFirstAdaptationSwitch) {
+        relativePosAfterSwitch = 0;
+      } else {
+        switch (bufferType) {
+          case "audio":
+            relativePosAfterSwitch = choice.relativeResumingPosition ??
+              DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio;
+            break;
+          case "video":
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.video;
+            break;
+
+          default:
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+            break;
+        }
+      }
       isFirstAdaptationSwitch = false;
 
       if (SegmentBuffersStore.isNative(bufferType) &&

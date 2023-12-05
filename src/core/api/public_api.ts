@@ -1695,6 +1695,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     let trackId : string;
     let switchingMode : IAudioTrackSwitchingMode | undefined;
     let reprsToLock : string[] | null = null;
+    let relativeResumingPosition : number | undefined;
     if (typeof arg === "string") {
       trackId = arg;
     } else {
@@ -1702,12 +1703,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       periodId = arg.periodId;
       switchingMode = arg.switchingMode;
       reprsToLock = arg.lockedRepresentations ?? null;
+      relativeResumingPosition = arg.relativeResumingPosition;
     }
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       undefined,
       (tcm, periodRef) =>
-        tcm.setAudioTrack(periodRef, trackId, switchingMode, reprsToLock));
+        tcm.setAudioTrack(
+          periodRef,
+          trackId,
+          switchingMode,
+          reprsToLock,
+          relativeResumingPosition
+        )
+    );
   }
 
   /**
