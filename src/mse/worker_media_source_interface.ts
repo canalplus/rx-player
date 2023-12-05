@@ -37,7 +37,7 @@ const generateSourceBufferOperationId = idGenerator();
  *
  * To set to `Infinity` to disable.
  */
-const MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE = 5;
+const MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE = Infinity;
 
 /**
  * Interface to the MediaSource browser APIs of the Media Source Extentions for
