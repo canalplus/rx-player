@@ -218,6 +218,8 @@ export interface IAdaptationChoice {
   /** "Switching mode" in which the track switch should happen. */
   switchingMode : ITrackSwitchingMode;
 
+  /** RelativeResumingPosition */
+  relativeResumingPosition : number | undefined;
   /**
    * Shared reference allowing to indicate which Representations from
    * that Adaptation are allowed.
