@@ -1004,6 +1004,28 @@ export interface IAudioTrackSetting {
    * Keeping it undefined means that all compatible qualities may be played.
    */
   lockedRepresentations? : string[] | undefined;
+  /**
+   * This only has an effect if the track switching operation lead to a small
+   * playback interruption (which can only happen if `switchingMode` is either
+   * set to `"reload"` or in some cases when it is undefined).
+   *
+   * `relativeResumingPosition` corresponds to the relative time in seconds at
+   * which we will resume playback with the new track.
+   *
+   * For example if switching from an audio track `A` to an audio track `B` at
+   * position `20` (seconds) and setting `relativeResumingPosition` to `-1`, we
+   * will resume playback with the audio track `B` at position `19`.
+   *
+   * You might want to set this value generally either because you want to
+   * replay some audio content after switching the audio track to give back
+   * context (e.g. picking back at the same sentence in the language of the new
+   * audio track) or to ensure the exact same position is played by setting it
+   * to `0`.
+   *
+   * If not set or set to `undefined`, the RxPlayer will automatically choose
+   * a suitable default value instead.
+   */
+  relativeResumingPosition? : number | undefined;
 }
 
 export interface IVideoTrackSetting {
@@ -1027,6 +1049,28 @@ export interface IVideoTrackSetting {
    * Keeping it undefined means that all compatible qualities may be played.
    */
   lockedRepresentations? : string[] | undefined;
+  /**
+   * This only has an effect if the track switching operation lead to a small
+   * playback interruption (which can only happen if `switchingMode` is either
+   * set to `"reload"`, `"flush"` or in some cases when it is undefined).
+   *
+   * `relativeResumingPosition` corresponds to the relative time in seconds at
+   * which we will resume playback with the new track.
+   *
+   * For example if switching from a video track `A` to a video track `B` at
+   * position `20` (seconds) and setting `relativeResumingPosition` to `-1`, we
+   * will resume playback with the video track `B` at position `19` (only if the
+   * track switch operation led to a playback interruption, see top of comment).
+   *
+   * You might want to set this value generally either because you want to
+   * replay some video content after switching the video track to give back
+   * context or to ensure the exact same position is played by setting it to
+   * `0`.
+   *
+   * If not set or set to `undefined`, the RxPlayer will automatically choose
+   * a suitable default value instead.
+   */
+  relativeResumingPosition? : number | undefined;
 }
 
 export interface ITextTrackSetting {

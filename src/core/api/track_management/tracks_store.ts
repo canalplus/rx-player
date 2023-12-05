@@ -543,14 +543,17 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj : ITSPeriodObject,
     wantedId : string,
     switchingMode : IAudioTrackSwitchingMode | undefined,
-    reprsToLock : string[] | null
+    reprsToLock : string[] | null,
+    relativeResumingPosition : number | undefined
   ) : void {
     return this._setAudioOrTextTrack("audio",
                                      periodObj,
                                      wantedId,
                                      switchingMode ??
                                        this._defaultAudioTrackSwitchingMode,
-                                     reprsToLock);
+                                     reprsToLock,
+                                     relativeResumingPosition
+    );
   }
 
   /**
@@ -559,7 +562,14 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @param {string} wantedId - adaptation id of the wanted track.
    */
   public setTextTrack(periodObj : ITSPeriodObject, wantedId : string) : void {
-    return this._setAudioOrTextTrack("text", periodObj, wantedId, "direct", null);
+    return this._setAudioOrTextTrack(
+      "text",
+      periodObj,
+      wantedId,
+      "direct",
+      null,
+      undefined
+    );
   }
 
   /**
@@ -577,7 +587,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj : ITSPeriodObject,
     wantedId : string,
     switchingMode : IAudioTrackSwitchingMode,
-    reprsToLock : string[] | null
+    reprsToLock : string[] | null,
+    relativeResumingPosition : number | undefined
   ) : void {
     const period = periodObj.period;
     const wantedAdaptation = arrayFind(period.getSupportedAdaptations(bufferType),
@@ -605,7 +616,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
     const storedSettings = { adaptation: wantedAdaptation,
                              switchingMode,
-                             lockedRepresentations };
+                             lockedRepresentations,
+                             relativeResumingPosition };
     typeInfo.storedSettings = storedSettings;
     this.trigger("trackUpdate", { period: toExposedPeriod(period),
                                   trackType: bufferType,
