@@ -224,6 +224,7 @@ function Player(): JSX.Element {
     (mod: IAudioRepresentationsSwitchingMode) => {
       if (playerModule === null) {
         setDefaultAudioRepresentationsSwitchingMode(mod);
+        setHasUpdatedPlayerOptions(true);
         return;
       }
       playerModule.actions.setDefaultAudioRepresentationSwitchingMode(mod);
@@ -235,6 +236,7 @@ function Player(): JSX.Element {
     (mod: IVideoRepresentationsSwitchingMode) => {
       if (playerModule === null) {
         setDefaultVideoRepresentationsSwitchingMode(mod);
+        setHasUpdatedPlayerOptions(true);
         return;
       }
       playerModule.actions.setDefaultVideoRepresentationSwitchingMode(mod);
