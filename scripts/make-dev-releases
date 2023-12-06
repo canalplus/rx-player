@@ -4,7 +4,7 @@
 # =================
 #
 # This script produces pre-releases on top of the current branch for the
-# `dev` and `canal` versions (as per their npm tags).
+# `dev-v4` and `canal-v4` versions (as per their npm tags).
 #
 # To use it:
 #
@@ -68,7 +68,7 @@ while true; do
   esac
 done
 git push origin ${dev_branch}
-npm publish --tag dev
+npm publish --tag dev-v4
 
 git checkout $current_branch
 
@@ -87,4 +87,4 @@ while true; do
     * ) echo "Please answer y or n.";;
   esac
 done
-npm publish --tag canal
+npm publish --tag canal-v4
