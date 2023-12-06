@@ -1,8 +1,8 @@
 diff --git a/src/core/init/directfile_content_initializer.ts b/src/core/init/directfile_content_initializer.ts
-index c9aa31d7a..b64dfc4b3 100644
+index 68a24d897..80f05baf7 100644
 --- a/src/core/init/directfile_content_initializer.ts
 +++ b/src/core/init/directfile_content_initializer.ts
-@@ -121,6 +121,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
+@@ -122,6 +122,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       * events when it cannot, as well as "unstalled" events when it get out of one.
       */
      const rebufferingController = new RebufferingController(playbackObserver,
@@ -11,7 +11,7 @@ index c9aa31d7a..b64dfc4b3 100644
                                                              speed);
      rebufferingController.addEventListener("stalled", (evt) =>
 diff --git a/src/core/init/media_source_content_initializer.ts b/src/core/init/media_source_content_initializer.ts
-index d89a39828..8fd859cd7 100644
+index 1cc84a4d5..ce3522ef0 100644
 --- a/src/core/init/media_source_content_initializer.ts
 +++ b/src/core/init/media_source_content_initializer.ts
 @@ -462,9 +462,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
@@ -257,46 +257,42 @@ index 5772fa8fb..eb3a051e4 100644
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-height", secondExtent[1]);
 diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-index 1897e9ab4..c7c118ac3 100644
+index 4f727229a..253aa1a72 100644
 --- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-@@ -19,30 +19,13 @@ import log from "../../../../log";
+@@ -14,16 +14,15 @@
+  * limitations under the License.
+  */
+ 
+-import { addClassName } from "../../../../compat";
+ import log from "../../../../log";
  import { REGXP_LENGTH } from "../regexps";
  
  /**
 - * @param {HTMLElement} element
-- * @param {string} lineHeight
 + * @param {HTMLElement} _element
-+ * @param {string} _lineHeight
+  * @param {string} lineHeight
   */
  export default function applyLineHeight(
 -  element : HTMLElement,
--  lineHeight : string
 +  _element : HTMLElement,
-+  _lineHeight : string
+   lineHeight : string
  ) : void {
--  const trimmedLineHeight = lineHeight.trim();
--  if (trimmedLineHeight === "auto") {
--    return;
--  }
--  const firstLineHeight = REGXP_LENGTH.exec(trimmedLineHeight[0]);
--  if (firstLineHeight === null) {
--    return;
--  }
--  if (firstLineHeight[2] === "px" ||
--      firstLineHeight[2] === "%" ||
--      firstLineHeight[2] === "em")
--  {
+   const trimmedLineHeight = lineHeight.trim();
+@@ -40,10 +39,10 @@ export default function applyLineHeight(
+       firstLineHeight[2] === "%" ||
+       firstLineHeight[2] === "em")
+   {
 -    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
--  } else if (firstLineHeight[2] === "c") {
++    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
+   } else if (firstLineHeight[2] === "c") {
 -    addClassName(element, "proportional-style");
 -    element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
--  } else {
--    log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
--  }
-+  // Ignore lineHeight in this as it is often set content-side to an unwanted value
-+  return;
- }
++    // addClassName(element, "proportional-style");
++    // element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
+   } else {
+     log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
+   }
 diff --git a/src/parsers/texttracks/ttml/html/apply_origin.ts b/src/parsers/texttracks/ttml/html/apply_origin.ts
 index 01a205aad..91d69fa3c 100644
 --- a/src/parsers/texttracks/ttml/html/apply_origin.ts
