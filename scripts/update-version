@@ -21,6 +21,11 @@
 
 set -e
 
+if [ $# -eq 0 ]; then
+ echo "no version in argument"
+ exit 1
+fi
+
 version=$1
 date_iso=$(date "+%Y-%m-%d")
 
