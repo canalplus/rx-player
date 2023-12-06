@@ -4,7 +4,7 @@
 # =================
 #
 # This script produces pre-releases on top of the current branch for the
-# `dev-v4` and `canal-v4` versions (as per their npm tags).
+# `worker` and `canal-worker` versions (as per their npm tags).
 #
 # To use it:
 #
@@ -40,15 +40,15 @@ fi
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 date=$(date "+%Y%m%d")
-dev_branch="release/v${version}-dev.${date}00"
-canal_branch="release/v${version}-canal.${date}00"
+dev_branch="release/v${version}-worker.${date}00"
+canal_branch="release/v${version}-canal.worker.${date}00"
 
 git checkout -b ${dev_branch}
-./scripts/update-version $1-dev.${date}00
+./scripts/update-version $1-worker.${date}00
 git add --all
 git commit -m "update version"
 while true; do
-  read -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
+  read -n1 -p "Do you wish to push and publish the worker build? [y/n] " yn
   echo ""
   case $yn in
     [Yy]* ) break;;
@@ -57,18 +57,18 @@ while true; do
   esac
 done
 git push origin ${dev_branch}
-npm publish --tag dev-v4
+npm publish --tag worker
 
 git checkout $current_branch
 
 git checkout -b ${canal_branch}
 git apply ./scripts/canal-release.patch
-./scripts/update-version $1-canal.${date}00
+./scripts/update-version $1-canal.worker.${date}00
 git add --all
 git commit -m "update version"
 git push origin ${canal_branch}
 while true; do
-  read -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
+  read -n1 -p "Do you wish to push and publish the canal-worker build? [y/n] " yn
   echo ""
   case $yn in
     [Yy]* ) break;;
@@ -76,4 +76,4 @@ while true; do
     * ) echo "Please answer y or n.";;
   esac
 done
-npm publish --tag canal-v4
+npm publish --tag canal-worker
