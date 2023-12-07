@@ -316,7 +316,7 @@ This object can take the following properties (all are optional):
 
       Defaults to `4`.
 
-    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
       that the client can wait for downloading all the data of the request response.
       If all data are not downloaded within the specified timeout, segment request are
       aborted and, depending on other options, retried.
@@ -326,7 +326,7 @@ This object can take the following properties (all are optional):
       `undefined` (the default) will lead to a default, large, timeout being
       used.
 
-    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
       that the client can wait for receiving the responses headers and status code.
       If they are not received within the specified timeout, segment requests are aborted and,
       depending on other options, retried.
@@ -352,7 +352,7 @@ This object can take the following properties (all are optional):
 
       Defaults to `4`.
 
-    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
       that the client can wait for downloading all the data of the request response.
       If all data are not downloaded within the specified timeout, manifest requests are
       aborted and, depending on other options, retried.
@@ -362,7 +362,7 @@ This object can take the following properties (all are optional):
       `undefined` (the default) will lead to a default, large, timeout being
       used.
 
-    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds, 
+    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
       that the client can wait for receiving the responses headers and status code.
       If they are not received within the specified timeout, manifest requests are aborted and,
       depending on other options, retried.
