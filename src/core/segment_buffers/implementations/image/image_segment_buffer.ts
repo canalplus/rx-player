@@ -83,7 +83,7 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
     try {
       this._buffered.insert(startTime, endTime);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true, performance.now());
       }
     } catch (err) {
       return Promise.reject(err);

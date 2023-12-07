@@ -442,10 +442,7 @@ function doesStartSeemGarbageCollected(
 ) {
   const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
   if (currentSeg.bufferedStart === undefined)  {
-    log.warn("Stream: Start of a segment unknown. " +
-             "Assuming it is garbage collected by default.",
-             currentSeg.start);
-    return true;
+    return false;
   }
 
   if (prevSeg !== null && prevSeg.bufferedEnd !== undefined &&
@@ -486,10 +483,7 @@ function doesEndSeemGarbageCollected(
 ) {
   const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
   if (currentSeg.bufferedEnd === undefined)  {
-    log.warn("Stream: End of a segment unknown. " +
-             "Assuming it is garbage collected by default.",
-             currentSeg.end);
-    return true;
+    return false;
   }
 
   if (nextSeg !== null && nextSeg.bufferedStart !== undefined &&

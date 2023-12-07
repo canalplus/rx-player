@@ -723,6 +723,39 @@ const DEFAULT_CONFIG = {
      */
   UNFREEZING_DELTA_POSITION: 0.001,
 
+  /**
+   * The RxPlayer has a recurring logic which will synchronize the browser's
+   * buffers' buffered time ranges with its internal representation in the
+   * RxPlayer to then rely on that internal representation to determine where
+   * segments are technically present in the browser's buffer.
+   *
+   * We found out that when inserting a new segment to the buffer, the browser
+   * may actually take time before actually considering the full segment in its
+   * advertised buffered time ranges.
+   *
+   * This value thus set an amount of milliseconds we might want to wait before
+   * being sure that the buffered time ranges should have considered a segment
+   * that has been pushed.
+   */
+  SEGMENT_SYNCHRONIZATION_DELAY: 1500,
+
+  /**
+   * The `SEGMENT_SYNCHRONIZATION_DELAY` defined in this same configuration
+   * object only needs to be used if it appears that the current buffered
+   * time ranges do not reflect the full data of a pushed segment yet.
+   *
+   * The `MISSING_DATA_TRIGGER_SYNC_DELAY` value thus allows to define a
+   * minimum time difference in seconds between what's buffered and what the
+   * segment's ranges should have been, from which we might consider that we may
+   * want to wait the `SEGMENT_SYNCHRONIZATION_DELAY` before trusting the buffered
+   * time ranges for that segment.
+   * If what's missing from that segment is however less than that value in
+   * seconds, we can begin to trust the reported buffered time ranges.
+   *
+   * Should generally be inferior to `MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT`.
+   */
+  MISSING_DATA_TRIGGER_SYNC_DELAY: 0.1,
+
     /**
      * Maximum authorized difference between what we calculated to be the
      * beginning or end of the segment in a media buffer and what we

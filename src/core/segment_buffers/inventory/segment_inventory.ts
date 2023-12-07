@@ -53,6 +53,15 @@ export const enum ChunkStatus {
 /** Information stored on a single chunk by the SegmentInventory. */
 export interface IBufferedChunk {
   /**
+   * Value of the monotonically-increasing timestamp used by the RxPlayer at
+   * the time the segment was succesfully pushed to the buffer.
+   *
+   * We add this value here as we may want to wait for some time before
+   * synchronizing the buffer to ensure the browser has properly considered the
+   * full segment in its `buffered` value.
+   */
+  insertionTs: number;
+  /**
    * Complete size of the pushed chunk, in bytes.
    * Note that this does not always reflect the memory imprint of the segment in
    * memory:
@@ -330,7 +339,7 @@ export default class SegmentInventory {
               "SI: calculating buffered end of contiguous segment",
               bufferType,
               prevSegment.bufferedEnd,
-              prevSegment.end,
+              prevSegment.end
             );
           }
 
@@ -378,6 +387,10 @@ export default class SegmentInventory {
    * Chunks are decodable sub-parts of a whole segment. Once all chunks in a
    * segment have been inserted, you should call the `completeSegment` method.
    * @param {Object} chunkInformation
+   * @param {boolean} succeed - If `true` the insertion operation finished with
+   * success, if `false` an error arised while doing it.
+   * @param {number} insertionTs - The monotonically-increasing timestamp at the
+   * time the segment has been confirmed to be inserted by the buffer.
    */
   public insertChunk(
     { period,
@@ -387,7 +400,8 @@ export default class SegmentInventory {
       chunkSize,
       start,
       end } : IInsertedChunkInfos,
-    succeed: boolean
+    succeed: boolean,
+    insertionTs: number
   ) : void {
     if (segment.isInit) {
       return;
@@ -403,6 +417,7 @@ export default class SegmentInventory {
     const inventory = this._inventory;
     const newSegment = { status: succeed ? ChunkStatus.PartiallyPushed :
                                            ChunkStatus.Failed,
+                         insertionTs,
                          chunkSize,
                          splitted: false,
                          start,
@@ -611,6 +626,7 @@ export default class SegmentInventory {
               log.warn("SI: Segment pushed is contained in a previous one",
                        bufferType, start, end, segmentI.start, segmentI.end);
               const nextSegment = { status: segmentI.status,
+                                    insertionTs: segmentI.insertionTs,
                                     /**
                                      * Note: this sadly means we're doing as if
                                      * that chunk is present two times.
@@ -814,6 +830,8 @@ export default class SegmentInventory {
                                                        end: seg.bufferedEnd });
           }
         } else {
+          // TODO FIXME There might be a false positive here when the
+          // `SEGMENT_SYNCHRONIZATION_DELAY` config value is at play
           log.debug("SI: buffered range not known after sync. Skipping history.",
                     seg.start,
                     seg.end);
@@ -918,7 +936,9 @@ function guessBufferedStartFromRangeStart(
                             null,
   bufferType : string
 ) : void {
-  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MISSING_DATA_TRIGGER_SYNC_DELAY,
+          SEGMENT_SYNCHRONIZATION_DELAY } = config.getCurrent();
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
       log.debug("SI: Segment partially GCed at the start",
@@ -954,6 +974,17 @@ function guessBufferedStartFromRangeStart(
   } else if (firstSegmentInRange.start - rangeStart <=
                MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE)
   {
+    const now = performance.now();
+    if (firstSegmentInRange.start - rangeStart >= MISSING_DATA_TRIGGER_SYNC_DELAY &&
+        now - firstSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY)
+    {
+      log.debug("SI: Ignored bufferedStart synchronization",
+                bufferType,
+                rangeStart,
+                firstSegmentInRange.start,
+                now - firstSegmentInRange.insertionTs);
+      return;
+    }
     log.debug("SI: found true buffered start",
               bufferType, rangeStart, firstSegmentInRange.start);
     firstSegmentInRange.bufferedStart = rangeStart;
@@ -966,8 +997,19 @@ function guessBufferedStartFromRangeStart(
               bufferType, rangeStart, firstSegmentInRange.start);
     firstSegmentInRange.bufferedStart = firstSegmentInRange.start;
   } else {
+    const now = performance.now();
+    if (firstSegmentInRange.start - rangeStart >= MISSING_DATA_TRIGGER_SYNC_DELAY &&
+        now - firstSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY)
+    {
+      log.debug("SI: Ignored bufferedStart synchronization",
+                bufferType,
+                rangeStart,
+                firstSegmentInRange.start,
+                now - firstSegmentInRange.insertionTs);
+      return;
+    }
     log.debug("SI: Segment appears immediately garbage collected at the start",
-              bufferType, firstSegmentInRange.bufferedStart, rangeStart);
+              bufferType, rangeStart, firstSegmentInRange.start);
     firstSegmentInRange.bufferedStart = rangeStart;
   }
 }
@@ -984,7 +1026,9 @@ function guessBufferedEndFromRangeEnd(
   rangeEnd : number,
   bufferType? : string
 ) : void {
-  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE } = config.getCurrent();
+  const { MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+          MISSING_DATA_TRIGGER_SYNC_DELAY,
+          SEGMENT_SYNCHRONIZATION_DELAY } = config.getCurrent();
   if (lastSegmentInRange.bufferedEnd !== undefined) {
     if (lastSegmentInRange.bufferedEnd > rangeEnd) {
       log.debug("SI: Segment partially GCed at the end",
@@ -1016,7 +1060,7 @@ function guessBufferedEndFromRangeEnd(
         bufferType,
         rangeEnd,
         lastSegmentInRange.end,
-        now - lastSegmentInRange.insertionTs,
+        now - lastSegmentInRange.insertionTs
       );
       return;
     }
@@ -1024,7 +1068,7 @@ function guessBufferedEndFromRangeEnd(
       "SI: found true buffered end",
       bufferType,
       rangeEnd,
-      lastSegmentInRange.end,
+      lastSegmentInRange.end
     );
     lastSegmentInRange.bufferedEnd = rangeEnd;
     if (bufferedEndLooksCoherent(lastSegmentInRange)) {
@@ -1036,6 +1080,17 @@ function guessBufferedEndFromRangeEnd(
               bufferType, rangeEnd, lastSegmentInRange.end);
     lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
   } else {
+    const now = performance.now();
+    if (rangeEnd - lastSegmentInRange.end >= MISSING_DATA_TRIGGER_SYNC_DELAY &&
+        now - lastSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY)
+    {
+      log.debug("SI: Ignored bufferedEnd synchronization",
+                bufferType,
+                rangeEnd,
+                lastSegmentInRange.end,
+                now - lastSegmentInRange.insertionTs);
+      return;
+    }
     log.debug("SI: Segment appears immediately garbage collected at the end",
               bufferType, lastSegmentInRange.bufferedEnd, rangeEnd);
     lastSegmentInRange.bufferedEnd = rangeEnd;
