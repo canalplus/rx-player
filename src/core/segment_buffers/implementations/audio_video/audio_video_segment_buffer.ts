@@ -21,6 +21,7 @@ import {
   ISourceBufferInterface,
   SourceBufferType,
 } from "../../../../mse";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { IRange } from "../../../../utils/ranges";
 import {
   ICompleteSegmentInfo,
@@ -187,11 +188,15 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     try {
       res = await promise;
     } catch (err) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos, false);
+      this._segmentInventory.insertChunk(infos.inventoryInfos,
+                                         false,
+                                         getMonotonicTimeStamp());
       throw err;
     }
     if (infos.inventoryInfos !== null) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos, true);
+      this._segmentInventory.insertChunk(infos.inventoryInfos,
+                                         true,
+                                         getMonotonicTimeStamp());
     }
     const ranges = res[res.length - 1];
     this._segmentInventory.synchronizeBuffered(ranges);

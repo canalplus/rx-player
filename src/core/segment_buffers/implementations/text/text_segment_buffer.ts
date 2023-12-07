@@ -1,6 +1,7 @@
 import log from "../../../../log";
 import { ITextDisplayer } from "../../../../text_displayer";
 import { ITextTrackSegmentData } from "../../../../transports";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { IRange } from "../../../../utils/ranges";
 import {
   ICompleteSegmentInfo,
@@ -69,7 +70,9 @@ export default class TextSegmentBuffer extends SegmentBuffer {
                                          value: infos });
     const ranges = await promise;
     if (infos.inventoryInfos !== null) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos, true);
+      this._segmentInventory.insertChunk(infos.inventoryInfos,
+                                         true,
+                                         getMonotonicTimeStamp());
     }
     this._segmentInventory.synchronizeBuffered(ranges);
     return ranges;
