@@ -28,6 +28,13 @@
       "import": "./dist/es2017/experimental/features/index.js",
       "default": "./dist/es2017/experimental/features/index.js"
     },
+    "./experimental/features/embeds": {
+      "node": "./dist/commonjs/__GENERATED_CODE/index.js",
+      "es2015": "./dist/es2017/__GENERATED_CODE/index.js",
+      "require": "./dist/commonjs/__GENERATED_CODE/index.js",
+      "import": "./dist/es2017/__GENERATED_CODE/index.js",
+      "default": "./dist/es2017/__GENERATED_CODE/index.js"
+    },
     "./experimental/features/*": {
       "node": "./dist/commonjs/experimental/features/*.js",
       "es2015": "./dist/es2017/experimental/features/*.js",
@@ -118,8 +125,8 @@
   "license": "Apache-2.0",
   "sideEffects": false,
   "scripts": {
-    "build": "./scripts/build/generate_build.mjs",
-    "build:all": "npm run build:rxp:all && npm run build:wasm:release",
+    "build": "./scripts/generate_build.mjs",
+    "build:all": "npm run build:wasm:release && npm run build:rxp:all",
     "build:rxp:all": "npm run bundle && npm run bundle:min && npm run build",
     "build:wasm:debug": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && node ../../../../../scripts/wasm-optimize.mjs target/wasm32-unknown-unknown/release/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm && cd ../../../../../ && npm run wasm-strip",
@@ -263,7 +270,7 @@
     },
     "Build the player or one of its sub-parts": {
       "Regular builds (used by JS bundlers)": {
-        "build": "Build the rx-player and create corresponding files and directories."
+        "build": "Build the rx-player JavaScript output"
       },
       "Legacy bundle builds (single-file bundles exporting to window.RxPlayer)": {
         "bundle": "Build the player in dist/rx-player.js",
