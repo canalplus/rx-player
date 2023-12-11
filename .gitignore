@@ -26,13 +26,7 @@
 
 /doc/generated
 
-/features
-/logger
-/minimal
-/experimental
-/types
-/tools
-
+/src/__GENERATED_CODE
 /src/parsers/manifest/dash/wasm-parser/target
 
 # IDE files
