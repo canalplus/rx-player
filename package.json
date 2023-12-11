@@ -265,8 +265,8 @@
     },
     "Build the player or one of its sub-parts": {
       "Regular builds (used by JS bundlers)": {
-        "build": "Build the rx-player JavaScript code in release mode",
-        "build:dev": "Build the rx-player JavaScript code in development mode (more runtime checks, mostly)"
+        "build": "Build the rx-player code in release mode",
+        "build:dev": "Build the rx-player code in development mode (more runtime checks, mostly)"
       },
       "Legacy bundle builds (single-file bundles exporting to window.RxPlayer)": {
         "bundle": "Build the player in dist/rx-player.js",

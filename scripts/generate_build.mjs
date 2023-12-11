@@ -19,6 +19,7 @@
  */
 
 import { spawn } from "child_process";
+import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { rimraf } from "rimraf";
@@ -56,7 +57,25 @@ async function generateBuild(options = {}) {
     console.log(" 🧹 Removing previous build artefacts...");
     await removePreviousBuildArtefacts();
 
-    console.log(" 🤖 Generate embedded code...");
+    const distDir = path.join(ROOT_DIR, "./dist");
+    if (!fs.existsSync(distDir)) {
+      fs.mkdirSync(distDir);
+    }
+
+      const dashWasmDir = path.join(distDir, "./mpd-parser.wasm");
+      if (!fs.existsSync(dashWasmDir)) {
+        console.log(" 🏭 Generating WebAssembly file...");
+        await spawnProm(
+          "npm run " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
+          [],
+          (code) =>
+          new Error(`WebAssembly compilation process exited with code ${code}`)
+        );
+      } else {
+        console.log(" 🏭 Reusing already-generated WebAssembly file.");
+      }
+
+    console.log(" 🤖 Generating embedded code...");
     await generateEmbeds();
 
     console.log(" ⚙️ Compiling project with TypeScript...");
