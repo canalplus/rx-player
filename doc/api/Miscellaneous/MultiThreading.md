@@ -49,15 +49,20 @@ ensure a smooth playback.
 This can be interesting for performance reasons, especially if you encounter
 one of the following situations:
 
--   You play large dynamic (e.g. live) DASH contents. Those might be complex to
-    parse by the RxPlayer, and the parsing operation may block your application,
-    including UI interactions, for some amount of time especially on
-    resource-limited devices.
-    For dynamic contents especially, that parsing operation might be repeated
-    frequently.
+-   Your application run on devices on which you can encounter performance
+    issues. Here loading contents in a multithread mode might bring a better
+    experience, such as a more responsive application and less rebuffering.
 
-    When running in "multithreading" mode, this parsing operation is performed
-    concurrently to your user interface, preventing this blocking situation.
+    We also noticed on various smart TV devices targeted by Canal+ noticeably
+    far fewer unexpected media quality drops (and consequently, a much more
+    stable video quality).
+    This is because most of those drops were linked to heavy processing
+    performed by the full application, which has an effect on the
+    RxPlayer's adaptive and networking logic.
+
+    When running in "multithread" mode, performance issues coming from the
+    application will influence much less negatively the RxPlayer code (and
+    vice-versa), as its main logic will run in a separate thread.
 
 -   Your application is very dynamic and you cannot afford to have a big media
     buffer (for example because you play live contents, because you're playing
@@ -98,17 +103,24 @@ The choice of labeling this feature as experimental has been made so we can
 have more freedom if we find ways to provide sensible improvements to its API in
 the future.
 
-## Quick example
+## Quick start
 
-Before going into the details, here is an example of how you can rely on
-WebWorkers through the RxPlayer:
-
+You can just test this feature quickly by running the following code:
 ```js
-// Import the RxPlayer (here minimal, but it also works with the default import)
+// Import the RxPlayer (here the minimal version, but it also works with the
+// default import)
 import RxPlayer from "rx-player/minimal";
 
 // Import the MULTI_THREAD experimental feature
 import { MULTI_THREAD } from "rx-player/experimental/features";
+
+// To simplify this example, we'll directly import "embedded" versions of the
+// supplementary code used by the `MULTI_THREAD` feature.
+// We could also load them on demand through URLs
+import {
+    EMBEDDED_WORKER,    // Code which will run in the "Worker"
+    EMBEDDED_DASH_WASM, // To be able to play DASH contents
+} from "rx-player/experimental/features/embeds";
 
 // Add the MULTI_THREAD feature, like any other feature
 RxPlayer.addFeatures([MULTI_THREAD]);
@@ -116,14 +128,15 @@ RxPlayer.addFeatures([MULTI_THREAD]);
 // Instantiate your player as usual
 const player = new RxPlayer(/* your usual options */);
 
-// After instantiation, you can at any time "attach" a WebWorker instance so
-// any following `loadVideo` call can rely on it.
+// After instantiation, you can at any time "attach" a WebWorker so any
+// following `loadVideo` call can rely on it when possible.
 player.attachWorker({
-    workerUrl: LINK_TO_WEB_WORKER_URL,
-    dashWasmUrl: LINK_TO_DASH_WASM_PARSER_URL,
+    workerUrl: EMBEDDED_WORKER,
+    dashWasmUrl: EMBEDDED_DASH_WASM,
 });
 
-// Any further call to `loadVideo` may rely on WebWorker if possible (see below)
+// Any further call to `loadVideo` may rely on WebWorker if possible (see
+// limitations below)
 player.loadVideo({
     /* ... */
 });
@@ -143,8 +156,8 @@ if (currentModeInfo === null) {
 
 ## Limitations
 
-Note that the `"multithread"` mode can only run on a `loadVideo` call if all the
-following conditions are respected:
+Note that the `"multithread"` mode will only run on a `loadVideo` call if all
+the following conditions are respected:
 
 -   Your supported platforms both are compatible to the `WebWorker` browser
     feature (the great majority are) and WebAssembly (very old platforms might
@@ -225,6 +238,26 @@ multithread mode:
 
 You can find them at any of the following places:
 
+- The easiest way is to just import in your application the "embedded" versions
+  of each of them, exported through the
+  `"rx-player/experimental/features/embeds"` path:
+  ```js
+  import {
+    EMBEDDED_WORKER, // "embedded" version of the `worker.js` file
+    EMBEDDED_DASH_WASM, // "embedded" version of the `mpd-parser.wasm` file
+  } from "rx-player/experimental/features/embeds";
+  ```
+
+  This allows to bypass the need to store and serve separately those two files.
+  Note however that including those "embeds" in your application may sensibly
+  increase its size.
+
+  If you would prefer more control and a smaller bundle size, you may instead
+  consider the other following ways to load those as separate files.
+  This will lead to smaller file sizes and they will only be loaded on demand,
+  but at a maintenance cost: you'll have to store and serve those files yourself
+  as well as not forget to update them each time you update the RxPlayer.
+
 - With every release note published on GitHub (you should only use
   the files linked to the RxPlayer's version you're using), as `worker.js` and
   `mpd-parser.wasm` respectively.
@@ -235,23 +268,10 @@ You can find them at any of the following places:
   example in the `node_modules` directory (most probably in
   `node_modules/rx-player/dist/` depending on your project).
 
-- Alternatively, if you don't want to store and serve those files yourselve,
-  both may be imported as URL through respectively the
-  `"rx-player/experimental/inline-worker"` and
-  `"rx-player/experimental/inline-mpd-parser"` import paths:
-  ```js
-  import RxPlayerWorkerUrl from "rx-player/experimental/inline-worker";
-  import RxPlayerDashWasmUrl from "rx-player/experimental/inline-mpd-parser";
-  ```
-
-  Note however than including those imports in your build may drastically
-  increase your bundle's size. The preferred way is for you to rely on those
-  files through the other means listed.
-
-Once you've retrieved the right WebAssembly file linked to your RxPlayer
-version, you will need to store it and give its URL to the RxPlayer so it will
-be able to load it (unless the inline version has been imported, which is
-already an URL itself).
+Once you've retrieved those files and unless you relied on the embedded versions,
+you will need to store them and give its URL to the RxPlayer so it will be able
+to load them (embedded versions may be used directly instead, like an URL, in
+the `attachWorker` method shown below).
 
 ### Step 2: importing the `MULTI_THREAD` feature and adding it
 
@@ -283,8 +303,8 @@ step 1) - or the embedded version - to it:
 ```js
 const player = new RxPlayer({ /* ... */ });
 player.attachWorker({
-    workerUrl,
-    dashWasmUrl,
+    workerUrl: URL_TO_WORKER_FILE,
+    dashWasmUrl: URL_TO_DASH_WASM_FILE,
 });
 ```
 
@@ -292,13 +312,13 @@ player.attachWorker({
 
 That should be all!
 
-Now all contents that are compatible with the "multithreading" mode should rely
+Now all contents that are compatible with the "multithread" mode should rely
 on the WebWorker. You can look at the limitations listed on this page to know
 what are the exact conditions and how you can still rely on the regular "main"
 mode for other contents.
 
 You can know at any time whether a loaded content is relying on a WebWorker
-("multithreading" mode) or not ("main" mode), by calling the
+("multithread" mode) or not ("main" mode), by calling the
 [`getCurrentModeInformation` method](../Playback_Information/getCurrentModeInformation.md):
 ```js
 const currentModeInfo = player.getCurrentModeInformation();

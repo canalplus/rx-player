@@ -42,6 +42,13 @@
       "import": "./dist/es2017/experimental/features/index.js",
       "default": "./dist/es2017/experimental/features/index.js"
     },
+    "./experimental/features/embeds": {
+      "node": "./dist/commonjs/__GENERATED_CODE/index.js",
+      "es2015": "./dist/es2017/__GENERATED_CODE/index.js",
+      "require": "./dist/commonjs/__GENERATED_CODE/index.js",
+      "import": "./dist/es2017/__GENERATED_CODE/index.js",
+      "default": "./dist/es2017/__GENERATED_CODE/index.js"
+    },
     "./experimental/features/*": {
       "node": "./dist/commonjs/experimental/features/*.js",
       "es2015": "./dist/es2017/experimental/features/*.js",
@@ -132,21 +139,18 @@
   "license": "Apache-2.0",
   "sideEffects": false,
   "scripts": {
-    "build": "./scripts/build/generate_build.mjs",
-    "build:all": "npm run build:wasm:release && npm run build:rxp:all",
-    "build:rxp:all": "npm run bundle && npm run bundle:min && npm run build && npm run build:worker:prod",
-    "build:wasm:debug": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
-    "build:wasm:release": "cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && node ../../../../../scripts/wasm-optimize.mjs target/wasm32-unknown-unknown/release/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm && cd ../../../../../ && npm run wasm-strip",
+    "build": "./scripts/generate_build.mjs",
+    "build:dev": "./scripts/generate_build.mjs --dev-mode",
+    "build:all": "npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
+    "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
+    "build:wasm:release": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && node ../../../../../scripts/wasm-optimize.mjs target/wasm32-unknown-unknown/release/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm && cd ../../../../../ && npm run wasm-strip",
     "bundle": "webpack --progress --config webpack.config.mjs --env production",
-    "build:worker": "esbuild ./src/worker_entry_point.ts --target=es2017 --bundle --outfile=dist/worker.js --define:__ENVIRONMENT__=\"{ \\\"PRODUCTION\\\": 0, \\\"DEV\\\": 1, \\\"CURRENT_ENV\\\": 1 }\" && node scripts/generate_inline_worker.mjs && node scripts/generate_inline_dash_wasm.mjs",
-    "build:worker:prod": "esbuild --minify ./src/worker_entry_point.ts --target=es2017 --bundle --outfile=dist/worker.js --define:__ENVIRONMENT__=\"{ \\\"PRODUCTION\\\": 0, \\\"DEV\\\": 1, \\\"CURRENT_ENV\\\": 0 }\" && node scripts/generate_inline_worker.mjs && node scripts/generate_inline_dash_wasm.mjs",
     "bundle:min": "webpack --progress --config webpack.config.mjs --env minify --env production",
     "bundle:min:watch": "webpack --progress --config webpack.config.mjs -w --env production --env minify",
     "bundle:watch": "webpack --progress --config webpack.config.mjs -w --env production",
     "certificate": "./scripts/generate_certificate",
     "check": "npm run check:types && npm run lint",
     "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run test:unit && npm run test:integration && npm run test:memory && node -r esm ./scripts/check_nodejs_import_compatibility.js",
-    "check:appveyor": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run test:appveyor",
     "check:types": "tsc --noEmit --project .",
     "check:types:watch": "tsc --noEmit --watch --project .",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
@@ -163,14 +167,11 @@
     "releases:dev": "./scripts/make-dev-releases",
     "standalone": "node ./scripts/run_standalone_demo.mjs",
     "start": "node ./scripts/start_demo_web_server.mjs",
-    "sart:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
+    "start:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
     "wasm-strip": "node scripts/wasm-strip.mjs dist/mpd-parser.wasm",
-    "test:appveyor": "npm run test:unit && npm run test:memory",
     "test:integration": "node tests/integration/run.mjs --bchromehl --bfirefoxhl",
-    "test:integration:appveyor": "node --max-old-space-size=2048 ./tests/integration/run.mjs --bchromehl",
     "test:integration:chrome": "node tests/integration/run.mjs --bchrome",
     "test:integration:chrome:watch": "node tests/integration/run.mjs --bchrome --watch",
-    "test:integration:coverage": "node tests/integration/run.mjs --bchromehl --bfirefoxhl --coverage",
     "test:integration:firefox": "node tests/integration/run.mjs --bfirefox",
     "test:integration:firefox:watch": "node tests/integration/run.mjs --bfirefox --watch",
     "test:memory": "node tests/memory/run.mjs --bchromehl",
@@ -264,7 +265,6 @@
         "test:integration": "Launch integration tests in multiple browser environments",
         "test:integration:chrome": "Launch integration tests in a Chrome browser.",
         "test:integration:chrome:watch": "Launch integration tests in Chrome each times the files update",
-        "test:integration:coverage": "Launch integration tests in multiple browser environments and produce a coverage report in tests/integration/coverage",
         "test:integration:firefox": "Launch integration tests in a Firefox browser.",
         "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update"
       },
@@ -279,7 +279,8 @@
     },
     "Build the player or one of its sub-parts": {
       "Regular builds (used by JS bundlers)": {
-        "build": "Build the rx-player and create corresponding files and directories."
+        "build": "Build the rx-player code in release mode",
+        "build:dev": "Build the rx-player code in development mode (more runtime checks, non-minified worker)"
       },
       "Legacy bundle builds (single-file bundles exporting to window.RxPlayer)": {
         "bundle": "Build the player in dist/rx-player.js",
@@ -287,17 +288,12 @@
         "bundle:min:watch": "Build the player in dist/rx-player.js each times the files update",
         "bundle:watch": "Build the player as a minified version in dist/rx-player.min.js each times the files update"
       },
-      "Worker builds (relied on in \"multithread\" mode)": {
-        "build:worker": "Build the RxPlayer's worker code when running in \"multithread\" mode, in a development context.",
-        "build:worker:prod": "Build the RxPlayer's worker code when running in \"multithread\" mode, minified and some checks removed, used for a release."
-      },
       "WebAssembly MPD parser builds (needs Rust, Cargo and binaryen)": {
         "build:wasm:debug": "Build the DASH MPD parser written in rust as WebAssembly into debug mode, and output the result as dist/mpd-parser.wasm",
         "build:wasm:release": "Build the DASH MPD parser written in rust as WebAssembly into release mode, and output the result as dist/mpd-parser.wasm"
       },
       "Combinations of multiple builds": {
-        "build:all": "Perform all possible builds of the player (regular RxPlayer builds, legacy bundles and the WebAssembly DASH MPD parser release build).",
-        "build:rxp:all": "Perform all possible builds of the RxPlayer main code (that is, excluding the WebAssembly DASH MPD parser build)."
+        "build:all": "Perform all possible builds of the player (regular RxPlayer builds, legacy bundles and the WebAssembly DASH MPD parser release build)."
       }
     },
     "Build the documentation pages": {
