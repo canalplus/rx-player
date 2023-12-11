@@ -20,7 +20,7 @@
 
 import { spawn } from "child_process";
 import * as path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
 
@@ -33,13 +33,26 @@ const BUILD_ARTEFACTS_TO_REMOVE = [
   "src/__GENERATED_CODE",
 ];
 
-generateBuild();
+// If true, this script is called directly
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const { argv } = process;
+  if (argv.includes("-h") || argv.includes("--help")) {
+    displayHelp();
+    process.exit(0);
+  }
+  const devMode = argv.includes("-d") || argv.includes("--dev-mode");
+  generateBuild({
+    devMode,
+  });
+}
 
 /**
+ * @param {Object|undefined} options
  * @returns {Promise}
  */
-async function generateBuild() {
+async function generateBuild(options = {}) {
   try {
+    const devMode = options.devMode === true;
     console.log(" 🧹 Removing previous build artefacts...");
     await removePreviousBuildArtefacts();
 
@@ -47,12 +60,9 @@ async function generateBuild() {
     await generateEmbeds();
 
     console.log(" ⚙️ Compiling project with TypeScript...");
-    await compile();
+    await compile(devMode);
   } catch (err) {
-    console.error(
-      "Fatal error:",
-      err instanceof Error ? err.message : err
-    );
+    console.error("Fatal error:", err instanceof Error ? err.message : err);
     process.exit(1);
   }
 
@@ -64,17 +74,20 @@ async function generateBuild() {
  * @returns {Promise}
  */
 async function removePreviousBuildArtefacts() {
-  await Promise.all(BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
-    const relativePath = path.join(ROOT_DIR, name);
-    return removeFile(relativePath);
-  }));
+  await Promise.all(
+    BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
+      const relativePath = path.join(ROOT_DIR, name);
+      return removeFile(relativePath);
+    })
+  );
 }
 
 /**
  * Compile the project by spawning a separate procress running TypeScript.
+ * @param {boolean} devMode
  * @returns {Promise}
  */
-async function compile() {
+async function compile(devMode) {
   // Sadly TypeScript compiler API seems to be sub-par.
   // I did not find for example how to exclude some files (our unit tests)
   // easily by running typescript directly from NodeJS.
@@ -82,14 +95,20 @@ async function compile() {
   await Promise.all([
     spawnProm(
       "npx tsc -p",
-      [path.join(ROOT_DIR, "tsconfig.json")],
-      (code) => new Error(`CommonJS compilation process exited with code ${code}`),
+      [path.join(ROOT_DIR, devMode ? "tsconfig.dev.json" : "tsconfig.json")],
+      (code) =>
+        new Error(`CommonJS compilation process exited with code ${code}`)
     ),
     spawnProm(
       "npx tsc -p",
-      [path.join(ROOT_DIR, "tsconfig.commonjs.json")],
-      (code) => new Error(`es2018 compilation process exited with code ${code}`),
-    )
+      [
+        path.join(
+          ROOT_DIR,
+          devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json"
+        ),
+      ],
+      (code) => new Error(`es2018 compilation process exited with code ${code}`)
+    ),
   ]);
 }
 
@@ -108,12 +127,31 @@ function removeFile(fileName) {
  */
 function spawnProm(command, args, errorOnCode) {
   return new Promise((res, rej) => {
-    spawn(command, args, { shell: true, stdio: "inherit" })
-      .on("close", (code) => {
+    spawn(command, args, { shell: true, stdio: "inherit" }).on(
+      "close",
+      (code) => {
         if (code !== 0) {
           rej(errorOnCode(code));
         }
         res();
-      });
+      }
+    );
   });
+}
+
+/**
+ * Display through `console.log` an helping message relative to how to run this
+ * script.
+ */
+function displayHelp() {
+  /* eslint-disable no-console */
+  console.log(
+    /* eslint-disable indent */
+    `Usage: node generate_build.mjs [options]
+Options:
+  -h, --help             Display this help
+  -p, --dev-mode         Build all files in development mode (more runtime checks, mostly)`
+    /* eslint-enable indent */
+  );
+  /* eslint-enable no-console */
 }
