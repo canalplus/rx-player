@@ -179,14 +179,6 @@ Demo pages for our previous versions are also available
 
 
 
-## Your questions ##############################################################
-
-You can ask directly your questions about the project on [our
-gitter](https://gitter.im/canalplus/rx-player).
-We will try our best to answer them as quickly as possible.
-
-
-
 ## Contribute ##################################################################
 
 Details on how to contribute is written in the [CONTRIBUTING.md
