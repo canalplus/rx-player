@@ -8,17 +8,13 @@
   "browser": "./dist/es2017/index.js",
   "exports": {
     ".": {
-      "node": "./dist/commonjs/index.js",
-      "es2015": "./dist/es2017/index.js",
-      "require": "./dist/commonjs/index.js",
       "import": "./dist/es2017/index.js",
+      "require": "./dist/commonjs/index.js",
       "default": "./dist/es2017/index.js"
     },
     "./experimental": {
-      "node": "./dist/commonjs/experimental/index.js",
-      "es2015": "./dist/es2017/experimental/index.js",
-      "require": "./dist/commonjs/experimental/index.js",
       "import": "./dist/es2017/experimental/index.js",
+      "require": "./dist/commonjs/experimental/index.js",
       "default": "./dist/es2017/experimental/index.js"
     },
     "./experimental/inline-worker": {
@@ -36,87 +32,63 @@
       "default": "./experimental/inline-mpd-parser.js"
     },
     "./experimental/features": {
-      "node": "./dist/commonjs/experimental/features/index.js",
-      "es2015": "./dist/es2017/experimental/features/index.js",
-      "require": "./dist/commonjs/experimental/features/index.js",
       "import": "./dist/es2017/experimental/features/index.js",
+      "require": "./dist/commonjs/experimental/features/index.js",
       "default": "./dist/es2017/experimental/features/index.js"
     },
     "./experimental/features/embeds": {
-      "node": "./dist/commonjs/__GENERATED_CODE/index.js",
-      "es2015": "./dist/es2017/__GENERATED_CODE/index.js",
-      "require": "./dist/commonjs/__GENERATED_CODE/index.js",
       "import": "./dist/es2017/__GENERATED_CODE/index.js",
+      "require": "./dist/commonjs/__GENERATED_CODE/index.js",
       "default": "./dist/es2017/__GENERATED_CODE/index.js"
     },
     "./experimental/features/*": {
-      "node": "./dist/commonjs/experimental/features/*.js",
-      "es2015": "./dist/es2017/experimental/features/*.js",
-      "require": "./dist/commonjs/experimental/features/*.js",
       "import": "./dist/es2017/experimental/features/*.js",
+      "require": "./dist/commonjs/experimental/features/*.js",
       "default": "./dist/es2017/experimental/features/*.js"
     },
     "./experimental/tools": {
-      "node": "./dist/commonjs/experimental/tools/index.js",
-      "es2015": "./dist/es2017/experimental/tools/index.js",
-      "require": "./dist/commonjs/experimental/tools/index.js",
       "import": "./dist/es2017/experimental/tools/index.js",
+      "require": "./dist/commonjs/experimental/tools/index.js",
       "default": "./dist/es2017/experimental/tools/index.js"
     },
     "./experimental/tools/*": {
-      "node": "./dist/commonjs/experimental/tools/*/index.js",
-      "es2015": "./dist/es2017/experimental/tools/*/index.js",
-      "require": "./dist/commonjs/experimental/tools/*/index.js",
       "import": "./dist/es2017/experimental/tools/*/index.js",
+      "require": "./dist/commonjs/experimental/tools/*/index.js",
       "default": "./dist/es2017/experimental/tools/*/index.js"
     },
     "./features": {
-      "node": "./dist/commonjs/features/list/index.js",
-      "es2015": "./dist/es2017/features/list/index.js",
-      "require": "./dist/commonjs/features/list/index.js",
       "import": "./dist/es2017/features/list/index.js",
+      "require": "./dist/commonjs/features/list/index.js",
       "default": "./dist/es2017/features/list/index.js"
     },
     "./features/*": {
-      "node": "./dist/commonjs/features/list/*.js",
-      "es2015": "./dist/es2017/features/list/*.js",
-      "require": "./dist/commonjs/features/list/*.js",
       "import": "./dist/es2017/features/list/*.js",
+      "require": "./dist/commonjs/features/list/*.js",
       "default": "./dist/es2017/features/list/*.js"
     },
     "./logger": {
-      "node": "./dist/commonjs/log.js",
-      "es2015": "./dist/es2017/log.js",
-      "require": "./dist/commonjs/log.js",
       "import": "./dist/es2017/log.js",
+      "require": "./dist/commonjs/log.js",
       "default": "./dist/es2017/log.js"
     },
     "./minimal": {
-      "node": "./dist/commonjs/minimal.js",
-      "es2015": "./dist/es2017/minimal.js",
-      "require": "./dist/commonjs/minimal.js",
       "import": "./dist/es2017/minimal.js",
+      "require": "./dist/commonjs/minimal.js",
       "default": "./dist/es2017/minimal.js"
     },
     "./tools": {
-      "node": "./dist/commonjs/tools/index.js",
-      "es2015": "./dist/es2017/tools/index.js",
-      "require": "./dist/commonjs/tools/index.js",
       "import": "./dist/es2017/tools/index.js",
+      "require": "./dist/commonjs/tools/index.js",
       "default": "./dist/es2017/tools/index.js"
     },
     "./tools/*": {
-      "node": "./dist/commonjs/tools/*/index.js",
-      "es2015": "./dist/es2017/tools/*/index.js",
-      "require": "./dist/commonjs/tools/*/index.js",
       "import": "./dist/es2017/tools/*/index.js",
+      "require": "./dist/commonjs/tools/*/index.js",
       "default": "./dist/es2017/tools/*/index.js"
     },
     "./types": {
-      "node": "./dist/commonjs/public_types.js",
-      "es2015": "./dist/es2017/public_types.js",
-      "require": "./dist/commonjs/public_types.js",
       "import": "./dist/es2017/public_types.js",
+      "require": "./dist/commonjs/public_types.js",
       "default": "./dist/es2017/public_types.js"
     },
     "./package.json": "./package.json"
