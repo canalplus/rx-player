@@ -239,7 +239,7 @@ The R&D department of Canal+ Group thus started to work on a new featureful
 media-player: the RxPlayer. To both help and profit from the community, it also
 decided to share it to everyone under a permissive open-source licence.
 
-Now, more than 6 years later, the RxPlayer continues to evolve at the same fast
+Now, more than  years later, the RxPlayer continues to evolve at the same fast
 pace to include a lot of features and improvements you may not find in other
 media players.
 You can look at our
