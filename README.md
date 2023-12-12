@@ -228,7 +228,7 @@ Canal+ Group is a media company with many advanced needs when it comes to media
 playback: it provides both live and VoD stream with multiple encryption
 requirements, supports a very large panel of devices and has many other
 specificities (like adult content restrictions, ad-insertion, Peer-To-Peer
-integration...).
+integration, low-latency live streaming...).
 
 When the time came to switch from a plugin-based web player approach to an HTML5
 one back in 2015, no media player had the key features we wanted, and including
