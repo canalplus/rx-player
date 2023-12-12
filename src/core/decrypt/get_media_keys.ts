@@ -39,15 +39,9 @@ import ServerCertificateStore from "./utils/server_certificate_store";
 function createPersistentSessionsStorage(
   keySystemOptions : IKeySystemOption
 ) : PersistentSessionsStore|null {
-  if (isNullOrUndefined(keySystemOptions.persistentLicenseConfig)) {
-    return null;
-  }
-
   const { persistentLicenseConfig } = keySystemOptions;
-  if (persistentLicenseConfig == null) {
-    throw new EncryptedMediaError("INVALID_KEY_SYSTEM",
-                                  "No `persistentLicenseConfig` found for " +
-                                  "persistent license.");
+  if (isNullOrUndefined(persistentLicenseConfig)) {
+    return null;
   }
 
   log.debug("DRM: Set the given license storage");
