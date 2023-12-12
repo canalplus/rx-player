@@ -192,8 +192,6 @@ We will try our best to answer them as quickly as possible.
 Details on how to contribute is written in the [CONTRIBUTING.md
 file](./CONTRIBUTING.md) at the root of this repository.
 
-If you need more information, you can contact us via our [gitter
-room](https://gitter.im/canalplus/rx-player).
 
 
 ### Dependencies ###############################################################
@@ -296,24 +294,3 @@ them. Amongst those:
     risks always low.
 
 \* In "directfile" mode, on compatible browsers
-
-
-## Target support ##############################################################
-
-Here is a basic list of supported platforms:
-
-|             | Chrome  |  IE [1] |  Edge  |  Firefox  |  Safari  |  Opera  |
-|-------------|:-------:|:-------:|:------:|:---------:|:--------:|:-------:|
-| Windows     |  >= 30  |  >= 11  |  >= 12 |   >= 42   |   >= 8   |  >= 25  |
-| OSX         |  >= 30  |    -    |    -   |   >= 42   |   >= 8   |  >= 25  |
-| Linux       |  >= 37  |    -    |    -   |   >= 42   |    -     |  >= 25  |
-| Android [2] |  >= 30  |    -    |    -   |   >= 42   |    -     |  >= 15  |
-| iOS         |   No    |    -    |    -   |    No     |    No    |    No   |
-
-[1] Only on Windows >= 8.
-
-[2] Android version >= 4.2
-
-And more. A good way to know if the browser should be supported by our player is
-to go on the page https://www.youtube.com/html5 and check for "Media Source
-Extensions" support.
