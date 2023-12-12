@@ -7,7 +7,7 @@ The `v4.0.0` release is a major RxPlayer release.
 It deeply changes some aspects of the RxPlayer API, particularly relative to
 tracks and quality selection.
 
-Though we succeeded to maintain API compatibility for more than 5 years despite
+Though we succeeded to maintain API compatibility for more than 6 years despite
 huge changes in the OTT media streaming domain, we considered that an API
 overhaul was now necessary to better handle the features of the current
 streaming landscape (normalization of multi-Period contents, multiplication of
