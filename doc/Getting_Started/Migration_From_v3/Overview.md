@@ -17,8 +17,7 @@ removing old deprecated but burdensome API.
 
 Still, we understand that porting to a new major version of the RxPlayer might
 not be a small task, and thus decided to continue maintaining the v3.x.x for
-some time, while pre-releasing the beta version of the `v4.0.0` with this
-complete migration guide.
+some time and releasing the `v4.0.0` with this complete migration guide.
 
 
 ## Organization of this documentation
