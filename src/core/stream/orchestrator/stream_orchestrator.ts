@@ -108,7 +108,8 @@ export default function StreamOrchestrator(
           wantedBufferAhead,
           maxVideoBufferSize } = options;
 
-  const { MAXIMUM_MAX_BUFFER_AHEAD,
+  const { MINIMUM_MAX_BUFFER_AHEAD,
+          MAXIMUM_MAX_BUFFER_AHEAD,
           MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
 
   // Keep track of a unique BufferGarbageCollector created per
@@ -116,12 +117,8 @@ export default function StreamOrchestrator(
   const garbageCollectors =
     new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
       const { bufferType } = segmentBuffer;
-      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] !== undefined ?
-                                 MAXIMUM_MAX_BUFFER_BEHIND[bufferType] as number :
-                                 Infinity;
-      const defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] !== undefined ?
-                                MAXIMUM_MAX_BUFFER_AHEAD[bufferType] as number :
-                                Infinity;
+      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ?? Infinity;
+      const maxAheadHigherBound = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ?? Infinity;
       return (gcCancelSignal : CancellationSignal) => {
         BufferGarbageCollector(
           { segmentBuffer,
@@ -131,15 +128,9 @@ export default function StreamOrchestrator(
                                                      Math.min(val, defaultMaxBehind),
                                                    gcCancelSignal),
             maxBufferAhead: createMappedReference(maxBufferAhead, (val) => {
-              const actualMaxBuff = bufferType === "text" ?
-                // Text segments are both much lighter on resources and might
-                // actually be much larger than other types of segments in terms
-                // of duration. Let's make an exception here by authorizing a
-                // larger text buffer ahead, to avoid unnecesarily reloading the
-                // same text track.
-                Math.max(val, 2 * 60) :
-                val;
-              return Math.min(actualMaxBuff, defaultMaxAhead);
+              const lowerBound = Math.max(val,
+                                          MINIMUM_MAX_BUFFER_AHEAD[bufferType] ?? 0);
+              return Math.min(lowerBound, maxAheadHigherBound);
             }, gcCancelSignal) },
           gcCancelSignal
         );
