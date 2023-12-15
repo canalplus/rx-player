@@ -373,6 +373,9 @@ export default class PlaybackObserver {
     const mediaTimings = getMediaInfos(this._mediaElement, this._withMediaSource);
 
     if (tmpEvt === "seeking") {
+      // We just began seeking.
+      // Let's find out if the seek is internal or external and handle approximate
+      // seeking
       if (this._internalSeeksIncoming.length > 0) {
         isInternalSeeking = true;
         tmpEvt = "internal-seeking";
@@ -383,19 +386,20 @@ export default class PlaybackObserver {
       } else {
         this._expectedSeekingPosition = mediaTimings.position;
       }
-    }
-
-    if (mediaTimings.seeking) {
-      if (this._expectedSeekingPosition === null) {
-        this._expectedSeekingPosition = mediaTimings.position;
-      } else {
-        this._expectedSeekingPosition = Math.max(mediaTimings.position,
-                                                 this._expectedSeekingPosition);
-      }
+    } else if (mediaTimings.seeking) {
+      // we're still seeking, this time without a "seeking" event so it's an
+      // already handled one, keep track of the last wanted position we wanted
+      // to seek to, to work-around devices re-seeking silently.
+      this._expectedSeekingPosition = Math.max(mediaTimings.position,
+                                               this._expectedSeekingPosition ?? 0);
     } else if (isSeekingApproximate &&
                this._expectedSeekingPosition !== null &&
                  mediaTimings.position < this._expectedSeekingPosition)
     {
+      // We're on a target with aproximate seeking, we're not seeking anymore, but
+      // we're not yet at the expected seeking position.
+      // Signal to the rest of the application that the intented position is not
+      // the current position but the one contained in `this._expectedSeekingPosition`
       pendingPosition = this._expectedSeekingPosition;
     } else {
       this._expectedSeekingPosition = null;
