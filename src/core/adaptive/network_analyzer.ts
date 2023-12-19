@@ -154,7 +154,7 @@ function estimateStarvationModeBitrate(
   const { bufferGap, speed, position } = playbackInfo;
   const realBufferGap = isFinite(bufferGap) ? bufferGap :
                                               0;
-  const nextNeededPosition = position.last + realBufferGap;
+  const nextNeededPosition = position.getWanted() + realBufferGap;
   const concernedRequests = getConcernedRequests(pendingRequests, nextNeededPosition);
 
   if (concernedRequests.length !== 1) { // 0  == no request
@@ -238,7 +238,7 @@ function shouldDirectlySwitchToLowBitrate(
   }
   const realBufferGap = isFinite(playbackInfo.bufferGap) ? playbackInfo.bufferGap :
                                                            0;
-  const nextNeededPosition = playbackInfo.position.last + realBufferGap;
+  const nextNeededPosition = playbackInfo.position.getWanted() + realBufferGap;
   const nextRequest = arrayFind(requests, ({ content }) =>
     content.segment.duration > 0 &&
     (content.segment.time + content.segment.duration) > nextNeededPosition);
@@ -334,7 +334,7 @@ export default class NetworkAnalyzer {
     const { ABR_STARVATION_DURATION_DELTA } = config.getCurrent();
     // check if should get in/out of starvation mode
     if (isNaN(duration) ||
-        realBufferGap + position.last < duration - ABR_STARVATION_DURATION_DELTA)
+        realBufferGap + position.getWanted() < duration - ABR_STARVATION_DURATION_DELTA)
     {
       if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
         log.info("ABR: enter starvation mode.");

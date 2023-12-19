@@ -243,7 +243,7 @@ describe("DASH live content (SegmentTimeline)", function () {
                          segmentLoader });
 
       expect(manifestLoaderCalledTimes).to.equal(1);
-      await sleep(50);
+      await sleep(100);
       expect(player.getMinimumPosition()).to.be
         .closeTo(1527507768, 1);
     });
@@ -268,7 +268,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
 
       expect(manifestLoaderCalledTimes).to.equal(1);
-      await sleep(50);
+      await sleep(100);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1527508062, 1);
     });
