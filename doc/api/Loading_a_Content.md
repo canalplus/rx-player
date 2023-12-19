@@ -549,6 +549,7 @@ rxPlayer.loadVideo({
 });
 ```
 
+More information on it can be found [here](../api/Miscellaneous/plugins.md#representationfilter).
 
 ### segmentLoader
 
