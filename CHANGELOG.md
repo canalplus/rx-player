@@ -1,4 +1,41 @@
-# Changelog
+## Unreleased
+
+### Changes
+
+  - A `representationFilter`'s advertised `codec` has now been renamed to `codecs` and is an Array when defined [#1332]
+
+### Features
+
+  - Add `getLivePosition` RxPlayer method [#1300]
+  - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
+  - add `connectionTimeout` property to the `requestConfig` `loadVideo` option for both the manifest and segment requests to set a timeout just linked to HTTP connection establishment [#1319]
+  - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
+
+### Bug fixes
+
+  - Fix subtitles "blinking" in some specific conditions, especially with some DASH low-latency contents [#1314]
+  - DASH: Fix Period overlap resolution logic for when the first Period is removed [#1311]
+  - TTML: Fix handling of the `tts:lineHeight` attribute [#1320]
+  - Fix import of the `LOCAL_MANIFEST` experimental feature
+  - Smooth: Rely on a defined `segmentLoader` when playing smooth streaming contents.
+  - Avoid very rarely skipping segments which initially were too big to be pushed due to memory limitations [#1323]
+  - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327]
+
+### Other improvements
+
+  - Provide both commonJS and ES6-style exports to improve compatibilities with applications
+  - DASH: rely on SCTE214 `supplementalCodecs` instead of `codecs` if it's supported to better support backward compatible Dolby Vision contents [#1307]
+  - DASH: Provide better support of the `availabilityTimeOffset` attribute [#1300]
+  - DEBUG_ELEMENT: Add unsupported and undecipherable bitrates to the debug element [#1321]
+  - DEBUG_ELEMENT: update buffer graph maximum size so it becomes more readable for lengthy contents [#1316]
+  - DEBUG_ELEMENT: always synchronize inventory of segments before rendering it [#1317]
+  - Remove remaining RxPlayer dependency removing possibility of some application-side bundling errors [#1312]
+  - Add cache when checking for codec support, improving performance on some devices and potentially working around some xbox bugs on long-lived pages [#1324]
+  - Add exception to text Garbage collection logic to avoid unnecessarily reload text segments frequently [#1325]
+  - Demo: Fix switching mode toggle [#1328]
+  - Demo: Add possibility to see the debug element in the demo page
+  - Demo: Fix reporting of live position in demo page [#1313]
+
 
 ## v4.0.0-beta.3 (2023-10-19)
 
