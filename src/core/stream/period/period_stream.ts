@@ -221,18 +221,15 @@ export default function PeriodStream(
         return; // Previous call has provoken cancellation by side-effect
       }
 
-      const readyState = playbackObserver.getReadyState();
       const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
                                                        bufferType,
                                                        adaptation,
                                                        options);
-      const playbackInfos = { currentTime: playbackObserver.getCurrentTime(),
-                              readyState };
       const strategy = getAdaptationSwitchStrategy(segmentBuffer,
                                                    period,
                                                    adaptation,
                                                    choice.switchingMode,
-                                                   playbackInfos,
+                                                   playbackObserver,
                                                    options);
       if (strategy.type === "needs-reload") {
         return askForMediaSourceReload(relativePosAfterSwitch,
@@ -444,8 +441,10 @@ function createAdaptationStreamPlaybackObserver(
     ) : IAdaptationStreamPlaybackObservation {
       const baseObservation = observationRef.getValue();
       const buffered = segmentBuffer.getBufferedRanges();
-      const bufferGap = getLeftSizeOfBufferedTimeRange(buffered,
-                                                       baseObservation.position.last);
+      const bufferGap = getLeftSizeOfBufferedTimeRange(
+        buffered,
+        baseObservation.position.getWanted()
+      );
       return objectAssign({}, baseObservation, { bufferGap });
     }
 
@@ -486,15 +485,15 @@ function createEmptyAdaptationStream(
   function sendStatus() : void {
     const observation = playbackObserver.getReference().getValue();
     const wba = wantedBufferAhead.getValue();
-    const position = observation.position.last;
+    const position = observation.position.getWanted();
     if (period.end !== undefined && position + wba >= period.end) {
       log.debug("Stream: full \"empty\" AdaptationStream", bufferType);
       hasFinishedLoading = true;
     }
     callbacks.streamStatusUpdate({ period,
                                    bufferType,
-                                   position,
                                    imminentDiscontinuity: null,
+                                   position,
                                    isEmptyStream: true,
                                    hasFinishedLoading,
                                    neededSegments: [] });
