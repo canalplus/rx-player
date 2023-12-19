@@ -6,6 +6,12 @@
  * This file allows to remove debugging information from a WebAssembly binary
  * file (`.wasm`).
  *
+ * To run it, provide the source WebAssembly file in argument, it will be
+ * updated in place:
+ * ```
+ * node wasm-strip.mjs file_to_strip.wasm
+ * ```
+ *
  *
  * == Why?
  *
