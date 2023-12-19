@@ -30,7 +30,7 @@ import SharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../api";
+import { IObservationPosition, IReadOnlyPlaybackObserver } from "../api";
 import { IBufferType } from "../segment_buffers";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
@@ -272,7 +272,7 @@ function getEstimateReference(
       }
       const { position, speed } = lastPlaybackObservation;
       const timeRanges = val.buffered;
-      const bufferGap = getLeftSizeOfBufferedTimeRange(timeRanges, position.last);
+      const bufferGap = getLeftSizeOfBufferedTimeRange(timeRanges, position.getWanted());
       const { representation } = val.content;
       const currentScore = scoreCalculator.getEstimate(representation);
       const currentBitrate = representation.bitrate;
@@ -389,7 +389,7 @@ function getEstimateReference(
       if (lowLatencyMode &&
           currentRepresentationVal !== null &&
           context.manifest.isDynamic &&
-          maximumPosition - position.last < 40)
+          maximumPosition - position.getWanted() < 40)
       {
         chosenRepFromGuessMode = guessBasedChooser
           .getGuess(sortedRepresentations,
@@ -595,24 +595,7 @@ export interface IRepresentationEstimatorPlaybackObservation {
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
    */
-  position : {
-    /**
-     * Known position at the time the Observation was emitted, in seconds.
-     *
-     * Note that it might have changed since. If you want truly precize
-     * information, you should recuperate it from the HTMLMediaElement directly
-     * through another mean.
-     */
-    last : number;
-    /**
-     * Actually wanted position in seconds that is not yet reached.
-     *
-     * This might for example be set to the initial position when the content is
-     * loading (and thus potentially at a `0` position) but which will be seeked
-     * to a given position once possible.
-     */
-    pending : number | undefined;
-  };
+  position : IObservationPosition;
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
    * which the media should play.

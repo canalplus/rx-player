@@ -171,7 +171,7 @@ export default function StreamOrchestrator(
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
     playbackObserver.listen(({ position }) => {
-      const time = position.pending ?? position.last;
+      const time = position.getWanted();
       if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
         return ;
       }
@@ -369,8 +369,7 @@ export default function StreamOrchestrator(
           }
         }
 
-        const lastPosition = observation.position.pending ??
-                             observation.position.last;
+        const lastPosition = observation.position.getWanted();
         const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
         if (newInitialPeriod == null) {
           callbacks.error(
@@ -443,18 +442,17 @@ export default function StreamOrchestrator(
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
     playbackObserver.listen(({ position }, stopListeningObservations) => {
-      const wantedPosition = position.pending ?? position.last;
-      if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
+      if (basePeriod.end !== undefined && position.getWanted() >= basePeriod.end) {
         const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
         // Handle special wantedPosition === basePeriod.end cases
-        if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
+        if (basePeriod.containsTime(position.getWanted(), nextPeriod)) {
           return;
         }
         log.info("Stream: Destroying PeriodStream as the current playhead moved above it",
                  bufferType,
                  basePeriod.start,
-                 position.pending ?? position.last,
+                 position.getWanted(),
                  basePeriod.end);
         stopListeningObservations();
         consecutivePeriodStreamCb.periodStreamCleared({ type: bufferType,
@@ -723,7 +721,7 @@ function needsFlushingAfterClean(
   if (cleanedRanges.length === 0) {
     return false;
   }
-  const curPos = observation.position.last;
+  const curPos = observation.position.getPolled();
 
   // Based on the playback direction, we just check whether we may encounter
   // the corresponding ranges, without seeking or re-switching playback

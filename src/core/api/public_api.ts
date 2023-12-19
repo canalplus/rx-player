@@ -814,12 +814,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         case "ENDED":
           this._priv_reloadingMetadata.reloadInPause = true;
           this._priv_reloadingMetadata.reloadPosition =
-            playbackObserver.getReference().getValue().position;
+            playbackObserver.getReference().getValue().position.getPolled();
           break;
         default:
           const o = playbackObserver.getReference().getValue();
           this._priv_reloadingMetadata.reloadInPause = o.paused;
-          this._priv_reloadingMetadata.reloadPosition = o.position;
+          this._priv_reloadingMetadata.reloadPosition = o.position.getWanted();
           break;
       }
     };
@@ -2590,7 +2590,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const maximumPosition = manifest !== null ? manifest.getMaximumSafePosition() :
                                                 undefined;
     const positionData : IPositionUpdate = {
-      position: observation.position,
+      position: observation.position.getPolled(),
       duration: observation.duration,
       playbackRate: observation.playbackRate,
       maximumPosition,
@@ -2604,18 +2604,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (manifest !== null &&
         manifest.isLive &&
-        observation.position > 0
+        observation.position.getPolled() > 0
     ) {
       const ast = manifest.availabilityStartTime ?? 0;
-      positionData.wallClockTime = observation.position + ast;
+      positionData.wallClockTime = observation.position.getPolled() + ast;
       const livePosition = manifest.getLivePosition();
       if (livePosition !== undefined) {
-        positionData.liveGap = livePosition - observation.position;
+        positionData.liveGap = livePosition - observation.position.getPolled();
       }
     } else if (isDirectFile && this.videoElement !== null) {
       const startDate = getStartDate(this.videoElement);
       if (startDate !== undefined) {
-        positionData.wallClockTime = startDate + observation.position;
+        positionData.wallClockTime = startDate + observation.position.getPolled();
       }
     }
     this.trigger("positionUpdate", positionData);

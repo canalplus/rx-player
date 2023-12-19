@@ -11,7 +11,7 @@ import {
   IVideoRepresentationsSwitchingMode,
 } from "../../../public_types";
 import { IReadOnlySharedReference } from "../../../utils/reference";
-import { IReadOnlyPlaybackObserver } from "../../api";
+import { IObservationPosition, IReadOnlyPlaybackObserver } from "../../api";
 import { IContentProtection } from "../../decrypt";
 import { IPrioritizedSegmentFetcher } from "../../fetchers";
 import {
@@ -180,7 +180,7 @@ export interface IRepresentationStreamPlaybackObservation {
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
    */
-  position : IPositionPlaybackObservation;
+  position : IObservationPosition;
 }
 
 /** Position-related information linked to an emitted Playback observation. */

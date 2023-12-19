@@ -61,7 +61,7 @@ export default async function appendSegmentToBuffer<T>(
                            { adaptations: [dataInfos.inventoryInfos.adaptation] });
     }
     const { position } = playbackObserver.getReference().getValue();
-    const currentPos = position.pending ?? position.last;
+    const currentPos = position.getWanted();
     try {
       await forceGarbageCollection(currentPos, segmentBuffer, cancellationSignal);
       await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
