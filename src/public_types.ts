@@ -186,8 +186,35 @@ export interface IRepresentationFilterRepresentation {
   /** String identifying the Representation, unique per Adaptation. */
   id : string;
   bitrate? : number | undefined;
-  /** Codec used by the media segments of that Representation. */
-  codec? : string | undefined;
+  /**
+   * Codec(s) relied on by the media segments of that Representation.
+   *
+   * For the great majority of cases, this value will be set to either
+   * `undefined` (meaning the codec is unknown) or to an array with a
+   * single element which will be the actual codec relied on when the
+   * corresponding Representation will be played.
+   *
+   * However in some very rare scenarios, this value might be set to an array
+   * with multiple codecs, itself being a list of its candidate codecs from the
+   * most wanted to the most compatible.
+   * The conditions for this more complex format are very specific:
+   *
+   *   - It can only happen if the `representationFilter` callback is called in
+   *     an environment where it hasn't yet been possible for the RxPlayer to
+   *     check for codec support (mainly when running through the RxPlayer's
+   *     `MULTI_THREAD` feature in a browser without MSE-in-worker
+   *     capabilities).
+   *
+   *   - The corresponding Representation is compatible to a restrictive codec
+   *     yet also retro-compatible to a less restrictive one.
+   *
+   *     The main example being Dolby Vision Representations which are
+   *     retro-compatible to HDR10 HEVC codecs.
+   *     In that very specific case, we could have an array with two elements:
+   *       1. The Dolby Vision codec
+   *       2. The base HDR10 codec
+   */
+  codecs? : string[] | undefined;
   /**
    * This property makes the most sense for video Representations.
    * It defines the height of the video, in pixels.
