@@ -35,14 +35,17 @@ import {
   IBufferedChunk,
   SegmentBuffer,
 } from "../../segment_buffers";
-import { IRepresentationsChoice } from "../representation";
+import {
+  IRepresentationStreamPlaybackObservation,
+  IRepresentationsChoice,
+} from "../representation";
 
 export default function getRepresentationsSwitchingStrategy(
   period : Period,
   adaptation : Adaptation,
   settings : IRepresentationsChoice,
   segmentBuffer : SegmentBuffer,
-  playbackObserver : IReadOnlyPlaybackObserver<unknown>
+  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>
 ) : IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };
@@ -81,17 +84,22 @@ export default function getRepresentationsSwitchingStrategy(
     return { type: "continue", value: undefined };
   }
 
-  const currentTime = playbackObserver.getCurrentTime();
   const readyState = playbackObserver.getReadyState();
-  if (settings.switchingMode === "reload" &&
-      // We're playing the current Period
-      isTimeInRange({ start, end }, currentTime) &&
-      // There is data for the current position
-      readyState > 1 &&
-      // We're not playing the current wanted video Adaptation
-      !isTimeInRanges(rangesWithReps, currentTime))
-  {
-    return { type: "needs-reload", value: undefined };
+  if (settings.switchingMode === "reload" && readyState > 1) {
+    const lastObservation = playbackObserver.getReference().getValue();
+    if (lastObservation.position.isAwaitingFuturePosition()) {
+      // We are not at the position we want to reach (e.g. initial seek, tizen
+      // seek-back...), just reload as checks here would be too complex
+      return { type: "needs-reload", value: undefined };
+    } else {
+      const currentTime = playbackObserver.getCurrentTime();
+      if (isTimeInRange({ start, end }, currentTime) &&
+          // We're not playing the current wanted video Adaptation
+          !isTimeInRanges(rangesWithReps, currentTime))
+      {
+        return { type: "needs-reload", value: undefined };
+      }
+    }
   }
 
   // From here, clean-up data from the previous Adaptation, if one
@@ -128,6 +136,7 @@ export default function getRepresentationsSwitchingStrategy(
     if (paddingAfter == null) {
       paddingAfter = 0;
     }
+    const currentTime = playbackObserver.getCurrentTime();
     rangesToExclude.push({ start: currentTime - paddingBefore,
                            end: currentTime + paddingAfter });
   }
