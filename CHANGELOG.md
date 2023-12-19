@@ -6,6 +6,7 @@
 
 ### Features
 
+  - Add `MULTI_THREAD` experimental feature to enable multithreading capabilities through a WebWorker
   - Add `getLivePosition` RxPlayer method [#1300]
   - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
   - add `connectionTimeout` property to the `requestConfig` `loadVideo` option for both the manifest and segment requests to set a timeout just linked to HTTP connection establishment [#1319]
