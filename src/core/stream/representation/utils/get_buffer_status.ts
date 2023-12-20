@@ -273,7 +273,8 @@ function isPeriodTheCurrentAndLastOne(
   period : Period,
   time : number
 ) : boolean {
-  return period.containsTime(time) &&
+  const nextPeriod = manifest.getPeriodAfter(period);
+  return period.containsTime(time, nextPeriod) &&
          manifest.isLastPeriodKnown &&
          period.id === manifest.periods[manifest.periods.length - 1]?.id;
 }
