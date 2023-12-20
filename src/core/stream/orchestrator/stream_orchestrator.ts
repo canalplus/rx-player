@@ -192,6 +192,7 @@ export default function StreamOrchestrator(
                          manifest.getNextPeriod(time);
       if (nextPeriod === undefined) {
         log.warn("Stream: The wanted position is not found in the Manifest.");
+        enableOutOfBoundsCheck = true;
         return;
       }
       launchConsecutiveStreamsForPeriod(nextPeriod);
@@ -269,7 +270,7 @@ export default function StreamOrchestrator(
 
     /**
      * React to a Manifest's decipherability updates.
-     * @param {Array.<Object>}
+     * @param {Array.<Object>} updates
      * @returns {Promise}
      */
     async function onDecipherabilityUpdates(
@@ -436,9 +437,14 @@ export default function StreamOrchestrator(
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
     playbackObserver.listen(({ position }, stopListeningObservations) => {
-      if (basePeriod.end !== undefined &&
-          (position.pending ?? position.last) >= basePeriod.end)
-      {
+      const wantedPosition = position.pending ?? position.last;
+      if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
+        const nextPeriod = manifest.getPeriodAfter(basePeriod);
+
+        // Handle special wantedPosition === basePeriod.end cases
+        if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
+          return;
+        }
         log.info("Stream: Destroying PeriodStream as the current playhead moved above it",
                  bufferType,
                  basePeriod.start,
