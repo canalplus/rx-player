@@ -40,9 +40,9 @@ Can be either:
 
    - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
 
-   - the `DASH_WASM` experimental feature (backed by a WebAssembly parser, more
-     efficient when handling very large MPDs).
-     More information in the [`DASH_WASM` experimental feature
+   - the `DASH_WASM` feature (backed by a WebAssembly parser, more efficient
+     when handling very large MPDs).
+     More information in the [`DASH_WASM` feature
      documentation](./Miscellaneous/DASH_WASM_Parser.md).
 
    - or both (which will use the latter only when available)
