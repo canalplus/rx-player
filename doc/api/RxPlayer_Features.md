@@ -59,16 +59,16 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `DASH` [1]                  | Enable DASH playback using a JavaScript-based MPD parser  |
 | `DIRECTFILE`                | Enable playback of "directfile" contents                  |
 | `EME`                       | Enable playback of encrypted contents                     |
-| `NATIVE_SRT_PARSER` [2]     | Parse SRT text tracks for the `"native"` `textTrackMode`  |
-| `NATIVE_VTT_PARSER` [2]     | Parse VTT text tracks for the `"native"` `textTrackMode`  |
-| `NATIVE_TTML_PARSER` [2]    | Parse TTML text tracks for the `"native"` `textTrackMode` |
-| `NATIVE_SAMI_PARSER` [2]    | Parse SAMI text tracks for the `"native"` `textTrackMode` |
 | `HTML_SRT_PARSER` [2]       | Parse SRT text tracks for the `"html"` `textTrackMode`    |
 | `HTML_VTT_PARSER` [2]       | Parse VTT text tracks for the `"html"` `textTrackMode`    |
 | `HTML_TTML_PARSER` [2]      | Parse TTML text tracks for the `"html"` `textTrackMode`   |
 | `HTML_SAMI_PARSER` [2]      | Parse SAMI text tracks for the `"html"` `textTrackMode`   |
+| `NATIVE_SRT_PARSER` [2]     | Parse SRT text tracks for the `"native"` `textTrackMode`  |
+| `NATIVE_VTT_PARSER` [2]     | Parse VTT text tracks for the `"native"` `textTrackMode`  |
+| `NATIVE_TTML_PARSER` [2]    | Parse TTML text tracks for the `"native"` `textTrackMode` |
+| `NATIVE_SAMI_PARSER` [2]    | Parse SAMI text tracks for the `"native"` `textTrackMode` |
+| `DEBUG_ELEMENT`             | Allows to use the `createDebugElement` RxPlayer method    |
 | `DASH_WASM` [1] [4]         | Enable DASH playback using a WebAssembly-based MPD parser |
-| `DEBUG_ELEMENT` [3]         | Allows to use the `createDebugElement` RxPlayer method    |
 | `LOCAL_MANIFEST` [3]        | Enable playback of "local" contents                       |
 | `METAPLAYLIST` [3]          | Enable playback of "metaplaylist" contents                |
 | `NATIVE_TEXT_BUFFER` [5]    | (Deprecated) Base for the `"native"` `textTrackMode`.     |
