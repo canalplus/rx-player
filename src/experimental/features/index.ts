@@ -14,6 +14,5 @@
  * limitations under the License.
  */
 
-export { DEBUG_ELEMENT } from "./debug_element";
 export { METAPLAYLIST } from "./metaplaylist";
 export { LOCAL_MANIFEST } from "./local";
