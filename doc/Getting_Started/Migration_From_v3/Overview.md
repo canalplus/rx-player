@@ -207,6 +207,38 @@ This is all documented in the [Player Methods page](./Player_Methods.md).
 Several RxPlayer types have been removed and updated.
 This is all documented in the [Player Types page](./Player_Types.md).
 
+### Experimental features
+
+The `DASH_WASM` and `DEBUG_ELEMENT` features are now moved as stable features.
+
+This means that what was previously written as:
+
+```js
+import { DASH_WASM, DEBUG_ELEMENT } from "rx-player/experimental/features";
+```
+
+Should now be written:
+
+```js
+import { DASH_WASM, DEBUG_ELEMENT } from "rx-player/features";
+```
+
+### Experimental tools
+
+The `parseBifThumbnails` tool is now considered a stable tool.
+
+This means that what was previously written as:
+
+```js
+import { parseBifThumbnails } from "rx-player/experimental/tools";
+```
+
+Should now be written:
+
+```js
+import { parseBifThumbnails } from "rx-player/tools";
+```
+
 ### Miscellaneous
 
 Other minor changes on which you might have relied are present in the v4.x.x:
