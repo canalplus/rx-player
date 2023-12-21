@@ -67,8 +67,8 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 | `HTML_VTT_PARSER` [2]       | Parse VTT text tracks for the `"html"` `textTrackMode`    |
 | `HTML_TTML_PARSER` [2]      | Parse TTML text tracks for the `"html"` `textTrackMode`   |
 | `HTML_SAMI_PARSER` [2]      | Parse SAMI text tracks for the `"html"` `textTrackMode`   |
+| `DASH_WASM` [1] [4]         | Enable DASH playback using a WebAssembly-based MPD parser |
 | `DEBUG_ELEMENT` [3]         | Allows to use the `createDebugElement` RxPlayer method    |
-| `DASH_WASM` [1] [3] [4]     | Enable DASH playback using a WebAssembly-based MPD parser |
 | `LOCAL_MANIFEST` [3]        | Enable playback of "local" contents                       |
 | `METAPLAYLIST` [3]          | Enable playback of "metaplaylist" contents                |
 | `NATIVE_TEXT_BUFFER` [5]    | (Deprecated) Base for the `"native"` `textTrackMode`.     |

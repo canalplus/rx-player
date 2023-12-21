@@ -15,6 +15,7 @@
  */
 
 export { DASH } from "./dash";
+export { DASH_WASM } from "./dash_wasm";
 export { DIRECTFILE } from "./directfile";
 export { EME } from "./eme";
 export { HTML_SAMI_PARSER } from "./html_sami_parser";
