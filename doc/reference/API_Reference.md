@@ -502,14 +502,14 @@ properties, methods, events and so on.
   - [`TextTrackRenderer`](../api/Tools/TextTrackRenderer.md):
     Render external text tracks on top of the video.
 
-  - [`VideoThumbnailLoader`](../api/Tools/VideoThumbnailLoader.md):
-    Display seeking preview thumbnails from trick mode video tracks.
-
   - [`StringUtils`](../api/Tools/StringUtils.md):
     Various string conversion utils.
 
   - [`parseBifThumbnails`](../api/Tools/parseBifThumbnails.md):
     Parse thumbnails in the "BIF" format.
+
+  - [`VideoThumbnailLoader`](../api/Tools/VideoThumbnailLoader.md):
+    Display seeking preview thumbnails from trick mode video tracks.
 
   - [`MediaCapabilitiesProber`](../api/Tools/MediaCapabilitiesProber.md):
     Tool to probe several media-related browser APIs.
