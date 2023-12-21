@@ -10,7 +10,7 @@ the "MPD":
 
 2. A generally-faster WebAssembly parser.
 
-   Only provided through the `DASH_WASM` experimental feature.
+   Only provided through the `DASH_WASM` feature.
 
 This page is the API documentation page for the second parser.
 
@@ -36,22 +36,6 @@ In case WebAssembly is not supported on the current platform and both the
 WebAssembly and default JavaScript DASH parsers are imported through their
 respective features, the RxPlayer will automatically fallback on the latter.
 
-### Why "experimental"?
-
-As every other "experimental" features in the RxPlayer, the WebAssembly MPD
-parser should be stable in functional terms.
-
-The "experimental" notion has more to do with the fact that its API can evolve
-without impacting too much RxPlayer's semantic versioning.
-For example, a new minor RxPlayer version could bring with it a complete API
-change regarding this feature.
-Still, potential changes would be fully documented on that release's release
-note and changelog file.
-
-The choice of labeling this feature as experimental has been made so we can
-have more freedom if we find ways to provide sensible improvements to it in the
-future.
-
 ## How to use it?
 
 To use the WebAssembly-based parser you will need to do two things:
@@ -59,8 +43,8 @@ To use the WebAssembly-based parser you will need to do two things:
 - the WebAssembly file will have to be stored somewhere, accessible through an
   URL that can be then communicated to the RxPlayer.
 
-- the `DASH_WASM` experimental feature has to be initialized with it and
-  added to the RxPlayer
+- the `DASH_WASM` feature has to be initialized with it and added to the
+  RxPlayer.
 
 Don't worry, it is relatively straightforward.
 The current chapter will explain everything you need to do.
@@ -79,7 +63,7 @@ by step in the next chapters.
 import RxPlayer from "rx-player/minimal";
 
 // Import the function allowing to create the DASH-WASM parser
-import { DASH_WASM } from "rx-player/experimental/features";
+import { DASH_WASM } from "rx-player/features";
 
 // Trigger request for the WebAssembly file.
 // This function can be called at any point in time.
@@ -124,17 +108,10 @@ be able to load it.
 
 ### Step 2: importing the `DASH_WASM` feature
 
-As indicated before, the `DASH-WASM` feature is an "experimental" feature.
-
-This is because although the feature is considered stable, its API may still
-change at any new RxPlayer version (if this happens, changes on its API will be
-explained on our CHANGELOG and this documentation will be updated).
-
-As any experimental features, it needs to be imported through the
-`rx-player/experimental/features` path:
-
+The `DASH_WASM` feature needs to be imported through the
+`rx-player/features` path:
 ```js
-import { DASH_WASM } from "rx-player/experimental/features";
+import { DASH_WASM } from "rx-player/features";
 ```
 
 ### Step 3: Initializing the feature
