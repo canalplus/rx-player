@@ -65,9 +65,9 @@ Such features are imported from `"rx-player/experimental/features"` instead:
 
 ```js
 import MinimalRxPlayer from "rx-player/minimal";
-import { DASH_WASM } from "rx-player/experimental/features";
+import { LOCAL_MANIFEST } from "rx-player/experimental/features";
 
-MinimalRxPlayer.addFeatures([DASH_WASM]);
+MinimalRxPlayer.addFeatures([LOCAL_MANIFEST]);
 ```
 
 You can of course depend on both experimental and regular features:
@@ -75,9 +75,9 @@ You can of course depend on both experimental and regular features:
 ```js
 import MinimalRxPlayer from "rx-player/minimal";
 import { DASH, SMOOTH } from "rx-player/features";
-import { DASH_WASM } from "rx-player/experimental/features";
+import { LOCAL_MANIFEST } from "rx-player/experimental/features";
 
-MinimalRxPlayer.addFeatures([DASH, SMOOTH, DASH_WASM]);
+MinimalRxPlayer.addFeatures([DASH, SMOOTH, LOCAL_MANIFEST]);
 ```
 
 By using the minimal version, you will reduce the final bundle file **if
