@@ -67,11 +67,13 @@ export default function getLoadedReference(
 
     const minReadyState = shouldWaitForHaveEnoughData() ? 4 :
                                                           3;
-    if (observation.readyState >= minReadyState && observation.currentRange !== null) {
-      if (!shouldValidateMetadata() || mediaElement.duration > 0) {
-        isLoaded.setValue(true);
-        listenCanceller.cancel();
-        return;
+    if (observation.readyState >= minReadyState) {
+      if (observation.currentRange !== null || observation.ended) {
+        if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+          isLoaded.setValue(true);
+          listenCanceller.cancel();
+          return;
+        }
       }
     }
   }, { includeLastObservation: true, clearSignal: listenCanceller.signal });
