@@ -9,6 +9,7 @@
 import {
   DASH,
   DASH_WASM,
+  DEBUG_ELEMENT,
   DIRECTFILE,
   EME,
   HTML_SAMI_PARSER,
@@ -18,10 +19,7 @@ import {
   HTML_VTT_PARSER,
   SMOOTH,
 } from "../../../../../src/features/list";
-import {
-  METAPLAYLIST,
-  DEBUG_ELEMENT,
-} from "../../../../../src/experimental/features";
+import { METAPLAYLIST } from "../../../../../src/experimental/features";
 import RxPlayer from "../../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
