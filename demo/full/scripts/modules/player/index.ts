@@ -8,6 +8,7 @@
 
 import {
   DASH,
+  DASH_WASM,
   DIRECTFILE,
   EME,
   HTML_SAMI_PARSER,
@@ -18,7 +19,6 @@ import {
   SMOOTH,
 } from "../../../../../src/features/list";
 import {
-  DASH_WASM,
   METAPLAYLIST,
   DEBUG_ELEMENT,
 } from "../../../../../src/experimental/features";
