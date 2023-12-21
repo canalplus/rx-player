@@ -1,5 +1,6 @@
 import { DASH as DASH_FEATURE } from "../dash";
 import { DASH_WASM as DASH_WASM_FEATURE } from "../dash_wasm";
+import { DEBUG_ELEMENT as DEBUG_ELEMENT_FEATURE } from "../debug_element";
 import { DIRECTFILE as DIRECTFILE_FEATURE } from "../directfile";
 import { EME as EME_FEATURE } from "../eme";
 import { HTML_SAMI_PARSER as HTML_SAMI_PARSER_FEATURE } from "../html_sami_parser";
@@ -11,6 +12,7 @@ import {
   DASH,
   DASH_WASM,
   DIRECTFILE,
+  DEBUG_ELEMENT,
   EME,
   HTML_SAMI_PARSER,
   HTML_SRT_PARSER,
@@ -48,5 +50,6 @@ describe("Features list", () => {
     expect(NATIVE_TTML_PARSER).toBe(NATIVE_TTML_PARSER_FEATURE);
     expect(NATIVE_VTT_PARSER).toBe(NATIVE_VTT_PARSER_FEATURE);
     expect(SMOOTH).toBe(SMOOTH_FEATURE);
+    expect(DEBUG_ELEMENT).toBe(DEBUG_ELEMENT_FEATURE);
   });
 });
