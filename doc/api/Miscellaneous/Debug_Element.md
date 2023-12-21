@@ -1,8 +1,7 @@
 # Displaying the RxPlayer's debugging element
 
-The `DEBUG_ELEMENT` feature is an experimental (meaning its API can still evolve
-from version to version) feature allowing to render an HTML element displaying
-debug information that might be interesting while debugging playback.
+The `DEBUG_ELEMENT` feature allows to render an HTML element displaying debug
+information that might be interesting while debugging playback.
 
 ![Example of a debug element](../../static/img/debug_elt.png)
 
@@ -16,7 +15,7 @@ displaying debug information.
 Using one directly defined in the RxPlayer API instead allows to:
 
   1. Use a default and complete debugging element, if you don't want to have to
-     create one from scratch
+     create one from scratch.
 
   2. Display debugging information that is not even available through the API,
      like a representation of the content in the various buffers.
@@ -27,15 +26,14 @@ Using one directly defined in the RxPlayer API instead allows to:
 This feature is not present in default builds to prevent adding unnecessary code
 to codebases that don't need it.
 
-As such, to add it, you will need  to add the `DEBUG_ELEMENT` experimental
-feature:
+As such, to add it, you will need  to add the `DEBUG_ELEMENT` feature:
 ```js
 // Import the RxPlayer
 // (here through the "minimal" build, though it doesn't change for other builds)
 import RxPlayer from "rx-player/minimal";
 
 // Import the feature
-import { DEBUG_ELEMENT } from "rx-player/experimental/features";
+import { DEBUG_ELEMENT } from "rx-player/features";
 
 // Attach the feature to imported RxPlayer
 RxPlayer.addFeatures([DEBUG_ELEMENT]);
