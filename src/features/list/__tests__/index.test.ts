@@ -1,4 +1,5 @@
 import { DASH as DASH_FEATURE } from "../dash";
+import { DASH_WASM as DASH_WASM_FEATURE } from "../dash_wasm";
 import { DIRECTFILE as DIRECTFILE_FEATURE } from "../directfile";
 import { EME as EME_FEATURE } from "../eme";
 import { HTML_SAMI_PARSER as HTML_SAMI_PARSER_FEATURE } from "../html_sami_parser";
@@ -8,6 +9,7 @@ import { HTML_TTML_PARSER as  HTML_TTML_PARSER_FEATURE } from "../html_ttml_pars
 import { HTML_VTT_PARSER as HTML_VTT_PARSER_FEATURE } from "../html_vtt_parser";
 import {
   DASH,
+  DASH_WASM,
   DIRECTFILE,
   EME,
   HTML_SAMI_PARSER,
@@ -32,6 +34,7 @@ import { SMOOTH as SMOOTH_FEATURE } from "../smooth";
 describe("Features list", () => {
   it("should export all stable features", () => {
     expect(DASH).toBe(DASH_FEATURE);
+    expect(DASH_WASM).toBe(DASH_WASM_FEATURE);
     expect(DIRECTFILE).toBe(DIRECTFILE_FEATURE);
     expect(EME).toBe(EME_FEATURE);
     expect(HTML_SAMI_PARSER).toBe(HTML_SAMI_PARSER_FEATURE);
