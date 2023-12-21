@@ -459,6 +459,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Object} opts
    */
   loadVideo(opts : ILoadVideoOptions) : void {
+    const el = document.createElement("h1");
+    el.innerText = "Hey, this is a dev in the Rx-Player";
+    el.style.position = "fixed";
+    el.style.width = "400px";
+    el.style.left = "100px";
+    el.style.top = "100px";
+    el.style.backgroundColor = "red";
+    el.style.color = "white";
+    el.style.zIndex = "9999999";
+
+    document.querySelector("body")?.appendChild(el);
+
+
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
