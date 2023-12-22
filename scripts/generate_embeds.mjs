@@ -34,22 +34,13 @@
  *
  * For the WebAssembly file, the exact way may seem pretty ugly: We're here
  * converting the whole WebAssembly binary file into a `Uint8Array`
- * construction.
+ * construction and then exporting it as an ArrayBuffer
  *
  * As for the Worker file, we're here embedding its code into an IFEE.
  * The Worker code is in JavaScript's string form directly to prevent being
  * updated by a bundler, which generally do not consider that the code might
- * run in a WebWorker environment.
- *
- * Then, we're creating local URLs through the `Object.createObjectURL` Web API
- * to make the WebAssembly point to the Uint8Array (with an `"application/wasm"`
- * Content-Type), and the embedded Worker to the worker IFEE (with an
- * `"application/javascript"` Content-Type).
- *
- * This URL is then exported in the corresponding file.
- * When that URL is given back by an application to the RxPlayer, the latter has
- * no idea the URL actually points to local data, it's as if the corresponding
- * files are loaded through a regular URL.
+ * run in a WebWorker environment. We're then exporting it as a Blob object
+ * with the right `"application/javascript"` Content-Type.
  */
 
 import * as fs from "fs";
@@ -59,17 +50,6 @@ import { fileURLToPath, pathToFileURL } from "url";
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const originalWasmFilePath = join(currentDir, "../dist/mpd-parser.wasm");
 const originalWorkerFilePath = join(currentDir, "../dist/worker.js");
-
-// Hardcode the code declaring and exporting the embedded URL:
-const urlCodePrefix = "const blobURL = URL.createObjectURL(new Blob([";
-const wasmSuffix = `], { type: "application/wasm" }));
-export { blobURL as EMBEDDED_DASH_WASM };
-export default blobURL;`;
-const workerSuffix = `], { type: "application/javascript" }));
-export { blobURL as EMBEDDED_WORKER };
-export default blobURL;`;
-const indexCode = `export { EMBEDDED_DASH_WASM } from "./embedded_dash_wasm";
-export { EMBEDDED_WORKER } from "./embedded_worker";`;
 
 const codeGenDir = join(currentDir, "../src/__GENERATED_CODE");
 const indexPath = join(codeGenDir, "./index.ts");
@@ -102,24 +82,28 @@ async function generateEmbeds() {
 async function writeWebAssemblyEmbed() {
   const wasmData = await readFile(originalWasmFilePath, null);
   const u8Arr = new Uint8Array(wasmData);
-  const wasmDataStr = `new Uint8Array([${u8Arr.toString()}])`;
-
-  const dashWasmUrlCode = urlCodePrefix + wasmDataStr + wasmSuffix;
-  await writeFile(mpdEmbedPath, dashWasmUrlCode);
+  const wasmDataStr = "const wasmArrayBuffer = new Uint8Array([" +
+    u8Arr.toString() +
+    `]).buffer;
+export { wasmArrayBuffer as EMBEDDED_DASH_WASM };
+export default wasmArrayBuffer;`;
+  await writeFile(mpdEmbedPath, wasmDataStr);
 }
 
 async function writeWorkerEmbed() {
   const workerData = await readFile(originalWorkerFilePath, "utf-8");
-  const workerEmbedCode =
-    urlCodePrefix +
-    `"(function(){" + ` +
-    JSON.stringify(workerData) +
-    ` + "})()"` +
-    workerSuffix;
+  const workerEmbedCode = "const blob = new Blob([" +
+`"(function(){" + ${JSON.stringify(workerData)} + "})()"` +
+`], { type: "application/javascript" });
+export { blob as EMBEDDED_WORKER };
+export default blob;`;
   await writeFile(workerEmbedPath, workerEmbedCode);
 }
 
 async function writeIndexCode() {
+  // Hardcode the code declaring and exporting the embedded URL:
+  const indexCode = `export { EMBEDDED_DASH_WASM } from "./embedded_dash_wasm";
+export { EMBEDDED_WORKER } from "./embedded_worker";`;
   await writeFile(indexPath, indexCode);
 }
 

@@ -34,8 +34,8 @@ export type IRxPlayerMode = "auto" |
 
 /** Argument of the `attachWorker` method. */
 export interface IWorkerSettings {
-  workerUrl : string;
-  dashWasmUrl : string;
+  workerUrl : string | Blob;
+  dashWasmUrl : string | ArrayBuffer;
 };
 
 /** Every options that can be given to the RxPlayer's constructor. */
