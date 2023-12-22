@@ -17,7 +17,6 @@ import {
   IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
   IReferenceUpdateMessage,
-  IWorkerPlaybackObservation,
   MainThreadMessageType,
   WorkerMessageType,
 } from "../../../../multithread_types";
@@ -29,10 +28,12 @@ import assert from "../../../../utils/assert";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import { ILoggerLevel } from "../../../../utils/logger";
 import { mainThreadTimestampDiff } from "../../../../utils/monotonic_timestamp";
+import objectAssign from "../../../../utils/object_assign";
 import SharedReference from "../../../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../../utils/task_canceller";
+import { ObservationPosition } from "../../../api/playback_observer";
 import StreamOrchestrator, {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
@@ -54,7 +55,9 @@ import sendMessage, {
   formatErrorForSender,
 } from "./send_message";
 import createStreamPlaybackObserver from "./stream_playback_observer";
-import WorkerPlaybackObserver from "./worker_playback_observer";
+import WorkerPlaybackObserver, {
+  ICorePlaybackObservation,
+} from "./worker_playback_observer";
 
 export default function initializeWorkerPortal() {
   /**
@@ -88,7 +91,7 @@ export default function initializeWorkerPortal() {
   /**
    * When set, emit playback observation made on the main thread.
    */
-  let playbackObservationRef : SharedReference<IWorkerPlaybackObservation> | null = null;
+  let playbackObservationRef : SharedReference<ICorePlaybackObservation> | null = null;
 
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
     log.debug("Worker: received message", e.data.type);
@@ -144,7 +147,9 @@ export default function initializeWorkerPortal() {
 
         const currentCanceller = new TaskCanceller();
         const currentContentObservationRef =
-          new SharedReference(msg.value.initialObservation);
+          new SharedReference(objectAssign(msg.value.initialObservation, {
+            position: new ObservationPosition(...msg.value.initialObservation.position),
+          }));
         playbackObservationRef = currentContentObservationRef;
         currentLoadedContentTaskCanceller = currentCanceller;
         currentLoadedContentTaskCanceller.signal.register(() => {
@@ -165,7 +170,9 @@ export default function initializeWorkerPortal() {
         if (msg.contentId !== currentContent?.contentId) {
           return;
         }
-        playbackObservationRef?.setValue(msg.value);
+        playbackObservationRef?.setValue(objectAssign(msg.value, {
+          position: new ObservationPosition(...msg.value.position),
+        }));
         break;
       }
 

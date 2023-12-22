@@ -5,18 +5,25 @@ import {
 import { IReadOnlySharedReference } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
-import { generateReadOnlyObserver } from "../../../api/playback_observer";
+import {
+  generateReadOnlyObserver,
+  IObservationPosition,
+} from "../../../api/playback_observer";
 import sendMessage from "./send_message";
 
+export type ICorePlaybackObservation = IWorkerPlaybackObservation & {
+  position: IObservationPosition;
+};
+
 export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver<
-  IWorkerPlaybackObservation
+  ICorePlaybackObservation
 > {
-  private _src : IReadOnlySharedReference<IWorkerPlaybackObservation>;
+  private _src : IReadOnlySharedReference<ICorePlaybackObservation>;
   private _cancelSignal : CancellationSignal;
   private _contentId : string;
 
   constructor(
-    src : IReadOnlySharedReference<IWorkerPlaybackObservation>,
+    src : IReadOnlySharedReference<ICorePlaybackObservation>,
     contentId : string,
     cancellationSignal : CancellationSignal
   ) {
@@ -37,7 +44,7 @@ export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver
     return undefined;
   }
 
-  public getReference() : IReadOnlySharedReference<IWorkerPlaybackObservation> {
+  public getReference() : IReadOnlySharedReference<ICorePlaybackObservation> {
     return this._src;
   }
 
@@ -53,7 +60,7 @@ export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver
 
   public listen(
     cb : (
-      observation : IWorkerPlaybackObservation,
+      observation : ICorePlaybackObservation,
       stopListening : () => void
     ) => void,
     options? : { includeLastObservation? : boolean | undefined;
@@ -72,7 +79,7 @@ export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver
 
   public deriveReadOnlyObserver<TDest>(
     transform : (
-      observationRef : IReadOnlySharedReference<IWorkerPlaybackObservation>,
+      observationRef : IReadOnlySharedReference<ICorePlaybackObservation>,
       cancellationSignal : CancellationSignal
     ) => IReadOnlySharedReference<TDest>
   ) : IReadOnlyPlaybackObserver<TDest> {

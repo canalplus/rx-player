@@ -7,7 +7,6 @@
 import { IResolutionInfo } from "./core/adaptive/utils/filter_by_resolution";
 import {
   IFreezingStatus,
-  IObservationPosition,
   IRebufferingStatus,
 } from "./core/api";
 import {
@@ -362,7 +361,7 @@ export interface IRepresentationUpdateMessage {
 
 /** Media-related metadata. */
 export interface IWorkerPlaybackObservation {
-  position: IObservationPosition;
+  position: [number, number | null];
   duration : number;
   paused : { last : boolean;
              pending : boolean | undefined; };
