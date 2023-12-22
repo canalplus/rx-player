@@ -16,6 +16,14 @@
 #      `./update-version 4.1.3`). Special suffix corresponding to the date and
 #      tag will be added automatically by this script.
 #
+#      Optionally, this script can take a supplementary argument, which is the
+#      increment number (For example `update-version 4.1.3 01`), which is set to
+#      `00` if that argument is not set (as is wanted for the first and
+#      hopefully only release in a given day).
+#      This is for cases where you're doing multiple releases in a single day,
+#      allowing you to increment that value for each of these releases and avoid
+#      release naming conflicts.
+#
 #   3. When the script ask you to confirm, check that the preceding commands did
 #      not output any issue and if it didn't you can confirm.
 #
@@ -40,11 +48,11 @@ fi
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 date=$(date "+%Y%m%d")
-dev_branch="release/v${version}-worker.${date}00"
-canal_branch="release/v${version}-canal.worker.${date}00"
+dev_branch="release/v${version}-worker.${date}${incr}"
+canal_branch="release/v${version}-canal.worker.${date}${incr}"
 
 git checkout -b ${dev_branch}
-./scripts/update-version $1-worker.${date}00
+./scripts/update-version $1-worker.${date}${incr}
 git add --all
 git commit -m "update version"
 while true; do
@@ -63,7 +71,7 @@ git checkout $current_branch
 
 git checkout -b ${canal_branch}
 git apply ./scripts/canal-release.patch
-./scripts/update-version $1-canal.worker.${date}00
+./scripts/update-version $1-canal.worker.${date}${incr}
 git add --all
 git commit -m "update version"
 git push origin ${canal_branch}
