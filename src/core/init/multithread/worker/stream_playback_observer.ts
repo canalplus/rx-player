@@ -3,7 +3,6 @@ import {
   IMediaSourceInterface,
   SourceBufferType,
 } from "../../../../mse";
-import { IWorkerPlaybackObservation } from "../../../../multithread_types";
 import arrayFind from "../../../../utils/array_find";
 import SharedReference, {
   IReadOnlySharedReference,
@@ -13,6 +12,7 @@ import TaskCanceller, {
 } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import { IStreamOrchestratorPlaybackObservation } from "../../../stream";
+import { ICorePlaybackObservation } from "./worker_playback_observer";
 
 /** Arguments needed to create the Stream's version of the PlaybackObserver. */
 export interface IStreamPlaybackObserverArguments {
@@ -31,12 +31,12 @@ export interface IStreamPlaybackObserverArguments {
  * @returns {Object}
  */
 export default function createStreamPlaybackObserver(
-  playbackObserver : IReadOnlyPlaybackObserver<IWorkerPlaybackObservation>,
+  playbackObserver : IReadOnlyPlaybackObserver<ICorePlaybackObservation>,
   { speed, mediaSource, manifest } : IStreamPlaybackObserverArguments,
   fnCancelSignal : CancellationSignal
 ) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
   return playbackObserver.deriveReadOnlyObserver(function transform(
-    observationRef : IReadOnlySharedReference<IWorkerPlaybackObservation>,
+    observationRef : IReadOnlySharedReference<ICorePlaybackObservation>,
     parentObserverCancelSignal : CancellationSignal
   ) : IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
     const canceller = new TaskCanceller();
