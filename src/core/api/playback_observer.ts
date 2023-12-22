@@ -609,7 +609,7 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
 
 export type IObservationPosition = ObservationPosition;
 
-class ObservationPosition {
+export class ObservationPosition {
   /**
    * Known position at the time the Observation was emitted, in seconds.
    *
@@ -630,6 +630,17 @@ class ObservationPosition {
   constructor(last: number, wanted: number | null) {
     this._last = last;
     this._wanted = wanted;
+  }
+
+  /**
+   * Obtain arguments allowing to instanciate the same ObservationPosition.
+   *
+   * This can be used to create a new `ObservationPosition` across JS realms,
+   * generally to communicate its data between the main thread and a WebWorker.
+   * @returns {Array.<number>}
+   */
+  public serialize(): [number, number | null] {
+    return [this._last, this._wanted];
   }
 
   /**
