@@ -438,7 +438,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!hasWebassembly) {
       log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
     } else {
-      this._priv_worker = new Worker(workerSettings.workerUrl);
+      if (typeof workerSettings.workerUrl === "string") {
+        this._priv_worker = new Worker(workerSettings.workerUrl);
+      } else {
+        const blobUrl = URL.createObjectURL(workerSettings.workerUrl);
+        this._priv_worker = new Worker(blobUrl);
+        URL.revokeObjectURL(blobUrl);
+      }
+
       this._priv_worker.onerror = (evt: ErrorEvent) => {
         this._priv_worker = null;
         log.error("Unexpected worker error",
