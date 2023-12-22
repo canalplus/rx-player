@@ -172,7 +172,15 @@ export default class DashWasmParser {
       },
     };
 
-    const fetchedWasm = fetch(opts.wasmUrl);
+    let objectUrl : string | null = null;
+    let fetchedWasm: Promise<Response>;
+    if (typeof opts.wasmUrl === "string") {
+      fetchedWasm = fetch(opts.wasmUrl);
+    } else {
+      objectUrl = URL.createObjectURL(new Blob([opts.wasmUrl],
+                                               { type: "application/wasm" }));
+      fetchedWasm = fetch(objectUrl);
+    }
 
     const streamingProm = typeof WebAssembly.instantiateStreaming === "function" ?
       WebAssembly.instantiateStreaming(fetchedWasm, imports) :
@@ -180,6 +188,10 @@ export default class DashWasmParser {
 
     this._initProm = streamingProm
       .catch(async (e) => {
+        if (objectUrl !== null) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
         log.warn("Unable to call `instantiateStreaming` on WASM",
                  e instanceof Error ? e : "");
         const res = await fetchedWasm;
@@ -190,6 +202,10 @@ export default class DashWasmParser {
         return WebAssembly.instantiate(resAb, imports);
       })
       .then((instanceWasm) => {
+        if (objectUrl !== null) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
         this._instance = instanceWasm;
 
         // TODO better types?
@@ -474,5 +490,5 @@ export default class DashWasmParser {
 
 /** Options needed when constructing the DASH-WASM parser. */
 export interface IDashWasmParserOptions {
-  wasmUrl : string;
+  wasmUrl : string | ArrayBuffer;
 }
