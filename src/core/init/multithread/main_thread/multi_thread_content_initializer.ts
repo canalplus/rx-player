@@ -1262,7 +1262,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       buffered.text = context.textDisplayer.getBufferedRanges();
     }
 
-    return { position: observation.position,
+    return { position: observation.position.serialize(),
              buffered,
              duration: observation.duration,
              paused: { last: observation.paused,
