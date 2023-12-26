@@ -47,7 +47,7 @@ export interface IAdaptationStreamCallbacks
    * Generally flushing/refreshing low-level buffers can be performed simply by
    * performing a very small seek.
    */
-  needsBufferFlush() : void;
+  needsBufferFlush(payload?: number) : void;
 }
 
 /** Payload for the `bitrateEstimateChange` callback. */

@@ -249,11 +249,7 @@ export default function PeriodStream(
         return askForMediaSourceReload(relativePosAfterSwitch,
                                        true,
                                        streamCanceller.signal);
-      } else if (choice.switchingMode === "direct") {
-        const seekingTime = playbackObserver.getCurrentTime() + relativePosAfterSwitch;
-        callbacks.seekTo(seekingTime);
       }
-
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
       if (streamCanceller.isUsed()) {
         return; // The Stream has since been cancelled
@@ -266,7 +262,10 @@ export default function PeriodStream(
           }
         }
         if (strategy.type === "flush-buffer") {
-          callbacks.needsBufferFlush();
+          // The seek to `relativePosAfterSwitch` is only performed if strategy.type
+          // is "flush-buffer" because there should be no interuption when playing in
+          // with `clean-buffer` strategy
+          callbacks.needsBufferFlush(relativePosAfterSwitch);
           if (streamCanceller.isUsed()) {
             return ; // Previous callback cancelled the Stream by side-effect
           }
