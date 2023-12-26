@@ -249,6 +249,9 @@ export default function PeriodStream(
         return askForMediaSourceReload(relativePosAfterSwitch,
                                        true,
                                        streamCanceller.signal);
+      } else if (choice.switchingMode === "direct") {
+        const seekingTime = playbackObserver.getCurrentTime() + relativePosAfterSwitch;
+        callbacks.seekTo(seekingTime);
       }
 
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
