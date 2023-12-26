@@ -523,6 +523,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
+        seekTo(value) {
+          playbackObserver.setCurrentTime(value);
+        },
+
         needsBufferFlush: () => {
           const seekedTime = mediaElement.currentTime + 0.001;
           playbackObserver.setCurrentTime(seekedTime);
