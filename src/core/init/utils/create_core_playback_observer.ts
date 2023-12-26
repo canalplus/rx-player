@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Manifest, { IManifestMetadata } from "../../../manifest";
+import { IManifestMetadata, getMaximumSafePosition } from "../../../manifest";
 import { IMediaSourceInterface, SourceBufferType } from "../../../mse";
 import { ITrackType } from "../../../public_types";
 import { ITextDisplayer } from "../../../text_displayer";
@@ -27,18 +27,20 @@ import TaskCanceller, {
   CancellationSignal,
 } from "../../../utils/task_canceller";
 import {
+  IFreezingStatus,
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
+  IRebufferingStatus,
   PlaybackObserver,
 } from "../../api";
 import { IStreamOrchestratorPlaybackObservation } from "../../stream";
 
-/** Arguments needed to create the Stream's version of the PlaybackObserver. */
-export interface IStreamPlaybackObserverArguments {
+/** Arguments needed to create the core's version of the PlaybackObserver. */
+export interface ICorePlaybackObserverArguments {
   /** If true, the player will auto-play when `initialPlayPerformed` becomes `true`. */
   autoPlay : boolean;
   /** Manifest of the content being played */
-  manifest : Manifest;
+  manifest : IManifestMetadata;
   /** Becomes `true` after the initial play has been taken care of. */
   initialPlayPerformed : IReadOnlySharedReference<boolean>;
   /** The last speed requested by the user. */
@@ -50,11 +52,17 @@ export interface IStreamPlaybackObserverArguments {
    */
   textDisplayer : ITextDisplayer | null;
   /** Used abstraction for MSE API. */
-  mediaSource : IMediaSourceInterface;
+  mediaSource : IMediaSourceInterface | null;
 }
 
+export type ICorePlaybackObservation = IStreamOrchestratorPlaybackObservation & {
+  rebuffering: IRebufferingStatus | null;
+  freezing: IFreezingStatus | null;
+  bufferGap: number | undefined;
+};
+
 /**
- * Create PlaybackObserver for the `Stream` part of the code.
+ * Create PlaybackObserver for the core part of the code.
  * @param {Object} srcPlaybackObserver - Base `PlaybackObserver` from which we
  * will derive information.
  * @param {Object} context - Various information linked to the current content
@@ -62,49 +70,52 @@ export interface IStreamPlaybackObserverArguments {
  * @param {Object} fnCancelSignal - Abort the created PlaybackObserver.
  * @returns {Object}
  */
-export default function createStreamPlaybackObserver(
+export default function createCorePlaybackObserver(
   srcPlaybackObserver : PlaybackObserver,
   { autoPlay,
     initialPlayPerformed,
     manifest,
     mediaSource,
     speed,
-    textDisplayer } : IStreamPlaybackObserverArguments,
+    textDisplayer } : ICorePlaybackObserverArguments,
   fnCancelSignal : CancellationSignal
-) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
+) : IReadOnlyPlaybackObserver<ICorePlaybackObservation> {
   return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
     observationRef : IReadOnlySharedReference<IPlaybackObservation>,
     parentObserverCancelSignal : CancellationSignal
-  ) : IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
+  ) : IReadOnlySharedReference<ICorePlaybackObservation> {
     const canceller = new TaskCanceller();
     canceller.linkToSignal(parentObserverCancelSignal);
     canceller.linkToSignal(fnCancelSignal);
-    const newRef = new SharedReference(constructStreamPlaybackObservation(),
+    const newRef = new SharedReference(constructCorePlaybackObservation(),
                                        canceller.signal);
 
     // TODO there might be subtle unexpected behavior here as updating the
     // speed will send observation which may be outdated at the time it is sent
-    speed.onUpdate(emitStreamPlaybackObservation, {
+    speed.onUpdate(emitCorePlaybackObservation, {
       clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
 
-    observationRef.onUpdate(emitStreamPlaybackObservation, {
+    observationRef.onUpdate(emitCorePlaybackObservation, {
       clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
     return newRef;
 
-    function constructStreamPlaybackObservation() {
+    function constructCorePlaybackObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
       updateWantedPositionIfAfterManifest(observation, manifest);
       return {
         // TODO more exact according to the current Adaptation chosen?
-        maximumPosition: manifest.getMaximumSafePosition(),
+        maximumPosition: getMaximumSafePosition(manifest),
+        bufferGap: observation.bufferGap,
         position: observation.position,
         buffered: getBufferedDataPerMediaBuffer(mediaSource, textDisplayer),
         duration: observation.duration,
+        rebuffering: observation.rebuffering,
+        freezing: observation.freezing,
         paused: { last: observation.paused,
                   pending: getPendingPaused(initialPlayPerformed, autoPlay) },
         readyState: observation.readyState,
@@ -112,8 +123,8 @@ export default function createStreamPlaybackObserver(
       };
     }
 
-    function emitStreamPlaybackObservation() {
-      newRef.setValue(constructStreamPlaybackObservation());
+    function emitCorePlaybackObservation() {
+      newRef.setValue(constructCorePlaybackObservation());
     }
   });
 }
