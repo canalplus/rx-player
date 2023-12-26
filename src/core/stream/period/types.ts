@@ -23,6 +23,8 @@ import {
 } from "../adaptation";
 import { IPausedPlaybackObservation } from "../representation";
 
+export { IPausedPlaybackObservation };
+
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends
   IAdaptationStreamCallbacks
