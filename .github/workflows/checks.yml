@@ -64,9 +64,13 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
     # needed for integration & memory tests codecs support
     - run: sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y ubuntu-restricted-extras
     - run: npm install
+    - run: rustup target add wasm32-unknown-unknown
     - run: npm run build
     # Firefox seems to have issue with integration tests on GitHub actions only
     # TODO to check
