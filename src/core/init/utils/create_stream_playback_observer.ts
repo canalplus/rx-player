@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../manifest";
-import { SourceBufferType } from "../../../mse";
-import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
+import Manifest, { IManifestMetadata } from "../../../manifest";
+import { IMediaSourceInterface, SourceBufferType } from "../../../mse";
 import { ITrackType } from "../../../public_types";
 import { ITextDisplayer } from "../../../text_displayer";
 import arrayFind from "../../../utils/array_find";
@@ -51,7 +50,7 @@ export interface IStreamPlaybackObserverArguments {
    */
   textDisplayer : ITextDisplayer | null;
   /** Used abstraction for MSE API. */
-  mediaSource : MainMediaSourceInterface;
+  mediaSource : IMediaSourceInterface;
 }
 
 /**
@@ -99,65 +98,15 @@ export default function createStreamPlaybackObserver(
     function constructStreamPlaybackObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
-
-      if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
-        // HACK: When the position is actually further than the maximum
-        // position for a finished content, we actually want to be loading
-        // the last segment before ending.
-        // For now, this behavior is implicitely forced by making as if we
-        // want to seek one second before the period's end (despite never
-        // doing it).
-        const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (lastPeriod !== undefined && lastPeriod.end !== undefined) {
-          const wantedPosition = observation.position.getWanted();
-          if (wantedPosition >= lastPeriod.start &&
-              wantedPosition >= lastPeriod.end - 1)
-          {
-            // We're after the end of the last Period, check if `buffered`
-            // indicates that the last segment is probably not loaded, in which
-            // case act as if we want to load one second before the end.
-            const buffered = observation.buffered;
-            if (buffered.length === 0 ||
-                buffered.end(buffered.length - 1) < observation.duration - 1)
-            {
-              observation.position.forceWantedPosition(lastPeriod.end - 1);
-            }
-          }
-        }
-      }
-
-      const buffered: Record<ITrackType, IRange[] | null> = {
-        audio: null,
-        video: null,
-        text: null,
-      };
-
-      const audioBuffer = arrayFind(mediaSource.sourceBuffers,
-                                    s => s.type === SourceBufferType.Audio);
-      const videoBuffer = arrayFind(mediaSource.sourceBuffers,
-                                    s => s.type === SourceBufferType.Video);
-      if (audioBuffer !== undefined) {
-        buffered.audio = audioBuffer.getBuffered();
-      }
-      if (videoBuffer !== undefined) {
-        buffered.video = videoBuffer.getBuffered();
-      }
-      if (textDisplayer !== null) {
-        buffered.text = textDisplayer.getBufferedRanges();
-      }
-
+      updateWantedPositionIfAfterManifest(observation, manifest);
       return {
         // TODO more exact according to the current Adaptation chosen?
         maximumPosition: manifest.getMaximumSafePosition(),
         position: observation.position,
-        buffered,
+        buffered: getBufferedDataPerMediaBuffer(mediaSource, textDisplayer),
         duration: observation.duration,
-        paused: {
-          last: observation.paused,
-          pending: initialPlayPerformed.getValue()  ? undefined :
-                   !autoPlay === observation.paused ? undefined :
-                                                      !autoPlay,
-        },
+        paused: { last: observation.paused,
+                  pending: getPendingPaused(initialPlayPerformed, autoPlay) },
         readyState: observation.readyState,
         speed: lastSpeed,
       };
@@ -167,4 +116,73 @@ export default function createStreamPlaybackObserver(
       newRef.setValue(constructStreamPlaybackObservation());
     }
   });
+}
+
+export function updateWantedPositionIfAfterManifest(
+  observation: IPlaybackObservation,
+  manifest: IManifestMetadata
+): void  {
+  if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
+    // HACK: When the position is actually further than the maximum
+    // position for a finished content, we actually want to be loading
+    // the last segment before ending.
+    // For now, this behavior is implicitely forced by making as if we
+    // want to seek one second before the period's end (despite never
+    // doing it).
+    const lastPeriod = manifest.periods[manifest.periods.length - 1];
+    if (lastPeriod !== undefined && lastPeriod.end !== undefined) {
+      const wantedPosition = observation.position.getWanted();
+      if (wantedPosition >= lastPeriod.start &&
+          wantedPosition >= lastPeriod.end - 1)
+      {
+        // We're after the end of the last Period, check if `buffered`
+        // indicates that the last segment is probably not loaded, in which
+        // case act as if we want to load one second before the end.
+        const buffered = observation.buffered;
+        if (buffered.length === 0 ||
+            buffered.end(buffered.length - 1) < observation.duration - 1)
+        {
+          observation.position.forceWantedPosition(lastPeriod.end - 1);
+        }
+      }
+    }
+  }
+}
+
+export function getPendingPaused(
+  initialPlayPerformed: IReadOnlySharedReference<boolean>,
+  autoPlay: boolean
+): boolean | undefined {
+  return initialPlayPerformed.getValue() ? undefined :
+                                           !autoPlay;
+}
+
+export function getBufferedDataPerMediaBuffer(
+  mediaSourceInterface: IMediaSourceInterface | null,
+  textDisplayer: ITextDisplayer | null
+): Record<ITrackType, IRange[] | null> {
+  const buffered: Record<ITrackType, IRange[] | null> = {
+    audio: null,
+    video: null,
+    text: null,
+  };
+  if (textDisplayer !== null) {
+    buffered.text = textDisplayer.getBufferedRanges();
+  }
+  if (mediaSourceInterface === null) {
+    return buffered;
+  }
+  const audioBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
+                                s => s.type === SourceBufferType.Audio);
+  const videoBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
+                                s => s.type === SourceBufferType.Video);
+  const audioBuffered = audioBuffer?.getBuffered();
+  if (audioBuffered !== undefined) {
+    buffered.audio = audioBuffered;
+  }
+  const videoBuffered = videoBuffer?.getBuffered();
+  if (videoBuffered !== undefined) {
+    buffered.video = videoBuffered;
+  }
+  return buffered;
 }

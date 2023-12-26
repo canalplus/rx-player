@@ -1,9 +1,5 @@
 import Manifest from "../../../../manifest";
-import {
-  IMediaSourceInterface,
-  SourceBufferType,
-} from "../../../../mse";
-import arrayFind from "../../../../utils/array_find";
+import { IMediaSourceInterface } from "../../../../mse";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../../utils/reference";
@@ -12,6 +8,9 @@ import TaskCanceller, {
 } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import { IStreamOrchestratorPlaybackObservation } from "../../../stream";
+import {
+  getBufferedDataPerMediaBuffer,
+} from "../../utils/create_stream_playback_observer";
 import { ICorePlaybackObservation } from "./worker_playback_observer";
 
 /** Arguments needed to create the Stream's version of the PlaybackObserver. */
@@ -62,29 +61,19 @@ export default function createStreamPlaybackObserver(
     ): IStreamOrchestratorPlaybackObservation {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
-
       const { buffered } = observation;
-
-      if (buffered.audio === null) {
-        const audioBuffer = arrayFind(mediaSource.sourceBuffers,
-                                      s => s.type === SourceBufferType.Audio);
-        if (audioBuffer !== undefined) {
-          buffered.audio = audioBuffer.getBuffered() ?? null;
-        }
+      const newBuffered = getBufferedDataPerMediaBuffer(mediaSource, null);
+      if (newBuffered.audio !== null) {
+        buffered.audio = newBuffered.audio;
       }
-      if (buffered.video === null) {
-        const videoBuffer = arrayFind(mediaSource.sourceBuffers,
-                                      s => s.type === SourceBufferType.Video);
-        if (videoBuffer !== undefined) {
-          buffered.video = videoBuffer.getBuffered() ?? null;
-        }
+      if (newBuffered.video !== null) {
+        buffered.video = newBuffered.video;
       }
-
       return {
         // TODO more exact according to the current Adaptation chosen?
         maximumPosition: manifest.getMaximumSafePosition(),
-        buffered,
         position: observation.position,
+        buffered,
         duration: observation.duration,
         paused: observation.paused,
         readyState: observation.readyState,

@@ -19,7 +19,6 @@ import {
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../../../manifest";
-import { SourceBufferType } from "../../../../mse";
 import MainMediaSourceInterface from "../../../../mse/main_media_source_interface";
 import {
   ICreateMediaSourceWorkerMessage,
@@ -41,7 +40,6 @@ import assert from "../../../../utils/assert";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import idGenerator from "../../../../utils/id_generator";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import { IRange } from "../../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../../utils/reference";
@@ -64,6 +62,11 @@ import {
   ITextDisplayerOptions,
 } from "../../types";
 import { resetMediaElement } from "../../utils/create_media_source";
+import {
+  getBufferedDataPerMediaBuffer,
+  getPendingPaused,
+  updateWantedPositionIfAfterManifest,
+} from "../../utils/create_stream_playback_observer";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "../../utils/get_initial_time";
@@ -1200,77 +1203,27 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     context : { textDisplayer : ITextDisplayer | null }
   ) : IWorkerPlaybackObservation {
     assert(this._currentContentInfo !== null);
-    const speedVal = 1;
-    if (
-      this._currentContentInfo.manifest !== null &&
-      (
-        !this._currentContentInfo.manifest.isDynamic ||
-        this._currentContentInfo.manifest.isLastPeriodKnown
-      )
-    ) {
-      // HACK: When the position is actually further than the maximum
-      // position for a finished content, we actually want to be loading
-      // the last segment before ending.
-      // For now, this behavior is implicitely forced by making as if we
-      // want to seek one second before the period's end (despite never
-      // doing it).
-      const manifest = this._currentContentInfo.manifest;
-      const lastPeriod = manifest.periods[manifest.periods.length - 1];
-      if (lastPeriod !== undefined && lastPeriod.end !== undefined) {
-        const wantedPosition = observation.position.getWanted();
-        if (wantedPosition >= lastPeriod.start &&
-            wantedPosition >= lastPeriod.end - 1)
-        {
-          // We're after the end of the last Period, check if `buffered`
-          // indicates that the last segment is probably not loaded, in which
-          // case act as if we want to load one second before the end.
-          const buffered = observation.buffered;
-          if (buffered.length === 0 ||
-              buffered.end(buffered.length - 1) < observation.duration - 1)
-          {
-            observation.position.forceWantedPosition(lastPeriod.end - 1);
-          }
-        }
-      }
+    const { initialPlayPerformed,
+            mainThreadMediaSource,
+            autoPlay,
+            manifest } = this._currentContentInfo;
+    if (manifest !== null) {
+      updateWantedPositionIfAfterManifest(observation, manifest);
     }
-
-    const pendingPause =
-      this._currentContentInfo.initialPlayPerformed?.getValue() === false &&
-      this._currentContentInfo.autoPlay === observation.paused ?
-        !this._currentContentInfo.autoPlay :
-        undefined;
-
-    const buffered: Record<ITrackType, IRange[] | null> = {
-      audio: null,
-      video: null,
-      text: null,
-    };
-    if (this._currentContentInfo.mainThreadMediaSource !== null) {
-      const mediaSourceInterface = this._currentContentInfo.mainThreadMediaSource;
-      const audioBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
-                                    s => s.type === SourceBufferType.Audio);
-      const videoBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
-                                    s => s.type === SourceBufferType.Video);
-      if (audioBuffer !== undefined) {
-        buffered.audio = audioBuffer.getBuffered();
-      }
-      if (videoBuffer !== undefined) {
-        buffered.video = videoBuffer.getBuffered();
-      }
-    }
-    if (context.textDisplayer !== null) {
-      buffered.text = context.textDisplayer.getBufferedRanges();
-    }
-
+    const pendingPause = (initialPlayPerformed === null || autoPlay === undefined) ?
+      undefined :
+      getPendingPaused(initialPlayPerformed, autoPlay);
     return { position: observation.position.serialize(),
-             buffered,
+             buffered: getBufferedDataPerMediaBuffer(mainThreadMediaSource,
+                                                     context.textDisplayer),
              duration: observation.duration,
              paused: { last: observation.paused,
                        pending: pendingPause },
              rebuffering: observation.rebuffering,
              freezing: observation.freezing,
              bufferGap: observation.bufferGap,
-             speed: speedVal,
+             // TODO should we actually rely on that one here?
+             speed: 1,
              readyState: observation.readyState };
   }
 
