@@ -250,7 +250,7 @@
       "lint:tests": "Lint integration tests source files"
     },
     "Run tests": {
-      "Integration tests (test the whole API)": {
+      "Integration tests (test the whole API, ensure the RxPlayer build is made BEFORE running them)": {
         "test:integration": "Launch integration tests in multiple browser environments",
         "test:integration:chrome": "Launch integration tests in a Chrome browser.",
         "test:integration:chrome:watch": "Launch integration tests in Chrome each times the files update",
