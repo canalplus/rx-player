@@ -18,6 +18,7 @@ import {
 } from "./core/fetchers";
 import {
   IInbandEvent,
+  IPausedPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
 } from "./core/stream";
@@ -361,12 +362,28 @@ export interface IRepresentationUpdateMessage {
 
 /** Media-related metadata. */
 export interface IWorkerPlaybackObservation {
-  position: [number, number | null];
-  duration : number;
-  paused : { last : boolean;
-             pending : boolean | undefined; };
+  /**
+   * Information on whether the media element was paused at the time of the
+   * Observation.
+   */
+  paused : IPausedPlaybackObservation;
+  position : [number, number | null];
+  /** `readyState` property of the HTMLMediaElement. */
   readyState: number;
+  /** Target playback rate at which we want to play the content. */
   speed: number;
+  /** Theoretical maximum position on the content that can currently be played. */
+  maximumPosition : number;
+  /**
+   * Ranges of buffered data per type of media.
+   *
+   * `null` as a record's value if no buffer exists for that type of media.
+   *
+   * `null` as a `buffered` value if this could not have been obtained on the
+   * current environment (e.g. in the main thread).
+   */
+  buffered : Record<ITrackType, IRange[] | null>;
+  duration : number;
   /**
    * Set if the player is short on audio and/or video media data and is a such,
    * rebuffering.
@@ -387,15 +404,6 @@ export interface IWorkerPlaybackObservation {
    * `undefined` if we cannot determine the buffer gap.
    */
   bufferGap : number | undefined;
-  /**
-   * Ranges of buffered data per type of media.
-   *
-   * `null` as a record's value if no buffer exists for that type of media.
-   *
-   * `null` as a `buffered` value if this could not have been obtained on the
-   * current environment (e.g. in the main thread).
-   */
-  buffered : Record<ITrackType, IRange[] | null>;
 }
 
 /**
@@ -511,7 +519,6 @@ export type IReferenceUpdateMessage =
   IReferenceUpdate<"maxVideoBufferSize", number> |
   IReferenceUpdate<"maxBufferBehind", number> |
   IReferenceUpdate<"maxBufferAhead", number> |
-  IReferenceUpdate<"speed", number> |
   IReferenceUpdate<"limitVideoResolution", IResolutionInfo> |
   IReferenceUpdate<"throttleVideoBitrate", number>;
 

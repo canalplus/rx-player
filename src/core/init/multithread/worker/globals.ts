@@ -26,9 +26,6 @@ const limitVideoResolution = new SharedReference<IResolutionInfo>({
 });
 const throttleVideoBitrate = new SharedReference(Infinity);
 
-/** Emit the playback rate (speed) set by the user. */
-const speed = new SharedReference(1);
-
 export {
   wantedBufferAhead,
   maxVideoBufferSize,
@@ -36,5 +33,4 @@ export {
   maxBufferAhead,
   limitVideoResolution,
   throttleVideoBitrate,
-  speed,
 };
