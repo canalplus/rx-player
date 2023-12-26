@@ -523,13 +523,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        seekTo(value) {
-          playbackObserver.setCurrentTime(value);
-        },
-
-        needsBufferFlush: () => {
-          const seekedTime = mediaElement.currentTime + 0.001;
-          playbackObserver.setCurrentTime(seekedTime);
+        needsBufferFlush: (relativeResumingPosition?) => {
+          let wantedSeekingTime: number;
+          const currentTime = playbackObserver.getCurrentTime();
+          if (relativeResumingPosition !== undefined && relativeResumingPosition !== 0) {
+            wantedSeekingTime = currentTime + relativeResumingPosition;
+          } else {
+            wantedSeekingTime = currentTime + 0.001;
+          }
+          playbackObserver.setCurrentTime(wantedSeekingTime);
 
           // Seek again once data begins to be buffered.
           // This is sadly necessary on some browsers to avoid decoding
@@ -550,7 +552,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               // Data is buffered around the current position
               obs.currentRange !== null ||
               // Or, for whatever reason, we have no buffer but we're already advancing
-              obs.position.getPolled() > seekedTime + 0.1
+              obs.position.getPolled() > wantedSeekingTime + 0.1
             ) {
               stopListening();
               playbackObserver.setCurrentTime(obs.position.getWanted() + 0.001);
