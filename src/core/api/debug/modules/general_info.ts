@@ -163,7 +163,7 @@ export default function constructDebugGeneralInfo(
                (r.isSupported ? "" : " U!") +
                (r.decipherable !== false ? "" : " E!");
       }) ?? [];
-      const audioBitratesStr = adaptations?.video?.representations.map((r) => {
+      const audioBitratesStr = adaptations?.audio?.representations.map((r) => {
         return String(r.bitrate ?? "N/A") +
                (r.isSupported ? "" : " U!") +
                (r.decipherable !== false ? "" : " E!");
