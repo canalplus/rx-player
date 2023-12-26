@@ -1,5 +1,10 @@
 import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
+import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
+import {
+  EMBEDDED_WORKER,
+  EMBEDDED_DASH_WASM,
+} from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import sleep from "../../utils/sleep.js";
 import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import tryTestMultipleTimes from "../../utils/try_test_multiple_times";
@@ -46,8 +51,15 @@ import { lockLowestBitrates } from "../../utils/bitrates";
  *                                                .url {string}
  * ```
  */
-export default function launchTestsForContent(manifestInfos) {
+export default function launchTestsForContent(
+  manifestInfos,
+  { multithread } = {}
+) {
   let player;
+
+  if (multithread === true) {
+    RxPlayer.addFeatures([MULTI_THREAD]);
+  }
 
   const { isLive,
           maximumPosition,
@@ -60,6 +72,12 @@ export default function launchTestsForContent(manifestInfos) {
   describe("API tests", () => {
     beforeEach(() => {
       player = new RxPlayer();
+      if (multithread === true) {
+        player.attachWorker({
+          workerUrl: EMBEDDED_WORKER,
+          dashWasmUrl: EMBEDDED_DASH_WASM,
+        });
+      }
     });
 
     afterEach(() => {
