@@ -29,7 +29,7 @@ import assertUnreachable from "../../../../utils/assert_unreachable";
 import { ILoggerLevel } from "../../../../utils/logger";
 import { mainThreadTimestampDiff } from "../../../../utils/monotonic_timestamp";
 import objectAssign from "../../../../utils/object_assign";
-import SharedReference from "../../../../utils/reference";
+import SharedReference, { IReadOnlySharedReference } from "../../../../utils/reference";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../../../utils/task_canceller";
@@ -41,23 +41,23 @@ import StreamOrchestrator, {
 } from "../../../stream";
 /* eslint-disable-next-line max-len */
 import createContentTimeBoundariesObserver from "../../utils/create_content_time_boundaries_observer";
+import {
+  getBufferedDataPerMediaBuffer,
+  ICorePlaybackObservation,
+} from "../../utils/create_core_playback_observer";
 import ContentPreparer from "./content_preparer";
 import {
   limitVideoResolution,
   maxBufferAhead,
   maxBufferBehind,
   maxVideoBufferSize,
-  speed,
   throttleVideoBitrate,
   wantedBufferAhead,
 } from "./globals";
 import sendMessage, {
   formatErrorForSender,
 } from "./send_message";
-import createStreamPlaybackObserver from "./stream_playback_observer";
-import WorkerPlaybackObserver, {
-  ICorePlaybackObservation,
-} from "./worker_playback_observer";
+import WorkerPlaybackObserver from "./worker_playback_observer";
 
 export default function initializeWorkerPortal() {
   /**
@@ -146,21 +146,19 @@ export default function initializeWorkerPortal() {
         }
 
         const currentCanceller = new TaskCanceller();
-        const currentContentObservationRef =
-          new SharedReference(objectAssign(msg.value.initialObservation, {
-            position: new ObservationPosition(...msg.value.initialObservation.position),
-          }));
+        const currentContentObservationRef = new SharedReference<
+          ICorePlaybackObservation
+        >(objectAssign(msg.value.initialObservation, {
+          position: new ObservationPosition(...msg.value.initialObservation.position),
+        }));
         playbackObservationRef = currentContentObservationRef;
         currentLoadedContentTaskCanceller = currentCanceller;
         currentLoadedContentTaskCanceller.signal.register(() => {
           currentContentObservationRef.finish();
         });
-        const playbackObserver = new WorkerPlaybackObserver(playbackObservationRef,
-                                                            preparedContent.contentId,
-                                                            currentCanceller.signal);
         loadOrReloadPreparedContent(msg.value,
                                     contentPreparer,
-                                    playbackObserver,
+                                    currentContentObservationRef,
                                     currentCanceller.signal);
         break;
       }
@@ -170,7 +168,17 @@ export default function initializeWorkerPortal() {
         if (msg.contentId !== currentContent?.contentId) {
           return;
         }
-        playbackObservationRef?.setValue(objectAssign(msg.value, {
+        const observation = msg.value;
+        const { buffered } = observation;
+        const newBuffered = getBufferedDataPerMediaBuffer(currentContent.mediaSource,
+                                                          null);
+        if (newBuffered.audio !== null) {
+          buffered.audio = newBuffered.audio;
+        }
+        if (newBuffered.video !== null) {
+          buffered.video = newBuffered.video;
+        }
+        playbackObservationRef?.setValue(objectAssign(observation, {
           position: new ObservationPosition(...msg.value.position),
         }));
         break;
@@ -421,9 +429,6 @@ function updateGlobalReference(msg: IReferenceUpdateMessage) : void {
     case "maxBufferAhead":
       maxBufferAhead.setValueIfChanged(msg.value.newVal);
       break;
-    case "speed":
-      speed.setValueIfChanged(msg.value.newVal);
-      break;
     case "limitVideoResolution":
       limitVideoResolution.setValueIfChanged(msg.value.newVal);
       break;
@@ -456,7 +461,7 @@ interface IBufferingInitializationInformation {
 function loadOrReloadPreparedContent(
   val : IBufferingInitializationInformation,
   contentPreparer : ContentPreparer,
-  playbackObserver : WorkerPlaybackObserver,
+  playbackObservationRef : IReadOnlySharedReference<ICorePlaybackObservation>,
   parentCancelSignal : CancellationSignal
 ) {
   const currentLoadCanceller = new TaskCanceller();
@@ -494,19 +499,14 @@ function loadOrReloadPreparedContent(
           enableFastSwitching,
           initialTime,
           onCodecSwitch } = val;
-  playbackObserver.listen((observation) => {
+  playbackObservationRef.onUpdate((observation) => {
     if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
       handleMediaSourceReload({ timeOffset: 0,
                                 minimumPosition: 0,
                                 maximumPosition: Infinity });
     }
-  });
-  const streamObserver = createStreamPlaybackObserver(playbackObserver,
-                                                      { manifest, mediaSource, speed },
-                                                      currentLoadCanceller.signal);
 
-  // Synchronize SegmentBuffers with what has been buffered.
-  streamObserver.listen((observation) => {
+    // Synchronize SegmentBuffers with what has been buffered.
     ["video" as const, "audio" as const, "text" as const].forEach(tType => {
       const segmentBufferStatus =  segmentBuffersStore.getStatus(tType);
       if (segmentBufferStatus.type === "initialized") {
@@ -515,7 +515,7 @@ function loadOrReloadPreparedContent(
         );
       }
     });
-  }, { clearSignal: currentLoadCanceller.signal });
+  });
 
   const initialPeriod = manifest.getPeriodForTime(initialTime) ??
                         manifest.getNextPeriod(initialTime);
@@ -528,10 +528,14 @@ function loadOrReloadPreparedContent(
     return;
   }
 
+  const playbackObserver = new WorkerPlaybackObserver(playbackObservationRef,
+                                                      contentId,
+                                                      currentLoadCanceller.signal);
+
   const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
     manifest,
     mediaSource,
-    streamObserver,
+    playbackObserver,
     segmentBuffersStore,
     {
       onWarning: (err: IPlayerError) =>
@@ -552,7 +556,7 @@ function loadOrReloadPreparedContent(
 
   StreamOrchestrator({ initialPeriod: manifest.periods[0],
                        manifest },
-                     streamObserver,
+                     playbackObserver,
                      representationEstimator,
                      segmentBuffersStore,
                      segmentFetcherCreator,
@@ -806,7 +810,7 @@ function loadOrReloadPreparedContent(
 
   function handleMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
     // TODO more precize one day?
-    const lastObservation = playbackObserver.getReference().getValue();
+    const lastObservation = playbackObservationRef.getValue();
     const newInitialTime = lastObservation.position.getWanted();
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel();
@@ -818,7 +822,7 @@ function loadOrReloadPreparedContent(
                                       enableFastSwitching: val.enableFastSwitching,
                                       onCodecSwitch: val.onCodecSwitch },
                                     contentPreparer,
-                                    playbackObserver,
+                                    playbackObservationRef,
                                     parentCancelSignal);
       },
       (err : unknown) => {

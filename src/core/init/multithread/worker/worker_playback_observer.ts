@@ -1,19 +1,10 @@
-import {
-  IWorkerPlaybackObservation,
-  WorkerMessageType,
-} from "../../../../multithread_types";
+import { WorkerMessageType } from "../../../../multithread_types";
 import { IReadOnlySharedReference } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
-import {
-  generateReadOnlyObserver,
-  IObservationPosition,
-} from "../../../api/playback_observer";
+import { generateReadOnlyObserver } from "../../../api/playback_observer";
+import { ICorePlaybackObservation } from "../../utils/create_core_playback_observer";
 import sendMessage from "./send_message";
-
-export type ICorePlaybackObservation = IWorkerPlaybackObservation & {
-  position: IObservationPosition;
-};
 
 export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver<
   ICorePlaybackObservation
