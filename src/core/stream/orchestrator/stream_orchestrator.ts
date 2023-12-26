@@ -494,6 +494,9 @@ export default function StreamOrchestrator(
         }
         consecutivePeriodStreamCb.streamStatusUpdate(value);
       },
+      seekTo(value) {
+        callbacks.seekTo(value);
+      },
       error(err : unknown) : void {
         if (nextStreamInfo !== null) {
           nextStreamInfo.canceller.cancel();
@@ -607,6 +610,7 @@ export type IStreamOrchestratorOptions =
 export interface IStreamOrchestratorCallbacks
   extends Omit<IPeriodStreamCallbacks, "waitingMediaSourceReload">
 {
+  seekTo(payload: number): void;
   /**
    * Called when a `PeriodStream` has been removed.
    * This event can be used for clean-up purposes. For example, you are free to

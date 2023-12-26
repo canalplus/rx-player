@@ -26,6 +26,7 @@ import {
 export interface IPeriodStreamCallbacks extends
   IAdaptationStreamCallbacks
 {
+  seekTo(payload: number): void;
   /**
    * Called when a new `PeriodStream` is ready to start but needs an Adaptation
    * (i.e. track) to be chosen first.
