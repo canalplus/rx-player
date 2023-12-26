@@ -182,16 +182,16 @@ export default function PeriodStream(
       let relativePosAfterSwitch : number;
       if (isFirstAdaptationSwitch) {
         relativePosAfterSwitch = 0;
+      } else if (choice.relativeResumingPosition !== undefined) {
+        relativePosAfterSwitch = choice.relativeResumingPosition;
       } else {
         switch (bufferType) {
           case "audio":
-            relativePosAfterSwitch = choice.relativeResumingPosition ??
-              DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio;
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio;
             break;
           case "video":
             relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.video;
             break;
-
           default:
             relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
             break;
