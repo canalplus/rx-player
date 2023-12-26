@@ -72,8 +72,8 @@ import {
 } from "./types";
 /* eslint-disable-next-line max-len */
 import createContentTimeBoundariesObserver from "./utils/create_content_time_boundaries_observer";
+import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import createMediaSource from "./utils/create_media_source";
-import createStreamPlaybackObserver from "./utils/create_stream_playback_observer";
 import DecipherabilityFreezeDetector from "./utils/DecipherabilityFreezeDetector";
 import getInitialTime, {
   IInitialTimeOptions,
@@ -519,14 +519,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       }
     }, { clearSignal: cancelSignal, emitCurrentValue: true });
 
-    const streamObserver = createStreamPlaybackObserver(playbackObserver,
-                                                        { autoPlay,
-                                                          manifest,
-                                                          mediaSource,
-                                                          textDisplayer,
-                                                          initialPlayPerformed,
-                                                          speed },
-                                                        cancelSignal);
+    const coreObserver = createCorePlaybackObserver(playbackObserver,
+                                                    { autoPlay,
+                                                      manifest,
+                                                      mediaSource,
+                                                      textDisplayer,
+                                                      initialPlayPerformed,
+                                                      speed },
+                                                    cancelSignal);
 
     const rebufferingController = this._createRebufferingController(playbackObserver,
                                                                     manifest,
@@ -553,7 +553,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }, { clearSignal: cancelSignal });
 
     // Synchronize SegmentBuffers with what has been buffered.
-    streamObserver.listen((observation) => {
+    coreObserver.listen((observation) => {
       ["video" as const, "audio" as const, "text" as const].forEach(tType => {
         const segmentBufferStatus =  segmentBuffersStore.getStatus(tType);
         if (segmentBufferStatus.type === "initialized") {
@@ -567,7 +567,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
       manifest,
       mediaSource,
-      streamObserver,
+      coreObserver,
       segmentBuffersStore,
       {
         onWarning: (err: IPlayerError) => this.trigger("warning", err),
@@ -602,7 +602,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     /* eslint-disable-next-line @typescript-eslint/no-this-alias */
     const self = this;
     StreamOrchestrator({ manifest, initialPeriod },
-                       streamObserver,
+                       coreObserver,
                        representationEstimator,
                        segmentBuffersStore,
                        segmentFetcherCreator,
@@ -732,12 +732,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           self.trigger("bitrateEstimateChange", value),
 
         needsMediaSourceReload: (payload) => {
-          const lastObservation = streamObserver.getReference().getValue();
+          const lastObservation = coreObserver.getReference().getValue();
           const currentPosition = lastObservation.position.isAwaitingFuturePosition() ?
             lastObservation.position.getWanted() :
-            (streamObserver.getCurrentTime() ?? lastObservation.position.getPolled());
+            (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
           const isPaused = lastObservation.paused.pending ??
-                           streamObserver.getIsPaused() ??
+                           coreObserver.getIsPaused() ??
                            lastObservation.paused.last;
           let position = currentPosition + payload.timeOffset;
           if (payload.minimumPosition !== undefined) {
@@ -752,19 +752,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         needsDecipherabilityFlush() {
           const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-            const lastObservation = streamObserver.getReference().getValue();
+            const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition() ?
               lastObservation.position.getWanted() :
-              (streamObserver.getCurrentTime() ?? lastObservation.position.getPolled());
+              (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
             const isPaused = lastObservation.paused.pending ??
-                             streamObserver.getIsPaused() ??
+                             coreObserver.getIsPaused() ??
                              lastObservation.paused.last;
             onReloadOrder({ position, autoPlay: !isPaused });
           } else {
-            const lastObservation = streamObserver.getReference().getValue();
+            const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition() ?
               lastObservation.position.getWanted() :
-              (streamObserver.getCurrentTime() ?? lastObservation.position.getPolled());
+              (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
             // simple seek close to the current position
             // to flush the buffers
             if (position + 0.001 < lastObservation.duration) {

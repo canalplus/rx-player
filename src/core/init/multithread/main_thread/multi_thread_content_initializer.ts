@@ -24,7 +24,6 @@ import {
   ICreateMediaSourceWorkerMessage,
   ISentError,
   IWorkerMessage,
-  IWorkerPlaybackObservation,
   MainThreadMessageType,
   WorkerMessageType,
 } from "../../../../multithread_types";
@@ -40,6 +39,7 @@ import assert from "../../../../utils/assert";
 import assertUnreachable from "../../../../utils/assert_unreachable";
 import idGenerator from "../../../../utils/id_generator";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import objectAssign from "../../../../utils/object_assign";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../../utils/reference";
@@ -49,7 +49,7 @@ import TaskCanceller, {
 } from "../../../../utils/task_canceller";
 import { IAdaptiveRepresentationSelectorArguments } from "../../../adaptive";
 import { IResolutionInfo } from "../../../adaptive/utils/filter_by_resolution";
-import { IPlaybackObservation, PlaybackObserver } from "../../../api";
+import { IReadOnlyPlaybackObserver, PlaybackObserver } from "../../../api";
 import {
   ContentDecryptorState,
   getKeySystemConfiguration,
@@ -61,12 +61,10 @@ import {
   ContentInitializer,
   ITextDisplayerOptions,
 } from "../../types";
+import createCorePlaybackObserver, {
+  ICorePlaybackObservation,
+} from "../../utils/create_core_playback_observer";
 import { resetMediaElement } from "../../utils/create_media_source";
-import {
-  getBufferedDataPerMediaBuffer,
-  getPendingPaused,
-  updateWantedPositionIfAfterManifest,
-} from "../../utils/create_stream_playback_observer";
 import getInitialTime, {
   IInitialTimeOptions,
 } from "../../utils/get_initial_time";
@@ -272,25 +270,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return ;
     }
 
-    /** Send content protection initialization data. */
-    const lastContentProtection = new SharedReference<IContentProtection | null>(null);
-
-    const mediaSourceStatus = new SharedReference<MediaSourceInitializationStatus>(
-      MediaSourceInitializationStatus.Nothing
-    );
-
-    const drmInitialization = this._initializeContentDecryption(
-      mediaElement,
-      lastContentProtection,
-      mediaSourceStatus,
-      this._initCanceller.signal
-    );
-
-    /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(mediaElement,
-                       (error : MediaError) => this._onFatalError(error),
-                       this._initCanceller.signal);
-
     let textDisplayer : ITextDisplayer | null = null;
     if (
       this._settings.textTrackOptions.textTrackMode === "html" &&
@@ -311,6 +290,43 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       textDisplayer?.stop();
     });
 
+    /** Translate errors coming from the media element into RxPlayer errors. */
+    listenToMediaError(mediaElement,
+                       (error : MediaError) => this._onFatalError(error),
+                       this._initCanceller.signal);
+
+    /** Send content protection initialization data. */
+    const lastContentProtection = new SharedReference<IContentProtection | null>(null);
+
+    const mediaSourceStatus = new SharedReference<MediaSourceInitializationStatus>(
+      MediaSourceInitializationStatus.Nothing
+    );
+
+    const drmInitializationStatus = this._initializeContentDecryption(
+      mediaElement,
+      lastContentProtection,
+      mediaSourceStatus,
+      this._initCanceller.signal
+    );
+
+    const playbackStartParams = { mediaElement,
+                                  textDisplayer,
+                                  playbackObserver,
+                                  drmInitializationStatus,
+                                  mediaSourceStatus };
+    mediaSourceStatus.onUpdate((msInitStatus, stopListeningMSStatus) => {
+      if (msInitStatus === MediaSourceInitializationStatus.Attached) {
+        stopListeningMSStatus();
+        this._startPlaybackIfReady(playbackStartParams);
+      }
+    }, { clearSignal: this._initCanceller.signal, emitCurrentValue: true });
+    drmInitializationStatus.onUpdate((initializationStatus, stopListeningDrm) => {
+      if (initializationStatus.initializationState.type === "initialized") {
+        stopListeningDrm();
+        this._startPlaybackIfReady(playbackStartParams);
+      }
+    }, { emitCurrentValue: true, clearSignal: this._initCanceller.signal });
+
     const onmessage = (msg: MessageEvent) => {
       const msgData = msg.data as unknown as IWorkerMessage;
       switch (msgData.type) {
@@ -320,7 +336,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const mediaSourceLink = msgData.value;
           mediaSourceStatus.onUpdate((currStatus, stopListening) => {
-            if (currStatus === MediaSourceInitializationStatus.Ready) {
+            if (currStatus === MediaSourceInitializationStatus.AttachNow) {
               stopListening();
               log.info("MTCI: Attaching MediaSource URL to the media element");
               if (mediaSourceLink.type === "handle") {
@@ -635,53 +651,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           } catch (err) {
             this._onFatalError(err);
           }
-          drmInitialization.onUpdate((initializationStatus, stopListening) => {
-            if (this._currentContentInfo === null) {
-              return;
-            }
-            if (initializationStatus.initializationState.type === "initialized") {
-              stopListening();
-              this._currentContentInfo.manifest = manifest;
-
-              log.debug("MTCI: Calculating initial time");
-              const initialTime = getInitialTime(manifest,
-                                                 this._settings.lowLatencyMode,
-                                                 this._settings.startAt);
-              log.debug("MTCI: Initial time calculated:", initialTime);
-
-              const currentContentInfo = this._currentContentInfo;
-              playbackObserver.listen((obs) => {
-                sendMessage(this._settings.worker, {
-                  type: MainThreadMessageType.PlaybackObservation,
-                  contentId: currentContentInfo.contentId,
-                  value: this._getWorkerPlaybackObservation(obs, { textDisplayer }),
-                });
-              }, { includeLastObservation: true,
-                   clearSignal: this._initCanceller.signal });
-
-              this._startPlayback(initialTime,
-                                  this._settings.autoPlay,
-                                  mediaElement,
-                                  playbackObserver,
-                                  this._currentMediaSourceCanceller.signal);
-
-              const { enableFastSwitching,
-                      onCodecSwitch } = this._settings.bufferOptions;
-              const initialObservation = this._getWorkerPlaybackObservation(
-                playbackObserver.getReference().getValue(),
-                { textDisplayer }
-              );
-              sendMessage(this._settings.worker,
-                          { type: MainThreadMessageType.StartPreparedContent,
-                            contentId: msgData.contentId,
-                            value: { initialTime,
-                                     initialObservation,
-                                     drmSystemId: initializationStatus.drmSystemId,
-                                     enableFastSwitching,
-                                     onCodecSwitch } });
-              this.trigger("manifestReady", manifest);
-            }
-          }, { emitCurrentValue: true, clearSignal: this._initCanceller.signal });
+          this._currentContentInfo.manifest = manifest;
+          this._startPlaybackIfReady(playbackStartParams);
           break;
         }
 
@@ -950,9 +921,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
           const contentInfo = this._currentContentInfo;
           const lastObservation = playbackObserver.getReference().getValue();
-
           const currentPosition = lastObservation.position.getWanted();
-
           const isPaused = contentInfo.initialPlayPerformed?.getValue() === true ||
                            contentInfo.autoPlay === undefined ?
             lastObservation.paused :
@@ -966,6 +935,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
 
           this._reload(mediaElement,
+                       textDisplayer,
                        playbackObserver,
                        mediaSourceStatus,
                        position,
@@ -989,6 +959,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             lastObservation.paused :
             !contentInfo.autoPlay;
             this._reload(mediaElement,
+                         textDisplayer,
                          playbackObserver,
                          mediaSourceStatus,
                          currentPosition,
@@ -1080,7 +1051,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
     // TODO private?
     const createEmeDisabledReference = (errMsg : string) => {
-      mediaSourceStatus.setValue(MediaSourceInitializationStatus.Ready);
+      mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
       lastContentProtection.onUpdate((data, stopListening) => {
         if (data === null) { // initial value
           return;
@@ -1159,7 +1130,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       if (state === ContentDecryptorState.WaitingForAttachment) {
         mediaSourceStatus.onUpdate((currStatus, stopListening) => {
           if (currStatus === MediaSourceInitializationStatus.Nothing) {
-            mediaSourceStatus.setValue(MediaSourceInitializationStatus.Ready);
+            mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
           } else if (currStatus === MediaSourceInitializationStatus.Attached) {
             stopListening();
             if (state === ContentDecryptorState.WaitingForAttachment) {
@@ -1198,35 +1169,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     return drmStatusRef;
   }
 
-  private _getWorkerPlaybackObservation(
-    observation : IPlaybackObservation,
-    context : { textDisplayer : ITextDisplayer | null }
-  ) : IWorkerPlaybackObservation {
-    assert(this._currentContentInfo !== null);
-    const { initialPlayPerformed,
-            mainThreadMediaSource,
-            autoPlay,
-            manifest } = this._currentContentInfo;
-    if (manifest !== null) {
-      updateWantedPositionIfAfterManifest(observation, manifest);
-    }
-    const pendingPause = (initialPlayPerformed === null || autoPlay === undefined) ?
-      undefined :
-      getPendingPaused(initialPlayPerformed, autoPlay);
-    return { position: observation.position.serialize(),
-             buffered: getBufferedDataPerMediaBuffer(mainThreadMediaSource,
-                                                     context.textDisplayer),
-             duration: observation.duration,
-             paused: { last: observation.paused,
-                       pending: pendingPause },
-             rebuffering: observation.rebuffering,
-             freezing: observation.freezing,
-             bufferGap: observation.bufferGap,
-             // TODO should we actually rely on that one here?
-             speed: 1,
-             readyState: observation.readyState };
-  }
-
   private _hasTextBufferFeature(): boolean {
     return (
       this._settings.textTrackOptions.textTrackMode === "html" &&
@@ -1236,6 +1178,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
   private _reload(
     mediaElement : HTMLMediaElement,
+    textDisplayer : ITextDisplayer | null,
     playbackObserver : PlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     position : number,
@@ -1244,38 +1187,84 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller.cancel();
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
-    mediaSourceStatus.setValue(MediaSourceInitializationStatus.Ready);
+    mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
     this.trigger("reloadingMediaSource", { position, autoPlay });
-    return this._startPlayback(position,
-                               autoPlay,
-                               mediaElement,
-                               playbackObserver,
-                               this._currentMediaSourceCanceller.signal);
+
+    mediaSourceStatus.onUpdate((status, stopListeningMSStatusUpdates) => {
+      if (status !== MediaSourceInitializationStatus.Attached) {
+        return;
+      }
+      stopListeningMSStatusUpdates();
+      const corePlaybackObserver = this._setUpModulesOnNewMediaSource({
+        initialTime: position,
+        autoPlay,
+        mediaElement,
+        textDisplayer,
+        playbackObserver,
+      }, this._currentMediaSourceCanceller.signal);
+
+      if (!this._currentMediaSourceCanceller.isUsed() &&
+          corePlaybackObserver !== null &&
+          this._currentContentInfo !== null)
+      {
+        const contentId = this._currentContentInfo.contentId;
+        corePlaybackObserver.listen((obs) => {
+          sendMessage(this._settings.worker, {
+            type: MainThreadMessageType.PlaybackObservation,
+            contentId,
+            value: objectAssign(obs, { position: obs.position.serialize() }),
+          });
+        }, { includeLastObservation: true,
+             clearSignal: this._currentMediaSourceCanceller.signal });
+      }
+    }, { clearSignal: this._currentMediaSourceCanceller.signal,
+         emitCurrentValue: true });
   }
 
-  private _startPlayback(
-    initialTime : number,
-    autoPlay : boolean,
-    mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver,
+  /**
+   * Start-up modules and mechanisms (initial seek, auto-play etc.) needed each
+   * time a content is loaded AND re-loaded on a `HTMLMediaElement`, when the
+   * manifest is known.
+   *
+   * Note that this does not include reacting to incoming worker messages nor
+   * sending them, those actions have to be handled separately.
+   *
+   * @param {Object} parameters
+   * @param {Object} cancelSignal
+   * @returns {Object|null} - Playback Observer created for this content. `null`
+   * only if playback initialization failed (most likely because it has been
+   * cancelled).
+   */
+  private _setUpModulesOnNewMediaSource(
+    parameters : { initialTime : number;
+                   autoPlay : boolean;
+                   mediaElement : HTMLMediaElement;
+                   textDisplayer : ITextDisplayer | null;
+                   playbackObserver : PlaybackObserver; },
     cancelSignal : CancellationSignal
-  ) {
+  ): IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null {
     if (cancelSignal.isCancelled()) {
-      return;
+      return null;
     }
     if (this._currentContentInfo === null) {
-      log.error("MTCI: Starting playback without a contentId");
-      return;
+      log.error("MTCI: Setting up modules without a contentId");
+      return null;
     }
     if (this._currentContentInfo.manifest === null) {
-      log.error("MTCI: Starting playback without a loaded Manifest");
-      return;
+      log.error("MTCI: Setting up modules without a loaded Manifest");
+      return null;
     }
+
+    const { manifest,
+            mainThreadMediaSource: mediaSource } = this._currentContentInfo;
+    const { speed } = this._settings;
+    const { initialTime,
+            autoPlay,
+            mediaElement,
+            textDisplayer,
+            playbackObserver } = parameters;
     this._currentContentInfo.initialTime = initialTime;
     this._currentContentInfo.autoPlay = autoPlay;
-
-    const { manifest } = this._currentContentInfo;
-    const { speed } = this._settings;
 
     const { autoPlayResult, initialPlayPerformed } =
       performInitialSeekAndPlay({ mediaElement,
@@ -1286,9 +1275,19 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                                   isDirectfile: false },
                                 cancelSignal);
     this._currentContentInfo.initialPlayPerformed = initialPlayPerformed;
+    const corePlaybackObserver = createCorePlaybackObserver(
+      playbackObserver,
+      { autoPlay,
+        initialPlayPerformed,
+        manifest,
+        mediaSource,
+        speed,
+        textDisplayer },
+      cancelSignal
+    );
 
     if (cancelSignal.isCancelled()) {
-      return;
+      return null;
     }
 
     /**
@@ -1355,6 +1354,87 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         }
         this._onFatalError(err);
       });
+
+    return corePlaybackObserver;
+  }
+
+  /**
+   * Initialize content playback if and only if those conditions are filled:
+   *   - The Manifest is fetched and stored in `this._currentContentInfo`.
+   *   - `drmInitializationStatus` indicates that DRM matters are initialized.
+   *   - `mediaSourceStatus` indicates that the MediaSource is attached to the
+   *     `mediaElement`.
+   *
+   * In other cases, this method will do nothing.
+   *
+   * To call when any of those conditions might become `true`, to start-up
+   * playback.
+   *
+   * @param {Object} parameters
+   * @returns {boolean} - Returns `true` if all conditions where met for
+   * playback start.
+   */
+  private _startPlaybackIfReady(parameters: {
+    mediaElement: HTMLMediaElement;
+    textDisplayer: ITextDisplayer | null;
+    playbackObserver: PlaybackObserver;
+    drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
+    mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
+  }): boolean {
+    if (this._currentContentInfo === null || this._currentContentInfo.manifest === null) {
+      return false;
+    }
+    const drmInitStatus = parameters.drmInitializationStatus.getValue();
+    if (drmInitStatus.initializationState.type !== "initialized") {
+      return false;
+    }
+    const msInitStatus = parameters.mediaSourceStatus.getValue();
+    if (msInitStatus !== MediaSourceInitializationStatus.Attached) {
+      return false;
+    }
+
+    const { contentId, manifest } = this._currentContentInfo;
+    log.debug("MTCI: Calculating initial time");
+    const initialTime = getInitialTime(manifest,
+                                       this._settings.lowLatencyMode,
+                                       this._settings.startAt);
+    log.debug("MTCI: Initial time calculated:", initialTime);
+    const { enableFastSwitching,
+            onCodecSwitch } = this._settings.bufferOptions;
+    const corePlaybackObserver = this._setUpModulesOnNewMediaSource({
+      initialTime,
+      autoPlay: this._settings.autoPlay,
+      mediaElement: parameters.mediaElement,
+      textDisplayer: parameters.textDisplayer,
+      playbackObserver: parameters.playbackObserver,
+    }, this._currentMediaSourceCanceller.signal);
+
+    if (this._currentMediaSourceCanceller.isUsed() || corePlaybackObserver === null) {
+      return true;
+    }
+    const initialObservation = corePlaybackObserver.getReference().getValue();
+    const sentInitialObservation = objectAssign(initialObservation, {
+      position: initialObservation.position.serialize(),
+    });
+    sendMessage(this._settings.worker,
+                { type: MainThreadMessageType.StartPreparedContent,
+                  contentId,
+                  value: { initialTime,
+                           initialObservation: sentInitialObservation,
+                           drmSystemId: drmInitStatus.drmSystemId,
+                           enableFastSwitching,
+                           onCodecSwitch } });
+
+    corePlaybackObserver.listen((obs) => {
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.PlaybackObservation,
+        contentId,
+        value: objectAssign(obs, { position: obs.position.serialize() }),
+      });
+    }, { includeLastObservation: false,
+         clearSignal: this._currentMediaSourceCanceller.signal });
+    this.trigger("manifestReady", manifest);
+    return true;
   }
 
   /**
@@ -1383,9 +1463,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             stopListening();
             return;
           }
-          if (currStatus === MediaSourceInitializationStatus.Ready) {
+          if (currStatus === MediaSourceInitializationStatus.AttachNow) {
             stopListening();
-            assert(features.multithread !== null);
             const mediaSource = new MainMediaSourceInterface(
               mediaSourceId
             );
@@ -1518,7 +1597,6 @@ function bindNumberReferencesToWorker(
     "maxVideoBufferSize" |
     "maxBufferBehind" |
     "maxBufferAhead" |
-    "speed" |
     "throttleVideoBitrate"
   ]>
 ) : void {
@@ -1566,9 +1644,26 @@ function formatWorkerError(sentError : ISentError) : IPlayerError {
   }
 }
 
+/** Enume allowing to state what is the current status of MediaSource initialization. */
 const enum MediaSourceInitializationStatus {
+  /**
+   * The `MediaSource` is not attached to the `HTMLMediaElement` and shouldn't
+   * be yet.
+   */
   Nothing,
-  Ready,
+  /**
+   * The `MediaSource` is not yet attached to the `HTMLMediaElement` but it
+   * now can and should be.
+   *
+   * The purpose of this enum variant is to be set when wanting to indicate
+   * that `MediaSource` attachment has to be done, in code that do not have
+   * the capability to do so.
+   *
+   * The code that can do so would then read that value and then set this enum
+   * to `Attached` once the `MediaSource` is attached.
+   */
+  AttachNow,
+  /** The `MediaSource` is attached to the `HTMLMediaElement`. */
   Attached,
 }
 
