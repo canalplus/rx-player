@@ -651,7 +651,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj : ITSPeriodObject,
     wantedId : string,
     switchingMode : IVideoTrackSwitchingMode | undefined,
-    reprsToLock : string[]| null
+    reprsToLock : string[]| null,
+    relativeResumingPosition : number | undefined
   ) : void {
     const period = periodObj.period;
     const wantedAdaptation = arrayFind(period.getSupportedAdaptations("video"),
@@ -683,6 +684,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                              switchingMode: switchingMode ??
                                             DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
                              adaptation: newAdaptation,
+                             relativeResumingPosition,
                              lockedRepresentations };
     typeInfo.storedSettings = storedSettings;
     this.trigger("trackUpdate", { period: toExposedPeriod(period),
