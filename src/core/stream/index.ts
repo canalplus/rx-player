@@ -20,6 +20,7 @@ import StreamOrchestrator, {
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorCallbacks,
 } from "./orchestrator";
+import { IPausedPlaybackObservation } from "./period";
 export {
   IRepresentationsChoice,
   IInbandEvent,
@@ -33,6 +34,7 @@ export {
 
 export default StreamOrchestrator;
 export {
+  IPausedPlaybackObservation,
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorOptions,
