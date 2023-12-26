@@ -21,22 +21,30 @@ import {
 
 describe("DASH non-linear content (SegmentTimeline)", function () {
   launchTestsForContent(segmentTimelineManifestInfos);
+  launchTestsForContent(segmentTimelineManifestInfos, { multithread: true });
 });
 
 describe("DASH non-linear content multi-codecs (SegmentBase)", function () {
   launchTestsForContent(segmentBaseMultiCodecsInfos);
+  launchTestsForContent(segmentBaseMultiCodecsInfos, { multithread: true });
 });
 
 describe("DASH non-linear content not starting at 0 (SegmentTimeline)", function () {
   launchTestsForContent(notStartingAt0ManifestInfos);
+  launchTestsForContent(notStartingAt0ManifestInfos, { multithread: true });
 });
 
 describe("DASH non-linear content with SegmentTemplate inheritance (Period-AdaptationSet)", function () {
   launchTestsForContent(segmentTemplateInheritancePeriodAS);
+  launchTestsForContent(
+    segmentTemplateInheritancePeriodAS,
+    { multithread: true }
+  );
 });
 
 describe("DASH non-linear content with SegmentTemplate inheritance (AdaptationSet-Representation)", function () {
   launchTestsForContent(segmentTemplateInheritanceASRep);
+  launchTestsForContent(segmentTemplateInheritanceASRep, { multithread: true });
 });
 
 describe("DASH content CENC wrong version in MPD", function () {

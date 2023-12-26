@@ -16,6 +16,7 @@ import {lockHighestBitrates} from "../../utils/bitrates";
 
 describe("DASH non-linear multi-periods content (SegmentTemplate)", function () {
   launchTestsForContent(manifestInfos);
+  launchTestsForContent(manifestInfos, { multithread: true });
 });
 
 describe("DASH multi-Period with different choices", function () {
