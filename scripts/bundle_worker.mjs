@@ -45,6 +45,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
  * @param {boolean} [options.watch] - If `true`, the RxPlayer's files involve
  * will be watched and the code re-built each time one of them changes.
  * @param {boolean} [options.silent] - If `true`, we won't output logs.
+ * @param {boolean} [options.outfile] - Destination of the produced bundle.
+ * `dist/worker.js` by default.
  * @returns {Promise}
  */
 export default function buildWorker(options) {
@@ -52,6 +54,7 @@ export default function buildWorker(options) {
   const watch = !!options.watch;
   const isDevMode = !options.production;
   const isSilent = options.silent;
+  const outfile = options.outfile ?? join(rootDirectory, "dist/worker.js");
 
   /** Declare a plugin to anounce when a build begins and ends */
   const consolePlugin = {
@@ -74,7 +77,8 @@ export default function buildWorker(options) {
           return;
         }
         console.log(
-          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "Worker built!"
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
+          `Worker updated at ${outfile}!`
         );
       });
     },
@@ -88,7 +92,7 @@ export default function buildWorker(options) {
     bundle: true,
     target: "es2017",
     minify,
-    outfile: join(rootDirectory, "dist/worker.js"),
+    outfile,
     plugins: isSilent ? [] : [consolePlugin],
     define: {
       "process.env.NODE_ENV": JSON.stringify(
