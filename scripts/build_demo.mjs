@@ -10,12 +10,17 @@
  * right options.
  */
 
+import { stat } from "fs";
 import { join } from "path";
 import { pathToFileURL } from "url";
 import esbuild from "esbuild";
 import rootDirectory from "./utils/project_root_directory.mjs";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 import buildWorker from "./bundle_worker.mjs";
+
+const DEMO_OUT_FILE = join(rootDirectory, "demo/full/bundle.js");
+const WORKER_OUT_FILE = join(rootDirectory, "demo/full/worker.js");
+const WASM_FILE_DEPENDENCY = join(rootDirectory, "dist/mpd-parser.wasm");
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -52,19 +57,29 @@ export default function buildDemo(options) {
   const watch = !!options.watch;
   const isDevMode = !options.production;
   const includeWasmParser = !!options.includeWasmParser;
-  const outfile = join(rootDirectory, "demo/full/bundle.js");
+  const outfile = DEMO_OUT_FILE;
 
-  console.warn(
-    "\x1b[33m[NOTE]\x1b[0m The WebAssembly file won't be built by " +
-    "this script. If needed, ensure its build is up-to-date."
-  );
+  stat(WASM_FILE_DEPENDENCY, (err) => {
+    if (err != null && err.code === "ENOENT") {
+      console.warn(
+        "\x1b[31m[NOTE]\x1b[0m No built WebAssembly file detected. " +
+        "If needed, please build it separately."
+      );
+    } else {
+      console.warn(
+        "\x1b[33m[NOTE]\x1b[0m The WebAssembly file won't be re-built by " +
+        "this script. If needed, ensure its build is up-to-date."
+      );
+    }
+  });
+
   buildWorker({
     watch,
     minify,
     production: !isDevMode,
-    outfile: join(rootDirectory, "demo/full/worker.js"),
+    outfile: WORKER_OUT_FILE,
     silent: false,
-  })
+  });
 
   /** Declare a plugin to anounce when a build begins and ends */
   const consolePlugin = {
