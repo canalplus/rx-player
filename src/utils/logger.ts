@@ -65,6 +65,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
 
   /**
    * @param {string} levelStr
+   * @param {function} [logFn]
    */
   public setLevel(
     levelStr : string,
