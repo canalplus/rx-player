@@ -43,7 +43,7 @@ function PlaybackConfig({
           checked={tryRelyOnWorker}
           onChange={onTryRelyOnWorkerChange}
         >
-          Multithread mode <br/> (when possible)
+          Multithread mode (when possible)
         </Checkbox>
         <span className="option-desc">
           {tryRelyOnWorker ?
