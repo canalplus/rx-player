@@ -15,6 +15,7 @@ import { pathToFileURL } from "url";
 import esbuild from "esbuild";
 import rootDirectory from "./utils/project_root_directory.mjs";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
+import buildWorker from "./bundle_worker.mjs";
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -51,6 +52,19 @@ export default function buildDemo(options) {
   const watch = !!options.watch;
   const isDevMode = !options.production;
   const includeWasmParser = !!options.includeWasmParser;
+  const outfile = join(rootDirectory, "demo/full/bundle.js");
+
+  console.warn(
+    "\x1b[33m[NOTE]\x1b[0m The WebAssembly file won't be built by " +
+    "this script. If needed, ensure its build is up-to-date."
+  );
+  buildWorker({
+    watch,
+    minify,
+    production: !isDevMode,
+    outfile: join(rootDirectory, "demo/full/worker.js"),
+    silent: false,
+  })
 
   /** Declare a plugin to anounce when a build begins and ends */
   const consolePlugin = {
@@ -69,7 +83,7 @@ export default function buildDemo(options) {
           return;
         }
         console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-          "Demo built!");
+          `Demo updated at ${outfile}!`);
       });
     },
   };
@@ -82,7 +96,7 @@ export default function buildDemo(options) {
     bundle: true,
     target: "es2017",
     minify,
-    outfile: join(rootDirectory, "demo/full/bundle.js"),
+    outfile,
     plugins: [consolePlugin],
     define: {
       "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
