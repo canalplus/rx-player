@@ -2430,7 +2430,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const segmentBufferStatus = this._priv_contentInfos
       .segmentBuffersStore.getStatus(bufferType);
     if (segmentBufferStatus.type === "initialized") {
-      segmentBufferStatus.value.synchronizeInventory();
+      segmentBufferStatus.value.synchronizeInventory(true);
       return segmentBufferStatus.value.getInventory();
     }
     return null;

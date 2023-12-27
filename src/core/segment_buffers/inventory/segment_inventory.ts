@@ -204,8 +204,13 @@ export default class SegmentInventory {
    * at a time, so each `synchronizeBuffered` call should be given a TimeRanges
    * coming from the same buffer.
    * @param {TimeRanges} buffered
+   * @param {boolean|undefined} [skipLog=false] - This method normally may
+   * trigger a voluminous debug log if debug logs are enabled.
+   * As this method might be called very often in some specific debugging
+   * situations, setting this value to `true` allows to prevent the call from
+   * triggering a log.
    */
-  public synchronizeBuffered(buffered : TimeRanges) : void {
+  public synchronizeBuffered(buffered : TimeRanges, skipLog : boolean = false) : void {
     const inventory = this._inventory;
     let inventoryIndex = 0; // Current index considered.
     let thisSegment = inventory[0]; // Current segmentInfos considered
@@ -348,7 +353,7 @@ export default class SegmentInventory {
         }
       }
     }
-    if (bufferType !== undefined && log.hasLevel("DEBUG")) {
+    if (!skipLog && bufferType !== undefined && log.hasLevel("DEBUG")) {
       log.debug(`SI: current ${bufferType} inventory timeline:\n` +
                 prettyPrintInventory(this._inventory));
     }
