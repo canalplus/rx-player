@@ -45,7 +45,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     /** "Switching mode" in which the track switch should happen. */
     switchingMode : ITrackSwitchingMode;
     /** Representations "locked" for this `Adaptation`. */
-    representations : SharedReference<IRepresentationsChoice>;
+    representations : IReadOnlySharedReference<IRepresentationsChoice>;
     /** Relative resuming position after a track change */
     relativeResumingPosition: number | undefined;
   } |
