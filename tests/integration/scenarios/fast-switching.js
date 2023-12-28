@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../dist/es2017";
+import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import {
@@ -8,9 +8,9 @@ import {
   lockLowestBitrates,
 } from "../../utils/bitrates";
 
-let player;
-
 describe("Fast-switching", function () {
+  let player;
+
   beforeEach(() => {
     player = new RxPlayer();
   });
