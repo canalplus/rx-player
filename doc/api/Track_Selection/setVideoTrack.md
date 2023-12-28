@@ -128,6 +128,30 @@ rxPlayer.setVideoTrack({
 ```
 
 
+### Changing the resuming position after a video track change
+
+In scenarios where a change in media disrupts continuous playback, you can leverage the `relativeResumingPosition` option to set a rewind duration, such as 5 seconds, to revisit the content that might have been cut off during the transition.
+
+The `relativeResumingPosition` is defined as the offset in seconds between the resuming position and the currrent position.
+A negative number will seek back and a positive number will seek forward.
+
+<div class="note">
+The <code>relativeResumingPosition</code> has no effect if:
+
+- The switching mode is set to <code>"seamless"</code>.
+- The track that has been changed is outside of the current period.
+</div>
+
+```js
+// the player will seek 5 seconds back  after the video track change.
+rxPlayer.setVideoTrack({
+  trackId: [videoTrackId],
+  relativeResumingPosition: -5,
+  switchingMode: "direct",
+});
+```
+
+
 ### Selecting only some Representations in the new video track
 
 You can also start "locking" only a given set of Representations in the new
@@ -217,6 +241,7 @@ player.setVideoTrack({
   periodId,
   switchingMode,
   lockedRepresentations,
+  relativeResumingPosition,
 });
 ```
 
@@ -240,3 +265,6 @@ player.setVideoTrack({
          Representations' id you wish to "lock" when switching to the new track.
          More information [in the corresponding documentation
          page](../Representation_Selection/lockAudioVideoRepresentations.md).
+
+      - `relativeResumingPosition`  (`string|undefined`): The offset in seconds to apply to the
+         current position to get the new position after resuming playback.
