@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import directfileInfos from "../../contents/directfile_webm";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
