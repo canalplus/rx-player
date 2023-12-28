@@ -347,6 +347,8 @@ export interface ITrackUpdateChoiceObject {
    * that Adaptation are allowed.
    */
   initialRepresentations : IRepresentationsChoice;
+
+  relativeResumingPosition: number | undefined;
 }
 
 export interface IRepresentationUpdateMessage {
@@ -573,7 +575,7 @@ export type ISentError = ISerializedNetworkError |
 export interface INeedsBufferFlushWorkerMessage {
   type: WorkerMessageType.NeedsBufferFlush;
   contentId: string;
-  value: null;
+  value: { relativeResumingPosition: number | undefined };
 }
 
 export interface IActivePeriodChangedWorkerMessage {

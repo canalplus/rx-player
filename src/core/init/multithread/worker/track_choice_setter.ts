@@ -122,6 +122,7 @@ export default class TrackChoiceSetter {
         // TODO
         relativeResumingPosition: undefined,
         representations: ref.representations,
+        relativeResumingPosition: choice.relativeResumingPosition,
       });
     }
     return true;
