@@ -7,9 +7,7 @@ import {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
 } from "../../../public_types";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
+import { IReadOnlySharedReference } from "../../../utils/reference";
 import { IRepresentationEstimator } from "../../adaptive";
 import { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
@@ -212,9 +210,8 @@ export interface IAdaptationChoice {
   /**
    * Shared reference allowing to indicate which Representations from
    * that Adaptation are allowed.
-   * TODO Read-only?
    */
-  representations : SharedReference<IRepresentationsChoice>;
+  representations : IReadOnlySharedReference<IRepresentationsChoice>;
 }
 
 export type ITrackSwitchingMode = IAudioTrackSwitchingMode |
