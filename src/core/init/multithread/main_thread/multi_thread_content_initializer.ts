@@ -539,12 +539,22 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         }
           break;
 
-        case WorkerMessageType.NeedsBufferFlush:
+        case WorkerMessageType.NeedsBufferFlush: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
+          const currentTime = mediaElement.currentTime;
+          const relativeResumingPosition = msgData.value.relativeResumingPosition;
+          let wantedSeekingTime: number;
+
+          if (relativeResumingPosition !== undefined && relativeResumingPosition !== 0) {
+            wantedSeekingTime = currentTime + relativeResumingPosition;
+          } else {
+            wantedSeekingTime = currentTime + 0.001;
+          }
+          playbackObserver.setCurrentTime(wantedSeekingTime);
           break;
+        }
 
         case WorkerMessageType.ActivePeriodChanged: {
           if (
@@ -778,6 +788,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                     adaptationId: adapChoice.adaptationId,
                     switchingMode: adapChoice.switchingMode,
                     initialRepresentations: adapChoice.representations.getValue(),
+                    relativeResumingPosition : adapChoice.relativeResumingPosition,
                   },
               },
             });
