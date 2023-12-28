@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 
 /**
  * Test every player at an initial, idle state.

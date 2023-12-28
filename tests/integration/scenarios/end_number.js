@@ -8,7 +8,7 @@ import {
 import {
   segmentTimelineEndNumber as timeBasedManifestInfos,
 } from "../../contents/DASH_static_SegmentTimeline";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import sleep from "../../utils/sleep.js";
 import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import {lockLowestBitrates} from "../../utils/bitrates";
