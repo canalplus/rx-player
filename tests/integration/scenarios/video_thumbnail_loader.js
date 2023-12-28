@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import VideoThumbnailLoader, {
   DASH_LOADER,
-} from "../../../src/experimental/tools/VideoThumbnailLoader";
+} from "../../../dist/es2017/experimental/tools/VideoThumbnailLoader";
 import {
   manifestInfos,
   trickModeInfos,
