@@ -2,20 +2,58 @@ import log from "../../../../log";
 import { ITrackUpdateChoiceObject } from "../../../../multithread_types";
 import { ITrackType } from "../../../../public_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import objectAssign from "../../../../utils/object_assign";
 import SharedReference from "../../../../utils/reference";
 import { IAdaptationChoice, IRepresentationsChoice } from "../../../stream";
 
 export default class TrackChoiceSetter {
-  private _refs: Map<string, Partial<Record<
-    ITrackType,
-    SharedReference<IAdaptationChoice | null | undefined>
-  >>>;
+
+  /**
+   * Store SharedReference through which track choices and Representation
+   * choices will be emitted to the rest of the code.
+   *
+   * Organized by Period id and by track type (audio, video, text).
+   */
+  private _refs: Map<
+    /** Period's id */
+    string,
+    Partial<
+      Record<
+        ITrackType,
+        {
+          /** Object through which track choices will be emitted. */
+          trackReference: SharedReference<IAdaptationChoice | null | undefined>;
+          /**
+           * Object through which Representation choices will be emitted.
+           *
+           * This same object (same reference) is also found inside data emitted
+           * by `trackReference`.
+           * It is repeated here as the one declared inside `trackReference` is
+           * declared by type as a read-only property - which makes more sense in
+           * the rest of the code.
+           */
+          representations: SharedReference<IRepresentationsChoice>;
+        }
+      >
+  >>;
 
   constructor() {
     this._refs = new Map();
   }
 
   public reset(): void {
+    for (const key of this._refs.keys()) {
+      // Ensure no event listener is still listening to track/representations choices.
+      // This should be unnecessary if the rest of the code is well-written but
+      // better safe than sorry.
+      this._refs.get(key)?.audio?.trackReference.finish();
+      this._refs.get(key)?.audio?.representations.finish();
+      this._refs.get(key)?.video?.trackReference.finish();
+      this._refs.get(key)?.video?.representations.finish();
+      this._refs.get(key)?.text?.trackReference.finish();
+      this._refs.get(key)?.text?.representations.finish();
+    }
+
     this._refs = new Map();
   }
 
@@ -31,9 +69,32 @@ export default class TrackChoiceSetter {
     }
     if (obj[bufferType] !== undefined) {
       log.warn("WP: Track for periodId already declared", periodId, bufferType);
-      obj[bufferType]?.finish();
+      obj[bufferType]?.trackReference.finish();
+      obj[bufferType]?.representations.finish();
     }
-    obj[bufferType] = ref;
+
+    const val = ref.getValue();
+    let representations;
+    if (isNullOrUndefined(val)) {
+      // When no track is chosen yet, set default empty Representation choices
+      representations = new SharedReference<IRepresentationsChoice>({
+        representationIds: [],
+        switchingMode: "lazy",
+      });
+    } else {
+      // Re-add `representations` key as a SharedReference so we're able to
+      // update it.
+      representations = new SharedReference<IRepresentationsChoice>(
+        val.representations.getValue()
+      );
+      ref.setValue(objectAssign({}, ref.getValue(), {
+        representations,
+      }));
+    }
+    obj[bufferType] = {
+      trackReference: ref,
+      representations,
+    };
   }
 
   public setTrack(
@@ -47,12 +108,18 @@ export default class TrackChoiceSetter {
       return false;
     }
     if (isNullOrUndefined(choice)) {
-      ref.setValue(choice);
+      // When no track is chosen, set default empty Representation choices
+      ref.representations = new SharedReference<IRepresentationsChoice>({
+        representationIds: [],
+        switchingMode: "lazy",
+      });
+      ref.trackReference.setValue(choice);
     } else {
-      ref.setValue({
+      ref.representations = new SharedReference(choice.initialRepresentations);
+      ref.trackReference.setValue({
         adaptationId: choice.adaptationId,
         switchingMode: choice.switchingMode,
-        representations: new SharedReference(choice.initialRepresentations),
+        representations: ref.representations,
       });
     }
     return true;
@@ -69,12 +136,12 @@ export default class TrackChoiceSetter {
       log.debug("WP: Setting track for inexistent periodId", periodId, bufferType);
       return false;
     }
-    const val = ref.getValue();
+    const val = ref.trackReference.getValue();
     if (isNullOrUndefined(val) || val.adaptationId !== adaptationId) {
       log.debug("WP: Desynchronized Adaptation id", val?.adaptationId, adaptationId);
       return false;
     }
-    val.representations.setValue(choice);
+    ref.representations.setValue(choice);
     return true;
   }
 
@@ -87,7 +154,8 @@ export default class TrackChoiceSetter {
                 bufferType);
       return false;
     }
-    ref.finish();
+    ref.trackReference.finish();
+    ref.representations.finish();
     delete obj[bufferType];
     if (Object.keys(obj).length === 0) {
       this._refs.delete(periodId);
