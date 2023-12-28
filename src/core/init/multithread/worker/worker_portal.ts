@@ -579,11 +579,11 @@ function loadOrReloadPreparedContent(
    */
   function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
     return {
-      needsBufferFlush() {
+      needsBufferFlush(relativeResumingPosition) {
         sendMessage({
           type: WorkerMessageType.NeedsBufferFlush,
           contentId,
-          value: null,
+          value: { relativeResumingPosition },
         });
       },
 
