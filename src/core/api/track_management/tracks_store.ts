@@ -168,7 +168,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         if (curWantedTextTrack !== null) {
           const textAdaptations = getSupportedAdaptations(newPeriod, "text");
           const stillHere = textAdaptations
-            .some(a => a.id === curWantedTextTrack.adaptationId);
+            .some(a => a.id === curWantedTextTrack.adaptation.id);
           if (!stillHere) {
             log.warn("TS: Chosen text Adaptation not available anymore");
             const periodInfo =  this._storedPeriodInfo[i];
@@ -194,7 +194,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         if (curWantedVideoTrack !== null) {
           const videoAdaptations = getSupportedAdaptations(newPeriod, "video");
           const stillHere = videoAdaptations
-            .some(a => a.id === curWantedVideoTrack.adaptationId);
+            .some(a => a.id === curWantedVideoTrack.adaptation.id);
           if (!stillHere) {
             log.warn("TS: Chosen video Adaptation not available anymore");
             const periodItem = this._storedPeriodInfo[i];
@@ -209,7 +209,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                 new SharedReference<IRepresentationsChoice | null>(null);
               storedSettings = { adaptationBase,
                                  adaptation,
-                                 adaptationId: adaptation.id,
                                  switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
                                  lockedRepresentations };
             }
@@ -627,8 +626,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       });
     }
 
-    const storedSettings = { adaptationId: wantedAdaptation.id,
-                             adaptation: wantedAdaptation,
+    const storedSettings = { adaptation: wantedAdaptation,
                              switchingMode,
                              lockedRepresentations };
     typeInfo.storedSettings = storedSettings;
@@ -698,7 +696,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                              switchingMode: switchingMode ??
                                             DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
                              adaptation: newAdaptation,
-                             adaptationId: newAdaptation.id,
                              lockedRepresentations };
     typeInfo.storedSettings = storedSettings;
     this.trigger("trackUpdate", { period: toExposedPeriod(period),
@@ -1175,7 +1172,6 @@ function generatePeriodInfo(
     null;
   const videoSettings = videoAdaptation !== undefined ?
     { adaptation: videoAdaptation,
-      adaptationId: videoAdaptation.id,
       adaptationBase: baseVideoAdaptation,
       switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
       lockedRepresentations:
@@ -1203,7 +1199,6 @@ function generatePeriodInfo(
   let textSettings = null;
   if (textAdaptation !== null) {
     textSettings = { adaptation: textAdaptation,
-                     adaptationId: textAdaptation.id,
                      switchingMode: ("direct" as const),
                      lockedRepresentations:
                       new SharedReference<IRepresentationsChoice | null>(null) };
@@ -1302,8 +1297,6 @@ export interface ITextPeriodInfo {
    * `null` if no text track is wanted.
    */
   storedSettings : {
-    /** Contains the `id` of the last `Adaptation` wanted by the user. */
-    adaptationId : string;
     /** Contains the last `Adaptation` wanted by the user. */
     adaptation : IAdaptationMetadata;
      /** "Switching mode" in which the track switch should happen. */
@@ -1337,13 +1330,6 @@ export interface IVideoPeriodInfo {
    * `null` if no video track is wanted.
    */
   storedSettings : {
-    /**
-     * The `id` of the wanted Adaptation (may be different from `adaptationBase`
-     * when a trickmode track is chosen, in which case `adaptationBase` is
-     * the Adaptation the trickmode track is linked to and `adaptation` is
-     * the trickmode track).
-     */
-    adaptationId : string;
     /**
      * The wanted Adaptation itself (may be different from `adaptationBase`
      * when a trickmode track is chosen, in which case `adaptationBase` is
@@ -1379,13 +1365,6 @@ export interface IVideoPeriodInfo {
 }
 
 type IVideoStoredSettings = {
-  /**
-   * The `id` of the wanted Adaptation itself (may be different from
-   * `adaptationBase` when a trickmode track is chosen, in which case
-   * `adaptationBase` is the Adaptation the trickmode track is linked to and
-   * `adaptation` is the trickmode track).
-   */
-  adaptationId : string;
   /**
    * The wanted Adaptation itself (may be different from `adaptationBase` when
    * a trickmode track is chosen, in which case `adaptationBase` is the
