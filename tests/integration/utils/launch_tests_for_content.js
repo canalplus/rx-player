@@ -50,6 +50,10 @@ import { lockLowestBitrates } from "../../utils/bitrates";
  *                                                .duration {number}
  *                                                .url {string}
  * ```
+ * @param {Object} [options]
+ * @param {Boolean} [options.multithread] - If `true`, those tests will be run
+ * if the RxPlayer runs in multithread mode.
+ * In any other cases, tests will run in monothread mode.
  */
 export default function launchTestsForContent(
   manifestInfos,
