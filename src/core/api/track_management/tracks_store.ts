@@ -539,13 +539,18 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * locked after switchingMode to that track.
    * `null` if no Audio Representation should be locked.
    */
-  public setAudioTrack(
-    periodObj : ITSPeriodObject,
-    wantedId : string,
-    switchingMode : IAudioTrackSwitchingMode | undefined,
-    reprsToLock : string[] | null,
-    relativeResumingPosition : number | undefined
-  ) : void {
+  public setAudioTrack(payload: {
+    periodObj : ITSPeriodObject;
+    wantedId : string;
+    switchingMode : IAudioTrackSwitchingMode | undefined;
+    reprsToLock : string[] | null;
+    relativeResumingPosition : number | undefined;
+  }) : void {
+    const { periodObj,
+            wantedId,
+            switchingMode,
+            reprsToLock,
+            relativeResumingPosition } = payload;
     return this._setAudioOrTextTrack("audio",
                                      periodObj,
                                      wantedId,
@@ -647,13 +652,19 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * locked after switchingMode to that track.
    * `null` if no Video Representation should be locked.
    */
-  public setVideoTrack(
-    periodObj : ITSPeriodObject,
-    wantedId : string,
-    switchingMode : IVideoTrackSwitchingMode | undefined,
-    reprsToLock : string[]| null,
-    relativeResumingPosition : number | undefined
-  ) : void {
+  public setVideoTrack(payload: {
+    periodObj : ITSPeriodObject;
+    wantedId : string;
+    switchingMode : IVideoTrackSwitchingMode | undefined;
+    reprsToLock : string[]| null;
+    relativeResumingPosition : number | undefined;
+  }) : void {
+
+    const { periodObj,
+            wantedId,
+            switchingMode,
+            reprsToLock,
+            relativeResumingPosition } = payload;
     const period = periodObj.period;
     const wantedAdaptation = arrayFind(period.getSupportedAdaptations("video"),
                                        ({ id }) => id === wantedId);

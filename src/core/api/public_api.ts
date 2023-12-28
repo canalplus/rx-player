@@ -1709,13 +1709,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       periodId,
       undefined,
       (tcm, periodRef) =>
-        tcm.setAudioTrack(
-          periodRef,
-          trackId,
+        tcm.setAudioTrack({
+          periodObj: periodRef,
+          wantedId: trackId,
           switchingMode,
           reprsToLock,
-          relativeResumingPosition
-        )
+          relativeResumingPosition,
+        })
     );
   }
 
@@ -1814,13 +1814,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       periodId,
       undefined,
       (tcm, periodRef) =>
-        tcm.setVideoTrack(
-          periodRef,
-          trackId,
+        tcm.setVideoTrack({
+          periodObj: periodRef,
+          wantedId: trackId,
           switchingMode,
           reprsToLock,
-          relativeResumingPosition
-        ));
+          relativeResumingPosition,
+        }));
   }
 
   /**
