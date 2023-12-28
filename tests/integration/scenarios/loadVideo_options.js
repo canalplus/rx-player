@@ -15,7 +15,7 @@
  */
 
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import /* waitForState, */ {
