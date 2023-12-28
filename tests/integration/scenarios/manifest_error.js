@@ -29,7 +29,6 @@ const sleepWithoutSinonStub = (function() {
 /**
  * Test various cases of errors due to Manifest loading or parsing.
  */
-
 describe("manifest error management", function () {
   let player;
   let fakeServer;
