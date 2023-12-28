@@ -2,7 +2,7 @@ import { expect } from "chai";
 import sleep from "../../utils/sleep.js";
 import sinon from "sinon";
 
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
 

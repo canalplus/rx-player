@@ -1,11 +1,10 @@
 import { expect } from "chai";
-import RxPlayer from "../../../src";
+import RxPlayer from "../../../dist/es2017";
 import {
   manifestInfos,
   noTimeShiftBufferDepthManifestInfos,
 } from "../../contents/DASH_dynamic_SegmentTemplate";
 import sleep from "../../utils/sleep.js";
-import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 describe("DASH live content (SegmentTemplate)", function() {
   let player;
