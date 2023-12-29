@@ -60,7 +60,7 @@ dev_branch="release/v${version}-worker.${date}${incr}"
 canal_branch="release/v${version}-canal.worker.${date}${incr}"
 
 git checkout -b ${dev_branch}
-./scripts/update-version $1-worker.${date}${incr}
+./scripts/update-version $version-worker.${date}${incr}
 git add --all
 git commit -m "update version"
 while true; do
@@ -79,7 +79,7 @@ git checkout $current_branch
 
 git checkout -b ${canal_branch}
 git apply ./scripts/canal-release.patch
-./scripts/update-version $1-canal.worker.${date}${incr}
+./scripts/update-version $version-canal.worker.${date}${incr}
 git add --all
 git commit -m "update version"
 git push origin ${canal_branch}
