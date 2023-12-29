@@ -96,7 +96,14 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
                  null;
   }>;
 
+  /** TimeRanges implementation for this buffer. */
   private _buffered : ManualTimeRanges;
+
+  /**
+   * If `true`, we're currently automatically refreshing subtitles in intervals
+   * (and on some playback events) based on the polled current position.
+   */
+  private _isAutoRefreshing : boolean;
 
   /**
    * @param {HTMLMediaElement} videoElement
@@ -115,6 +122,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     this._subtitlesIntervalCanceller = new TaskCanceller();
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
+    this._isAutoRefreshing = false;
   }
 
   /**
@@ -205,7 +213,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     }
     this._buffer.insert(cues, start, end);
     this._buffered.insert(start, end);
-    if (!this._buffer.isEmpty()) {
+    if (!this._isAutoRefreshing && !this._buffer.isEmpty()) {
       this.autoRefreshSubtitles(this._subtitlesIntervalCanceller.signal);
     }
     return convertToRanges(this._buffered);
@@ -221,7 +229,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     log.debug("HTD: Removing html text track data", start, end);
     this._buffer.remove(start, end);
     this._buffered.remove(start, end);
-    if (this._buffer.isEmpty()) {
+    if (this._isAutoRefreshing && this._buffer.isEmpty()) {
       this.refreshSubtitles();
       this._subtitlesIntervalCanceller.cancel();
       this._subtitlesIntervalCanceller = new TaskCanceller();
@@ -326,14 +334,22 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
   private autoRefreshSubtitles(
     cancellationSignal : CancellationSignal
   ) : void {
-    if (cancellationSignal.isCancelled()) {
+    if (this._isAutoRefreshing || cancellationSignal.isCancelled()) {
       return;
     }
     let autoRefreshCanceller : TaskCanceller | null = null;
     const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
 
+    const stopAutoRefresh = () => {
+      this._isAutoRefreshing = false;
+      if (autoRefreshCanceller !== null) {
+        autoRefreshCanceller.cancel();
+        autoRefreshCanceller = null;
+      }
+    };
     const startAutoRefresh = () => {
       stopAutoRefresh();
+      this._isAutoRefreshing = true;
       autoRefreshCanceller = new TaskCanceller();
       autoRefreshCanceller.linkToSignal(cancellationSignal);
       const intervalId = setInterval(() => this.refreshSubtitles(),
@@ -352,12 +368,6 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     onEnded(this._videoElement, startAutoRefresh, cancellationSignal);
 
     startAutoRefresh();
-    function stopAutoRefresh() {
-      if (autoRefreshCanceller !== null) {
-        autoRefreshCanceller.cancel();
-        autoRefreshCanceller = null;
-      }
-    }
   }
 
   /**
