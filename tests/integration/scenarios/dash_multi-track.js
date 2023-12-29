@@ -44,14 +44,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     expect(player.getPosition()).to.be.within(0, 10);
   }
 
-  function setAudioTrack(language, isAudioDescription) {
+  function setAudioTrack(language, isAudioDescription, setTrackOptions = {}) {
     const audioTracks = player.getAvailableAudioTracks();
     for (let i = 0; i < audioTracks.length; i++) {
       const audioTrack = audioTracks[i];
       if (audioTrack.language === language &&
           audioTrack.audioDescription === isAudioDescription)
       {
-        player.setAudioTrack(audioTrack.id);
+        const payload = Object.assign(
+          {trackId: audioTrack.id},
+          setTrackOptions
+        );
+        player.setAudioTrack(payload);
         return;
       }
     }
@@ -72,22 +76,30 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     throw new Error("Text track not found.");
   }
 
-  function setVideoTrack(codecRules, isSignInterpreted) {
+  function setVideoTrack(codecRules,
+    isSignInterpreted,
+    setVideoTrackOptions = {}) {
     const videoTracks = player.getAvailableVideoTracks();
     for (let i = 0; i < videoTracks.length; i++) {
       const videoTrack = videoTracks[i];
       if (videoTrack.signInterpreted === isSignInterpreted) {
         const { representations } = videoTrack;
         if (codecRules === null) {
-          player.setVideoTrack(videoTrack.id);
+          player.setVideoTrack(Object.assign(
+            { trackId: videoTrack.id },
+            setVideoTrackOptions));
           return;
         } else if (codecRules.all) {
           if (representations.every(r => codecRules.test.test(r.codec))) {
-            player.setVideoTrack(videoTrack.id);
+            player.setVideoTrack(Object.assign(
+              { trackId: videoTrack.id },
+              setVideoTrackOptions));
             return;
           }
         } else if (representations.some(r => codecRules.test.test(r.codec))) {
-          player.setVideoTrack(videoTrack.id);
+          player.setVideoTrack(Object.assign(
+            { trackId: videoTrack.id },
+            setVideoTrackOptions));
           return;
         }
       }
@@ -363,7 +375,6 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should allow the initial disabling of the video tracks", async () => {
-    player = new RxPlayer();
     player.addEventListener("newAvailablePeriods", () => {
       updateTracks([], [], [ null, null ]);
     });
@@ -425,5 +436,40 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkAudioTrack("fr", "fra", true);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
+  });
+
+
+  it("setting a track with relativeResumingPosition should seek back or forward if switchingMode is 'direct'", async () => {
+    await loadContent();
+    expect(player.getPosition()).to.be.within(0, 1);
+    checkAudioTrack("de", "deu", false);
+
+    setAudioTrack("fr", true, { relativeResumingPosition: 10, switchingMode: "direct"});
+    await sleep(300);
+    checkAudioTrack("fr", "fra", true);
+    expect(player.getPosition()).to.be.within(10, 11);
+
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, { relativeResumingPosition: -5, switchingMode: "direct" });
+    await sleep(300);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
+    expect(player.getPosition()).to.be.within(5, 6);
+  });
+
+  it("setting a track with relativeResumingPosition should have no effect if switchingMode is 'seamless'", async () => {
+    await loadContent();
+    expect(player.getPosition()).to.be.within(0, 1);
+    checkAudioTrack("de", "deu", false);
+
+    setAudioTrack("fr", true, { relativeResumingPosition: 10, switchingMode: "seamless"});
+    await sleep(300);
+    checkAudioTrack("fr", "fra", true);
+    expect(player.getPosition()).to.be.within(0, 1);
+
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, { relativeResumingPosition: 10, switchingMode: "seamless" });
+    await sleep(300);
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
+    expect(player.getPosition()).to.be.within(0, 1);
   });
 });
