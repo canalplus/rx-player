@@ -21,6 +21,7 @@
     ]
   },
   "include": [
+    "../../src/globals.prod.d.ts",
     "./scripts/**/*"
   ]
 }
