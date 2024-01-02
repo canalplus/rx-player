@@ -48,7 +48,7 @@ function Settings({
   showOptions: boolean;
 }): JSX.Element | null {
   const {
-    limitVideoWidth,
+    videoResolutionLimit,
     maxBufferAhead,
     maxBufferBehind,
     maxVideoBufferSize,
@@ -84,14 +84,20 @@ function Settings({
     });
   }, [updateLoadVideoOptions]);
 
-  const onLimitVideoWidthChange = useCallback((limitVideoWidth: boolean) => {
-    updatePlayerOptions((prevOptions) => {
-      if (limitVideoWidth === prevOptions.limitVideoWidth) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { limitVideoWidth });
-    });
-  }, [updatePlayerOptions]);
+  const onVideoResolutionLimitChange = useCallback(
+    (videoResolutionLimitArg: { value: string}) => {
+      updatePlayerOptions((prevOptions) => {
+        if (videoResolutionLimitArg.value ===
+          prevOptions.videoResolutionLimit) {
+          return prevOptions;
+        }
+        return Object.assign(
+          {},
+          prevOptions,
+          { videoResolutionLimit: videoResolutionLimitArg.value }
+        );
+      });
+    }, [updatePlayerOptions]);
 
   const onThrottleVideoBitrateWhenHiddenChange = useCallback((
     value: boolean
@@ -285,12 +291,12 @@ function Settings({
             defaultVideoRepresentationsSwitchingMode={
               defaultVideoRepresentationsSwitchingMode
             }
-            limitVideoWidth={limitVideoWidth}
+            videoResolutionLimit={videoResolutionLimit}
             throttleVideoBitrateWhenHidden={throttleVideoBitrateWhenHidden}
             onDefaultVideoRepresentationsSwitchingModeChange={
               onDefaultVideoRepresentationsSwitchingModeChange
             }
-            onLimitVideoWidthChange={onLimitVideoWidthChange}
+            onVideoResolutionLimitChange={onVideoResolutionLimitChange}
             onThrottleVideoBitrateWhenHiddenChange={
               onThrottleVideoBitrateWhenHiddenChange
             }
