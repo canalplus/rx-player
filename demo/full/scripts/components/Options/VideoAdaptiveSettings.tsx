@@ -14,18 +14,20 @@ const { Fragment } = React;
 function VideoAdaptiveSettings({
   defaultVideoRepresentationsSwitchingMode,
   onDefaultVideoRepresentationsSwitchingModeChange,
-  limitVideoWidth,
+  videoResolutionLimit,
   throttleVideoBitrateWhenHidden,
-  onLimitVideoWidthChange,
+  onVideoResolutionLimitChange,
   onThrottleVideoBitrateWhenHiddenChange,
 }: {
   defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
   onDefaultVideoRepresentationsSwitchingModeChange: (
     mode: IVideoRepresentationsSwitchingMode
   ) => void;
-  limitVideoWidth: boolean;
+  videoResolutionLimit: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden: boolean;
-  onLimitVideoWidthChange: (newVal: boolean) => void;
+  onVideoResolutionLimitChange: (
+    newVal: { index: number, value: string}
+  ) => void;
   onThrottleVideoBitrateWhenHiddenChange: (newVal: boolean) => void;
 }): JSX.Element {
   let defaultVideoRepresentationsSwitchingModeDescMsg;
@@ -49,6 +51,19 @@ function VideoAdaptiveSettings({
     default:
       defaultVideoRepresentationsSwitchingModeDescMsg =
         "Unknown value";
+      break;
+  }
+
+  let videoResolutionLimitDescMsg;
+  switch (videoResolutionLimit) {
+    case "none":
+      videoResolutionLimitDescMsg = "No limit on the video Representation’s resolution will be automatically applied.";
+      break;
+    case "screen":
+      videoResolutionLimitDescMsg = "The loaded video Representation will be throttled according to the screen’s dimensions.";
+      break;
+    case "videoElement":
+      videoResolutionLimitDescMsg = "The loaded video Representation will be throttled according to the given videoElement’s dimensions.";
       break;
   }
 
@@ -82,22 +97,23 @@ function VideoAdaptiveSettings({
         </span>
       </li>
       <li>
-        <div>
-          <Checkbox
-            className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
-            name="limitVideoWidth"
-            ariaLabel="Limit video width option"
-            checked={limitVideoWidth}
-            onChange={onLimitVideoWidthChange}
-          >
-            Limit Video Width
-          </Checkbox>
-          <span className="option-desc">
-            {limitVideoWidth ?
-              "Limiting video width to the current <video> element's width" :
-              "Not limiting video width to the current <video> element's width"}
-          </span>
-        </div>
+        <Select
+          ariaLabel="Select the videoResolutionLimit"
+          className="playerOptionInput"
+          disabled={false}
+          name="videoResolutionLimit"
+          onChange={onVideoResolutionLimitChange}
+          selected={{
+            value: "none",
+            index: undefined,
+          }}
+          options={["videoElement", "screen", "none"]}
+        >
+            Limit Video Resolution
+        </Select>
+        <span className="option-desc">
+          {videoResolutionLimitDescMsg}
+        </span>
       </li>
       <li>
         <div className="playerOptionInput">
