@@ -434,11 +434,24 @@ function ContentList({
     changeSelectedContent(firstEnabledContentIndex, content);
   }, []);
 
-  const isCustomContent = contentChoiceIndex === 0;
-  const isCustomDRM = chosenDRMType === CUSTOM_DRM_NAME;
-
   const contentsToSelect = contentsPerType[transportType] ?? [];
   const chosenContent = contentsToSelect[contentChoiceIndex];
+
+  const isCustomContent = React.useMemo(() => {
+    return contentChoiceIndex === 0;
+  }, [contentChoiceIndex]);
+
+  const isCustomDRM = React.useMemo(() => {
+    return chosenDRMType === CUSTOM_DRM_NAME;
+  }, [chosenDRMType]);
+
+  const hasURL = React.useMemo(() => {
+    return currentManifestURL !== "";
+  }, [currentManifestURL]);
+
+  const isLocalContent = React.useMemo(() => {
+    return !!(chosenContent && chosenContent.isLocalContent);
+  }, [chosenContent]);
 
   let generatedLink = null;
   if (shouldDisplayGeneratedLink) {
@@ -463,9 +476,6 @@ function ContentList({
             fallbackLicenseRequest: shouldFallbackOnLicenseReqError,
           });
   }
-
-  const hasURL = currentManifestURL !== "";
-  const isLocalContent = !!(chosenContent && chosenContent.isLocalContent);
 
   const onTransportChange = React.useCallback(
     ({ value }: { value: string; index: number }) => {
