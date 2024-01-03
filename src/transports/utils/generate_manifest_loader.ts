@@ -18,7 +18,7 @@ import {
   IManifestLoader,
   ILoadedManifestFormat,
 } from "../../public_types";
-import assertUnreachable from "../../utils/assert_unreachable";
+import { assertUnreachable } from "../../utils/assert";
 import request from "../../utils/request";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {

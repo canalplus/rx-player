@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import globalScope from "../../../../compat/global_scope";
+import globalScope from "../../../../utils/global_scope";
 import {
   IMediaConfiguration,
   ProberStatus,

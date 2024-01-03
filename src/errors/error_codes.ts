@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { IRequestErrorType, RequestErrorTypes } from "../utils/request";
+
 export type IErrorType = "NETWORK_ERROR" |
                          "MEDIA_ERROR" |
                          "ENCRYPTED_MEDIA_ERROR" |
@@ -59,6 +61,9 @@ export type IMediaErrorCode = "BUFFER_APPEND_ERROR" |
 
 export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
 
+export type INetworkErrorType = IRequestErrorType;
+export const NetworkErrorTypes = RequestErrorTypes;
+
 export type IOtherErrorCode = "PIPELINE_LOAD_ERROR" |
                               "PIPELINE_PARSE_ERROR" |
                               "INTEGRITY_ERROR" |
@@ -69,24 +74,12 @@ export type IErrorCode = INetworkErrorCode |
                          IEncryptedMediaErrorCode |
                          IOtherErrorCode;
 
-export type INetworkErrorType = "TIMEOUT" |
-                                "ERROR_EVENT" |
-                                "PARSE_ERROR" |
-                                "ERROR_HTTP_CODE";
-
 const ErrorTypes = {
   NETWORK_ERROR: "NETWORK_ERROR",
   MEDIA_ERROR: "MEDIA_ERROR",
   ENCRYPTED_MEDIA_ERROR: "ENCRYPTED_MEDIA_ERROR",
   OTHER_ERROR: "OTHER_ERROR",
 } as const;
-
-const NetworkErrorTypes : Record<INetworkErrorType, INetworkErrorType> = {
-  TIMEOUT: "TIMEOUT",
-  ERROR_EVENT: "ERROR_EVENT",
-  ERROR_HTTP_CODE: "ERROR_HTTP_CODE",
-  PARSE_ERROR: "PARSE_ERROR",
-};
 
 const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
   PIPELINE_LOAD_ERROR: "PIPELINE_LOAD_ERROR",
@@ -144,6 +137,5 @@ const ErrorCodes : Record<IErrorCode, IErrorCode>  = {
 
 export {
   ErrorTypes,
-  NetworkErrorTypes,
   ErrorCodes,
 };

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import globalScope from "../global_scope";
+import globalScope from "../../utils/global_scope";
 
 // Needed for calling require (which itself is needed to mock properly) because
 // it is not type-checked:
@@ -38,8 +38,8 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use the native MediaSource if defined", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../../utils/is_node", () => ({ __esModule: true as const,
+                                              default: false }));
 
     const origMediaSource = gs.MediaSource;
     const origMozMediaSource = gs.MozMediaSource;
@@ -61,8 +61,8 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use MozMediaSource if defined and MediaSource is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../../utils/is_node", () => ({ __esModule: true as const,
+                                              default: false }));
 
     const origMediaSource = gs.MediaSource;
     const origMozMediaSource = gs.MozMediaSource;
@@ -84,8 +84,8 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use WebKitMediaSource if defined and MediaSource is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../../utils/is_node", () => ({ __esModule: true as const,
+                                              default: false }));
 
     const origMediaSource = gs.MediaSource;
     const origMozMediaSource = gs.MozMediaSource;
@@ -107,8 +107,8 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use MSMediaSource if defined and MediaSource is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../../utils/is_node", () => ({ __esModule: true as const,
+                                              default: false }));
 
     const origMediaSource = gs.MediaSource;
     const origMozMediaSource = gs.MozMediaSource;
