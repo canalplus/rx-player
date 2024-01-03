@@ -17,9 +17,9 @@
 import {
   formatError,
   NetworkError,
-  RequestError,
 } from "../../../errors";
 import { IPlayerError } from "../../../public_types";
+import { RequestError } from "../../../utils/request";
 
 /**
  * Generate a new error from the infos given.

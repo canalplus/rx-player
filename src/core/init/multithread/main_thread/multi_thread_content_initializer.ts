@@ -7,7 +7,6 @@ import {
   MediaError,
   NetworkError,
   OtherError,
-  RequestError,
   SourceBufferError,
 } from "../../../../errors";
 import features from "../../../../features";
@@ -35,14 +34,16 @@ import {
 import { ITextDisplayer } from "../../../../text_displayer";
 import { ITransportOptions } from "../../../../transports";
 import arrayFind from "../../../../utils/array_find";
-import assert from "../../../../utils/assert";
-import assertUnreachable from "../../../../utils/assert_unreachable";
+import assert, {
+  assertUnreachable,
+} from "../../../../utils/assert";
 import idGenerator from "../../../../utils/id_generator";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import objectAssign from "../../../../utils/object_assign";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../../utils/reference";
+import { RequestError } from "../../../../utils/request";
 import TaskCanceller, {
   CancellationError,
   CancellationSignal,

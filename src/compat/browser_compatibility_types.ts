@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import globalScope from "../utils/global_scope";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
-import globalScope from "./global_scope";
 
 /** Regular MediaKeys type + optional functions present in IE11. */
 interface ICompatMediaKeysConstructor {

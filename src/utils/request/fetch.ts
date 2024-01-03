@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-import globalScope from "../../compat/global_scope";
-import {
-  NetworkErrorTypes,
-  RequestError,
-} from "../../errors";
 import log from "../../log";
+import globalScope from "../global_scope";
 import isNullOrUndefined from "../is_null_or_undefined";
 import getMonotonicTimeStamp from "../monotonic_timestamp";
 import {
   CancellationError,
   CancellationSignal,
 } from "../task_canceller";
+import RequestError, {
+  RequestErrorTypes,
+} from "./request_error";
 
 /** Object returned by `fetchRequest` after the fetch operation succeeded. */
 export interface IFetchedStreamComplete {
@@ -198,13 +197,13 @@ export default function fetchRequest(
       log.warn("Fetch: Request HTTP Error", response.status, response.url);
       throw new RequestError(response.url,
                              response.status,
-                             NetworkErrorTypes.ERROR_HTTP_CODE);
+                             RequestErrorTypes.ERROR_HTTP_CODE);
     }
 
     if (isNullOrUndefined(response.body)) {
       throw new RequestError(response.url,
                              response.status,
-                             NetworkErrorTypes.PARSE_ERROR);
+                             RequestErrorTypes.PARSE_ERROR);
     }
 
     const contentLengthHeader = response.headers.get("Content-Length");
@@ -255,16 +254,16 @@ export default function fetchRequest(
     deregisterCancelLstnr();
     if (isTimedOut) {
       log.warn("Fetch: Request timed out.");
-      throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
+      throw new RequestError(options.url, 0, RequestErrorTypes.TIMEOUT);
     } else if (isConnectionTimedOut) {
       log.warn("Fetch: Request connection timed out.");
-      throw new RequestError(options.url, 0, NetworkErrorTypes.TIMEOUT);
+      throw new RequestError(options.url, 0, RequestErrorTypes.TIMEOUT);
     } else if (err instanceof RequestError) {
       throw err;
     }
     log.warn("Fetch: Request Error", err instanceof Error ? err.toString() :
                                                             "");
-    throw new RequestError(options.url, 0, NetworkErrorTypes.ERROR_EVENT);
+    throw new RequestError(options.url, 0, RequestErrorTypes.ERROR_EVENT);
   });
 }
 
