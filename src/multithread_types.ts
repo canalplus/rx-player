@@ -348,6 +348,7 @@ export interface ITrackUpdateChoiceObject {
    */
   initialRepresentations : IRepresentationsChoice;
 
+  /** Relative resuming position after a track change */
   relativeResumingPosition: number | undefined;
 }
 
