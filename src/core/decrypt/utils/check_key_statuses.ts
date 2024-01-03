@@ -24,7 +24,7 @@ import {
   IKeySystemOption,
   IPlayerError,
 } from "../../../public_types";
-import assertUnreachable from "../../../utils/assert_unreachable";
+import { assertUnreachable } from "../../../utils/assert";
 import { bytesToHex } from "../../../utils/string_parsing";
 
 /**

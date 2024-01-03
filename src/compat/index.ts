@@ -31,7 +31,6 @@ import enableAudioTrack from "./enable_audio_track";
 import * as events from "./event_listeners";
 import getStartDate from "./get_start_date";
 import isCodecSupported from "./is_codec_supported";
-import isNode from "./is_node";
 import isVTTCue from "./is_vtt_cue";
 import makeVTTCue from "./make_vtt_cue";
 import onHeightWidthChange from "./on_height_width_change";
@@ -62,7 +61,6 @@ export {
   ICompatVTTCue,
   ICompatSourceBuffer,
   isCodecSupported,
-  isNode,
   isVTTCue,
   makeVTTCue,
   MediaSource_,

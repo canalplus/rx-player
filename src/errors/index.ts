@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import AssertionError from "./assertion_error";
 import CustomLoaderError from "./custom_loader_error";
 import EncryptedMediaError, {
   ISerializedEncryptedMediaError,
@@ -24,6 +23,7 @@ import {
   ErrorTypes,
   IErrorCode,
   IErrorType,
+  INetworkErrorType,
   NetworkErrorTypes,
 } from "./error_codes";
 import formatError from "./format_error";
@@ -37,13 +37,9 @@ import NetworkError, {
 import OtherError, {
   ISerializedOtherError,
 } from "./other_error";
-import RequestError, {
-  ISerializedRequestError,
-} from "./request_error";
 import SourceBufferError from "./source_buffer_error";
 
 export {
-  AssertionError,
   CustomLoaderError,
   EncryptedMediaError,
   SourceBufferError,
@@ -56,7 +52,7 @@ export {
   MediaError as MediaError,
   NetworkError,
   OtherError,
-  RequestError,
+  INetworkErrorType,
   NetworkErrorTypes,
   isKnownError,
 
@@ -64,5 +60,4 @@ export {
   ISerializedNetworkError,
   ISerializedEncryptedMediaError,
   ISerializedOtherError,
-  ISerializedRequestError,
 };

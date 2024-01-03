@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import { RequestError } from "../../utils/request";
 import NetworkError from "../network_error";
-import RequestError from "../request_error";
 
 describe("errors - NetworkError", () => {
   it("should be able to use a RequestError", () => {

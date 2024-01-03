@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import assertUnreachable from "../../../../utils/assert_unreachable";
+import { assertUnreachable } from "../../../../utils/assert";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import parseMpdIr, {
   IIrParserResponse,
