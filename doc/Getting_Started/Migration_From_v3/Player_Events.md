@@ -136,3 +136,21 @@ All image related API, like the `imageTrackUpdate` event, have been removed.
 
 If you need to parse BIF file, you can use the
 [`parseBifThumbnails`](../../api/Tools/parseBifThumbnails.md) tool instead.
+
+
+### `volumeChange`
+
+Previously, this event only communicated about an audio volume as a number
+between `0` (silent) and `1` (loudest audio volume), with the `mute` RxPlayer
+method actually just setting that volume to `0` until the next `unMute` call.
+
+Now the `mute` RxPlayer method has been updated and this event accordingly send
+as a payload two properties:
+
+  - `volume` (`number`): The currently set audio volume from `0` to `1`, like
+    before.
+
+  - `muted` (`boolean`): If `true`, the media element is currently muted (e.g.
+    through the `mute` RxPlayer method), meaning that audio will be silent even
+    if a volume higher than `0` is set.
+    You can remove the `muted` status by calling the `unMute` RxPlayer method.
