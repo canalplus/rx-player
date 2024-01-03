@@ -1,6 +1,8 @@
+import type { IConstructorOptions, ILoadVideoOptions } from "../../../../src/public_types";
+
 const defaultOptionsValues = {
   player: {
-    limitVideoWidth: false,
+    videoResolutionLimit: "none",
     maxBufferAhead: Infinity,
     maxBufferBehind: Infinity,
     maxVideoBufferSize: Infinity,
@@ -8,6 +10,7 @@ const defaultOptionsValues = {
     wantedBufferAhead: 30,
   },
   loadVideo: {
+    transport: "dash",
     autoPlay: true,
     defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
@@ -23,7 +26,7 @@ const defaultOptionsValues = {
     },
     onCodecSwitch: "continue",
   },
-};
+} satisfies { player: IConstructorOptions, loadVideo: ILoadVideoOptions };
 
 export type IConstructorSettings = typeof defaultOptionsValues.player;
 export type ILoadVideoSettings = typeof defaultOptionsValues.loadVideo;
