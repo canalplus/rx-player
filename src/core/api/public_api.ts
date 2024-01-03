@@ -93,8 +93,9 @@ import {
 } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
-import assert from "../../utils/assert";
-import assertUnreachable from "../../utils/assert_unreachable";
+import assert, {
+  assertUnreachable,
+} from "../../utils/assert";
 import EventEmitter, {
   IEventPayload,
   IListener,

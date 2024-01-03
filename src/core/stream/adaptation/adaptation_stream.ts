@@ -3,7 +3,7 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import { Representation } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
-import assertUnreachable from "../../../utils/assert_unreachable";
+import { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";

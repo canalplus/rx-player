@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import globalScope from "../compat/global_scope";
 import log from "../log";
 import assert from "./assert";
+import globalScope from "./global_scope";
 
 const hasTextDecoder = typeof globalScope === "object" &&
                        typeof globalScope.TextDecoder === "function";
