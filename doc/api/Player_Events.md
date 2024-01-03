@@ -777,7 +777,7 @@ This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
 
-## inbandEvents
+### inbandEvents
 
 _payload type_: `Object`
 
