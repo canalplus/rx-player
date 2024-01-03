@@ -28,7 +28,7 @@ function linkPlayerEventsToState(
   linkPlayerEventToState("videoRepresentationChange", "videoRepresentation");
   linkPlayerEventToState("audioRepresentationChange", "audioRepresentation");
   linkPlayerEventToState("error", "error");
-  linkPlayerEventToState("volumeChange", "volume");
+  linkPlayerEventToState("volumeChange", "volumeInfo");
   linkPlayerEventToState("audioTrackChange", "audioTrack");
   linkPlayerEventToState("videoTrackChange", "videoTrack");
   linkPlayerEventToState("availableAudioTracksChange", "availableAudioTracks");

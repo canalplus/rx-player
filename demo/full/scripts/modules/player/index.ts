@@ -144,7 +144,10 @@ export interface IPlayerModuleState {
   videoRepresentation: IVideoRepresentation | undefined | null;
   videoRepresentationsLocked: boolean;
   videoTrack: IVideoTrack | undefined | null;
-  volume: number;
+  volumeInfo: {
+    volume: number;
+    muted: boolean;
+  };
   wallClockDiff: number | undefined;
   /**
    * If `true`, the currently set video track has a linked "trickmode" track.
@@ -195,7 +198,10 @@ const PlayerModule = declareModule(
     videoRepresentation: undefined,
     videoRepresentationsLocked: false,
     videoTrack: undefined,
-    volume: 1,
+    volumeInfo: {
+      volume: 1,
+      muted: false,
+    },
     wallClockDiff: undefined,
     videoTrackHasTrickMode: false,
     videoThumbnailsElement: null,
