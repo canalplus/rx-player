@@ -1194,7 +1194,7 @@ export default function launchTestsForContent(manifestInfos) {
     });
 
     describe("getVolume", () => {
-      it("should return the current media elment volume", async () => {
+      it("should return the current media element volume", async () => {
         const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
 
@@ -1230,11 +1230,11 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getVolume()).to.equal(0.92);
       });
 
-      it("should return 0 if muted", async () => {
+      it("should still return the volume if muted", async () => {
         const initialVolume = player.getVideoElement().volume;
         expect(player.getVolume()).to.equal(initialVolume);
         player.mute();
-        expect(player.getVolume()).to.equal(0);
+        expect(player.getVolume()).to.equal(initialVolume);
         player.unMute();
         expect(player.getVolume()).to.equal(initialVolume);
         player.mute();
@@ -1245,7 +1245,7 @@ export default function launchTestsForContent(manifestInfos) {
           autoPlay: true,
         });
 
-        expect(player.getVolume()).to.equal(0);
+        expect(player.getVolume()).to.equal(initialVolume);
         player.setVolume(0.12);
         expect(player.getVolume()).to.equal(0.12);
         await waitForLoadedStateAfterLoadVideo(player);
@@ -1273,12 +1273,12 @@ export default function launchTestsForContent(manifestInfos) {
         expect(player.getVolume()).to.equal(0.17);
       });
 
-      it("should un-mute when muted", async () => {
+      it("should not un-mute when muted", async () => {
         player.mute();
         expect(player.isMute()).to.equal(true);
         player.setVolume(0.25);
         expect(player.getVolume()).to.equal(0.25);
-        expect(player.isMute()).to.equal(false);
+        expect(player.isMute()).to.equal(true);
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1286,21 +1286,19 @@ export default function launchTestsForContent(manifestInfos) {
           autoPlay: true,
         });
 
+        player.unMute();
         expect(player.isMute()).to.equal(false);
         player.mute();
         expect(player.isMute()).to.equal(true);
         player.setVolume(0.33);
         expect(player.getVolume()).to.equal(0.33);
-        expect(player.isMute()).to.equal(false);
+        expect(player.isMute()).to.equal(true);
 
         await waitForLoadedStateAfterLoadVideo(player);
 
-        expect(player.isMute()).to.equal(false);
-        player.mute();
-        expect(player.isMute()).to.equal(true);
         player.setVolume(0.45);
         expect(player.getVolume()).to.equal(0.45);
-        expect(player.isMute()).to.equal(false);
+        expect(player.isMute()).to.equal(true);
       });
     });
 
@@ -1338,17 +1336,19 @@ export default function launchTestsForContent(manifestInfos) {
         player.mute();
         expect(player.isMute()).to.equal(true);
         player.setVolume(1);
-        expect(player.isMute()).to.equal(false);
+        expect(player.isMute()).to.equal(true);
       });
     });
 
     describe("mute", () => {
-      it("should set the volume to 0", async () => {
+      it("should set the muted property", async () => {
         const initialVolume = player.getVideoElement().volume;
+        expect(player.getVideoElement().muted).to.equal(false);
         player.mute();
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(player.getVideoElement().volume).to.equal(0);
+        expect(player.getVolume()).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().muted).to.equal(true);
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1357,25 +1357,30 @@ export default function launchTestsForContent(manifestInfos) {
         });
 
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(player.getVideoElement().volume).to.equal(0);
+        expect(player.getVideoElement().muted).to.equal(true);
+        expect(player.getVolume()).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
         player.unMute();
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
         expect(player.getVideoElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().muted).to.equal(false);
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
         expect(player.getVideoElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().muted).to.equal(false);
 
         player.mute();
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(player.getVideoElement().volume).to.equal(0);
-        player.setVolume(1);
-        expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
         expect(player.getVideoElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().muted).to.equal(true);
+        player.setVolume(1);
+        expect(player.isMute()).to.equal(true);
+        expect(player.getVolume()).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().muted).to.equal(true);
       });
     });
 
@@ -1384,8 +1389,9 @@ export default function launchTestsForContent(manifestInfos) {
         const initialVolume = player.getVideoElement().volume;
         player.mute();
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(player.getVideoElement().volume).to.equal(0);
+        expect(player.getVolume()).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
+        expect(player.getVideoElement().muted).to.equal(true);
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -1394,8 +1400,8 @@ export default function launchTestsForContent(manifestInfos) {
         });
 
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(player.getVideoElement().volume).to.equal(0);
+        expect(player.getVolume()).to.equal(initialVolume);
+        expect(player.getVideoElement().volume).to.equal(initialVolume);
         player.unMute();
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
@@ -1407,12 +1413,12 @@ export default function launchTestsForContent(manifestInfos) {
 
         player.mute();
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(player.getVideoElement().volume).to.equal(0);
-        player.setVolume(1);
-        expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(initialVolume);
         expect(player.getVideoElement().volume).to.equal(initialVolume);
+        player.setVolume(0.7);
+        expect(player.isMute()).to.equal(true);
+        expect(player.getVolume()).to.equal(0.7);
+        expect(player.getVideoElement().volume).to.equal(0.7);
       });
     });
 

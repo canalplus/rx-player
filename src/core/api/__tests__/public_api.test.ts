@@ -236,7 +236,7 @@ describe("API - Public API", () => {
     });
 
     describe("mute/unMute/isMute", () => {
-      it("should set the volume to 0 in mute by default", () => {
+      it("should keep the volume yet mute the media element in mute by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
@@ -250,15 +250,18 @@ describe("API - Public API", () => {
         player.setVolume(1);
 
         player.mute();
-        expect(player.getVolume()).toBe(0);
-        expect(videoElement.volume).toBe(0);
-        expect(videoElement.muted).toBe(false);
+        expect(player.getVolume()).toBe(1);
+        expect(videoElement.volume).toBe(1);
+        expect(videoElement.muted).toBe(true);
         expect(player.isMute()).toBe(true);
         player.unMute();
         expect(player.isMute()).toBe(false);
+        expect(player.getVolume()).toBe(1);
+        expect(videoElement.volume).toBe(1);
+        expect(videoElement.muted).toBe(false);
       });
 
-      it("should unmute the volume at the previous value in unMute by default", () => {
+      it("should unmute without changing the volume in unMute by default", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         // back to a "normal" state.
@@ -280,13 +283,15 @@ describe("API - Public API", () => {
 
         player.mute();
         expect(player.isMute()).toBe(true);
-        expect(player.getVolume()).toBe(0);
-        expect(videoElement.volume).toBe(0);
+        expect(player.getVolume()).toBe(0.8);
+        expect(videoElement.volume).toBe(0.8);
+        expect(videoElement.muted).toBe(true);
 
         player.unMute();
         expect(player.isMute()).toBe(false);
         expect(player.getVolume()).toBe(0.8);
         expect(videoElement.volume).toBe(0.8);
+        expect(videoElement.muted).toBe(false);
       });
 
       it("should return false in isMute by default", () => {
@@ -295,31 +300,14 @@ describe("API - Public API", () => {
         expect(player.isMute()).toBe(false);
       });
 
-      it("should return true in isMute if the volume is equal to 0", () => {
+      it("should not true in isMute if just the volume is equal to 0", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
-        const oldVolume = player.getVolume();
 
         expect(player.isMute()).toBe(false);
 
         player.setVolume(0);
-        expect(player.isMute()).toBe(true);
-        player.setVolume(oldVolume);
         expect(player.isMute()).toBe(false);
-
-        player.mute();
-        expect(player.isMute()).toBe(true);
-        player.unMute();
-        expect(player.isMute()).toBe(false);
-
-        player.mute();
-        expect(player.isMute()).toBe(true);
-        player.setVolume(oldVolume);
-        expect(player.isMute()).toBe(false);
-        player.unMute();
-        expect(player.isMute()).toBe(false);
-
-        player.setVolume(oldVolume);
       });
     });
 

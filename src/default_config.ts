@@ -9,15 +9,6 @@
  */
 const DEFAULT_CONFIG = {
     /**
-     * Volume set on unMute if the volume is set to 0 and either:
-     *   - mute has never been called before
-     *   - mute has last been called while the volume was already set to 0 (either
-     *     via setVolume, or a previous mute call)
-     * @type {Number}
-     */
-  DEFAULT_UNMUTED_VOLUME: 0.1,
-
-    /**
      * Default time interval after which a request will timeout, in ms.
      * @type {Number}
      */
