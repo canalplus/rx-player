@@ -259,6 +259,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     this._disableCurrentCues();
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);
+    this._isAutoRefreshing = false;
     this._subtitlesIntervalCanceller.cancel();
   }
 
