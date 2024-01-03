@@ -523,12 +523,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        needsBufferFlush: (relativeResumingPosition?) => {
+        needsBufferFlush: (relativeResumingPosition? : number | undefined) => {
           let wantedSeekingTime: number;
           const currentTime = playbackObserver.getCurrentTime();
-          if (relativeResumingPosition !== undefined && relativeResumingPosition !== 0) {
+          if (relativeResumingPosition !== undefined) {
             wantedSeekingTime = currentTime + relativeResumingPosition;
           } else {
+            // in case relativeResumingPosition was omitted, we still perform
+            // a tiny seek to be sure that the browser will correclty reload the video.
             wantedSeekingTime = currentTime + 0.001;
           }
           playbackObserver.setCurrentTime(wantedSeekingTime);
