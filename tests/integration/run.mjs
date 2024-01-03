@@ -23,6 +23,9 @@ const browsers = [];
 if (argv.includes("--bchrome")) {
   browsers.push("ChromeAutoPlay");
 }
+if (argv.includes("--bfirefox")) {
+  browsers.push("Firefox");
+}
 if (argv.includes("--bchromehl")) {
   browsers.push("ChromeHeadlessAutoPlay");
 }
@@ -114,6 +117,7 @@ Options:
   -h, --help    Display this help
   --bchrome     Launch tests on Chrome
   --bchromehl   Launch tests on headless Chrome
+  --bfirefox    Launch tests on Firefox
   --bfirefoxhl  Launch tests on headless Firefox
   --watch       Re-run tests on modifications`,
   /* eslint-enable indent */
