@@ -547,7 +547,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           const relativeResumingPosition = msgData.value.relativeResumingPosition;
           let wantedSeekingTime: number;
 
-          if (relativeResumingPosition !== undefined && relativeResumingPosition !== 0) {
+          if (relativeResumingPosition !== undefined) {
             wantedSeekingTime = currentTime + relativeResumingPosition;
           } else {
             wantedSeekingTime = currentTime + 0.001;
