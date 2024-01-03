@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { NetworkErrorTypes, RequestError } from "../../errors";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
 import getMonotonicTimeStamp from "../monotonic_timestamp";
@@ -22,7 +21,9 @@ import {
   CancellationError,
   CancellationSignal,
 } from "../task_canceller";
-
+import RequestError, {
+  RequestErrorTypes,
+} from "./request_error";
 
 const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
 
@@ -30,14 +31,14 @@ const DEFAULT_RESPONSE_TYPE : XMLHttpRequestResponseType = "json";
  * Perform an HTTP request, according to the options given.
  *
  * Several errors can be rejected. Namely:
- *   - NetworkErrorTypes.TIMEOUT: the request timed out (took too long)
+ *   - RequestErrorTypes.TIMEOUT: the request timed out (took too long)
  *
- *   - NetworkErrorTypes.PARSE_ERROR: the browser APIs used to parse the
+ *   - RequestErrorTypes.PARSE_ERROR: the browser APIs used to parse the
  *                                    data failed.
- *   - NetworkErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
+ *   - RequestErrorTypes.ERROR_HTTP_CODE: the HTTP code at the time of reception
  *                                        was not in the 200-299 (included)
  *                                        range.
- *   - NetworkErrorTypes.ERROR_EVENT: The XHR had an error event before the
+ *   - RequestErrorTypes.ERROR_EVENT: The XHR had an error event before the
  *                                    response could be fetched.
  * @param {Object} options
  * @returns {Promise.<Object>}
@@ -95,7 +96,7 @@ export default function request<T>(
       // is more precise, it might also be more efficient.
       timeoutId = setTimeout(() => {
         clearCancellingProcess();
-        reject(new RequestError(url, xhr.status, NetworkErrorTypes.TIMEOUT));
+        reject(new RequestError(url, xhr.status, RequestErrorTypes.TIMEOUT));
       }, timeout + 3000);
     }
     let connectionTimeoutId: undefined | number;
@@ -105,7 +106,7 @@ export default function request<T>(
         if (xhr.readyState !== XMLHttpRequest.DONE) {
           xhr.abort();
         }
-        reject(new RequestError(url, xhr.status, NetworkErrorTypes.TIMEOUT));
+        reject(new RequestError(url, xhr.status, RequestErrorTypes.TIMEOUT));
       }, connectionTimeout);
     }
 
@@ -145,12 +146,12 @@ export default function request<T>(
 
     xhr.onerror = function onXHRError() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, NetworkErrorTypes.ERROR_EVENT));
+      reject(new RequestError(url, xhr.status, RequestErrorTypes.ERROR_EVENT));
     };
 
     xhr.ontimeout = function onXHRTimeout() {
       clearCancellingProcess();
-      reject(new RequestError(url, xhr.status, NetworkErrorTypes.TIMEOUT));
+      reject(new RequestError(url, xhr.status, RequestErrorTypes.TIMEOUT));
     };
 
 
@@ -200,7 +201,7 @@ export default function request<T>(
           }
 
           if (isNullOrUndefined(responseData)) {
-            reject(new RequestError(url, xhr.status, NetworkErrorTypes.PARSE_ERROR));
+            reject(new RequestError(url, xhr.status, RequestErrorTypes.PARSE_ERROR));
             return;
           }
 
@@ -214,7 +215,7 @@ export default function request<T>(
                     responseData });
 
         } else {
-          reject(new RequestError(url, xhr.status, NetworkErrorTypes.ERROR_HTTP_CODE));
+          reject(new RequestError(url, xhr.status, RequestErrorTypes.ERROR_HTTP_CODE));
         }
       }
     };

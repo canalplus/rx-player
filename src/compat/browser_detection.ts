@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import globalScope from "./global_scope";
-import isNode from "./is_node";
+import globalScope from "../utils/global_scope";
+import isNode from "../utils/is_node";
 
 type GlobalScope = typeof globalScope;
 

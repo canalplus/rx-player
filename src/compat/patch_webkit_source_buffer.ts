@@ -15,9 +15,9 @@
  */
 
 import EventEmitter from "../utils/event_emitter";
+import globalScope from "../utils/global_scope";
+import isNode from "../utils/is_node";
 import queueMicrotask from "../utils/queue_microtask";
-import globalScope from "./global_scope";
-import isNode from "./is_node";
 
 type IWebKitSourceBufferConstructor = new() => IWebKitSourceBuffer;
 
