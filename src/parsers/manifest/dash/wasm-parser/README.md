@@ -246,22 +246,26 @@ On Rust-side, we exploit multiple FFI features:
 The Rust code is compiled through npm scripts, just like all other building
 logic in the RxPlayer.
 
-To be able to call the corresponding npm script [1], you will need to:
-
-  1. Install [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html),
-     which is roughly Rust's npm.
-
-  2. Install [binaryen](https://github.com/WebAssembly/binaryen), which is a
-     WebAssembly toolbox we're using to optimize the built wasm file.
-
-If you see error messages while building related to a "wasm32-unknown-unknown"
-target not being installed, you should install it.
-
-If you use `rustup` this can be done for example by writing:
-```sh
-rustup target add wasm32-unknown-unknown
-```
-
-[1] The name of those scripts are not repeated in this document because of the
+The name of those scripts are not repeated in this document because of the
 fear that they may change in the future, in which case this documentation could
 easily be outdated.
+
+To be able to call those scripts, you will need to have the Rust compiler
+toolchain installed and ready to compile to WebAssembly.
+
+To do this, the easiest way would be to rely on `rustup`, a tool to install and
+update Rust toolchains:
+
+  1. Install [rustup](https://rustup.rs/)
+
+  2. Install and rely on the stable toolchain:
+     ```sh
+     rustup default stable
+     ```
+
+  3. Add the WebAssembly compiler target:
+     ```sh
+     rustup target add wasm32-unknown-unknown
+     ```
+
+That should be it!
