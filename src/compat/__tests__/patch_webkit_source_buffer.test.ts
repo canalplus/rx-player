@@ -22,7 +22,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import EventEmitter from "../../utils/event_emitter";
-import globalScope from "../global_scope";
+import globalScope from "../../utils/global_scope";
 import patchWebkitSourceBuffer from "../patch_webkit_source_buffer";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

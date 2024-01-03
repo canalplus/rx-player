@@ -1,4 +1,3 @@
-import { IPlayerError } from "../public_types";
 import getFuzzedDelay from "./get_fuzzed_delay";
 import isNullOrUndefined from "./is_null_or_undefined";
 import sleep from "./sleep";
@@ -90,6 +89,6 @@ export interface IBackoffOptions {
   maxDelay : number;
   totalRetry : number;
   shouldRetry? : (error : unknown) => boolean;
-  errorSelector? : (error : unknown, retryCount : number) => Error | IPlayerError;
+  errorSelector? : (error : unknown, retryCount : number) => Error;
   onRetry? : (error : unknown, retryCount : number) => void;
 }

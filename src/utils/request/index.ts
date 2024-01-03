@@ -19,6 +19,11 @@ import fetchRequest, {
   IFetchedDataObject,
   IFetchedStreamComplete,
 } from "./fetch";
+import RequestError, {
+  RequestErrorTypes,
+  ISerializedRequestError,
+  IRequestErrorType,
+} from "./request_error";
 import xhr, {
   IRequestOptions,
   IProgressInfo,
@@ -35,4 +40,9 @@ export {
   IRequestOptions,
   IRequestResponse,
   xhr,
+
+  RequestError,
+  RequestErrorTypes,
+  ISerializedRequestError,
+  IRequestErrorType,
 };

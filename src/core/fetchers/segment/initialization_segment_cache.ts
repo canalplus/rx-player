@@ -17,7 +17,7 @@
 import {
   ISegment,
   Representation,
-} from "../manifest";
+} from "../../../manifest";
 
 /**
  * Caching object used to cache initialization segments.

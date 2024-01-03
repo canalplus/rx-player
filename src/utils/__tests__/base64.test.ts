@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import globalScope from "../../compat/global_scope";
+import globalScope from "../global_scope";
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

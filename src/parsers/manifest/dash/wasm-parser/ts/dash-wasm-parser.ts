@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import globalScope from "../../../../../compat/global_scope";
 import hasWebassembly from "../../../../../compat/has_webassembly";
 import log from "../../../../../log";
-import assertUnreachable from "../../../../../utils/assert_unreachable";
+import { assertUnreachable } from "../../../../../utils/assert";
+import globalScope from "../../../../../utils/global_scope";
 import noop from "../../../../../utils/noop";
 import parseMpdIr, {
   IIrParserResponse,
