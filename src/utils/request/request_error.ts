@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { INetworkErrorType } from "./error_codes";
-
 /**
  * Internal Error used when doing requests through fetch / XHRs.
  *
@@ -27,7 +25,7 @@ import { INetworkErrorType } from "./error_codes";
  */
 export default class RequestError extends Error {
   public readonly name : "RequestError";
-  public readonly type : INetworkErrorType;
+  public readonly type : IRequestErrorType;
   public readonly message : string;
   public readonly url : string;
   public readonly status : number;
@@ -40,7 +38,7 @@ export default class RequestError extends Error {
   constructor(
     url : string,
     status : number,
-    type : INetworkErrorType
+    type : IRequestErrorType
   ) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -77,5 +75,19 @@ export default class RequestError extends Error {
 export interface ISerializedRequestError {
   url : string;
   status : number;
-  type : INetworkErrorType;
+  type : IRequestErrorType;
 }
+
+export type IRequestErrorType = "TIMEOUT" |
+                                "ERROR_EVENT" |
+                                "PARSE_ERROR" |
+                                "ERROR_HTTP_CODE";
+
+const RequestErrorTypes : Record<IRequestErrorType, IRequestErrorType> = {
+  TIMEOUT: "TIMEOUT",
+  ERROR_EVENT: "ERROR_EVENT",
+  ERROR_HTTP_CODE: "ERROR_HTTP_CODE",
+  PARSE_ERROR: "PARSE_ERROR",
+};
+
+export { RequestErrorTypes };

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import globalScope from "../../../utils/global_scope";
 import wrapInPromise from "../../../utils/wrapInPromise";
 import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
-import globalScope from "../../global_scope";
 import { ICustomMediaKeys } from "./types";
 
 interface IMozMediaKeysConstructor {
