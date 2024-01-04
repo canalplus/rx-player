@@ -15,7 +15,7 @@
  */
 
 import parseTTMLToDiv from "../../";
-import globalScope from "../../../../../../compat/global_scope";
+import globalScope from "../../../../../../utils/global_scope";
 
 const testingText = `<?xml version="1.0" encoding="UTF-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml">

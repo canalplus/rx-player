@@ -14,8 +14,32 @@
  * limitations under the License.
  */
 
-import { AssertionError } from "../errors";
 import isNullOrUndefined from "./is_null_or_undefined";
+
+/**
+ * Error due to an abnormal assertion fails.
+ *
+ * This should be an internal error which is later transformed into a documented
+ * (as part of the API) Error instance before being emitted to the application.
+ * @class AssertionError
+ * @extends Error
+ */
+export class AssertionError extends Error {
+  public readonly name : "AssertionError";
+  public readonly message : string;
+
+  /**
+   * @param {string} message
+   */
+  constructor(message : string) {
+    super();
+    // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
+    Object.setPrototypeOf(this, AssertionError.prototype);
+
+    this.name = "AssertionError";
+    this.message = message;
+  }
+}
 
 /**
  * Throw an AssertionError if the given assertion is false.
@@ -62,4 +86,32 @@ export function assertInterface<T>(
       /* eslint-enable @typescript-eslint/restrict-template-expressions */
     }
   }
+}
+
+/**
+ * TypeScript hack to make sure a code path is never taken.
+ *
+ * This can for example be used to ensure that a switch statement handle all
+ * possible cases by adding a default clause calling assertUnreachable with
+ * an argument (it doesn't matter which one).
+ *
+ * @example
+ * function parseBinary(str : "0" | "1") : number {
+ *   switch (str) {
+ *     case "0:
+ *       return 0;
+ *     case "1":
+ *       return 1;
+ *     default:
+ *       // branch never taken. If it can be, TypeScript will yell at us because
+ *       // its argument (here, `str`) is not of the right type.
+ *       assertUnreachable(str);
+ *   }
+ * }
+ * @param {*} _
+ * @throws AssertionError - Throw an AssertionError when called. If we're
+ * sufficiently strict with how we use TypeScript, this should never happen.
+ */
+export function assertUnreachable(_: never): never {
+  throw new AssertionError("Unreachable path taken");
 }

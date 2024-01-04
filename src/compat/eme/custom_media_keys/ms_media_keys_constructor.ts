@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import globalScope from "../../global_scope";
+import globalScope from "../../../utils/global_scope";
 
 export interface MSMediaKeyError {
     readonly code: number;

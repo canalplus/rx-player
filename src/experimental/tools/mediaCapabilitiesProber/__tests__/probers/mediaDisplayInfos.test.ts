@@ -23,7 +23,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 
-import globalScope from "../../../../../compat/global_scope";
+import globalScope from "../../../../../utils/global_scope";
 import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {

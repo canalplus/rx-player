@@ -16,7 +16,7 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import globalScope from "../../compat/global_scope";
+import globalScope from "../global_scope";
 import idGenerator from "../id_generator";
 
 const oldNumberDef = globalScope.Number;
