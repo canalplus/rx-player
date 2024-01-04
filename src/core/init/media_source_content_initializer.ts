@@ -55,6 +55,7 @@ import StreamOrchestrator, {
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorPlaybackObservation,
 } from "../stream";
+import { INeedsBufferFlushPayload } from "../stream/adaptation";
 import { ContentInitializer } from "./types";
 import ContentTimeBoundariesObserver from "./utils/content_time_boundaries_observer";
 import openMediaSource from "./utils/create_media_source";
@@ -523,15 +524,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        needsBufferFlush: (relativeResumingPosition? : number | undefined) => {
+        needsBufferFlush: (payload? : INeedsBufferFlushPayload) => {
           let wantedSeekingTime: number;
           const currentTime = playbackObserver.getCurrentTime();
-          if (relativeResumingPosition !== undefined) {
-            wantedSeekingTime = currentTime + relativeResumingPosition;
-          } else {
-            // in case relativeResumingPosition was omitted, we still perform
+          const relativeResumingPosition = payload?.relativeResumingPosition ?? 0;
+          const canBeApproximateSeek = Boolean(payload?.relativePosHasBeenDefaulted);
+
+          if (relativeResumingPosition === 0 && canBeApproximateSeek) {
+            // in case relativeResumingPosition is 0, we still perform
             // a tiny seek to be sure that the browser will correclty reload the video.
             wantedSeekingTime = currentTime + 0.001;
+          } else {
+            wantedSeekingTime = currentTime + relativeResumingPosition;
           }
           playbackObserver.setCurrentTime(wantedSeekingTime);
 
