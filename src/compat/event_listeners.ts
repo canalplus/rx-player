@@ -17,6 +17,7 @@
 import config from "../config";
 import log from "../log";
 import { IEventEmitter } from "../utils/event_emitter";
+import globalScope from "../utils/global_scope";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import noop from "../utils/noop";
@@ -29,7 +30,6 @@ import {
   ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
-import globalScope from "./global_scope";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 

@@ -22,7 +22,6 @@ import { utf8ToStr } from "../../utils/string_parsing";
  * From an array of EMSGs with manifest validity scheme id,
  * tells if the manifest needs to be refreshed.
  * @param {Array.<Object>} emsgs
- * @param {Object} segment
  * @param {number} manifestPublishTime
  * @returns {boolean}
  */
