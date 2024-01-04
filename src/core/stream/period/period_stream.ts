@@ -178,13 +178,14 @@ export default function PeriodStream(
        * @see createMediaSourceReloadRequester
        */
       const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-
+      let relativePosHasBeenDefaulted : boolean = false;
       let relativePosAfterSwitch : number;
       if (isFirstAdaptationSwitch) {
         relativePosAfterSwitch = 0;
       } else if (choice.relativeResumingPosition !== undefined) {
         relativePosAfterSwitch = choice.relativeResumingPosition;
       } else {
+        relativePosHasBeenDefaulted = true;
         switch (bufferType) {
           case "audio":
             relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio;
@@ -265,7 +266,8 @@ export default function PeriodStream(
           // The seek to `relativePosAfterSwitch` is only performed if strategy.type
           // is "flush-buffer" because there should be no interuption when playing in
           // with `clean-buffer` strategy
-          callbacks.needsBufferFlush(relativePosAfterSwitch);
+          callbacks.needsBufferFlush({ relativeResumingPosition: relativePosAfterSwitch,
+                                       relativePosHasBeenDefaulted });
           if (streamCanceller.isUsed()) {
             return ; // Previous callback cancelled the Stream by side-effect
           }
