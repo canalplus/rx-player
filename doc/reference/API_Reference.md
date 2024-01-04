@@ -75,7 +75,7 @@ properties, methods, events and so on.
       Allows to ask for the DRM session to persist the license.
 
     - [`keySystems[].onKeyExpiration`](../api/Decryption_Options.md#onkeyexpiration):
-      Behavior when a key has an `"internal-error"` status.
+      Behavior when a key has an `"expired"` status.
 
     - [`keySystems[].onKeyOutputRestricted`](../api/Decryption_Options.md#onkeyoutputrestricted):
       Behavior when a key has an `"output-restricted"` status.
@@ -190,6 +190,10 @@ properties, methods, events and so on.
   - [`mode`](../api/Loading_a_Content.md#mode):
     Force the content to be loaded in a `"mulithread"` mode or not.
 
+## Static methods
+
+  - [`addFeatures`](../api/RxPlayer_Features.md):
+    Add features to the RxPlayer (e.g.: multithreading, offline playback etc.).
 
 ## Methods
 
@@ -295,12 +299,6 @@ properties, methods, events and so on.
     Select audio Representations (a.k.a. qualities) that should the only one
     being played.
 
-  - [`unlockVideoRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
-    Disable a lock previously set with `lockVideoRepresentations`.
-
-  - [`unlockAudioRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
-    Disable a lock previously set with `lockAudioRepresentations`.
-
   - [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
     Get the list of currently "locked" video Representations (a.k.a. qualities).
 
@@ -391,8 +389,22 @@ properties, methods, events and so on.
   - [`isPaused`](../api/Playback_Information/isPaused.md):
     Returns `true` if the `<video>` element is paused.
 
+  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
+    Returns `true` if a content is loaded.
+
   - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
     Returns the last stored content position, in seconds.
+
+  - [`createDebugElement`](../api/Miscellaneous/Debug_Element.md):
+    Display a RxPlayer-specialized debugging element.
+
+  - [`attachWorker`](../api/Miscellaneous/MultiThreading.md):
+    Attach a WebWorker to the RxPlayer instance to then be able to load contents
+    in "multithread mode".
+
+  - [`getCurrentModeInformation`](../api/Playback_Information/getCurrentModeInformation.md):
+    Returns information on which "mode" the current content is playing
+    (e.g.: multithreading).
 
 ## Static Properties
 
@@ -446,6 +458,15 @@ properties, methods, events and so on.
   - [`textTrackChange`](../api/Player_Events.md#texttrackchange):
     The current text track changed.
 
+  - [`audioRepresentationChange`](../api/Player_Events.md#audiorepresentationchange):
+    The current audio Representation changed.
+
+  - [`videoRepresentationChange`](../api/Player_Events.md#videorepresentationchange):
+    The current video Representation changed.
+
+  - [`volumeChange`](../api/Player_Events.md#volumechange):
+    Characteristics of the currently set volume changed.
+
   - [`periodChange`](../api/Player_Events.md#periodchange):
     A new Period begins.
 
@@ -453,12 +474,15 @@ properties, methods, events and so on.
     New Periods associated to the current content are known. It is also now
     possible to change their respective tracks and qualities.
 
+  - [`play`](../api/Player_Events.md#play):
+    Emitted when playback is no longer consider paused.
+
+  - [`pause`](../api/Player_Events.md#pause):
+    Emitted when playback is now consider paused.
+
   - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
     Representations previously being locked was automatically unlocked by the
     RxPlayer.
-
-  - [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch):
-    A track previously set was automatically changed by the RxPlayer.
 
   - [`inbandEvents`](../api/Player_Events.md#inbandevents):
     Events in the media have been encountered.
@@ -468,6 +492,14 @@ properties, methods, events and so on.
 
   - [`streamEventSkip`](../api/Player_Events.md#streameventskip):
     A "stream event" was just skipped.
+
+  - [`trackUpdate`](../api/Player_Events.md#trackupdate):
+    Emitted when any of the currently selected audio, video or text track(s) is
+    changed.
+
+  - [`representationListUpdate`](../api/Player_Events.md#representationlistupdate):
+    The list of available Representations linked to a currently chosen audio,
+    video or text track changed.
 
 ## Error types
 
