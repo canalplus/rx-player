@@ -24,8 +24,9 @@ import DashWasmParser from "../../../../parsers/manifest/dash/wasm-parser";
 import { IPlayerError, ITrackType } from "../../../../public_types";
 import createDashPipelines from "../../../../transports/dash";
 import arrayFind from "../../../../utils/array_find";
-import assert from "../../../../utils/assert";
-import assertUnreachable from "../../../../utils/assert_unreachable";
+import assert, {
+  assertUnreachable,
+} from "../../../../utils/assert";
 import { ILoggerLevel } from "../../../../utils/logger";
 import { mainThreadTimestampDiff } from "../../../../utils/monotonic_timestamp";
 import objectAssign from "../../../../utils/object_assign";

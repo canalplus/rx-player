@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isWorker from "../compat/is_worker";
 import log from "../log";
+import isWorker from "../utils/is_worker";
 import { MediaSource_ } from "./browser_compatibility_types";
 
 /**

@@ -19,6 +19,8 @@
 
 import assert, {
   assertInterface,
+  assertUnreachable,
+  AssertionError,
 } from "../assert";
 
 describe("utils - assert", () => {
@@ -233,5 +235,34 @@ describe("utils - assertInterface", () => {
     };
 
     assertInterface(myObj, objIface, nameOfMyObj);
+  });
+});
+
+describe("utils - AssertionError", () => {
+  it("should format an Assertion when called", () => {
+    const error = new AssertionError("foo");
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("AssertionError");
+    expect(error.message).toBe("foo");
+  });
+});
+
+describe("utils - assertUnreachable", () => {
+  it("should throw an error if the function is called", () => {
+    let error;
+    try {
+      assertUnreachable(4 as never);
+    } catch (e : unknown) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+
+    // Impossible check to shut-up TypeScript
+    if (!(error instanceof Error)) {
+      throw new Error("Impossible: already checked it was an Error instance");
+    }
+    expect(error.message).toBe("Unreachable path taken");
+    expect(error.name).toBe("AssertionError");
   });
 });

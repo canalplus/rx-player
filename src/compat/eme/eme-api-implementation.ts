@@ -1,12 +1,12 @@
 import { MediaError } from "../../errors";
 import assert from "../../utils/assert";
+import globalScope from "../../utils/global_scope";
+import isNode from "../../utils/is_node";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { ICompatHTMLMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import { createCompatibleEventListener, IEventTargetLike } from "../event_listeners";
-import globalScope from "../global_scope";
-import isNode from "../is_node";
 import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 import getIE11MediaKeysCallbacks, {

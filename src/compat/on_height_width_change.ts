@@ -15,11 +15,11 @@
  */
 
 import log from "../log";
+import globalScope from "../utils/global_scope";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../utils/reference";
 import { CancellationSignal } from "../utils/task_canceller";
-import globalScope from "./global_scope";
 
 export interface IResolution { width : number;
                                height : number; }
