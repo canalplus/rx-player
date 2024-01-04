@@ -187,6 +187,9 @@ properties, methods, events and so on.
     Default offset to add to the segment's time to obtain a live time. This is
     in most cases not needed.
 
+  - [`mode`](../api/Loading_a_Content.md#mode):
+    Force the content to be loaded in a `"mulithread"` mode or not.
+
 
 ## Methods
 
