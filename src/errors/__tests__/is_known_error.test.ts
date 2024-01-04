@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-import AssertionError from "../assertion_error";
+import { RequestError } from "../../utils/request";
 import EncryptedMediaError from "../encrypted_media_error";
 import isKnownError from "../is_known_error";
 import MediaError from "../media_error";
 import NetworkError from "../network_error";
 import OtherError from "../other_error";
-import RequestError from "../request_error";
 
 describe("Errors - isKnownError", () => {
   it("should return false for a regular error", () => {
@@ -31,11 +30,6 @@ describe("Errors - isKnownError", () => {
   it("should return false for a RequestError", () => {
     const requestError = new RequestError("foo", 23, "TIMEOUT");
     expect(isKnownError(requestError)).toBe(false);
-  });
-
-  it("should return false for an AssertionError", () => {
-    const assertionError = new AssertionError("foo");
-    expect(isKnownError(assertionError)).toBe(false);
   });
 
   it("should return true for an OtherError", () => {

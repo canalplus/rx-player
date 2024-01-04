@@ -15,15 +15,16 @@
  */
 
 import {
+  RequestError,
+  ISerializedRequestError,
+} from "../utils/request";
+import {
   ErrorTypes,
   INetworkErrorCode,
   INetworkErrorType,
   NetworkErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";
-import RequestError, {
-  ISerializedRequestError,
-} from "./request_error";
 
 /**
  * Error linked to network interactions (requests).

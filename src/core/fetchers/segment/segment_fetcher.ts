@@ -36,7 +36,6 @@ import {
 } from "../../../transports";
 import arrayIncludes from "../../../utils/array_includes";
 import idGenerator from "../../../utils/id_generator";
-import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getTimestamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
@@ -54,7 +53,7 @@ import { IBufferType } from "../../segment_buffers";
 import CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
 import { scheduleRequestWithCdns } from "../utils/schedule_request";
-
+import InitializationSegmentCache from "./initialization_segment_cache";
 
 /** Allows to generate a unique identifies for each request. */
 const generateRequestID = idGenerator();

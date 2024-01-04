@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../manifest";
+import { Representation } from "../../../../manifest";
 import InitializationSegmentCache from "../initialization_segment_cache";
 
 const representation1 = {
