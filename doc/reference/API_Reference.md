@@ -229,6 +229,9 @@ properties, methods, events and so on.
   - [`getMaximumPosition`](../api/Basic_Methods/getMaximumPosition.md): Get the
     maximum seekable position.
 
+  - [`getLivePosition`](../api/Basic_Methods/getLivePosition.md): Get the
+    time corresponding to live content (when klaying live contents).
+
   - [`getMediaDuration`](../api/Basic_Methods/getMediaDuration.md): Get the
     duration linked to the media element.
 

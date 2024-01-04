@@ -45,6 +45,10 @@
       "displayName": "getMaximumPosition"
     },
     {
+      "path": "./getLivePosition.md",
+      "displayName": "getLivePosition"
+    },
+    {
       "path": "./getMediaDuration.md",
       "displayName": "getMediaDuration"
     },
