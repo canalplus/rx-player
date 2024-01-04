@@ -190,7 +190,6 @@ properties, methods, events and so on.
   - [`mode`](../api/Loading_a_Content.md#mode):
     Force the content to be loaded in a `"mulithread"` mode or not.
 
-
 ## Static methods
 
   - [`addFeatures`](../api/RxPlayer_Features.md):
@@ -300,12 +299,6 @@ properties, methods, events and so on.
     Select audio Representations (a.k.a. qualities) that should the only one
     being played.
 
-  - [`unlockVideoRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
-    Disable a lock previously set with `lockVideoRepresentations`.
-
-  - [`unlockAudioRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
-    Disable a lock previously set with `lockAudioRepresentations`.
-
   - [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
     Get the list of currently "locked" video Representations (a.k.a. qualities).
 
@@ -405,6 +398,14 @@ properties, methods, events and so on.
   - [`createDebugElement`](../api/Miscellaneous/Debug_Element.md):
     Display a RxPlayer-specialized debugging element.
 
+  - [`attachWorker`](../api/Miscellaneous/MultiThreading.md):
+    Attach a WebWorker to the RxPlayer instance to then be able to load contents
+    in "multithread mode".
+
+  - [`getCurrentModeInformation`](../api/Playback_Information/getCurrentModeInformation.md):
+    Returns information on which "mode" the current content is playing
+    (e.g.: multithreading).
+
 ## Static Properties
 
   - [`version`](../api/Static_Properties.md#version):
@@ -457,15 +458,21 @@ properties, methods, events and so on.
   - [`textTrackChange`](../api/Player_Events.md#texttrackchange):
     The current text track changed.
 
+  - [`audioRepresentationChange`](../api/Player_Events.md#audiorepresentationchange):
+    The current audio Representation changed.
+
+  - [`videoRepresentationChange`](../api/Player_Events.md#videorepresentationchange):
+    The current video Representation changed.
+
+  - [`volumeChange`](../api/Player_Events.md#volumechange):
+    Characteristics of the currently set volume changed.
+
   - [`periodChange`](../api/Player_Events.md#periodchange):
     A new Period begins.
 
   - [`newAvailablePeriods`](../api/Player_Events.md#newavailableperiods):
     New Periods associated to the current content are known. It is also now
     possible to change their respective tracks and qualities.
-
-  - [`volumeChange`](../api/Player_Events.md#volumechange):
-    Characteristics of the currently set volume changed.
 
   - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
     Representations previously being locked was automatically unlocked by the
@@ -488,6 +495,14 @@ properties, methods, events and so on.
 
   - [`streamEventSkip`](../api/Player_Events.md#streameventskip):
     A "stream event" was just skipped.
+
+  - [`trackUpdate`](../api/Player_Events.md#trackupdate):
+    Emitted when any of the currently selected audio, video or text track(s) is
+    changed.
+
+  - [`representationListUpdate`](../api/Player_Events.md#representationlistupdate):
+    The list of available Representations linked to a currently chosen audio,
+    video or text track changed.
 
 ## Error types
 
