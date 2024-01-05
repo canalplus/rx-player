@@ -300,7 +300,7 @@ describe("API - Public API", () => {
         expect(player.isMute()).toBe(false);
       });
 
-      it("should not true in isMute if just the volume is equal to 0", () => {
+      it("should not return true in isMute if just the volume is equal to 0", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
 
