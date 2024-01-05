@@ -347,6 +347,9 @@ export interface ITrackUpdateChoiceObject {
    * that Adaptation are allowed.
    */
   initialRepresentations : IRepresentationsChoice;
+
+  /** Relative resuming position after a track change */
+  relativeResumingPosition: number | undefined;
 }
 
 export interface IRepresentationUpdateMessage {
@@ -573,7 +576,9 @@ export type ISentError = ISerializedNetworkError |
 export interface INeedsBufferFlushWorkerMessage {
   type: WorkerMessageType.NeedsBufferFlush;
   contentId: string;
-  value: null;
+  value: { relativeResumingPosition: number;
+           relativePosHasBeenDefaulted: boolean;
+  } | undefined;
 }
 
 export interface IActivePeriodChangedWorkerMessage {
