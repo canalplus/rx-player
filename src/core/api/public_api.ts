@@ -25,7 +25,6 @@ import {
 } from "../../compat";
 /* eslint-disable-next-line max-len */
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
-import config from "../../config";
 import {
   ErrorCodes,
   ErrorTypes,
@@ -242,9 +241,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /** Store wanted configuration for the `throttleVideoBitrateWhenHidden` option. */
   private readonly _priv_throttleVideoBitrateWhenHidden : boolean;
 
-  /** Store volume when mute is called, to restore it on unmute. */
-  private _priv_mutedMemory : number;
-
   /**
    * Store last state of various values sent as events, to avoid re-triggering
    * them multiple times in a row.
@@ -341,7 +337,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             videoElement,
             wantedBufferAhead,
             maxVideoBufferSize } = parseConstructorOptions(options);
-    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
@@ -381,18 +376,28 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_throttleVideoBitrateWhenHidden = throttleVideoBitrateWhenHidden;
     this._priv_videoResolutionLimit = videoResolutionLimit;
-    this._priv_mutedMemory = DEFAULT_UNMUTED_VOLUME;
 
     this._priv_currentError = null;
     this._priv_contentInfos = null;
 
     this._priv_contentEventsMemory = {};
 
-    this._priv_setPlayerState(PLAYER_STATES.STOPPED);
-
     this._priv_reloadingMetadata = {};
 
     this._priv_lastAutoPlay = false;
+
+    this.state = PLAYER_STATES.STOPPED;
+
+    const onVolumeChange = () => {
+      this.trigger("volumeChange", {
+        volume: videoElement.volume,
+        muted: videoElement.muted,
+      });
+    };
+    videoElement.addEventListener("volumechange", onVolumeChange);
+    destroyCanceller.signal.register(() => {
+      videoElement.removeEventListener("volumechange", onVolumeChange);
+    });
   }
 
   /**
@@ -1397,36 +1402,38 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const videoElement = this.videoElement;
     if (volume !== videoElement.volume) {
       videoElement.volume = volume;
-      this.trigger("volumeChange", volume);
     }
   }
 
   /**
-   * Returns true if the volume is set to 0. false otherwise.
+   * Returns `true` if audio is currently muted.
    * @returns {Boolean}
    */
   isMute() : boolean {
-    return this.getVolume() === 0;
+    return this.videoElement?.muted === true;
   }
 
   /**
-   * Set the volume to 0 and save current one for when unmuted.
+   * Mute audio.
    */
   mute() : void {
-    this._priv_mutedMemory = this.getVolume();
-    this.setVolume(0);
+    if (this.videoElement === null) {
+      throw new Error("Disposed player");
+    }
+    if (!this.videoElement.muted) {
+      this.videoElement.muted = true;
+    }
   }
 
   /**
-   * Set the volume back to when it was when mute was last called.
-   * If the volume was set to 0, set a default volume instead (see config).
+   * Unmute audio.
    */
   unMute() : void {
-    const { DEFAULT_UNMUTED_VOLUME } = config.getCurrent();
-    const vol = this.getVolume();
-    if (vol === 0) {
-      this.setVolume(this._priv_mutedMemory === 0 ? DEFAULT_UNMUTED_VOLUME :
-                                                    this._priv_mutedMemory);
+    if (this.videoElement === null) {
+      throw new Error("Disposed player");
+    }
+    if (this.videoElement.muted) {
+      this.videoElement.muted = false;
     }
   }
 
@@ -2840,7 +2847,10 @@ interface IPublicAPIEvent {
   videoTrackChange : IVideoTrack | null;
   audioRepresentationChange : IVideoRepresentation | null;
   videoRepresentationChange : IAudioRepresentation | null;
-  volumeChange : number;
+  volumeChange : {
+    volume: number;
+    muted: boolean;
+  };
   error : IPlayerError | Error;
   warning : IPlayerError | Error;
   periodChange : IPeriodChangeEvent;

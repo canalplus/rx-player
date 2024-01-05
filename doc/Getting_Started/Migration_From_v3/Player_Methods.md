@@ -283,3 +283,20 @@ The `bitrate` property that can be retrieved as a child property of the
 `representations` property, itself found in tracks returned by the
 `getAvailableAudioTracks` and `getAudioTrack` methods, can now be
 `undefined` if unknown.
+
+### `mute` / `unMute` / `getVolume`
+
+Previously, those two methods updated the `volume` property of an
+`HTMLMediaElement` by setting it to `0` and restoring its previous value.
+
+Now, it updates the `muted` property of that same `HTMLMediaElement` without
+actually updating the `volume`, meaning that:
+
+  - The volume returned by `getVolume` won't be affected anymore when muted
+    (it would previously be set to `0` in that case).
+
+  - Likewise the `volume` property of the `HTMLMediaElement` won't be affected
+
+Note that consequently the `volumeChange` also has been updated to indicates
+both an audio volume change (through a `volume` property) and/or a
+muting/un-muting of the volume (through a `muted` property).

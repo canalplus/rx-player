@@ -16,7 +16,7 @@ function VolumeBar({
 }: {
   player: IPlayerModule
 }): JSX.Element {
-  const volume = useModuleState(player, "volume");
+  const { volume, muted } = useModuleState(player, "volumeInfo");
   const elementRef = React.useRef<HTMLDivElement>(null);
 
   const getMouseVolume = React.useCallback((event: React.MouseEvent) => {
@@ -36,7 +36,12 @@ function VolumeBar({
   const onVolumeClick = React.useCallback((evt: React.MouseEvent) => {
     const newVol = getMouseVolume(evt);
     if (newVol !== undefined) {
-      player.actions.setVolume(newVol);
+      if (newVol === 0) {
+        player.actions.mute();
+      } else {
+        player.actions.setVolume(newVol);
+        player.actions.unmute();
+      }
     }
   }, [player]);
 
@@ -48,7 +53,7 @@ function VolumeBar({
     >
       <div
         className="volume-bar-current"
-        style={{ "width": `${volume * 100}%` }}
+        style={{ "width": muted ? "0%" : `${volume * 100}%` }}
       />
     </div>
   );
