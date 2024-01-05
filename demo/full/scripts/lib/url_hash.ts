@@ -1,3 +1,8 @@
+import type {
+  ILoadVideoSettings,
+  IConstructorSettings,
+} from "../lib/defaultOptionsValues";
+
 /**
  * Parse possible information given through the "hash" part of the URL (what
  * comes after the "#" character).
@@ -59,7 +64,6 @@
  *   foobar: true
  * }
  * ```
-
  * If any invalid data is encountered, this function returns null.
  * @param {string} hashStr
  * @returns {Object|null}
@@ -134,7 +138,7 @@ export function parseHashInURL(
  * Array of {key, value} params that will be added in the URL.
  * @returns {string}
  */
-function generateLink(
+function generateURL(
   params: Array<{ value: string | boolean | undefined; key: string }>,
 ) {
   let urlString =
@@ -158,23 +162,7 @@ function generateLink(
   return urlString;
 }
 
-/**
- * Generate the URL for the given state of the player.
- * Returns null if it could not generate an URL for the current content.
- * @param {Object} state - The current ContentList state.
- * @returns {string|null}
- */
-export function generateLinkForCustomContent({
-  chosenDRMType, // DRM Choice
-  customKeySystem, // key system of a custom DRM if one
-  fallbackKeyError, // `true` if the corresponding switch is enabled
-  fallbackLicenseRequest, // `true` if the corresponding switch is enabled
-  licenseServerUrl,
-  lowLatency, // True if the low-latency switch is enabled
-  manifestURL,
-  serverCertificateUrl,
-  transport, // Choice for the transport protocol
-}: {
+export interface ContentConfig {
   chosenDRMType?: string | undefined;
   customKeySystem?: string | undefined;
   fallbackKeyError?: boolean | undefined;
@@ -184,11 +172,37 @@ export function generateLinkForCustomContent({
   manifestURL?: string | undefined;
   serverCertificateUrl?: string | undefined;
   transport?: string | undefined;
+}
+
+/**
+ * Generate the URL for the given state of the player.
+ * Returns null if it could not generate an URL for the current content.
+ * @param {Object} state - The current ContentList state.
+ * @returns {string|null}
+ */
+export function generateURLForConfig({
+  contentConfig: {
+    chosenDRMType, // DRM Choice
+    customKeySystem, // key system of a custom DRM if one
+    fallbackKeyError, // `true` if the corresponding switch is enabled
+    fallbackLicenseRequest, // `true` if the corresponding switch is enabled
+    licenseServerUrl,
+    lowLatency, // True if the low-latency switch is enabled
+    manifestURL,
+    serverCertificateUrl,
+    transport, // Choice for the transport protocol
+  },
+  loadVideoConfig,
+  playerConfig,
+}: {
+  contentConfig: ContentConfig;
+  loadVideoConfig: ILoadVideoSettings;
+  playerConfig: IConstructorSettings;
 }): string | null {
   if (!transport) {
     return null;
   }
-  return generateLink([
+  return generateURL([
     { value: lowLatency, key: "lowLatency" },
     { value: fallbackKeyError, key: "fallbackKeyError" },
     { value: fallbackLicenseRequest, key: "fallbackLicenseRequest" },
@@ -198,5 +212,7 @@ export function generateLinkForCustomContent({
     { value: customKeySystem, key: "customKeySystem" },
     { value: licenseServerUrl, key: "licenseServ" },
     { value: serverCertificateUrl, key: "certServ" },
+    { value: JSON.stringify(loadVideoConfig), key: "loadVideoConfig" },
+    { value: JSON.stringify(playerConfig), key: "playerConfig" },
   ]);
 }

@@ -7,7 +7,7 @@ import {
 } from "../lib/localStorage";
 import type { IContentInfo, IStoredContentInfo } from "../lib/localStorage";
 import parseDRMConfigurations from "../lib/parseDRMConfigurations";
-import { generateLinkForCustomContent, parseHashInURL } from "../lib/url_hash";
+import { ContentConfig, parseHashInURL } from "../lib/url_hash";
 import Button from "../components/Button";
 import Checkbox from "../components/CheckBox";
 import FocusedTextInput from "../components/FocusedInput";
@@ -47,18 +47,24 @@ const URL_DENOMINATIONS: Partial<Record<string, string>> = {
   DirectFile: "URL to the content",
 };
 
-interface IDisplayedContent {
-  contentName: string;
-  displayName: string;
-  drmInfos: IDrmInfo[] | null;
+interface IPlayableContent {
+  url: string | undefined;
+  transport: string | undefined;
   fallbackKeyError: boolean | undefined;
   fallbackLicenseRequest: boolean | undefined;
-  transport: string | undefined;
-  url: string | undefined;
+  isLowLatency: boolean;
+  drmInfos: IDrmInfo[] | null;
+}
+
+/** Contents that exist in the preset list have a name, an id, ...
+ *  Custom contents does not have such infos
+ */
+interface IDisplayedContent extends IPlayableContent {
+  contentName: string;
+  displayName: string;
   id: number | undefined;
   isDisabled: boolean;
   isLocalContent: boolean;
-  isLowLatency: boolean;
 }
 
 /**
@@ -144,18 +150,8 @@ function constructContentList(): Partial<Record<string, IDisplayedContent[]>> {
   );
 }
 
-/**
- * Generate URL with hash-string which can be used to reload the page with the
- * current stored content or demo content. This can be used for example to
- * share some content with other people.
- * Returns null if it could not generate an URL for the current content.
- * @param {Object} content - The content object as constructed in the
- * ContentList.
- * @param {Object} state - The current ContentList state.
- * @returns {string|null}
- */
-function generateLinkForContent(
-  content: IDisplayedContent,
+function generateConfigForContent(
+  content: IPlayableContent,
   {
     transportType,
     fallbackKeyError,
@@ -165,15 +161,14 @@ function generateLinkForContent(
     fallbackKeyError: boolean;
     fallbackLicenseRequest: boolean;
   },
-): string | null {
+): ContentConfig | null {
   if (content == null) {
     return null;
   }
-  const licenseServerUrl =
-    content.drmInfos && content.drmInfos[0] && content.drmInfos[0].licenseServerUrl;
-  const serverCertificateUrl =
-    content.drmInfos && content.drmInfos[0] && content.drmInfos[0].serverCertificateUrl;
-  return generateLinkForCustomContent({
+  const drmInfos = content.drmInfos && content.drmInfos[0];
+  const licenseServerUrl = drmInfos && drmInfos.licenseServerUrl;
+  const serverCertificateUrl = drmInfos && drmInfos.serverCertificateUrl;
+  return {
     chosenDRMType: content.drmInfos?.[0]?.drm,
     customKeySystem: content.drmInfos?.[0]?.customKeySystem ?? undefined,
     fallbackKeyError,
@@ -183,7 +178,7 @@ function generateLinkForContent(
     lowLatency: !!content.isLowLatency,
     serverCertificateUrl: serverCertificateUrl ?? undefined,
     transport: transportType,
-  });
+  };
 }
 
 /**
@@ -245,12 +240,42 @@ function getKeySystemsOption(
   return parseDRMConfigurations(wantedDRMs);
 }
 
+function getLoadVideoOptions(content: IPlayableContent): Promise<ILoadVideoOptions> {
+  const {
+    url,
+    transport,
+    fallbackKeyError,
+    fallbackLicenseRequest,
+    isLowLatency,
+    drmInfos,
+  } = content;
+  return new Promise((resolve, reject) => {
+    getKeySystemsOption(drmInfos ?? [], {
+      fallbackKeyError: !!fallbackKeyError,
+      fallbackLicenseRequest: !!fallbackLicenseRequest,
+    }).then(
+      (keySystems) => {
+        resolve({
+          url: url ?? "",
+          transport: transport ?? "",
+          textTrackMode: "html",
+          lowLatencyMode: isLowLatency,
+          keySystems,
+        });
+      },
+      () => reject("Could not construct key systems option"),
+    );
+  });
+}
+
 function ContentList({
   loadVideo,
+  onContentConfigChange,
   showOptions,
   onOptionToggle,
 }: {
   loadVideo: (opts: ILoadVideoOptions) => void;
+  onContentConfigChange: (config: ContentConfig) => void;
   showOptions: boolean;
   onOptionToggle: () => void;
 }): JSX.Element {
@@ -276,77 +301,23 @@ function ContentList({
   const [licenseServerUrl, setLicenseServerUrl] = React.useState("");
   const [serverCertificateUrl, setServerCertificateUrl] = React.useState("");
   const [isLowLatencyChecked, setIsLowLatencyChecked] = React.useState(false);
+  const [generatedURL, setGeneratedURL] = React.useState<null | string>(null);
 
   /**
-   * Load the given displayed content through the player.
+   * Load the given content through the player.
    * @param {Object|null} content
    */
   const loadContent = React.useCallback(
-    (content: IDisplayedContent) => {
-      const {
-        url,
-        transport,
-        fallbackKeyError,
-        fallbackLicenseRequest,
-        isLowLatency,
-        drmInfos,
-      } = content;
-
-      getKeySystemsOption(drmInfos ?? [], {
-        fallbackKeyError: !!fallbackKeyError,
-        fallbackLicenseRequest: !!fallbackLicenseRequest,
-      }).then(
-        (keySystems) => {
-          loadVideo({
-            url: url ?? "",
-            transport: transport ?? "",
-            textTrackMode: "html",
-            lowLatencyMode: isLowLatency,
-            keySystems,
-          });
+    (content: IPlayableContent) => {
+      getLoadVideoOptions(content).then(
+        (loadVideoOptions) => {
+          loadVideo(loadVideoOptions);
         },
-        () => {
-          /* eslint-disable-next-line no-console */
-          console.error("Could not construct key systems option");
-        },
+        /* eslint-disable-next-line no-console */
+        (err) => console.error(err),
       );
     },
     [loadVideo],
-  );
-
-  /**
-   * Load a custom content entered in a custom link.
-   * @param {string} url
-   * @param {Array.<Object>} drmInfos
-   */
-  const loadUrl = React.useCallback(
-    (url: string, drmInfos: IDrmInfo[]) => {
-      getKeySystemsOption(drmInfos, {
-        fallbackKeyError: !!shouldFallbackOnKeyError,
-        fallbackLicenseRequest: !!shouldFallbackOnLicenseReqError,
-      }).then(
-        (keySystems) => {
-          loadVideo({
-            url: url,
-            transport: transportType.toLowerCase(),
-            textTrackMode: "html",
-            lowLatencyMode: isLowLatencyChecked,
-            keySystems,
-          });
-        },
-        () => {
-          /* eslint-disable-next-line no-console */
-          console.error("Could not construct key systems option");
-        },
-      );
-    },
-    [
-      loadVideo,
-      shouldFallbackOnKeyError,
-      shouldFallbackOnLicenseReqError,
-      transportType,
-      isLowLatencyChecked,
-    ],
   );
 
   /**
@@ -390,7 +361,7 @@ function ContentList({
   );
 
   React.useEffect(() => {
-    const parsedHash = parseHashInURL(location.hash);
+    const parsedHash = parseHashInURL(decodeURI(location.hash));
     if (parsedHash !== null) {
       const { tech } = parsedHash;
       if (typeof tech === "string" && TRANSPORT_TYPES.includes(tech)) {
@@ -453,30 +424,6 @@ function ContentList({
     return !!(chosenContent && chosenContent.isLocalContent);
   }, [chosenContent]);
 
-  let generatedLink = null;
-  if (shouldDisplayGeneratedLink) {
-    generatedLink =
-      contentChoiceIndex === 0 || isSavingOrUpdating
-        ? generateLinkForCustomContent({
-            chosenDRMType: shouldDisplayDRMSettings ? chosenDRMType : undefined,
-            customKeySystem: shouldDisplayDRMSettings ? customKeySystem : undefined,
-            fallbackKeyError: shouldFallbackOnKeyError,
-            fallbackLicenseRequest: shouldFallbackOnLicenseReqError,
-            manifestURL: currentManifestURL,
-            licenseServerUrl: shouldDisplayDRMSettings ? licenseServerUrl : undefined,
-            lowLatency: isLowLatencyChecked,
-            serverCertificateUrl: shouldDisplayDRMSettings
-              ? serverCertificateUrl
-              : undefined,
-            transport: transportType,
-          })
-        : generateLinkForContent(chosenContent, {
-            transportType: transportType,
-            fallbackKeyError: shouldFallbackOnKeyError,
-            fallbackLicenseRequest: shouldFallbackOnLicenseReqError,
-          });
-  }
-
   const onTransportChange = React.useCallback(
     ({ value }: { value: string; index: number }) => {
       setContentChoiceIndex(0);
@@ -500,6 +447,46 @@ function ContentList({
     },
     [contentsPerType, changeSelectedContent],
   );
+  React.useEffect(() => {
+    const isCustomizedContent = contentChoiceIndex === 0 || isSavingOrUpdating;
+    let config: ContentConfig | null;
+    if (isCustomizedContent) {
+      config = {
+        chosenDRMType: shouldDisplayDRMSettings ? chosenDRMType : undefined,
+        customKeySystem: shouldDisplayDRMSettings ? customKeySystem : undefined,
+        fallbackKeyError: shouldFallbackOnKeyError,
+        fallbackLicenseRequest: shouldFallbackOnLicenseReqError,
+        manifestURL: currentManifestURL,
+        licenseServerUrl: shouldDisplayDRMSettings ? licenseServerUrl : undefined,
+        lowLatency: isLowLatencyChecked,
+        serverCertificateUrl: shouldDisplayDRMSettings ? serverCertificateUrl : undefined,
+        transport: transportType,
+      };
+    } else {
+      config = generateConfigForContent(chosenContent, {
+        transportType: transportType,
+        fallbackKeyError: shouldFallbackOnKeyError,
+        fallbackLicenseRequest: shouldFallbackOnLicenseReqError,
+      });
+    }
+    if (config !== null) {
+      onContentConfigChange(config);
+    }
+  }, [
+    contentChoiceIndex,
+    isSavingOrUpdating,
+    shouldDisplayDRMSettings,
+    chosenDRMType,
+    customKeySystem,
+    shouldFallbackOnKeyError,
+    shouldFallbackOnLicenseReqError,
+    currentManifestURL,
+    licenseServerUrl,
+    isLowLatencyChecked,
+    serverCertificateUrl,
+    transportType,
+    chosenContent,
+  ]);
 
   const onContentChoiceChange = React.useCallback(
     ({ index }: { index: number }): void => {
@@ -510,19 +497,27 @@ function ContentList({
   );
 
   const onClickLoad = () => {
+    let content: IPlayableContent;
     if (contentChoiceIndex === 0) {
-      const drmInfos = [
-        {
-          licenseServerUrl,
-          serverCertificateUrl,
-          drm: chosenDRMType,
-          customKeySystem,
-        },
-      ];
-      loadUrl(currentManifestURL, drmInfos);
+      content = {
+        url: currentManifestURL,
+        transport: transportType.toLowerCase(),
+        fallbackKeyError: !!shouldFallbackOnKeyError,
+        fallbackLicenseRequest: !!shouldFallbackOnLicenseReqError,
+        isLowLatency: isLowLatencyChecked,
+        drmInfos: [
+          {
+            licenseServerUrl,
+            serverCertificateUrl,
+            drm: chosenDRMType,
+            customKeySystem,
+          },
+        ],
+      };
     } else {
-      loadContent(contentsToSelect[contentChoiceIndex]);
+      content = contentsToSelect[contentChoiceIndex];
     }
+    loadContent(content);
   };
 
   const saveCurrentContent = () => {
@@ -682,7 +677,7 @@ function ContentList({
   return (
     <div className="choice-inputs-wrapper">
       <span className={"generated-url" + (shouldDisplayGeneratedLink ? " enabled" : "")}>
-        {shouldDisplayGeneratedLink ? <GeneratedLinkURL url={generatedLink} /> : null}
+        {shouldDisplayGeneratedLink ? <GeneratedLinkURL url={generatedURL} /> : null}
       </span>
       <div className="content-inputs">
         <div className="content-inputs-selects">

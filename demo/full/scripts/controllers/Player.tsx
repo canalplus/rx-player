@@ -17,6 +17,7 @@ import type {
   ILoadVideoOptions,
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
+import { ContentConfig, generateURLForConfig, parseHashInURL } from "../lib/url_hash";
 
 const { useCallback, useEffect, useRef, useState } = React;
 
@@ -52,6 +53,8 @@ function Player(): JSX.Element {
   const textTrackElementRef = useRef<HTMLDivElement>(null);
   const debugElementRef = useRef<HTMLDivElement>(null);
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
+  const [contentConfig, setContentConfig] =
+    React.useState<null | ContentConfig>(null);
 
   const onOptionToggle = useCallback(() => {
     setShowOptions((prevState) => !prevState);
@@ -254,11 +257,54 @@ function Player(): JSX.Element {
     [playerModule],
   );
 
+  const handleContentConfigChange = useCallback(
+    (contentConfigArg: ContentConfig) => {
+      setContentConfig(contentConfigArg);
+    }, []);
+
+  const generatedURL = React.useMemo<null | string >(() => {
+    if (contentConfig === null) {
+      return null;
+    }
+    return generateURLForConfig({
+      contentConfig,
+      loadVideoConfig: loadVideoOpts,
+      playerConfig: playerOpts
+    });
+  }, [contentConfig, loadVideoOpts, playerOpts]);
+
+  React.useEffect(() => {
+    if (generatedURL) {
+      window.location.href = generatedURL;
+    }
+  }, [generatedURL]);
+
+  React.useEffect(() => {
+    const parsedHash = parseHashInURL(decodeURI(location.hash));
+    if (parsedHash !== null) {
+      const { loadVideoConfig , playerConfig } = parsedHash;
+      if (typeof loadVideoConfig === "string") {
+        // maybe we want to check the shape of the object to
+        // be error prone instead of casting?
+        setLoadVideoOpts(JSON.parse(loadVideoConfig) as
+        ILoadVideoSettings);
+      }
+
+      if (typeof playerConfig === "string") {
+        // maybe we want to check the shape of the object to
+        // be error prone instead of casting?
+        setPlayerOpts(JSON.parse(playerConfig) as
+        IConstructorSettings);
+      }
+    }
+  }, []);
+
   return (
     <section className="video-player-section">
       <div className="video-player-content">
         <ContentList
           loadVideo={startContent}
+          onContentConfigChange={handleContentConfigChange}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
         />
