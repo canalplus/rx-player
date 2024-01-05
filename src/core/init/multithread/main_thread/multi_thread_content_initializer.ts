@@ -545,7 +545,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const currentTime = mediaElement.currentTime;
           const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
-          const canBeApproximateSeek = Boolean(msgData.value?.relativePosHasBeenDefaulted);
+          const canBeApproximateSeek = Boolean(
+            msgData.value?.relativePosHasBeenDefaulted
+          );
           let wantedSeekingTime: number;
 
           if (relativeResumingPosition === 0 && canBeApproximateSeek) {

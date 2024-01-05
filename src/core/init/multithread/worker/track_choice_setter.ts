@@ -119,8 +119,6 @@ export default class TrackChoiceSetter {
       ref.trackReference.setValue({
         adaptationId: choice.adaptationId,
         switchingMode: choice.switchingMode,
-        // TODO
-        relativeResumingPosition: undefined,
         representations: ref.representations,
         relativeResumingPosition: choice.relativeResumingPosition,
       });
