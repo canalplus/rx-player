@@ -576,7 +576,9 @@ export type ISentError = ISerializedNetworkError |
 export interface INeedsBufferFlushWorkerMessage {
   type: WorkerMessageType.NeedsBufferFlush;
   contentId: string;
-  value: { relativeResumingPosition: number | undefined };
+  value: { relativeResumingPosition: number;
+           relativePosHasBeenDefaulted: boolean;
+  } | undefined;
 }
 
 export interface IActivePeriodChangedWorkerMessage {

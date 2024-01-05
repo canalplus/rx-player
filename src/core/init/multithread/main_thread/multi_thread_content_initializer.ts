@@ -544,13 +544,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           const currentTime = mediaElement.currentTime;
-          const relativeResumingPosition = msgData.value.relativeResumingPosition;
+          const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
+          const canBeApproximateSeek = Boolean(msgData.value?.relativePosHasBeenDefaulted);
           let wantedSeekingTime: number;
 
-          if (relativeResumingPosition !== undefined) {
-            wantedSeekingTime = currentTime + relativeResumingPosition;
-          } else {
+          if (relativeResumingPosition === 0 && canBeApproximateSeek) {
+            // in case relativeResumingPosition is 0, we still perform
+            // a tiny seek to be sure that the browser will correclty reload the video.
             wantedSeekingTime = currentTime + 0.001;
+          } else {
+            wantedSeekingTime = currentTime + relativeResumingPosition;
           }
           playbackObserver.setCurrentTime(wantedSeekingTime);
           break;
