@@ -108,8 +108,8 @@ export interface IWaitingMediaSourceReloadPayload {
 export interface INeedsBufferFlushPayload {
   /** Relative resuming position after a track change */
   relativeResumingPosition : number;
-  /** `true` if the user manually set relativeResumingPosition value.
-   *  `false` if the API assigned a default value to relativeResumingPosition.
+  /** `false` if the user manually set relativeResumingPosition value.
+   *  `true` if the API assigned a default value to relativeResumingPosition.
    *  This setting allows to respect exactly the specified relativeResumingPosition
    *  that has been set by the user, while still providing the flexibility to modify it
    *  for slight adjustments when needed if it was defaulted by the API."
