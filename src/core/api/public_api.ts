@@ -1406,7 +1406,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Returns `true` if the audio volume is currently muted.
+   * Returns `true` if audio is currently muted.
    * @returns {Boolean}
    */
   isMute() : boolean {
@@ -1414,7 +1414,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Mute the audio volume.
+   * Mute audio.
    */
   mute() : void {
     if (this.videoElement === null) {
@@ -1426,7 +1426,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Unmute the audio volume.
+   * Unmute audio.
    */
   unMute() : void {
     if (this.videoElement === null) {
