@@ -116,6 +116,29 @@ rxPlayer.setAudioTrack({
 });
 ```
 
+### Changing the resuming position after an audio track change
+
+In scenarios where a change in media disrupts continuous playback, you can leverage the `relativeResumingPosition` option to set a rewind duration, such as 5 seconds, to revisit the content that might have been missed by users.
+This can happen when there's a language switch midway through a sentence, for instance, impacting user understanding.
+
+The `relativeResumingPosition` is defined as the offset in seconds between the resuming position and the currrent position.
+A negative number will seek back and a positive number will seek forward.
+
+<div class="note">
+The <code>relativeResumingPosition</code> has no effect if the playback doesn't need to be interrupted
+by the track change.
+For example, this occurs when `switchingMode` is set to "seamless", when the track change affect 
+a future period, when a track is initially set, and in some other cases.
+</div>
+
+```js
+// the player will seek 5 seconds back after the audio track change.
+rxPlayer.setAudioTrack({
+  trackId: [audioTrackId],
+  relativeResumingPosition: -5,
+  switchingMode: "direct",
+});
+```
 
 ### Selecting only some Representations in the new audio track
 
@@ -209,6 +232,7 @@ player.setAudioTrack({
   periodId,
   switchingMode,
   lockedRepresentations,
+  relativeResumingPosition,
 });
 ```
 
@@ -232,3 +256,6 @@ player.setAudioTrack({
          Representations' id you wish to "lock" when switching to the new track.
          More information [in the corresponding documentation
          page](../Representation_Selection/lockAudioVideoRepresentations.md).
+
+       - `relativeResumingPosition`  (`string|undefined`): The offset in seconds to apply to the
+         current position to get the new position after resuming playback.

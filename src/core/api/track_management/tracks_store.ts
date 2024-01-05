@@ -539,18 +539,27 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * locked after switchingMode to that track.
    * `null` if no Audio Representation should be locked.
    */
-  public setAudioTrack(
-    periodObj : ITSPeriodObject,
-    wantedId : string,
-    switchingMode : IAudioTrackSwitchingMode | undefined,
-    reprsToLock : string[] | null
-  ) : void {
-    return this._setAudioOrTextTrack("audio",
-                                     periodObj,
-                                     wantedId,
-                                     switchingMode ??
-                                       this._defaultAudioTrackSwitchingMode,
-                                     reprsToLock);
+  public setAudioTrack(payload: {
+    periodRef : ITSPeriodObject;
+    trackId : string;
+    switchingMode : IAudioTrackSwitchingMode | undefined;
+    lockedRepresentations : string[] | null;
+    relativeResumingPosition : number | undefined;
+  }) : void {
+    const { periodRef,
+            trackId,
+            switchingMode,
+            lockedRepresentations,
+            relativeResumingPosition } = payload;
+    return this._setAudioOrTextTrack(
+      {
+        bufferType: "audio",
+        periodRef,
+        trackId,
+        switchingMode: switchingMode ?? this._defaultAudioTrackSwitchingMode,
+        reprsToLock: lockedRepresentations,
+        relativeResumingPosition,
+      });
   }
 
   /**
@@ -559,7 +568,15 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @param {string} wantedId - adaptation id of the wanted track.
    */
   public setTextTrack(periodObj : ITSPeriodObject, wantedId : string) : void {
-    return this._setAudioOrTextTrack("text", periodObj, wantedId, "direct", null);
+    return this._setAudioOrTextTrack(
+      {
+        bufferType: "text",
+        periodRef: periodObj,
+        trackId: wantedId,
+        switchingMode: "direct",
+        reprsToLock: null,
+        relativeResumingPosition: undefined,
+      });
   }
 
   /**
@@ -572,22 +589,30 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * locked after switchingMode to that track.
    * `null` if no Audio Representation should be locked.
    */
-  private _setAudioOrTextTrack(
-    bufferType : "audio" | "text",
-    periodObj : ITSPeriodObject,
-    wantedId : string,
-    switchingMode : IAudioTrackSwitchingMode,
-    reprsToLock : string[] | null
-  ) : void {
-    const period = periodObj.period;
+  private _setAudioOrTextTrack({
+    bufferType,
+    periodRef,
+    trackId,
+    switchingMode,
+    reprsToLock,
+    relativeResumingPosition,
+  }: {
+    bufferType : "audio" | "text";
+    periodRef : ITSPeriodObject;
+    trackId : string;
+    switchingMode : IAudioTrackSwitchingMode;
+    reprsToLock : string[] | null;
+    relativeResumingPosition : number | undefined;
+  }) : void {
+    const period = periodRef.period;
     const wantedAdaptation = arrayFind(period.getSupportedAdaptations(bufferType),
-                                       ({ id }) => id === wantedId);
+                                       ({ id }) => id === trackId);
 
     if (wantedAdaptation === undefined) {
       throw new Error(`Wanted ${bufferType} track not found.`);
     }
 
-    const typeInfo = periodObj[bufferType];
+    const typeInfo = periodRef[bufferType];
     let lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
     if (reprsToLock === null) {
       lockedRepresentations = new SharedReference<IRepresentationsChoice | null>(null);
@@ -605,7 +630,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
     const storedSettings = { adaptation: wantedAdaptation,
                              switchingMode,
-                             lockedRepresentations };
+                             lockedRepresentations,
+                             relativeResumingPosition };
     typeInfo.storedSettings = storedSettings;
     this.trigger("trackUpdate", { period: toExposedPeriod(period),
                                   trackType: bufferType,
@@ -635,33 +661,40 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * locked after switchingMode to that track.
    * `null` if no Video Representation should be locked.
    */
-  public setVideoTrack(
-    periodObj : ITSPeriodObject,
-    wantedId : string,
-    switchingMode : IVideoTrackSwitchingMode | undefined,
-    reprsToLock : string[]| null
-  ) : void {
-    const period = periodObj.period;
+  public setVideoTrack(payload: {
+    periodRef : ITSPeriodObject;
+    trackId : string;
+    switchingMode : IVideoTrackSwitchingMode | undefined;
+    lockedRepresentations : string[]| null;
+    relativeResumingPosition : number | undefined;
+  }) : void {
+
+    const { periodRef,
+            trackId,
+            switchingMode,
+            lockedRepresentations,
+            relativeResumingPosition } = payload;
+    const period = periodRef.period;
     const wantedAdaptation = arrayFind(period.getSupportedAdaptations("video"),
-                                       ({ id }) => id === wantedId);
+                                       ({ id }) => id === trackId);
 
     if (wantedAdaptation === undefined) {
       throw new Error("Wanted video track not found.");
     }
 
     const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
-    const typeInfo = periodObj.video;
+    const typeInfo = periodRef.video;
     const newAdaptation = getRightVideoTrack(wantedAdaptation,
                                              this._isTrickModeTrackEnabled);
 
-    let lockedRepresentations;
-    if (reprsToLock === null) {
-      lockedRepresentations = new SharedReference<IRepresentationsChoice | null>(null);
+    let lockedRepresentationsRef;
+    if (lockedRepresentations === null) {
+      lockedRepresentationsRef = new SharedReference<IRepresentationsChoice | null>(null);
     } else {
       const representationsToLock = this._getRepresentationsToLock(wantedAdaptation,
-                                                                   reprsToLock);
+                                                                   lockedRepresentations);
       const repSwitchingMode = DEFAULT_VIDEO_TRACK_SWITCHING_MODE;
-      lockedRepresentations = new SharedReference<IRepresentationsChoice | null>({
+      lockedRepresentationsRef = new SharedReference<IRepresentationsChoice | null>({
         representations: representationsToLock,
         switchingMode: repSwitchingMode,
       });
@@ -671,7 +704,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                              switchingMode: switchingMode ??
                                             DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
                              adaptation: newAdaptation,
-                             lockedRepresentations };
+                             relativeResumingPosition,
+                             lockedRepresentations: lockedRepresentationsRef };
     typeInfo.storedSettings = storedSettings;
     this.trigger("trackUpdate", { period: toExposedPeriod(period),
                                   trackType: "video",
