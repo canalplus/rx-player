@@ -191,7 +191,7 @@ describe("initial idle state", () => {
     });
 
     describe("mute/unMute/isMute", () => {
-      it("should set the volume to 0 in mute by default", () => {
+      it("should not update the volume when calling mute", () => {
         const videoElement = player.getVideoElement();
         if (videoElement.muted) {
           videoElement.muted = false;
@@ -210,7 +210,7 @@ describe("initial idle state", () => {
         expect(videoElement.muted).to.equal(false);
       });
 
-      it("should unmute the volume at the previous value in unMute by default", () => {
+      it("should unmute at the previous value in unMute by default", () => {
         // back to a "normal" state.
         player.unMute();
         const videoElement = player.getVideoElement();
