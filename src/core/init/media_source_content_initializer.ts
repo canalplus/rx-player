@@ -55,6 +55,7 @@ import StreamOrchestrator, {
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorPlaybackObservation,
 } from "../stream";
+import { INeedsBufferFlushPayload } from "../stream/adaptation";
 import { ContentInitializer } from "./types";
 import ContentTimeBoundariesObserver from "./utils/content_time_boundaries_observer";
 import openMediaSource from "./utils/create_media_source";
@@ -523,9 +524,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
       return {
-        needsBufferFlush: () => {
-          const seekedTime = mediaElement.currentTime + 0.001;
-          playbackObserver.setCurrentTime(seekedTime);
+        needsBufferFlush: (payload? : INeedsBufferFlushPayload) => {
+          let wantedSeekingTime: number;
+          const currentTime = playbackObserver.getCurrentTime();
+          const relativeResumingPosition = payload?.relativeResumingPosition ?? 0;
+          const canBeApproximateSeek = Boolean(payload?.relativePosHasBeenDefaulted);
+
+          if (relativeResumingPosition === 0 && canBeApproximateSeek) {
+            // in case relativeResumingPosition is 0, we still perform
+            // a tiny seek to be sure that the browser will correclty reload the video.
+            wantedSeekingTime = currentTime + 0.001;
+          } else {
+            wantedSeekingTime = currentTime + relativeResumingPosition;
+          }
+          playbackObserver.setCurrentTime(wantedSeekingTime);
 
           // Seek again once data begins to be buffered.
           // This is sadly necessary on some browsers to avoid decoding
@@ -546,7 +558,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               // Data is buffered around the current position
               obs.currentRange !== null ||
               // Or, for whatever reason, we have no buffer but we're already advancing
-              obs.position.getPolled() > seekedTime + 0.1
+              obs.position.getPolled() > wantedSeekingTime + 0.1
             ) {
               stopListening();
               playbackObserver.setCurrentTime(obs.position.getWanted() + 0.001);

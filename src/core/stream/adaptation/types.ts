@@ -47,7 +47,7 @@ export interface IAdaptationStreamCallbacks
    * Generally flushing/refreshing low-level buffers can be performed simply by
    * performing a very small seek.
    */
-  needsBufferFlush() : void;
+  needsBufferFlush(payload?: INeedsBufferFlushPayload) : void;
 }
 
 /** Payload for the `bitrateEstimateChange` callback. */
@@ -103,6 +103,18 @@ export interface IWaitingMediaSourceReloadPayload {
    *     Period's end.
    */
   stayInPeriod : boolean;
+}
+
+export interface INeedsBufferFlushPayload {
+  /** Relative resuming position after a track change */
+  relativeResumingPosition : number;
+  /** `false` if the user manually set relativeResumingPosition value.
+   *  `true` if the API assigned a default value to relativeResumingPosition.
+   *  This setting allows to respect exactly the specified relativeResumingPosition
+   *  that has been set by the user, while still providing the flexibility to modify it
+   *  for slight adjustments when needed if it was defaulted by the API."
+   */
+  relativePosHasBeenDefaulted : boolean;
 }
 
 /** Regular playback information needed by the AdaptationStream. */
@@ -218,6 +230,8 @@ export interface IAdaptationChoice {
   /** "Switching mode" in which the track switch should happen. */
   switchingMode : ITrackSwitchingMode;
 
+  /** Relative resuming position after a track change */
+  relativeResumingPosition : number | undefined;
   /**
    * Shared reference allowing to indicate which Representations from
    * that Adaptation are allowed.

@@ -41,6 +41,8 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     switchingMode : ITrackSwitchingMode;
     /** Representations "locked" for this `Adaptation`. */
     representations : IReadOnlySharedReference<IRepresentationsChoice>;
+    /** Relative resuming position after a track change */
+    relativeResumingPosition: number | undefined;
   } |
   null |
   undefined>;
@@ -111,7 +113,9 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     this._updateToken = false;
     this._adaptationRef.setValue({ adaptation: initialTrackInfo.adaptation,
                                    switchingMode: initialTrackInfo.switchingMode,
-                                   representations: reference });
+                                   representations: reference,
+                                   relativeResumingPosition: undefined,
+    });
   }
 
   /**
@@ -133,7 +137,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       this._adaptationRef.setValue(null);
       return;
     }
-    const { adaptation, switchingMode } = newTrackInfo;
+    const { adaptation, switchingMode, relativeResumingPosition } = newTrackInfo;
     this._canceller.cancel();
     this._canceller = new TaskCanceller();
     const reference = this._constructLockedRepresentationsReference(newTrackInfo);
@@ -144,7 +148,8 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     this._updateToken = false;
     this._adaptationRef.setValue({ adaptation,
                                    switchingMode,
-                                   representations: reference });
+                                   representations: reference,
+                                   relativeResumingPosition });
   }
 
   /**
@@ -255,6 +260,8 @@ export interface ITrackSetting {
   adaptation : Adaptation;
   /** "Switching mode" in which the track switch should happen. */
   switchingMode : ITrackSwitchingMode;
+  /** Relative resuming position after a track change */
+  relativeResumingPosition? : number | undefined;
   /**
    * Contains the last locked `Representation`s for this `Adaptation` wanted
    * by the user.

@@ -10,6 +10,7 @@
   - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
   - add `connectionTimeout` property to the `requestConfig` `loadVideo` option for both the manifest and segment requests to set a timeout just linked to HTTP connection establishment [#1319]
   - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
+  - Add `relativeResumingPosition` property to the `setVideoTrack`and `setAudioTrack` options.
 
 ### Bug fixes
 
