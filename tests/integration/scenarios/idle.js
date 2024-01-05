@@ -191,7 +191,7 @@ describe("initial idle state", () => {
     });
 
     describe("mute/unMute/isMute", () => {
-      it("should set the volume to 0 in mute by default", () => {
+      it("should not update the volume when calling mute", () => {
         const videoElement = player.getVideoElement();
         if (videoElement.muted) {
           videoElement.muted = false;
@@ -199,15 +199,18 @@ describe("initial idle state", () => {
         player.setVolume(1);
 
         expect(player.mute()).to.equal(undefined);
-        expect(player.getVolume()).to.equal(0);
-        expect(videoElement.volume).to.equal(0);
-        expect(videoElement.muted).to.equal(false);
+        expect(player.getVolume()).to.equal(1);
+        expect(videoElement.volume).to.equal(1);
+        expect(videoElement.muted).to.equal(true);
         expect(player.isMute()).to.equal(true);
         player.unMute();
         expect(player.isMute()).to.equal(false);
+        expect(player.getVolume()).to.equal(1);
+        expect(videoElement.volume).to.equal(1);
+        expect(videoElement.muted).to.equal(false);
       });
 
-      it("should unmute the volume at the previous value in unMute by default", () => {
+      it("should unmute at the previous value in unMute by default", () => {
         // back to a "normal" state.
         player.unMute();
         const videoElement = player.getVideoElement();
@@ -223,42 +226,28 @@ describe("initial idle state", () => {
 
         player.mute();
         expect(player.isMute()).to.equal(true);
-        expect(player.getVolume()).to.equal(0);
-        expect(videoElement.volume).to.equal(0);
+        expect(player.getVolume()).to.equal(0.8);
+        expect(videoElement.volume).to.equal(0.8);
+        expect(videoElement.muted).to.equal(true);
 
         player.unMute();
         expect(player.isMute()).to.equal(false);
         expect(player.getVolume()).to.equal(0.8);
         expect(videoElement.volume).to.equal(0.8);
+        expect(videoElement.muted).to.equal(false);
       });
 
       it("should return false in isMute by default", () => {
         expect(player.isMute()).to.equal(false);
       });
 
-      it("should return true in isMute if the volume is equal to 0", () => {
-        const oldVolume = player.getVolume();
-
+      it("should not return true in isMute if the volume is equal to 0", () => {
         expect(player.isMute()).to.equal(false);
 
         player.setVolume(0);
-        expect(player.isMute()).to.equal(true);
-        player.setVolume(oldVolume);
         expect(player.isMute()).to.equal(false);
-
         player.mute();
         expect(player.isMute()).to.equal(true);
-        player.unMute();
-        expect(player.isMute()).to.equal(false);
-
-        player.mute();
-        expect(player.isMute()).to.equal(true);
-        player.setVolume(oldVolume);
-        expect(player.isMute()).to.equal(false);
-        player.unMute();
-        expect(player.isMute()).to.equal(false);
-
-        player.setVolume(oldVolume);
       });
     });
 
