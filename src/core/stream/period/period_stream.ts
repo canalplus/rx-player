@@ -178,11 +178,26 @@ export default function PeriodStream(
        * @see createMediaSourceReloadRequester
        */
       const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-      const relativePosAfterSwitch =
-        isFirstAdaptationSwitch ? 0 :
-        bufferType === "audio"  ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio :
-        bufferType === "video"  ? DELTA_POSITION_AFTER_RELOAD.trackSwitch.video :
-                                  DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+      let relativePosHasBeenDefaulted : boolean = false;
+      let relativePosAfterSwitch : number;
+      if (isFirstAdaptationSwitch) {
+        relativePosAfterSwitch = 0;
+      } else if (choice.relativeResumingPosition !== undefined) {
+        relativePosAfterSwitch = choice.relativeResumingPosition;
+      } else {
+        relativePosHasBeenDefaulted = true;
+        switch (bufferType) {
+          case "audio":
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.audio;
+            break;
+          case "video":
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.video;
+            break;
+          default:
+            relativePosAfterSwitch = DELTA_POSITION_AFTER_RELOAD.trackSwitch.other;
+            break;
+        }
+      }
       isFirstAdaptationSwitch = false;
 
       if (SegmentBuffersStore.isNative(bufferType) &&
@@ -236,7 +251,6 @@ export default function PeriodStream(
                                        true,
                                        streamCanceller.signal);
       }
-
       await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
       if (streamCanceller.isUsed()) {
         return; // The Stream has since been cancelled
@@ -249,7 +263,11 @@ export default function PeriodStream(
           }
         }
         if (strategy.type === "flush-buffer") {
-          callbacks.needsBufferFlush();
+          // The seek to `relativePosAfterSwitch` is only performed if strategy.type
+          // is "flush-buffer" because there should be no interuption when playing in
+          // with `clean-buffer` strategy
+          callbacks.needsBufferFlush({ relativeResumingPosition: relativePosAfterSwitch,
+                                       relativePosHasBeenDefaulted });
           if (streamCanceller.isUsed()) {
             return ; // Previous callback cancelled the Stream by side-effect
           }

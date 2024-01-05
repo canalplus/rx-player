@@ -89,8 +89,8 @@ const DEFAULT_CONFIG = {
        * "Other" mainly concern text track, where seeking back could even be
        * annoying, so that behavior has been disabled in that case.
        */
-    trackSwitch: { audio: -0.7,
-                   video: -0.1,
+    trackSwitch: { audio: 0,
+                   video: 0,
                    other: 0 },
   },
 
