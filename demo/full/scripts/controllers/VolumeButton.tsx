@@ -22,11 +22,11 @@ function VolumeButton({
   className?: string | undefined
   player: IPlayerModule;
 }) {
-  const volume = useModuleState(player, "volume");
+  const { muted, volume } = useModuleState(player, "volumeInfo");
 
   let volumeLevelClass;
   let charCode;
-  if (volume === 0) {
+  if (muted || volume === 0) {
     volumeLevelClass = "muted";
     charCode = 0xf026;
   } else if (volume <= 0.5) {
@@ -38,12 +38,17 @@ function VolumeButton({
   }
 
   const onClick = React.useCallback(() => {
-    if (volume === 0) {
+    if (muted) {
       player.actions.unmute();
     } else {
       player.actions.mute();
     }
-  }, [volume]);
+
+    if (volume === 0) {
+      player.actions.setVolume(0.3);
+    }
+  }, [volume, muted]);
+
   return (
     <Button
       ariaLabel="Mute/Unmute audio"

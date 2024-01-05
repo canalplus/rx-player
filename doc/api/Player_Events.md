@@ -891,3 +891,19 @@ was not entered, and will thus not be exited.
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+### volumeChange
+
+_payload type_: `Object`
+
+Notify about a change of audio volume and/or of muted status.
+
+The sent payload contains the following properties:
+
+  - `volume` (`number`): The currently set audio volume from `0` (silent) to
+    `1` (the loudest).
+
+  - `muted` (`boolean`): If `true`, the media element is currently muted (e.g.
+    through the `mute` RxPlayer method), meaning that audio will be silent even
+    if a volume higher than `0` is set.
+    You can remove the `muted` status by calling the `unMute` RxPlayer method.
