@@ -10,7 +10,6 @@ const defaultOptionsValues = {
     wantedBufferAhead: 30,
   },
   loadVideo: {
-    transport: "dash",
     autoPlay: true,
     defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
@@ -26,7 +25,7 @@ const defaultOptionsValues = {
     },
     onCodecSwitch: "continue",
   },
-} satisfies { player: IConstructorOptions, loadVideo: ILoadVideoOptions };
+} satisfies { player: IConstructorOptions, loadVideo: Omit<ILoadVideoOptions, "transport"> };
 
 export type IConstructorSettings = typeof defaultOptionsValues.player;
 export type ILoadVideoSettings = typeof defaultOptionsValues.loadVideo;
