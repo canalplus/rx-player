@@ -274,12 +274,16 @@ function ContentList({
   showOptions,
   onOptionToggle,
   generatedURL,
+  isReactiveURLEnabled,
+  onIsReactiveURLEnabledChange,
 }: {
   loadVideo: (opts: ILoadVideoOptions) => void;
   onContentConfigChange: (config: ContentConfig) => void;
   showOptions: boolean;
   onOptionToggle: () => void;
   generatedURL: string | null;
+  isReactiveURLEnabled: boolean;
+  onIsReactiveURLEnabledChange: (newVal: boolean) => void;
 }): JSX.Element {
   const initialContents = React.useMemo(() => {
     return constructContentList();
@@ -678,7 +682,22 @@ function ContentList({
   return (
     <div className="choice-inputs-wrapper">
       <div className={"generated-url" + (shouldDisplayGeneratedLink ? " enabled" : "")}>
-        {shouldDisplayGeneratedLink && <GeneratedLinkURL url={generatedURL} />}
+        {shouldDisplayGeneratedLink && (
+          <>
+            <div className="link-with-copy-button">
+              <GeneratedLinkURL url={generatedURL} />
+            </div>
+            <Checkbox
+              className="enable-reactive-url"
+              ariaLabel="Enable reactive url"
+              checked={isReactiveURLEnabled}
+              onChange={onIsReactiveURLEnabledChange}
+              name="enableReactiveUrl"
+            >
+              Enable reactive URL
+            </Checkbox>
+          </>
+        )}
       </div>
       <div className="content-inputs">
         <div className="content-inputs-selects">

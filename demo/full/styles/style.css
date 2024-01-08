@@ -844,21 +844,24 @@ header .right {
   z-index: 1;
   color: #3a3a3a;
   font-size: 14px;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 3px;
   display: none;
+  margin-bottom: 10px;
+}
+
+.link-with-copy-button {
+  position: relative;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  margin-bottom: 10px;
-  position: relative;
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
 }
 
 .generated-url.enabled {
   animation: grow-generated-url 0.6s;
   display: flex;
   flex-direction: row;
-  align-items: center;
 }
 
 .generated-url-link.none {
@@ -874,7 +877,7 @@ header .right {
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 10px;
-  margin-right: 60px;
+  margin-right: 60px; 
 }
 .copy-url-button {
   position: absolute;
@@ -886,8 +889,30 @@ header .right {
   background-color: white;
 }
 
+.copy-url-button:not(:disabled) {
+  color: #3a3a3a;
+}
+
 .copy-url-button:hover:not(:disabled) {
   color: #ec3655;
+}
+
+.enable-reactive-url {
+  margin-left: 8px;
+  flex-direction: row;
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+  color: #2b2e2f;
+  border: dashed 1px #d1d1d1;
+  border-radius: 3px;
+  padding-right: 5px;
+  text-align: center;
+  text-wrap: nowrap;
+}
+
+.enable-reactive-url > label:first-child {
+  margin: 5px;
 }
 
 .knob-value > select {

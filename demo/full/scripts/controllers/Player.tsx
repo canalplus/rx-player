@@ -18,6 +18,7 @@ import type {
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
 import { ContentConfig, generateURLForConfig, parseHashInURL } from "../lib/url_hash";
+import { usePrevious } from "../lib/usePrevious";
 
 const { useCallback, useEffect, useRef, useState } = React;
 
@@ -55,6 +56,12 @@ function Player(): JSX.Element {
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
   const [contentConfig, setContentConfig] =
     React.useState<null | ContentConfig>(null);
+  const [isReactiveURLEnabled, setIsReactiveURLEnabled] =
+    useState<boolean>(true);
+  const previousIsReactiveURLEnabled = usePrevious(isReactiveURLEnabled);
+  const onIsReactiveURLEnabledChange = useCallback((newVal: boolean) => {
+    setIsReactiveURLEnabled(newVal);
+  }, []);
 
   const onOptionToggle = useCallback(() => {
     setShowOptions((prevState) => !prevState);
@@ -269,20 +276,26 @@ function Player(): JSX.Element {
     return generateURLForConfig({
       contentConfig,
       loadVideoConfig: loadVideoOpts,
-      playerConfig: playerOpts
+      playerConfig: playerOpts,
+      demoConfig: { reactiveURL: isReactiveURLEnabled }
     });
-  }, [contentConfig, loadVideoOpts, playerOpts]);
+  }, [contentConfig, loadVideoOpts, playerOpts, isReactiveURLEnabled]);
 
+  const [sharableURL, setSharableURL] = React.useState("");
   React.useEffect(() => {
-    if (generatedURL) {
+    // still update URL if the last change was editing "isReactiveURLEnabled"
+    // value, so the "isReactiveURLEnabled" can be stored in the URL
+    const isEnabled = previousIsReactiveURLEnabled || isReactiveURLEnabled;
+    if (generatedURL && isEnabled) {
+      setSharableURL(generatedURL);
       window.location.href = generatedURL;
     }
-  }, [generatedURL]);
+  }, [generatedURL, isReactiveURLEnabled]);
 
   React.useEffect(() => {
     const parsedHash = parseHashInURL(decodeURI(location.hash));
     if (parsedHash !== null) {
-      const { loadVideoConfig , playerConfig } = parsedHash;
+      const { loadVideoConfig , playerConfig, disableReactiveURL } = parsedHash;
       if (typeof loadVideoConfig === "string") {
         // maybe we want to check the shape of the object to
         // be error prone instead of casting?
@@ -296,6 +309,10 @@ function Player(): JSX.Element {
         setPlayerOpts(JSON.parse(playerConfig) as
         IConstructorSettings);
       }
+
+      if (disableReactiveURL) {
+        setIsReactiveURLEnabled(false);
+      }
     }
   }, []);
 
@@ -307,7 +324,9 @@ function Player(): JSX.Element {
           onContentConfigChange={handleContentConfigChange}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
-          generatedURL={generatedURL}
+          generatedURL={sharableURL}
+          isReactiveURLEnabled={isReactiveURLEnabled}
+          onIsReactiveURLEnabledChange={onIsReactiveURLEnabledChange}
         />
         <Settings
           playerOptions={playerOpts}

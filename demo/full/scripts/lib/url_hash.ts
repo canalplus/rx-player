@@ -194,10 +194,14 @@ export function generateURLForConfig({
   },
   loadVideoConfig,
   playerConfig,
+  demoConfig: {
+    reactiveURL, // update reactively the URL when player options changes
+  },
 }: {
   contentConfig: ContentConfig;
   loadVideoConfig: ILoadVideoSettings;
   playerConfig: IConstructorSettings;
+  demoConfig: { reactiveURL: boolean };
 }): string | null {
   if (!transport) {
     return null;
@@ -214,5 +218,6 @@ export function generateURLForConfig({
     { value: serverCertificateUrl, key: "certServ" },
     { value: JSON.stringify(loadVideoConfig), key: "loadVideoConfig" },
     { value: JSON.stringify(playerConfig), key: "playerConfig" },
+    { value: !reactiveURL, key: "disableReactiveURL" },
   ]);
 }

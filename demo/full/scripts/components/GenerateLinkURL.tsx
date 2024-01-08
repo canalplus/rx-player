@@ -28,12 +28,12 @@ function GeneratedLinkURL({ url }: { url: string | undefined | null }): JSX.Elem
   }
   return (
     <>
-      <span className="generated-url-link-wrapper">
+      <div className="generated-url-link-wrapper">
         {"URL: "}
         <a className="generated-url-link" href={url}>
           {url}
         </a>
-      </span>
+      </div>
       <Button
         key={0}
         className={"copy-url-button"}
