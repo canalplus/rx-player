@@ -844,15 +844,14 @@ header .right {
   z-index: 1;
   color: #3a3a3a;
   font-size: 14px;
-  height: 21px;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 3px;
-  padding: 10px;
   display: none;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .generated-url.enabled {
@@ -870,6 +869,25 @@ header .right {
 .generated-url-link {
   color: #ec3655;
   text-decoration: none;
+}
+.generated-url-link-wrapper {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px;
+  margin-right: 60px;
+}
+.copy-url-button {
+  position: absolute;
+  height: 100%;
+  right: 0;
+  width: 60px;
+  border-radius: 3px;
+  border: solid 1px #d1d1d1;
+  background-color: white;
+}
+
+.copy-url-button:hover:not(:disabled) {
+  color: #ec3655;
 }
 
 .knob-value > select {

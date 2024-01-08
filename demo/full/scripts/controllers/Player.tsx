@@ -307,6 +307,7 @@ function Player(): JSX.Element {
           onContentConfigChange={handleContentConfigChange}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
+          generatedURL={generatedURL}
         />
         <Settings
           playerOptions={playerOpts}

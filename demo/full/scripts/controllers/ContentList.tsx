@@ -273,11 +273,13 @@ function ContentList({
   onContentConfigChange,
   showOptions,
   onOptionToggle,
+  generatedURL,
 }: {
   loadVideo: (opts: ILoadVideoOptions) => void;
   onContentConfigChange: (config: ContentConfig) => void;
   showOptions: boolean;
   onOptionToggle: () => void;
+  generatedURL: string | null;
 }): JSX.Element {
   const initialContents = React.useMemo(() => {
     return constructContentList();
@@ -301,7 +303,6 @@ function ContentList({
   const [licenseServerUrl, setLicenseServerUrl] = React.useState("");
   const [serverCertificateUrl, setServerCertificateUrl] = React.useState("");
   const [isLowLatencyChecked, setIsLowLatencyChecked] = React.useState(false);
-  const [generatedURL, setGeneratedURL] = React.useState<null | string>(null);
 
   /**
    * Load the given content through the player.
@@ -676,9 +677,9 @@ function ContentList({
 
   return (
     <div className="choice-inputs-wrapper">
-      <span className={"generated-url" + (shouldDisplayGeneratedLink ? " enabled" : "")}>
-        {shouldDisplayGeneratedLink ? <GeneratedLinkURL url={generatedURL} /> : null}
-      </span>
+      <div className={"generated-url" + (shouldDisplayGeneratedLink ? " enabled" : "")}>
+        {shouldDisplayGeneratedLink && <GeneratedLinkURL url={generatedURL} />}
+      </div>
       <div className="content-inputs">
         <div className="content-inputs-selects">
           <Select
@@ -701,35 +702,35 @@ function ContentList({
           />
         </div>
         <div className="content-inputs-middle">
-          {isCustomContent || isLocalContent
-            ? [
-                <Button
-                  key={0}
-                  className={
-                    "choice-input-button content-button enter-name-button" +
-                    (!hasURL ? " disabled" : "")
-                  }
-                  ariaLabel="Save or update custom content"
-                  onClick={onClickSaveOrUpdate}
-                  disabled={!hasURL || isSavingOrUpdating}
-                  value={
-                    isLocalContent
-                      ? isSavingOrUpdating
-                        ? "Updating..."
-                        : "Update content"
-                      : isSavingOrUpdating
-                        ? "Saving..."
-                        : "Store content"
-                  }
-                />,
-                <GenerateLinkButton
-                  key={1}
-                  enabled={shouldDisplayGeneratedLink}
-                  onClick={onClickGenerateLink}
-                />,
-              ]
-            : null}
-          {isLocalContent ? (
+          {(isCustomContent || isLocalContent) && (
+            <Button
+              key={0}
+              className={
+                "choice-input-button content-button enter-name-button" +
+                (!hasURL ? " disabled" : "")
+              }
+              ariaLabel="Save or update custom content"
+              onClick={onClickSaveOrUpdate}
+              disabled={!hasURL || isSavingOrUpdating}
+              value={
+                isLocalContent
+                  ? isSavingOrUpdating
+                    ? "Updating..."
+                    : "Update content"
+                  : isSavingOrUpdating
+                    ? "Saving..."
+                    : "Store content"
+              }
+            />
+          )}
+          {
+            <GenerateLinkButton
+              key={1}
+              enabled={shouldDisplayGeneratedLink}
+              onClick={onClickGenerateLink}
+            />
+          }
+          {isLocalContent && (
             <Button
               className="choice-input-button erase-button"
               ariaLabel="Remove custom content from saved contents"
@@ -737,7 +738,7 @@ function ContentList({
               value={String.fromCharCode(0xf1f8)}
               disabled={false}
             />
-          ) : null}
+          )}
         </div>
         <div className="choice-input-button-wrapper">
           <Checkbox
@@ -758,9 +759,9 @@ function ContentList({
           />
         </div>
       </div>
-      {isCustomContent || (isLocalContent && isSavingOrUpdating) ? (
+      {(isCustomContent || (isLocalContent && isSavingOrUpdating)) && (
         <div className="custom-input-wrapper">
-          {isSavingOrUpdating ? (
+          {isSavingOrUpdating && (
             <div className="update-control">
               <FocusedTextInput
                 className={"text-input need-to-fill"}
@@ -786,7 +787,7 @@ function ContentList({
                 />
               </div>
             </div>
-          ) : null}
+          )}
           <TextInput
             ariaLabel="Enter here the Manifest's URL"
             className="text-input"
@@ -814,10 +815,10 @@ function ContentList({
                 onChange={onChangeDisplayDRMSettings}
               />
             </span>
-            {shouldDisplayDRMSettings ? (
+            {shouldDisplayDRMSettings && (
               <div className="drm-settings">
                 <div className="drm-choice">{generateDRMButtons()}</div>
-                {isCustomDRM ? (
+                {isCustomDRM && (
                   <div>
                     <TextInput
                       ariaLabel={
@@ -829,7 +830,7 @@ function ContentList({
                       placeholder={"Key system (reverse domain name)"}
                     />
                   </div>
-                ) : null}
+                )}
                 <div>
                   <TextInput
                     ariaLabel="URL for the license server"
@@ -879,23 +880,23 @@ function ContentList({
                   </span>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
-          {transportType === "DASH" ? (
+          {transportType === "DASH" && (
             <div className="player-box player-box-load button-low-latency">
               <span className={"low-latency-checkbox custom-checkbox"}>
                 Low-Latency content
                 <Checkbox
-                  ariaLabel="Enable for a low-latency content"
-                  name="isLowLatencyChecked"
-                  checked={isLowLatencyChecked}
-                  onChange={onLowLatencyClick}
+                  ariaLabel="Should fallback on key errors"
+                  name="shouldFallbackOnKeyError"
+                  checked={shouldFallbackOnKeyError}
+                  onChange={onChangeFallbackKeyError}
                 />
               </span>
             </div>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
