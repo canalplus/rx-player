@@ -9,7 +9,7 @@ function MainComponent(): JSX.Element {
       <header>
         <div className="left">
           <h1 className="title">
-            <a href="https://github.com/canalplus/rx-player">
+            <a href="/">
               <img className="logo" alt="RxPlayer" src="./assets/logo_white.png" />
             </a>
             <a
@@ -32,6 +32,12 @@ function MainComponent(): JSX.Element {
           <a aria-label="Go to Canal+ website" href="https://canalplus.com">
             <img className="canal-logo" alt="CANAL+" src="./assets/canalp.svg" />
           </a>
+          <GitHubButton
+            href="https://github.com/canalplus/rx-player"
+            ariaLabel="Explore RxPlayer repository"
+            dataIcon="octicon-mark-github"
+            dataText=""
+          />
           <GitHubButton
             href="https://github.com/canalplus/rx-player"
             ariaLabel="Star the RxPlayer on GitHub"
