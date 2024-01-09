@@ -90,9 +90,23 @@ let isPlayStation5 = false;
   {
     isSafariMobile = true;
   } else if (
+    // the following statement check if the window.safari contains the method
+    // "pushNotification", this condition is not met when using web app from the dock
+    // on macOS, this is why we also check userAgent.
     Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 ||
     (window as ISafariWindowObject).safari?.pushNotification?.toString() ===
-      "[object SafariRemoteNotification]"
+      "[object SafariRemoteNotification]" ||
+    // browsers are lying: Chrome reports both as Chrome and Safari in user
+    // agent string, So to detect Safari we have to check for the Safari string
+    // and the absence of the Chrome string
+    // eslint-disable-next-line max-len
+    // @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent#which_part_of_the_user_agent_contains_the_information_you_are_looking_for
+    ((/Safari\/(\d+)/).test(navigator.userAgent) &&
+    // Safari should contain Version/ in userAgent
+    (/Version\/(\d+)/).test(navigator.userAgent) &&
+    (navigator.vendor?.indexOf("Apple") !== -1) &&
+    !(/Chrome\/(\d+)/).test(navigator.userAgent) &&
+    !(/Chromium\/(\d+)/).test(navigator.userAgent))
   ) {
     isSafariDesktop = true;
   }
