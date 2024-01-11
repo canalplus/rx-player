@@ -16,6 +16,8 @@
 
 import { shouldValidateMetadata } from "../../../compat";
 import { READY_STATES } from "../../../compat/browser_compatibility_types";
+/* eslint-disable-next-line max-len */
+import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
@@ -99,12 +101,24 @@ export default function performInitialSeekAndPlay(
 
   function onLoadedMetadata() {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+    // `startTime` defined as a function might depend on metadata to make its
+    // choice, such as the content duration, minimum and/or maximum position.
+    //
+    // The RxPlayer might already know those through the Manifest file for
+    // non-Directfile contents, yet only through the `HTMLMediaElement` once a
+    // a sufficient `readyState` has been reached for directfile contents.
+    // So let's divide the two possibilities here.
     const initialTime = typeof startTime === "function" ? startTime() :
                                                           startTime;
-    log.info("Init: Set initial time", initialTime);
-    playbackObserver.setCurrentTime(initialTime);
-    initialSeekPerformed.setValue(true);
-    initialSeekPerformed.finish();
+    if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    } else {
+      log.info("Init: Set initial time", initialTime);
+      playbackObserver.setCurrentTime(initialTime);
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    }
 
     if (shouldValidateMetadata() && mediaElement.duration === 0) {
       const error = new MediaError("MEDIA_ERR_NOT_LOADED_METADATA",
