@@ -70,6 +70,9 @@ let isPanasonic = false;
 /** `true` for the PlayStation 5 game console. */
 let isPlayStation5 = false;
 
+/** `true` for the Xbox game consoles. */
+let isXbox = false;
+
 ((function findCurrentBrowser() : void {
   if (isNode) {
     return ;
@@ -135,6 +138,8 @@ let isPlayStation5 = false;
     }
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     isPanasonic = true;
+  } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
+    isXbox = true;
   }
 })());
 
@@ -145,6 +150,7 @@ export {
   isFirefox,
   isPanasonic,
   isPlayStation5,
+  isXbox,
   isSafariDesktop,
   isSafariMobile,
   isSamsungBrowser,
