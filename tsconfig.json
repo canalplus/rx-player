@@ -15,7 +15,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "moduleResolution": "node",
-    "module": "esnext",
+    "module": "es6",
     "typeRoots": [
       "./src/globals.prod.d.ts",
       "./node_modules/@types"
