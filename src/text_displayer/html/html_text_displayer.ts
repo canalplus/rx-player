@@ -102,6 +102,9 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
   /**
    * If `true`, we're currently automatically refreshing subtitles in intervals
    * (and on some playback events) based on the polled current position.
+   *
+   * TODO link it to `_subtitlesIntervalCanceller`? Or just use
+   * `_subtitlesIntervalCanceller.isUsed`? To check.
    */
   private _isAutoRefreshing : boolean;
 
@@ -231,6 +234,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     this._buffered.remove(start, end);
     if (this._isAutoRefreshing && this._buffer.isEmpty()) {
       this.refreshSubtitles();
+      this._isAutoRefreshing = false;
       this._subtitlesIntervalCanceller.cancel();
       this._subtitlesIntervalCanceller = new TaskCanceller();
     }
