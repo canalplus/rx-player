@@ -15,6 +15,8 @@
  */
 
 import { shouldValidateMetadata } from "../../../compat";
+/* eslint-disable-next-line max-len */
+import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
@@ -75,6 +77,9 @@ export default function performInitialSeekAndPlay(
     resolveAutoPlay,
     rejectAutoPlay
   ) => {
+    /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
+    let hasAskedForInitialSeek = false;
+
     // `startTime` defined as a function might depend on metadata to make its
     // choice, such as the content duration, minimum and/or maximum position.
     //
@@ -83,17 +88,23 @@ export default function performInitialSeekAndPlay(
     // a sufficient `readyState` has been reached for directfile contents.
     // So let's divide the two possibilities here.
     if (!isDirectfile || typeof startTime === "number") {
-      playbackObserver.setCurrentTime(
-        typeof startTime === "number" ? startTime : startTime()
-      );
+      const initiallySeekedTime = typeof startTime === "number" ? startTime :
+                                                                  startTime();
+      if (!shouldPreventSeekingAt0Initially() || initiallySeekedTime !== 0) {
+        playbackObserver.setCurrentTime(initiallySeekedTime);
+        hasAskedForInitialSeek = true;
+      }
       waitForSeekable();
     } else {
       playbackObserver.listen((obs, stopListening) => {
         if (obs.readyState >= 1) {
           stopListening();
-          playbackObserver.setCurrentTime(
-            typeof startTime === "number" ? startTime : startTime()
-          );
+          const initiallySeekedTime = typeof startTime === "number" ? startTime :
+                                                                      startTime();
+          if (!shouldPreventSeekingAt0Initially() || initiallySeekedTime !== 0) {
+            playbackObserver.setCurrentTime(initiallySeekedTime);
+            hasAskedForInitialSeek = true;
+          }
           waitForSeekable();
         }
       }, { includeLastObservation: true, clearSignal: cancelSignal });
@@ -112,8 +123,20 @@ export default function performInitialSeekAndPlay(
      * potentially send warning if a minor issue is detected.
      */
     function waitForSeekable() {
+      /**
+       * We only want to continue to `play` when a `seek` has actually been
+       * performed (if it has been asked). This boolean keep track of if the
+       * seek arised.
+       */
+      let hasStartedSeeking = false;
       playbackObserver.listen((obs, stopListening) => {
-        if (obs.seeking === SeekingState.None || obs.readyState === 0) {
+        if (!hasStartedSeeking && obs.seeking !== SeekingState.None) {
+          hasStartedSeeking = true;
+        }
+        if (
+          (hasAskedForInitialSeek && !hasStartedSeeking) ||
+          obs.readyState === 0
+        ) {
           return;
         }
         stopListening();
