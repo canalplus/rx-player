@@ -2,7 +2,11 @@
 
 ### Changes
 
+  - `volumeChange` events are now sending both the audio volume and the muted status [#1348]
+  - `mute`/`unMute`/`isMute` now rely on the `HTMLMediaElement`'s `muted` property and not the audio volume [#1348]
   - A `representationFilter`'s advertised `codec` has now been renamed to `codecs` and is an Array when defined [#1332]
+  - `DASH_WASM` and `DEBUG_ELEMENT` are not experimental features anymore [#1339]
+  - The `parseBifThumbnails` function is not an experimental tool anymore [#1339]
 
 ### Features
 
@@ -11,7 +15,8 @@
   - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
   - add `connectionTimeout` property to the `requestConfig` `loadVideo` option for both the manifest and segment requests to set a timeout just linked to HTTP connection establishment [#1319]
   - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
-  - Add `relativeResumingPosition` property to the `setVideoTrack`and `setAudioTrack` options.
+  - Add `relativeResumingPosition` property to the `setVideoTrack`and `setAudioTrack` options [#1331]
+  - types: export type `IcompatibleKeySystem` to the public API [#1340]
 
 ### Bug fixes
 
@@ -22,6 +27,9 @@
   - Smooth: Rely on a defined `segmentLoader` when playing smooth streaming contents.
   - Avoid very rarely skipping segments which initially were too big to be pushed due to memory limitations [#1323]
   - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327]
+  -  Fix issue arising when using track APIs at the exact last possible position of a Period with no consecutive Period [#1337]
+  - Starting at the end (through a `startAt` `loadVideo` option) or reloading at the end led to the restart of the content [#1338]
+  - DRM/Safari: also perform Safari DRM work-arounds when the page is launched from the dock [#1351]
 
 ### Other improvements
 
@@ -34,6 +42,7 @@
   - Remove remaining RxPlayer dependency removing possibility of some application-side bundling errors [#1312]
   - Add cache when checking for codec support, improving performance on some devices and potentially working around some xbox bugs on long-lived pages [#1324]
   - Add exception to text Garbage collection logic to avoid unnecessarily reload text segments frequently [#1325]
+  - Avoid logging too much the buffer's content when our debugging UI or the demo is used [#1341]
   - Demo: Fix switching mode toggle [#1328]
   - Demo: Add possibility to see the debug element in the demo page
   - Demo: Fix reporting of live position in demo page [#1313]
