@@ -357,7 +357,7 @@ export default class PlaybackObserver {
     // NOTE: `this._observationRef` may be `undefined` because we might here be
     // called in the constructor when that property is not yet set.
     const previousObservation = this._observationRef === undefined ?
-      getInitialObservation(this._mediaElement, this._withMediaSource) :
+      getInitialObservation(this._mediaElement) :
       this._observationRef.getValue();
 
     /**
@@ -370,8 +370,8 @@ export default class PlaybackObserver {
     let pendingPosition: number | null = this._pendingSeek;
 
     /** Initially-polled playback observation, before adjustments. */
-    const mediaTimings = getMediaInfos(this._mediaElement, this._withMediaSource);
-
+    const mediaTimings = getMediaInfos(this._mediaElement);
+    const { buffered, readyState, position, seeking } = mediaTimings;
     if (tmpEvt === "seeking") {
       // We just began seeking.
       // Let's find out if the seek is internal or external and handle approximate
@@ -381,20 +381,20 @@ export default class PlaybackObserver {
         tmpEvt = "internal-seeking";
         const startedInternalSeekTime = this._internalSeeksIncoming.shift();
         this._expectedSeekingPosition = isSeekingApproximate ?
-          Math.max(mediaTimings.position, startedInternalSeekTime ?? 0) :
-          mediaTimings.position;
+          Math.max(position, startedInternalSeekTime ?? 0) :
+          position;
       } else {
-        this._expectedSeekingPosition = mediaTimings.position;
+        this._expectedSeekingPosition = position;
       }
-    } else if (mediaTimings.seeking) {
+    } else if (seeking) {
       // we're still seeking, this time without a "seeking" event so it's an
       // already handled one, keep track of the last wanted position we wanted
       // to seek to, to work-around devices re-seeking silently.
-      this._expectedSeekingPosition = Math.max(mediaTimings.position,
+      this._expectedSeekingPosition = Math.max(position,
                                                this._expectedSeekingPosition ?? 0);
     } else if (isSeekingApproximate &&
                this._expectedSeekingPosition !== null &&
-                 mediaTimings.position < this._expectedSeekingPosition)
+                 position < this._expectedSeekingPosition)
     {
       // We're on a target with aproximate seeking, we're not seeking anymore, but
       // we're not yet at the expected seeking position.
@@ -405,30 +405,69 @@ export default class PlaybackObserver {
       this._expectedSeekingPosition = null;
     }
 
-    if (mediaTimings.seeking &&
+    if (seeking &&
         previousObservation.seeking === SeekingState.Internal &&
         event !== "seeking")
     {
       isInternalSeeking = true;
     }
-    const rebufferingStatus = getRebufferingStatus(
+
+    // NOTE: Devices which decide to not exactly seek where we want to seek
+    // (e.g. to start on an intra video frame instead) bother us when it
+    // comes to defining rebuffering and freezing statuses, because we might
+    // for example believe that we're rebuffering whereas it's just that the
+    // device decided to bring us just before the buffered data.
+    //
+    // After many major issues on those devices (namely Tizen), we decided to
+    // just consider the position WE wanted to seek to as the real current
+    // position for buffer-starvation related metrics like the current range,
+    // the bufferGap, the rebuffering status, the freezing status...
+    //
+    // This specificity should only apply to those devices, other devices rely
+    // on the actual current position.
+    const basePosition = this._expectedSeekingPosition ?? position;
+    let currentRange;
+    let bufferGap;
+    if (!this._withMediaSource && buffered.length === 0 && readyState >= 3) {
+      // Sometimes `buffered` stay empty for directfile contents yet we are able
+      // to play. This seems to be linked to browser-side issues but has been
+      // encountered on enough platforms (Chrome desktop and PlayStation 4's
+      // WebKit for us to do something about it in the player.
+      currentRange = undefined;
+      bufferGap = undefined;
+    } else {
+      currentRange = getBufferedTimeRange(buffered, basePosition);
+      bufferGap = currentRange !== null ? currentRange.end - basePosition :
+                                          // TODO null/0 would probably be
+                                          // more appropriate
+                                          Infinity;
+    }
+
+    const rebufferingStatus = getRebufferingStatus({
       previousObservation,
-      mediaTimings,
-      tmpEvt,
-      { lowLatencyMode: this._lowLatencyMode,
-        withMediaSource: this._withMediaSource });
+      currentObservation: mediaTimings,
+      basePosition,
+      observationEvent: tmpEvt,
+      lowLatencyMode: this._lowLatencyMode,
+      withMediaSource: this._withMediaSource,
+      bufferGap,
+      currentRange,
+    });
 
-    const freezingStatus = getFreezingStatus(previousObservation, mediaTimings, tmpEvt);
+    const freezingStatus = getFreezingStatus(previousObservation,
+                                             mediaTimings,
+                                             tmpEvt,
+                                             bufferGap);
 
-    const seeking = isInternalSeeking    ? SeekingState.Internal :
-                    mediaTimings.seeking ? SeekingState.External :
-                                           SeekingState.None;
+    const seekingState = isInternalSeeking    ? SeekingState.Internal :
+                         seeking              ? SeekingState.External :
+                                                SeekingState.None;
     const timings: IPlaybackObservation = objectAssign(
       {},
       mediaTimings,
       { position: new ObservationPosition(mediaTimings.position, pendingPosition),
         event: tmpEvt,
-        seeking,
+        seeking: seekingState,
         rebuffering: rebufferingStatus,
         freezing: freezingStatus });
     if (log.hasLevel("DEBUG")) {
@@ -442,7 +481,8 @@ export default class PlaybackObserver {
                 "ended", timings.ended,
                 "paused", timings.paused,
                 "playbackRate", timings.playbackRate,
-                "readyState", timings.readyState);
+                "readyState", timings.readyState,
+                "pendingPosition", pendingPosition);
     }
     return timings;
   }
@@ -492,23 +532,8 @@ export type IPlaybackObserverEventType =
 
 /** Information recuperated on the media element on each playback observation. */
 interface IMediaInfos {
-  /**
-   * Gap between `currentTime` and the next position with un-buffered data.
-   * `Infinity` if we don't have buffered data right now.
-   * `undefined` if we cannot determine the buffer gap.
-   */
-  bufferGap : number | undefined;
   /** Value of `buffered` (buffered ranges) for the media element. */
   buffered : TimeRanges;
-  /**
-   * The buffered range we are currently playing.
-   * `null` if no range is currently available.
-   * `undefined` if we cannot tell which range is currently available.
-   */
-  currentRange : { start : number;
-                   end : number; } |
-                 null |
-                 undefined;
   /**
    * `currentTime` (position) set on the media element at the time of the
    * PlaybackObserver's measure.
@@ -605,6 +630,21 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
    * `null` if the player is not frozen.
    */
   freezing : IFreezingStatus | null;
+  /**
+   * Gap between `currentTime` and the next position with un-buffered data.
+   * `Infinity` if we don't have buffered data right now.
+   * `undefined` if we cannot determine the buffer gap.
+   */
+  bufferGap : number | undefined;
+  /**
+   * The buffered range we are currently playing.
+   * `null` if no range is currently available.
+   * `undefined` if we cannot tell which range is currently available.
+   */
+  currentRange : { start : number;
+                   end : number; } |
+                 null |
+                 undefined;
 }
 
 export type IObservationPosition = ObservationPosition;
@@ -867,10 +907,7 @@ function hasLoadedUntilTheEnd(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-function getMediaInfos(
-  mediaElement : HTMLMediaElement,
-  withMediaSource : boolean
-) : IMediaInfos {
+function getMediaInfos(mediaElement : HTMLMediaElement) : IMediaInfos {
   const { buffered,
           currentTime,
           duration,
@@ -879,26 +916,7 @@ function getMediaInfos(
           playbackRate,
           readyState,
           seeking } = mediaElement;
-
-  let currentRange;
-  let bufferGap;
-  if (!withMediaSource && buffered.length === 0 && readyState >= 3) {
-    // Sometimes `buffered` stay empty for directfile contents yet we are able
-    // to play. This seems to be linked to browser-side issues but has been
-    // encountered on enough platforms (Chrome desktop and PlayStation 4's
-    // WebKit for us to do something about it in the player.
-    currentRange = undefined;
-    bufferGap = undefined;
-  } else {
-    currentRange = getBufferedTimeRange(buffered, currentTime);
-    bufferGap = currentRange !== null ? currentRange.end - currentTime :
-                                        // TODO null/0 would probably be
-                                        // more appropriate
-                                        Infinity;
-  }
-  return { bufferGap,
-           buffered,
-           currentRange,
+  return { buffered,
            position: currentTime,
            duration,
            ended,
@@ -913,42 +931,75 @@ function getMediaInfos(
  *   - the return of the function getMediaInfos
  *   - the previous observation object.
  *
- * @param {Object} prevObservation - Previous playback observation object.
- * @param {Object} currentInfo - Current set of basic information on the
- * `HTMLMediaElement`. This does not need every single property from a regular
- * playback observation.
- * @param {string} currentEvt
  * @param {Object} options
  * @returns {Object|null}
  */
-function getRebufferingStatus(
-  prevObservation : IPlaybackObservation,
-  currentInfo : IMediaInfos,
-  currentEvt : IPlaybackObserverEventType,
-  { withMediaSource, lowLatencyMode } : IPlaybackObserverOptions
-) : IRebufferingStatus | null {
+function getRebufferingStatus({
+  previousObservation,
+  currentObservation,
+  basePosition,
+  observationEvent,
+  withMediaSource,
+  lowLatencyMode,
+  bufferGap,
+  currentRange,
+} : {
+  /** Previous Playback Observation produced. */
+  previousObservation : IPlaybackObservation;
+  /** New media information collected. */
+  currentObservation : IMediaInfos;
+  /**
+   * Position we should consider as the position we're currently playing.
+   * Might be different than the `position` advertised by `currentObservation`
+   * in cases where the device just decides to seek back a little without
+   * authorization.
+   */
+  basePosition : number;
+  /** Name of the event that triggers this new observation. */
+  observationEvent : IPlaybackObserverEventType;
+  /**
+   * If `true`, we're relying on MSE API for the current content, if `false`,
+   * we're relying on regular HTML5 video playback handled by the browser.
+   */
+  withMediaSource : boolean;
+  /** If `true`, we're playing the current content in low-latency mode. */
+  lowLatencyMode : boolean;
+  /**
+   * Amount of media data we've ahead in the current buffered range of media
+   * buffer.
+   *
+   * `Infinity` if we've no data.
+   * `undefined` if we cannot determine this due to a browser issue.
+   */
+  bufferGap: number | undefined;
+  /**
+   * Range of buffered data where the current position is (`basePosition`).
+   *
+   * `null` if we've no buffered data at the current position.
+   * `undefined` if we cannot determine this due to a browser issue.
+   */
+  currentRange: { start : number; end : number } | null | undefined;
+}) : IRebufferingStatus | null {
 
   const { REBUFFERING_GAP } = config.getCurrent();
   const { position: currentTime,
-          bufferGap,
-          currentRange,
           duration,
           paused,
           readyState,
-          ended } = currentInfo;
+          ended } = currentObservation;
 
   const { rebuffering: prevRebuffering,
           event: prevEvt,
-          position: prevTime } = prevObservation;
+          position: prevTime } = previousObservation;
 
-  const fullyLoaded = hasLoadedUntilTheEnd(currentTime,
+  const fullyLoaded = hasLoadedUntilTheEnd(basePosition,
                                            currentRange,
                                            ended,
                                            duration,
                                            lowLatencyMode);
 
   const canSwitchToRebuffering = (readyState >= 1 &&
-                                  currentEvt !== "loadedmetadata" &&
+                                  observationEvent !== "loadedmetadata" &&
                                   prevRebuffering === null &&
                                   !(fullyLoaded || ended));
 
@@ -963,7 +1014,7 @@ function getRebufferingStatus(
     if (canSwitchToRebuffering) {
       if (bufferGap === Infinity) {
         shouldRebuffer = true;
-        rebufferEndPosition = currentTime;
+        rebufferEndPosition = basePosition;
       } else if (bufferGap === undefined) {
         if (readyState < 3) {
           shouldRebuffer = true;
@@ -971,7 +1022,7 @@ function getRebufferingStatus(
         }
       } else if (bufferGap <= rebufferGap) {
         shouldRebuffer = true;
-        rebufferEndPosition = currentTime + bufferGap;
+        rebufferEndPosition = basePosition + bufferGap;
       }
     } else if (prevRebuffering !== null) {
       const resumeGap = getRebufferingEndGap(prevRebuffering, lowLatencyMode);
@@ -984,9 +1035,9 @@ function getRebufferingStatus(
       } else if (bufferGap === undefined) {
         rebufferEndPosition = undefined;
       } else if (bufferGap === Infinity) {
-        rebufferEndPosition = currentTime;
+        rebufferEndPosition = basePosition;
       } else if (bufferGap <= resumeGap) {
-        rebufferEndPosition = currentTime + bufferGap;
+        rebufferEndPosition = basePosition + bufferGap;
       }
     }
   }
@@ -998,12 +1049,13 @@ function getRebufferingStatus(
     if (canSwitchToRebuffering &&
         (
           (
+            // TODO what about when paused: e.g. when loading initially the content
             !paused &&
-            currentEvt === "timeupdate" && prevEvt === "timeupdate" &&
+            observationEvent === "timeupdate" && prevEvt === "timeupdate" &&
             currentTime === prevTime.getPolled()
           ) ||
           (
-            currentEvt === "seeking" && (
+            observationEvent === "seeking" && (
               bufferGap === Infinity || (bufferGap === undefined && readyState < 3)
             )
           )
@@ -1013,8 +1065,8 @@ function getRebufferingStatus(
     } else if (
       prevRebuffering !== null &&
       (
-        (currentEvt !== "seeking" && currentTime !== prevTime.getPolled()) ||
-        currentEvt === "canplay" ||
+        (observationEvent !== "seeking" && currentTime !== prevTime.getPolled()) ||
+        observationEvent === "canplay" ||
         (bufferGap === undefined && readyState >= 3) ||
         (
           bufferGap !== undefined && bufferGap < Infinity &&
@@ -1033,10 +1085,10 @@ function getRebufferingStatus(
     return null;
   } else if (shouldRebuffer === true || prevRebuffering !== null) {
     let reason : "seeking" | "not-ready" | "buffering" | "internal-seek";
-    if (currentEvt === "seeking" ||
+    if (observationEvent === "seeking" ||
         prevRebuffering !== null && prevRebuffering.reason === "seeking") {
       reason = "seeking";
-    } else if (currentInfo.seeking) {
+    } else if (currentObservation.seeking) {
       reason = "seeking";
     } else if (readyState === 1) {
       reason = "not-ready";
@@ -1064,12 +1116,14 @@ function getRebufferingStatus(
  * @param {Object} prevObservation
  * @param {Object} currentInfo
  * @param {string} currentEvt
+ * @param {number|undefined} bufferGap
  * @returns {Object|null}
  */
 function getFreezingStatus(
   prevObservation : IPlaybackObservation,
   currentInfo : IMediaInfos,
-  currentEvt : IPlaybackObserverEventType
+  currentEvt : IPlaybackObserverEventType,
+  bufferGap : number | undefined
 ) : IFreezingStatus | null {
   const { MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config.getCurrent();
   if (prevObservation.freezing) {
@@ -1085,8 +1139,8 @@ function getFreezingStatus(
   }
 
   return currentEvt === "timeupdate" &&
-         currentInfo.bufferGap !== undefined &&
-         currentInfo.bufferGap > MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING &&
+         bufferGap !== undefined &&
+         bufferGap > MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING &&
          !currentInfo.ended &&
          !currentInfo.paused &&
          currentInfo.readyState >= 1 &&
@@ -1229,14 +1283,10 @@ export function generateReadOnlyObserver<TSource, TDest>(
  * Generate the initial playback observation for when no event has yet been
  * emitted to lead to one.
  * @param {HTMLMediaElement} mediaElement
- * @param {boolean} withMediaSource
  * @returns {Object}
  */
-function getInitialObservation(
-  mediaElement: HTMLMediaElement,
-  withMediaSource: boolean
-) : IPlaybackObservation {
-  const mediaTimings = getMediaInfos(mediaElement, withMediaSource);
+function getInitialObservation(mediaElement: HTMLMediaElement) : IPlaybackObservation {
+  const mediaTimings = getMediaInfos(mediaElement);
   return objectAssign(mediaTimings,
                       { rebuffering: null,
                         event: "init",
