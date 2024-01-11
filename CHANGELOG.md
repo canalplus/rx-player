@@ -26,10 +26,10 @@
   - Fix import of the `LOCAL_MANIFEST` experimental feature
   - Smooth: Rely on a defined `segmentLoader` when playing smooth streaming contents.
   - Avoid very rarely skipping segments which initially were too big to be pushed due to memory limitations [#1323]
-  - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327]
-  -  Fix issue arising when using track APIs at the exact last possible position of a Period with no consecutive Period [#1337]
+  - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327, #1355]
+  - Fix issue arising when using track APIs at the exact last possible position of a Period with no consecutive Period [#1337]
   - Starting at the end (through a `startAt` `loadVideo` option) or reloading at the end led to the restart of the content [#1338]
-  - DRM/Safari: also perform Safari DRM work-arounds when the page is launched from the dock [#1351]
+  - DRM/Safari: also perform Safari DRM work-arounds when the page is launched from the dock [#1351, #1356]
 
 ### Other improvements
 
