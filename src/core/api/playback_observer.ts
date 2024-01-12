@@ -927,10 +927,7 @@ function getMediaInfos(mediaElement : HTMLMediaElement) : IMediaInfos {
 }
 
 /**
- * Infer rebuffering status of the media based on:
- *   - the return of the function getMediaInfos
- *   - the previous observation object.
- *
+ * Infer the rebuffering status.
  * @param {Object} options
  * @returns {Object|null}
  */
