@@ -15,6 +15,7 @@
  */
 
 import { shouldValidateMetadata } from "../../../compat";
+import { isSafariMobile } from "../../../compat/browser_detection";
 /* eslint-disable-next-line max-len */
 import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
@@ -80,6 +81,11 @@ export default function performInitialSeekAndPlay(
     /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
     let hasAskedForInitialSeek = false;
 
+    const performInitialSeek = (initialSeekTime: number) => {
+      playbackObserver.setCurrentTime(initialSeekTime);
+      hasAskedForInitialSeek = true;
+    };
+
     // `startTime` defined as a function might depend on metadata to make its
     // choice, such as the content duration, minimum and/or maximum position.
     //
@@ -91,8 +97,7 @@ export default function performInitialSeekAndPlay(
       const initiallySeekedTime = typeof startTime === "number" ? startTime :
                                                                   startTime();
       if (!shouldPreventSeekingAt0Initially() || initiallySeekedTime !== 0) {
-        playbackObserver.setCurrentTime(initiallySeekedTime);
-        hasAskedForInitialSeek = true;
+        performInitialSeek(initiallySeekedTime);
       }
       waitForSeekable();
     } else {
@@ -102,8 +107,16 @@ export default function performInitialSeekAndPlay(
           const initiallySeekedTime = typeof startTime === "number" ? startTime :
                                                                       startTime();
           if (!shouldPreventSeekingAt0Initially() || initiallySeekedTime !== 0) {
-            playbackObserver.setCurrentTime(initiallySeekedTime);
-            hasAskedForInitialSeek = true;
+            if (isSafariMobile) {
+              // On safari mobile (version 17.1.2) seeking too early cause the video
+              // to never buffer media data. Using setTimeout 0 defers the seek
+              // to a moment at which safari should be more able to handle a seek.
+              setTimeout(() => {
+                performInitialSeek(initiallySeekedTime);
+              }, 0);
+            } else {
+              performInitialSeek(initiallySeekedTime);
+            }
           }
           waitForSeekable();
         }
