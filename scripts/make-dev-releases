@@ -24,12 +24,21 @@
 set -e
 
 if [ $# -eq 0 ]; then
- echo "no version in argument"
- exit 1
+  read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  if [ -z "${version}" ]; then
+    echo "Please enter a valid version number"
+    exit 1
+  fi
+fi
+
+if [ $# -lt 2 ]; then
+  read -r -p "Please enter the increment number [by default: 00]: " incr
+  if [ -z "${incr}" ]; then
+    incr="00"
+  fi
 fi
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-version=$1
 date=$(date "+%Y%m%d")
 dev_branch="release/v${version}-dev.${date}00"
 canal_branch="release/v${version}-canal.${date}00"
