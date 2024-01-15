@@ -20,6 +20,7 @@ import type {
   IEmeApiImplementation,
 } from "../../compat/eme";
 import eme from "../../compat/eme";
+import { setMediaKeys } from "../../compat/eme/set_media_keys";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -33,18 +34,9 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @returns {Promise}
  */
 export function disableMediaKeys(mediaElement: HTMLMediaElement): Promise<unknown> {
+  const previousState = MediaKeysInfosStore.getState(mediaElement);
   MediaKeysInfosStore.setState(mediaElement, null);
-  return eme
-    .setMediaKeys(mediaElement, null)
-    .then(() => {
-      log.info("DRM: MediaKeys disabled with success");
-    })
-    .catch((err) => {
-      log.error(
-        "DRM: Could not disable MediaKeys",
-        err instanceof Error ? err : "Unknown Error",
-      );
-    });
+  return setMediaKeys(previousState?.emeImplementation ?? eme, mediaElement, null);
 }
 
 /**
@@ -92,12 +84,13 @@ export default async function attachMediaKeys(
     return;
   }
   log.info("DRM: Attaching MediaKeys to the media element");
-  emeImplementation
-    .setMediaKeys(mediaElement, mediaKeys)
+  return setMediaKeys(emeImplementation, mediaElement, mediaKeys)
     .then(() => {
       log.info("DRM: MediaKeys attached with success");
     })
     .catch((err) => {
+      // TODO proper error (rely on the `CREATE_MEDIA_KEYS` code or create a new
+      // one?).
       log.error(
         "DRM: Could not set MediaKeys",
         err instanceof Error ? err : "Unknown Error",
