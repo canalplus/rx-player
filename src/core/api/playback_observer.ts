@@ -469,7 +469,9 @@ export default class PlaybackObserver {
         event: tmpEvt,
         seeking: seekingState,
         rebuffering: rebufferingStatus,
-        freezing: freezingStatus });
+        freezing: freezingStatus,
+        bufferGap,
+        currentRange });
     if (log.hasLevel("DEBUG")) {
       log.debug("API: current media element state tick",
                 "event", timings.event,
