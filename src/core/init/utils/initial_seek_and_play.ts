@@ -16,6 +16,7 @@
 
 import { shouldValidateMetadata } from "../../../compat";
 import { READY_STATES } from "../../../compat/browser_compatibility_types";
+import { isSafariMobile } from "../../../compat/browser_detection";
 /* eslint-disable-next-line max-len */
 import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
@@ -65,6 +66,7 @@ export interface IInitialSeekAndPlayObject {
  * @param {number|Function} startTime
  * @param {boolean} mustAutoPlay
  * @param {Function} onWarning
+ * @param {boolean} isDirectfile
  * @param {Object} cancelSignal
  * @returns {Object}
  */
@@ -74,6 +76,7 @@ export default function performInitialSeekAndPlay(
   startTime : number|(() => number),
   mustAutoPlay : boolean,
   onWarning : (err : IPlayerError) => void,
+  isDirectfile : boolean,
   cancelSignal : CancellationSignal
 ) : IInitialSeekAndPlayObject {
   let resolveAutoPlay : (x : IInitialPlayEvent) => void;
@@ -101,6 +104,18 @@ export default function performInitialSeekAndPlay(
 
   function onLoadedMetadata() {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+
+    /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
+    let hasAskedForInitialSeek = false;
+
+    const performInitialSeek = (initialSeekTime: number) => {
+      log.info("Init: Set initial time", initialSeekTime);
+      playbackObserver.setCurrentTime(initialSeekTime);
+      hasAskedForInitialSeek = true;
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    };
+
     // `startTime` defined as a function might depend on metadata to make its
     // choice, such as the content duration, minimum and/or maximum position.
     //
@@ -113,11 +128,15 @@ export default function performInitialSeekAndPlay(
     if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
       initialSeekPerformed.setValue(true);
       initialSeekPerformed.finish();
+    } else if (isDirectfile && isSafariMobile) {
+      // On safari mobile (version 17.1.2) seeking too early cause the video
+      // to never buffer media data. Using setTimeout 0 defers the seek
+      // to a moment at which safari should be more able to handle a seek.
+      setTimeout(() => {
+        performInitialSeek(initialTime);
+      }, 0);
     } else {
-      log.info("Init: Set initial time", initialTime);
-      playbackObserver.setCurrentTime(initialTime);
-      initialSeekPerformed.setValue(true);
-      initialSeekPerformed.finish();
+      performInitialSeek(initialTime);
     }
 
     if (shouldValidateMetadata() && mediaElement.duration === 0) {
@@ -130,8 +149,19 @@ export default function performInitialSeekAndPlay(
       return ;
     }
 
+    /**
+     * We only want to continue to `play` when a `seek` has actually been
+     * performed (if it has been asked). This boolean keep track of if the
+     * seek arised.
+     */
+    let isAwaitingSeek = hasAskedForInitialSeek;
     playbackObserver.listen((observation, stopListening) => {
-      if (!observation.seeking &&
+      if (hasAskedForInitialSeek && observation.seeking) {
+        isAwaitingSeek = false;
+        return;
+      }
+      if (!isAwaitingSeek &&
+          !observation.seeking &&
           observation.rebuffering === null &&
           observation.readyState >= 1)
       {

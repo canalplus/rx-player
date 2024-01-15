@@ -212,6 +212,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       initialTime,
       autoPlay,
       (err) => this.trigger("warning", err),
+      true,
       cancelSignal
     ).autoPlayResult
       .then(() =>

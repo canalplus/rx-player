@@ -426,6 +426,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                 initialTime,
                                 autoPlay,
                                 (err) => this.trigger("warning", err),
+                                true,
                                 cancelSignal);
 
     if (cancelSignal.isCancelled()) {
