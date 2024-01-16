@@ -307,20 +307,26 @@ function ContentList({
   const [licenseServerUrl, setLicenseServerUrl] = React.useState("");
   const [serverCertificateUrl, setServerCertificateUrl] = React.useState("");
   const [isLowLatencyChecked, setIsLowLatencyChecked] = React.useState(false);
+  const [isAlreadyLoading, setIsAlreadyLoading] = React.useState(false);
 
   /**
    * Load the given content through the player.
    * @param {Object|null} content
    */
   const loadContent = React.useCallback(
-    (content: IPlayableContent) => {
-      getLoadVideoOptions(content).then(
-        (loadVideoOptions) => {
+    async (content: IPlayableContent) => {
+      if (!isAlreadyLoading) {
+        setIsAlreadyLoading(true);
+        try {
+          const loadVideoOptions = await getLoadVideoOptions(content);
           loadVideo(loadVideoOptions);
-        },
-        /* eslint-disable-next-line no-console */
-        (err) => console.error(err),
-      );
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error(err);
+        } finally {
+          setIsAlreadyLoading(false);
+        }
+      }
     },
     [loadVideo],
   );
@@ -522,7 +528,9 @@ function ContentList({
     } else {
       content = contentsToSelect[contentChoiceIndex];
     }
-    loadContent(content);
+    loadContent(content)
+      // eslint-disable-next-line no-console
+      .catch((err) => console.log(err));
   };
 
   const saveCurrentContent = () => {
