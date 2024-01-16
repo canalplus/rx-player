@@ -87,7 +87,7 @@ export default class TrackChoiceSetter {
       representations = new SharedReference<IRepresentationsChoice>(
         val.representations.getValue()
       );
-      ref.setValue(objectAssign({}, ref.getValue(), {
+      ref.setValue(objectAssign({}, val, {
         representations,
       }));
     }
