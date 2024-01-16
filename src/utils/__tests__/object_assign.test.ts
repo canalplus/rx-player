@@ -53,4 +53,17 @@ describe("utils - objectAssign", () => {
                         { c: { d: 85 } })).toBe(obj);
     expect(obj).toEqual({ a: 78, c: { d: 85 } });
   });
+
+  it("types definition should be correct", () => {
+    const obj = { a: 4, b: 5 };
+    interface Shape1 { a: number; b: number };
+    interface Shape2 { a: string; b: number };
+
+    // @ts-expect-error type is incorrect, should be an error
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const mergedObj1: Shape1 = objectAssign(obj, { a: "foo" });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const mergedObj2: Shape2 = objectAssign(obj, { a: "foo" });
+  });
 });
