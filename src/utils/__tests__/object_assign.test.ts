@@ -59,11 +59,13 @@ describe("utils - objectAssign", () => {
     interface Shape1 { a: number; b: number };
     interface Shape2 { a: string; b: number };
 
-    // @ts-expect-error type is incorrect, should be an error
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const mergedObj1: Shape1 = objectAssign(obj, { a: "foo" });
+    const mergedObj = objectAssign(obj, { a: "foo" });
+    // the intention in this test is to check typescript definitions
+    // the test would always pass in javascript, but it will show
+    // a typescript error if the typedefinition are incorrects.
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const mergedObj2: Shape2 = objectAssign(obj, { a: "foo" });
+    // @ts-expect-error result is not of Shape1, should show an error
+    expect(mergedObj).toMatchObject<Shape1>({ a: "foo", b: 5 });
+    expect(mergedObj).toMatchObject<Shape2>({ a: "foo", b: 5 });
   });
 });
