@@ -597,6 +597,13 @@ thus face several restrictions.
     a function when in the right environment (WebWorker or main thread) by
     passing it through the `Function` constructor (new Function(...)).
 
+    As the provided string will be executed, this option is sensible to attacks
+    like cross-site scripting. It is __VERY__ important to either not rely on
+    external (config, user) input at all to produce that string, or if not
+    possible to make sure that all potential inputs will lead to expected
+    behavior (an easy way of doing this for example is too only allow inputed
+    JS numbers, a whitelisted choice of properties etc.).
+
 -   As you do not control the scope nor the realm in which it is run in,
     this function should not use variables declared in its current outer
     scope, only on its declared parameters.
