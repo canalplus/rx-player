@@ -300,3 +300,29 @@ actually updating the `volume`, meaning that:
 Note that consequently the `volumeChange` also has been updated to indicates
 both an audio volume change (through a `volume` property) and/or a
 muting/un-muting of the volume (through a `muted` property).
+
+### `setVolume` / `getVolume` / `mute` / `unMute` / `isMute`
+
+In the v3, `mute`, `unMute` and `isMute` were actually respectively setting the
+media element's `volume` property to `0` (`mute`), resetting it to its previous
+value (`unMute`) and telling if the current `volume` is set to `0` (`isMute`).
+
+Now, `mute` actually set the media element's `muted` property to `true`, the
+`unMute` method set it to `false`, and the `isMute` return its current value.
+We're now doing this this way because it better reflect the HTML5 way of doing
+things and thus might be more compatible with some browser-provided features.
+
+This means that you may have to update your code to handle the fact that now
+`setVolume` and muting methods don't interact, like they did before:
+
+  1. If you before expected a `setVolume` call to automatically un-mute the
+     media, you now also may have to call `unMute` to do so.
+
+  2. If you expected `isMute` to return `true` when the current volume is set
+     to `0` (e.g. to show an icon telling that there's no volume), you now will
+     also have to check through `getVolume` if the volume is currently set to
+     `0`.
+
+  3. Likewise `getVolume` will not return `0` when muted, but the last volume
+     set through `setVolume` instead. Beware of this when showing UI volume
+     indicators to not let users believe that there are sound when muted.
