@@ -1292,7 +1292,7 @@ function getInitialObservation(mediaElement: HTMLMediaElement) : IPlaybackObserv
                         seeking: SeekingState.None,
                         position: new ObservationPosition(mediaTimings.position, null),
                         freezing: null,
-                        bufferGap: undefined,
+                        bufferGap: 0,
                         currentRange: null,
                       });
 }
