@@ -206,7 +206,7 @@ export default class ContentPreparer {
           // Remove `periods` key to reduce cost of an unnecessary manifest
           // clone.
           const snapshot = objectAssign(manifest.getMetadataSnapshot(),
-                                        { periods: undefined });
+                                        { periods: [] });
           sendMessage({
             type: WorkerMessageType.ManifestUpdate,
             contentId,

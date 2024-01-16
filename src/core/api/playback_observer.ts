@@ -1288,9 +1288,11 @@ function getInitialObservation(mediaElement: HTMLMediaElement) : IPlaybackObserv
   const mediaTimings = getMediaInfos(mediaElement);
   return objectAssign(mediaTimings,
                       { rebuffering: null,
-                        event: "init",
+                        event: "init" as const,
                         seeking: SeekingState.None,
-                        position: { last: mediaTimings.position,
-                                    pending: undefined },
-                        freezing: null });
+                        position: new ObservationPosition(mediaTimings.position, null),
+                        freezing: null,
+                        bufferGap: undefined,
+                        currentRange: null,
+                      });
 }
