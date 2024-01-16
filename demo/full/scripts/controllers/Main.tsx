@@ -17,7 +17,8 @@ function MainComponent(): JSX.Element {
             </a>
           </h1>
           <nav>
-            <a href="https://developers.canal-plus.com/rx-player/doc/Getting_Started/Welcome.html">
+            <a href={"https://developers.canal-plus.com/rx-player/doc/Getting_Started/"
+            + "Welcome.html"}>
               Getting Started
             </a>
             <a href="https://developers.canal-plus.com/rx-player/doc/api/Overview.html">

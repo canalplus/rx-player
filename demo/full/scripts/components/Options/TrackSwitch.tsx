@@ -82,7 +82,8 @@ function TrackSwitchConfig({
         </Checkbox>
         <span className="option-desc">
           {enableFastSwitching ?
-            "Fast quality switch by replacing lower qualities in the buffer by higher ones when possible." :
+            `Fast quality switch by replacing lower qualities in the buffer by higher
+             ones when possible.` :
             "Not replacing lower qualities in the buffer by an higher one when possible."}
         </span>
       </li>

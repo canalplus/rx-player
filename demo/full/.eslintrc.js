@@ -71,12 +71,12 @@ module.exports = {
     "no-case-declarations": 0,
     "no-var": 1,
     "prefer-const": 1,
-    "max-len": [1, 80, 2, {
-      "ignoreUrls": true,
-      "ignoreStrings": true,
-      "ignoreTemplateLiterals": true,
-      "ignoreRegExpLiterals": true,
-    } ],
+    "max-len": [
+      "warn",
+      {
+        "code": 90
+      }
+    ],
     "indent": [1, 2, {
       "ArrayExpression": "first",
       "ObjectExpression": "first",

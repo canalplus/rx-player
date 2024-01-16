@@ -860,7 +860,10 @@ function ContentList({
                   "encryption-checkbox custom-checkbox" +
                   (DISABLE_ENCRYPTED_CONTENT ? " disabled" : "")}
                 >
-                  {(DISABLE_ENCRYPTED_CONTENT ? "[HTTPS only] " : "") + "Encrypted content"}
+                  {(DISABLE_ENCRYPTED_CONTENT
+                    ? "[HTTPS only] "
+                    : ""
+                  ) + "Encrypted content"}
                   <Checkbox
                     ariaLabel="Enable for an encrypted content"
                     disabled={DISABLE_ENCRYPTED_CONTENT}
@@ -878,7 +881,8 @@ function ContentList({
                       { isCustomDRM ?
                         <div>
                           <TextInput
-                            ariaLabel={"Key system reverse domain name (e.g. \"org.w3.clearkey\")"}
+                            ariaLabel={"Key system reverse domain name"
+                            + " (e.g. \"org.w3.clearkey\")"}
                             className="choice-input text-input"
                             onChange={onCustomKeySystemInput}
                             value={customKeySystem}

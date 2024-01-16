@@ -50,7 +50,8 @@
  * announced length (followed either by the following field - prepended by an
  * exclamation mark - or the end of the string).
  * Example with both booleans and strings and a `FIELD_LENGTH` of 4:
- * http://www.example.com/#!lowLatency!manifest_1n=http://www.example.com/streaming/dash_contents/Manifest.mpd!foobar
+ * http://www.example.com/#!lowLatency!manifest_1n=http://www.example.com
+ * /streaming/dash_contents/Manifest.mpd!foobar
  * => will get you
  * ```js
  * {

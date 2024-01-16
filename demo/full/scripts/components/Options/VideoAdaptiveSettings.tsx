@@ -57,13 +57,16 @@ function VideoAdaptiveSettings({
   let videoResolutionLimitDescMsg;
   switch (videoResolutionLimit) {
     case "none":
-      videoResolutionLimitDescMsg = "No limit on the video Representation’s resolution will be automatically applied.";
+      videoResolutionLimitDescMsg = `No limit on the video Representation’s resolution
+       will be automatically applied.`;
       break;
     case "screen":
-      videoResolutionLimitDescMsg = "The loaded video Representation will be throttled according to the screen’s dimensions.";
+      videoResolutionLimitDescMsg = `The loaded video Representation will be throttled
+       according to the screen’s dimensions.`;
       break;
     case "videoElement":
-      videoResolutionLimitDescMsg = "The loaded video Representation will be throttled according to the given videoElement’s dimensions.";
+      videoResolutionLimitDescMsg = `The loaded video Representation will be throttled
+       according to the given videoElement’s dimensions.`;
       break;
   }
 

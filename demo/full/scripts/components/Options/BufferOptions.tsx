@@ -204,8 +204,10 @@ function BufferOptions({
           {
             maxVideoBufferSize === Infinity ||
             !isMaxVideoBufferSizeLimited ?
-              "Not setting a size limit to the video buffer (relying only on the wantedBufferAhead option)" :
-              `Buffering at most around ${maxVideoBufferSize} kilobyte(s) on the video buffer`
+              `Not setting a size limit to the video buffer (relying only on the 
+                wantedBufferAhead option)` :
+              `Buffering at most around ${maxVideoBufferSize} 
+              kilobyte(s) on the video buffer`
           }
         </span>
       </li>
@@ -234,7 +236,8 @@ function BufferOptions({
             maxBufferAhead === Infinity ||
             !isMaxBufferAheadLimited ?
               "Not manually cleaning buffer far ahead of the current position" :
-              `Manually cleaning data ${maxBufferAhead} second(s) ahead of the current position`
+              `Manually cleaning data ${maxBufferAhead} second(s) 
+              ahead of the current position`
           }
         </span>
       </li>
@@ -263,7 +266,8 @@ function BufferOptions({
             maxBufferBehind === Infinity ||
             !isMaxBufferBehindLimited ?
               "Not manually cleaning buffer behind the current position" :
-              `Manually cleaning data ${maxBufferBehind} second(s) behind the current position`
+              `Manually cleaning data ${maxBufferBehind} second(s)
+               behind the current position`
           }
         </span>
       </li>

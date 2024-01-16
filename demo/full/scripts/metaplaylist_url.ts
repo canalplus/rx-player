@@ -10,6 +10,7 @@ const MetaPlaylistDASHSmooth = {
       "transport": "dash",
     },
     {
+      // eslint-disable-next-line max-len
       "url": "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
       "startTime": 733.3,
       "endTime": 1368,

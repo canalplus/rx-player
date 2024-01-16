@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
 
 export interface IDrmInfo {
