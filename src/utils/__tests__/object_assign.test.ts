@@ -53,4 +53,19 @@ describe("utils - objectAssign", () => {
                         { c: { d: 85 } })).toBe(obj);
     expect(obj).toEqual({ a: 78, c: { d: 85 } });
   });
+
+  it("types definition should be correct", () => {
+    const obj = { a: 4, b: 5 };
+    interface Shape1 { a: number; b: number };
+    interface Shape2 { a: string; b: number };
+
+    const mergedObj = objectAssign(obj, { a: "foo" });
+    // the intention in this test is to check typescript definitions
+    // the test would always pass in javascript, but it will show
+    // a typescript error if the typedefinition are incorrects.
+
+    // @ts-expect-error result is not of Shape1, should show an error
+    expect(mergedObj).toMatchObject<Shape1>({ a: "foo", b: 5 });
+    expect(mergedObj).toMatchObject<Shape2>({ a: "foo", b: 5 });
+  });
 });
