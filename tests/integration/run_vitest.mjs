@@ -21,11 +21,20 @@ const config = defineConfig({
     browser: {
       enabled: true,
       name: "chrome",
+      provider: "webdriverio",
+      headless: true,
+      providerOptions: {
+        capabilities: {
+          "goog:chromeOptions" : {
+            args: ["--autoplay-policy=no-user-gesture-required"]
+          }
+        }
+
+      }
     }
   },
 });
 const testContentServer = TestContentServer(CONTENT_SERVER_PORT);
-
 
 startVitest("test", undefined, undefined, config);
 

@@ -5,7 +5,10 @@
     "declarationMap": true,
     "target": "es2017",
     "lib": ["es2017", "dom"],
-    "types": ["jest"],
+    "types": [
+      "jest",
+      "@vitest/browser/providers/webdriverio",
+    ],
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
