@@ -76,6 +76,14 @@ export default function performInitialSeekAndPlay(
     resolveAutoPlay,
     rejectAutoPlay
   ) => {
+    const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
+      rejectAutoPlay(err);
+    });
+
+    if (cancelSignal.isCancelled()) {
+      return;
+    }
+
     /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
     let hasAskedForInitialSeek = false;
 
@@ -120,10 +128,6 @@ export default function performInitialSeekAndPlay(
         }
       }, { includeLastObservation: true, clearSignal: cancelSignal });
     }
-
-    const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
-      rejectAutoPlay(err);
-    });
 
     /**
      * Logic that should be run once the initial seek has been asked to the
