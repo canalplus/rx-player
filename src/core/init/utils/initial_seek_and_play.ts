@@ -16,8 +16,6 @@
 
 import { shouldValidateMetadata } from "../../../compat";
 import { isSafariMobile } from "../../../compat/browser_detection";
-/* eslint-disable-next-line max-len */
-import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import { IPlayerError } from "../../../public_types";
@@ -78,6 +76,14 @@ export default function performInitialSeekAndPlay(
     resolveAutoPlay,
     rejectAutoPlay
   ) => {
+    const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
+      rejectAutoPlay(err);
+    });
+
+    if (cancelSignal.isCancelled()) {
+      return;
+    }
+
     /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
     let hasAskedForInitialSeek = false;
 
@@ -96,7 +102,7 @@ export default function performInitialSeekAndPlay(
     if (!isDirectfile || typeof startTime === "number") {
       const initiallySeekedTime = typeof startTime === "number" ? startTime :
                                                                   startTime();
-      if (!shouldPreventSeekingAt0Initially() || initiallySeekedTime !== 0) {
+      if (initiallySeekedTime !== 0) {
         performInitialSeek(initiallySeekedTime);
       }
       waitForSeekable();
@@ -106,7 +112,7 @@ export default function performInitialSeekAndPlay(
           stopListening();
           const initiallySeekedTime = typeof startTime === "number" ? startTime :
                                                                       startTime();
-          if (!shouldPreventSeekingAt0Initially() || initiallySeekedTime !== 0) {
+          if (initiallySeekedTime !== 0) {
             if (isSafariMobile) {
               // On safari mobile (version 17.1.2) seeking too early cause the video
               // to never buffer media data. Using setTimeout 0 defers the seek
@@ -122,10 +128,6 @@ export default function performInitialSeekAndPlay(
         }
       }, { includeLastObservation: true, clearSignal: cancelSignal });
     }
-
-    const deregisterCancellation = cancelSignal.register((err : CancellationError) => {
-      rejectAutoPlay(err);
-    });
 
     /**
      * Logic that should be run once the initial seek has been asked to the
