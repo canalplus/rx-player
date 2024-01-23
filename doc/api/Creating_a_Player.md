@@ -105,11 +105,6 @@ is currently buffered and an estimation of the size of the next segments.
 </div>
 
 <div class="warning">
-In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>),
-this method has no effect.
-</div>
-
-<div class="warning">
 This option will have no effects if we didn't buffer at least <b>MIN_BUFFER_LENGTH</b>
 <i>( defaults at 5sec )</i>
 </div>
