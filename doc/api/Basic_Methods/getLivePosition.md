@@ -25,7 +25,7 @@ returned by [`getMaximumPosition`](./getMaximumPosition.md):
 ## Syntax
 
 ```js
-const livePosition = player.getMaximumPosition();
+const livePosition = player.getLivePosition();
 ```
 
   - **return value** `number|null|undefined`: position for the live content, in
