@@ -2,108 +2,6 @@
 
 ### Changes
 
-  - `volumeChange` events are now sending both the audio volume and the muted status [#1348]
-  - `mute`/`unMute`/`isMute` now rely on the `HTMLMediaElement`'s `muted` property and not the audio volume [#1348]
-  - A `representationFilter`'s advertised `codec` has now been renamed to `codecs` and is an Array when defined [#1332]
-  - `DASH_WASM` and `DEBUG_ELEMENT` are not experimental features anymore [#1339]
-  - The `parseBifThumbnails` function is not an experimental tool anymore [#1339]
-
-### Features
-
-  - Add `MULTI_THREAD` experimental feature to enable multithreading capabilities through a WebWorker
-  - Add `getLivePosition` RxPlayer method [#1300]
-  - Add `startAt.fromLivePosition` `loadVideo` option [#1300]
-  - add `connectionTimeout` property to the `requestConfig` `loadVideo` option for both the manifest and segment requests to set a timeout just linked to HTTP connection establishment [#1319]
-  - Add the possibility to set a new `keySystems` option on the `reload` API [#1308]
-  - Add `relativeResumingPosition` property to the `setVideoTrack`and `setAudioTrack` options [#1331]
-  - types: export type `IcompatibleKeySystem` to the public API [#1340]
-
-### Bug fixes
-
-  - Fix subtitles "blinking" in some specific conditions, especially with some DASH low-latency contents [#1314]
-  - DASH: Fix Period overlap resolution logic for when the first Period is removed [#1311]
-  - TTML: Fix handling of the `tts:lineHeight` attribute [#1320]
-  - Fix import of the `LOCAL_MANIFEST` experimental feature
-  - Smooth: Rely on a defined `segmentLoader` when playing smooth streaming contents.
-  - Avoid very rarely skipping segments which initially were too big to be pushed due to memory limitations [#1323]
-  - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327, #1355]
-  - Fix issue arising when using track APIs at the exact last possible position of a Period with no consecutive Period [#1337]
-  - Starting at the end (through a `startAt` `loadVideo` option) or reloading at the end led to the restart of the content [#1338]
-  - DRM/Safari: also perform Safari DRM work-arounds when the page is launched from the dock [#1351, #1356]
-
-### Other improvements
-
-  - Provide both commonJS and ES6-style exports to improve compatibilities with applications
-  - DASH: rely on SCTE214 `supplementalCodecs` instead of `codecs` if it's supported to better support backward compatible Dolby Vision contents [#1307]
-  - DASH: Provide better support of the `availabilityTimeOffset` attribute [#1300]
-  - DEBUG_ELEMENT: Add unsupported and undecipherable bitrates to the debug element [#1321]
-  - DEBUG_ELEMENT: update buffer graph maximum size so it becomes more readable for lengthy contents [#1316]
-  - DEBUG_ELEMENT: always synchronize inventory of segments before rendering it [#1317]
-  - Remove remaining RxPlayer dependency removing possibility of some application-side bundling errors [#1312]
-  - Add cache when checking for codec support, improving performance on some devices and potentially working around some xbox bugs on long-lived pages [#1324]
-  - Add exception to text Garbage collection logic to avoid unnecessarily reload text segments frequently [#1325]
-  - Avoid logging too much the buffer's content when our debugging UI or the demo is used [#1341]
-  - Demo: Fix switching mode toggle [#1328]
-  - Demo: Add possibility to see the debug element in the demo page
-  - Demo: Fix reporting of live position in demo page [#1313]
-
-
-## v4.0.0-beta.3 (2023-10-19)
-
-### Changes
-
-  - The `MediaError`'s `trackInfo` property is now an array renamed as `tracksInfo` and similar `MediaError` are grouped in one [#1264]
-  - The `manifestUpdateUrl` `loadVideo` option has been removed as it was unused [#1276]
-  - The `/dist` directory in the project has been removed [#1270]
-
-### Bug fixes
-
-  - Fix adaptive logic on some legacy Edge browsers [#1302]
-
-### Other improvements
-
-  - `newAvailablePeriods` is now sent lazily at the time new Periods are considered to improve performance [#1265]
-  - Implement better error messages by not repeating the Error Type in it [#1290]
-  - All import path to the RxPlayer now depend on the same RxPlayer modular build (and not just the minimal, as before) [#1301]
-
-
-## v4.0.0-beta.2 (2023-06-27)
-
-### Changes
-
-  - If all Representations from the current track become undecipherable, automatically switch to another track (also send a `trackUpdate` event) instead of stopping on error [#1234]
-  - Only send `MediaError` errors with the `NO_PLAYABLE_REPRESENTATION` error code when no Representation from all tracks of a given type can be played [#1234]
-
-### Features
-
-  - Add `representationListUpdate` event for when the list of available Representation for a current track changes [#1240]
-  - Add `"no-playable-representation"` as a `reason` for `trackUpdate` events when the track switch is due to encrypted Representations [#1234]
-
-### Other improvements
-
-  - DRM: Reload when playback is unexpectedly frozen with encrypted but only decipherable data in the buffer to work-around rare encryption-related issues [#1236]
-
-
-## v4.0.0-beta.1 (2023-03-08)
-
-### Bug fixes
-
-  - (v4.0.0-beta.0-only issue) Fix memory leak
-  - (v4.0.0-beta.0-only issue) Fix MediaSource duration when the maximum buffered end is inferior to current duration but superior to calculated duration
-  - (v4.0.0-beta.0-only issue) Fix `stopAtEnd` option by also switching to STOPPED state on ended
-  - (v4.0.0-beta.0-only issue) Fix some target's support by not relying on `Promise.prototype.finally` anymore [#1224]
-  - (v4.0.0-beta.0-only issue) For dynamic contents, always set a very high duration [#1220]
-  - (v4.0.0-beta.0-only issue) DRM: Fix fallbacking for an already-played content by checking key statuses initially linked to a MediaKeySession
-
-### Other improvements
-
-  - Based on the v3.30.0 of which it inherits all the features, bug fixes and other improvements
-
-
-## v4.0.0-beta.0 (2023-01-27)
-
-### Changes
-
   - Create `"FREEZING"` player state for cases where the playback position is currently not advancing due to an unknown reason, to separate it from regular `"BUFFERING"`. [#1146]
   - The `RELOADING` player state (gettable  through the `getPlayerState` and `playerStateChange` API) can now happen at any time to unlock playback.
   - Remove bitrate API: `getAvailableVideoBitrates`, `getAvailableAudioBitrates`, `setAudioBitrate`, `setVideoBitrate`, `getAudioBitrate`, `getVideoBitrate` in profit of the Representations lock APIs [#1144]
@@ -161,9 +59,19 @@
   - Remove public types `IDefaultAudioTrackOption` and `IDefaultTextTrackOption`. Those are the types respectively for `defaultAudioTrack` and `defaultTextTrack` `loadVideo` options which have been removed
   - Remove public types `IAudioTrackPreference`, `ITextTrackPreference` and `IVideoTrackPreference` as the corresponding API do not exist anymore.
   - Stop officially supporting the Internet Explorer 11 browser
+  - The `MediaError`'s `trackInfo` property is now an array renamed as `tracksInfo` and similar `MediaError` are grouped in one [#1264]
+  - The `manifestUpdateUrl` `loadVideo` option has been removed as it was unused [#1276]
+  - `volumeChange` events are now sending both the audio volume and the muted status [#1348]
+  - `mute`/`unMute`/`isMute` now rely on the `HTMLMediaElement`'s `muted` property and not the audio volume [#1348]
+  - A `representationFilter`'s advertised `codec` has now been renamed to `codecs` and is an Array when defined [#1332]
+  - `DASH_WASM` and `DEBUG_ELEMENT` are not experimental features anymore [#1339]
+  - The `parseBifThumbnails` function is not an experimental tool anymore [#1339]
+  - If all Representations from the current track become undecipherable, automatically switch to another track (also send a `trackUpdate` event) instead of stopping on error [#1234]
+  - Only send `MediaError` errors with the `NO_PLAYABLE_REPRESENTATION` error code when no Representation from all tracks of a given type can be played [#1234]
 
 ### Features
 
+  - Add `MULTI_THREAD` experimental feature to enable multithreading capabilities through a WebWorker
   - `setAudioTrack`, `setVideoTrack` and `setTextTrack` now may take an object in argument, with the track's id set as a `trackId` property, to allow new features
   - Add `switchingMode` optional property to `setVideoTrack` and `setAudioTrack`, to configure the way in which the RxPlayer switches between the previous and new track
   - Add optional `periodId` property to `setAudioTrack`, `setVideoTrack` and `setTextTrack`, to allow setting the track of another, future or past, Period.
@@ -175,45 +83,47 @@
   - Add `lockVideoRepresentations`, `lockAudioRepresentations`, `getLockedVideoRepresentations`, `getLockedAudioRepresentations`, `unlockVideoRepresentations` and `unlockAudioRepresentations` methods to allow a complex selection of Representations that are currently allowed to play.
   - Add `getVideoRepresentation` and `getAudioRepresentation` method to retrieve information on the currently loaded representations [#1144]
   - Add `audioRepresentationChange` and `videoRepresentationChange` events to be notified when the currently-loaded Representation for the current Period changes.
-  - Add `updateContentUrls` API, allowing to update the Manifest's URL during playback [#1182]
-  - DASH: implement forced-subtitles, adding the `forced` property to the audio tracks API and selecting by default a forced text track linked to the audio track's language if present [#1187]
   - Add `getContentUrls` allowing to retrieve the one or several known URLs through which the current Manifest or content is reachable.
   - Add `videoResolutionLimit` constructor option allowing to automatically limit a video Representation's resolution.
   - Add `newAvailablePeriods` event to signal new Period on which a track and/or Representation choice can be made
   - Add `brokenRepresentationsLock` event for when a Representations lock could not be respected anymore
   - Add `trackUpdate` event for when a track has been updated for any type and Period
-  - Add  `distinctiveIdentifier` property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
-  - Add  `persistentState`  property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
+  - Add `distinctiveIdentifier` property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
+  - Add `persistentState`  property in the `keySystems` option (given to the `loadVideo` method) to have full control over the MediaKeySystemConfiguration of the same name in the chosen key system [#1148]
   - Add `keySystems[].onKeyOutputRestricted` and `keySystems[].onKeyInternalError` properties to configure the RxPlayer's behavior when a key switches to the status respectively `"output-restricted"` and `"internal-error"`
   - Add `audioCapabilitiesConfig` and `videoCapabilitiesConfig` properties in the `keySystems` option (given to the `loadVideo` method)  to allow advanced configuration of respectively the "audioCapabilities" and "videoCapabilities" in the asked MediaKeySystemConfiguration [#1148]
-  - Add `ISegmentLoaderContext` public type for the first argument of the `segmentLoader` API
-  - Add `IRepresentationFilterRepresentation` public type for the first argument of the `representationFilter` API
-  - Add `IRepresentationContext` public type for the second argument of the `representationFilter` API
-  - Add `IManifestLoaderInfo` public type for the first argument of the `manifestLoader` API
-  - Add `IPeriodChangeEvent` public type to define the properties send through a `periodChange` event
-  - Add `IPeriod` public type to define a Period object returned by methods like `getAvailablePeriods` or `getCurrentPeriod`
-  - Add `IVideoTrackSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `setAudioTrack`
-  - Add `IAudioRepresentationsSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `lockAudioRepresentations`
-  - Add `IVideoRepresentationsSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `lockAudioRepresentations`
-  - Add `IBrokenRepresentationsLockContext` public type to define the type sent as a payload of the `brokenRepresentationsLock` event
-  - Add `ITrackUpdateEventPayload` public type to define the type sent as a payload of the `trackUpdate` event
-  - Add `ILockedVideoRepresentationsSettings` public type to define the object that should be given to the new `lockVideoRepresentation` method
-  - Add `ILockedAudioRepresentationsSettings` public type to define the object that should be given to the new `lockAudioRepresentation` method
-  - Add `IAudioTrackSetting` public type to define the object that may be given to the `setAudioTrack` method
-  - Add `IVideoTrackSetting` public type to define the object that may be given to the `setVideoTrack` method
-  - Add `ITextTrackSetting` public type to define the object that may be given to the `setTextTrack` method
+  - Add `representationListUpdate` event for when the list of available Representation for a current track changes [#1240]
+  - add `connectionTimeout` property to the `requestConfig` `loadVideo` option for both the manifest and segment requests to set a timeout just linked to HTTP connection establishment [#1319]
+  - Add `relativeResumingPosition` property to the `setVideoTrack`and `setAudioTrack` options [#1331]
+  - types: export type `ICompatibleKeySystem` to the public API [#1340]
+  - types: Add `ISegmentLoaderContext` public type for the first argument of the `segmentLoader` API
+  - types: Add `IRepresentationFilterRepresentation` public type for the first argument of the `representationFilter` API
+  - types: Add `IRepresentationContext` public type for the second argument of the `representationFilter` API
+  - types: Add `IManifestLoaderInfo` public type for the first argument of the `manifestLoader` API
+  - types: Add `IPeriodChangeEvent` public type to define the properties send through a `periodChange` event
+  - types: Add `IPeriod` public type to define a Period object returned by methods like `getAvailablePeriods` or `getCurrentPeriod`
+  - types: Add `IVideoTrackSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `setAudioTrack`
+  - types: Add `IAudioRepresentationsSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `lockAudioRepresentations`
+  - types: Add `IVideoRepresentationsSwitchingMode` public type to define the type of the `switchingMode` property optionally given to `lockAudioRepresentations`
+  - types: Add `IBrokenRepresentationsLockContext` public type to define the type sent as a payload of the `brokenRepresentationsLock` event
+  - types: Add `ITrackUpdateEventPayload` public type to define the type sent as a payload of the `trackUpdate` event
+  - types: Add `ILockedVideoRepresentationsSettings` public type to define the object that should be given to the new `lockVideoRepresentation` method
+  - types: Add `ILockedAudioRepresentationsSettings` public type to define the object that should be given to the new `lockAudioRepresentation` method
+  - types: Add `IAudioTrackSetting` public type to define the object that may be given to the `setAudioTrack` method
+  - types: Add `IVideoTrackSetting` public type to define the object that may be given to the `setVideoTrack` method
+  - types: Add `ITextTrackSetting` public type to define the object that may be given to the `setTextTrack` method
 
 ### Bug fixes
 
-  - Fix segment requesting error when playing a DASH content without an url and without BaseURL elements [#1192]
-  - API: Stop sending events if the content is stopped due to a side-effect of one of the event handler [#1197]
-  - text-tracks/ttml: fix inconsistent line spacing when resizing the `textTrackElement` [#1191]
-  - DRM: Fix race condition leading to a JS error instead of a `NO_PLAYABLE_REPRESENTATION` [#1201]
-  - DRM/Compat: Renew MediaKeys at each `loadVideo` on all WebOS (LG TV) platforms to work around issues [#1188]
+  - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327, #1355]
 
 ### Other improvements
 
-  - Remove dependency to RxJS, improving the debugging experience and preventing some uncaught Error from being thrown
+  - Provide both commonJS and ES6-style exports to improve compatibilities with applications
+  - Implement better error messages by not repeating the Error Type in it [#1290]
+  - DRM: Reload when playback is unexpectedly frozen with encrypted but only decipherable data in the buffer to work-around rare encryption-related issues [#1236]
+  - Add cache when checking for codec support, improving performance on some devices and potentially working around some xbox bugs on long-lived pages [#1324]
+  - Demo: Add possibility to see the debug element in the demo page
 
 
 ## v3.33.0 (2024-01-24)
