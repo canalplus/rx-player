@@ -43,6 +43,8 @@ tmpDemoFile=$(mktemp)
 tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
+tmpWorkerFile=$(mktemp)
+tmpMpdWasmFile=$(mktemp)
 tmpDemoList=$(mktemp)
 
 cp -r demo/full/fonts $tmpFontsDir -v
@@ -51,6 +53,8 @@ cp -r demo/full/styles $tmpStylesDir -v
 cp demo/full/bundle.js $tmpDemoFile -v
 cp demo/full/index.html $tmpIndexFile -v
 cp demo/full/plus.ico $tmpFaviconFile -v
+cp demo/full/worker.js $tmpWorkerFile -v
+cp demo/full/mpd-parser.wasm $tmpMpdWasmFile -v
 cp scripts/generate_demo_list.mjs $tmpDemoList -v
 
 # update gh-pages
@@ -61,6 +65,8 @@ rm -rf "versions/$current_version/demo"
 mkdir -p "versions/$current_version/demo"
 rm index.html
 rm plus.ico
+rm worker.js
+rm mpd-parser.wasm
 rm bundle.js
 rm -rf fonts
 rm -rf assets
@@ -68,6 +74,8 @@ rm -rf styles
 mv $tmpIndexFile "versions/$current_version/demo/index.html"
 mv $tmpFaviconFile "versions/$current_version/demo/plus.ico"
 mv $tmpDemoFile "versions/$current_version/demo/bundle.js"
+mv $tmpWorkerFile "versions/$current_version/demo/worker.js"
+mv $tmpMpdWasmFile "versions/$current_version/demo/mpd-parser.wasm"
 mv $tmpFontsDir/fonts "versions/$current_version/demo/fonts"
 mv $tmpAssetsDir/assets "versions/$current_version/demo/assets"
 mv $tmpStylesDir/styles "versions/$current_version/demo/styles"
@@ -75,6 +83,8 @@ mv $tmpDemoList generate_demo_list.mjs
 ln -s "./versions/$current_version/demo/index.html" index.html
 ln -s "./versions/$current_version/demo/plus.ico" plus.ico
 ln -s "./versions/$current_version/demo/bundle.js" bundle.js
+ln -s "./versions/$current_version/demo/worker.js" worker.js
+ln -s "./versions/$current_version/demo/mpd-parser.wasm" mpd-parser.wasm
 ln -s "./versions/$current_version/demo/fonts" fonts
 ln -s "./versions/$current_version/demo/assets" assets
 ln -s "./versions/$current_version/demo/styles" styles
@@ -82,10 +92,10 @@ ln -s "./versions/$current_version/demo/styles" styles
 node generate_demo_list.mjs
 rm generate_demo_list.mjs
 
-if [ -n "$(git status --porcelain bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html)" ]; then
+if [ -n "$(git status --porcelain bundle.js worker.js mpd-parser.wasm plus.ico styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html)" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
-  git status bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
+  git status bundle.js worker.js mpd-parser.wasm plus.ico styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
 
   while : ; do
     echo ""
@@ -107,21 +117,21 @@ if [ -n "$(git status --porcelain bundle.js styles fonts assets index.html "vers
       echo "| h: see this help                                       |"
       echo "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add bundle.js styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
+      git add bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
       git commit -m "demo: deploy $current_version to the gh-pages" -S
       git push origin gh-pages
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html || true # ignore when return 1
+      git diff bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html || true # ignore when return 1
     elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
+      git status bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
+      git checkout bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push bundle.js styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
+      git stash -u push bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
       break
     fi
   done
