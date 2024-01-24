@@ -119,22 +119,6 @@ You can find it at any of the following places:
   probably in `node_modules/rx-player/dist/mpd-parser.wasm` depending on
   your project).
 
-- Alternatively, if you don't want to store and serve this files yourselve,
-  it may be imported as URL through the
-  `"rx-player/experimental/inline-mpd-parser"` import path:
-  ```js
-    import RxPlayer from "rx-player/minimal";
-    import RxPlayerDashWasmUrl from "rx-player/experimental/inline-mpd-parser";
-    import { DASH_WASM } from "rx-player/experimental/features";
-
-    DASH_WASM.initialize({ wasmUrl: RxPlayerDashWasmUrl });
-    RxPlayer.addFeatures([DASH_WASM]);
-  ```
-
-  Note however than including this import in your build risk to drastically
-  increase your bundle's size. The preferred way is for you to rely on this
-  file through the other means listed.
-
 Once you've retrieved the right WebAssembly file linked to your RxPlayer
 version, you will need to store it and give its URL to the RxPlayer so it will
 be able to load it (the embedded version may be used directly instead, like an
