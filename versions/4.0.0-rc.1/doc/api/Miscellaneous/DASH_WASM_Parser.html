@@ -119,21 +119,6 @@ loaded in your project, for example in the <code>node_modules</code> directory (
 probably in <code>node_modules/rx-player/dist/mpd-parser.wasm</code> depending on
 your project).</p>
 </li>
-<li>
-<p>Alternatively, if you don’t want to store and serve this files yourselve,
-it may be imported as URL through the
-<code>"rx-player/experimental/inline-mpd-parser"</code> import path:</p>
-<pre><code class="language-js">  <span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayer</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/minimal"</span>;
-  <span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayerDashWasmUrl</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/inline-mpd-parser"</span>;
-  <span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH_WASM</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/features"</span>;
-
-  <span class="hljs-variable constant_">DASH_WASM</span>.<span class="hljs-title function_">initialize</span>({ <span class="hljs-attr">wasmUrl</span>: <span class="hljs-title class_">RxPlayerDashWasmUrl</span> });
-  <span class="hljs-title class_">RxPlayer</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH_WASM</span>]);
-</code></pre>
-<p>Note however than including this import in your build risk to drastically
-increase your bundle’s size. The preferred way is for you to rely on this
-file through the other means listed.</p>
-</li>
 </ul>
 <p>Once you’ve retrieved the right WebAssembly file linked to your RxPlayer
 version, you will need to store it and give its URL to the RxPlayer so it will
