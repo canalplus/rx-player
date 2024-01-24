@@ -1,4 +1,4 @@
-## Unreleased
+## v4.0.0-rc.1 (2024-01-24)
 
 ### Changes
 
