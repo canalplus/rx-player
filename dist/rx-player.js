@@ -59,6 +59,7 @@ var READY_STATES = {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   $u: function() { return /* binding */ isWebOs; },
+/* harmony export */   GQ: function() { return /* binding */ isXbox; },
 /* harmony export */   SB: function() { return /* binding */ isSafariMobile; },
 /* harmony export */   YM: function() { return /* binding */ isIEOrEdge; },
 /* harmony export */   fq: function() { return /* binding */ isIE11; },
@@ -114,8 +115,10 @@ var isWebOs2022 = false;
 var isPanasonic = false;
 /** `true` for the PlayStation 5 game console. */
 var isPlayStation5 = false;
+/** `true` for the Xbox game consoles. */
+var isXbox = false;
 (function findCurrentBrowser() {
-  var _a, _b;
+  var _a, _b, _c;
   if (_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z) {
     return;
   }
@@ -131,7 +134,19 @@ var isPlayStation5 = false;
     isFirefox = true;
   } else if (typeof navigator.platform === "string" && /iPad|iPhone|iPod/.test(navigator.platform)) {
     isSafariMobile = true;
-  } else if (Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 || ((_b = (_a = window.safari) === null || _a === void 0 ? void 0 : _a.pushNotification) === null || _b === void 0 ? void 0 : _b.toString()) === "[object SafariRemoteNotification]") {
+  } else if (
+  // the following statement check if the window.safari contains the method
+  // "pushNotification", this condition is not met when using web app from the dock
+  // on macOS, this is why we also check userAgent.
+  Object.prototype.toString.call(window.HTMLElement).indexOf("Constructor") >= 0 || ((_b = (_a = window.safari) === null || _a === void 0 ? void 0 : _a.pushNotification) === null || _b === void 0 ? void 0 : _b.toString()) === "[object SafariRemoteNotification]" ||
+  // browsers are lying: Chrome reports both as Chrome and Safari in user
+  // agent string, So to detect Safari we have to check for the Safari string
+  // and the absence of the Chrome string
+  // eslint-disable-next-line max-len
+  // @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent#which_part_of_the_user_agent_contains_the_information_you_are_looking_for
+  /Safari\/(\d+)/.test(navigator.userAgent) &&
+  // Safari should contain Version/ in userAgent
+  /Version\/(\d+)/.test(navigator.userAgent) && ((_c = navigator.vendor) === null || _c === void 0 ? void 0 : _c.indexOf("Apple")) !== -1 && !/Chrome\/(\d+)/.test(navigator.userAgent) && !/Chromium\/(\d+)/.test(navigator.userAgent)) {
     isSafariDesktop = true;
   }
   // 2 - Find out specific device/platform information
@@ -155,6 +170,8 @@ var isPlayStation5 = false;
     }
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     isPanasonic = true;
+  } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
+    isXbox = true;
   }
 })();
 
@@ -1029,6 +1046,22 @@ var DEFAULT_CONFIG = {
    */
   MAXIMUM_MAX_BUFFER_AHEAD: {
     text: 5 * 60 * 60
+  },
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+  /**
+   * Minimum possible buffer ahead for each type of buffer, to avoid Garbage
+   * Collecting too much data when it would have adverse effects.
+   * Equal to `0` if not defined here.
+   * @type {Object}
+   */
+  MINIMUM_MAX_BUFFER_AHEAD: {
+    // Text segments are both much lighter on resources and might
+    // actually be much larger than other types of segments in terms
+    // of duration. Let's make an exception here by authorizing a
+    // larger text buffer ahead, to avoid unnecesarily reloading the
+    // same text track.
+    text: 2 * 60
   },
   /* eslint-enable @typescript-eslint/consistent-type-assertions */
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
@@ -4307,10 +4340,11 @@ var media_keys_infos_store = __webpack_require__(770);
  * Dispose of the MediaKeys instance attached to the given media element, if
  * one.
  * @param {Object} mediaElement
+ * @returns {Promise}
  */
 function disableMediaKeys(mediaElement) {
   media_keys_infos_store/* default */.Z.setState(mediaElement, null);
-  eme.setMediaKeys(mediaElement, null).then(function () {
+  return eme.setMediaKeys(mediaElement, null).then(function () {
     log/* default */.Z.info("DRM: MediaKeys disabled with success");
   })["catch"](function (err) {
     log/* default */.Z.error("DRM: Could not disable MediaKeys", err instanceof Error ? err : "Unknown Error");
@@ -7150,6 +7184,8 @@ function _createMediaKeys() {
 
 
 
+
+
 /**
  * Get media keys infos from key system configs then attach media keys to media element.
  * @param {HTMLMediaElement} mediaElement
@@ -7172,12 +7208,28 @@ function _initMediaKeys() {
           mediaKeysInfo = _context.sent;
           mediaKeys = mediaKeysInfo.mediaKeys;
           shouldDisableOldMediaKeys = mediaElement.mediaKeys !== null && mediaElement.mediaKeys !== undefined && mediaKeys !== mediaElement.mediaKeys;
-          if (shouldDisableOldMediaKeys) {
-            log/* default */.Z.debug("DRM: Disabling old MediaKeys");
-            disableMediaKeys(mediaElement);
+          if (!shouldDisableOldMediaKeys) {
+            _context.next = 13;
+            break;
           }
+          log/* default */.Z.debug("DRM: Disabling old MediaKeys");
+          // TODO should we be awaiting always?
+          // Should be tested on all devices, we may want to wait for another
+          // version to make this important change.
+          if (!browser_detection/* isWebOs */.$u) {
+            _context.next = 12;
+            break;
+          }
+          _context.next = 10;
+          return disableMediaKeys(mediaElement);
+        case 10:
+          _context.next = 13;
+          break;
+        case 12:
+          disableMediaKeys(mediaElement)["catch"](noop/* default */.Z);
+        case 13:
           return _context.abrupt("return", mediaKeysInfo);
-        case 7:
+        case 14:
         case "end":
           return _context.stop();
       }
@@ -9337,11 +9389,12 @@ var currentMediaState = new WeakMap();
 /* harmony import */ var _compat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5767);
 /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(3887);
 /* harmony import */ var _utils_assert__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(811);
+/* harmony import */ var _utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(1946);
 /* harmony import */ var _utils_reference__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5095);
 /* harmony import */ var _utils_task_canceller__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(288);
 /* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(9420);
 /* harmony import */ var _utils_get_loaded_reference__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(379);
-/* harmony import */ var _utils_initial_seek_and_play__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(8833);
+/* harmony import */ var _utils_initial_seek_and_play__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(9016);
 /* harmony import */ var _utils_initialize_content_decryption__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7794);
 /* harmony import */ var _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6199);
 /* harmony import */ var _utils_throw_on_media_error__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4576);
@@ -9365,6 +9418,7 @@ var currentMediaState = new WeakMap();
  * /!\ This file is feature-switchable.
  * It always should be imported through the `features` object.
  */
+
 
 
 
@@ -9533,7 +9587,7 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
     };
     (0,_utils_initial_seek_and_play__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .Z)(mediaElement, playbackObserver, initialTime, autoPlay, function (err) {
       return _this3.trigger("warning", err);
-    }, cancelSignal).autoPlayResult.then(function () {
+    }, true, cancelSignal).autoPlayResult.then(function () {
       return (0,_utils_get_loaded_reference__WEBPACK_IMPORTED_MODULE_10__/* ["default"] */ .Z)(playbackObserver, mediaElement, true, cancelSignal).onUpdate(function (isLoaded, stopListening) {
         if (isLoaded) {
           stopListening();
@@ -9561,10 +9615,10 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
  */
 
 function getDirectFileInitialTime(mediaElement, startAt) {
-  if (startAt == null) {
+  if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .Z)(startAt)) {
     return 0;
   }
-  if (startAt.position != null) {
+  if (!(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .Z)(startAt.position)) {
     return startAt.position;
   } else if (startAt.wallClockTime != null) {
     return startAt.wallClockTime;
@@ -9572,13 +9626,24 @@ function getDirectFileInitialTime(mediaElement, startAt) {
     return startAt.fromFirstPosition;
   }
   var duration = mediaElement.duration;
-  if (duration == null || !isFinite(duration)) {
-    _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .Z.warn("startAt.fromLastPosition set but no known duration, " + "beginning at 0.");
-    return 0;
-  }
   if (typeof startAt.fromLastPosition === "number") {
+    if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .Z)(duration) || !isFinite(duration)) {
+      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .Z.warn("startAt.fromLastPosition set but no known duration, " + "beginning at 0.");
+      return 0;
+    }
     return Math.max(0, duration + startAt.fromLastPosition);
+  } else if (typeof startAt.fromLivePosition === "number") {
+    var livePosition = mediaElement.seekable.length > 0 ? mediaElement.seekable.end(0) : duration;
+    if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .Z)(livePosition)) {
+      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .Z.warn("startAt.fromLivePosition set but no known live position, " + "beginning at 0.");
+      return 0;
+    }
+    return Math.max(0, livePosition + startAt.fromLivePosition);
   } else if (startAt.percentage != null) {
+    if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .Z)(duration) || !isFinite(duration)) {
+      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .Z.warn("startAt.percentage set but no known duration, " + "beginning at 0.");
+      return 0;
+    }
     var percentage = startAt.percentage;
     if (percentage >= 100) {
       return duration;
@@ -9659,8 +9724,6 @@ var task_canceller = __webpack_require__(288);
 var noop = __webpack_require__(8894);
 // EXTERNAL MODULE: ./src/utils/ranges.ts
 var ranges = __webpack_require__(2829);
-// EXTERNAL MODULE: ./src/utils/take_first_set.ts
-var take_first_set = __webpack_require__(5278);
 // EXTERNAL MODULE: ./src/utils/array_find_index.ts
 var array_find_index = __webpack_require__(5138);
 ;// CONCATENATED MODULE: ./src/core/adaptive/utils/get_buffer_levels.ts
@@ -10666,7 +10729,6 @@ function filterByBitrate(representations, bitrate) {
  * limitations under the License.
  */
 
-
 /**
  * Filter representations based on their width:
  *   - the highest width considered will be the one linked to the first
@@ -10678,7 +10740,8 @@ function filterByBitrate(representations, bitrate) {
 function filterByWidth(representations, width) {
   var sortedRepsByWidth = representations.slice() // clone
   .sort(function (a, b) {
-    return (0,take_first_set/* default */.Z)(a.width, 0) - (0,take_first_set/* default */.Z)(b.width, 0);
+    var _a, _b;
+    return ((_a = a.width) !== null && _a !== void 0 ? _a : 0) - ((_b = b.width) !== null && _b !== void 0 ? _b : 0);
   });
   var repWithMaxWidth = (0,array_find/* default */.Z)(sortedRepsByWidth, function (representation) {
     return typeof representation.width === "number" && representation.width >= width;
@@ -11011,7 +11074,6 @@ function selectOptimalRepresentation(representations, optimalBitrate, minBitrate
 
 
 
-
 // Create default shared references
 var manualBitrateDefaultRef = new reference/* default */.Z(-1);
 manualBitrateDefaultRef.finish();
@@ -11056,15 +11118,16 @@ function createAdaptiveRepresentationSelector(options) {
    * @returns {Array.<Object>}
    */
   return function getEstimates(context, currentRepresentation, representations, playbackObserver, stopAllEstimates) {
+    var _a, _b, _c, _d, _e, _f, _g;
     var type = context.adaptation.type;
     var bandwidthEstimator = _getBandwidthEstimator(type);
-    var manualBitrate = (0,take_first_set/* default */.Z)(manualBitrates[type], manualBitrateDefaultRef);
-    var minAutoBitrate = (0,take_first_set/* default */.Z)(minAutoBitrates[type], minAutoBitrateDefaultRef);
-    var maxAutoBitrate = (0,take_first_set/* default */.Z)(maxAutoBitrates[type], maxAutoBitrateDefaultRef);
-    var initialBitrate = (0,take_first_set/* default */.Z)(initialBitrates[type], 0);
+    var manualBitrate = (_a = manualBitrates[type]) !== null && _a !== void 0 ? _a : manualBitrateDefaultRef;
+    var minAutoBitrate = (_b = minAutoBitrates[type]) !== null && _b !== void 0 ? _b : minAutoBitrateDefaultRef;
+    var maxAutoBitrate = (_c = maxAutoBitrates[type]) !== null && _c !== void 0 ? _c : maxAutoBitrateDefaultRef;
+    var initialBitrate = (_d = initialBitrates[type]) !== null && _d !== void 0 ? _d : 0;
     var filters = {
-      limitWidth: (0,take_first_set/* default */.Z)(throttlers.limitWidth[type], limitWidthDefaultRef),
-      throttleBitrate: (0,take_first_set/* default */.Z)(throttlers.throttleBitrate[type], throttlers.throttle[type], throttleBitrateDefaultRef)
+      limitWidth: (_e = throttlers.limitWidth[type]) !== null && _e !== void 0 ? _e : limitWidthDefaultRef,
+      throttleBitrate: (_g = (_f = throttlers.throttleBitrate[type]) !== null && _f !== void 0 ? _f : throttlers.throttle[type]) !== null && _g !== void 0 ? _g : throttleBitrateDefaultRef
     };
     return getEstimateReference({
       bandwidthEstimator: bandwidthEstimator,
@@ -13850,7 +13913,12 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     this._lastInitSegmentUniqueId = null; // initialize init segment as a security
     if (this._pendingTask !== null) {
       var error = err instanceof Error ? err : new Error("An unknown error occured when doing operations " + "on the SourceBuffer");
-      this._pendingTask.reject(error);
+      var task = this._pendingTask;
+      if (task.type === types/* SegmentBufferOperation */.f.Push && task.data.length === 0 && task.inventoryData !== null) {
+        this._segmentInventory.insertChunk(task.inventoryData, false);
+      }
+      this._pendingTask = null;
+      task.reject(error);
     }
   }
   /**
@@ -13901,7 +13969,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
         switch (task.type) {
           case types/* SegmentBufferOperation */.f.Push:
             if (task.inventoryData !== null) {
-              this._segmentInventory.insertChunk(task.inventoryData);
+              this._segmentInventory.insertChunk(task.inventoryData, true);
             }
             break;
           case types/* SegmentBufferOperation */.f.EndOfSegment:
@@ -15669,7 +15737,7 @@ function doesEndSeemGarbageCollected(currentSeg, nextSeg, minimumEndTime) {
     return false;
   }
   if (minimumEndTime > currentSeg.bufferedEnd && currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT) {
-    log/* default */.Z.info("Stream: The end of the wanted segment has been garbage collected", currentSeg.start, currentSeg.bufferedStart);
+    log/* default */.Z.info("Stream: The end of the wanted segment has been garbage collected", currentSeg.end, currentSeg.bufferedEnd);
     return true;
   }
   return false;
@@ -15893,7 +15961,7 @@ function getBufferStatus(content, initialWantedTime, playbackObserver, fastSwitc
    * `true` if the current `RepresentationStream` has loaded all the
    * needed segments for this Representation until the end of the Period.
    */
-  var hasFinishedLoading = representation.index.isInitialized() && representation.index.isFinished() && neededRange.hasReachedPeriodEnd && prioritizedNeededSegments.length === 0 && segmentsOnHold.length === 0;
+  var hasFinishedLoading = representation.index.isInitialized() && !representation.index.isStillAwaitingFutureSegments() && neededRange.hasReachedPeriodEnd && prioritizedNeededSegments.length === 0 && segmentsOnHold.length === 0;
   /**
    * Start time in seconds of the next available not-yet pushed segment.
    * `null` if no segment is wanted for the current wanted range.
@@ -15942,14 +16010,14 @@ function getRangeOfNeededSegments(content, initialWantedTime, bufferGoal) {
   // In that case, we want to actually request at least the last segment to
   // avoid ending the last Period - and by extension the content - with a
   // segment which isn't the last one.
-  if (!(0,is_null_or_undefined/* default */.Z)(lastIndexPosition) && segment_buffers.isNative(content.adaptation.type) && initialWantedTime >= lastIndexPosition && representationIndex.isInitialized() && representationIndex.isFinished() && isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime)) {
+  if (!(0,is_null_or_undefined/* default */.Z)(lastIndexPosition) && segment_buffers.isNative(content.adaptation.type) && initialWantedTime >= lastIndexPosition && representationIndex.isInitialized() && !representationIndex.isStillAwaitingFutureSegments() && isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime)) {
     wantedStartPosition = lastIndexPosition - 1;
   } else {
     wantedStartPosition = initialWantedTime - 0.1;
   }
   var wantedEndPosition = wantedStartPosition + bufferGoal;
   var hasReachedPeriodEnd;
-  if (!representation.index.isInitialized() || !representation.index.isFinished() || period.end === undefined) {
+  if (!representation.index.isInitialized() || representation.index.isStillAwaitingFutureSegments() || period.end === undefined) {
     hasReachedPeriodEnd = false;
   } else if (lastIndexPosition === undefined) {
     // We do not know the end of this index.
@@ -15982,7 +16050,8 @@ function getRangeOfNeededSegments(content, initialWantedTime, bufferGoal) {
  */
 function isPeriodTheCurrentAndLastOne(manifest, period, time) {
   var _a;
-  return period.containsTime(time) && manifest.isLastPeriodKnown && period.id === ((_a = manifest.periods[manifest.periods.length - 1]) === null || _a === void 0 ? void 0 : _a.id);
+  var nextPeriod = manifest.getPeriodAfter(period);
+  return period.containsTime(time, nextPeriod) && manifest.isLastPeriodKnown && period.id === ((_a = manifest.periods[manifest.periods.length - 1]) === null || _a === void 0 ? void 0 : _a.id);
 }
 /**
  * From the given SegmentInventory, filters the "playable" (in a supported codec
@@ -16002,7 +16071,7 @@ function getPlayableBufferedSegments(neededRange, segmentInventory) {
   for (var i = segmentInventory.length - 1; i >= 0; i--) {
     var eltInventory = segmentInventory[i];
     var representation = eltInventory.infos.representation;
-    if (!eltInventory.partiallyPushed && representation.decipherable !== false && representation.isSupported) {
+    if (eltInventory.status === 1 /* ChunkStatus.Complete */ && representation.decipherable !== false && representation.isSupported) {
       var inventorySegment = eltInventory.infos.segment;
       var eltInventoryStart = inventorySegment.time / inventorySegment.timescale;
       var eltInventoryEnd = !inventorySegment.complete ? eltInventory.end : eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
@@ -18216,14 +18285,16 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
     wantedBufferAhead = options.wantedBufferAhead,
     maxVideoBufferSize = options.maxVideoBufferSize;
   var _config$getCurrent = config/* default */.Z.getCurrent(),
+    MINIMUM_MAX_BUFFER_AHEAD = _config$getCurrent.MINIMUM_MAX_BUFFER_AHEAD,
     MAXIMUM_MAX_BUFFER_AHEAD = _config$getCurrent.MAXIMUM_MAX_BUFFER_AHEAD,
     MAXIMUM_MAX_BUFFER_BEHIND = _config$getCurrent.MAXIMUM_MAX_BUFFER_BEHIND;
   // Keep track of a unique BufferGarbageCollector created per
   // SegmentBuffer.
   var garbageCollectors = new WeakMapMemory(function (segmentBuffer) {
+    var _a, _b;
     var bufferType = segmentBuffer.bufferType;
-    var defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] != null ? MAXIMUM_MAX_BUFFER_BEHIND[bufferType] : Infinity;
-    var defaultMaxAhead = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] != null ? MAXIMUM_MAX_BUFFER_AHEAD[bufferType] : Infinity;
+    var defaultMaxBehind = (_a = MAXIMUM_MAX_BUFFER_BEHIND[bufferType]) !== null && _a !== void 0 ? _a : Infinity;
+    var maxAheadHigherBound = (_b = MAXIMUM_MAX_BUFFER_AHEAD[bufferType]) !== null && _b !== void 0 ? _b : Infinity;
     return function (gcCancelSignal) {
       BufferGarbageCollector({
         segmentBuffer: segmentBuffer,
@@ -18232,7 +18303,9 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
           return Math.min(val, defaultMaxBehind);
         }, gcCancelSignal),
         maxBufferAhead: (0,reference/* createMappedReference */.l)(maxBufferAhead, function (val) {
-          return Math.min(val, defaultMaxAhead);
+          var _a;
+          var lowerBound = Math.max(val, (_a = MINIMUM_MAX_BUFFER_AHEAD[bufferType]) !== null && _a !== void 0 ? _a : 0);
+          return Math.min(lowerBound, maxAheadHigherBound);
         }, gcCancelSignal)
       }, gcCancelSignal);
     };
@@ -18292,6 +18365,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
       var nextPeriod = (_b = manifest.getPeriodForTime(time)) !== null && _b !== void 0 ? _b : manifest.getNextPeriod(time);
       if (nextPeriod === undefined) {
         log/* default */.Z.warn("Stream: The wanted position is not found in the Manifest.");
+        enableOutOfBoundsCheck = true;
         return;
       }
       launchConsecutiveStreamsForPeriod(nextPeriod);
@@ -18362,7 +18436,7 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
     }
     /**
      * React to a Manifest's decipherability updates.
-     * @param {Array.<Object>}
+     * @param {Array.<Object>} updates
      * @returns {Promise}
      */
     function onDecipherabilityUpdates(_x) {
@@ -18534,7 +18608,13 @@ function StreamOrchestrator(content, playbackObserver, representationEstimator, 
     playbackObserver.listen(function (_ref2, stopListeningObservations) {
       var position = _ref2.position;
       var _a, _b;
-      if (basePeriod.end !== undefined && ((_a = position.pending) !== null && _a !== void 0 ? _a : position.last) >= basePeriod.end) {
+      var wantedPosition = (_a = position.pending) !== null && _a !== void 0 ? _a : position.last;
+      if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
+        var nextPeriod = manifest.getPeriodAfter(basePeriod);
+        // Handle special wantedPosition === basePeriod.end cases
+        if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
+          return;
+        }
         log/* default */.Z.info("Stream: Destroying PeriodStream as the current playhead moved above it", bufferType, basePeriod.start, (_b = position.pending) !== null && _b !== void 0 ? _b : position.last, basePeriod.end);
         stopListeningObservations();
         consecutivePeriodStreamCb.periodStreamCleared({
@@ -18703,8 +18783,8 @@ function content_time_boundaries_observer_arrayLikeToArray(arr, len) { if (len =
 /**
  * Observes what's being played and take care of media events relating to time
  * boundaries:
- *   - Emits a `durationUpdate` when the duration of the current content is
- *     known and every time it changes.
+ *   - Emits a `endingPositionChange` when the known maximum playable position
+ *     of the current content is known and every time it changes.
  *   - Emits `endOfStream` API once segments have been pushed until the end and
  *     `resumeStream` if downloads starts back.
  *   - Emits a `periodChange` event when the currently-playing Period seemed to
@@ -18750,7 +18830,7 @@ var ContentTimeBoundariesObserver = /*#__PURE__*/function (_EventEmitter) {
       clearSignal: cancelSignal
     });
     manifest.addEventListener("manifestUpdate", function () {
-      _this.trigger("durationUpdate", _this._getManifestDuration());
+      _this.trigger("endingPositionChange", _this._getManifestEndTime());
       if (cancelSignal.isCancelled()) {
         return;
       }
@@ -18759,12 +18839,13 @@ var ContentTimeBoundariesObserver = /*#__PURE__*/function (_EventEmitter) {
     return _this;
   }
   /**
-   * Returns an estimate of the current duration of the content.
+   * Returns an estimate of the current last position which may be played in
+   * the content at the moment.
    * @returns {Object}
    */
   var _proto = ContentTimeBoundariesObserver.prototype;
-  _proto.getCurrentDuration = function getCurrentDuration() {
-    return this._getManifestDuration();
+  _proto.getCurrentEndingTime = function getCurrentEndingTime() {
+    return this._getManifestEndTime();
   }
   /**
    * Method to call any time an Adaptation has been selected.
@@ -18790,14 +18871,14 @@ var ContentTimeBoundariesObserver = /*#__PURE__*/function (_EventEmitter) {
             this._maximumPositionCalculator.updateLastVideoAdaptation(adaptation);
           }
           var endingPosition = this._maximumPositionCalculator.getEndingPosition();
-          var newDuration = endingPosition !== undefined ? {
+          var newEndingPosition = endingPosition !== undefined ? {
             isEnd: true,
-            duration: endingPosition
+            endingPosition: endingPosition
           } : {
             isEnd: false,
-            duration: this._maximumPositionCalculator.getMaximumAvailablePosition()
+            endingPosition: this._maximumPositionCalculator.getMaximumAvailablePosition()
           };
-          this.trigger("durationUpdate", newDuration);
+          this.trigger("endingPositionChange", newEndingPosition);
         }
       }
     }
@@ -18937,14 +19018,14 @@ var ContentTimeBoundariesObserver = /*#__PURE__*/function (_EventEmitter) {
       if (_ret) return _ret.v;
     }
   };
-  _proto._getManifestDuration = function _getManifestDuration() {
+  _proto._getManifestEndTime = function _getManifestEndTime() {
     var endingPosition = this._maximumPositionCalculator.getEndingPosition();
     return endingPosition !== undefined ? {
       isEnd: true,
-      duration: endingPosition
+      endingPosition: endingPosition
     } : {
       isEnd: false,
-      duration: this._maximumPositionCalculator.getMaximumAvailablePosition()
+      endingPosition: this._maximumPositionCalculator.getMaximumAvailablePosition()
     };
   };
   _proto._lazilyCreateActiveStreamInfo = function _lazilyCreateActiveStreamInfo(bufferType) {
@@ -19021,9 +19102,8 @@ var MaximumPositionCalculator = /*#__PURE__*/function () {
    * @returns {number}
    */;
   _proto2.getMaximumAvailablePosition = function getMaximumAvailablePosition() {
-    var _a;
     if (this._manifest.isDynamic) {
-      return (_a = this._manifest.getLivePosition()) !== null && _a !== void 0 ? _a : this._manifest.getMaximumSafePosition();
+      return this._manifest.getMaximumSafePosition();
     }
     if (this._lastVideoAdaptation === undefined || this._lastAudioAdaptation === undefined) {
       return this._manifest.getMaximumSafePosition();
@@ -19493,15 +19573,10 @@ function maintainEndOfStream(mediaSource, cancelSignal) {
  * @returns {Number}
  */
 function getInitialTime(manifest, lowLatencyMode, startAt) {
+  var _a;
   if (!(0,is_null_or_undefined/* default */.Z)(startAt)) {
     var min = manifest.getMinimumSafePosition();
-    var max;
-    if (manifest.isLive) {
-      max = manifest.getLivePosition();
-    }
-    if (max === undefined) {
-      max = manifest.getMaximumSafePosition();
-    }
+    var max = manifest.getMaximumSafePosition();
     if (!(0,is_null_or_undefined/* default */.Z)(startAt.position)) {
       log/* default */.Z.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
@@ -19518,6 +19593,11 @@ function getInitialTime(manifest, lowLatencyMode, startAt) {
       log/* default */.Z.debug("Init: using startAt.fromLastPosition");
       var fromLastPosition = startAt.fromLastPosition;
       return fromLastPosition >= 0 ? max : Math.max(min, max + fromLastPosition);
+    } else if (!(0,is_null_or_undefined/* default */.Z)(startAt.fromLivePosition)) {
+      log/* default */.Z.debug("Init: using startAt.fromLivePosition");
+      var livePosition = (_a = manifest.getLivePosition()) !== null && _a !== void 0 ? _a : max;
+      var fromLivePosition = startAt.fromLivePosition;
+      return fromLivePosition >= 0 ? livePosition : Math.max(min, livePosition + fromLivePosition);
     } else if (!(0,is_null_or_undefined/* default */.Z)(startAt.percentage)) {
       log/* default */.Z.debug("Init: using startAt.percentage");
       var percentage = startAt.percentage;
@@ -19557,8 +19637,8 @@ function getInitialTime(manifest, lowLatencyMode, startAt) {
 }
 // EXTERNAL MODULE: ./src/core/init/utils/get_loaded_reference.ts + 2 modules
 var get_loaded_reference = __webpack_require__(379);
-// EXTERNAL MODULE: ./src/core/init/utils/initial_seek_and_play.ts
-var initial_seek_and_play = __webpack_require__(8833);
+// EXTERNAL MODULE: ./src/core/init/utils/initial_seek_and_play.ts + 1 modules
+var initial_seek_and_play = __webpack_require__(9016);
 // EXTERNAL MODULE: ./src/core/init/utils/initialize_content_decryption.ts
 var initialize_content_decryption = __webpack_require__(7794);
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
@@ -20538,7 +20618,7 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
     });
     var _performInitialSeekAn = (0,initial_seek_and_play/* default */.Z)(mediaElement, playbackObserver, initialTime, autoPlay, function (err) {
         return _this6.trigger("warning", err);
-      }, cancelSignal),
+      }, true, cancelSignal),
       autoPlayResult = _performInitialSeekAn.autoPlayResult,
       initialPlayPerformed = _performInitialSeekAn.initialPlayPerformed,
       initialSeekPerformed = _performInitialSeekAn.initialSeekPerformed;
@@ -20818,8 +20898,8 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
         period: period
       });
     });
-    contentTimeBoundariesObserver.addEventListener("durationUpdate", function (newDuration) {
-      mediaSourceDurationUpdater.updateDuration(newDuration.duration, newDuration.isEnd);
+    contentTimeBoundariesObserver.addEventListener("endingPositionChange", function (x) {
+      return mediaSourceDurationUpdater.updateDuration(x.endingPosition, x.isEnd);
     });
     contentTimeBoundariesObserver.addEventListener("endOfStream", function () {
       if (endOfStreamCanceller === null) {
@@ -20836,8 +20916,8 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
         endOfStreamCanceller = null;
       }
     });
-    var currentDuration = contentTimeBoundariesObserver.getCurrentDuration();
-    mediaSourceDurationUpdater.updateDuration(currentDuration.duration, currentDuration.isEnd);
+    var endInfo = contentTimeBoundariesObserver.getCurrentEndingTime();
+    mediaSourceDurationUpdater.updateDuration(endInfo.endingPosition, endInfo.isEnd);
     return contentTimeBoundariesObserver;
   }
   /**
@@ -21041,11 +21121,13 @@ function getLoadedReference(playbackObserver, mediaElement, isDirectfile, cancel
       }
     }
     var minReadyState = shouldWaitForHaveEnoughData() ? 4 : 3;
-    if (observation.readyState >= minReadyState && observation.currentRange !== null) {
-      if (!(0,should_validate_metadata/* default */.Z)() || mediaElement.duration > 0) {
-        isLoaded.setValue(true);
-        listenCanceller.cancel();
-        return;
+    if (observation.readyState >= minReadyState) {
+      if (observation.currentRange !== null || observation.ended) {
+        if (!(0,should_validate_metadata/* default */.Z)() || mediaElement.duration > 0) {
+          isLoaded.setValue(true);
+          listenCanceller.cancel();
+          return;
+        }
       }
     }
   }, {
@@ -21057,18 +21139,47 @@ function getLoadedReference(playbackObserver, mediaElement, isDirectfile, cancel
 
 /***/ }),
 
-/***/ 8833:
+/***/ 9016:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ performInitialSeekAndPlay; }
-/* harmony export */ });
-/* harmony import */ var _compat__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1669);
-/* harmony import */ var _compat_browser_compatibility_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3774);
-/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3714);
-/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3887);
-/* harmony import */ var _utils_reference__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5095);
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  Z: function() { return /* binding */ performInitialSeekAndPlay; }
+});
+
+// EXTERNAL MODULE: ./src/compat/should_validate_metadata.ts
+var should_validate_metadata = __webpack_require__(1669);
+// EXTERNAL MODULE: ./src/compat/browser_compatibility_types.ts
+var browser_compatibility_types = __webpack_require__(3774);
+// EXTERNAL MODULE: ./src/compat/browser_detection.ts
+var browser_detection = __webpack_require__(3666);
+;// CONCATENATED MODULE: ./src/compat/should_prevent_seeking_at_0_initially.ts
+
+/**
+ * We noticed that on Xbox game consoles and Universal windows platforms
+ * (presumably an Edge version is in cause here), the browser didn't send
+ * a "seeking" event if we were seeking at a 0 position initially.
+ *
+ * We could theoretically never seek at 0 initially as the initial position of
+ * an HTMLMediaElement should be at 0 anyway, but we still do it as a safe
+ * solution, as many devices have a buggy integration of HTML5 media API.
+ *
+ * This function returns `true` when we should avoid doing so, for now only for
+ * the non-standard behavior of those Edge platforms.
+ * @returns {number}
+ */
+function shouldPreventSeekingAt0Initially() {
+  return browser_detection/* isXbox */.GQ || browser_detection/* isIEOrEdge */.YM;
+}
+// EXTERNAL MODULE: ./src/errors/media_error.ts
+var media_error = __webpack_require__(3714);
+// EXTERNAL MODULE: ./src/log.ts + 1 modules
+var log = __webpack_require__(3887);
+// EXTERNAL MODULE: ./src/utils/reference.ts
+var reference = __webpack_require__(5095);
+;// CONCATENATED MODULE: ./src/core/init/utils/initial_seek_and_play.ts
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -21087,6 +21198,9 @@ function getLoadedReference(playbackObserver, mediaElement, isDirectfile, cancel
 
 
 
+/* eslint-disable-next-line max-len */
+
+
 
 
 /**
@@ -21097,24 +21211,25 @@ function getLoadedReference(playbackObserver, mediaElement, isDirectfile, cancel
  * @param {number|Function} startTime
  * @param {boolean} mustAutoPlay
  * @param {Function} onWarning
+ * @param {boolean} isDirectfile
  * @param {Object} cancelSignal
  * @returns {Object}
  */
-function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mustAutoPlay, onWarning, cancelSignal) {
+function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mustAutoPlay, onWarning, isDirectfile, cancelSignal) {
   var resolveAutoPlay;
   var rejectAutoPlay;
   var autoPlayResult = new Promise(function (res, rej) {
     resolveAutoPlay = res;
     rejectAutoPlay = rej;
   });
-  var initialSeekPerformed = new _utils_reference__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z(false, cancelSignal);
-  var initialPlayPerformed = new _utils_reference__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z(false, cancelSignal);
+  var initialSeekPerformed = new reference/* default */.Z(false, cancelSignal);
+  var initialPlayPerformed = new reference/* default */.Z(false, cancelSignal);
   mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
   var deregisterCancellation = cancelSignal.register(function (err) {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
     rejectAutoPlay(err);
   });
-  if (mediaElement.readyState >= _compat_browser_compatibility_types__WEBPACK_IMPORTED_MODULE_1__/* .READY_STATES */ .c.HAVE_METADATA) {
+  if (mediaElement.readyState >= browser_compatibility_types/* READY_STATES */.c.HAVE_METADATA) {
     onLoadedMetadata();
   }
   return {
@@ -21124,20 +21239,55 @@ function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mu
   };
   function onLoadedMetadata() {
     mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+    /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
+    var hasAskedForInitialSeek = false;
+    var performInitialSeek = function performInitialSeek(initialSeekTime) {
+      log/* default */.Z.info("Init: Set initial time", initialSeekTime);
+      playbackObserver.setCurrentTime(initialSeekTime);
+      hasAskedForInitialSeek = true;
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    };
+    // `startTime` defined as a function might depend on metadata to make its
+    // choice, such as the content duration, minimum and/or maximum position.
+    //
+    // The RxPlayer might already know those through the Manifest file for
+    // non-Directfile contents, yet only through the `HTMLMediaElement` once a
+    // a sufficient `readyState` has been reached for directfile contents.
+    // So let's divide the two possibilities here.
     var initialTime = typeof startTime === "function" ? startTime() : startTime;
-    _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z.info("Init: Set initial time", initialTime);
-    playbackObserver.setCurrentTime(initialTime);
-    initialSeekPerformed.setValue(true);
-    initialSeekPerformed.finish();
-    if ((0,_compat__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z)() && mediaElement.duration === 0) {
-      var error = new _errors__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .Z("MEDIA_ERR_NOT_LOADED_METADATA", "Cannot load automatically: your browser " + "falsely announced having loaded the content.");
+    if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    } else if (isDirectfile && browser_detection/* isSafariMobile */.SB) {
+      // On safari mobile (version 17.1.2) seeking too early cause the video
+      // to never buffer media data. Using setTimeout 0 defers the seek
+      // to a moment at which safari should be more able to handle a seek.
+      setTimeout(function () {
+        performInitialSeek(initialTime);
+      }, 0);
+    } else {
+      performInitialSeek(initialTime);
+    }
+    if ((0,should_validate_metadata/* default */.Z)() && mediaElement.duration === 0) {
+      var error = new media_error/* default */.Z("MEDIA_ERR_NOT_LOADED_METADATA", "Cannot load automatically: your browser " + "falsely announced having loaded the content.");
       onWarning(error);
     }
     if (cancelSignal.isCancelled()) {
       return;
     }
+    /**
+     * We only want to continue to `play` when a `seek` has actually been
+     * performed (if it has been asked). This boolean keep track of if the
+     * seek arised.
+     */
+    var isAwaitingSeek = hasAskedForInitialSeek;
     playbackObserver.listen(function (observation, stopListening) {
-      if (!observation.seeking && observation.rebuffering === null && observation.readyState >= 1) {
+      if (hasAskedForInitialSeek && observation.seeking) {
+        isAwaitingSeek = false;
+        return;
+      }
+      if (!isAwaitingSeek && !observation.seeking && observation.rebuffering === null && observation.readyState >= 1) {
         stopListening();
         onPlayable();
       }
@@ -21148,11 +21298,22 @@ function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mu
   }
   function onPlayable() {
     var _a;
-    _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z.info("Init: Can begin to play content");
+    log/* default */.Z.info("Init: Can begin to play content");
     if (!mustAutoPlay) {
       if (mediaElement.autoplay) {
-        _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z.warn("Init: autoplay is enabled on HTML media element. " + "Media will play as soon as possible.");
+        log/* default */.Z.warn("Init: autoplay is enabled on HTML media element. " + "Media will play as soon as possible.");
       }
+      initialPlayPerformed.setValue(true);
+      initialPlayPerformed.finish();
+      deregisterCancellation();
+      return resolveAutoPlay({
+        type: "skipped"
+      });
+    } else if (mediaElement.ended) {
+      // the video has ended state to true, executing VideoElement.play() will
+      // restart the video from the start, which is not wanted in most cases.
+      // returning "skipped" prevents the call to play() and fix the issue
+      log/* default */.Z.warn("Init: autoplay is enabled but the video is ended. " + "Skipping autoplay to prevent video to start again");
       initialPlayPerformed.setValue(true);
       initialPlayPerformed.finish();
       deregisterCancellation();
@@ -21184,8 +21345,8 @@ function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mu
       }
       if (playError instanceof Error && playError.name === "NotAllowedError") {
         // auto-play was probably prevented.
-        _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .Z.warn("Init: Media element can't play." + " It may be due to browser auto-play policies.");
-        var error = new _errors__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .Z("MEDIA_ERR_BLOCKED_AUTOPLAY", "Cannot trigger auto-play automatically: " + "your browser does not allow it.");
+        log/* default */.Z.warn("Init: Media element can't play." + " It may be due to browser auto-play policies.");
+        var error = new media_error/* default */.Z("MEDIA_ERR_BLOCKED_AUTOPLAY", "Cannot trigger auto-play automatically: " + "your browser does not allow it.");
         onWarning(error);
         if (cancelSignal.isCancelled()) {
           return;
@@ -22020,7 +22181,7 @@ var ImageSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     try {
       this._buffered.insert(startTime, endTime);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
       }
     } catch (err) {
       return Promise.reject(err);
@@ -22294,6 +22455,21 @@ function parseTextTrackToElements(type, data, timestampOffset, language) {
  * Setting a value too high might lead to two segments targeting different times
  * to be wrongly believed to target the same time. In worst case scenarios, this
  * could lead to wanted text tracks being removed.
+ *
+ * When comparing 2 segments s1 and s2, you may want to take into account the duration
+ * of the segments:
+ *   - if s1 is [0, 2] and s2 is [0, 2.1] s1 and s2 can be considered as nearly equal as
+ *     there is a relative difference of: (2.1-2) / 2 = 5%;
+ *     Formula: (end_s1 - end_s2) / duration_s2 = relative_difference
+ *   - if s1 is [0, 0.04] and s2 is [0.04, 0.08] s1 and s2 may not considered as nearly
+ *     equal as there is a relative difference of: (0.04-0.08) / 0.04 = 100%
+ *
+ * To compare relatively to the duration of a segment you can provide and additional
+ * parameter "delta" that remplace MAX_DELTA_BUFFER_TIME.
+ * If parameter "delta" is higher than MAX_DELTA_BUFFER_TIME, MAX_DELTA_BUFFER_TIME
+ * is used instead of delta. This ensure that segments are nearly equal when comparing
+ * relatively AND absolutely.
+ *
  * @type Number
  */
 var MAX_DELTA_BUFFER_TIME = 0.2;
@@ -22301,10 +22477,14 @@ var MAX_DELTA_BUFFER_TIME = 0.2;
  * @see MAX_DELTA_BUFFER_TIME
  * @param {Number} a
  * @param {Number} b
+ * @param {Number} delta
  * @returns {Boolean}
  */
-function areNearlyEqual(a, b) {
-  return Math.abs(a - b) <= MAX_DELTA_BUFFER_TIME;
+function areNearlyEqual(a, b, delta) {
+  if (delta === void 0) {
+    delta = MAX_DELTA_BUFFER_TIME;
+  }
+  return Math.abs(a - b) <= Math.min(delta, MAX_DELTA_BUFFER_TIME);
 }
 /**
  * Get all cues which have data before the given time.
@@ -22378,6 +22558,22 @@ function removeCuesInfosBetween(cuesInfos, start, end) {
 
 
 /**
+ * first or last IHTMLCue in a group can have a slighlty different start
+ * or end time than the start or end time of the ICuesGroup due to parsing
+ * approximation.
+ * DELTA_CUES_GROUP defines the tolerance level when comparing the start/end
+ * of a IHTMLCue to the start/end of a ICuesGroup.
+ * Having this value too high may lead to have unwanted subtitle displayed
+ * Having this value too low may lead to have subtitles not displayed
+ */
+var DELTA_CUES_GROUP = 1e-3;
+/**
+ * segment_duration / RELATIVE_DELTA_RATIO = relative_delta
+ *
+ * relative_delta is the tolerance to determine if two segements are the same
+ */
+var RELATIVE_DELTA_RATIO = 5;
+/**
  * Manage the buffer of the HTMLTextSegmentBuffer.
  * Allows to add, remove and recuperate cues at given times.
  * @class TextTrackCuesStore
@@ -22418,6 +22614,17 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
         for (var j = 0; j < cues.length; j++) {
           if (time >= cues[j].start && time < cues[j].end) {
             ret.push(cues[j].element);
+          }
+        }
+        // first or last IHTMLCue in a group can have a slighlty different start
+        // or end time than the start or end time of the ICuesGroup due to parsing
+        // approximation.
+        // Add a tolerance of 1ms to fix this issue
+        if (ret.length === 0 && cues.length > 0) {
+          for (var _j = 0; _j < cues.length; _j++) {
+            if (areNearlyEqual(time, cues[_j].start, DELTA_CUES_GROUP) || areNearlyEqual(time, cues[_j].end, DELTA_CUES_GROUP)) {
+              ret.push(cues[_j].element);
+            }
           }
         }
         return ret;
@@ -22506,6 +22713,11 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
       end: end,
       cues: cues
     };
+    // it's preferable to have a delta depending on the duration of the segment
+    // if the delta is one fifth of the length of the segment:
+    // a segment of [0, 2] is the "same" segment as [0, 2.1]
+    // but [0, 0.04] is not the "same" segement as [0,04, 0.08]
+    var relativeDelta = Math.abs(start - end) / RELATIVE_DELTA_RATIO;
     /**
      * Called when we found the index of the next cue relative to the cue we
      * want to insert (that is a cue starting after its start or at the same
@@ -22518,7 +22730,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
       var nextCue = cuesBuffer[indexOfNextCue];
       if (nextCue === undefined ||
       // no cue
-      areNearlyEqual(cuesInfosToInsert.end, nextCue.end))
+      areNearlyEqual(cuesInfosToInsert.end, nextCue.end, relativeDelta))
         // samey end
         {
           //   ours:            |AAAAA|
@@ -22553,8 +22765,8 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
     for (var cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
       var cuesInfos = cuesBuffer[cueIdx];
       if (start < cuesInfos.end) {
-        if (areNearlyEqual(start, cuesInfos.start)) {
-          if (areNearlyEqual(end, cuesInfos.end)) {
+        if (areNearlyEqual(start, cuesInfos.start, relativeDelta)) {
+          if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             // exact same segment
             //   ours:            |AAAAA|
             //   the current one: |BBBBB|
@@ -22599,7 +22811,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             //   - add ours before the current one
             cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
-          } else if (areNearlyEqual(end, cuesInfos.start)) {
+          } else if (areNearlyEqual(end, cuesInfos.start, relativeDelta)) {
             // our cue goes just before the current one:
             //   ours:            |AAAAAAA|
             //   the current one:         |BBBB|
@@ -22610,7 +22822,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
             cuesInfos.start = end;
             cuesBuffer.splice(cueIdx, 0, cuesInfosToInsert);
             return;
-          } else if (areNearlyEqual(end, cuesInfos.end)) {
+          } else if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             //   ours:            |AAAAAAA|
             //   the current one:    |BBBB|
             //   Result:          |AAAAAAA|
@@ -22637,7 +22849,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
           return;
         }
         // else -> start > cuesInfos.start
-        if (areNearlyEqual(cuesInfos.end, end)) {
+        if (areNearlyEqual(cuesInfos.end, end, relativeDelta)) {
           //   ours:              |AAAAAA|
           //   the current one: |BBBBBBBB|
           //   Result:          |BBAAAAAA|
@@ -22671,6 +22883,21 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
           onIndexOfNextCueFound(nextCueIdx);
           return;
         }
+      }
+    }
+    if (cuesBuffer.length) {
+      var lastCue = cuesBuffer[cuesBuffer.length - 1];
+      if (areNearlyEqual(lastCue.end, start, relativeDelta)) {
+        // Match the end of the previous cue to the start of the following one
+        // if they are close enough. If there is a small gap between two segments
+        // it can lead to having no subtitles for a short time, this is noticeable when
+        // two successive segments displays the same text, making it diseappear
+        // and reappear quickly, which gives the impression of blinking
+        //
+        //   ours:                   |AAAAA|
+        //   the current one: |BBBBB|...
+        //   Result:          |BBBBBBBAAAAA|
+        lastCue.end = start;
       }
     }
     // no cues group has the end after our current start.
@@ -22986,7 +23213,7 @@ var HTMLTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       return;
     }
     if (infos.inventoryInfos !== null) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos);
+      this._segmentInventory.insertChunk(infos.inventoryInfos, true);
     }
     this._buffer.insert(cues, start, end);
     this._buffered.insert(start, end);
@@ -23501,7 +23728,7 @@ var NativeTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       }
       this._buffered.insert(start, end);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
       }
     } catch (err) {
       return Promise.reject(err);
@@ -23631,8 +23858,6 @@ var config = __webpack_require__(6872);
 var log = __webpack_require__(3887);
 // EXTERNAL MODULE: ./src/manifest/utils.ts
 var utils = __webpack_require__(520);
-// EXTERNAL MODULE: ./src/utils/take_first_set.ts
-var take_first_set = __webpack_require__(5278);
 ;// CONCATENATED MODULE: ./src/core/segment_buffers/inventory/buffered_history.ts
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -23756,7 +23981,6 @@ function segment_inventory_arrayLikeToArray(arr, len) { if (len == null || len >
 
 
 
-
 /**
  * Keep track of every chunk downloaded and currently in the linked media
  * buffer.
@@ -23792,8 +24016,17 @@ var SegmentInventory = /*#__PURE__*/function () {
    * at a time, so each `synchronizeBuffered` call should be given a TimeRanges
    * coming from the same buffer.
    * @param {TimeRanges} buffered
+   * @param {boolean|undefined} [skipLog=false] - This method normally may
+   * trigger a voluminous debug log if debug logs are enabled.
+   * As this method might be called very often in some specific debugging
+   * situations, setting this value to `true` allows to prevent the call from
+   * triggering a log.
    */;
-  _proto.synchronizeBuffered = function synchronizeBuffered(buffered) {
+  _proto.synchronizeBuffered = function synchronizeBuffered(buffered, skipLog) {
+    if (skipLog === void 0) {
+      skipLog = false;
+    }
+    var _a, _b, _c, _d, _e, _f, _g;
     var inventory = this._inventory;
     var inventoryIndex = 0; // Current index considered.
     var thisSegment = inventory[0]; // Current segmentInfos considered
@@ -23819,7 +24052,7 @@ var SegmentInventory = /*#__PURE__*/function () {
       // it:
       // skip until first segment with at least `MINIMUM_SEGMENT_SIZE` past the
       // start of that range.
-      while (thisSegment !== undefined && (0,take_first_set/* default */.Z)(thisSegment.bufferedEnd, thisSegment.end) - rangeStart < MINIMUM_SEGMENT_SIZE) {
+      while (thisSegment !== undefined && ((_a = thisSegment.bufferedEnd) !== null && _a !== void 0 ? _a : thisSegment.end) - rangeStart < MINIMUM_SEGMENT_SIZE) {
         thisSegment = inventory[++inventoryIndex];
       }
       // Contains infos about the last garbage-collected segment before
@@ -23833,14 +24066,14 @@ var SegmentInventory = /*#__PURE__*/function () {
         // last garbage-collected segment
         inventory[indexBefore + numberOfSegmentToDelete - 1];
         lastDeletedSegmentInfos = {
-          end: (0,take_first_set/* default */.Z)(lastDeletedSegment.bufferedEnd, lastDeletedSegment.end),
+          end: (_b = lastDeletedSegment.bufferedEnd) !== null && _b !== void 0 ? _b : lastDeletedSegment.end,
           precizeEnd: lastDeletedSegment.precizeEnd
         };
         log/* default */.Z.debug("SI: " + numberOfSegmentToDelete + " segments GCed.", bufferType);
         var removed = inventory.splice(indexBefore, numberOfSegmentToDelete);
         for (var _iterator = segment_inventory_createForOfIteratorHelperLoose(removed), _step; !(_step = _iterator()).done;) {
           var seg = _step.value;
-          if (seg.bufferedStart === undefined && seg.bufferedEnd === undefined) {
+          if (seg.bufferedStart === undefined && seg.bufferedEnd === undefined && seg.status !== 2 /* ChunkStatus.Failed */) {
             this._bufferedHistory.addBufferedSegment(seg.infos, null);
           }
         }
@@ -23851,7 +24084,7 @@ var SegmentInventory = /*#__PURE__*/function () {
       }
       // If the current segment is actually completely outside that range (it
       // is contained in one of the next one), skip that part.
-      if (rangeEnd - (0,take_first_set/* default */.Z)(thisSegment.bufferedStart, thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
+      if (rangeEnd - ((_c = thisSegment.bufferedStart) !== null && _c !== void 0 ? _c : thisSegment.start) >= MINIMUM_SEGMENT_SIZE) {
         guessBufferedStartFromRangeStart(thisSegment, rangeStart, lastDeletedSegmentInfos, bufferType);
         if (inventoryIndex === inventory.length - 1) {
           // This is the last segment in the inventory.
@@ -23861,8 +24094,8 @@ var SegmentInventory = /*#__PURE__*/function () {
         }
         thisSegment = inventory[++inventoryIndex];
         // Make contiguous until first segment outside that range
-        var thisSegmentStart = (0,take_first_set/* default */.Z)(thisSegment.bufferedStart, thisSegment.start);
-        var thisSegmentEnd = (0,take_first_set/* default */.Z)(thisSegment.bufferedEnd, thisSegment.end);
+        var thisSegmentStart = (_d = thisSegment.bufferedStart) !== null && _d !== void 0 ? _d : thisSegment.start;
+        var thisSegmentEnd = (_e = thisSegment.bufferedEnd) !== null && _e !== void 0 ? _e : thisSegment.end;
         var nextRangeStart = i < rangesLength - 1 ? buffered.start(i + 1) : undefined;
         while (thisSegment !== undefined && rangeEnd - thisSegmentStart >= MINIMUM_SEGMENT_SIZE && (nextRangeStart === undefined || rangeEnd - thisSegmentStart >= thisSegmentEnd - nextRangeStart)) {
           var prevSegment = inventory[inventoryIndex - 1];
@@ -23875,8 +24108,8 @@ var SegmentInventory = /*#__PURE__*/function () {
           thisSegment.bufferedStart = prevSegment.bufferedEnd;
           thisSegment = inventory[++inventoryIndex];
           if (thisSegment !== undefined) {
-            thisSegmentStart = (0,take_first_set/* default */.Z)(thisSegment.bufferedStart, thisSegment.start);
-            thisSegmentEnd = (0,take_first_set/* default */.Z)(thisSegment.bufferedEnd, thisSegment.end);
+            thisSegmentStart = (_f = thisSegment.bufferedStart) !== null && _f !== void 0 ? _f : thisSegment.start;
+            thisSegmentEnd = (_g = thisSegment.bufferedEnd) !== null && _g !== void 0 ? _g : thisSegment.end;
           }
         }
       }
@@ -23893,12 +24126,12 @@ var SegmentInventory = /*#__PURE__*/function () {
       var _removed = inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
       for (var _iterator2 = segment_inventory_createForOfIteratorHelperLoose(_removed), _step2; !(_step2 = _iterator2()).done;) {
         var _seg = _step2.value;
-        if (_seg.bufferedStart === undefined && _seg.bufferedEnd === undefined) {
+        if (_seg.bufferedStart === undefined && _seg.bufferedEnd === undefined && _seg.status !== 2 /* ChunkStatus.Failed */) {
           this._bufferedHistory.addBufferedSegment(_seg.infos, null);
         }
       }
     }
-    if (bufferType !== undefined && log/* default */.Z.hasLevel("DEBUG")) {
+    if (!skipLog && bufferType !== undefined && log/* default */.Z.hasLevel("DEBUG")) {
       log/* default */.Z.debug("SI: current " + bufferType + " inventory timeline:\n" + prettyPrintInventory(this._inventory));
     }
   }
@@ -23909,7 +24142,7 @@ var SegmentInventory = /*#__PURE__*/function () {
    * segment have been inserted, you should call the `completeSegment` method.
    * @param {Object} chunkInformation
    */;
-  _proto.insertChunk = function insertChunk(_ref) {
+  _proto.insertChunk = function insertChunk(_ref, succeed) {
     var period = _ref.period,
       adaptation = _ref.adaptation,
       representation = _ref.representation,
@@ -23927,7 +24160,7 @@ var SegmentInventory = /*#__PURE__*/function () {
     }
     var inventory = this._inventory;
     var newSegment = {
-      partiallyPushed: true,
+      status: succeed ? 0 /* ChunkStatus.PartiallyPushed */ : 2 /* ChunkStatus.Failed */,
       chunkSize: chunkSize,
       splitted: false,
       start: start,
@@ -24123,7 +24356,7 @@ var SegmentInventory = /*#__PURE__*/function () {
               //  ===>         : |--|====|-|
               log/* default */.Z.warn("SI: Segment pushed is contained in a previous one", bufferType, start, end, segmentI.start, segmentI.end);
               var nextSegment = {
-                partiallyPushed: segmentI.partiallyPushed,
+                status: segmentI.status,
                 /**
                  * Note: this sadly means we're doing as if
                  * that chunk is present two times.
@@ -24276,7 +24509,10 @@ var SegmentInventory = /*#__PURE__*/function () {
           this._inventory.splice(firstI + 1, length);
           i -= length;
         }
-        this._inventory[firstI].partiallyPushed = false;
+        if (this._inventory[firstI].status === 0 /* ChunkStatus.PartiallyPushed */) {
+          this._inventory[firstI].status = 1 /* ChunkStatus.Complete */;
+        }
+
         this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
         this._inventory[firstI].bufferedEnd = lastBufferedEnd;
@@ -24291,10 +24527,12 @@ var SegmentInventory = /*#__PURE__*/function () {
       for (var _iterator3 = segment_inventory_createForOfIteratorHelperLoose(resSegments), _step3; !(_step3 = _iterator3()).done;) {
         var seg = _step3.value;
         if (seg.bufferedStart !== undefined && seg.bufferedEnd !== undefined) {
-          this._bufferedHistory.addBufferedSegment(seg.infos, {
-            start: seg.bufferedStart,
-            end: seg.bufferedEnd
-          });
+          if (seg.status !== 2 /* ChunkStatus.Failed */) {
+            this._bufferedHistory.addBufferedSegment(seg.infos, {
+              start: seg.bufferedStart,
+              end: seg.bufferedEnd
+            });
+          }
         } else {
           log/* default */.Z.debug("SI: buffered range not known after sync. Skipping history.", seg.start, seg.end);
         }
@@ -24337,7 +24575,7 @@ var SegmentInventory = /*#__PURE__*/function () {
  */
 
 function bufferedStartLooksCoherent(thisSegment) {
-  if (thisSegment.bufferedStart === undefined || thisSegment.partiallyPushed) {
+  if (thisSegment.bufferedStart === undefined || thisSegment.status !== 1 /* ChunkStatus.Complete */) {
     return false;
   }
   var start = thisSegment.start,
@@ -24355,7 +24593,7 @@ function bufferedStartLooksCoherent(thisSegment) {
  * @returns {Boolean}
  */
 function bufferedEndLooksCoherent(thisSegment) {
-  if (thisSegment.bufferedEnd === undefined || thisSegment.partiallyPushed) {
+  if (thisSegment.bufferedEnd === undefined || thisSegment.status !== 1 /* ChunkStatus.Complete */) {
     return false;
   }
   var start = thisSegment.start,
@@ -24619,11 +24857,16 @@ var SegmentBuffer = /*#__PURE__*/function () {
    * This methods allow to manually trigger a synchronization. It should be
    * called before retrieving Segment information from it (e.g. with
    * `getInventory`).
+   * @param {boolean} [skipLog] - This method may trigger a voluminous debug
+   * log once synchronization is finished if debug logs are enabled.
+   * As this method might be called very often in some specific debugging
+   * situations, setting this value to `true` allows to prevent the call from
+   * triggering a log.
    */
   var _proto = SegmentBuffer.prototype;
-  _proto.synchronizeInventory = function synchronizeInventory() {
+  _proto.synchronizeInventory = function synchronizeInventory(skipLog) {
     // The default implementation just use the SegmentInventory
-    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges());
+    this._segmentInventory.synchronizeBuffered(this.getBufferedRanges(), skipLog);
   }
   /**
    * Returns the currently buffered data for which the content is known with
@@ -25717,6 +25960,7 @@ var Representation = /*#__PURE__*/function () {
    * @param {Object} args
    */
   function Representation(args, opts) {
+    var _a;
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
@@ -25745,12 +25989,24 @@ var Representation = /*#__PURE__*/function () {
     this.cdnMetadata = args.cdnMetadata;
     this.index = args.index;
     if (opts.type === "audio" || opts.type === "video") {
-      var mimeTypeStr = this.getMimeTypeString();
-      var isSupported = isCodecSupported(mimeTypeStr);
-      if (!isSupported) {
-        log/* default */.Z.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+      this.isSupported = false;
+      // Supplemental codecs are defined as backwards-compatible codecs enhancing
+      // the experience of a base layer codec
+      if (args.supplementalCodecs !== undefined) {
+        var supplementalCodecMimeTypeStr = ((_a = this.mimeType) !== null && _a !== void 0 ? _a : "") + ";codecs=\"" + args.supplementalCodecs + "\"";
+        if (isCodecSupported(supplementalCodecMimeTypeStr)) {
+          this.codec = args.supplementalCodecs;
+          this.isSupported = true;
+        }
       }
-      this.isSupported = isSupported;
+      if (!this.isSupported) {
+        var mimeTypeStr = this.getMimeTypeString();
+        var isSupported = isCodecSupported(mimeTypeStr);
+        if (!isSupported) {
+          log/* default */.Z.info("Unsupported Representation", mimeTypeStr, this.id, this.bitrate);
+        }
+        this.isSupported = isSupported;
+      }
     } else {
       this.isSupported = true; // TODO for other types
     }
@@ -26372,10 +26628,22 @@ var Period = /*#__PURE__*/function () {
   /**
    * Returns true if the give time is in the time boundaries of this `Period`.
    * @param {number} time
+   * @param {object|null} nextPeriod - Period coming chronologically just
+   * after in the same Manifest. `null` if this instance is the last `Period`.
    * @returns {boolean}
    */;
-  _proto.containsTime = function containsTime(time) {
-    return time >= this.start && (this.end === undefined || time < this.end);
+  _proto.containsTime = function containsTime(time, nextPeriod) {
+    if (time >= this.start && (this.end === undefined || time < this.end)) {
+      return true;
+    } else if (time === this.end && (nextPeriod === null || nextPeriod.start > this.end)) {
+      // The last possible timed position of a Period is ambiguous as it is
+      // frequently in common with the start of the next one: is it part of
+      // the current or of the next Period?
+      // Here we only consider it part of the current Period if it is the
+      // only one with that position.
+      return true;
+    }
+    return false;
   };
   return Period;
 }();
@@ -26501,8 +26769,8 @@ var StaticRepresentationIndex = /*#__PURE__*/function () {
   /**
    * @returns {Boolean}
    */;
-  _proto.isFinished = function isFinished() {
-    return true;
+  _proto.isStillAwaitingFutureSegments = function isStillAwaitingFutureSegments() {
+    return false;
   }
   /**
    * @returns {Boolean}
@@ -26979,9 +27247,14 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
    * @returns {Object|undefined}
    */;
   _proto.getPeriodForTime = function getPeriodForTime(time) {
-    return (0,array_find/* default */.Z)(this.periods, function (period) {
-      return time >= period.start && (period.end === undefined || period.end > time);
-    });
+    var nextPeriod = null;
+    for (var i = this.periods.length - 1; i >= 0; i--) {
+      var period = this.periods[i];
+      if (period.containsTime(time, nextPeriod)) {
+        return period;
+      }
+      nextPeriod = period;
+    }
   }
   /**
    * Returns the first Period starting strictly after the given time.
@@ -28627,6 +28900,7 @@ var BaseRepresentationIndex = /*#__PURE__*/function () {
       timeline: (_c = index.timeline) !== null && _c !== void 0 ? _c : [],
       timescale: timescale
     };
+    this._manifestBoundsCalculator = context.manifestBoundsCalculator;
     this._scaledPeriodStart = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .toIndexTime */ .gT)(periodStart, this._index);
     this._scaledPeriodEnd = periodEnd == null ? undefined : (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_1__/* .toIndexTime */ .gT)(periodEnd, this._index);
     this._isInitialized = this._index.timeline.length > 0;
@@ -28655,7 +28929,7 @@ var BaseRepresentationIndex = /*#__PURE__*/function () {
    * @returns {Array.<Object>}
    */;
   _proto.getSegments = function getSegments(from, dur) {
-    return (0,_get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z)(this._index, from, dur, this._isEMSGWhitelisted, this._scaledPeriodEnd);
+    return (0,_get_segments_from_timeline__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .Z)(this._index, from, dur, this._manifestBoundsCalculator, this._scaledPeriodEnd, this._isEMSGWhitelisted);
   }
   /**
    * Returns false as no Segment-Base based index should need to be refreshed.
@@ -28758,8 +29032,8 @@ var BaseRepresentationIndex = /*#__PURE__*/function () {
    * should become available in the future.
    * @returns {Boolean}
    */;
-  _proto.isFinished = function isFinished() {
-    return true;
+  _proto.isStillAwaitingFutureSegments = function isStillAwaitingFutureSegments() {
+    return false;
   }
   /**
    * No segment in a `BaseRepresentationIndex` are known initially.
@@ -28894,13 +29168,17 @@ function getWantedRepeatIndex(segmentStartTime, segmentDuration, wantedTime) {
  * @param {Object} index - index object, constructed by parsing the manifest.
  * @param {number} from - starting timestamp wanted, in seconds
  * @param {number} durationWanted - duration wanted, in seconds
+ * @param {Object} manifestBoundsCalculator
+ * @param {number|undefined} scaledPeriodEnd
  * @param {function} isEMSGWhitelisted
- * @param {number|undefined} maximumTime
  * @returns {Array.<Object>}
  */
-function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted, maximumTime) {
+function getSegmentsFromTimeline(index, from, durationWanted, manifestBoundsCalculator, scaledPeriodEnd, isEMSGWhitelisted) {
+  var _a;
+  var maximumTime = manifestBoundsCalculator.getEstimatedMaximumPosition((_a = index.availabilityTimeOffset) !== null && _a !== void 0 ? _a : 0);
+  var wantedMaximum = Math.min(from + durationWanted, maximumTime !== null && maximumTime !== void 0 ? maximumTime : Infinity);
   var scaledUp = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from, index);
-  var scaledTo = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(from + durationWanted, index);
+  var scaledTo = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .toIndexTime */ .gT)(wantedMaximum, index);
   var timeline = index.timeline,
     timescale = index.timescale,
     segmentUrlTemplate = index.segmentUrlTemplate,
@@ -28914,7 +29192,13 @@ function getSegmentsFromTimeline(index, from, durationWanted, isEMSGWhitelisted,
     var duration = timelineItem.duration,
       start = timelineItem.start,
       range = timelineItem.range;
-    var repeat = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .calculateRepeat */ .KF)(timelineItem, timeline[i + 1], maximumTime);
+    var maxRepeatTime = void 0;
+    if (maximumTime === undefined) {
+      maxRepeatTime = scaledPeriodEnd;
+    } else {
+      maxRepeatTime = Math.min(maximumTime * timescale, scaledPeriodEnd !== null && scaledPeriodEnd !== void 0 ? scaledPeriodEnd : Infinity);
+    }
+    var repeat = (0,_utils_index_helpers__WEBPACK_IMPORTED_MODULE_0__/* .calculateRepeat */ .KF)(timelineItem, timeline[i + 1], maxRepeatTime);
     var complete = index.availabilityTimeComplete !== false || i !== timelineLength - 1 && repeat !== 0;
     var segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
     var segmentTime = start + segmentNumberInCurrentRange * duration;
@@ -29077,7 +29361,7 @@ function createDashUrlDetokenizer(time, nb) {
 
 /***/ }),
 
-/***/ 4541:
+/***/ 1707:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -29433,6 +29717,133 @@ function getMinimumAndMaximumPositions(periods) {
     maximumUnsafePosition: maxPositions.unsafe
   };
 }
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/manifest_bounds_calculator.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
+ * This class allows to easily calculate the first and last available positions
+ * in a content at any time.
+ *
+ * By centralizing the manifest bounds calculation in this class and by giving
+ * an instance of it to each parsed elements which might depend on it, we
+ * ensure that we can provide it once it is known to every one of those
+ * elements without needing to parse a second time the MPD.
+ * @class ManifestBoundsCalculator
+ */
+var ManifestBoundsCalculator = /*#__PURE__*/function () {
+  /**
+   * @param {Object} args
+   */
+  function ManifestBoundsCalculator(args) {
+    this._isDynamic = args.isDynamic;
+    this._timeShiftBufferDepth = !args.isDynamic || args.timeShiftBufferDepth === undefined ? null : args.timeShiftBufferDepth;
+    this._serverTimestampOffset = args.serverTimestampOffset;
+    this._availabilityStartTime = args.availabilityStartTime;
+  }
+  /**
+   * Set the last position and the position time (the value of `performance.now()`
+   * at the time that position was true converted into seconds).
+   *
+   * @example
+   * Example if you trust `Date.now()` to give you a reliable offset:
+   * ```js
+   * const lastPosition = Date.now();
+   * const positionTime = performance.now() / 1000;
+   * manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
+   * ```
+   *
+   * @param {number} lastPosition
+   * @param {number|undefined} positionTime
+   */
+  var _proto = ManifestBoundsCalculator.prototype;
+  _proto.setLastPosition = function setLastPosition(lastPosition, positionTime) {
+    this._lastPosition = lastPosition;
+    this._positionTime = positionTime;
+  }
+  /**
+   * Returns `true` if the last position and the position time
+   * (for dynamic content only) have been comunicated.
+   * `false` otherwise.
+   * @returns {boolean}
+   */;
+  _proto.lastPositionIsKnown = function lastPositionIsKnown() {
+    if (this._isDynamic) {
+      return this._positionTime != null && this._lastPosition != null;
+    }
+    return this._lastPosition != null;
+  }
+  /**
+   * Estimate a minimum bound for the content from the last set segment time
+   * and buffer depth.
+   * Consider that it is only an estimation, not the real value.
+   * @return {number|undefined}
+   */;
+  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime() {
+    var _a;
+    if (!this._isDynamic || this._timeShiftBufferDepth === null) {
+      return 0;
+    }
+    var maximumBound = (_a = this.getEstimatedLiveEdge()) !== null && _a !== void 0 ? _a : this.getEstimatedMaximumPosition(0);
+    if (maximumBound === undefined) {
+      return undefined;
+    }
+    var minimumBound = maximumBound - this._timeShiftBufferDepth;
+    return minimumBound;
+  }
+  /**
+   * Estimate the segment time in seconds that corresponds to what could be
+   * considered the live edge (or `undefined` for non-live contents).
+   *
+   * Note that for some contents which just anounce segments in advance, this
+   * value might be very different than the maximum position that is
+   * requestable.
+   * @return {number|undefined}
+   */;
+  _proto.getEstimatedLiveEdge = function getEstimatedLiveEdge() {
+    if (!this._isDynamic || this._serverTimestampOffset === undefined) {
+      return undefined;
+    }
+    return (performance.now() + this._serverTimestampOffset) / 1000 - this._availabilityStartTime;
+  }
+  /**
+   * Produce a rough estimate of the ending time of the last requestable segment
+   * in that content.
+   *
+   * This value is only an estimate and may be far from reality.
+   *
+   * The `availabilityTimeOffset` in argument is the corresponding
+   * `availabilityTimeOffset` that applies to the current wanted segment, or `0`
+   * if none exist. It will be applied on live content to deduce the maximum
+   * segment time available.
+   */;
+  _proto.getEstimatedMaximumPosition = function getEstimatedMaximumPosition(availabilityTimeOffset) {
+    if (!this._isDynamic) {
+      return this._lastPosition;
+    }
+    var liveEdge = this.getEstimatedLiveEdge();
+    if (liveEdge !== undefined && availabilityTimeOffset !== Infinity) {
+      return liveEdge + availabilityTimeOffset;
+    } else if (this._positionTime !== undefined && this._lastPosition !== undefined) {
+      return Math.max(this._lastPosition - this._positionTime + performance.now() / 1000, 0);
+    }
+    return this._lastPosition;
+  };
+  return ManifestBoundsCalculator;
+}();
+
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/parse_availability_start_time.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -29537,6 +29948,11 @@ function flattenOverlappingPeriods(parsedPeriods) {
         // `lastFlattenedPeriod` has now a negative or `0` duration.
         // Remove it, consider the next Period in its place, and re-start the loop.
         flattenedPeriods.pop();
+        if (flattenedPeriods.length === 0) {
+          // There's no remaining Period to compare to `parsedPeriod`
+          break;
+        }
+        // Take the previous Period as reference and compare it now to `parsedPeriod`
         lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
       }
     }
@@ -29604,113 +30020,6 @@ function getPeriodsTimeInformation(periodsIR, manifestInfos) {
   });
   return periodsTimeInformation;
 }
-;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/manifest_bounds_calculator.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/**
- * This class allows to easily calculate the first and last available positions
- * in a content at any time.
- *
- * That task can be an hard for dynamic DASH contents: it depends on a
- * `timeShiftBufferDepth` defined in the MPD and on the maximum possible
- * position.
- *
- * The latter can come from either a clock synchronization mechanism or the
- * indexing schemes (e.g. SegmentTemplate, SegmentTimeline etc.) of the last
- * Periods.
- * As such, it might only be known once a large chunk of the MPD has already
- * been parsed.
- *
- * By centralizing the manifest bounds calculation in this class and by giving
- * an instance of it to each parsed elements which might depend on it, we
- * ensure that we can provide it once it is known to every one of those
- * elements without needing to parse a second time the MPD.
- * @class ManifestBoundsCalculator
- */
-var ManifestBoundsCalculator = /*#__PURE__*/function () {
-  /**
-   * @param {Object} args
-   */
-  function ManifestBoundsCalculator(args) {
-    this._isDynamic = args.isDynamic;
-    this._timeShiftBufferDepth = !args.isDynamic || args.timeShiftBufferDepth === undefined ? null : args.timeShiftBufferDepth;
-  }
-  /**
-   * Set the last position and the position time (the value of `performance.now()`
-   * at the time that position was true converted into seconds).
-   *
-   * @example
-   * Example if you trust `Date.now()` to give you a reliable offset:
-   * ```js
-   * const lastPosition = Date.now();
-   * const positionTime = performance.now() / 1000;
-   * manifestBoundsCalculator.setLastPosition(lastPosition, positionTime);
-   * ```
-   *
-   * @param {number} lastPosition
-   * @param {number|undefined} positionTime
-   */
-  var _proto = ManifestBoundsCalculator.prototype;
-  _proto.setLastPosition = function setLastPosition(lastPosition, positionTime) {
-    this._lastPosition = lastPosition;
-    this._positionTime = positionTime;
-  }
-  /**
-   * Returns `true` if the last position and the position time
-   * (for dynamic content only) have been comunicated.
-   * `false` otherwise.
-   * @returns {boolean}
-   */;
-  _proto.lastPositionIsKnown = function lastPositionIsKnown() {
-    if (this._isDynamic) {
-      return this._positionTime != null && this._lastPosition != null;
-    }
-    return this._lastPosition != null;
-  }
-  /**
-   * Estimate a minimum bound for the content from the last set segment time
-   * and buffer depth.
-   * Consider that it is only an estimation, not the real value.
-   * @return {number|undefined}
-   */;
-  _proto.estimateMinimumBound = function estimateMinimumBound() {
-    if (!this._isDynamic || this._timeShiftBufferDepth === null) {
-      return 0;
-    }
-    var maximumBound = this.estimateMaximumBound();
-    if (maximumBound === undefined) {
-      return undefined;
-    }
-    var minimumBound = maximumBound - this._timeShiftBufferDepth;
-    return minimumBound;
-  }
-  /**
-   * Estimate a maximum bound for the content from the last set segment time.
-   * Consider that it is only an estimation, not the real value.
-   * @return {number|undefined}
-   */;
-  _proto.estimateMaximumBound = function estimateMaximumBound() {
-    if (this._isDynamic && this._positionTime != null && this._lastPosition != null) {
-      return Math.max(this._lastPosition - this._positionTime + performance.now() / 1000, 0);
-    }
-    return this._lastPosition;
-  };
-  return ManifestBoundsCalculator;
-}();
-
 // EXTERNAL MODULE: ./src/manifest/adaptation.ts + 3 modules
 var manifest_adaptation = __webpack_require__(8999);
 // EXTERNAL MODULE: ./src/utils/array_find_index.ts
@@ -29890,6 +30199,31 @@ function inferAdaptationType(representations, adaptationMimeType, adaptationCode
 }
 // EXTERNAL MODULE: ./src/utils/object_assign.ts
 var object_assign = __webpack_require__(8026);
+;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/convert_supplemental_codecs.ts
+
+var supplementalCodecSeparator = /[, ]+/g;
+/**
+ * Converts SCTE 214 supplemental codec string into RFC4281 codec string
+ *
+ * The returned value is a codec string respecting RFC6381
+ *
+ * SCTE 214 defines supplemental codecs as a whitespace-separated multiple list of
+ * codec strings
+ *
+ * RFC6381 defines codecs as a comma-separated list of codec strings.
+ *
+ * This two syntax differs and this parser is used to convert SCTE214
+ * to be compliant with what MSE APIs expect
+ *
+ * @param {string} val - The codec string to parse
+ * @returns { Array.<string | undefined | null>}
+ */
+function convertSupplementalCodecsToRFC6381(val) {
+  if ((0,is_non_empty_string/* default */.Z)(val)) {
+    return val.trim().replace(supplementalCodecSeparator, ", ");
+  }
+  return "";
+}
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/get_hdr_information.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -30155,8 +30489,8 @@ var ListRepresentationIndex = /*#__PURE__*/function () {
   /**
    * @returns {Boolean}
    */;
-  _proto.isFinished = function isFinished() {
-    return true;
+  _proto.isStillAwaitingFutureSegments = function isStillAwaitingFutureSegments() {
+    return false;
   }
   /**
    * @returns {Boolean}
@@ -30182,8 +30516,6 @@ var network_error = __webpack_require__(9362);
 var assert = __webpack_require__(811);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/clear_timeline_from_position.ts
 var clear_timeline_from_position = __webpack_require__(8232);
-// EXTERNAL MODULE: ./src/parsers/manifest/utils/is_segment_still_available.ts
-var is_segment_still_available = __webpack_require__(1091);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/update_segment_timeline.ts
 var update_segment_timeline = __webpack_require__(5505);
 // EXTERNAL MODULE: ./src/parsers/manifest/dash/common/indexes/get_segments_from_timeline.ts
@@ -30607,9 +30939,13 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
 
 
 
-
 // eslint-disable-next-line max-len
 
+/**
+ * `IRepresentationIndex` implementation for a DASH `SegmentTimeline` segment
+ * indexing scheme.
+ * @class TimelineRepresentationIndex
+ */
 var TimelineRepresentationIndex = /*#__PURE__*/function () {
   /**
    * @param {Object} index
@@ -30621,6 +30957,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
       throw new Error("The given index is not compatible with a " + "TimelineRepresentationIndex.");
     }
     var availabilityTimeComplete = context.availabilityTimeComplete,
+      availabilityTimeOffset = context.availabilityTimeOffset,
       manifestBoundsCalculator = context.manifestBoundsCalculator,
       isDynamic = context.isDynamic,
       isLastPeriod = context.isLastPeriod,
@@ -30647,8 +30984,25 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     this._parseTimeline = (_b = index.timelineParser) !== null && _b !== void 0 ? _b : null;
     var initializationUrl = ((_c = index.initialization) === null || _c === void 0 ? void 0 : _c.media) === undefined ? null : (0,tokens/* constructRepresentationUrl */.zA)(index.initialization.media, representationId, representationBitrate);
     var segmentUrlTemplate = index.media === undefined ? null : (0,tokens/* constructRepresentationUrl */.zA)(index.media, representationId, representationBitrate);
+    var actualAvailabilityTimeOffset;
+    // Technically, it seems (although it is not clear) that an MPD may contain
+    // future segments and it's the job of a player to not request segments later
+    // than the time at which they should be available.
+    // In practice, we don't do that for various reasons: precision issues,
+    // various DASH spec interpretations by packagers and players...
+    //
+    // So as a compromise, if nothing in the MPD indicates that future segments
+    // may be announced (see code below), we will act as if ALL segments in this
+    // TimelineRepresentationIndex are requestable
+    if (availabilityTimeOffset === undefined && availabilityTimeComplete === undefined) {
+      actualAvailabilityTimeOffset = Infinity; // Meaning: we can request
+      // everything in the index
+    } else {
+      actualAvailabilityTimeOffset = availabilityTimeOffset !== null && availabilityTimeOffset !== void 0 ? availabilityTimeOffset : 0;
+    }
     this._index = {
-      availabilityTimeComplete: availabilityTimeComplete,
+      availabilityTimeComplete: availabilityTimeComplete !== null && availabilityTimeComplete !== void 0 ? availabilityTimeComplete : true,
+      availabilityTimeOffset: actualAvailabilityTimeOffset,
       indexRange: index.indexRange,
       indexTimeOffset: indexTimeOffset,
       initialization: index.initialization == null ? undefined : {
@@ -30698,7 +31052,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
       timeline: timeline,
       timescale: timescale,
       indexTimeOffset: indexTimeOffset
-    }, from, duration, this._isEMSGWhitelisted, this._scaledPeriodEnd);
+    }, from, duration, this._manifestBoundsCalculator, this._scaledPeriodEnd, this._isEMSGWhitelisted);
   }
   /**
    * Returns true if the index should be refreshed.
@@ -30730,12 +31084,19 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
    * @returns {Number|null}
    */;
   _proto.getLastAvailablePosition = function getLastAvailablePosition() {
+    var _a;
     this._refreshTimeline();
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    var lastTime = TimelineRepresentationIndex.getIndexEnd(this._index.timeline, this._scaledPeriodEnd);
-    return lastTime === null ? null : (0,index_helpers/* fromIndexTime */.zG)(lastTime, this._index);
+    var lastReqSegInfo = getLastRequestableSegmentInfo(
+    // Needed typecast for TypeScript
+    this._index, this._manifestBoundsCalculator, this._scaledPeriodEnd);
+    if (lastReqSegInfo === null) {
+      return null;
+    }
+    var lastScaledPosition = Math.min(lastReqSegInfo.end, (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity);
+    return (0,index_helpers/* fromIndexTime */.zG)(lastScaledPosition, this._index);
   }
   /**
    * Returns the absolute end in seconds this RepresentationIndex can reach once
@@ -30743,11 +31104,20 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
    * @returns {number|null|undefined}
    */;
   _proto.getEnd = function getEnd() {
-    if (!this._isDynamic || !this._isLastPeriod) {
-      // @see isFinished
-      return this.getLastAvailablePosition();
+    var _a;
+    if (this._isDynamic && !this._isLastPeriod) {
+      return undefined;
     }
-    return undefined;
+    this._refreshTimeline();
+    if (this._index.timeline === null) {
+      this._index.timeline = this._getTimeline();
+    }
+    if (this._index.timeline.length <= 0) {
+      return null;
+    }
+    var lastSegment = this._index.timeline[this._index.timeline.length - 1];
+    var lastTime = Math.min((0,index_helpers/* getIndexSegmentEnd */.jH)(lastSegment, null, this._scaledPeriodEnd), (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity);
+    return (0,index_helpers/* fromIndexTime */.zG)(lastTime, this._index);
   }
   /**
    * Returns:
@@ -30761,34 +31131,56 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
    * @returns {boolean|undefined}
    */;
   _proto.awaitSegmentBetween = function awaitSegmentBetween(start, end) {
-    var _a;
+    var _a, _b;
     (0,assert/* default */.Z)(start <= end);
-    if (!this._isDynamic || !this._isLastPeriod) {
-      return false;
+    if (!this._isDynamic) {
+      return false; // No segment will be newly available in the future
     }
+
     this._refreshTimeline();
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     var _this$_index2 = this._index,
-      timeline = _this$_index2.timeline,
-      timescale = _this$_index2.timescale;
+      timescale = _this$_index2.timescale,
+      timeline = _this$_index2.timeline;
     var segmentTimeRounding = getSegmentTimeRoundingError(timescale);
-    var scaledEnd = (0,index_helpers/* toIndexTime */.gT)(end, this._index);
-    if (timeline.length > 0) {
-      var lastTimelineElement = timeline[timeline.length - 1];
-      var lastSegmentEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastTimelineElement, null, this._scaledPeriodEnd);
-      var roundedEnd = lastSegmentEnd + segmentTimeRounding;
-      if (roundedEnd >= Math.min(scaledEnd, (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity)) {
-        return false; // already loaded
+    var scaledWantedEnd = (0,index_helpers/* toIndexTime */.gT)(end, this._index);
+    var lastReqSegInfo = getLastRequestableSegmentInfo(
+    // Needed typecast for TypeScript
+    this._index, this._manifestBoundsCalculator, this._scaledPeriodEnd);
+    if (lastReqSegInfo !== null) {
+      var lastReqSegmentEnd = Math.min(lastReqSegInfo.end, (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity);
+      var roundedReqSegmentEnd = lastReqSegmentEnd + segmentTimeRounding;
+      if (roundedReqSegmentEnd >= Math.min(scaledWantedEnd, (_b = this._scaledPeriodEnd) !== null && _b !== void 0 ? _b : Infinity)) {
+        return false; // everything up to that point is already requestable
       }
     }
 
-    if (this._scaledPeriodEnd === undefined) {
-      return scaledEnd + segmentTimeRounding > this._scaledPeriodStart ? undefined : false;
+    var scaledWantedStart = (0,index_helpers/* toIndexTime */.gT)(start, this._index);
+    if (timeline.length > 0 && lastReqSegInfo !== null && !lastReqSegInfo.isLastOfTimeline) {
+      // There are some future segments already anounced in the MPD
+      var lastSegment = timeline[timeline.length - 1];
+      var lastSegmentEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastSegment, null, this._scaledPeriodEnd);
+      var roundedLastSegEnd = lastSegmentEnd + segmentTimeRounding;
+      if (scaledWantedStart < roundedLastSegEnd + segmentTimeRounding) {
+        return true; // The MPD's timeline already contains one such element,
+        // It is just not requestable yet
+      }
     }
-    var scaledStart = (0,index_helpers/* toIndexTime */.gT)(start, this._index);
-    return scaledStart - segmentTimeRounding < this._scaledPeriodEnd && scaledEnd + segmentTimeRounding > this._scaledPeriodStart;
+
+    if (!this._isLastPeriod) {
+      // Let's consider - perhaps wrongly, that Periods which aren't the last
+      // one have all of their segments announced.
+      return false;
+    }
+    if (this._scaledPeriodEnd === undefined) {
+      return scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart ? undefined :
+      // There may be future segments at this point
+      false; // Before the current Period
+    }
+    // `true` if within the boundaries of this Period. `false` otherwise.
+    return scaledWantedStart - segmentTimeRounding < this._scaledPeriodEnd && scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart;
   }
   /**
    * Returns true if a Segment returned by this index is still considered
@@ -30806,11 +31198,9 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    var _this$_index3 = this._index,
-      timeline = _this$_index3.timeline,
-      timescale = _this$_index3.timescale,
-      indexTimeOffset = _this$_index3.indexTimeOffset;
-    return (0,is_segment_still_available/* default */.Z)(segment, timeline, timescale, indexTimeOffset);
+    return _isSegmentStillAvailable(segment,
+    // Needed typecast for TypeScript
+    this._index, this._manifestBoundsCalculator, this._scaledPeriodEnd);
   }
   /**
    * Checks if the time given is in a discontinuity. That is:
@@ -30874,6 +31264,8 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     if (hasReplaced) {
       this._index.startNumber = newIndex._index.startNumber;
     }
+    this._index.availabilityTimeOffset = newIndex._index.availabilityTimeOffset;
+    this._index.availabilityTimeComplete = newIndex._index.availabilityTimeComplete;
     this._index.endNumber = newIndex._index.endNumber;
     this._isDynamic = newIndex._isDynamic;
     this._scaledPeriodStart = newIndex._scaledPeriodStart;
@@ -30882,32 +31274,66 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     this._isLastPeriod = newIndex._isLastPeriod;
   }
   /**
-   * Returns `true` if this RepresentationIndex currently contains its last
+   * Returns `false` if this RepresentationIndex currently contains its last
    * segment.
-   * Returns `false` if it's still pending.
+   * Returns `true` if it's still pending.
    * @returns {Boolean}
    */;
-  _proto.isFinished = function isFinished() {
-    if (!this._isDynamic || !this._isLastPeriod) {
-      // Either the content is not dynamic, in which case no new segment will
-      // be generated, either it is but this index is not linked to the current
-      // last Period in the MPD, in which case it is inferred that it has been
-      // completely generated. Note that this second condition might break very
-      // very rare use cases where old Periods are still being generated, yet it
-      // should fix more cases than it breaks.
-      return true;
+  _proto.isStillAwaitingFutureSegments = function isStillAwaitingFutureSegments() {
+    var _a;
+    if (!this._isDynamic) {
+      return false;
     }
+    this._refreshTimeline();
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     var timeline = this._index.timeline;
-    if (this._scaledPeriodEnd === undefined || timeline.length === 0) {
+    if (timeline.length === 0) {
+      // No segment announced in this Period
+      if (this._scaledPeriodEnd !== undefined) {
+        var liveEdge = this._manifestBoundsCalculator.getEstimatedLiveEdge();
+        if (liveEdge !== undefined && (0,index_helpers/* toIndexTime */.gT)(liveEdge, this._index) > this._scaledPeriodEnd) {
+          // This Period is over, we're not awaiting anything
+          return false;
+        }
+      }
+      // Let's just consider that we're awaiting only for when this is the last Period.
+      return this._isLastPeriod;
+    }
+    var segmentTimeRounding = getSegmentTimeRoundingError(this._index.timescale);
+    var lastReqSegInfo = getLastRequestableSegmentInfo(
+    // Needed typecast for TypeScript
+    this._index, this._manifestBoundsCalculator, this._scaledPeriodEnd);
+    if (lastReqSegInfo !== null && !lastReqSegInfo.isLastOfTimeline) {
+      // There might be non-yet requestable segments in the manifest
+      var lastReqSegmentEnd = Math.min(lastReqSegInfo.end, (_a = this._scaledPeriodEnd) !== null && _a !== void 0 ? _a : Infinity);
+      if (this._scaledPeriodEnd !== undefined && lastReqSegmentEnd + segmentTimeRounding >= this._scaledPeriodEnd) {
+        // The last requestable segment ends after the end of the Period anyway
+        return false;
+      }
+      return true; // There are not-yet requestable segments
+    }
+
+    if (!this._isLastPeriod) {
+      // This index is not linked to the current last Period in the MPD, in
+      // which case it is inferred that all segments have been announced.
+      //
+      // Note that this condition might break very very rare use cases where old
+      // Periods are still being generated, yet it should fix more cases than it
+      // breaks.
       return false;
     }
-    var lastTimelineElement = timeline[timeline.length - 1];
-    var lastTime = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastTimelineElement, null, this._scaledPeriodEnd);
-    var segmentTimeRounding = getSegmentTimeRoundingError(this._index.timescale);
-    return lastTime + segmentTimeRounding >= this._scaledPeriodEnd;
+    if (this._scaledPeriodEnd === undefined) {
+      // This is the last Period of a dynamic content whose end is unknown.
+      // Just return true.
+      return true;
+    }
+    var lastSegment = timeline[timeline.length - 1];
+    var lastSegmentEnd = (0,index_helpers/* getIndexSegmentEnd */.jH)(lastSegment, null, this._scaledPeriodEnd);
+    // We're awaiting future segments only if the current end is before the end
+    // of the Period
+    return lastSegmentEnd + segmentTimeRounding < this._scaledPeriodEnd;
   }
   /**
    * @returns {Boolean}
@@ -30935,7 +31361,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     if (!this._isDynamic) {
       return;
     }
-    var firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
     if (firstPosition == null) {
       return; // we don't know yet
     }
@@ -30947,12 +31373,6 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     } else if (this._index.endNumber !== undefined) {
       this._index.startNumber = nbEltsRemoved + 1;
     }
-  };
-  TimelineRepresentationIndex.getIndexEnd = function getIndexEnd(timeline, scaledPeriodEnd) {
-    if (timeline.length <= 0) {
-      return null;
-    }
-    return Math.min((0,index_helpers/* getIndexSegmentEnd */.jH)(timeline[timeline.length - 1], null, scaledPeriodEnd), scaledPeriodEnd !== null && scaledPeriodEnd !== void 0 ? scaledPeriodEnd : Infinity);
   }
   /**
    * Allows to generate the "timeline" for this RepresentationIndex.
@@ -31041,6 +31461,113 @@ function updateTimelineFromEndNumber(timeline, startNumber, endNumber) {
   }
   return timeline;
 }
+/**
+ * Returns true if a Segment returned by the corresponding index is still
+ * considered available.
+ * Returns false if it is not available anymore.
+ * Returns undefined if we cannot know whether it is still available or not.
+ * /!\ We do not check the mediaURLs of the segment.
+ * @param {Object} segment
+ * @param {Object} index
+ * @param {Object} manifestBoundsCalculator
+ * @param {number|undefined} scaledPeriodEnd
+ * @returns {Boolean|undefined}
+ */
+function _isSegmentStillAvailable(segment, index, manifestBoundsCalculator, scaledPeriodEnd) {
+  var lastReqSegInfo = getLastRequestableSegmentInfo(index, manifestBoundsCalculator, scaledPeriodEnd);
+  if (lastReqSegInfo === null) {
+    return false;
+  }
+  for (var i = 0; i < index.timeline.length; i++) {
+    if (lastReqSegInfo.timelineIdx < i) {
+      return false;
+    }
+    var tSegment = index.timeline[i];
+    var tSegmentTime = (tSegment.start - index.indexTimeOffset) / index.timescale;
+    if (tSegmentTime > segment.time) {
+      return false; // We went over it without finding it
+    } else if (tSegmentTime === segment.time) {
+      if (tSegment.range === undefined) {
+        return segment.range === undefined;
+      }
+      return segment.range != null && tSegment.range[0] === segment.range[0] && tSegment.range[1] === segment.range[1];
+    } else {
+      // tSegment.start < segment.time
+      if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
+        var timeDiff = tSegmentTime - tSegment.start;
+        var repeat = timeDiff / tSegment.duration - 1;
+        return repeat % 1 === 0 && repeat <= lastReqSegInfo.newRepeatCount;
+      }
+    }
+  }
+  return false;
+}
+/**
+ * Returns from the given RepresentationIndex information on the last segment
+ * that may be requested currently.
+ *
+ * Returns `null` if there's no such segment.
+ * @param {Object} index
+ * @param {Object} manifestBoundsCalculator
+ * @param {number|undefined} scaledPeriodEnd
+ * @returns {number|null}
+ */
+
+function getLastRequestableSegmentInfo(index, manifestBoundsCalculator, scaledPeriodEnd) {
+  if (index.timeline.length <= 0) {
+    return null;
+  }
+  if (index.availabilityTimeOffset === Infinity) {
+    // availabilityTimeOffset to Infinity == Everything is requestable in the timeline.
+    var lastIndex = index.timeline.length - 1;
+    var lastElem = index.timeline[lastIndex];
+    return {
+      isLastOfTimeline: true,
+      timelineIdx: lastIndex,
+      newRepeatCount: lastElem.repeatCount,
+      end: (0,index_helpers/* getIndexSegmentEnd */.jH)(lastElem, null, scaledPeriodEnd)
+    };
+  }
+  var adjustedMaxSeconds = manifestBoundsCalculator.getEstimatedMaximumPosition(index.availabilityTimeOffset);
+  if (adjustedMaxSeconds === undefined) {
+    var _lastIndex = index.timeline.length - 1;
+    var _lastElem = index.timeline[_lastIndex];
+    return {
+      isLastOfTimeline: true,
+      timelineIdx: _lastIndex,
+      newRepeatCount: _lastElem.repeatCount,
+      end: (0,index_helpers/* getIndexSegmentEnd */.jH)(_lastElem, null, scaledPeriodEnd)
+    };
+  }
+  for (var i = index.timeline.length - 1; i >= index.timeline.length; i--) {
+    var element = index.timeline[i];
+    var endOfFirstOccurence = element.start + element.duration;
+    if ((0,index_helpers/* fromIndexTime */.zG)(endOfFirstOccurence, index) <= adjustedMaxSeconds) {
+      var endTime = (0,index_helpers/* getIndexSegmentEnd */.jH)(element, index.timeline[i + 1], scaledPeriodEnd);
+      if ((0,index_helpers/* fromIndexTime */.zG)(endTime, index) <= adjustedMaxSeconds) {
+        return {
+          isLastOfTimeline: i === index.timeline.length - 1,
+          timelineIdx: i,
+          newRepeatCount: element.repeatCount,
+          end: endOfFirstOccurence
+        };
+      } else {
+        // We have to find the right repeatCount
+        var maxIndexTime = (0,index_helpers/* toIndexTime */.gT)(adjustedMaxSeconds, index);
+        var diffToSegStart = maxIndexTime - element.start;
+        var nbOfSegs = Math.floor(diffToSegStart / element.duration);
+        (0,assert/* default */.Z)(nbOfSegs >= 1);
+        return {
+          isLastOfTimeline: false,
+          timelineIdx: i,
+          newRepeatCount: nbOfSegs - 1,
+          end: element.start + nbOfSegs * element.duration
+        };
+      }
+    }
+  }
+  return null;
+}
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/timeline/index.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -31093,8 +31620,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
    */
   function TemplateRepresentationIndex(index, context) {
     var _a, _b;
-    var aggressiveMode = context.aggressiveMode,
-      availabilityTimeOffset = context.availabilityTimeOffset,
+    var availabilityTimeOffset = context.availabilityTimeOffset,
       manifestBoundsCalculator = context.manifestBoundsCalculator,
       isDynamic = context.isDynamic,
       periodEnd = context.periodEnd,
@@ -31105,7 +31631,6 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     var timescale = (_a = index.timescale) !== null && _a !== void 0 ? _a : 1;
     this._availabilityTimeOffset = availabilityTimeOffset;
     this._manifestBoundsCalculator = manifestBoundsCalculator;
-    this._aggressiveMode = aggressiveMode;
     var presentationTimeOffset = index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
     var scaledStart = periodStart * timescale;
     var indexTimeOffset = presentationTimeOffset - scaledStart;
@@ -31271,13 +31796,22 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     var timescale = this._index.timescale;
     var segmentTimeRounding = getSegmentTimeRoundingError(timescale);
     var scaledPeriodStart = this._periodStart * timescale;
+    var scaledRelativeStart = start * timescale - scaledPeriodStart;
     var scaledRelativeEnd = end * timescale - scaledPeriodStart;
+    var lastSegmentStart = this._getLastSegmentStart();
+    if ((0,is_null_or_undefined/* default */.Z)(lastSegmentStart)) {
+      var _relativeScaledIndexEnd = this._estimateRelativeScaledEnd();
+      if (_relativeScaledIndexEnd === undefined) {
+        return scaledRelativeEnd + segmentTimeRounding >= 0;
+      }
+      return scaledRelativeEnd + segmentTimeRounding >= 0 && scaledRelativeStart < _relativeScaledIndexEnd - segmentTimeRounding;
+    }
+    var lastSegmentEnd = lastSegmentStart + this._index.duration;
     var relativeScaledIndexEnd = this._estimateRelativeScaledEnd();
     if (relativeScaledIndexEnd === undefined) {
-      return scaledRelativeEnd + segmentTimeRounding >= 0;
+      return scaledRelativeEnd > lastSegmentEnd - segmentTimeRounding;
     }
-    var scaledRelativeStart = start * timescale - scaledPeriodStart;
-    return scaledRelativeStart - segmentTimeRounding < relativeScaledIndexEnd;
+    return scaledRelativeEnd > lastSegmentEnd - segmentTimeRounding && scaledRelativeStart < relativeScaledIndexEnd - segmentTimeRounding;
   }
   /**
    * Returns true if, based on the arguments, the index should be refreshed.
@@ -31320,30 +31854,30 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     return false;
   }
   /**
-   * Returns `true` if the last segments in this index have already been
+   * Returns `false` if the last segments in this index have already been
    * generated so that we can freely go to the next period.
-   * Returns `false` if the index is still waiting on future segments to be
+   * Returns `true` if the index is still waiting on future segments to be
    * generated.
    * @returns {Boolean}
    */;
-  _proto.isFinished = function isFinished() {
+  _proto.isStillAwaitingFutureSegments = function isStillAwaitingFutureSegments() {
     if (!this._isDynamic) {
-      return true;
+      return false;
     }
     var scaledRelativeIndexEnd = this._estimateRelativeScaledEnd();
     if (scaledRelativeIndexEnd === undefined) {
-      return false;
+      return true;
     }
     var timescale = this._index.timescale;
     var lastSegmentStart = this._getLastSegmentStart();
     // As last segment start is null if live time is before
     // current period, consider the index not to be finished.
     if ((0,is_null_or_undefined/* default */.Z)(lastSegmentStart)) {
-      return false;
+      return true;
     }
     var lastSegmentEnd = lastSegmentStart + this._index.duration;
     var segmentTimeRounding = getSegmentTimeRoundingError(timescale);
-    return lastSegmentEnd + segmentTimeRounding >= scaledRelativeIndexEnd;
+    return lastSegmentEnd + segmentTimeRounding < scaledRelativeIndexEnd;
   }
   /**
    * @returns {Boolean}
@@ -31356,7 +31890,6 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
    */;
   _proto._replace = function _replace(newIndex) {
     this._index = newIndex._index;
-    this._aggressiveMode = newIndex._aggressiveMode;
     this._isDynamic = newIndex._isDynamic;
     this._periodStart = newIndex._periodStart;
     this._scaledRelativePeriodEnd = newIndex._scaledRelativePeriodEnd;
@@ -31376,6 +31909,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
    * @returns {number | null | undefined}
    */;
   _proto._getFirstSegmentStart = function _getFirstSegmentStart() {
+    var _a;
     if (!this._isDynamic) {
       return 0; // it is the start of the Period
     }
@@ -31384,8 +31918,8 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
       // /!\ The scaled max position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      var maximumBound = this._manifestBoundsCalculator.estimateMaximumBound();
-      if (maximumBound !== undefined && maximumBound < this._periodStart) {
+      var maximumSegmentTime = this._manifestBoundsCalculator.getEstimatedMaximumPosition((_a = this._availabilityTimeOffset) !== null && _a !== void 0 ? _a : 0);
+      if (maximumSegmentTime !== undefined && maximumSegmentTime < this._periodStart) {
         // Maximum position is before this period.
         // No segment is yet available here
         return null;
@@ -31394,7 +31928,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     var _this$_index = this._index,
       duration = _this$_index.duration,
       timescale = _this$_index.timescale;
-    var firstPosition = this._manifestBoundsCalculator.estimateMinimumBound();
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
     if (firstPosition === undefined) {
       return undefined;
     }
@@ -31409,7 +31943,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
    * @returns {number|null|undefined}
    */;
   _proto._getLastSegmentStart = function _getLastSegmentStart() {
-    var _a;
+    var _a, _b;
     var _this$_index2 = this._index,
       duration = _this$_index2.duration,
       timescale = _this$_index2.timescale,
@@ -31417,35 +31951,34 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
       _this$_index2$startNu = _this$_index2.startNumber,
       startNumber = _this$_index2$startNu === void 0 ? 1 : _this$_index2$startNu;
     if (this._isDynamic) {
-      var lastPos = this._manifestBoundsCalculator.estimateMaximumBound();
-      if (lastPos === undefined) {
-        return undefined;
-      }
-      var agressiveModeOffset = this._aggressiveMode ? duration / timescale : 0;
-      if (this._scaledRelativePeriodEnd !== undefined && this._scaledRelativePeriodEnd < (lastPos + agressiveModeOffset - this._periodStart) * this._index.timescale) {
+      var liveEdge = this._manifestBoundsCalculator.getEstimatedLiveEdge();
+      if (liveEdge !== undefined && this._scaledRelativePeriodEnd !== undefined && this._scaledRelativePeriodEnd < liveEdge - this._periodStart * this._index.timescale) {
         var numberOfSegments = Math.ceil(this._scaledRelativePeriodEnd / duration);
         if (endNumber !== undefined && endNumber - startNumber + 1 < numberOfSegments) {
           numberOfSegments = endNumber - startNumber + 1;
         }
         return (numberOfSegments - 1) * duration;
       }
+      var lastPosition = this._manifestBoundsCalculator.getEstimatedMaximumPosition((_a = this._availabilityTimeOffset) !== null && _a !== void 0 ? _a : 0);
+      if (lastPosition === undefined) {
+        return undefined;
+      }
       // /!\ The scaled last position augments continuously and might not
       // reflect exactly the real server-side value. As segments are
       // generated discretely.
-      var scaledLastPosition = (lastPos - this._periodStart) * timescale;
+      var scaledLastPosition = (lastPosition - this._periodStart) * timescale;
       // Maximum position is before this period.
       // No segment is yet available here
       if (scaledLastPosition < 0) {
         return null;
       }
-      var availabilityTimeOffset = ((this._availabilityTimeOffset !== undefined ? this._availabilityTimeOffset : 0) + agressiveModeOffset) * timescale;
-      var numberOfSegmentsAvailable = Math.floor((scaledLastPosition + availabilityTimeOffset) / duration);
+      var numberOfSegmentsAvailable = Math.floor(scaledLastPosition / duration);
       if (endNumber !== undefined && endNumber - startNumber + 1 < numberOfSegmentsAvailable) {
         numberOfSegmentsAvailable = endNumber - startNumber + 1;
       }
       return numberOfSegmentsAvailable <= 0 ? null : (numberOfSegmentsAvailable - 1) * duration;
     } else {
-      var maximumTime = (_a = this._scaledRelativePeriodEnd) !== null && _a !== void 0 ? _a : 0;
+      var maximumTime = (_b = this._scaledRelativePeriodEnd) !== null && _b !== void 0 ? _b : 0;
       var _numberOfSegments = Math.ceil(maximumTime / duration);
       if (endNumber !== undefined && endNumber - startNumber + 1 < _numberOfSegments) {
         _numberOfSegments = endNumber - startNumber + 1;
@@ -31511,14 +32044,12 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
  */
 function parseRepresentationIndex(representation, context) {
   var _a, _b;
-  var aggressiveMode = context.aggressiveMode,
-    availabilityTimeOffset = context.availabilityTimeOffset,
+  var availabilityTimeOffset = context.availabilityTimeOffset,
     manifestBoundsCalculator = context.manifestBoundsCalculator,
     isDynamic = context.isDynamic,
     periodEnd = context.end,
     periodStart = context.start,
     receivedTime = context.receivedTime,
-    timeShiftBufferDepth = context.timeShiftBufferDepth,
     unsafelyBaseOnPreviousRepresentation = context.unsafelyBaseOnPreviousRepresentation,
     inbandEventStreams = context.inbandEventStreams,
     isLastPeriod = context.isLastPeriod;
@@ -31532,8 +32063,7 @@ function parseRepresentationIndex(representation, context) {
     });
   };
   var reprIndexCtxt = {
-    aggressiveMode: aggressiveMode,
-    availabilityTimeComplete: true,
+    availabilityTimeComplete: undefined,
     availabilityTimeOffset: availabilityTimeOffset,
     unsafelyBaseOnPreviousRepresentation: unsafelyBaseOnPreviousRepresentation,
     isEMSGWhitelisted: isEMSGWhitelisted,
@@ -31544,8 +32074,7 @@ function parseRepresentationIndex(representation, context) {
     periodStart: periodStart,
     receivedTime: receivedTime,
     representationBitrate: representation.attributes.bitrate,
-    representationId: representation.attributes.id,
-    timeShiftBufferDepth: timeShiftBufferDepth
+    representationId: representation.attributes.id
   };
   var representationIndex;
   if (representation.children.segmentBase !== undefined) {
@@ -31561,8 +32090,9 @@ function parseRepresentationIndex(representation, context) {
       segmentTemplates.push(childSegmentTemplate);
     }
     var segmentTemplate = object_assign/* default */.Z.apply(void 0, [{}].concat(segmentTemplates));
-    reprIndexCtxt.availabilityTimeComplete = (_a = segmentTemplate.availabilityTimeComplete) !== null && _a !== void 0 ? _a : context.availabilityTimeComplete;
-    reprIndexCtxt.availabilityTimeOffset = ((_b = segmentTemplate.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + context.availabilityTimeOffset;
+    if (segmentTemplate.availabilityTimeOffset !== undefined || context.availabilityTimeOffset !== undefined) {
+      reprIndexCtxt.availabilityTimeOffset = ((_a = segmentTemplate.availabilityTimeOffset) !== null && _a !== void 0 ? _a : 0) + ((_b = context.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0);
+    }
     representationIndex = timeline.isTimelineIndexArgument(segmentTemplate) ? new timeline(segmentTemplate, reprIndexCtxt) : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
   } else {
     var adaptationChildren = context.adaptation.children;
@@ -31657,6 +32187,7 @@ function parse_representations_arrayLikeToArray(arr, len) { if (len == null || l
 
 
 
+
 /**
  * Combine inband event streams from representation and
  * adaptation data.
@@ -31727,12 +32258,12 @@ function getHDRInformation(_ref) {
  * @returns {Array.<Object>}
  */
 function parseRepresentations(representationsIR, adaptation, context) {
-  var _a, _b, _c, _d;
+  var _a, _b, _c, _d, _e;
   var parsedRepresentations = [];
   var _loop = function _loop() {
     var representation = _step.value;
     // Compute Representation ID
-    var representationID = representation.attributes.id != null ? representation.attributes.id : String(representation.attributes.bitrate) + (representation.attributes.height != null ? "-" + representation.attributes.height : "") + (representation.attributes.width != null ? "-" + representation.attributes.width : "") + (representation.attributes.mimeType != null ? "-" + representation.attributes.mimeType : "") + (representation.attributes.codecs != null ? "-" + representation.attributes.codecs : "");
+    var representationID = representation.attributes.id !== undefined ? representation.attributes.id : String(representation.attributes.bitrate) + (representation.attributes.height !== undefined ? "-" + representation.attributes.height : "") + (representation.attributes.width !== undefined ? "-" + representation.attributes.width : "") + (representation.attributes.mimeType !== undefined ? "-" + representation.attributes.mimeType : "") + (representation.attributes.codecs !== undefined ? "-" + representation.attributes.codecs : "");
     // Avoid duplicate IDs
     while (parsedRepresentations.some(function (r) {
       return r.id === representationID;
@@ -31743,7 +32274,10 @@ function parseRepresentations(representationsIR, adaptation, context) {
     var unsafelyBaseOnPreviousRepresentation = (_b = (_a = context.unsafelyBaseOnPreviousAdaptation) === null || _a === void 0 ? void 0 : _a.getRepresentation(representationID)) !== null && _b !== void 0 ? _b : null;
     var inbandEventStreams = combineInbandEventStreams(representation, adaptation);
     var availabilityTimeComplete = (_c = representation.attributes.availabilityTimeComplete) !== null && _c !== void 0 ? _c : context.availabilityTimeComplete;
-    var availabilityTimeOffset = ((_d = representation.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0) + context.availabilityTimeOffset;
+    var availabilityTimeOffset;
+    if (representation.attributes.availabilityTimeOffset !== undefined || context.availabilityTimeOffset !== undefined) {
+      availabilityTimeOffset = ((_d = representation.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0) + ((_e = context.availabilityTimeOffset) !== null && _e !== void 0 ? _e : 0);
+    }
     var reprIndexCtxt = (0,object_assign/* default */.Z)({}, context, {
       availabilityTimeOffset: availabilityTimeOffset,
       availabilityTimeComplete: availabilityTimeComplete,
@@ -31754,7 +32288,7 @@ function parseRepresentations(representationsIR, adaptation, context) {
     var representationIndex = parseRepresentationIndex(representation, reprIndexCtxt);
     // Find bitrate
     var representationBitrate;
-    if (representation.attributes.bitrate == null) {
+    if (representation.attributes.bitrate === undefined) {
       log/* default */.Z.warn("DASH: No usable bitrate found in the Representation.");
       representationBitrate = 0;
     } else {
@@ -31789,33 +32323,42 @@ function parseRepresentations(representationsIR, adaptation, context) {
     }
     // Add optional attributes
     var codecs;
-    if (representation.attributes.codecs != null) {
+    if (representation.attributes.codecs !== undefined) {
       codecs = representation.attributes.codecs;
-    } else if (adaptation.attributes.codecs != null) {
+    } else if (adaptation.attributes.codecs !== undefined) {
       codecs = adaptation.attributes.codecs;
     }
-    if (codecs != null) {
+    if (codecs !== undefined) {
       codecs = codecs === "mp4a.40.02" ? "mp4a.40.2" : codecs;
       parsedRepresentation.codecs = codecs;
     }
-    if (representation.attributes.frameRate != null) {
+    var supplementalCodecs;
+    if (representation.attributes.supplementalCodecs !== undefined) {
+      supplementalCodecs = representation.attributes.supplementalCodecs;
+    } else if (adaptation.attributes.supplementalCodecs !== undefined) {
+      supplementalCodecs = adaptation.attributes.supplementalCodecs;
+    }
+    if (supplementalCodecs !== undefined) {
+      parsedRepresentation.supplementalCodecs = convertSupplementalCodecsToRFC6381(supplementalCodecs);
+    }
+    if (representation.attributes.frameRate !== undefined) {
       parsedRepresentation.frameRate = representation.attributes.frameRate;
-    } else if (adaptation.attributes.frameRate != null) {
+    } else if (adaptation.attributes.frameRate !== undefined) {
       parsedRepresentation.frameRate = adaptation.attributes.frameRate;
     }
-    if (representation.attributes.height != null) {
+    if (representation.attributes.height !== undefined) {
       parsedRepresentation.height = representation.attributes.height;
-    } else if (adaptation.attributes.height != null) {
+    } else if (adaptation.attributes.height !== undefined) {
       parsedRepresentation.height = adaptation.attributes.height;
     }
-    if (representation.attributes.mimeType != null) {
+    if (representation.attributes.mimeType !== undefined) {
       parsedRepresentation.mimeType = representation.attributes.mimeType;
-    } else if (adaptation.attributes.mimeType != null) {
+    } else if (adaptation.attributes.mimeType !== undefined) {
       parsedRepresentation.mimeType = adaptation.attributes.mimeType;
     }
-    if (representation.attributes.width != null) {
+    if (representation.attributes.width !== undefined) {
       parsedRepresentation.width = representation.attributes.width;
-    } else if (adaptation.attributes.width != null) {
+    } else if (adaptation.attributes.width !== undefined) {
       parsedRepresentation.width = adaptation.attributes.width;
     }
     var contentProtectionsIr = adaptation.children.contentProtections !== undefined ? adaptation.children.contentProtections : [];
@@ -32052,7 +32595,7 @@ function getAdaptationSetSwitchingIDs(adaptation) {
  * @returns {Array.<Object>}
  */
 function parseAdaptationSets(adaptationsIR, context) {
-  var _a, _b, _c, _d, _e, _f;
+  var _a, _b, _c, _d, _e, _f, _g;
   var parsedAdaptations = {
     video: [],
     audio: [],
@@ -32075,14 +32618,17 @@ function parseAdaptationSets(adaptationsIR, context) {
     });
     var representationsIR = adaptation.children.representations;
     var availabilityTimeComplete = (_a = adaptation.attributes.availabilityTimeComplete) !== null && _a !== void 0 ? _a : context.availabilityTimeComplete;
-    var availabilityTimeOffset = ((_b = adaptation.attributes.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + context.availabilityTimeOffset;
+    var availabilityTimeOffset = void 0;
+    if (adaptation.attributes.availabilityTimeOffset !== undefined || context.availabilityTimeOffset !== undefined) {
+      availabilityTimeOffset = ((_b = adaptation.attributes.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0) + ((_c = context.availabilityTimeOffset) !== null && _c !== void 0 ? _c : 0);
+    }
     var adaptationMimeType = adaptation.attributes.mimeType;
     var adaptationCodecs = adaptation.attributes.codecs;
     var type = inferAdaptationType(representationsIR, (0,is_non_empty_string/* default */.Z)(adaptationMimeType) ? adaptationMimeType : null, (0,is_non_empty_string/* default */.Z)(adaptationCodecs) ? adaptationCodecs : null, adaptationChildren.roles != null ? adaptationChildren.roles : null);
     if (type === undefined) {
       continue;
     }
-    var priority = (_c = adaptation.attributes.selectionPriority) !== null && _c !== void 0 ? _c : 1;
+    var priority = (_d = adaptation.attributes.selectionPriority) !== null && _d !== void 0 ? _d : 1;
     var originalID = adaptation.attributes.id;
     var adaptationSetSwitchingIDs = getAdaptationSetSwitchingIDs(adaptation);
     var parentSegmentTemplates = [];
@@ -32093,7 +32639,6 @@ function parseAdaptationSets(adaptationsIR, context) {
       parentSegmentTemplates.push(adaptation.children.segmentTemplate);
     }
     var reprCtxt = {
-      aggressiveMode: context.aggressiveMode,
       availabilityTimeComplete: availabilityTimeComplete,
       availabilityTimeOffset: availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
@@ -32105,13 +32650,12 @@ function parseAdaptationSets(adaptationsIR, context) {
       parentSegmentTemplates: parentSegmentTemplates,
       receivedTime: context.receivedTime,
       start: context.start,
-      timeShiftBufferDepth: context.timeShiftBufferDepth,
       unsafelyBaseOnPreviousAdaptation: null
     };
     var trickModeProperty = Array.isArray(essentialProperties) ? (0,array_find/* default */.Z)(essentialProperties, function (scheme) {
       return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
     }) : undefined;
-    var trickModeAttachedAdaptationIds = (_d = trickModeProperty === null || trickModeProperty === void 0 ? void 0 : trickModeProperty.value) === null || _d === void 0 ? void 0 : _d.split(" ");
+    var trickModeAttachedAdaptationIds = (_e = trickModeProperty === null || trickModeProperty === void 0 ? void 0 : trickModeProperty.value) === null || _e === void 0 ? void 0 : _e.split(" ");
     var isTrickModeTrack = trickModeAttachedAdaptationIds !== undefined;
     var accessibilities = adaptationChildren.accessibilities;
     var isDub = void 0;
@@ -32158,7 +32702,7 @@ function parseAdaptationSets(adaptationsIR, context) {
     }
     var newID = adaptationID;
     parsedAdaptationsIDs.push(adaptationID);
-    reprCtxt.unsafelyBaseOnPreviousAdaptation = (_f = (_e = context.unsafelyBaseOnPreviousPeriod) === null || _e === void 0 ? void 0 : _e.getAdaptation(adaptationID)) !== null && _f !== void 0 ? _f : null;
+    reprCtxt.unsafelyBaseOnPreviousAdaptation = (_g = (_f = context.unsafelyBaseOnPreviousPeriod) === null || _f === void 0 ? void 0 : _f.getAdaptation(adaptationID)) !== null && _g !== void 0 ? _g : null;
     var representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
     var parsedAdaptationSet = {
       id: adaptationID,
@@ -32291,8 +32835,8 @@ function parse_periods_arrayLikeToArray(arr, len) { if (len == null || len > arr
 
 
 
-// eslint-disable-next-line max-len
 
+// eslint-disable-next-line max-len
 
 
 
@@ -32305,19 +32849,15 @@ var generatePeriodID = (0,id_generator/* default */.Z)();
  * @returns {Array.<Object>}
  */
 function parsePeriods(periodsIR, context) {
-  var _a, _b, _c, _d, _e, _f;
+  var _a, _b, _c, _d;
   var parsedPeriods = [];
   var periodsTimeInformation = getPeriodsTimeInformation(periodsIR, context);
   if (periodsTimeInformation.length !== periodsIR.length) {
     throw new Error("MPD parsing error: the time information are incoherent.");
   }
   var isDynamic = context.isDynamic,
-    timeShiftBufferDepth = context.timeShiftBufferDepth;
-  var manifestBoundsCalculator = new ManifestBoundsCalculator({
-    isDynamic: isDynamic,
-    timeShiftBufferDepth: timeShiftBufferDepth
-  });
-  if (!isDynamic && context.duration != null) {
+    manifestBoundsCalculator = context.manifestBoundsCalculator;
+  if (!isDynamic && !(0,is_null_or_undefined/* default */.Z)(context.duration)) {
     manifestBoundsCalculator.setLastPosition(context.duration);
   }
   // We parse it in reverse because we might need to deduce the buffer depth from
@@ -32332,7 +32872,7 @@ function parsePeriods(periodsIR, context) {
       periodDuration = _periodsTimeInformati.periodDuration,
       periodEnd = _periodsTimeInformati.periodEnd;
     var periodID;
-    if (periodIR.attributes.id == null) {
+    if ((0,is_null_or_undefined/* default */.Z)(periodIR.attributes.id)) {
       log/* default */.Z.warn("DASH: No usable id found in the Period. Generating one.");
       periodID = "gen-dash-period-" + generatePeriodID();
     } else {
@@ -32346,13 +32886,11 @@ function parsePeriods(periodsIR, context) {
     }
     var receivedTime = xlinkInfos !== undefined ? xlinkInfos.receivedTime : context.receivedTime;
     var unsafelyBaseOnPreviousPeriod = (_b = (_a = context.unsafelyBaseOnPreviousManifest) === null || _a === void 0 ? void 0 : _a.getPeriod(periodID)) !== null && _b !== void 0 ? _b : null;
-    var availabilityTimeComplete = (_c = periodIR.attributes.availabilityTimeComplete) !== null && _c !== void 0 ? _c : true;
-    var availabilityTimeOffset = (_d = periodIR.attributes.availabilityTimeOffset) !== null && _d !== void 0 ? _d : 0;
-    var aggressiveMode = context.aggressiveMode,
-      manifestProfiles = context.manifestProfiles;
+    var availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete;
+    var availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset;
+    var manifestProfiles = context.manifestProfiles;
     var segmentTemplate = periodIR.children.segmentTemplate;
     var adapCtxt = {
-      aggressiveMode: aggressiveMode,
       availabilityTimeComplete: availabilityTimeComplete,
       availabilityTimeOffset: availabilityTimeOffset,
       baseURLs: periodBaseURLs,
@@ -32364,11 +32902,10 @@ function parsePeriods(periodsIR, context) {
       receivedTime: receivedTime,
       segmentTemplate: segmentTemplate,
       start: periodStart,
-      timeShiftBufferDepth: timeShiftBufferDepth,
       unsafelyBaseOnPreviousPeriod: unsafelyBaseOnPreviousPeriod
     };
     var adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
-    var namespaces = ((_e = context.xmlNamespaces) !== null && _e !== void 0 ? _e : []).concat((_f = periodIR.attributes.namespaces) !== null && _f !== void 0 ? _f : []);
+    var namespaces = ((_c = context.xmlNamespaces) !== null && _c !== void 0 ? _c : []).concat((_d = periodIR.attributes.namespaces) !== null && _d !== void 0 ? _d : []);
     var streamEvents = generateStreamEvents(periodIR.children.eventStreams, periodStart, namespaces);
     var parsedPeriod = {
       id: periodID,
@@ -32442,7 +32979,7 @@ function parsePeriods(periodsIR, context) {
  * @returns {Array.<number|undefined>}
  */
 function guessLastPositionFromClock(context, minimumTime) {
-  if (context.clockOffset != null) {
+  if (!(0,is_null_or_undefined/* default */.Z)(context.clockOffset)) {
     var lastPosition = context.clockOffset / 1000 - context.availabilityStartTime;
     var positionTime = performance.now() / 1000;
     var timeInSec = positionTime + lastPosition;
@@ -32474,7 +33011,7 @@ function getMaximumLastPosition(adaptationsPerType) {
   var maxEncounteredPosition = null;
   var allIndexAreEmpty = true;
   var adaptationsVal = (0,object_values/* default */.Z)(adaptationsPerType).filter(function (ada) {
-    return ada != null;
+    return !(0,is_null_or_undefined/* default */.Z)(ada);
   });
   var allAdaptations = (0,flat_map/* default */.Z)(adaptationsVal, function (adaptationsForType) {
     return adaptationsForType;
@@ -32488,12 +33025,12 @@ function getMaximumLastPosition(adaptationsPerType) {
       if (position !== null) {
         allIndexAreEmpty = false;
         if (typeof position === "number") {
-          maxEncounteredPosition = maxEncounteredPosition == null ? position : Math.max(maxEncounteredPosition, position);
+          maxEncounteredPosition = (0,is_null_or_undefined/* default */.Z)(maxEncounteredPosition) ? position : Math.max(maxEncounteredPosition, position);
         }
       }
     }
   }
-  if (maxEncounteredPosition != null) {
+  if (!(0,is_null_or_undefined/* default */.Z)(maxEncounteredPosition)) {
     return maxEncounteredPosition;
   } else if (allIndexAreEmpty) {
     return null;
@@ -32584,6 +33121,7 @@ function parse_mpd_arrayLikeToArray(arr, len) { if (len == null || len > arr.len
 
 
 // eslint-disable-next-line max-len
+
 
 
 
@@ -32712,6 +33250,13 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
   var timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
   var clockOffset = args.externalClockOffset,
     unsafelyBaseOnPreviousManifest = args.unsafelyBaseOnPreviousManifest;
+  var externalClockOffset = args.externalClockOffset;
+  var manifestBoundsCalculator = new ManifestBoundsCalculator({
+    availabilityStartTime: availabilityStartTime,
+    isDynamic: isDynamic,
+    timeShiftBufferDepth: timeShiftBufferDepth,
+    serverTimestampOffset: externalClockOffset
+  });
   var manifestInfos = {
     aggressiveMode: args.aggressiveMode,
     availabilityStartTime: availabilityStartTime,
@@ -32719,6 +33264,7 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
     clockOffset: clockOffset,
     duration: rootAttributes.duration,
     isDynamic: isDynamic,
+    manifestBoundsCalculator: manifestBoundsCalculator,
     manifestProfiles: mpdIR.attributes.profiles,
     receivedTime: args.manifestReceivedTime,
     timeShiftBufferDepth: timeShiftBufferDepth,
@@ -32760,29 +33306,32 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
       time: now
     };
   } else {
-    minimumTime = minimumSafePosition;
-    timeshiftDepth = timeShiftBufferDepth !== null && timeShiftBufferDepth !== void 0 ? timeShiftBufferDepth : null;
+    // Determine the maximum seekable position
     var _finalMaximumSafePosition;
-    var livePosition;
-    if (maximumUnsafePosition !== undefined) {
-      livePosition = maximumUnsafePosition;
-    }
     if (maximumSafePosition !== undefined) {
       _finalMaximumSafePosition = maximumSafePosition;
     } else {
-      var ast = availabilityStartTime !== null && availabilityStartTime !== void 0 ? availabilityStartTime : 0;
-      var externalClockOffset = args.externalClockOffset;
       if (externalClockOffset === undefined) {
         log/* default */.Z.warn("DASH Parser: use system clock to define maximum position");
-        _finalMaximumSafePosition = Date.now() / 1000 - ast;
+        _finalMaximumSafePosition = Date.now() / 1000 - availabilityStartTime;
       } else {
         var serverTime = performance.now() + externalClockOffset;
-        _finalMaximumSafePosition = serverTime / 1000 - ast;
+        _finalMaximumSafePosition = serverTime / 1000 - availabilityStartTime;
       }
     }
+    // Determine live edge (what position corresponds to live content, can be
+    // inferior or superior to the maximum anounced position in some specific
+    // scenarios). However, the `timeShiftBufferDepth` should be based on it.
+    var livePosition = manifestBoundsCalculator.getEstimatedLiveEdge();
     if (livePosition === undefined) {
-      livePosition = _finalMaximumSafePosition;
+      if (maximumUnsafePosition !== undefined) {
+        livePosition = maximumUnsafePosition;
+      } else {
+        livePosition = _finalMaximumSafePosition;
+      }
+      // manifestBoundsCalculator.forceLiveEdge(livePosition);
     }
+
     maximumTimeData = {
       isLinear: true,
       maximumSafePosition: _finalMaximumSafePosition,
@@ -32791,8 +33340,10 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
     };
     // if the minimum calculated time is even below the buffer depth, perhaps we
     // can go even lower in terms of depth
-    if (timeshiftDepth !== null && minimumTime !== undefined && _finalMaximumSafePosition - minimumTime > timeshiftDepth) {
-      timeshiftDepth = _finalMaximumSafePosition - minimumTime;
+    minimumTime = minimumSafePosition;
+    timeshiftDepth = timeShiftBufferDepth !== null && timeShiftBufferDepth !== void 0 ? timeShiftBufferDepth : null;
+    if (timeshiftDepth !== null && minimumTime !== undefined && livePosition - minimumTime > timeshiftDepth) {
+      timeshiftDepth = livePosition - minimumTime;
     }
   }
   // `isLastPeriodKnown` should be `true` in two cases for DASH contents:
@@ -33850,6 +34401,9 @@ function parseRepresentationAttributes(representationElement) {
           dashName: "qualityRanking"
         });
         break;
+      case "scte214:supplementalCodecs":
+        attributes.supplementalCodecs = attr.value;
+        break;
       case "segmentProfiles":
         attributes.segmentProfiles = attr.value;
         break;
@@ -34169,6 +34723,9 @@ function parseAdaptationSetAttributes(root) {
         break;
       case "codecs":
         parsedAdaptation.codecs = attribute.value;
+        break;
+      case "scte214:supplementalCodecs":
+        parsedAdaptation.supplementalCodecs = attribute.value;
         break;
       case "codingDependency":
         parseValue(attribute.value, {
@@ -35001,7 +35558,7 @@ function getTimescaledRange(start, duration, timescale) {
  * timescaled time.
  * Returns -1 if the given time is lower than the start of the first available
  * segment.
- * @param {Object} index
+ * @param {Object} timeline
  * @param {Number} timeTScaled
  * @returns {Number}
  */
@@ -35045,64 +35602,6 @@ function checkDiscontinuity(index, timeSec, maxPosition) {
   var nextStart = nextTimelineItem.start;
   var segmentEnd = getIndexSegmentEnd(timelineItem, nextTimelineItem, maxPosition);
   return scaledTime >= segmentEnd && scaledTime < nextStart ? fromIndexTime(nextStart, index) : null;
-}
-
-/***/ }),
-
-/***/ 1091:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ isSegmentStillAvailable; }
-/* harmony export */ });
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/**
- * Returns true if a Segment returned by the corresponding index is still
- * considered available.
- * Returns false if it is not available anymore.
- * Returns undefined if we cannot know whether it is still available or not.
- * /!\ We do not check the mediaURLs of the segment.
- * @param {Object} segment
- * @param {Array.<Object>} timescale
- * @param {number} timeline
- * @returns {Boolean|undefined}
- */
-function isSegmentStillAvailable(segment, timeline, timescale, indexTimeOffset) {
-  for (var i = 0; i < timeline.length; i++) {
-    var tSegment = timeline[i];
-    var tSegmentTime = (tSegment.start - indexTimeOffset) / timescale;
-    if (tSegmentTime > segment.time) {
-      return false;
-    } else if (tSegmentTime === segment.time) {
-      if (tSegment.range === undefined) {
-        return segment.range === undefined;
-      }
-      return segment.range != null && tSegment.range[0] === segment.range[0] && tSegment.range[1] === segment.range[1];
-    } else {
-      // tSegment.start < segment.time
-      if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
-        var timeDiff = tSegmentTime - tSegment.start;
-        var repeat = timeDiff / tSegment.duration - 1;
-        return repeat % 1 === 0 && repeat <= tSegment.repeatCount;
-      }
-    }
-  }
-  return false;
 }
 
 /***/ }),
@@ -36647,10 +37146,11 @@ function applyFontSize(element, fontSize) {
  */
 function applyLineHeight(element, lineHeight) {
   var trimmedLineHeight = lineHeight.trim();
+  var splittedLineHeight = trimmedLineHeight.split(" ");
   if (trimmedLineHeight === "auto") {
     return;
   }
-  var firstLineHeight = regexps/* REGXP_LENGTH */.eT.exec(trimmedLineHeight[0]);
+  var firstLineHeight = regexps/* REGXP_LENGTH */.eT.exec(splittedLineHeight[0]);
   if (firstLineHeight === null) {
     return;
   }
@@ -39444,8 +39944,6 @@ var regenerator = __webpack_require__(4687);
 var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 // EXTERNAL MODULE: ./src/utils/request/index.ts + 1 modules
 var request = __webpack_require__(4597);
-// EXTERNAL MODULE: ./src/utils/take_first_set.ts
-var take_first_set = __webpack_require__(5278);
 // EXTERNAL MODULE: ./src/utils/resolve_url.ts
 var resolve_url = __webpack_require__(9829);
 ;// CONCATENATED MODULE: ./src/transports/dash/construct_segment_url.ts
@@ -39486,7 +39984,6 @@ function constructSegmentUrl(wantedCdn, segment) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -39548,6 +40045,7 @@ function _imageLoader() {
   return _imageLoader.apply(this, arguments);
 }
 function imageParser(loadedSegment, content) {
+  var _a;
   var segment = content.segment,
     period = content.period;
   var data = loadedSegment.data,
@@ -39565,7 +40063,7 @@ function imageParser(loadedSegment, content) {
   if (isChunked) {
     throw new Error("Image data should not be downloaded in chunks");
   }
-  var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0);
+  var chunkOffset = (_a = segment.timestampOffset) !== null && _a !== void 0 ? _a : 0;
   // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features/* default */.Z.imageParser === null) {
     return {
@@ -41067,7 +41565,6 @@ function getEventsOutOfEMSGs(parsedEMSGs, manifestPublishTime) {
 
 
 
-
 /**
  * @param {Object} config
  * @returns {Function}
@@ -41075,7 +41572,7 @@ function getEventsOutOfEMSGs(parsedEMSGs, manifestPublishTime) {
 function generateAudioVideoSegmentParser(_ref) {
   var __priv_patchLastSegmentInSidx = _ref.__priv_patchLastSegmentInSidx;
   return function audioVideoSegmentParser(loadedSegment, content, initTimescale) {
-    var _a;
+    var _a, _b;
     var period = content.period,
       adaptation = content.adaptation,
       representation = content.representation,
@@ -41121,7 +41618,7 @@ function generateAudioVideoSegmentParser(_ref) {
     }
     if (!segment.isInit) {
       var chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData, isChunked, segment, initTimescale) : null; // TODO extract time info from webm
-      var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0);
+      var chunkOffset = (_b = segment.timestampOffset) !== null && _b !== void 0 ? _b : 0;
       if (seemsToBeMP4) {
         var parsedEMSGs = (0,utils/* parseEmsgBoxes */.s9)(chunkData);
         if (parsedEMSGs !== undefined) {
@@ -41465,7 +41962,6 @@ function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
 
 
 
-
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.
  *
@@ -41486,6 +41982,7 @@ function getPlainTextTrackData(_ref2, textTrackData, isChunked) {
  * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, __priv_patchLastSegmentInSidx) {
+  var _a;
   var period = content.period,
     representation = content.representation,
     segment = content.segment;
@@ -41521,7 +42018,7 @@ function parseISOBMFFEmbeddedTextTrack(data, isChunked, content, initTimescale, 
   }
   var chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
   var chunkData = getISOBMFFEmbeddedTextTrackData(content, chunkBytes, chunkInfos, isChunked);
-  var chunkOffset = (0,take_first_set/* default */.Z)(segment.timestampOffset, 0);
+  var chunkOffset = (_a = segment.timestampOffset) !== null && _a !== void 0 ? _a : 0;
   return {
     segmentType: "media",
     chunkData: chunkData,
@@ -41756,8 +42253,6 @@ var assert = __webpack_require__(811);
 var clear_timeline_from_position = __webpack_require__(8232);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/index_helpers.ts
 var index_helpers = __webpack_require__(3911);
-// EXTERNAL MODULE: ./src/parsers/manifest/utils/is_segment_still_available.ts
-var is_segment_still_available = __webpack_require__(1091);
 // EXTERNAL MODULE: ./src/parsers/manifest/utils/update_segment_timeline.ts
 var update_segment_timeline = __webpack_require__(5505);
 ;// CONCATENATED MODULE: ./src/parsers/manifest/smooth/utils/add_segment_infos.ts
@@ -41873,7 +42368,6 @@ function replaceSegmentSmoothTokens(url, time) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 
 
@@ -42150,7 +42644,7 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   _proto.awaitSegmentBetween = function awaitSegmentBetween(start, end) {
     var _a;
     (0,assert/* default */.Z)(start <= end);
-    if (this.isFinished()) {
+    if (this.isStillAwaitingFutureSegments()) {
       return false;
     }
     var lastAvailablePosition = this.getLastAvailablePosition();
@@ -42188,7 +42682,23 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
     var _this$_index3 = this._index,
       timeline = _this$_index3.timeline,
       timescale = _this$_index3.timescale;
-    return (0,is_segment_still_available/* default */.Z)(segment, timeline, timescale, 0);
+    for (var i = 0; i < timeline.length; i++) {
+      var tSegment = timeline[i];
+      var tSegmentTime = tSegment.start / timescale;
+      if (tSegmentTime > segment.time) {
+        return false; // We went over it without finding it
+      } else if (tSegmentTime === segment.time) {
+        return true;
+      } else {
+        // tSegment.start < segment.time
+        if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
+          var timeDiff = tSegmentTime - tSegment.start;
+          var repeat = timeDiff / tSegment.duration - 1;
+          return repeat % 1 === 0 && repeat <= tSegment.repeatCount;
+        }
+      }
+    }
+    return false;
   }
   /**
    * @param {Error} error
@@ -42271,9 +42781,9 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
     this._scaledLiveGap = newIndex._scaledLiveGap;
   }
   /**
-   * Returns `true` if the last segments in this index have already been
+   * Returns `false` if the last segments in this index have already been
    * generated.
-   * Returns `false` if the index is still waiting on future segments to be
+   * Returns `true` if the index is still waiting on future segments to be
    * generated.
    *
    * For Smooth, it should only depend on whether the content is a live content
@@ -42281,8 +42791,8 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
    * TODO What about Smooth live content that finishes at some point?
    * @returns {boolean}
    */;
-  _proto.isFinished = function isFinished() {
-    return !this._isLive;
+  _proto.isStillAwaitingFutureSegments = function isStillAwaitingFutureSegments() {
+    return this._isLive;
   }
   /**
    * @returns {Boolean}
@@ -42293,8 +42803,8 @@ var SmoothRepresentationIndex = /*#__PURE__*/function () {
   /**
    * Add new segments to a `SmoothRepresentationIndex`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.
-   * @param {Object} segment - Information on the segment which contained that
-   * new segment information.
+   * @param {Object} currentSegment - Information on the segment which contained
+   * that new segment information.
    */;
   _proto.addNewSegments = function addNewSegments(nextSegments, currentSegment) {
     this._refreshTimeline();
@@ -42337,8 +42847,6 @@ var object_assign = __webpack_require__(8026);
 var resolve_url = __webpack_require__(9829);
 // EXTERNAL MODULE: ./src/utils/string_parsing.ts
 var string_parsing = __webpack_require__(3635);
-// EXTERNAL MODULE: ./src/utils/take_first_set.ts
-var take_first_set = __webpack_require__(5278);
 // EXTERNAL MODULE: ./src/parsers/containers/isobmff/constants.ts
 var constants = __webpack_require__(2689);
 ;// CONCATENATED MODULE: ./src/parsers/containers/isobmff/create_box.ts
@@ -42781,7 +43289,6 @@ function reduceChildren(root, fn, init) {
 
 
 
-
 /**
  * Default value for the aggressive `mode`.
  * In this mode, segments will be returned even if we're not sure those had time
@@ -42905,7 +43412,7 @@ function createSmoothStreamingParser(parserOptions) {
             bitrate: _bitrate2,
             customAttributes: customAttributes,
             mimeType: _fourCC2 !== undefined ? MIME_TYPES[_fourCC2] : _fourCC2,
-            codecPrivateData: (0,take_first_set/* default */.Z)(_codecPrivateData2, "")
+            codecPrivateData: _codecPrivateData2 !== null && _codecPrivateData2 !== void 0 ? _codecPrivateData2 : ""
           };
         }
       default:
@@ -48804,48 +49311,6 @@ function readNullTerminatedString(buffer, offset) {
 
 /***/ }),
 
-/***/ 5278:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Z: function() { return /* binding */ takeFirstSet; }
-/* harmony export */ });
-/* harmony import */ var _is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1946);
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-function takeFirstSet() {
-  var i = 0;
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-  var len = args.length;
-  while (i < len) {
-    var arg = args[i];
-    if (!(0,_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Z)(arg)) {
-      return arg;
-    }
-    i++;
-  }
-  return undefined;
-}
-
-/***/ }),
-
 /***/ 288:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
@@ -50647,6 +51112,12 @@ function checkReloadOptions(options) {
   if (typeof ((_c = options === null || options === void 0 ? void 0 : options.reloadAt) === null || _c === void 0 ? void 0 : _c.relative) !== "number" && ((_d = options === null || options === void 0 ? void 0 : options.reloadAt) === null || _d === void 0 ? void 0 : _d.relative) !== undefined) {
     throw new Error("API: reload - Invalid 'reloadAt.relative' option format.");
   }
+  if (!Array.isArray(options === null || options === void 0 ? void 0 : options.keySystems) && (options === null || options === void 0 ? void 0 : options.keySystems) !== undefined) {
+    throw new Error("API: reload - Invalid 'keySystems' option format.");
+  }
+  if ((options === null || options === void 0 ? void 0 : options.autoPlay) !== undefined && typeof options.autoPlay !== "boolean") {
+    throw new Error("API: reload - Invalid 'autoPlay' option format.");
+  }
 }
 /**
  * Parse options given to loadVideo and set default options as found
@@ -50795,8 +51266,7 @@ function parseLoadVideoOptions(options) {
     log/* default */.Z.warn("API: You have set a textTrackElement without being in " + "an \"html\" textTrackMode. It will be ignored.");
   }
   if (!(0,is_null_or_undefined/* default */.Z)(options.startAt)) {
-    // TODO Better way to express that in TypeScript?
-    if (options.startAt.wallClockTime instanceof Date) {
+    if ("wallClockTime" in options.startAt && options.startAt.wallClockTime instanceof Date) {
       var wallClockTime = options.startAt.wallClockTime.getTime() / 1000;
       startAt = (0,object_assign/* default */.Z)({}, options.startAt, {
         wallClockTime: wallClockTime
@@ -51423,8 +51893,6 @@ var array_find = __webpack_require__(3274);
 var languages = __webpack_require__(7829);
 // EXTERNAL MODULE: ./src/utils/sorted_list.ts
 var sorted_list = __webpack_require__(3146);
-// EXTERNAL MODULE: ./src/utils/take_first_set.ts
-var take_first_set = __webpack_require__(5278);
 ;// CONCATENATED MODULE: ./src/core/api/tracks_management/track_choice_manager.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -51445,7 +51913,6 @@ var take_first_set = __webpack_require__(5278);
  * This file is used to abstract the notion of text, audio and video tracks
  * switching for an easier API management.
  */
-
 
 
 
@@ -52245,7 +52712,8 @@ function createTextPreferenceMatcher(preferredTextTrack) {
    * @returns {boolean}
    */
   return function matchTextPreference(textAdaptation) {
-    return (0,take_first_set/* default */.Z)(textAdaptation.normalizedLanguage, "") === preferredTextTrack.normalized && (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true : textAdaptation.isClosedCaption !== true) && (preferredTextTrack.forced === true ? textAdaptation.isForcedSubtitles === true : textAdaptation.isForcedSubtitles !== true);
+    var _a;
+    return ((_a = textAdaptation.normalizedLanguage) !== null && _a !== void 0 ? _a : "") === preferredTextTrack.normalized && (preferredTextTrack.closedCaption ? textAdaptation.isClosedCaption === true : textAdaptation.isClosedCaption !== true) && (preferredTextTrack.forced === true ? textAdaptation.isForcedSubtitles === true : textAdaptation.isForcedSubtitles !== true);
   };
 }
 /**
@@ -52658,7 +53126,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.32.1";
+    _this.version = /* PLAYER_VERSION */"3.33.0";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -52818,7 +53286,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    * @param {Object} reloadOpts
    */;
   _proto.reload = function reload(reloadOpts) {
-    var _a, _b;
+    var _a, _b, _c;
     var _this$_priv_reloading = this._priv_reloadingMetadata,
       options = _this$_priv_reloading.options,
       manifest = _this$_priv_reloading.manifest,
@@ -52852,6 +53320,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     } else if (reloadInPause !== undefined) {
       autoPlay = !reloadInPause;
     }
+    var keySystems;
+    if ((reloadOpts === null || reloadOpts === void 0 ? void 0 : reloadOpts.keySystems) !== undefined) {
+      keySystems = reloadOpts.keySystems;
+    } else if (((_c = this._priv_reloadingMetadata.options) === null || _c === void 0 ? void 0 : _c.keySystems) !== undefined) {
+      keySystems = this._priv_reloadingMetadata.options.keySystems;
+    }
     var newOptions = Object.assign(Object.assign({}, options), {
       initialManifest: manifest
     });
@@ -52860,6 +53334,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
     if (autoPlay !== undefined) {
       newOptions.autoPlay = autoPlay;
+    }
+    if (keySystems !== undefined) {
+      newOptions.keySystems = keySystems;
     }
     this._priv_initializeContentPlayback(newOptions);
   };
@@ -54497,6 +54974,29 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     return null;
   }
   /**
+   * Returns the current position for live contents.
+   *
+   * Returns `null` if no content is loaded or if the current loaded content is
+   * not considered as a live content.
+   * Returns `undefined` if that live position is currently unknown.
+   * @returns {number}
+   */;
+  _proto.getLivePosition = function getLivePosition() {
+    if (this._priv_contentInfos === null) {
+      return null;
+    }
+    var _this$_priv_contentIn19 = this._priv_contentInfos,
+      isDirectFile = _this$_priv_contentIn19.isDirectFile,
+      manifest = _this$_priv_contentIn19.manifest;
+    if (isDirectFile) {
+      return undefined;
+    }
+    if ((manifest === null || manifest === void 0 ? void 0 : manifest.isLive) !== true) {
+      return null;
+    }
+    return manifest.getLivePosition();
+  }
+  /**
    * Get maximum seek-able position.
    * @returns {number}
    */;
@@ -54504,9 +55004,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     if (this._priv_contentInfos === null) {
       return null;
     }
-    var _this$_priv_contentIn19 = this._priv_contentInfos,
-      isDirectFile = _this$_priv_contentIn19.isDirectFile,
-      manifest = _this$_priv_contentIn19.manifest;
+    var _this$_priv_contentIn20 = this._priv_contentInfos,
+      isDirectFile = _this$_priv_contentIn20.isDirectFile,
+      manifest = _this$_priv_contentIn20.manifest;
     if (isDirectFile) {
       if (this.videoElement === null) {
         throw new Error("Disposed player");
@@ -54534,7 +55034,11 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
       return null;
     }
     var segmentBufferStatus = this._priv_contentInfos.segmentBuffersStore.getStatus(bufferType);
-    return segmentBufferStatus.type === "initialized" ? segmentBufferStatus.value.getInventory() : null;
+    if (segmentBufferStatus.type === "initialized") {
+      segmentBufferStatus.value.synchronizeInventory(true);
+      return segmentBufferStatus.value.getInventory();
+    }
+    return null;
   }
   /**
    * Reset all state properties relative to a playing content.
@@ -54977,9 +55481,9 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     if (this._priv_contentInfos === null) {
       return null;
     }
-    var _this$_priv_contentIn20 = this._priv_contentInfos,
-      currentPeriod = _this$_priv_contentIn20.currentPeriod,
-      activeRepresentations = _this$_priv_contentIn20.activeRepresentations;
+    var _this$_priv_contentIn21 = this._priv_contentInfos,
+      currentPeriod = _this$_priv_contentIn21.currentPeriod,
+      activeRepresentations = _this$_priv_contentIn21.activeRepresentations;
     if (currentPeriod === null || activeRepresentations === null || (0,is_null_or_undefined/* default */.Z)(activeRepresentations[currentPeriod.id])) {
       return null;
     }
@@ -55072,7 +55576,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   }]);
   return Player;
 }(event_emitter/* default */.Z);
-Player.version = /* PLAYER_VERSION */"3.32.1";
+Player.version = /* PLAYER_VERSION */"3.33.0";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
@@ -55136,7 +55640,7 @@ function initializeFeaturesObject() {
   }
   if (true) {
     features_object/* default */.Z.transports.dash = (__webpack_require__(85)/* ["default"] */ .Z);
-    features_object/* default */.Z.dashParsers.js = (__webpack_require__(4541)/* ["default"] */ .Z);
+    features_object/* default */.Z.dashParsers.js = (__webpack_require__(1707)/* ["default"] */ .Z);
   }
   if (false) {}
   if (false) {}
