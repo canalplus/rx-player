@@ -276,6 +276,9 @@ properties, methods, events and so on.
   - [`getMaximumPosition`](../api/Basic_Methods/getMaximumPosition.md): Get the
     maximum seekable position.
 
+  - [`getLivePosition`](../api/Basic_Methods/getLivePosition.md): Get the
+    time corresponding to live content (when klaying live contents).
+
   - [`getVideoDuration`](../api/Basic_Methods/getVideoDuration.md): Get the
     duration linked to the media element.
 
@@ -468,9 +471,6 @@ properties, methods, events and so on.
 
   - [`isPaused`](../api/Playback_Information/isPaused.md):
     Returns `true` if the `<video>` element is paused.
-
-  - [`isContentLoaded`](../api/Playback_Information/isContentLoaded.md):
-    Returns `true` if a content is loaded.
 
   - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
     Returns the last stored content position, in seconds.
