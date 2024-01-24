@@ -119,10 +119,10 @@ The RxPlayer has several types of releases:
 Before each official releases, a list of steps are performed by its maintainers:
 
 1. Checkout the branch that will be the base of the next release: generally it
-   is either `master` (for patch releases) or `next` (for minor versions).
+   is either `stable` (for patch releases) or `dev` (for minor versions).
 
-2. Rebase that branch on the `master` branch if it is a different branch
-   (e.g.: `git rebase master --rebase-merges`).
+2. Rebase that branch on the `stable` branch if it is a different branch
+   (e.g.: `git rebase stable --rebase-merges`).
 
 3. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the
    semver of the wanted new version.
@@ -148,7 +148,7 @@ Before each official releases, a list of steps are performed by its maintainers:
     as a dependency.
 
 11. If and only if no problem was seen perform a signed merge without
-    fast-forward of the release branch into master (`git merge -S --no-ff release/vXX.XX.XX master`)
+    fast-forward of the release branch into stable (`git merge -S --no-ff release/vXX.XX.XX stable`)
 
 12. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
 
@@ -159,7 +159,7 @@ Before each official releases, a list of steps are performed by its maintainers:
 
 15. Check that the new demo and the new doc work as expected
 
-16. If all seems good, push to origin/master your local master branch.
+16. If all seems good, push to origin/stable your local stable branch.
 
 17. run `npm publish` to publish the new version on npm's registry.
 

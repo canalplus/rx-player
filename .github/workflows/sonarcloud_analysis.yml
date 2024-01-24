@@ -2,7 +2,7 @@ name: SonarCloud analysis
 on:
   push:
     branches:
-      - master, next
+      - stable, dev, legacy-v3
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:

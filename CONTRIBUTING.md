@@ -274,10 +274,10 @@ calling the `doc` script through `npm run doc`.
 ### Which branch to merge to
 
 Pull requests for bug fixes, new tests or documentation should be done on the
-`master` branch.
+`stable` branch.
 
 Pull requests for new features and breaking changes will have to be performed
-on the `next` branch.
+on the `dev` branch.
 
 If you don't know on which branch to do a pull request, please open it on
-`master`, we will know how to redirect it to the right one.
+`dev`, we will know how to redirect it to the right one.

@@ -8,7 +8,7 @@
 #
 # To use it:
 #
-#   1. Be sure that you're on a clean (no staged files and no diff) master
+#   1. Be sure that you're on a clean (no staged files and no diff) `stable`
 #      branch.
 #
 #   2. Call this script.
@@ -22,9 +22,9 @@ set -e
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version=$(cat VERSION)
 
-if ! [ "$current_branch" == "master" ]; then
+if ! [ "$current_branch" == "stable" ]; then
   echo $current_branch
-  echo "ERROR: The current branch should be master"
+  echo "ERROR: The current branch should be \"stable\""
   exit 1;
 fi
 
@@ -32,7 +32,7 @@ fi
 npm run demo:min
 
 if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Please commit your modifications to master"
+  echo "ERROR: Please commit your modifications to \"stable\""
   exit 1;
 fi
 
@@ -139,4 +139,4 @@ else
   echo "nothing to do on the gh-pages branch"
 fi
 
-git checkout master
+git checkout stable
