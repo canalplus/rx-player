@@ -187,7 +187,7 @@ interact with.
 ### `src/core/stream/`: Segment-picking logic
 
 The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the `SegmentBuffers`.
+download and push the segments into the `SegmentSinks`.
 
 
 ### `src/core/decrypt/`: Decryption handling
@@ -206,14 +206,14 @@ It facilitates the role of loading the Manifest and new segments for the rest of
 the core.
 
 
-### `src/core/segment_sinks/`: Media buffers
+### `src/core/segment_sinks/`: Media segment sinks
 
-Code allowing to interact with the media buffers called `SegmentBuffers`.
+Code allowing to interact with `SegmentSinks`.
 
 Those are the Objects to which segments are pushed so they can be decoded at the
 right time.
 
-For Audio and Video, `SegmentBuffers` rely on a native `SourceBuffer` object,
+For Audio and Video, `SegmentSinks` rely on a native `SourceBuffer` object,
 already provided by the browser,
 for other type of contents (like subtitles), we rely on completely custom media
 buffers implementations.

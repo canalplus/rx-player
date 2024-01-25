@@ -27,7 +27,7 @@ import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type {
   IPushedChunkData,
-  SegmentBuffer,
+  SegmentSink,
 } from "../../../segment_sinks";
 import type {
   IRepresentationStreamPlaybackObservation,
@@ -36,7 +36,7 @@ import type {
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
 /**
- * Push the initialization segment to the SegmentBuffer.
+ * Push the initialization segment to the SegmentSink.
  * @param {Object} args
  * @param {Object} cancelSignal
  * @returns {Promise}
@@ -47,7 +47,7 @@ export default async function pushInitSegment<T>(
     content,
     initSegmentUniqueId,
     segment,
-    segmentBuffer,
+    segmentSink,
     bufferGoal,
   } : {
     playbackObserver : IReadOnlyPlaybackObserver<
@@ -60,7 +60,7 @@ export default async function pushInitSegment<T>(
     initSegmentUniqueId : string;
     segmentData : T;
     segment : ISegment;
-    segmentBuffer : SegmentBuffer;
+    segmentSink : SegmentSink;
     bufferGoal : IReadOnlySharedReference<number>;
   },
   cancelSignal : CancellationSignal
@@ -80,7 +80,7 @@ export default async function pushInitSegment<T>(
                                         end: 0 },
                                       content);
   const buffered = await appendSegmentToBuffer(playbackObserver,
-                                               segmentBuffer,
+                                               segmentSink,
                                                { data, inventoryInfos },
                                                bufferGoal,
                                                cancelSignal);

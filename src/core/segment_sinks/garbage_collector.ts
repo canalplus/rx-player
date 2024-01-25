@@ -21,11 +21,11 @@ import { getInnerAndOuterRanges } from "../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IStreamOrchestratorPlaybackObservation } from "../stream";
-import type { SegmentBuffer } from "./implementations";
+import type { SegmentSink } from "./implementations";
 
 export interface IGarbageCollectorArgument {
-  /** SegmentBuffer implementation */
-  segmentBuffer : SegmentBuffer;
+  /** SegmentSink implementation */
+  segmentSink : SegmentSink;
   /** Emit current position in seconds regularly */
   playbackObserver : IReadOnlyPlaybackObserver<
     Pick<IStreamOrchestratorPlaybackObservation, "position" | "buffered">
@@ -49,7 +49,7 @@ export interface IGarbageCollectorArgument {
  * TODO Move to main thread?
  */
 export default function BufferGarbageCollector(
-  { segmentBuffer,
+  { segmentSink,
     playbackObserver,
     maxBufferBehind,
     maxBufferAhead } : IGarbageCollectorArgument,
@@ -59,14 +59,14 @@ export default function BufferGarbageCollector(
   let lastBuffered: IRange[] | null = [];
   playbackObserver.listen((o) => {
     lastPosition = o.position.getWanted();
-    lastBuffered = o.buffered[segmentBuffer.bufferType];
+    lastBuffered = o.buffered[segmentSink.bufferType];
     clean();
   }, { includeLastObservation: true, clearSignal: cancellationSignal });
   function clean() {
     if (lastBuffered === null) {
       return;
     }
-    clearBuffer(segmentBuffer,
+    clearBuffer(segmentSink,
                 lastPosition,
                 lastBuffered,
                 maxBufferBehind.getValue(),
@@ -94,7 +94,7 @@ export default function BufferGarbageCollector(
  * and a "depth" behind and ahead wanted for the buffer, in seconds.
  *
  * Anything older than the depth will be removed from the buffer.
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @param {Number} position - The current position
  * @param {Array.<Object>} buffered
  * @param {Number} maxBufferBehind
@@ -103,7 +103,7 @@ export default function BufferGarbageCollector(
  * @returns {Promise}
  */
 async function clearBuffer(
-  segmentBuffer : SegmentBuffer,
+  segmentSink : SegmentSink,
   position : number,
   buffered : IRange[],
   maxBufferBehind : number,
@@ -178,11 +178,11 @@ async function clearBuffer(
 
   for (const range of cleanedupRanges) {
     if (range.start < range.end) {
-      log.debug("GC: cleaning range from SegmentBuffer", range.start, range.end);
+      log.debug("GC: cleaning range from SegmentSink", range.start, range.end);
       if (cancellationSignal.cancellationError !== null) {
         throw cancellationSignal.cancellationError;
       }
-      await segmentBuffer.removeBuffer(range.start, range.end);
+      await segmentSink.removeBuffer(range.start, range.end);
     }
   }
 }
