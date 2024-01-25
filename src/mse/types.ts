@@ -1,6 +1,6 @@
-import { ISerializedSourceBufferError } from "../errors/source_buffer_error";
-import EventEmitter from "../utils/event_emitter";
-import { IRange } from "../utils/ranges";
+import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
+import type EventEmitter from "../utils/event_emitter";
+import type { IRange } from "../utils/ranges";
 
 /**
  * Categorize a type of media associated to a `SourceBuffer` (the Media Source

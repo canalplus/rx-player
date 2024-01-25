@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
+import type {
+  ICompatVTTCue } from "../../../../compat";
 import {
-  ICompatVTTCue,
   isVTTCue,
   makeVTTCue,
 } from "../../../../compat";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import {
+import type {
   IStyleList,
 } from "../get_styling";
 import getTimeDelimiters from "../get_time_delimiters";
-import { IParsedTTMLCue } from "../parse_ttml";
+import type { IParsedTTMLCue } from "../parse_ttml";
 import { REGXP_PERCENT_VALUES } from "../regexps";
 import {
   isLineBreakElement,

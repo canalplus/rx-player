@@ -9,17 +9,19 @@ import type {
 } from "../../../manifest";
 import type { ITrackType } from "../../../public_types";
 import type { IRange } from "../../../utils/ranges";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
+import type SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type WeakMapMemory from "../../../utils/weak_map_memory";
 import type { IRepresentationEstimator } from "../../adaptive";
 import type { SegmentFetcherCreator } from "../../fetchers";
-import SegmentBuffersStore, {
+import type {
   IBufferType,
   SegmentBuffer,
 } from "../../segment_sinks";
+import type SegmentBuffersStore from "../../segment_sinks";
 import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,

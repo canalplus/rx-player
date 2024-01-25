@@ -17,7 +17,7 @@
 import log from "../../../log";
 import type { IFreezingStatus, IRebufferingStatus } from "../../../main_thread/types";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import SegmentBuffersStore from "../../segment_sinks";
+import type SegmentBuffersStore from "../../segment_sinks";
 
 export default class DecipherabilityFreezeDetector {
 

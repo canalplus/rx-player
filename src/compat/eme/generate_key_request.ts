@@ -21,7 +21,7 @@ import {
   concat,
 } from "../../utils/byte_parsing";
 import { PSSH_TO_INTEGER } from "./constants";
-import { ICustomMediaKeySession } from "./custom_media_keys";
+import type { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
  * Modify "initialization data" sent to a `generateKeyRequest` EME call to

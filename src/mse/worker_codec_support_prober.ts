@@ -1,4 +1,4 @@
-import { ICodecSupportProber } from "./types";
+import type { ICodecSupportProber } from "./types";
 
 /**
  * Maximum size the `WorkerCodecSupportProber`'s inner cache can be.

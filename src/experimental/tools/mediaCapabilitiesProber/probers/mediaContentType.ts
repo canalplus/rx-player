@@ -15,8 +15,9 @@
  */
 
 import { MediaSource_ } from "../../../../compat";
+import type {
+  IMediaConfiguration } from "../types";
 import {
-  IMediaConfiguration,
   ProberStatus,
 } from "../types";
 
