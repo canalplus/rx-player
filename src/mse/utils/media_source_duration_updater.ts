@@ -18,18 +18,18 @@ import {
   onSourceOpen,
   onSourceEnded,
   onSourceClose,
-} from "../compat/event_listeners";
+} from "../../compat/event_listeners";
 /* eslint-disable-next-line max-len */
-import hasIssuesWithHighMediaSourceDuration from "../compat/has_issues_with_high_media_source_duration";
-import log from "../log";
+import hasIssuesWithHighMediaSourceDuration from "../../compat/has_issues_with_high_media_source_duration";
+import log from "../../log";
 import type {
   IReadOnlySharedReference,
-} from "../utils/reference";
-import SharedReference from "../utils/reference";
+} from "../../utils/reference";
+import SharedReference from "../../utils/reference";
 import type {
   CancellationSignal,
-} from "../utils/task_canceller";
-import TaskCanceller from "../utils/task_canceller";
+} from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 
 /** Number of seconds in a regular year. */
 const YEAR_IN_SECONDS = 365 * 24 * 3600;
