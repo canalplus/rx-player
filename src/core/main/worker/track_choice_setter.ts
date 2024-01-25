@@ -1,10 +1,10 @@
 import log from "../../../log";
-import { ITrackUpdateChoiceObject } from "../../../multithread_types";
-import { ITrackType } from "../../../public_types";
+import type { ITrackUpdateChoiceObject } from "../../../multithread_types";
+import type { ITrackType } from "../../../public_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
 import SharedReference from "../../../utils/reference";
-import { IAdaptationChoice, IRepresentationsChoice } from "../../stream";
+import type { IAdaptationChoice, IRepresentationsChoice } from "../../stream";
 
 export default class TrackChoiceSetter {
 

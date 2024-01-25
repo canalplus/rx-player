@@ -15,17 +15,21 @@
  */
 
 import type { ICorePlaybackObservation } from "../../../core/types";
-import { IManifestMetadata, getMaximumSafePosition } from "../../../manifest";
-import { IMediaSourceInterface, SourceBufferType } from "../../../mse";
+import type { IManifestMetadata } from "../../../manifest";
+import { getMaximumSafePosition } from "../../../manifest";
+import type { IMediaSourceInterface } from "../../../mse";
+import { SourceBufferType } from "../../../mse";
 import type { ITrackType } from "../../../public_types";
 import arrayFind from "../../../utils/array_find";
 import type { IRange } from "../../../utils/ranges";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
-import TaskCanceller, {
+import SharedReference from "../../../utils/reference";
+import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,

@@ -19,14 +19,16 @@ import type { IRepresentation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import { estimateRequestBandwidth } from "./network_analyzer";
-import LastEstimateStorage, {
+import type LastEstimateStorage from "./utils/last_estimate_storage";
+import {
   ABRAlgorithmType,
 } from "./utils/last_estimate_storage";
 import type { IRequestInfo } from "./utils/pending_requests_store";
-import RepresentationScoreCalculator, {
+import type {
   IRepresentationMaintainabilityScore,
-  ScoreConfidenceLevel,
 } from "./utils/representation_score_calculator";
+import type RepresentationScoreCalculator from "./utils/representation_score_calculator";
+import { ScoreConfidenceLevel } from "./utils/representation_score_calculator";
 
 /**
  * Estimate which Representation should be played based on risky "guesses".

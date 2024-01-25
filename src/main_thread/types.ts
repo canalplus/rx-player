@@ -1,4 +1,5 @@
-import RxPlayer, {
+import type RxPlayer from "./api";
+import type {
   IFreezingStatus,
   IRebufferingStatus,
   IObservationPosition,
@@ -15,7 +16,7 @@ import type {
 
 export type IRxPlayer = RxPlayer;
 
-export {
+export type {
   // Playback Observation Metadata
   IObservationPosition,
   IReadOnlyPlaybackObserver,

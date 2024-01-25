@@ -15,9 +15,10 @@
  */
 
 import { concat } from "../../utils/byte_parsing";
-import fetchRequest, {
+import type {
   IFetchedDataObject,
 } from "../../utils/request/fetch";
+import fetchRequest from "../../utils/request/fetch";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type {
   ISegmentContext,

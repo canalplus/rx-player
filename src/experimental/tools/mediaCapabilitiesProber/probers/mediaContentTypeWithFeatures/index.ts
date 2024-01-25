@@ -15,8 +15,9 @@
  */
 
 import globalScope from "../../../../../utils/global_scope";
+import type {
+  IMediaConfiguration } from "../../types";
 import {
-  IMediaConfiguration,
   ProberStatus,
 } from "../../types";
 

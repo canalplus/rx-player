@@ -36,9 +36,10 @@ import type {
 // eslint-disable-next-line max-len
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
-import parseAdaptationSets, {
+import type {
   IAdaptationSetContext,
 } from "./parse_adaptation_sets";
+import parseAdaptationSets from "./parse_adaptation_sets";
 import resolveBaseURLs from "./resolve_base_urls";
 
 const generatePeriodID = idGenerator();

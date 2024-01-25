@@ -19,9 +19,10 @@ import type { IIndexSegment } from "../../../../utils/index_helpers";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 import convertElementToIndexSegment from "./convert_element_to_index_segment";
 import findFirstCommonStartTime from "./find_first_common_start_time";
-import parseSElement, {
+import type {
   IParsedS,
 } from "./parse_s_element";
+import parseSElement from "./parse_s_element";
 
 export default function constructTimelineFromPreviousTimeline(
   newElements : HTMLCollection,

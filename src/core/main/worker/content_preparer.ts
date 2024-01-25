@@ -1,36 +1,41 @@
 import features from "../../../features";
 import log from "../../../log";
-import {
+import type {
   IManifest,
+  IManifestMetadata } from "../../../manifest";
+import {
   createRepresentationFilterFromFnString,
-  IManifestMetadata,
 } from "../../../manifest";
-import { IMediaSourceInterface } from "../../../mse";
+import type { IMediaSourceInterface } from "../../../mse";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import WorkerMediaSourceInterface from "../../../mse/worker_media_source_interface";
-import {
+import type {
   IAttachMediaSourceWorkerMessagePayload,
-  IContentInitializationData,
+  IContentInitializationData } from "../../../multithread_types";
+import {
   WorkerMessageType,
 } from "../../../multithread_types";
-import { IPlayerError } from "../../../public_types";
+import type { IPlayerError } from "../../../public_types";
 import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import objectAssign from "../../../utils/object_assign";
-import TaskCanceller, {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import createAdaptiveRepresentationSelector, {
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   IRepresentationEstimator,
 } from "../../adaptive";
+import createAdaptiveRepresentationSelector from "../../adaptive";
+import type {
+  IManifestRefreshSettings } from "../../fetchers";
 import {
   ManifestFetcher,
   SegmentFetcherCreator,
-  IManifestRefreshSettings,
 } from "../../fetchers";
 import SegmentBuffersStore from "../../segment_sinks";
-import { INeedsMediaSourceReloadPayload } from "../../stream";
+import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import DecipherabilityFreezeDetector from "../utils/DecipherabilityFreezeDetector";
 import {
   limitVideoResolution,

@@ -17,9 +17,10 @@
 import eme from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
-import {
+import type {
   ICompatibleKeySystem,
-  IMediaConfiguration,
+  IMediaConfiguration } from "../types";
+import {
   ProberStatus,
 } from "../types";
 

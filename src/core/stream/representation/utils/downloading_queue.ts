@@ -15,15 +15,15 @@
  */
 
 import log from "../../../../log";
-import {
+import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import { IPlayerError } from "../../../../public_types";
-import {
+import type { IPlayerError } from "../../../../public_types";
+import type {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
 } from "../../../../transports";
@@ -31,12 +31,13 @@ import assert from "../../../../utils/assert";
 import EventEmitter from "../../../../utils/event_emitter";
 import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../../../utils/reference";
+import SharedReference from "../../../../utils/reference";
 import TaskCanceller from "../../../../utils/task_canceller";
-import { IPrioritizedSegmentFetcher } from "../../../fetchers";
-import { IQueuedSegment } from "../types";
+import type { IPrioritizedSegmentFetcher } from "../../../fetchers";
+import type { IQueuedSegment } from "../types";
 
 /**
  * Class scheduling segment downloads for a single Representation.

@@ -19,8 +19,9 @@
  * It always should be imported through the `features` object.
  */
 
+import type {
+  ICompatVTTCue } from "../../../compat";
 import {
-  ICompatVTTCue,
   makeVTTCue,
 } from "../../../compat";
 import isNonEmptyString from "../../../utils/is_non_empty_string";

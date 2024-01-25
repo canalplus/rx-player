@@ -13,16 +13,17 @@ import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import objectAssign from "../utils/object_assign";
+import type {
+  IRange } from "../utils/ranges";
 import {
   convertToRanges,
-  IRange,
 } from "../utils/ranges";
 import TaskCanceller, {
   CancellationError,
 } from "../utils/task_canceller";
 import { maintainEndOfStream } from "./end_of_stream";
 import MediaSourceDurationUpdater from "./media_source_duration_updater";
-import {
+import type {
   IMediaSourceHandle,
   IMediaSourceInterface,
   IMediaSourceInterfaceEvents,

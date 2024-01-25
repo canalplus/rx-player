@@ -15,25 +15,27 @@
  */
 
 import config from "../../../../config";
-import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
-import {
+import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import type {
   IAdaptation,
   IPeriod,
 } from "../../../../manifest";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
+import type {
+  IRange } from "../../../../utils/ranges";
 import {
   excludeFromRanges,
   insertInto,
-  IRange,
 } from "../../../../utils/ranges";
+import type {
+  SegmentBuffer } from "../../../segment_sinks";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  SegmentBuffer,
   SegmentBufferOperation,
 } from "../../../segment_sinks";
-import { ITrackSwitchingMode } from "../../adaptation";
-import { IPeriodStreamPlaybackObservation } from "../types";
+import type { ITrackSwitchingMode } from "../../adaptation";
+import type { IPeriodStreamPlaybackObservation } from "../types";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */

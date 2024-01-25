@@ -22,7 +22,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import type { IRepresentationContext } from "../../../public_types";
-import Representation from "../representation";
+import type Representation from "../representation";
 
 const minimalRepresentationIndex = {
   getInitSegment() { return null; },

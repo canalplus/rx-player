@@ -15,7 +15,7 @@
  */
 
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { ITTParameters } from "./get_parameters";
+import type { ITTParameters } from "./get_parameters";
 import parseTime from "./time_parsing";
 
 /**

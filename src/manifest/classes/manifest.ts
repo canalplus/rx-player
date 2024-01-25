@@ -16,11 +16,12 @@
 
 import { MediaError } from "../../errors";
 import log from "../../log";
-import {
+import type {
   IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
-  IRepresentationMetadata,
+  IRepresentationMetadata } from "../../manifest";
+import {
   ManifestMetadataFormat,
   getLivePosition,
   getMaximumSafePosition,
@@ -39,16 +40,19 @@ import arrayFind from "../../utils/array_find";
 import EventEmitter from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
 import warnOnce from "../../utils/warn_once";
-import Adaptation from "./adaptation";
-import Period, {
+import type Adaptation from "./adaptation";
+import type {
   IManifestAdaptations,
 } from "./period";
-import Representation, {
+import Period from "./period";
+import type {
   ICodecSupportList,
 } from "./representation";
+import type Representation from "./representation";
 import { MANIFEST_UPDATE_TYPE } from "./types";
+import type {
+  IPeriodsUpdateResult } from "./update_periods";
 import {
-  IPeriodsUpdateResult,
   replacePeriods,
   updatePeriods,
 } from "./update_periods";

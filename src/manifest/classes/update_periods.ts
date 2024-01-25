@@ -24,9 +24,10 @@ import arrayFindIndex from "../../utils/array_find_index";
 import objectAssign from "../../utils/object_assign";
 import type Period from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
-import updatePeriodInPlace, {
+import type {
   IUpdatedPeriodResult,
 } from "./update_period_in_place";
+import updatePeriodInPlace from "./update_period_in_place";
 
 /**
  * Update old periods by adding new periods and removing

@@ -15,24 +15,26 @@
  */
 
 import config from "../../../config";
-import { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
-import {
+import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
+import type {
   IAdaptation,
   IPeriod,
 } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
+import type {
+  IRange } from "../../../utils/ranges";
 import {
-  IRange,
   excludeFromRanges,
   insertInto,
 } from "../../../utils/ranges";
+import type {
+  SegmentBuffer } from "../../segment_sinks";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  SegmentBuffer,
   SegmentBufferOperation,
 } from "../../segment_sinks";
-import {
+import type {
   IRepresentationsChoice,
   IRepresentationStreamPlaybackObservation,
 } from "../representation";

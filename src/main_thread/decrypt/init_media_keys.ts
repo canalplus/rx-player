@@ -20,9 +20,10 @@ import type { IKeySystemOption } from "../../public_types";
 import noop from "../../utils/noop";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import { disableMediaKeys } from "./attach_media_keys";
-import getMediaKeysInfos, {
+import type {
   IMediaKeysInfos,
 } from "./get_media_keys";
+import getMediaKeysInfos from "./get_media_keys";
 
 /**
  * Get media keys infos from key system configs then attach media keys to media element.

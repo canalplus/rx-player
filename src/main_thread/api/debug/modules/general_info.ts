@@ -1,6 +1,6 @@
 import hasMseInWorker from "../../../../compat/has_mse_in_worker";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
-import RxPlayer from "../../public_api";
+import type RxPlayer from "../../public_api";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
 import {
   createCompositeElement,

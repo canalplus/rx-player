@@ -17,15 +17,16 @@
 import type { ICustomMediaKeySession } from "../../compat/eme";
 import log from "../../log";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type {
   IProcessedProtectionData,
-  IMediaKeySessionStores,
+  IMediaKeySessionStores } from "./types";
+import {
   MediaKeySessionLoadingType,
 } from "./types";
 import isSessionUsable from "./utils/is_session_usable";
-import KeySessionRecord from "./utils/key_session_record";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
-import PersistentSessionsStore from "./utils/persistent_sessions_store";
+import type KeySessionRecord from "./utils/key_session_record";
+import type LoadedSessionsStore from "./utils/loaded_sessions_store";
+import type PersistentSessionsStore from "./utils/persistent_sessions_store";
 
 /**
  * Create a new Session or load a persistent one on the given MediaKeys,

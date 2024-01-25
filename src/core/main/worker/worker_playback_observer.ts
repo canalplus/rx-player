@@ -8,7 +8,7 @@ import type {
 import { WorkerMessageType } from "../../../multithread_types";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
-import { IStreamOrchestratorPlaybackObservation } from "../../stream";
+import type { IStreamOrchestratorPlaybackObservation } from "../../stream";
 import sendMessage from "./send_message";
 
 export type ICorePlaybackObservation = IStreamOrchestratorPlaybackObservation & {

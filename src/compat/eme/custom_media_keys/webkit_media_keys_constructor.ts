@@ -15,7 +15,7 @@
  */
 
 import globalScope from "../../../utils/global_scope";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 
 type IWebKitMediaKeys = unknown;
 

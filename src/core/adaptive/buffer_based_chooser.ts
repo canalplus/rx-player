@@ -18,10 +18,10 @@ import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import getBufferLevels from "./utils/get_buffer_levels";
-import {
+import type {
   IRepresentationMaintainabilityScore,
-  ScoreConfidenceLevel,
 } from "./utils/representation_score_calculator";
+import { ScoreConfidenceLevel } from "./utils/representation_score_calculator";
 
 /**
  * Minimum amount of time, in milliseconds, during which we are blocked from

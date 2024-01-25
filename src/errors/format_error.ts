@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IPlayerError } from "../public_types";
+import type { IPlayerError } from "../public_types";
 import isKnownError from "./is_known_error";
 import OtherError from "./other_error";
 

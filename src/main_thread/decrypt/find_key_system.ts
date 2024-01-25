@@ -15,9 +15,10 @@
  */
 
 import { shouldRenewMediaKeySystemAccess } from "../../compat";
-import eme, {
+import type {
   ICustomMediaKeySystemAccess,
 } from "../../compat/eme";
+import eme from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";

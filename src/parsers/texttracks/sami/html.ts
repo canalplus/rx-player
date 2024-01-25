@@ -30,7 +30,7 @@
  */
 
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { IHTMLCue } from "../types";
+import type { IHTMLCue } from "../types";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;

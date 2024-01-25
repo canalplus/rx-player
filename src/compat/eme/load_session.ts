@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import { ICustomMediaKeySession } from "./custom_media_keys";
+import type { ICustomMediaKeySession } from "./custom_media_keys";
 
 const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
 

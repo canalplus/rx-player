@@ -15,19 +15,21 @@
  */
 
 import config from "../../../config";
-import {
+import type {
   ISegmentPipeline,
   ITransportPipelines,
 } from "../../../transports";
-import { CancellationSignal } from "../../../utils/task_canceller";
-import { IBufferType } from "../../segment_sinks";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import type { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
-import applyPrioritizerToSegmentFetcher, {
+import type {
   IPrioritizedSegmentFetcher,
 } from "./prioritized_segment_fetcher";
+import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
+import type {
+  ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
 import createSegmentFetcher, {
   getSegmentFetcherOptions,
-  ISegmentFetcherLifecycleCallbacks,
 } from "./segment_fetcher";
 import TaskPrioritizer from "./task_prioritizer";
 

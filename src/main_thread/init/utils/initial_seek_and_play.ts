@@ -19,10 +19,12 @@ import { isSafariMobile } from "../../../compat/browser_detection";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IPlayerError } from "../../../public_types";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
-import { CancellationError, CancellationSignal } from "../../../utils/task_canceller";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
+import type {
+  CancellationError,
+  CancellationSignal,
+} from "../../../utils/task_canceller";
 import type { PlaybackObserver } from "../../api";
 import { SeekingState } from "../../api/playback_observer";
 

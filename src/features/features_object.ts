@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IFeaturesObject } from "./types";
+import type { IFeaturesObject } from "./types";
 
 /**
  * Initial features object, with no feature activated by default.

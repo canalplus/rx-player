@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IMediaConfiguration } from "../../types";
+import type { IMediaConfiguration } from "../../types";
 import { findDefaultVideoCodec } from "../defaultCodecsFinder";
 
 /**

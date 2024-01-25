@@ -15,10 +15,10 @@
  */
 
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import Adaptation from "./adaptation";
-import Period from "./period";
-import Representation from "./representation";
-import { ISegment } from "./representation_index";
+import type Adaptation from "./adaptation";
+import type Period from "./period";
+import type Representation from "./representation";
+import type { ISegment } from "./representation_index";
 
 /** All information needed to identify a given segment. */
 export interface IBufferedChunkInfos { adaptation : Adaptation;

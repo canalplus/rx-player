@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import type {
+  ICustomMediaKeys,
+  ICustomMediaKeySession } from "../../../compat/eme";
 import {
   closeSession,
   generateKeyRequest,
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
   loadSession,
 } from "../../../compat/eme";
 import log from "../../../log";

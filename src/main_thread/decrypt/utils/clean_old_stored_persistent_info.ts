@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import PersistentSessionsStore from "./persistent_sessions_store";
+import type PersistentSessionsStore from "./persistent_sessions_store";
 
 /**
  * Remove old information from a PersistentSessionsStore so that it respects the

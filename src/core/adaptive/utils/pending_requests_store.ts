@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import {
+import type {
   IManifest,
   IAdaptation,
   ISegment,

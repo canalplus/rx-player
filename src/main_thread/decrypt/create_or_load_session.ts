@@ -18,14 +18,15 @@ import type { ICustomMediaKeySession } from "../../compat/eme";
 import log from "../../log";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import createSession from "./create_session";
-import {
+import type {
   IProcessedProtectionData,
-  IMediaKeySessionStores,
+  IMediaKeySessionStores } from "./types";
+import {
   MediaKeySessionLoadingType,
 } from "./types";
 import cleanOldLoadedSessions from "./utils/clean_old_loaded_sessions";
 import isSessionUsable from "./utils/is_session_usable";
-import KeySessionRecord from "./utils/key_session_record";
+import type KeySessionRecord from "./utils/key_session_record";
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:

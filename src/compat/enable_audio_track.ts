@@ -1,4 +1,4 @@
-import { ICompatAudioTrack } from "./browser_compatibility_types";
+import type { ICompatAudioTrack } from "./browser_compatibility_types";
 import { isTizen } from "./browser_detection";
 
 /**

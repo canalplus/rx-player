@@ -16,8 +16,9 @@
 
 import eme from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type {
+  IMediaConfiguration } from "../types";
 import {
-  IMediaConfiguration,
   ProberStatus,
 } from "../types";
 

@@ -28,13 +28,16 @@ import type {
   ISegment,
 } from "../../manifest";
 import noop from "../../utils/noop";
-import { getLeftSizeOfRange, IRange } from "../../utils/ranges";
-import SharedReference, {
+import type { IRange } from "../../utils/ranges";
+import { getLeftSizeOfRange } from "../../utils/ranges";
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
-import TaskCanceller, {
+import SharedReference from "../../utils/reference";
+import type {
   CancellationSignal,
 } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 import type { IBufferType } from "../segment_sinks";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
@@ -47,10 +50,11 @@ import filterByResolution, {
 import LastEstimateStorage, {
   ABRAlgorithmType,
 } from "./utils/last_estimate_storage";
-import PendingRequestsStore, {
+import type {
   IPendingRequestStoreBegin,
   IPendingRequestStoreProgress,
 } from "./utils/pending_requests_store";
+import PendingRequestsStore from "./utils/pending_requests_store";
 import RepresentationScoreCalculator from "./utils/representation_score_calculator";
 import selectOptimalRepresentation from "./utils/select_optimal_representation";
 

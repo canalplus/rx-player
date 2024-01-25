@@ -20,11 +20,13 @@ import {
   shouldWaitForDataBeforeLoaded,
   shouldWaitForHaveEnoughData,
 } from "../../../compat";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
-import TaskCanceller, { CancellationSignal } from "../../../utils/task_canceller";
-import {
+import SharedReference from "../../../utils/reference";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
 } from "../../api";

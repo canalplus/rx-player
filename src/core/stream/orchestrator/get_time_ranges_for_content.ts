@@ -15,13 +15,13 @@
  */
 
 import log from "../../../log";
-import {
+import type {
   IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
 } from "../../../manifest";
-import { IRange } from "../../../utils/ranges";
-import { SegmentBuffer } from "../../segment_sinks";
+import type { IRange } from "../../../utils/ranges";
+import type { SegmentBuffer } from "../../segment_sinks";
 
 /**
  * Returns the buffered ranges which hold the given content.

@@ -16,12 +16,13 @@
 
 import type { ISegment } from "../../../../../manifest";
 import type { IEMSG } from "../../../../containers/isobmff";
+import type {
+  IIndexSegment } from "../../../utils/index_helpers";
 import {
   calculateRepeat,
-  IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import { createDashUrlDetokenizer } from "./tokens";
 
 /**

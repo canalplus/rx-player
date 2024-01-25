@@ -19,10 +19,11 @@ import type {
   IMPDAttributes,
   IMPDChildren,
 } from "../../../node_parser_types";
-import ParsersStack, {
+import type {
   IAttributeParser,
   IChildrenParser,
 } from "../parsers_stack";
+import type ParsersStack from "../parsers_stack";
 import {
   AttributeName,
   TagName,

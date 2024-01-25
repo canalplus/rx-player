@@ -1,7 +1,7 @@
 import { SourceBufferError } from "../errors";
-import { ISerializedSourceBufferError } from "../errors/source_buffer_error";
+import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
 import log from "../log";
-import {
+import type {
   IAbortBufferWorkerMessage,
   IAddSourceBufferWorkerMessage,
   IAppendBufferWorkerMessage,
@@ -11,16 +11,17 @@ import {
   IInterruptMediaSourceDurationWorkerMessage,
   IRemoveBufferWorkerMessage,
   IStopEndOfStreamWorkerMessage,
-  IUpdateMediaSourceDurationWorkerMessage,
+  IUpdateMediaSourceDurationWorkerMessage } from "../multithread_types";
+import {
   WorkerMessageType,
 } from "../multithread_types";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
-import { IRange } from "../utils/ranges";
+import type { IRange } from "../utils/ranges";
 import TaskCanceller, {
   CancellationError,
 } from "../utils/task_canceller";
-import {
+import type {
   IMediaSourceInterface,
   IMediaSourceInterfaceEvents,
   ISourceBufferInterface,

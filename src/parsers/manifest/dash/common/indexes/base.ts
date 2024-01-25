@@ -21,13 +21,14 @@ import type {
 } from "../../../../../manifest";
 import type { ISegmentInformation } from "../../../../../transports";
 import type { IEMSG } from "../../../../containers/isobmff";
+import type {
+  IIndexSegment } from "../../../utils/index_helpers";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
-  IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { constructRepresentationUrl } from "./tokens";

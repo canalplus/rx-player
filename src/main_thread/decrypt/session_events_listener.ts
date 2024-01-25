@@ -24,9 +24,10 @@ import type {
 } from "../../public_types";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import retryPromiseWithBackoff, {
+import type {
   IBackoffOptions,
 } from "../../utils/retry_promise_with_backoff";
+import retryPromiseWithBackoff from "../../utils/retry_promise_with_backoff";
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";

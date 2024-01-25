@@ -1,7 +1,7 @@
 import getFuzzedDelay from "./get_fuzzed_delay";
 import isNullOrUndefined from "./is_null_or_undefined";
 import sleep from "./sleep";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 /**
  * Retry the given Promise (if it rejects) with an exponential

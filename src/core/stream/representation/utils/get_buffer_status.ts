@@ -15,22 +15,23 @@
  */
 
 import config from "../../../../config";
-import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
-import {
+import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import type {
   IManifest,
   IAdaptation,
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import SegmentBuffersStore, {
-  ChunkStatus,
+import type {
   IBufferedChunk,
   ISignalCompleteSegmentOperation,
-  SegmentBuffer,
+  SegmentBuffer } from "../../../segment_sinks";
+import SegmentBuffersStore, {
+  ChunkStatus,
   SegmentBufferOperation,
 } from "../../../segment_sinks";
-import {
+import type {
   IBufferDiscontinuity,
   IRepresentationStreamPlaybackObservation,
   IQueuedSegment,

@@ -15,7 +15,7 @@
  */
 
 import getTimeDelimiters from "../get_time_delimiters";
-import { IParsedTTMLCue } from "../parse_ttml";
+import type { IParsedTTMLCue } from "../parse_ttml";
 import createElement from "./create_element";
 
 export interface ITTMLHTMLCue { start : number;

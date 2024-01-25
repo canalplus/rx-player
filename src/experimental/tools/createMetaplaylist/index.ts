@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
+import type { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import getDurationFromManifest from "./get_duration_from_manifest";
 
 interface IMetaplaylistContentInfos { url: string;

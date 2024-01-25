@@ -15,7 +15,7 @@
  */
 
 import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
-import {
+import type {
   IManifest,
   IAdaptation,
   ISegment,
@@ -23,13 +23,13 @@ import {
   IRepresentation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
-import { IReadOnlySharedReference } from "../../../../utils/reference";
-import { CancellationSignal } from "../../../../utils/task_canceller";
-import {
+import type { IReadOnlySharedReference } from "../../../../utils/reference";
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type {
   IPushedChunkData,
   SegmentBuffer,
 } from "../../../segment_sinks";
-import {
+import type {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
 } from "../types";

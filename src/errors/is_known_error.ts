@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IPlayerError } from "../public_types";
+import type { IPlayerError } from "../public_types";
 import EncryptedMediaError from "./encrypted_media_error";
 import { ErrorTypes } from "./error_codes";
 import MediaError from "./media_error";

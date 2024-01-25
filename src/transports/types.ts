@@ -29,9 +29,10 @@ import type {
   IServerSyncInfos,
   IPlayerError,
 } from "../public_types";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../utils/task_canceller";
+import type TaskCanceller from "../utils/task_canceller";
 
 /**
  * Interface returned by any transport implementation.

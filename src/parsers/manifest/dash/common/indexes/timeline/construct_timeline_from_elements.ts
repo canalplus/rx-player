@@ -16,9 +16,10 @@
 
 import type { IIndexSegment } from "../../../../utils/index_helpers";
 import convertElementsToIndexSegment from "./convert_element_to_index_segment";
-import parseSElement, {
+import type {
   IParsedS,
 } from "./parse_s_element";
+import parseSElement from "./parse_s_element";
 
 /**
  * Allows to generate the "timeline" for the "Timeline" RepresentationIndex.

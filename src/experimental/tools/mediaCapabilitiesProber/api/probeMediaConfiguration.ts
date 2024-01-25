@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
+import type { ICapabilitiesTypes } from "../capabilities";
+import getProbedConfiguration from "../capabilities";
 import log from "../log";
-import probers, {
+import type {
   IResultsFromAPI,
 } from "../probers";
+import probers from "../probers";
+import type {
+  IMediaConfiguration } from "../types";
 import {
-  IMediaConfiguration,
   ProberStatus,
 } from "../types";
 

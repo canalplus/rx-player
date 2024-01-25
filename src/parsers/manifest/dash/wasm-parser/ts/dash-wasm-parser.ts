@@ -19,10 +19,11 @@ import log from "../../../../../log";
 import { assertUnreachable } from "../../../../../utils/assert";
 import globalScope from "../../../../../utils/global_scope";
 import noop from "../../../../../utils/noop";
-import parseMpdIr, {
+import type {
   IIrParserResponse,
   ILoadedXlinkData,
 } from "../../common";
+import parseMpdIr from "../../common";
 import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
@@ -35,10 +36,11 @@ import type {
 import { generateRootChildrenParser } from "./generators";
 import { generateXLinkChildrenParser } from "./generators/XLink";
 import ParsersStack from "./parsers_stack";
-import {
+import type {
   AttributeName,
+  TagName } from "./types";
+import {
   CustomEventType,
-  TagName,
 } from "./types";
 
 const MAX_READ_SIZE = 15e3;

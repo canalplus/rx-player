@@ -32,12 +32,14 @@ import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPositions from "./get_minimum_and_maximum_positions";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import parseAvailabilityStartTime from "./parse_availability_start_time";
-import parsePeriods, {
+import type {
   IXLinkInfos,
 } from "./parse_periods";
-import resolveBaseURLs, {
+import parsePeriods from "./parse_periods";
+import type {
   IResolvedBaseUrl,
 } from "./resolve_base_urls";
+import resolveBaseURLs from "./resolve_base_urls";
 
 
 /** Possible options for `parseMPD`.  */

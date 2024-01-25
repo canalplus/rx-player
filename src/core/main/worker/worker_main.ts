@@ -18,11 +18,12 @@ import Manifest, {
 } from "../../../manifest/classes";
 import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
-import {
+import type {
   IContentInitializationData,
   IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
-  IReferenceUpdateMessage,
+  IReferenceUpdateMessage } from "../../../multithread_types";
+import {
   MainThreadMessageType,
   WorkerMessageType,
 } from "../../../multithread_types";
@@ -36,15 +37,18 @@ import assert, {
 import type { ILoggerLevel } from "../../../utils/logger";
 import { mainThreadTimestampDiff } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
-import SharedReference, { IReadOnlySharedReference } from "../../../utils/reference";
-import TaskCanceller, {
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
+import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import StreamOrchestrator, {
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamStatusPayload,
 } from "../../stream";
+import StreamOrchestrator from "../../stream";
 /* eslint-disable-next-line max-len */
 import createContentTimeBoundariesObserver from "../utils/create_content_time_boundaries_observer";
 import ContentPreparer from "./content_preparer";
@@ -59,9 +63,10 @@ import {
 import sendMessage, {
   formatErrorForSender,
 } from "./send_message";
-import WorkerPlaybackObserver, {
+import type {
   ICorePlaybackObservation,
 } from "./worker_playback_observer";
+import WorkerPlaybackObserver from "./worker_playback_observer";
 
 export default function initializeWorkerMain() {
   /**

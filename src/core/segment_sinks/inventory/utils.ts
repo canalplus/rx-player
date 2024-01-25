@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { IPeriod } from "../../../manifest";
-import { IBufferedChunk } from "./segment_inventory";
+import type { IPeriod } from "../../../manifest";
+import type { IBufferedChunk } from "./segment_inventory";
 
 /**
  * Returns the last segment in the `inventory` which is linked to a Period

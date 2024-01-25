@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import eme, {
+import type {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
   IEmeApiImplementation,
 } from "../../compat/eme";
+import eme from "../../compat/eme";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
+import type LoadedSessionsStore from "./utils/loaded_sessions_store";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**

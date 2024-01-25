@@ -15,7 +15,7 @@
  */
 
 import globalScope from "../utils/global_scope";
-import { ICompatVTTCue } from "./browser_compatibility_types";
+import type { ICompatVTTCue } from "./browser_compatibility_types";
 
 /**
  * Returns true if the given cue is an instance of a VTTCue.

@@ -15,14 +15,15 @@
  */
 
 import config from "../../../config";
-import createSegmentFetcher, {
+import type {
   ISegmentFetcher,
 } from "../../../core/fetchers/segment/segment_fetcher";
+import createSegmentFetcher from "../../../core/fetchers/segment/segment_fetcher";
 import log from "../../../log";
 import type { IRxPlayer } from "../../../main_thread/types";
 import type { ISegment } from "../../../manifest";
 import Manifest from "../../../manifest/classes";
-import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import arrayFind from "../../../utils/array_find";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";

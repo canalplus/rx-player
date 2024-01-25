@@ -31,7 +31,7 @@ import {
   utf8ToStr,
 } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type {
   IManifestParserOptions,
   IManifestParserRequestScheduler,
   IManifestParserResult,

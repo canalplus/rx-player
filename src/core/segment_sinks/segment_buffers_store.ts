@@ -16,20 +16,23 @@
 
 import { MediaError } from "../../errors";
 import log from "../../log";
+import type {
+  IMediaSourceInterface } from "../../mse";
 import {
-  IMediaSourceInterface,
   SourceBufferType,
 } from "../../mse";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
-import { CancellationSignal } from "../../utils/task_canceller";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
+  IBufferType,
+  SegmentBuffer } from "./implementations";
 import {
   AudioVideoSegmentBuffer,
-  IBufferType,
-  SegmentBuffer,
 } from "./implementations";
-import TextSegmentBuffer, {
+import type {
   ITextDisplayerInterface,
 } from "./implementations/text";
+import TextSegmentBuffer from "./implementations/text";
 
 const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "video",

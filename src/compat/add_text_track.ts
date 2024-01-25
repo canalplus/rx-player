@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICompatTextTrack } from "./browser_compatibility_types";
+import type { ICompatTextTrack } from "./browser_compatibility_types";
 import { isIEOrEdge } from "./browser_detection";
 
 /**

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import type {
+  IRange } from "../ranges";
 import {
   convertToRanges,
   excludeFromRanges,
@@ -32,7 +34,6 @@ import {
   keepRangeIntersection,
   mergeContiguousRanges,
   removeEmptyRanges,
-  IRange,
   getLeftSizeOfRange,
   getPlayedSizeOfRange,
   getRange,

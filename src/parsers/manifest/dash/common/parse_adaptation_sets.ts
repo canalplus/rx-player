@@ -15,7 +15,8 @@
  */
 
 import log from "../../../../log";
-import { IPeriod, SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
+import type { IPeriod } from "../../../../manifest";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
 import type { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
@@ -32,9 +33,10 @@ import type {
 import attachTrickModeTrack from "./attach_trickmode_track";
 // eslint-disable-next-line max-len
 import inferAdaptationType from "./infer_adaptation_type";
-import parseRepresentations, {
+import type {
   IRepresentationContext,
 } from "./parse_representations";
+import parseRepresentations from "./parse_representations";
 import resolveBaseURLs from "./resolve_base_urls";
 
 /**

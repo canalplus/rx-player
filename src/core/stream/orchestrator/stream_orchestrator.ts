@@ -18,36 +18,41 @@ import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
-import {
+import type {
   IManifest,
   IDecipherabilityUpdateElement,
   IPeriod,
 } from "../../../manifest";
 import queueMicrotask from "../../../utils/queue_microtask";
+import type {
+  IReadOnlySharedReference } from "../../../utils/reference";
 import {
   createMappedReference,
-  IReadOnlySharedReference,
 } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import { IRepresentationEstimator } from "../../adaptive";
-import { SegmentFetcherCreator } from "../../fetchers";
-import SegmentBuffersStore, {
-  BufferGarbageCollector,
+import type { IRepresentationEstimator } from "../../adaptive";
+import type { SegmentFetcherCreator } from "../../fetchers";
+import type {
   IBufferType,
-  SegmentBuffer,
+  SegmentBuffer } from "../../segment_sinks";
+import type SegmentBuffersStore from "../../segment_sinks";
+import {
+  BufferGarbageCollector,
 } from "../../segment_sinks";
-import { IWaitingMediaSourceReloadPayload } from "../adaptation";
-import PeriodStream, {
+import type { IWaitingMediaSourceReloadPayload } from "../adaptation";
+import type {
   IPeriodStreamCallbacks,
   IPeriodStreamOptions,
   IPeriodStreamPlaybackObservation,
   IPeriodStreamReadyPayload,
 } from "../period";
-import { IStreamStatusPayload } from "../representation";
+import PeriodStream from "../period";
+import type { IStreamStatusPayload } from "../representation";
 import getTimeRangesForContent from "./get_time_ranges_for_content";
 
 /**

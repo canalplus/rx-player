@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IRepresentation } from "../../../../manifest";
+import type { IRepresentation } from "../../../../manifest";
 import InitializationSegmentCache from "../initialization_segment_cache";
 
 const representation1 = {

@@ -16,7 +16,7 @@
 
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import { IStyleElements } from "./parse_style_block";
+import type { IStyleElements } from "./parse_style_block";
 
 /**
  * Construct an HTMLElement/TextNode representing the given node and apply

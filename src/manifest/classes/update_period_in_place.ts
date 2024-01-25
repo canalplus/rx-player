@@ -21,7 +21,7 @@ import type {
 } from "../../manifest";
 import type { ITrackType } from "../../public_types";
 import arrayFindIndex from "../../utils/array_find_index";
-import Period from "./period";
+import type Period from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 
 /**

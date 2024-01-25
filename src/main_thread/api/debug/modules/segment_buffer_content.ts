@@ -1,9 +1,10 @@
 import type { IBufferType } from "../../../../core/types";
-import {
-  getPeriodForTime,
+import type {
   IAdaptationMetadata,
   IPeriodMetadata,
-  IRepresentationMetadata,
+  IRepresentationMetadata } from "../../../../manifest";
+import {
+  getPeriodForTime,
 } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../../../utils/task_canceller";

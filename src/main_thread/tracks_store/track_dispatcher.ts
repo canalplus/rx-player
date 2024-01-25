@@ -14,9 +14,10 @@ import type {
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import noop from "../../utils/noop";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 
 /**

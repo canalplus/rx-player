@@ -18,18 +18,16 @@ import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import startsWith from "../../../utils/starts_with";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
-import {
+import type {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
 } from "./types";
-import {
-  IWebKitMediaKeys,
-  WebKitMediaKeysConstructor,
-} from "./webkit_media_keys_constructor";
+import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
+import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
   _setVideo: (videoElement: HTMLMediaElement) => void;

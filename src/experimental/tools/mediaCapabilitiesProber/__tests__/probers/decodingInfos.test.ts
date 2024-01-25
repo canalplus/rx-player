@@ -24,8 +24,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import probeDecodingInfos from "../../probers/decodingInfo";
+import type {
+  IMediaConfiguration } from "../../types";
 import {
-  IMediaConfiguration,
   ProberStatus,
 } from "../../types";
 

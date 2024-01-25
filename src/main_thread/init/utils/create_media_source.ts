@@ -22,7 +22,7 @@ import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 
 const generateMediaSourceId = idGenerator();
 

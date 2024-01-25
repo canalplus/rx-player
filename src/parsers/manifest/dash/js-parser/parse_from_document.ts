@@ -16,11 +16,12 @@
 
 import { assertUnreachable } from "../../../../utils/assert";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import parseMpdIr, {
+import type {
   IIrParserResponse,
   ILoadedXlinkData,
   IMPDParserArguments,
 } from "../common";
+import parseMpdIr from "../common";
 import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
 import type { IDashParserResponse, ILoadedResource } from "../parsers_types";
 import {
