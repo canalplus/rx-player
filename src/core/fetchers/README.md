@@ -5,7 +5,7 @@
 | Preferred import style  | Directory-only _[1]_              |
 | Multithread environment | Should be runnable in a WebWorker |
 
-_[1]_ Only the `decrypt` directory itself should be imported and relied on by
+_[1]_ Only the `fetchers` directory itself should be imported and relied on by
 the rest of the code, not its inner files (thus `./index.ts` should export
 everything that may be imported by outside code).
 

@@ -17,7 +17,7 @@
 import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
 import arrayIncludes from "../../../../utils/array_includes";
-import { IRepresentationIntermediateRepresentation } from "../node_parser_types";
+import type { IRepresentationIntermediateRepresentation } from "../node_parser_types";
 
 /** Different "type" a parsed Adaptation can be. */
 type IAdaptationType = "audio" |

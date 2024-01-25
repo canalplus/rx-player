@@ -16,16 +16,16 @@
 
 import config from "../../../../config";
 import log from "../../../../log";
-import Manifest from "../../../../manifest";
+import type { IManifest } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
-import { IParsedManifest } from "../../types";
-import {
+import type { IParsedManifest } from "../../types";
+import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
-import { IResponseData } from "../parsers_types";
+import type { IResponseData } from "../parsers_types";
 // eslint-disable-next-line max-len
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
@@ -62,7 +62,7 @@ export interface IMPDParserArguments {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousManifest : Manifest | null;
+  unsafelyBaseOnPreviousManifest : IManifest | null;
   /** URL of the manifest (post-redirection if one). */
   url? : string | undefined;
 }

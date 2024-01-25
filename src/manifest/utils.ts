@@ -1,21 +1,11 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import { IProcessedProtectionData } from "../core/decrypt";
-import {
+import type { IProcessedProtectionData } from "../main_thread/types";
+import type {
+  IManifest,
+  IPeriod,
+  IAdaptation,
+  IPeriodsUpdateResult,
+} from "../manifest";
+import type {
   IAudioRepresentation,
   IAudioTrack,
   IRepresentationFilter,
@@ -26,60 +16,17 @@ import {
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import { objectValues } from "../utils/object_values";
-import Adaptation from "./adaptation";
-import Manifest from "./manifest";
-import Period from "./period";
-import Representation from "./representation";
-import { ISegment } from "./representation_index";
-import {
+import type {
   IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
 } from "./types";
-import { IPeriodsUpdateResult } from "./update_periods";
 
-/** All information needed to identify a given segment. */
-export interface IBufferedChunkInfos { adaptation : Adaptation;
-                                       period : Period;
-                                       representation : Representation;
-                                       segment : ISegment; }
-
-/**
- * Check if two contents are the same
- * @param {Object} content1
- * @param {Object} content2
- * @returns {boolean}
- */
-export function areSameContent(
-  content1: IBufferedChunkInfos,
-  content2: IBufferedChunkInfos
-): boolean {
-  return (content1.segment.id === content2.segment.id &&
-          content1.representation.uniqueId === content2.representation.uniqueId);
-}
-
-/**
- * Get string describing a given ISegment, useful for log functions.
- * @param {Object} content
- * @returns {string|null|undefined}
- */
-export function getLoggableSegmentId(
-  content : IBufferedChunkInfos | null | undefined
-) : string {
-  if (isNullOrUndefined(content)) {
-    return "";
-  }
-  const { period, adaptation, representation, segment } = content;
-  return `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
-         `R: ${representation.id} S: ` +
-         (segment.isInit   ? "init" :
-          segment.complete ? `${segment.time}-${segment.duration}` :
-                             `${segment.time}`);
-}
+/** List in an array every possible value for the Adaptation's `type` property. */
+export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text"];
 
 /**
  * Returns the theoretical minimum playable position on the content
@@ -147,17 +94,17 @@ export function getMaximumSafePosition(manifest : IManifestMetadata) : number {
  * @returns {Array.<Adaptation>}
  */
 export function getSupportedAdaptations(
-  period : Period,
+  period : IPeriod,
   type? : ITrackType | undefined
-) : Adaptation[];
+) : IAdaptation[];
 export function getSupportedAdaptations(
   period : IPeriodMetadata,
   type? : ITrackType | undefined
 ) : IAdaptationMetadata[];
 export function getSupportedAdaptations(
-  period : Period | IPeriodMetadata,
+  period : IPeriod | IPeriodMetadata,
   type? : ITrackType | undefined
-) : IAdaptationMetadata[] | Adaptation[] {
+) : IAdaptationMetadata[] | IAdaptation[] {
   if (type === undefined) {
     return getAdaptations(period).filter(ada => {
       return ada.isSupported === true;
@@ -179,15 +126,15 @@ export function getSupportedAdaptations(
  * @param {number} time
  * @returns {Object|undefined}
  */
-export function getPeriodForTime(manifest: Manifest, time: number): Period | undefined;
+export function getPeriodForTime(manifest: IManifest, time: number): IPeriod | undefined;
 export function getPeriodForTime(
   manifest: IManifestMetadata,
   time: number
 ): IPeriodMetadata | undefined;
 export function getPeriodForTime(
-  manifest: IManifestMetadata | Manifest,
+  manifest: IManifestMetadata | IManifest,
   time: number
-): Period | IPeriodMetadata | undefined {
+): IPeriod | IPeriodMetadata | undefined {
   let nextPeriod = null;
   for (let i = manifest.periods.length - 1; i >= 0; i--) {
     const period = manifest.periods[i];
@@ -206,17 +153,17 @@ export function getPeriodForTime(
  * @returns {Object|null}
  */
 export function getPeriodAfter(
-  manifest: Manifest,
-  period: Period
-): Period | null;
+  manifest: IManifest,
+  period: IPeriod
+): IPeriod | null;
 export function getPeriodAfter(
   manifest: IManifestMetadata,
   period: IPeriodMetadata
 ): IPeriodMetadata | null;
 export function getPeriodAfter(
-  manifest: IManifestMetadata | Manifest,
-  period: IPeriodMetadata | Period
-): Period | IPeriodMetadata | null {
+  manifest: IManifestMetadata | IManifest,
+  period: IPeriodMetadata | IPeriod
+): IPeriod | IPeriodMetadata | null {
   const endOfPeriod = period.end;
   if (endOfPeriod === undefined) {
     return null;
@@ -261,11 +208,11 @@ export function periodContainsTime(
  * Array.
  * @returns {Array.<Object>}
  */
-export function getAdaptations(period : Period) : Adaptation[];
+export function getAdaptations(period : IPeriod) : IAdaptation[];
 export function getAdaptations(period : IPeriodMetadata) : IAdaptationMetadata[];
 export function getAdaptations(
-  period : IPeriodMetadata | Period
-) : IAdaptationMetadata[] | Adaptation[] {
+  period : IPeriodMetadata | IPeriod
+) : IAdaptationMetadata[] | IAdaptation[] {
   const adaptationsByType = period.adaptations;
   return objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
     // Note: the second case cannot happen. TS is just being dumb here
@@ -425,7 +372,7 @@ function toVideoRepresentation(
 }
 
 export function toTaggedTrack(
-  adaptation: Adaptation
+  adaptation: IAdaptation
 ): ITaggedTrack {
   switch (adaptation.type) {
     case "audio":

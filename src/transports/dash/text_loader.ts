@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
-import {
+import type {
   ILoadedTextSegmentFormat,
   ISegmentContext,
   ISegmentLoader,

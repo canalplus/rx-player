@@ -15,15 +15,15 @@
  */
 
 import { CustomLoaderError } from "../../errors";
-import { ICdnMetadata } from "../../parsers/manifest";
-import {
+import type { ICdnMetadata } from "../../parsers/manifest";
+import type {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,

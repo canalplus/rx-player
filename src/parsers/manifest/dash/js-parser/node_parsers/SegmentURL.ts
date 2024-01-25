@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {
+import type {
   ISegmentUrlIntermediateRepresentation,
 } from "../../node_parser_types";
 import {

@@ -15,7 +15,7 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import {
+import type {
   IEventStreamIntermediateRepresentation,
   IPeriodAttributes,
   IPeriodChildren,

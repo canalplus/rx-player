@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IFeaturesObject } from "../../../features/types";
+import type { IFeaturesObject } from "../../../features/types";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import DASHFeature from "../../../transports/dash";
 import dashWasmFeature from "../dash_wasm";

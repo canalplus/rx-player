@@ -15,7 +15,7 @@
  */
 
 import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
-import {
+import type {
   IParsedAdaptation,
   IParsedAdaptations,
 } from "../../types";

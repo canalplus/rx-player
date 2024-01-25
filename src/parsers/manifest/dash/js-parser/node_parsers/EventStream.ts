@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IEventStreamEventIntermediateRepresentation,
   IEventStreamIntermediateRepresentation,
 } from "../../node_parser_types";

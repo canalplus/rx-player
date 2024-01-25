@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { ISegment, Representation } from "../../manifest";
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ISegment, IRepresentation } from "../../manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import resolveURL from "../../utils/resolve_url";
-
 
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
@@ -25,7 +24,7 @@ import resolveURL from "../../utils/resolve_url";
  * @param {Representation} representation
  * @returns {Boolean}
  */
-function isMP4EmbeddedTrack(representation : Representation) : boolean {
+function isMP4EmbeddedTrack(representation : IRepresentation) : boolean {
   return typeof representation.mimeType === "string" &&
          representation.mimeType.indexOf("mp4") >= 0;
 }

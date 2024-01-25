@@ -16,7 +16,7 @@
 
 import idGenerator from "../../../utils/id_generator";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import {
+import type {
   IContentProtections,
   IContentProtectionInitData,
   IParsedAdaptation,
@@ -25,7 +25,7 @@ import {
   IParsedRepresentation,
 } from "../types";
 import LocalRepresentationIndex from "./representation_index";
-import {
+import type {
   IContentProtections as ILocalContentProtections,
   ILocalAdaptation,
   ILocalManifest,

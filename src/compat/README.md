@@ -2,7 +2,7 @@
 
 | Consideration           | Status                                      |
 |-------------------------|---------------------------------------------|
-| Preferred import style  | Compat files should be imported directly    |
+| Preferred import style  | Compat files can be imported directly       |
 | Multithread environment | Main thread or WebWorker depending on file  |
 
 ## Overview ####################################################################

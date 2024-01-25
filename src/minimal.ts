@@ -22,9 +22,9 @@
  */
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
-import Player from "./core/api";
 import features from "./features";
 import logger from "./log";
+import Player from "./main_thread/api";
 import MainCodecSupportProber from "./mse/main_codec_support_prober";
 
 features.codecSupportProber = MainCodecSupportProber;

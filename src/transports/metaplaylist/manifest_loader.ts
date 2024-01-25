@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IManifestLoader,
   ILoadedManifestFormat,
 } from "../../public_types";
 import request from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
-import { IManifestLoaderOptions, IRequestedData } from "../types";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type { IManifestLoaderOptions, IRequestedData } from "../types";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
 
 /**

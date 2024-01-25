@@ -16,22 +16,23 @@
 
 import config from "../../config";
 import features from "../../features";
-import Manifest, {
+import {
   IMetaPlaylistPrivateInfos,
   ISegment,
 } from "../../manifest";
+import Manifest from "../../manifest/classes";
 import parseMetaPlaylist, {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
-import {
+import type {
   ICdnMetadata,
   IParsedManifest,
 } from "../../parsers/manifest/types";
-import { IPlayerError } from "../../public_types";
+import type { IPlayerError } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
   ILoadedTextSegmentFormat,

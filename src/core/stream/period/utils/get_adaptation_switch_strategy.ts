@@ -15,9 +15,10 @@
  */
 
 import config from "../../../../config";
+import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
 import {
-  Adaptation,
-  Period,
+  IAdaptation,
+  IPeriod,
 } from "../../../../manifest";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
 import {
@@ -25,13 +26,12 @@ import {
   insertInto,
   IRange,
 } from "../../../../utils/ranges";
-import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
   SegmentBuffer,
   SegmentBufferOperation,
-} from "../../../segment_buffers";
+} from "../../../segment_sinks";
 import { ITrackSwitchingMode } from "../../adaptation";
 import { IPeriodStreamPlaybackObservation } from "../types";
 
@@ -67,8 +67,8 @@ export interface IAdaptationSwitchOptions {
  */
 export default function getAdaptationSwitchStrategy(
   segmentBuffer : SegmentBuffer,
-  period : Period,
-  adaptation : Adaptation,
+  period : IPeriod,
+  adaptation : IAdaptation,
   switchingMode : ITrackSwitchingMode,
   playbackObserver : IReadOnlyPlaybackObserver<
     IPeriodStreamPlaybackObservation
@@ -194,7 +194,7 @@ export default function getAdaptationSwitchStrategy(
  * @returns {boolean}
  */
 function hasCompatibleCodec(
-  adaptation : Adaptation,
+  adaptation : IAdaptation,
   segmentBufferCodec : string
 ) : boolean {
   return adaptation.representations.some(rep =>

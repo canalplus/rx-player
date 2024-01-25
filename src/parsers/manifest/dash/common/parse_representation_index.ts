@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IRepresentationIndex,
-  Representation,
+  IRepresentation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
-import { IEMSG } from "../../../containers/isobmff";
-import {
+import type { IEMSG } from "../../../containers/isobmff";
+import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
@@ -37,7 +37,7 @@ import {
   ITimelineIndexContextArgument,
 } from "./indexes";
 import ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import { IResolvedBaseUrl } from "./resolve_base_urls";
+import type { IResolvedBaseUrl } from "./resolve_base_urls";
 
 /**
  * Parse the specific segment indexing information found in a representation
@@ -195,5 +195,5 @@ export interface IRepresentationIndexContext {
    * /!\ If unexpected differences exist between both, there is a risk of
    * de-synchronization with what is actually on the server.
    */
-  unsafelyBaseOnPreviousRepresentation : Representation | null;
+  unsafelyBaseOnPreviousRepresentation : IRepresentation | null;
 }

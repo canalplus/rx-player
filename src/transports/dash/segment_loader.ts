@@ -15,17 +15,17 @@
  */
 
 import { CustomLoaderError } from "../../errors";
-import { ICdnMetadata } from "../../parsers/manifest";
-import { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
+import type { ICdnMetadata } from "../../parsers/manifest";
+import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
 import request, {
   fetchIsSupported,
 } from "../../utils/request";
-import {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
-import {
+import type {
   ILoadedAudioVideoSegmentFormat,
   ISegmentContext,
   ISegmentLoader,

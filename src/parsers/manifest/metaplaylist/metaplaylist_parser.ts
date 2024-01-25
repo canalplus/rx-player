@@ -15,15 +15,13 @@
  */
 
 import log from "../../../log";
-import Manifest, {
-  StaticRepresentationIndex,
-  SUPPORTED_ADAPTATIONS_TYPE,
-} from "../../../manifest";
-import { ITrackType } from "../../../public_types";
+import { IManifest, SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
+import { StaticRepresentationIndex } from "../../../manifest/classes";
+import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
-import {
+import type {
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -36,7 +34,7 @@ export type IParserResponse<T> =
   { type : "needs-manifest-loader";
     value : {
       ressources : Array<{ url : string; transportType : string }>;
-      continue : (loadedRessources : Manifest[]) => IParserResponse<T>;
+      continue : (loadedRessources : IManifest[]) => IParserResponse<T>;
     }; } |
   { type : "done"; value : T };
 
@@ -66,7 +64,7 @@ export interface IMetaPlaylist {
  * Parse playlist string to JSON.
  * Returns an array of contents.
  * @param {string} data
- * @param {string} url
+ * @param {Object} parserOptions
  * @returns {Object}
  */
 export default function parseMetaPlaylist(
@@ -128,7 +126,7 @@ export default function parseMetaPlaylist(
     type : "needs-manifest-loader",
     value : {
       ressources,
-      continue : function parseWholeMPL(loadedRessources : Manifest[]) {
+      continue : function parseWholeMPL(loadedRessources : IManifest[]) {
         const parsedManifest = createManifest(metaPlaylist,
                                               loadedRessources,
                                               parserOptions);
@@ -143,13 +141,13 @@ export default function parseMetaPlaylist(
  * Each content presents a start and end time, so that periods
  * boudaries could be adapted.
  * @param {Object} mplData
- * @param {Array<Object>} manifest
- * @param {string} url
+ * @param {Array<Object>} manifests
+ * @param {Object} parserOptions
  * @returns {Object}
  */
 function createManifest(
   mplData : IMetaPlaylist,
-  manifests : Manifest[],
+  manifests : IManifest[],
   parserOptions:  { url?: string | undefined;
                     serverSyncInfos?: { serverTimestamp: number;
                                         clientTime: number; } | undefined; }

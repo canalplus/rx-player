@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IIndexSegment } from "../../../../utils/index_helpers";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 
 /**
  * By comparing two timelines for the same content at different points in time,

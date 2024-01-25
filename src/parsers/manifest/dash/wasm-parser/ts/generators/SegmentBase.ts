@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {
+import type {
   ISegmentBaseIntermediateRepresentation,
 } from "../../../node_parser_types";
-import { IAttributeParser } from "../parsers_stack";
+import type { IAttributeParser } from "../parsers_stack";
 import { AttributeName } from "../types";
 import { parseString } from "../utils";
 

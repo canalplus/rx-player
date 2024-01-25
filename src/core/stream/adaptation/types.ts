@@ -1,21 +1,22 @@
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
-import {
+import type {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
 } from "../../../public_types";
-import { IReadOnlySharedReference } from "../../../utils/reference";
-import { IRepresentationEstimator } from "../../adaptive";
-import { IReadOnlyPlaybackObserver } from "../../api";
-import { SegmentFetcherCreator } from "../../fetchers";
-import {
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import type { IRepresentationEstimator } from "../../adaptive";
+import type { SegmentFetcherCreator } from "../../fetchers";
+import type {
   IBufferType,
   SegmentBuffer,
-} from "../../segment_buffers";
-import {
+} from "../../segment_sinks";
+import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   IRepresentationStreamPlaybackObservation,
@@ -66,14 +67,14 @@ export interface IRepresentationChangePayload {
   /** The type of buffer linked to that `RepresentationStream`. */
   type : IBufferType;
   /** The `Period` linked to the `RepresentationStream` we're creating. */
-  period : Period;
+  period : IPeriod;
   /** The `Adaptation` linked to the `RepresentationStream` we're creating. */
-  adaptation : Adaptation;
+  adaptation : IAdaptation;
   /**
    * The `Representation` linked to the `RepresentationStream` we're creating.
    * `null` when we're choosing no Representation at all.
    */
-  representation : Representation |
+  representation : IRepresentation |
                    null;
 }
 
@@ -85,7 +86,7 @@ export interface IWaitingMediaSourceReloadPayload {
    * The MediaSource will only be reloaded if that Period becomes the current
    * one.
    */
-  period : Period;
+  period : IPeriod;
   /** Buffer type concerned. */
   bufferType : IBufferType;
   /**
@@ -138,9 +139,9 @@ export interface IAdaptationStreamArguments {
   /** Regularly emit playback conditions. */
   playbackObserver : IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
   /** Content you want to create this Stream for. */
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation;
+  content : { manifest : IManifest;
+              period : IPeriod;
+              adaptation : IAdaptation;
               representations : IReadOnlySharedReference<IRepresentationsChoice>; };
   options: IAdaptationStreamOptions;
   /** Estimate the right Representation to play. */

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 
 /**
@@ -27,9 +27,9 @@ import arrayFind from "../../../utils/array_find";
  * @returns {Array.<Object>}
  */
 export default function filterByResolution(
-  representations : Representation[],
+  representations : IRepresentation[],
   resolution : IResolutionInfo
-) : Representation[] {
+) : IRepresentation[] {
   if (resolution.width === undefined || resolution.height === undefined) {
     return representations;
   }

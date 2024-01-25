@@ -17,16 +17,17 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
+import {
+  IManifest,
+  IAdaptation,
   getLoggableSegmentId,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
-import { ICdnMetadata } from "../../../parsers/manifest";
-import { IPlayerError } from "../../../public_types";
-import {
+import type { ICdnMetadata } from "../../../parsers/manifest";
+import type { IPlayerError } from "../../../public_types";
+import type {
   IChunkCompleteInformation,
   ISegmentLoader,
   ISegmentLoadingProgressInformation,
@@ -43,13 +44,13 @@ import {
   CancellationError,
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import {
+import type {
   IMetricsCallbackPayload,
   IRequestBeginCallbackPayload,
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
 } from "../../adaptive";
-import { IBufferType } from "../../segment_buffers";
+import type { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
 import { scheduleRequestWithCdns } from "../utils/schedule_request";
@@ -406,10 +407,10 @@ export interface ISegmentFetcherCallbacks<TSegmentDataType> {
 }
 
 /** Content used by the segment loader as a context to load a new segment. */
-export interface ISegmentLoaderContent { manifest : Manifest;
-                                         period : Period;
-                                         adaptation : Adaptation;
-                                         representation : Representation;
+export interface ISegmentLoaderContent { manifest : IManifest;
+                                         period : IPeriod;
+                                         adaptation : IAdaptation;
+                                         representation : IRepresentation;
                                          segment : ISegment; }
 
 /**

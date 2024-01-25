@@ -15,11 +15,11 @@
  */
 
 import log from "../../../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { IEMSG } from "../../../../containers/isobmff";
 import { getTimescaledRange } from "../../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
 import { constructRepresentationUrl } from "./tokens";

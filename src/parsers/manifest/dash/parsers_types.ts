@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IParsedManifest } from "../types";
+import type { IParsedManifest } from "../types";
 
 export { IMPDParserArguments } from "./common";
 

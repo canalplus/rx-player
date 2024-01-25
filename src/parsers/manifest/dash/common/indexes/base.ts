@@ -15,12 +15,12 @@
  */
 
 import log from "../../../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
-import { ISegmentInformation } from "../../../../../transports";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { ISegmentInformation } from "../../../../../transports";
+import type { IEMSG } from "../../../../containers/isobmff";
 import {
   fromIndexTime,
   getIndexSegmentEnd,

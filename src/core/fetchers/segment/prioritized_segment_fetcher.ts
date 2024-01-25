@@ -15,8 +15,8 @@
  */
 
 import log from "../../../log";
-import { CancellationSignal } from "../../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import type {
   ISegmentFetcher,
   ISegmentFetcherCallbacks,
   ISegmentLoaderContent,

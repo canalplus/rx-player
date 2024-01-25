@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import { IPlayerError } from "../../../public_types";
-import { ISegmentInformation } from "../../../transports";
+import type { IPlayerError } from "../../../public_types";
+import type { ISegmentInformation } from "../../../transports";
 import objectAssign from "../../../utils/object_assign";
 
 export interface IBaseContentMetadata {

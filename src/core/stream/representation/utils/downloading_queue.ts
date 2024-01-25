@@ -15,11 +15,12 @@
  */
 
 import log from "../../../../log";
-import Manifest, {
-  Adaptation,
+import {
+  IManifest,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
 import { IPlayerError } from "../../../../public_types";
 import {
@@ -593,11 +594,11 @@ interface ISegmentRequestObject {
 /** Context for segments downloaded through the DownloadingQueue. */
 export interface IDownloadingQueueContext {
   /** Adaptation linked to the segments you want to load. */
-  adaptation : Adaptation;
+  adaptation : IAdaptation;
   /** Manifest linked to the segments you want to load. */
-  manifest : Manifest;
+  manifest : IManifest;
   /** Period linked to the segments you want to load. */
-  period : Period;
+  period : IPeriod;
   /** Representation linked to the segments you want to load. */
-  representation : Representation;
+  representation : IRepresentation;
 }

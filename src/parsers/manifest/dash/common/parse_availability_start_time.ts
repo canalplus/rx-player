@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { IMPDAttributes } from "../node_parser_types";
+import type { IMPDAttributes } from "../node_parser_types";
 
 /**
  * Returns the base time of the Manifest.
  * @param {Object} rootAttributes
- * @param {number|undefined}
+ * @param {number|undefined} [referenceDateTime]
+ * @returns {number}
  */
 export default function parseAvailabilityStartTime(
   rootAttributes : IMPDAttributes,

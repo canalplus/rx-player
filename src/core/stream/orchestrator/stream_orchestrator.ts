@@ -17,9 +17,11 @@
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
-import Manifest, {
+import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
+import {
+  IManifest,
   IDecipherabilityUpdateElement,
-  Period,
+  IPeriod,
 } from "../../../manifest";
 import queueMicrotask from "../../../utils/queue_microtask";
 import {
@@ -32,13 +34,12 @@ import TaskCanceller, {
 } from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import { IRepresentationEstimator } from "../../adaptive";
-import type { IReadOnlyPlaybackObserver } from "../../api";
 import { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   BufferGarbageCollector,
   IBufferType,
   SegmentBuffer,
-} from "../../segment_buffers";
+} from "../../segment_sinks";
 import { IWaitingMediaSourceReloadPayload } from "../adaptation";
 import PeriodStream, {
   IPeriodStreamCallbacks,
@@ -92,8 +93,8 @@ import getTimeRangesForContent from "./get_time_ranges_for_content";
  * doing.
  */
 export default function StreamOrchestrator(
-  content : { manifest : Manifest;
-              initialPeriod : Period; },
+  content : { manifest : IManifest;
+              initialPeriod : IPeriod; },
   playbackObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
   representationEstimator : IRepresentationEstimator,
   segmentBuffersStore : SegmentBuffersStore,
@@ -151,9 +152,9 @@ export default function StreamOrchestrator(
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
    */
-  function manageEveryStreams(bufferType : IBufferType, basePeriod : Period) : void {
+  function manageEveryStreams(bufferType : IBufferType, basePeriod : IPeriod) : void {
     /** Each Period for which there is currently a Stream, chronologically */
-    const periodList = new SortedList<Period>((a, b) => a.start - b.start);
+    const periodList = new SortedList<IPeriod>((a, b) => a.start - b.start);
 
     /**
      * When set to `true`, all the currently active PeriodStream will be destroyed
@@ -216,7 +217,7 @@ export default function StreamOrchestrator(
     /**
      * @param {Object} period
      */
-    function launchConsecutiveStreamsForPeriod(period : Period) : void {
+    function launchConsecutiveStreamsForPeriod(period : IPeriod) : void {
       const consecutivePeriodStreamCb = {
         ...callbacks,
         waitingMediaSourceReload(payload : IWaitingMediaSourceReloadPayload) : void {
@@ -419,7 +420,7 @@ export default function StreamOrchestrator(
    */
   function manageConsecutivePeriodStreams(
     bufferType : IBufferType,
-    basePeriod : Period,
+    basePeriod : IPeriod,
     consecutivePeriodStreamCb : IPeriodStreamCallbacks & {
       periodStreamCleared(payload : IPeriodStreamClearedPayload) : void;
     },
@@ -435,7 +436,7 @@ export default function StreamOrchestrator(
       /** Emits when the `PeriodStreamfor should be destroyed, if created. */
       canceller : TaskCanceller;
       /** The `Period` concerned. */
-      period : Period;
+      period : IPeriod;
     } | null = null;
 
     /** Emits when the `PeriodStream` linked to `basePeriod` should be destroyed. */
@@ -514,7 +515,7 @@ export default function StreamOrchestrator(
      * Create `PeriodStream` for the next Period, specified under `nextPeriod`.
      * @param {Object} nextPeriod
      */
-    function checkOrCreateNextPeriodStream(nextPeriod : Period) : void {
+    function checkOrCreateNextPeriodStream(nextPeriod : IPeriod) : void {
       if (nextStreamInfo !== null) {
         if (nextStreamInfo.period.id === nextPeriod.id) {
           return;
@@ -669,14 +670,14 @@ export interface IPeriodStreamClearedPayload {
    */
   type : IBufferType;
   /** The `Manifest` linked to the `PeriodStream` we just cleared. */
-  manifest : Manifest;
+  manifest : IManifest;
   /**
    * The `Period` linked to the `PeriodStream` we just removed.
    *
    * The combination of this and `Period` should give you enough information
    * about which `PeriodStream` has been removed.
    */
-  period : Period;
+  period : IPeriod;
 }
 
 /** Payload for the `needsMediaSourceReload` callback. */
@@ -704,7 +705,7 @@ export interface INeedsMediaSourceReloadPayload {
 /** Payload for the `lockedStream` callback. */
 export interface ILockedStreamPayload {
   /** Period concerned. */
-  period : Period;
+  period : IPeriod;
   /** Buffer type concerned. */
   bufferType : IBufferType;
 }

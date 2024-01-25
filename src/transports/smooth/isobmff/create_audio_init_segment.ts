@@ -38,7 +38,6 @@ import getAacesHeader from "./get_aaces_header";
  * @param {string} codecPrivateData
  * @param {Uint8Array} keyId - hex string representing the key Id, 32 chars.
  * eg. a800dbed49c12c4cb8e0b25643844b9b
- * @param {Array.<Object>} [pssList]
  * @returns {Uint8Array}
  */
 export default function createAudioInitSegment(

@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import { ISegment } from "../../../manifest";
+import type { ISegment } from "../../../manifest";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import { getIndexSegmentEnd } from "../utils/index_helpers";

@@ -28,7 +28,7 @@ import objectAssign from "../../../utils/object_assign";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
 import { createBox } from "../../containers/isobmff";
-import {
+import type {
   IContentProtectionKID,
   IParsedAdaptation,
   IParsedAdaptations,

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../../main_thread/text_displayer/html";
 import srtParser from "../../../parsers/texttracks/srt/html";
-import HTMLTextDisplayer from "../../../text_displayer/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLsrtFeature from "../html_srt_parser";
 
 describe("Features list - HTML srt Parser", () => {
