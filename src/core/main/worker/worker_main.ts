@@ -502,7 +502,7 @@ function loadOrReloadPreparedContent(
           manifest,
           mediaSource,
           representationEstimator,
-          segmentBuffersStore,
+          segmentSinksStore,
           segmentFetcherCreator } = preparedContent;
   const { drmSystemId,
           enableFastSwitching,
@@ -515,11 +515,11 @@ function loadOrReloadPreparedContent(
                                 maximumPosition: Infinity });
     }
 
-    // Synchronize SegmentBuffers with what has been buffered.
+    // Synchronize SegmentSinks with what has been buffered.
     ["video" as const, "audio" as const, "text" as const].forEach(tType => {
-      const segmentBufferStatus =  segmentBuffersStore.getStatus(tType);
-      if (segmentBufferStatus.type === "initialized") {
-        segmentBufferStatus.value.synchronizeInventory(
+      const segmentSinkStatus =  segmentSinksStore.getStatus(tType);
+      if (segmentSinkStatus.type === "initialized") {
+        segmentSinkStatus.value.synchronizeInventory(
           observation.buffered[tType] ?? []
         );
       }
@@ -545,7 +545,7 @@ function loadOrReloadPreparedContent(
     manifest,
     mediaSource,
     playbackObserver,
-    segmentBuffersStore,
+    segmentSinksStore,
     {
       onWarning: (err: IPlayerError) =>
         sendMessage({ type: WorkerMessageType.Warning,
@@ -567,7 +567,7 @@ function loadOrReloadPreparedContent(
                        manifest },
                      playbackObserver,
                      representationEstimator,
-                     segmentBuffersStore,
+                     segmentSinksStore,
                      segmentFetcherCreator,
                      {  wantedBufferAhead,
                         maxVideoBufferSize,

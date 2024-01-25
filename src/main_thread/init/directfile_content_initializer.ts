@@ -221,7 +221,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
           .onUpdate((isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
-              this.trigger("loaded", { segmentBuffersStore: null });
+              this.trigger("loaded", { segmentSinksStore: null });
             }
           }, { emitCurrentValue: true, clearSignal: cancelSignal }))
       .catch((err) => {

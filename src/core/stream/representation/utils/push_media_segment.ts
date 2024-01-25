@@ -27,7 +27,7 @@ import type { ISegmentParserParsedMediaChunk } from "../../../../transports";
 import objectAssign from "../../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type { SegmentBuffer } from "../../../segment_sinks";
+import type { SegmentSink } from "../../../segment_sinks";
 import type {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
@@ -35,7 +35,7 @@ import type {
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
 /**
- * Push a given media segment (non-init segment) to a SegmentBuffer.
+ * Push a given media segment (non-init segment) to a SegmentSink.
  * @param {Object} args
  * @param {Object} cancelSignal
  * @returns {Promise}
@@ -47,7 +47,7 @@ export default async function pushMediaSegment<T>(
     initSegmentUniqueId,
     parsedSegment,
     segment,
-    segmentBuffer } :
+    segmentSink } :
   { playbackObserver : IReadOnlyPlaybackObserver<
       IRepresentationStreamPlaybackObservation
     >;
@@ -59,7 +59,7 @@ export default async function pushMediaSegment<T>(
     initSegmentUniqueId : string | null;
     parsedSegment : ISegmentParserParsedMediaChunk<T>;
     segment : ISegment;
-    segmentBuffer : SegmentBuffer; },
+    segmentSink : SegmentSink; },
   cancelSignal : CancellationSignal
 ) : Promise< IStreamEventAddedSegmentPayload | null > {
   if (parsedSegment.chunkData === null) {
@@ -109,7 +109,7 @@ export default async function pushMediaSegment<T>(
                                         end: estimatedEnd },
                                       content);
   const buffered = await appendSegmentToBuffer(playbackObserver,
-                                               segmentBuffer,
+                                               segmentSink,
                                                { data, inventoryInfos },
                                                bufferGoal,
                                                cancelSignal);
