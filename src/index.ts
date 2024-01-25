@@ -20,7 +20,6 @@
  */
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
-import Player from "./core/api";
 import {
   DASH,
   DIRECTFILE,
@@ -36,6 +35,7 @@ import {
   SMOOTH,
 } from "./features/list";
 import logger from "./log";
+import Player from "./main_thread/api";
 
 Player.addFeatures([
   SMOOTH,

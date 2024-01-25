@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import NativeTextDisplayer from "../../../text_displayer/native";
-import { IFeaturesObject } from "../../types";
+import NativeTextDisplayer from "../../../main_thread/text_displayer/native";
+import type { IFeaturesObject } from "../../types";
 import addNativeTextBuffer from "../native_text_buffer";
 
 describe("Features list - native Text Buffer", () => {

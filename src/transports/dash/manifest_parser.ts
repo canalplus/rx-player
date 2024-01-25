@@ -18,19 +18,19 @@ import config from "../../config";
 import { formatError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import Manifest from "../../manifest";
-import {
+import Manifest from "../../manifest/classes";
+import type {
   IDashParserResponse,
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
-import { IPlayerError } from "../../public_types";
+import type { IPlayerError } from "../../public_types";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import {
   strToUtf8,
   utf8ToStr,
 } from "../../utils/string_parsing";
-import { CancellationSignal } from "../../utils/task_canceller";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import {
   IManifestParserOptions,
   IManifestParserRequestScheduler,

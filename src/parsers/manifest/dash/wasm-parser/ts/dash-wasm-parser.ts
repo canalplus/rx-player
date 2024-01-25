@@ -23,10 +23,11 @@ import parseMpdIr, {
   IIrParserResponse,
   ILoadedXlinkData,
 } from "../../common";
-import {
-  IMPDIntermediateRepresentation, IPeriodIntermediateRepresentation,
+import type {
+  IMPDIntermediateRepresentation,
+  IPeriodIntermediateRepresentation,
 } from "../../node_parser_types";
-import {
+import type {
   IDashParserResponse,
   ILoadedResource,
   IMPDParserArguments,

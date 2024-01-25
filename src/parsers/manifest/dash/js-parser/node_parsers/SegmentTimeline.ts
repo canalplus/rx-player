@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ITimelineParser } from "../../node_parser_types";
+import type { ITimelineParser } from "../../node_parser_types";
 
 /**
  * @param {Element} root

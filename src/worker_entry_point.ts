@@ -3,5 +3,5 @@
  * on when running in a multithread mode.
  */
 
-import initializeWorkerPortal from "./core/init/multithread/worker";
+import initializeWorkerPortal from "./core/core_portal/worker";
 initializeWorkerPortal();

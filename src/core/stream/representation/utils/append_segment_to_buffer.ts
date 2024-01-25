@@ -23,17 +23,17 @@ import {
   SourceBufferError,
 } from "../../../../errors";
 import log from "../../../../log";
+import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
 import { toTaggedTrack } from "../../../../manifest";
 import { IRange } from "../../../../utils/ranges";
 import { IReadOnlySharedReference } from "../../../../utils/reference";
 import sleep from "../../../../utils/sleep";
 import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   IInsertedChunkInfos,
   IPushChunkInfos,
   SegmentBuffer,
-} from "../../../segment_buffers";
+} from "../../../segment_sinks";
 import { IRepresentationStreamPlaybackObservation } from "../types";
 
 /**

@@ -18,12 +18,11 @@ import {
   formatError,
   NetworkError,
 } from "../../../errors";
-import { IPlayerError } from "../../../public_types";
+import type { IPlayerError } from "../../../public_types";
 import { RequestError } from "../../../utils/request";
 
 /**
  * Generate a new error from the infos given.
- * @param {string} code
  * @param {Error} error
  * @returns {Error}
  */
