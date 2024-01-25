@@ -15,7 +15,8 @@
  */
 
 import log from "../../../log";
-import { IManifest, SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
+import type { IManifest } from "../../../manifest";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
 import { StaticRepresentationIndex } from "../../../manifest/classes";
 import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";

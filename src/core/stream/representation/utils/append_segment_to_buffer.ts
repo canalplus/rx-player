@@ -23,18 +23,19 @@ import {
   SourceBufferError,
 } from "../../../../errors";
 import log from "../../../../log";
-import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
 import { toTaggedTrack } from "../../../../manifest";
-import { IRange } from "../../../../utils/ranges";
-import { IReadOnlySharedReference } from "../../../../utils/reference";
+import type { IRange } from "../../../../utils/ranges";
+import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import sleep from "../../../../utils/sleep";
-import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import { CancellationError } from "../../../../utils/task_canceller";
+import type {
   IInsertedChunkInfos,
   IPushChunkInfos,
   SegmentBuffer,
 } from "../../../segment_sinks";
-import { IRepresentationStreamPlaybackObservation } from "../types";
+import type { IRepresentationStreamPlaybackObservation } from "../types";
 
 /**
  * Append a segment to the given segmentBuffer.

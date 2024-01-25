@@ -19,8 +19,9 @@
  * It always should be imported through the `features` object.
  */
 
+import type {
+  ICompatVTTCue } from "../../../../compat/index";
 import {
-  ICompatVTTCue,
   isVTTCue,
 } from "../../../../compat/index";
 import getCueBlocks from "../get_cue_blocks";

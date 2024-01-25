@@ -15,7 +15,7 @@
  */
 
 import createStyledElement from "./create_styled_element";
-import { IStyleElements } from "./parse_style_block";
+import type { IStyleElements } from "./parse_style_block";
 
 /**
  * @param {string} text

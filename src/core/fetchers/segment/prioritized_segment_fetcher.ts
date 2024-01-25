@@ -21,10 +21,11 @@ import type {
   ISegmentFetcherCallbacks,
   ISegmentLoaderContent,
 } from "./segment_fetcher";
-import TaskPrioritizer, {
+import type {
   ITaskFn,
   ITaskPrioritizerCallbacks,
 } from "./task_prioritizer";
+import type TaskPrioritizer from "./task_prioritizer";
 
 /**
  * This function basically put in relation:

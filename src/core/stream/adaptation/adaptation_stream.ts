@@ -1,27 +1,30 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import { IRepresentation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
+import type {
+  IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference, {
   createMappedReference,
-  IReadOnlySharedReference,
 } from "../../../utils/reference";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import RepresentationStream, {
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   ITerminationOrder,
 } from "../representation";
+import RepresentationStream from "../representation";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
-import {
+import type {
   IAdaptationStreamArguments,
   IAdaptationStreamCallbacks,
 } from "./types";

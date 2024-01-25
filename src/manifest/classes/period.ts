@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 import { MediaError } from "../../errors";
-import {
+import type {
   IAdaptationMetadata,
-  IPeriodMetadata,
+  IPeriodMetadata } from "../../manifest";
+import {
   getAdaptations,
   getSupportedAdaptations,
   periodContainsTime,
 } from "../../manifest";
-import {
+import type {
   IManifestStreamEvent,
   IParsedPeriod,
 } from "../../parsers/manifest";

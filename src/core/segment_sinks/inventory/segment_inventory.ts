@@ -16,19 +16,21 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import {
+import type {
   IAdaptation,
-  areSameContent,
   ISegment,
   IPeriod,
-  IRepresentation,
+  IRepresentation } from "../../../manifest";
+import {
+  areSameContent,
 } from "../../../manifest";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { IRange } from "../../../utils/ranges";
-import BufferedHistory, {
+import type { IRange } from "../../../utils/ranges";
+import type {
   IBufferedHistoryEntry,
 } from "./buffered_history";
-import { IChunkContext } from "./types";
+import BufferedHistory from "./buffered_history";
+import type { IChunkContext } from "./types";
 
 /** Categorization of a given chunk in the `SegmentInventory`. */
 export const enum ChunkStatus {
