@@ -15,18 +15,18 @@
  */
 
 import log from "../../log";
-import Manifest from "../../manifest";
+import Manifest from "../../manifest/classes";
 import { getMDAT } from "../../parsers/containers/isobmff";
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import { IPlayerError } from "../../public_types";
+import type { IPlayerError } from "../../public_types";
 import request from "../../utils/request";
 import {
   strToUtf8,
   utf8ToStr,
 } from "../../utils/string_parsing";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
   ILoadedTextSegmentFormat,

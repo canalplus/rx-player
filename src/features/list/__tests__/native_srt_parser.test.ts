@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
+import NativeTextDisplayer from "../../../main_thread/text_displayer/native";
 import srtParser from "../../../parsers/texttracks/srt/native";
-import NativeTextDisplayer from "../../../text_displayer/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativesrtFeature from "../native_srt_parser";
 
 describe("Features list - native srt Parser", () => {

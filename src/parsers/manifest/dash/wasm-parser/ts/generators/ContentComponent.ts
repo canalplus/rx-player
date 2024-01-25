@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { IContentComponentAttributes } from "../../../node_parser_types";
-import { IAttributeParser } from "../parsers_stack";
+import type { IContentComponentAttributes } from "../../../node_parser_types";
+import type { IAttributeParser } from "../parsers_stack";
 import { AttributeName } from "../types";
 import { parseString } from "../utils";
 
 /**
  * Generate an "attribute parser" once inside a `BaseURL` node.
- * @param {Object} baseUrlAttrs
+ * @param {Object} ccAttrs
  * @param {WebAssembly.Memory} linearMemory
  * @returns {Function}
  */

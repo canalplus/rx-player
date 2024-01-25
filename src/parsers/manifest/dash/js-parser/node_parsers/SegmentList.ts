@@ -15,7 +15,7 @@
  */
 
 import objectAssign from "../../../../../utils/object_assign";
-import {
+import type {
   ISegmentListIntermediateRepresentation,
   ISegmentUrlIntermediateRepresentation,
 } from "../../node_parser_types";

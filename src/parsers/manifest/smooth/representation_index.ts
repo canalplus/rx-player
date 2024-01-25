@@ -16,11 +16,11 @@
 
 import { NetworkError } from "../../../errors";
 import log from "../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import { IPlayerError } from "../../../public_types";
+import type { IPlayerError } from "../../../public_types";
 import assert from "../../../utils/assert";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import {

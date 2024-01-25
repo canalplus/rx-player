@@ -15,11 +15,11 @@
  */
 
 import log from "../../../log";
-import { IParsedPeriod } from "../types";
+import type { IParsedPeriod } from "../types";
 import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation";
 
 /**
- * @param {Object} manifest
+ * @param {Array.<Object>} periods
  * @returns {number | undefined}
  */
 export default function getMinimumPosition(

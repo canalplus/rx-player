@@ -17,15 +17,15 @@
 import config from "../../../../../../config";
 import { NetworkError } from "../../../../../../errors";
 import log from "../../../../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
-  Representation,
+  IRepresentation,
 } from "../../../../../../manifest";
-import { IPlayerError } from "../../../../../../public_types";
+import type { IPlayerError } from "../../../../../../public_types";
 import assert from "../../../../../../utils/assert";
 import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp";
-import { IEMSG } from "../../../../../containers/isobmff";
+import type { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
 import {
   checkDiscontinuity,
@@ -35,7 +35,7 @@ import {
   toIndexTime,
 } from "../../../../utils/index_helpers";
 import updateSegmentTimeline from "../../../../utils/update_segment_timeline";
-import { ISegmentTimelineElement } from "../../../node_parser_types";
+import type { ISegmentTimelineElement } from "../../../node_parser_types";
 import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
@@ -196,7 +196,7 @@ export interface ITimelineIndexContextArgument {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousRepresentation : Representation | null;
+  unsafelyBaseOnPreviousRepresentation : IRepresentation | null;
   /** Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
   /**

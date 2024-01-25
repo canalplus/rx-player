@@ -1,5 +1,5 @@
-import createDebugElement from "../../core/api/debug";
-import { IFeaturesObject } from "../../features/types";
+import type { IFeaturesObject } from "../../features/types";
+import createDebugElement from "../../main_thread/api/debug";
 
 /**
  * Add ability to parse SAMI text tracks in an HTML textrack mode.

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import { IFeaturesObject } from "../../features/types";
+// eslint-disable-next-line max-len
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import metaplaylist from "../../transports/metaplaylist";
 

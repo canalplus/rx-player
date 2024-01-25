@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-len
-import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
-import { IFeaturesObject } from "../types";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to run the RxPlayer's main buffering logic in a WebMultiThread.

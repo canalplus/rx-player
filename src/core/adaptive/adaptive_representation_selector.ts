@@ -16,11 +16,16 @@
 
 import config from "../../config";
 import log from "../../log";
-import Manifest, {
-  Adaptation,
+import type {
+  IObservationPosition,
+  IReadOnlyPlaybackObserver,
+} from "../../main_thread/types";
+import type {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
   ISegment,
-  Period,
-  Representation,
 } from "../../manifest";
 import noop from "../../utils/noop";
 import { getLeftSizeOfRange, IRange } from "../../utils/ranges";
@@ -30,8 +35,7 @@ import SharedReference, {
 import TaskCanceller, {
   CancellationSignal,
 } from "../../utils/task_canceller";
-import { IObservationPosition, IReadOnlyPlaybackObserver } from "../api";
-import { IBufferType } from "../segment_buffers";
+import type { IBufferType } from "../segment_sinks";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
 import NetworkAnalyzer from "./network_analyzer";
@@ -93,11 +97,11 @@ export default function createAdaptiveRepresentationSelector(
    * @returns {Array.<Object>}
    */
   return function getEstimates(
-    context : { manifest : Manifest;
-                period : Period;
-                adaptation : Adaptation; },
-    currentRepresentation : IReadOnlySharedReference<Representation | null>,
-    representations : IReadOnlySharedReference<Representation[]>,
+    context : { manifest : IManifest;
+                period : IPeriod;
+                adaptation : IAdaptation; },
+    currentRepresentation : IReadOnlySharedReference<IRepresentation | null>,
+    representations : IReadOnlySharedReference<IRepresentation[]>,
     playbackObserver : IReadOnlyPlaybackObserver<
       IRepresentationEstimatorPlaybackObservation
     >,
@@ -215,7 +219,7 @@ function getEstimateReference(
    * produced.
    */
   function createEstimateReference(
-    unsortedRepresentations : Representation[],
+    unsortedRepresentations : IRepresentation[],
     innerCancellationSignal : CancellationSignal
   ) : SharedReference<IABREstimate> {
     if (unsortedRepresentations.length <= 1) {
@@ -359,7 +363,7 @@ function getEstimateReference(
        * `null` if this buffer size mode is not enabled or if we don't have a
        * choice from it yet.
        */
-      let chosenRepFromBufferSize : Representation | null = null;
+      let chosenRepFromBufferSize : IRepresentation | null = null;
       if (allowBufferBasedEstimates &&
           currentBufferBasedEstimate !== undefined &&
           currentBufferBasedEstimate > currentBestBitrate)
@@ -385,7 +389,7 @@ function getEstimateReference(
        *
        * `null` if not enabled or if there's currently no guess.
        */
-      let chosenRepFromGuessMode : Representation | null = null;
+      let chosenRepFromGuessMode : IRepresentation | null = null;
       if (lowLatencyMode &&
           currentRepresentationVal !== null &&
           context.manifest.isDynamic &&
@@ -508,10 +512,10 @@ function getEstimateReference(
  * @returns {Array.<Representation>}
  */
 function getFilteredRepresentations(
-  representations : Representation[],
+  representations : IRepresentation[],
   resolutionLimit : IResolutionInfo | undefined,
   bitrateThrottle : number | undefined
-) : Representation[] {
+) : IRepresentation[] {
   let filteredReps = representations;
 
   if (bitrateThrottle !== undefined && bitrateThrottle < Infinity) {
@@ -548,7 +552,7 @@ export interface IABREstimate {
    * `null` in the rare occurence where there is no `Representation` to choose
    * from.
    */
-  representation: Representation | null;
+  representation: IRepresentation | null;
   /**
    * If `true`, the current `representation` suggested should be switched to as
    * soon as possible. For example, you might want to interrupt all pending
@@ -616,8 +620,8 @@ export interface IMetricsCallbackPayload {
   /** Duration of the loaded segment, in seconds. */
   segmentDuration: number | undefined;
   /** Context about the segment downloaded. */
-  content: { representation: Representation;
-             adaptation: Adaptation;
+  content: { representation: IRepresentation;
+             adaptation: IAdaptation;
              segment: ISegment; };
 }
 
@@ -685,7 +689,7 @@ export interface IAddedSegmentCallbackPayload {
    */
   buffered : IRange[];
   /** The context for the segment that has been pushed. */
-  content : { representation : Representation };
+  content : { representation : IRepresentation };
 }
 
 /** Arguments to give to `getEstimateReference`. */
@@ -700,7 +704,7 @@ export interface IRepresentationEstimatorArguments {
    * The Representation currently loaded.
    * `null` if no Representation is currently loaded.
    */
-  currentRepresentation : IReadOnlySharedReference<Representation | null>;
+  currentRepresentation : IReadOnlySharedReference<IRepresentation | null>;
   /** Throttle Representation pool according to filters. */
   filters: {
     limitResolution : IReadOnlySharedReference<IResolutionInfo |
@@ -722,15 +726,15 @@ export interface IRepresentationEstimatorArguments {
    */
   lowLatencyMode: boolean;
   /** The list of Representations `getEstimateReference` can choose from. */
-  representations : IReadOnlySharedReference<Representation[]>;
+  representations : IReadOnlySharedReference<IRepresentation[]>;
   /** Context for the list of Representations to choose. */
   context : {
     /** In which Manifest the Representations are. */
-    manifest : Manifest;
+    manifest : IManifest;
     /** In which Period the Representations are. */
-    period : Period;
+    period : IPeriod;
     /** In which Adaptation the Representations are. */
-    adaptation : Adaptation;
+    adaptation : IAdaptation;
   };
 }
 
@@ -740,13 +744,13 @@ export interface IRepresentationEstimatorArguments {
  */
 export type IRepresentationEstimator = (
   /** Information on the content for which a Representation will be chosen */
-  context : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation; },
+  context : { manifest : IManifest;
+              period : IPeriod;
+              adaptation : IAdaptation; },
   /** Reference emitting the Representation currently loaded. */
-  currentRepresentation : IReadOnlySharedReference<Representation | null>,
+  currentRepresentation : IReadOnlySharedReference<IRepresentation | null>,
   /** Reference emitting the list of available Representations to choose from. */
-  representations : IReadOnlySharedReference<Representation[]>,
+  representations : IReadOnlySharedReference<IRepresentation[]>,
   /** Regularly emits playback conditions */
   playbackObserver : IReadOnlyPlaybackObserver<
     IRepresentationEstimatorPlaybackObservation
@@ -792,9 +796,13 @@ export interface IAdaptiveRepresentationSelectorArguments {
  * to choose from.
  */
 export interface IRepresentationEstimatorThrottlers {
+  /** Limit Representations based on maximum authorized resolution. */
   limitResolution : Partial<Record<IBufferType, IReadOnlySharedReference<
     IResolutionInfo
   >>>;
+  /** Limit Representations based on maximum authorized bitrate. */
   throttleBitrate : Partial<Record<IBufferType,
                                    IReadOnlySharedReference<number>>>;
 }
+
+export { IResolutionInfo };

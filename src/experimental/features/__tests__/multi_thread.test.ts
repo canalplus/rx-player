@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 // eslint-disable-next-line max-len
-import MultiThreadContentInitializer from "../../../core/init/multithread/main_thread/multi_thread_content_initializer";
+import MultiThreadContentInitializer from "../../../main_thread/init/multi_thread_content_initializer";
 import addMultiThreadFeature from "../multi_thread";
 
 describe("Features list - EME", () => {

@@ -15,12 +15,12 @@
  */
 
 import log from "../../log";
-import { ISegment } from "../../manifest";
+import type { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
   getTRAF,
 } from "../../parsers/containers/isobmff";
-import { IChunkTimeInfo } from "../types";
+import type { IChunkTimeInfo } from "../types";
 import {
   IISOBMFFBasicSegment,
   parseTfrf,

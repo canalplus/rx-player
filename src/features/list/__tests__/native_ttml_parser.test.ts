@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import NativeTextDisplayer from "../../../main_thread/text_displayer/native";
 import ttmlParser from "../../../parsers/texttracks/ttml/native";
-import NativeTextDisplayer from "../../../text_displayer/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativettmlFeature from "../native_ttml_parser";
 
 describe("Features list - native ttml Parser", () => {

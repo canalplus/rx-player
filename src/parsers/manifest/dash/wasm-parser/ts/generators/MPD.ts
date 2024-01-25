@@ -15,7 +15,7 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import {
+import type {
   IMPDAttributes,
   IMPDChildren,
 } from "../../../node_parser_types";

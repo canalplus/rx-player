@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ISegmentBaseIntermediateRepresentation } from "../../node_parser_types";
+import type { ISegmentBaseIntermediateRepresentation } from "../../node_parser_types";
 import parseInitialization from "./Initialization";
 import {
   parseBoolean,

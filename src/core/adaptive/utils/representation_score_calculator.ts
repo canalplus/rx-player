@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import EWMA from "./ewma";
 
 /**
@@ -68,13 +68,13 @@ export interface IRepresentationMaintainabilityScore {
  * @class RepresentationScoreCalculator
  */
 export default class RepresentationScoreCalculator {
-  private _currentRepresentationData : { representation : Representation;
+  private _currentRepresentationData : { representation : IRepresentation;
                                          ewma : EWMA;
                                          loadedSegments : number;
                                          loadedDuration : number; } |
                                        null;
 
-  private _lastRepresentationWithGoodScore : Representation | null;
+  private _lastRepresentationWithGoodScore : IRepresentation | null;
 
   constructor() {
     this._currentRepresentationData = null;
@@ -83,14 +83,14 @@ export default class RepresentationScoreCalculator {
 
   /**
    * Add new sample data.
-   * @param {Representation} representation
+   * @param {Object} representation
    * @param {number} requestDuration - duration taken for doing the request for
    * the whole segment.
    * @param {number} segmentDuration - media duration of the whole segment, in
    * seconds.
    */
   public addSample(
-    representation : Representation,
+    representation : IRepresentation,
     requestDuration : number,
     segmentDuration : number
   ) : void {
@@ -122,11 +122,11 @@ export default class RepresentationScoreCalculator {
   /**
    * Get score estimate for the given Representation.
    * undefined if no estimate is available.
-   * @param {Representation} representation
+   * @param {Object} representation
    * @returns {number|undefined}
    */
   public getEstimate(
-    representation : Representation
+    representation : IRepresentation
   ) : IRepresentationMaintainabilityScore | undefined {
     if (this._currentRepresentationData === null ||
         this._currentRepresentationData.representation.id !== representation.id)
@@ -148,9 +148,9 @@ export default class RepresentationScoreCalculator {
    * Useful to know if a current guess is higher than what you should
    * normally be able to play.
    * `null` if no Representation ever reach that score.
-   * @returns {Representation|null}
+   * @returns {Object|null}
    */
-  public getLastStableRepresentation() : Representation | null {
+  public getLastStableRepresentation() : IRepresentation | null {
     return this._lastRepresentationWithGoodScore;
   }
 }

@@ -16,7 +16,7 @@
 
 import log from "../../../../../log";
 import { hexToBytes } from "../../../../../utils/string_parsing";
-import {
+import type {
   IContentProtectionAttributes,
   IContentProtectionChildren,
   IContentProtectionIntermediateRepresentation,

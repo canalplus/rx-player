@@ -15,21 +15,22 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
-import {
+import type {
   ISegmentParser,
   ITransportPipelines,
 } from "../../../transports";
 
 export interface IContentInfo {
-  manifest: Manifest;
-  period: Period;
-  adaptation: Adaptation;
-  representation: Representation;
+  manifest: IManifest;
+  period: IPeriod;
+  adaptation: IAdaptation;
+  representation: IRepresentation;
 }
 
 export type ILoaders = Partial<Record<string, ITransportPipelines>>;

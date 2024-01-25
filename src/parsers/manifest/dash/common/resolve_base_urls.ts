@@ -15,7 +15,7 @@
  */
 
 import resolveURL from "../../../../utils/resolve_url";
-import { IBaseUrlIntermediateRepresentation } from "../node_parser_types";
+import type { IBaseUrlIntermediateRepresentation } from "../node_parser_types";
 
 export interface IResolvedBaseUrl {
   url : string;

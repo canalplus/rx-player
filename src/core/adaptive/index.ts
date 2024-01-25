@@ -26,6 +26,7 @@ import AdaptiveRepresentationSelector, {
   IRequestBeginCallbackPayload,
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
+  IResolutionInfo,
 } from "./adaptive_representation_selector";
 
 export default AdaptiveRepresentationSelector;
@@ -42,4 +43,5 @@ export {
   IRequestBeginCallbackPayload,
   IRequestProgressCallbackPayload,
   IRequestEndCallbackPayload,
+  IResolutionInfo,
 };

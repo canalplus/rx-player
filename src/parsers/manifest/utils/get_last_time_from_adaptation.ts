@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IParsedAdaptation } from "../types";
+import type { IParsedAdaptation } from "../types";
 
 /**
  * Returns "last time of reference" from the adaptation given, considering a

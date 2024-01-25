@@ -15,12 +15,12 @@
  */
 
 import log from "../../log";
-import { ISegment } from "../../manifest";
+import type { ISegment } from "../../manifest";
 import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
 } from "../../parsers/containers/isobmff";
-import { IChunkTimeInfo } from "../types";
+import type { IChunkTimeInfo } from "../types";
 
 /**
  * Get precize start and duration of a chunk.

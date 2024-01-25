@@ -15,7 +15,7 @@
  */
 
 import features from "../../features";
-import {
+import type {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";

@@ -21,8 +21,8 @@ import parseMpdIr, {
   ILoadedXlinkData,
   IMPDParserArguments,
 } from "../common";
-import { IPeriodIntermediateRepresentation } from "../node_parser_types";
-import { IDashParserResponse, ILoadedResource } from "../parsers_types";
+import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
+import type { IDashParserResponse, ILoadedResource } from "../parsers_types";
 import {
   createMPDIntermediateRepresentation,
 } from "./node_parsers/MPD";

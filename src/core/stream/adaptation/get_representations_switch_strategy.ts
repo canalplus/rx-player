@@ -15,9 +15,10 @@
  */
 
 import config from "../../../config";
+import { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
 import {
-  Adaptation,
-  Period,
+  IAdaptation,
+  IPeriod,
 } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import {
@@ -25,21 +26,20 @@ import {
   excludeFromRanges,
   insertInto,
 } from "../../../utils/ranges";
-import { IReadOnlyPlaybackObserver } from "../../api";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
   SegmentBuffer,
   SegmentBufferOperation,
-} from "../../segment_buffers";
+} from "../../segment_sinks";
 import {
   IRepresentationsChoice,
   IRepresentationStreamPlaybackObservation,
 } from "../representation";
 
 export default function getRepresentationsSwitchingStrategy(
-  period : Period,
-  adaptation : Adaptation,
+  period : IPeriod,
+  adaptation : IAdaptation,
   settings : IRepresentationsChoice,
   segmentBuffer : SegmentBuffer,
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>

@@ -15,7 +15,7 @@
  */
 
 import TaskCanceller from "../../utils/task_canceller";
-import { ISegmentLoader } from "../types";
+import type { ISegmentLoader } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import inferSegmentContainer from "../utils/infer_segment_container";
 

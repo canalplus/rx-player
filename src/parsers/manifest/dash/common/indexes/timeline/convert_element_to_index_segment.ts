@@ -16,7 +16,7 @@
 
 import log from "../../../../../../log";
 import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import { IIndexSegment } from "../../../../utils/index_helpers";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 
 /**
  * Translate parsed `S` node into Segment compatible with this index:

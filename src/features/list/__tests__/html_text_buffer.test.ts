@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../../text_displayer/html";
-import { IFeaturesObject } from "../../types";
+import HTMLTextDisplayer from "../../../main_thread/text_displayer/html";
+import type { IFeaturesObject } from "../../types";
 import addHtmlTextBuffer from "../html_text_buffer";
 
 describe("Features list - html Text Buffer", () => {

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../../main_thread/text_displayer/html";
 import ttmlParser from "../../../parsers/texttracks/ttml/html";
-import HTMLTextDisplayer from "../../../text_displayer/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLttmlFeature from "../html_ttml_parser";
 
 describe("Features list - HTML ttml Parser", () => {

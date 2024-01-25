@@ -20,7 +20,7 @@ import {
 } from "../../parsers/containers/isobmff";
 import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
-import {
+import type {
   IProtectionDataInfo,
   ISegmentContext,
   ISegmentParserParsedInitChunk,

@@ -19,7 +19,7 @@ import {
   strToUtf8,
   utf8ToStr,
 } from "../../utils/string_parsing";
-import {
+import type {
   ILoadedTextSegmentFormat,
   ISegmentContext,
   ISegmentParserParsedInitChunk,

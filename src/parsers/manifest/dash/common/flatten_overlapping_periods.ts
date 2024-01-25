@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../log";
-import { IParsedPeriod } from "../../types";
+import type { IParsedPeriod } from "../../types";
 
 /**
  * Avoid periods to overlap.

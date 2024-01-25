@@ -1,24 +1,28 @@
-import Manifest, {
-  Adaptation,
+import type {
+  IContentProtection,
+  IObservationPosition,
+  IReadOnlyPlaybackObserver,
+} from "../../../main_thread/types";
+import type {
+  IManifest,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../manifest";
-import { IEMSG } from "../../../parsers/containers/isobmff";
-import {
+import type { IEMSG } from "../../../parsers/containers/isobmff";
+import type {
   IAudioRepresentationsSwitchingMode,
   IPlayerError,
   IVideoRepresentationsSwitchingMode,
 } from "../../../public_types";
-import { IRange } from "../../../utils/ranges";
-import { IReadOnlySharedReference } from "../../../utils/reference";
-import { IObservationPosition, IReadOnlyPlaybackObserver } from "../../api";
-import { IContentProtection } from "../../decrypt";
-import { IPrioritizedSegmentFetcher } from "../../fetchers";
-import {
+import type { IRange } from "../../../utils/ranges";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import type { IPrioritizedSegmentFetcher } from "../../fetchers";
+import type {
   IBufferType,
   SegmentBuffer,
-} from "../../segment_buffers";
+} from "../../segment_sinks";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
 export interface IRepresentationStreamCallbacks {
@@ -82,7 +86,7 @@ export interface IRepresentationStreamCallbacks {
 /** Payload for the `streamStatusUpdate` callback. */
 export interface IStreamStatusPayload {
   /** Period concerned. */
-  period : Period;
+  period : IPeriod;
   /** Buffer type concerned. */
   bufferType : IBufferType;
   /**
@@ -130,9 +134,9 @@ export interface IStreamStatusPayload {
 /** Payload for the `addedSegment` callback. */
 export interface IStreamEventAddedSegmentPayload {
   /** Context about the content that has been added. */
-  content: { period : Period;
-             adaptation : Adaptation;
-             representation : Representation; };
+  content: { period : IPeriod;
+             adaptation : IAdaptation;
+             representation : IRepresentation; };
   /** The concerned Segment. */
   segment : ISegment;
   /** Ranges of the concerned SegmentBuffer after the segment was pushed. */
@@ -245,10 +249,10 @@ export interface ITerminationOrder {
 /** Arguments to give to the RepresentationStream. */
 export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** The context of the Representation you want to load. */
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; };
+  content: { adaptation : IAdaptation;
+             manifest : IManifest;
+             period : IPeriod;
+             representation : IRepresentation; };
   /** The `SegmentBuffer` on which segments will be pushed. */
   segmentBuffer : SegmentBuffer;
   /** Interface used to load new segments. */

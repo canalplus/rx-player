@@ -28,6 +28,7 @@ export {
 } from "./representation";
 export {
   IAdaptationChoice,
+  INeedsBufferFlushPayload,
   ITrackSwitchingMode,
   IWaitingMediaSourceReloadPayload,
 } from "./adaptation";

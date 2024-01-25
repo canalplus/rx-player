@@ -28,7 +28,7 @@ import {
   getTimeCodeScale,
 } from "../../parsers/containers/matroska";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import {
+import type {
   IProtectionDataInfo,
   ISegmentContext,
   ISegmentParser,

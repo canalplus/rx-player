@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../../main_thread/text_displayer/html";
 import samiParser from "../../../parsers/texttracks/sami/html";
-import HTMLTextDisplayer from "../../../text_displayer/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLsamiFeature from "../html_sami_parser";
 
 describe("Features list - HTML sami Parser", () => {

@@ -206,7 +206,7 @@ It facilitates the role of loading the Manifest and new segments for the rest of
 the core.
 
 
-### `src/core/segment_buffers/`: Media buffers
+### `src/core/segment_sinks/`: Media buffers
 
 Code allowing to interact with the media buffers called `SegmentBuffers`.
 

@@ -20,7 +20,7 @@ import {
   ITransportPipelines,
 } from "../../../transports";
 import { CancellationSignal } from "../../../utils/task_canceller";
-import { IBufferType } from "../../segment_buffers";
+import { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
 import applyPrioritizerToSegmentFetcher, {
   IPrioritizedSegmentFetcher,

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { IIndexSegment } from "./index_helpers";
+import type { IIndexSegment } from "./index_helpers";
 
 /**
  * Remove segments which starts before the given `firstAvailablePosition` from
  * the timeline. `firstAvailablePosition` has to be time scaled.
- * @param {Array.<Object>}
+ * @param {Array.<Object>} timeline
+ * @param {number} firstAvailablePosition
  * @returns {number} - Returns the number of removed segments. This includes
  * potential implicit segment from decremented `repeatCount` attributes.
  */

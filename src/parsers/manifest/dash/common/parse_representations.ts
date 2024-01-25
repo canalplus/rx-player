@@ -15,15 +15,15 @@
  */
 
 import log from "../../../../log";
-import { Adaptation } from "../../../../manifest";
-import { IHDRInformation } from "../../../../public_types";
+import type { IAdaptation } from "../../../../manifest";
+import type { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
-import {
+import type {
   IContentProtections,
   IParsedRepresentation,
 } from "../../types";
-import {
+import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   IScheme,
@@ -339,7 +339,7 @@ export interface IRepresentationContext extends IInheritedRepresentationIndexCon
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
+  unsafelyBaseOnPreviousAdaptation : IAdaptation | null;
 }
 
 /**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IIndexSegment } from "../../../../utils/index_helpers";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 import convertElementsToIndexSegment from "./convert_element_to_index_segment";
 import parseSElement, {
   IParsedS,

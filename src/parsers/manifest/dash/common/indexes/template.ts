@@ -16,13 +16,13 @@
 
 import config from "../../../../../config";
 import log from "../../../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
 import assert from "../../../../../utils/assert";
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { IEMSG } from "../../../../containers/isobmff";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import {

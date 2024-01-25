@@ -15,7 +15,7 @@
  */
 
 /**
- * @param {*} parseBoolean
+ * @param {*} val
  * @returns {Boolean}
  */
 export default function parseBoolean(val : string|null) : boolean {

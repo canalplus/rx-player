@@ -3,25 +3,23 @@
  * Those types are considered as part of the API.
  */
 
-import { IPreferredEmeApiType } from "./compat/eme";
-import {
-  IPersistentSessionInfoV0,
-  IPersistentSessionInfoV1,
-  IPersistentSessionInfoV2,
-  IPersistentSessionInfoV3,
-  IPersistentSessionInfoV4,
-} from "./core/decrypt";
-import {
+import type { IPreferredEmeApiType } from "./compat/eme";
+import type {
   EncryptedMediaError,
   MediaError,
   NetworkError,
   OtherError,
 } from "./errors";
-import Manifest, {
-  ITaggedTrack,
-} from "./manifest";
-import { ILocalManifest } from "./parsers/manifest/local";
-import { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
+import type {
+  IPersistentSessionInfoV0,
+  IPersistentSessionInfoV1,
+  IPersistentSessionInfoV2,
+  IPersistentSessionInfoV3,
+  IPersistentSessionInfoV4,
+} from "./main_thread/decrypt";
+import type { IManifest, ITaggedTrack } from "./manifest";
+import type { ILocalManifest } from "./parsers/manifest/local";
+import type { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
 
 export { ITaggedTrack as IMediaErrorTrackContext };
 
@@ -177,7 +175,7 @@ export type IInitialManifest = Document |
                                ArrayBuffer |
                                IMetaPlaylist |
                                ILocalManifest |
-                               Manifest;
+                               IManifest;
 
 /** Type for the `representationFilter` API. */
 export type IRepresentationFilter = (representation: IRepresentationFilterRepresentation,

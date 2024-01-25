@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
+import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import {
+  IManifest,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
 import { IReadOnlySharedReference } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
   IPushedChunkData,
   SegmentBuffer,
-} from "../../../segment_buffers";
+} from "../../../segment_sinks";
 import {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
@@ -52,10 +53,10 @@ export default async function pushInitSegment<T>(
     playbackObserver : IReadOnlyPlaybackObserver<
       IRepresentationStreamPlaybackObservation
     >;
-    content: { adaptation : Adaptation;
-               manifest : Manifest;
-               period : Period;
-               representation : Representation; };
+    content: { adaptation : IAdaptation;
+               manifest : IManifest;
+               period : IPeriod;
+               representation : IRepresentation; };
     initSegmentUniqueId : string;
     segmentData : T;
     segment : ISegment;

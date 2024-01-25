@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { IInbandEvent } from "../../core/stream";
-import { IEMSG } from "../../parsers/containers/isobmff";
+import type { IInbandEvent } from "../../core/types";
+import type { IEMSG } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../utils/string_parsing";
 
 /**

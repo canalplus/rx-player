@@ -1,7 +1,7 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import { Representation } from "../../../manifest";
+import { IRepresentation } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
@@ -88,7 +88,7 @@ export default function AdaptationStream(
    * Emit the currently chosen `Representation`.
    * `null` if no Representation is chosen for now.
    */
-  const currentRepresentation = new SharedReference<Representation | null>(
+  const currentRepresentation = new SharedReference<IRepresentation | null>(
     null,
     adapStreamCanceller.signal
   );
@@ -341,7 +341,7 @@ export default function AdaptationStream(
    * anything this function is doing and free allocated resources.
    */
   function createRepresentationStream(
-    representation : Representation,
+    representation : IRepresentation,
     terminateCurrentStream : IReadOnlySharedReference<ITerminationOrder | null>,
     representationStreamCallbacks : IRepresentationStreamCallbacks,
     fnCancelSignal : CancellationSignal
@@ -438,7 +438,7 @@ export default function AdaptationStream(
    * @param {Object} representation
    * @returns {number}
    */
-  function getBufferGoalRatio(representation : Representation) : number {
+  function getBufferGoalRatio(representation : IRepresentation) : number {
     const oldBufferGoalRatio = bufferGoalRatioMap.get(representation.id);
     const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio :
                                                                1;

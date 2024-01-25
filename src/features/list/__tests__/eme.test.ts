@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import ContentDecryptor from "../../../core/decrypt";
-import { IFeaturesObject } from "../../types";
+import ContentDecryptor from "../../../main_thread/decrypt";
+import type { IFeaturesObject } from "../../types";
 import addEMEFeature from "../eme";
 
 describe("Features list - EME", () => {

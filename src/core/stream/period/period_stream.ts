@@ -20,9 +20,10 @@ import {
   MediaError,
 } from "../../../errors";
 import log from "../../../log";
+import { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
 import {
-  Adaptation,
-  Period,
+  IAdaptation,
+  IPeriod,
   toTaggedTrack,
 } from "../../../manifest";
 import { ITrackType } from "../../../public_types";
@@ -37,11 +38,10 @@ import TaskCanceller, {
   CancellationError,
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../api";
 import SegmentBuffersStore, {
   IBufferType,
   SegmentBuffer,
-} from "../../segment_buffers";
+} from "../../segment_sinks";
 import AdaptationStream, {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
@@ -306,7 +306,7 @@ export default function PeriodStream(
    * @param {Object} cancelSignal
    */
   function createAdaptationStream(
-    adaptation : Adaptation,
+    adaptation : IAdaptation,
     representations : IReadOnlySharedReference<IRepresentationsChoice>,
     segmentBuffer : SegmentBuffer,
     cancelSignal : CancellationSignal
@@ -410,7 +410,7 @@ export default function PeriodStream(
 function createOrReuseSegmentBuffer(
   segmentBuffersStore : SegmentBuffersStore,
   bufferType : IBufferType,
-  adaptation : Adaptation
+  adaptation : IAdaptation
 ) : SegmentBuffer {
   const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
   if (segmentBufferStatus.type === "initialized") {
@@ -429,7 +429,7 @@ function createOrReuseSegmentBuffer(
  * @param {Adaptation} adaptation
  * @returns {string}
  */
-function getFirstDeclaredMimeType(adaptation : Adaptation) : string {
+function getFirstDeclaredMimeType(adaptation : IAdaptation) : string {
   const representations = adaptation.representations.filter(r => {
     return r.isSupported === true && r.decipherable !== false;
   });
@@ -498,7 +498,7 @@ function createEmptyAdaptationStream(
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
   wantedBufferAhead : IReadOnlySharedReference<number>,
   bufferType : IBufferType,
-  content : { period : Period },
+  content : { period : IPeriod },
   callbacks : Pick<IAdaptationStreamCallbacks, "streamStatusUpdate">,
   cancelSignal : CancellationSignal
 ) : void {

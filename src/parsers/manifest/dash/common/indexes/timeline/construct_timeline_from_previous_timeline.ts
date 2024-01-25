@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../../../log";
-import { IIndexSegment } from "../../../../utils/index_helpers";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 import convertElementToIndexSegment from "./convert_element_to_index_segment";
 import findFirstCommonStartTime from "./find_first_common_start_time";

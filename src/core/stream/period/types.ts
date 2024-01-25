@@ -1,27 +1,31 @@
-import Manifest, {
-  Adaptation,
-  Period,
+import type {
+  IObservationPosition,
+  IReadOnlyPlaybackObserver,
+} from "../../../main_thread/types";
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
 } from "../../../manifest";
-import { ITrackType } from "../../../public_types";
-import { IRange } from "../../../utils/ranges";
+import type { ITrackType } from "../../../public_types";
+import type { IRange } from "../../../utils/ranges";
 import SharedReference, {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
-import { CancellationSignal } from "../../../utils/task_canceller";
-import WeakMapMemory from "../../../utils/weak_map_memory";
-import { IRepresentationEstimator } from "../../adaptive";
-import { IObservationPosition, IReadOnlyPlaybackObserver } from "../../api";
-import { SegmentFetcherCreator } from "../../fetchers";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import type WeakMapMemory from "../../../utils/weak_map_memory";
+import type { IRepresentationEstimator } from "../../adaptive";
+import type { SegmentFetcherCreator } from "../../fetchers";
 import SegmentBuffersStore, {
   IBufferType,
   SegmentBuffer,
-} from "../../segment_buffers";
-import {
+} from "../../segment_sinks";
+import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamOptions,
 } from "../adaptation";
-import { IPausedPlaybackObservation } from "../representation";
+import type { IPausedPlaybackObservation } from "../representation";
 
 export { IPausedPlaybackObservation };
 
@@ -46,12 +50,12 @@ export interface IAdaptationChangePayload {
   /** The type of buffer for which the Representation is changing. */
   type : IBufferType;
   /** The `Period` linked to the `RepresentationStream` we're creating. */
-  period : Period;
+  period : IPeriod;
   /**
    * The `Adaptation` linked to the `AdaptationStream` we're creating.
    * `null` when we're choosing no Adaptation at all.
    */
-  adaptation : Adaptation |
+  adaptation : IAdaptation |
                null;
 }
 
@@ -60,9 +64,9 @@ export interface IPeriodStreamReadyPayload {
   /** The type of buffer linked to the `PeriodStream` we want to create. */
   type : IBufferType;
   /** The `Manifest` linked to the `PeriodStream` we have created. */
-  manifest : Manifest;
+  manifest : IManifest;
   /** The `Period` linked to the `PeriodStream` we have created. */
-  period : Period;
+  period : IPeriod;
   /**
    * The reference through which any Adaptation (i.e. track) choice should be
    * emitted for that `PeriodStream`.
@@ -107,8 +111,8 @@ export interface IPeriodStreamPlaybackObservation {
 /** Arguments required by the `PeriodStream`. */
 export interface IPeriodStreamArguments {
   bufferType : IBufferType;
-  content : { manifest : Manifest;
-              period : Period; };
+  content : { manifest : IManifest;
+              period : IPeriod; };
   garbageCollectors : WeakMapMemory<SegmentBuffer,
                                     (cancelSignal : CancellationSignal) => void>;
   segmentFetcherCreator : SegmentFetcherCreator;

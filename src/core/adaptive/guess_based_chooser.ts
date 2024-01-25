@@ -15,14 +15,14 @@
  */
 
 import log from "../../log";
-import { Representation } from "../../manifest";
+import type { IRepresentation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import { estimateRequestBandwidth } from "./network_analyzer";
 import LastEstimateStorage, {
   ABRAlgorithmType,
 } from "./utils/last_estimate_storage";
-import { IRequestInfo } from "./utils/pending_requests_store";
+import type { IRequestInfo } from "./utils/pending_requests_store";
 import RepresentationScoreCalculator, {
   IRepresentationMaintainabilityScore,
   ScoreConfidenceLevel,
@@ -83,7 +83,7 @@ export default class GuessBasedChooser {
    * algorithm).
    */
   public getGuess(
-    representations : Representation[],
+    representations : IRepresentation[],
     observation : {
       /**
        * For the concerned media buffer, difference in seconds between the next
@@ -96,10 +96,10 @@ export default class GuessBasedChooser {
        */
       speed: number;
     },
-    currentRepresentation : Representation,
+    currentRepresentation : IRepresentation,
     incomingBestBitrate : number,
     requests : IRequestInfo[]
-  ) : Representation | null {
+  ) : IRepresentation | null {
     const { bufferGap, speed } = observation;
     const lastChosenRep = this._lastAbrEstimate.representation;
     if (lastChosenRep === null) {
@@ -198,7 +198,7 @@ export default class GuessBasedChooser {
    * @returns {boolean}
    */
   private _shouldStopGuess(
-    lastGuess : Representation,
+    lastGuess : IRepresentation,
     scoreData : IRepresentationMaintainabilityScore | undefined,
     bufferGap : number,
     requests : IRequestInfo[]
@@ -233,7 +233,7 @@ export default class GuessBasedChooser {
   }
 
   private _isLastGuessValidated(
-    lastGuess : Representation,
+    lastGuess : IRepresentation,
     incomingBestBitrate : number,
     scoreData : IRepresentationMaintainabilityScore | undefined
   ) : boolean {
@@ -263,9 +263,9 @@ export default class GuessBasedChooser {
  * @returns {Object|null}
  */
 function getNextRepresentation(
-  representations : Representation[],
-  currentRepresentation : Representation
-) : Representation | null {
+  representations : IRepresentation[],
+  currentRepresentation : IRepresentation
+) : IRepresentation | null {
   const len = representations.length;
   let index = arrayFindIndex(representations,
                              ({ id }) => id === currentRepresentation.id);
@@ -291,9 +291,9 @@ function getNextRepresentation(
  * @returns {Object|null}
  */
 function getPreviousRepresentation(
-  representations : Representation[],
-  currentRepresentation : Representation
-) : Representation | null {
+  representations : IRepresentation[],
+  currentRepresentation : IRepresentation
+) : IRepresentation | null {
   let index = arrayFindIndex(representations,
                              ({ id }) => id === currentRepresentation.id);
   if (index < 0) {

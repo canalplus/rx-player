@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import directfile from "../../main_thread/init/directfile_content_initializer";
 // eslint-disable-next-line max-len
-import mediaElementTracksStore from "../../core/api/track_management/media_element_tracks_store";
-import directfile from "../../core/init/directfile_content_initializer";
-import { IFeaturesObject } from "../types";
+import mediaElementTracksStore from "../../main_thread/tracks_store/media_element_tracks_store";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play file natively played by the browser

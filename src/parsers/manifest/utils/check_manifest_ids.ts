@@ -16,7 +16,7 @@
 
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array_includes";
-import {
+import type {
   IParsedAdaptationType,
   IParsedManifest,
 } from "../types";

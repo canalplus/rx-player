@@ -4,44 +4,37 @@
  * multithread situation.
  */
 
-import { IResolutionInfo } from "./core/adaptive/utils/filter_by_resolution";
-import {
-  IFreezingStatus,
-  IRebufferingStatus,
-} from "./core/api";
-import {
-  IContentProtection,
-} from "./core/decrypt";
-import {
+import type {
+  IResolutionInfo,
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
-} from "./core/fetchers";
-import {
   IInbandEvent,
   IPausedPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
-} from "./core/stream";
-import {
+} from "./core/types";
+import type {
   ISerializedMediaError,
   ISerializedNetworkError,
   ISerializedEncryptedMediaError,
   ISerializedOtherError,
 } from "./errors";
-import { ISerializedSourceBufferError } from "./errors/source_buffer_error";
-import {
-  IManifestMetadata,
-  IPeriodsUpdateResult,
-} from "./manifest";
-import {
+import type { ISerializedSourceBufferError } from "./errors/source_buffer_error";
+import type {
+  IContentProtection,
+  IFreezingStatus,
+  IRebufferingStatus,
+  ITextDisplayerData,
+} from "./main_thread/types";
+import type { IManifestMetadata, IPeriodsUpdateResult } from "./manifest";
+import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
 } from "./mse";
-import { ITrackType } from "./public_types";
-import { ITextDisplayerData } from "./text_displayer";
-import { ITransportOptions } from "./transports";
-import { ILoggerLevel } from "./utils/logger";
-import { IRange } from "./utils/ranges";
+import type { ITrackType } from "./public_types";
+import type { ITransportOptions } from "./transports";
+import type { ILoggerLevel } from "./utils/logger";
+import type { IRange } from "./utils/ranges";
 
 /**
  * First message sent by the main thread to the WebWorker.

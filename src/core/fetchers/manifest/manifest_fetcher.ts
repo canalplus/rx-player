@@ -17,7 +17,7 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import Manifest from "../../../manifest";
+import Manifest from "../../../manifest/classes";
 import {
   IInitialManifest,
   ILoadedManifestFormat,

@@ -19,14 +19,14 @@
  * It always should be imported through the `features` object.
  */
 
-import Manifest from "../../manifest";
+import Manifest from "../../manifest/classes";
 import parseLocalManifest, {
   ILocalManifest,
 } from "../../parsers/manifest/local";
-import { ILoadedManifestFormat, IPlayerError } from "../../public_types";
+import type { ILoadedManifestFormat, IPlayerError } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IManifestLoaderOptions,
   IManifestParserResult,
   IRequestedData,

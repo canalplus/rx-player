@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { IRepresentationIndex } from "../../manifest";
-import { IHDRInformation } from "../../public_types";
+import type { IRepresentationIndex } from "../../manifest";
+import type { IHDRInformation } from "../../public_types";
 
 export interface IManifestStreamEvent { start: number;
                                         end?: number | undefined;
