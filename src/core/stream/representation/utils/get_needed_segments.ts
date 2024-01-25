@@ -16,26 +16,27 @@
 
 import config from "../../../../config";
 import log from "../../../../log";
-import Manifest, {
-  Adaptation,
+import {
+  IManifest,
+  IAdaptation,
   areSameContent,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
-import { IBufferedChunk, ICompleteSegmentInfo } from "../../../segment_buffers";
-import {
+import type {
+  IBufferedChunk,
+  ICompleteSegmentInfo,
   IBufferedHistoryEntry,
   IChunkContext,
-} from "../../../segment_buffers/inventory";
-
+} from "../../../segment_sinks";
 
 interface IContentContext {
-  adaptation: Adaptation;
-  manifest: Manifest;
-  period: Period;
-  representation: Representation;
+  adaptation: IAdaptation;
+  manifest: IManifest;
+  period: IPeriod;
+  representation: IRepresentation;
 }
 
 
@@ -363,9 +364,9 @@ function getLastContiguousSegment(
  */
 function shouldContentBeReplaced(
   oldContent : ICompleteSegmentInfo,
-  currentContent : { adaptation : Adaptation;
-                     period : Period;
-                     representation : Representation; },
+  currentContent : { adaptation : IAdaptation;
+                     period : IPeriod;
+                     representation : IRepresentation; },
   currentPlaybackTime: number,
   fastSwitchThreshold? : number
 ) : boolean {
@@ -399,8 +400,8 @@ function shouldContentBeReplaced(
  * @returns {boolean}
  */
 function canFastSwitch(
-  oldSegmentRepresentation : Representation,
-  newSegmentRepresentation : Representation,
+  oldSegmentRepresentation : IRepresentation,
+  newSegmentRepresentation : IRepresentation,
   fastSwitchThreshold : number | undefined
 ) : boolean {
   const oldContentBitrate = oldSegmentRepresentation.bitrate;

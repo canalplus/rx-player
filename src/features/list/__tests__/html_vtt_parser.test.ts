@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../../main_thread/text_displayer/html";
 import vttParser from "../../../parsers/texttracks/webvtt/html";
-import HTMLTextDisplayer from "../../../text_displayer/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLVTTFeature from "../html_vtt_parser";
 
 describe("Features list - HTML VTT Parser", () => {

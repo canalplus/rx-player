@@ -7,8 +7,6 @@ import {
   onSourceEnded,
   onSourceOpen,
 } from "../compat/event_listeners";
-import { maintainEndOfStream } from "../core/init/utils/end_of_stream";
-import MediaSourceDurationUpdater from "../core/init/utils/media_source_duration_updater";
 import { MediaError, SourceBufferError } from "../errors";
 import log from "../log";
 import { concat } from "../utils/byte_parsing";
@@ -22,6 +20,8 @@ import {
 import TaskCanceller, {
   CancellationError,
 } from "../utils/task_canceller";
+import { maintainEndOfStream } from "./end_of_stream";
+import MediaSourceDurationUpdater from "./media_source_duration_updater";
 import {
   IMediaSourceHandle,
   IMediaSourceInterface,

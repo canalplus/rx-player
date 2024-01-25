@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import NativeTextDisplayer from "../../../main_thread/text_displayer/native";
 import samiParser from "../../../parsers/texttracks/sami/native";
-import NativeTextDisplayer from "../../../text_displayer/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativesamiFeature from "../native_sami_parser";
 
 describe("Features list - native sami Parser", () => {

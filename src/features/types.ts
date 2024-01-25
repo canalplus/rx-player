@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-import RxPlayer from "../core/api";
-// eslint-disable-next-line max-len
-import MediaElementTracksStore from "../core/api/track_management/media_element_tracks_store";
-import type ContentDecryptor from "../core/decrypt";
-import DirectFileContentInitializer from "../core/init/directfile_content_initializer";
-import MediaSourceContentInitializer from "../core/init/media_source_content_initializer";
-// eslint-disable-next-line max-len
-import MultiThreadContentInitializer from "../core/init/multithread/main_thread/multi_thread_content_initializer";
-import { SegmentBuffer } from "../core/segment_buffers";
-import { ICodecSupportProber } from "../mse";
-import {
+/* eslint-disable max-len */
+import type { SegmentBuffer } from "../core/segment_sinks";
+import type ContentDecryptor from "../main_thread/decrypt";
+import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
+import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer";
+import type MultiThreadContentInitializer from "../main_thread/init/multi_thread_content_initializer";
+import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
+import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
+import type MediaElementTracksStore from "../main_thread/tracks_store/media_element_tracks_store";
+import type { IRxPlayer } from "../main_thread/types";
+import type { ICodecSupportProber } from "../mse";
+import type {
   IDashParserResponse,
   IMPDParserArguments,
 } from "../parsers/manifest/dash/parsers_types";
-import DashWasmParser from "../parsers/manifest/dash/wasm-parser";
-import {
+import type DashWasmParser from "../parsers/manifest/dash/wasm-parser";
+import type {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks";
-import HTMLTextDisplayer from "../text_displayer/html";
-import NativeTextDisplayer from "../text_displayer/native/native_text_displayer";
-import { ITransportFunction } from "../transports";
-import { CancellationSignal } from "../utils/task_canceller";
+import type { ITransportFunction } from "../transports";
+import type { CancellationSignal } from "../utils/task_canceller";
+/* eslint-enable max-len */
 
 /**
  * Function allowing to implement a text track rendered by displaying them
@@ -78,7 +78,7 @@ export type IDashJsParser = (
  */
 export type IDebugElementFn = (
   parentElt : HTMLElement,
-  instance : RxPlayer,
+  instance : IRxPlayer,
   cancelSignal : CancellationSignal
 ) => void;
 
