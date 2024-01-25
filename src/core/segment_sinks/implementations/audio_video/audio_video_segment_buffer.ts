@@ -29,20 +29,20 @@ import type {
   IPushedChunkData,
   ISBOperation } from "../types";
 import {
-  SegmentBuffer,
-  SegmentBufferOperation,
+  SegmentSink,
+  SegmentSinkOperation,
 } from "../types";
 
 /**
  * Allows to push and remove new segments to a SourceBuffer while keeping an
  * inventory of what has been pushed and what is being pushed.
  *
- * To work correctly, only a single AudioVideoSegmentBuffer per SourceBuffer
+ * To work correctly, only a single AudioVideoSegmentSink per SourceBuffer
  * should be created.
  *
- * @class AudioVideoSegmentBuffer
+ * @class AudioVideoSegmentSink
  */
-export default class AudioVideoSegmentBuffer extends SegmentBuffer {
+export default class AudioVideoSegmentSink extends SegmentSink {
   /** "Type" of the buffer concerned. */
   public readonly bufferType : "audio" | "video";
 
@@ -70,7 +70,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    * pushed before any chunk is.
    *
    * `null` if no initialization segment have been pushed to the
-   * `AudioVideoSegmentBuffer` yet.
+   * `AudioVideoSegmentSink` yet.
    */
   private _lastInitSegmentUniqueId : string | null;
 
@@ -103,7 +103,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     this._pendingOperations = [];
   }
 
-  /** @see SegmentBuffer */
+  /** @see SegmentSink */
   public declareInitSegment(
     uniqueId : string,
     initSegmentData : unknown
@@ -112,7 +112,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     this._initSegmentsMap.set(uniqueId, initSegmentData);
   }
 
-  /** @see SegmentBuffer */
+  /** @see SegmentSink */
   public freeInitSegment(
     uniqueId : string
   ) : void {
@@ -183,7 +183,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
                                                      timestampOffset,
                                                      appendWindow });
     }));
-    this._addToOperationQueue(promise, { type: SegmentBufferOperation.Push,
+    this._addToOperationQueue(promise, { type: SegmentSinkOperation.Push,
                                          value: infos });
     let res;
     try {
@@ -204,7 +204,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     return ranges;
   }
 
-  /** @see SegmentBuffer */
+  /** @see SegmentSink */
   public async removeBuffer(
     start : number,
     end : number
@@ -214,7 +214,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
               start,
               end);
     const promise = this._sourceBuffer.remove(start, end);
-    this._addToOperationQueue(promise, { type: SegmentBufferOperation.Remove,
+    this._addToOperationQueue(promise, { type: SegmentSinkOperation.Remove,
                                          value: { start, end } });
     const ranges = await promise;
     this._segmentInventory.synchronizeBuffered(ranges);
@@ -237,7 +237,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       // Only validate after preceding operation
       const { promise } = this._pendingOperations[this._pendingOperations.length - 1];
       this._addToOperationQueue(promise, {
-        type: SegmentBufferOperation.SignalSegmentComplete,
+        type: SegmentSinkOperation.SignalSegmentComplete,
         value: infos,
       });
       try {
@@ -250,7 +250,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   }
 
   /**
-   * Returns the list of every operations that the `AudioVideoSegmentBuffer` is
+   * Returns the list of every operations that the `AudioVideoSegmentSink` is
    * still processing.
    * @returns {Array.<Object>}
    */
@@ -258,7 +258,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
     return this._pendingOperations.map(p => p.operation);
   }
 
-  /** @see SegmentBuffer */
+  /** @see SegmentSink */
   public dispose() : void {
     try {
       log.debug("AVSB: Calling `dispose` on the SourceBufferInterface");
@@ -317,7 +317,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 
  /**
   * Return `true` if the given `uniqueId` is the identifier of the last
-  * initialization segment pushed to the `AudioVideoSegmentBuffer`.
+  * initialization segment pushed to the `AudioVideoSegmentSink`.
   * @param {string} uniqueId
   * @returns {boolean}
   */
@@ -364,6 +364,6 @@ function assertDataIsBufferSource(
       !((data as ArrayBufferView).buffer instanceof ArrayBuffer)
     )
   ) {
-    throw new Error("Invalid data given to the AudioVideoSegmentBuffer");
+    throw new Error("Invalid data given to the AudioVideoSegmentSink");
   }
 }

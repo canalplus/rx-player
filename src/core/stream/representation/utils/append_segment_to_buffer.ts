@@ -15,7 +15,7 @@
  */
 
 /**
- * This file allows any Stream to push data to a SegmentBuffer.
+ * This file allows any Stream to push data to a SegmentSink.
  */
 
 import {
@@ -33,16 +33,16 @@ import { CancellationError } from "../../../../utils/task_canceller";
 import type {
   IInsertedChunkInfos,
   IPushChunkInfos,
-  SegmentBuffer,
+  SegmentSink,
 } from "../../../segment_sinks";
 import type { IRepresentationStreamPlaybackObservation } from "../types";
 
 /**
- * Append a segment to the given segmentBuffer.
+ * Append a segment to the given segmentSink.
  * If it leads to an Error due to a full buffer, try to run our custom range
  * _garbage collector_ then retry.
  * @param {Object} playbackObserver
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @param {Object} dataInfos
  * @param {number} bufferGoal
  * @param {Object} cancellationSignal
@@ -50,13 +50,13 @@ import type { IRepresentationStreamPlaybackObservation } from "../types";
  */
 export default async function appendSegmentToBuffer<T>(
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
-  segmentBuffer : SegmentBuffer,
+  segmentSink : SegmentSink,
   dataInfos : IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   bufferGoal : IReadOnlySharedReference<number>,
   cancellationSignal : CancellationSignal
 ) : Promise<IRange[]> {
   try {
-    return await segmentBuffer.pushChunk(dataInfos);
+    return await segmentSink.pushChunk(dataInfos);
   } catch (appendError : unknown) {
     if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
@@ -74,13 +74,13 @@ export default async function appendSegmentToBuffer<T>(
       log.warn("Stream: Running garbage collector");
       const start = Math.max(currentPos - 5, 0);
       const end = currentPos + bufferGoal.getValue() + 12;
-      await segmentBuffer.removeBuffer(0, start);
-      await segmentBuffer.removeBuffer(end, Number.MAX_VALUE);
+      await segmentSink.removeBuffer(0, start);
+      await segmentSink.removeBuffer(end, Number.MAX_VALUE);
       await sleep(200);
       if (cancellationSignal.cancellationError !== null) {
         throw cancellationSignal.cancellationError;
       }
-      return await segmentBuffer.pushChunk(dataInfos);
+      return await segmentSink.pushChunk(dataInfos);
     } catch (err2) {
       if (err2 instanceof CancellationError) {
         throw err2;

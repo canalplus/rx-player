@@ -34,7 +34,7 @@ import {
   ManifestFetcher,
   SegmentFetcherCreator,
 } from "../../fetchers";
-import SegmentBuffersStore from "../../segment_sinks";
+import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import DecipherabilityFreezeDetector from "../utils/DecipherabilityFreezeDetector";
 import {
@@ -145,7 +145,7 @@ export default class ContentPreparer {
 
       const [
         mediaSource,
-        segmentBuffersStore,
+        segmentSinksStore,
         workerTextSender,
       ] = createMediaSourceAndBuffersStore(contentId, {
         hasMseInWorker: this._hasMseInWorker,
@@ -153,7 +153,7 @@ export default class ContentPreparer {
         hasText,
       }, currentMediaSourceCanceller.signal);
       const decipherabilityFreezeDetector = new DecipherabilityFreezeDetector(
-        segmentBuffersStore
+        segmentSinksStore
       );
       this._currentContent = { contentId,
                                decipherabilityFreezeDetector,
@@ -161,7 +161,7 @@ export default class ContentPreparer {
                                manifest: null,
                                manifestFetcher,
                                representationEstimator,
-                               segmentBuffersStore,
+                               segmentSinksStore,
                                segmentFetcherCreator,
                                workerTextSender,
                                trackChoiceSetter };
@@ -251,7 +251,7 @@ export default class ContentPreparer {
 
     const [
       mediaSource,
-      segmentBuffersStore,
+      segmentSinksStore,
       workerTextSender,
     ] = createMediaSourceAndBuffersStore(this._currentContent.contentId, {
       hasMseInWorker: this._hasMseInWorker,
@@ -259,7 +259,7 @@ export default class ContentPreparer {
       hasText: this._currentContent.workerTextSender !== null,
     }, this._currentMediaSourceCanceller.signal);
     this._currentContent.mediaSource = mediaSource;
-    this._currentContent.segmentBuffersStore = segmentBuffersStore;
+    this._currentContent.segmentSinksStore = segmentSinksStore;
     this._currentContent.workerTextSender = workerTextSender;
     return new Promise((res, rej) => {
       mediaSource.addEventListener("mediaSourceOpen", function () {
@@ -314,10 +314,10 @@ export interface IPreparedContentData {
    */
   representationEstimator : IRepresentationEstimator;
   /**
-   * Allows to create a "SegmentBuffer" (powerful abstraction over media
+   * Allows to create a "SegmentSink" (powerful abstraction over media
    * buffering API) for each type of media.
    */
-  segmentBuffersStore : SegmentBuffersStore;
+  segmentSinksStore : SegmentSinksStore;
   /** Allows to send timed text media data so it can be rendered. */
   workerTextSender : WorkerTextDisplayerInterface | null;
   /**
@@ -349,7 +349,7 @@ function createMediaSourceAndBuffersStore(
     hasText: boolean;
   },
   cancelSignal: CancellationSignal
-): [IMediaSourceInterface, SegmentBuffersStore, WorkerTextDisplayerInterface | null] {
+): [IMediaSourceInterface, SegmentSinksStore, WorkerTextDisplayerInterface | null] {
   let mediaSource: IMediaSourceInterface;
   if (capabilities.hasMseInWorker) {
     const mainMediaSource = new MainMediaSourceInterface(
@@ -387,12 +387,12 @@ function createMediaSourceAndBuffersStore(
     new WorkerTextDisplayerInterface(contentId, sendMessage) :
     null;
   const { hasVideo } = capabilities;
-  const segmentBuffersStore = new SegmentBuffersStore(mediaSource, hasVideo, textSender);
+  const segmentSinksStore = new SegmentSinksStore(mediaSource, hasVideo, textSender);
   cancelSignal.register(() => {
-    segmentBuffersStore.disposeAll();
+    segmentSinksStore.disposeAll();
     textSender?.stop();
     mediaSource.dispose();
   });
 
-  return [mediaSource, segmentBuffersStore, textSender];
+  return [mediaSource, segmentSinksStore, textSender];
 }

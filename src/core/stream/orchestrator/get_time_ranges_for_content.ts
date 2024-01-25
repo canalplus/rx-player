@@ -21,17 +21,17 @@ import type {
   IRepresentationMetadata,
 } from "../../../manifest";
 import type { IRange } from "../../../utils/ranges";
-import type { SegmentBuffer } from "../../segment_sinks";
+import type { SegmentSink } from "../../segment_sinks";
 
 /**
  * Returns the buffered ranges which hold the given content.
  * Returns the whole buffered ranges if some of it is unknown.
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @param {Array.<Object>} contents
  * @returns {Array.<Object>}
  */
 export default function getTimeRangesForContent(
-  segmentBuffer : SegmentBuffer,
+  segmentSink : SegmentSink,
   contents : Array<{ adaptation : IAdaptationMetadata;
                      period : IPeriodMetadata;
                      representation : IRepresentationMetadata; }>
@@ -40,7 +40,7 @@ export default function getTimeRangesForContent(
     return [];
   }
   const accumulator : IRange[] = [];
-  const inventory = segmentBuffer.getLastKnownInventory();
+  const inventory = segmentSink.getLastKnownInventory();
 
   for (let i = 0; i < inventory.length; i++) {
     const chunk = inventory[i];

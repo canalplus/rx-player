@@ -21,7 +21,7 @@ import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { IPrioritizedSegmentFetcher } from "../../fetchers";
 import type {
   IBufferType,
-  SegmentBuffer,
+  SegmentSink,
 } from "../../segment_sinks";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
@@ -34,7 +34,7 @@ export interface IRepresentationStreamCallbacks {
    * same Period and type.
    */
   streamStatusUpdate(payload : IStreamStatusPayload) : void;
-  /** Called after a new segment has been succesfully added to the SegmentBuffer */
+  /** Called after a new segment has been succesfully added to the SegmentSink */
   addedSegment(payload : IStreamEventAddedSegmentPayload) : void;
   /** Called when a segment with protection information has been encountered. */
   encryptionDataEncountered(payload : IContentProtection[]) : void;
@@ -54,7 +54,7 @@ export interface IRepresentationStreamCallbacks {
    *   - it has stopped regularly checking for its current status.
    *
    *   - it only waits until all the segments it has loaded have been pushed to the
-   *     SegmentBuffer before actually stopping everything it does.
+   *     SegmentSink before actually stopping everything it does.
    *
    * You can use this call as a hint that a new `RepresentationStream` can be
    * created for the same `Period` and type (e.g. to switch quality).
@@ -90,7 +90,7 @@ export interface IStreamStatusPayload {
   /** Buffer type concerned. */
   bufferType : IBufferType;
   /**
-   * Present or future "hole" in the SegmentBuffer's buffer that will not be
+   * Present or future "hole" in the SegmentSink's buffer that will not be
    * filled by a segment, despite being part of the time period indicated by
    * the associated Period.
    *
@@ -139,7 +139,7 @@ export interface IStreamEventAddedSegmentPayload {
              representation : IRepresentation; };
   /** The concerned Segment. */
   segment : ISegment;
-  /** Ranges of the concerned SegmentBuffer after the segment was pushed. */
+  /** Ranges of the concerned SegmentSink after the segment was pushed. */
   buffered : IRange[];
 }
 
@@ -253,8 +253,8 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
              manifest : IManifest;
              period : IPeriod;
              representation : IRepresentation; };
-  /** The `SegmentBuffer` on which segments will be pushed. */
-  segmentBuffer : SegmentBuffer;
+  /** The `SegmentSink` on which segments will be pushed. */
+  segmentSink : SegmentSink;
   /** Interface used to load new segments. */
   segmentFetcher : IPrioritizedSegmentFetcher<TSegmentDataType>;
   /**

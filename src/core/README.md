@@ -33,10 +33,10 @@ Those modules are:
   - __the `Stream` (./stream)__
 
     Choose which media segments to download and push them to media buffers (here
-    called the `SegmentBuffers`) to then be able to decode them.
+    called the `SegmentSinks`) to then be able to decode them.
 
 
-  - __the `SegmentBuffers` (./segment_sinks)__
+  - __the `SegmentSinks` (./segment_sinks)__
 
     Implement media sinks on which loaded segments will be pushed.
     The corresponding media data contained in them will then be decoded at the
@@ -47,7 +47,7 @@ Those modules are:
     completely defined in the code (for example, text track buffers in the
     `"html"` `textTrackMode` are entirely defined in the RxPlayer).
 
-    Those `SegmentBuffers` include an inventory which allows to retrieve the
+    Those `SegmentSinks` include an inventory which allows to retrieve the
     metadata about every segments that is still contained within it.
 
   - __the `fetchers` (./fetchers)__

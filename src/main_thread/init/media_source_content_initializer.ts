@@ -30,7 +30,7 @@ import DecipherabilityFreezeDetector from "../../core/main/utils/Decipherability
 // eslint-disable-next-line max-len
 import MainThreadTextInterface from "../../core/main/utils/main_thread_text_displayer_interface";
 import type { ITextDisplayerInterface } from "../../core/segment_sinks";
-import SegmentBuffersStore from "../../core/segment_sinks";
+import SegmentSinksStore from "../../core/segment_sinks";
 import type {
   IStreamOrchestratorOptions,
   IStreamOrchestratorCallbacks,
@@ -476,11 +476,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }
 
     /** Interface to create media buffers. */
-    const segmentBuffersStore = new SegmentBuffersStore(mediaSource,
-                                                        mediaElement.nodeName === "VIDEO",
-                                                        textDisplayerInterface);
+    const segmentSinksStore = new SegmentSinksStore(mediaSource,
+                                                    mediaElement.nodeName === "VIDEO",
+                                                    textDisplayerInterface);
     cancelSignal.register(() => {
-      segmentBuffersStore.disposeAll();
+      segmentSinksStore.disposeAll();
     });
 
     const { autoPlayResult, initialPlayPerformed } =
@@ -532,7 +532,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                                     speed,
                                                                     cancelSignal);
     const decipherabilityFreezeDetector =
-      new DecipherabilityFreezeDetector(segmentBuffersStore);
+      new DecipherabilityFreezeDetector(segmentSinksStore);
 
     playbackObserver.listen((observation) => {
       if (decipherabilityFreezeDetector.needToReload(observation)) {
@@ -551,12 +551,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       }
     }, { clearSignal: cancelSignal });
 
-    // Synchronize SegmentBuffers with what has been buffered.
+    // Synchronize SegmentSinks with what has been buffered.
     coreObserver.listen((observation) => {
       ["video" as const, "audio" as const, "text" as const].forEach(tType => {
-        const segmentBufferStatus =  segmentBuffersStore.getStatus(tType);
-        if (segmentBufferStatus.type === "initialized") {
-          segmentBufferStatus.value.synchronizeInventory(
+        const segmentSinkStatus =  segmentSinksStore.getStatus(tType);
+        if (segmentSinkStatus.type === "initialized") {
+          segmentSinkStatus.value.synchronizeInventory(
             observation.buffered[tType] ?? []
           );
         }
@@ -567,7 +567,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       manifest,
       mediaSource,
       coreObserver,
-      segmentBuffersStore,
+      segmentSinksStore,
       {
         onWarning: (err: IPlayerError) => this.trigger("warning", err),
         onPeriodChanged: (period: IPeriodMetadata) =>
@@ -587,7 +587,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           .onUpdate((isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
-              this.trigger("loaded", { segmentBuffersStore });
+              this.trigger("loaded", { segmentSinksStore });
             }
           }, { emitCurrentValue: true, clearSignal: cancelSignal });
       })
@@ -603,7 +603,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     StreamOrchestrator({ manifest, initialPeriod },
                        coreObserver,
                        representationEstimator,
-                       segmentBuffersStore,
+                       segmentSinksStore,
                        segmentFetcherCreator,
                        bufferOptions,
                        handleStreamOrchestratorCallbacks(),

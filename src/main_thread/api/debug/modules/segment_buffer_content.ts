@@ -9,7 +9,7 @@ import {
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type RxPlayer from "../../public_api";
-import SegmentBufferGraph from "../buffer_graph";
+import SegmentSinkGraph from "../buffer_graph";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
 import {
   createElement,
@@ -18,7 +18,7 @@ import {
   isExtendedMode,
 } from "../utils";
 
-export default function createSegmentBufferGraph(
+export default function createSegmentSinkGraph(
   instance : RxPlayer,
   bufferType : IBufferType,
   title : string,
@@ -30,7 +30,7 @@ export default function createSegmentBufferGraph(
   const canvasElt = createGraphCanvas();
   const currentRangeRepInfoElt = createElement("div");
   const loadingRangeRepInfoElt = createElement("div");
-  const bufferGraph = new SegmentBufferGraph(canvasElt);
+  const bufferGraph = new SegmentSinkGraph(canvasElt);
   const intervalId = setInterval(update, DEFAULT_REFRESH_INTERVAL);
   cancelSignal.register(() => {
     clearInterval(intervalId);
@@ -52,7 +52,7 @@ export default function createSegmentBufferGraph(
       return;
     }
     const showAllInfo = isExtendedMode(parentElt);
-    const inventory = instance.__priv_getSegmentBufferContent(bufferType);
+    const inventory = instance.__priv_getSegmentSinkContent(bufferType);
     if (inventory === null) {
       bufferGraphWrapper.style.display = "none";
       currentRangeRepInfoElt.innerHTML = "";

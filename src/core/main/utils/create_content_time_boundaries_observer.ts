@@ -1,5 +1,5 @@
 import type {
-  ISegmentBuffersStore,
+  ISegmentSinksStore,
   IStreamOrchestratorPlaybackObservation,
 } from "../../../core/types";
 import log from "../../../log";
@@ -29,7 +29,7 @@ export interface IContentTimeBoundariesObserverCallbacks {
  * @param {Object} manifest
  * @param {MediaSource} mediaSource
  * @param {Object} streamObserver
- * @param {Object} segmentBuffersStore
+ * @param {Object} segmentSinksStore
  * @param {Object} cancelSignal
  * @returns {Object}
  */
@@ -37,7 +37,7 @@ export default function createContentTimeBoundariesObserver(
   manifest : IManifest,
   mediaSource : IMediaSourceInterface,
   streamObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
-  segmentBuffersStore : ISegmentBuffersStore,
+  segmentSinksStore : ISegmentSinksStore,
   callbacks: IContentTimeBoundariesObserverCallbacks,
   cancelSignal : CancellationSignal
 ) : ContentTimeBoundariesObserver {
@@ -47,7 +47,7 @@ export default function createContentTimeBoundariesObserver(
   const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
     manifest,
     streamObserver,
-    segmentBuffersStore.getBufferTypes()
+    segmentSinksStore.getBufferTypes()
   );
   cancelSignal.register(() => {
     contentTimeBoundariesObserver.dispose();

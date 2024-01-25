@@ -504,7 +504,7 @@ function doesEndSeemGarbageCollected(
  * Returns `false` if we have a high chance of staying in the same situation
  * after re-loading the segment.
  *
- * This function takes in argument the entries of a SegmentBuffer's history
+ * This function takes in argument the entries of a SegmentSink's history
  * related to the corresponding segment and check if the segment appeared
  * garbage-collected at the start directly after the last few times it was
  * pushed, indicating that the issue might be sourced at a browser issue instead
@@ -562,7 +562,7 @@ function shouldReloadSegmentGCedAtTheStart(
  * Returns `false` if we have a high chance of staying in the same situation
  * after re-loading the segment.
  *
- * This function takes in argument the entries of a SegmentBuffer's history
+ * This function takes in argument the entries of a SegmentSink's history
  * related to the corresponding segment and check if the segment appeared
  * garbage-collected at the end directly after the last few times it was
  * pushed, indicating that the issue might be sourced at a browser issue instead

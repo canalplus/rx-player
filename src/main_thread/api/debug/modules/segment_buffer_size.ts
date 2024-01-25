@@ -8,7 +8,7 @@ import {
   createMetricTitle,
 } from "../utils";
 
-export default function createSegmentBufferSizeGraph(
+export default function createSegmentSinkSizeGraph(
   instance : RxPlayer,
   parentElt : HTMLElement,
   cancelSignal : CancellationSignal

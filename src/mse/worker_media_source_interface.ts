@@ -288,13 +288,13 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
         return;
       }
       try {
-        let segmentBufferPushed : ArrayBuffer;
+        let segmentSinkPushed : ArrayBuffer;
         if (data instanceof ArrayBuffer) {
-          segmentBufferPushed = data;
+          segmentSinkPushed = data;
         } else if (data.byteLength === data.buffer.byteLength) {
-          segmentBufferPushed = data.buffer;
+          segmentSinkPushed = data.buffer;
         } else {
-          segmentBufferPushed = data.buffer.slice(
+          segmentSinkPushed = data.buffer.slice(
             data.byteOffset,
             data.byteLength + data.byteOffset
           );
@@ -306,10 +306,10 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
           sourceBufferType: this.type,
           operationId,
           value: {
-            data: segmentBufferPushed,
+            data: segmentSinkPushed,
             params,
           },
-        }, [segmentBufferPushed]);
+        }, [segmentSinkPushed]);
         this._addOperationToQueue(operationId, resolve, reject);
       } catch (err) {
         reject(err);
@@ -397,13 +397,13 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       try {
         if (nextOp.operationName === SbiOperationName.Push) {
           const [data, params] = nextOp.params;
-          let segmentBufferPushed : ArrayBuffer;
+          let segmentSinkPushed : ArrayBuffer;
           if (data instanceof ArrayBuffer) {
-            segmentBufferPushed = data;
+            segmentSinkPushed = data;
           } else if (data.byteLength === data.buffer.byteLength) {
-            segmentBufferPushed = data.buffer;
+            segmentSinkPushed = data.buffer;
           } else {
-            segmentBufferPushed = data.buffer.slice(
+            segmentSinkPushed = data.buffer.slice(
               data.byteOffset,
               data.byteLength + data.byteOffset
             );
@@ -415,10 +415,10 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
             sourceBufferType: this.type,
             operationId: nOpId,
             value: {
-              data: segmentBufferPushed,
+              data: segmentSinkPushed,
               params,
             },
-          }, [segmentBufferPushed]);
+          }, [segmentSinkPushed]);
           this._addOperationToQueue(nOpId, nextOp.resolve, nextOp.reject);
         } else {
           const [start, end] = nextOp.params;

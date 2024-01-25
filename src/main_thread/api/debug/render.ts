@@ -1,8 +1,8 @@
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type RxPlayer from "../public_api";
 import constructDebugGeneralInfo from "./modules/general_info";
-import createSegmentBufferGraph from "./modules/segment_buffer_content";
-import createSegmentBufferSizeGraph from "./modules/segment_buffer_size";
+import createSegmentSinkGraph from "./modules/segment_buffer_content";
+import createSegmentSinkSizeGraph from "./modules/segment_buffer_size";
 import { createCompositeElement, createElement } from "./utils";
 
 export default function renderDebugElement(
@@ -21,10 +21,10 @@ export default function renderDebugElement(
   const debugWrapperElt = createCompositeElement("div", [
     debugElementTitleElt,
     constructDebugGeneralInfo(instance, parentElt, cancelSignal),
-    createSegmentBufferGraph(instance, "video", "vbuf", parentElt, cancelSignal),
-    createSegmentBufferGraph(instance, "audio", "abuf", parentElt, cancelSignal),
-    createSegmentBufferGraph(instance, "text", "tbuf", parentElt, cancelSignal),
-    createSegmentBufferSizeGraph(instance, parentElt, cancelSignal),
+    createSegmentSinkGraph(instance, "video", "vbuf", parentElt, cancelSignal),
+    createSegmentSinkGraph(instance, "audio", "abuf", parentElt, cancelSignal),
+    createSegmentSinkGraph(instance, "text", "tbuf", parentElt, cancelSignal),
+    createSegmentSinkSizeGraph(instance, parentElt, cancelSignal),
   ]);
   debugWrapperElt.style.backgroundColor = "#00000099";
   debugWrapperElt.style.padding = "7px";

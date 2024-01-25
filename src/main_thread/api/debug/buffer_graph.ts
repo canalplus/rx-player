@@ -17,7 +17,7 @@ const COLORS = [
   "#fbe555",
 ];
 
-export interface ISegmentBufferGrapUpdateData {
+export interface ISegmentSinkGrapUpdateData {
   currentTime : number;
   inventory : IBufferedChunk[];
   width : number;
@@ -26,7 +26,7 @@ export interface ISegmentBufferGrapUpdateData {
   maximumPosition : number | undefined;
 }
 
-export default class SegmentBufferGraph {
+export default class SegmentSinkGraph {
   /** Link buffered Representation to their corresponding color. */
   private readonly _colorMap : WeakMap<IRepresentation, string>;
 
@@ -52,7 +52,7 @@ export default class SegmentBufferGraph {
     }
   }
 
-  public update(data : ISegmentBufferGrapUpdateData) : void {
+  public update(data : ISegmentSinkGrapUpdateData) : void {
     if (this._canvasCtxt === null) {
       return;
     }

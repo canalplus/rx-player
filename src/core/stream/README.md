@@ -15,7 +15,7 @@ everything that may be imported by outside code).
 
 The `Stream` is the part of the RxPlayer choosing the right segments to
 download, to then push them to the corresponding media buffers (called
-`SegmentBuffers`) so they can later be decoded.
+`SegmentSinks`) so they can later be decoded.
 
 To do so, they receive inputs on both what the chosen track should be and on the
 estimated optimal quality for those tracks. By then monitoring what has already
@@ -45,7 +45,7 @@ etc.).
 It does so after asking through a callback which Adaptation has to be chosen for
 that Period and type.
 
-It also takes care of creating the right "`SegmentBuffer`" for its associated
+It also takes care of creating the right "`SegmentSink`" for its associated
 type, if none was already created for it.
 
 
@@ -66,4 +66,4 @@ segment downloading and pushing itself.
 
 The ``RepresentationStream`` is the part that actually monitors the buffer to
 deduce which segments should be downloaded, ask to download them and then give
-the order to push them to the `SegmentBuffer`.
+the order to push them to the `SegmentSink`.

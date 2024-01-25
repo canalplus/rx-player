@@ -97,15 +97,15 @@ function linkPlayerEventsToState(
     if (player.getPlayerState() === "STOPPED") {
       return;
     }
-    let audioContent = player.__priv_getSegmentBufferContent("audio");
+    let audioContent = player.__priv_getSegmentSinkContent("audio");
     if (Array.isArray(audioContent)) {
       audioContent = audioContent.slice();
     }
-    let textContent = player.__priv_getSegmentBufferContent("text");
+    let textContent = player.__priv_getSegmentSinkContent("text");
     if (Array.isArray(textContent)) {
       textContent = textContent.slice();
     }
-    let videoContent = player.__priv_getSegmentBufferContent("video");
+    let videoContent = player.__priv_getSegmentSinkContent("video");
     if (Array.isArray(videoContent)) {
       videoContent = videoContent.slice();
     }

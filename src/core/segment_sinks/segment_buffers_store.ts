@@ -25,14 +25,14 @@ import createCancellablePromise from "../../utils/create_cancellable_promise";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type {
   IBufferType,
-  SegmentBuffer } from "./implementations";
+  SegmentSink } from "./implementations";
 import {
-  AudioVideoSegmentBuffer,
+  AudioVideoSegmentSink,
 } from "./implementations";
 import type {
   ITextDisplayerInterface,
 } from "./implementations/text";
-import TextSegmentBuffer from "./implementations/text";
+import TextSegmentSink from "./implementations/text";
 
 const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
                                                 "video",
@@ -42,27 +42,27 @@ const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
 type INativeMediaBufferType = "audio" | "video";
 
 /**
- * Allows to easily create and dispose SegmentBuffers, which are interfaces to
+ * Allows to easily create and dispose SegmentSinks, which are interfaces to
  * push and remove segments.
  *
- * Only one SegmentBuffer per type is allowed at the same time:
+ * Only one SegmentSink per type is allowed at the same time:
  *
- *   - SegmentBuffers linked to a "native" media buffer (relying on a
+ *   - SegmentSinks linked to a "native" media buffer (relying on a
  *     SourceBuffer: "audio" and "video" here) are reused if one is
  *     re-created.
  *
- *   - SegmentBuffers for custom types (the other types of media) are aborted
+ *   - SegmentSinks for custom types (the other types of media) are aborted
  *     each time a new one of the same type is created.
  *
- * To be able to use a SegmentBuffer linked to a native media buffer, you
+ * To be able to use a SegmentSink linked to a native media buffer, you
  * will first need to create it, but also wait until the other one is either
- * created or explicitely disabled through the `disableSegmentBuffer` method.
+ * created or explicitely disabled through the `disableSegmentSink` method.
  * The Promise returned by `waitForUsableBuffers` will emit when
  * that is the case.
  *
- * @class SegmentBuffersStore
+ * @class SegmentSinksStore
  */
-export default class SegmentBuffersStore {
+export default class SegmentSinksStore {
   /**
    * Returns true if the type is linked to a "native" media buffer (i.e. relying
    * on a SourceBuffer object, native to the browser).
@@ -80,12 +80,12 @@ export default class SegmentBuffersStore {
   private readonly _mediaSource : IMediaSourceInterface;
 
   /**
-   * List of initialized and explicitely disabled SegmentBuffers.
-   * A `null` value indicates that this SegmentBuffer has been explicitely
+   * List of initialized and explicitely disabled SegmentSinks.
+   * A `null` value indicates that this SegmentSink has been explicitely
    * disabled. This means that the corresponding type (e.g. audio, video etc.)
    * won't be needed when playing the current content.
    */
-  private _initializedSegmentBuffers : Partial<Record<IBufferType, SegmentBuffer | null>>;
+  private _initializedSegmentSinks : Partial<Record<IBufferType, SegmentSink | null>>;
 
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
@@ -110,7 +110,7 @@ export default class SegmentBuffersStore {
     this._mediaSource = mediaSource;
     this._textInterface = textDisplayerInterface;
     this._hasVideo = hasVideo;
-    this._initializedSegmentBuffers = {};
+    this._initializedSegmentSinks = {};
     this._onNativeBufferAddedOrDisabled = [];
   }
 
@@ -137,33 +137,33 @@ export default class SegmentBuffersStore {
   }
 
   /**
-   * Returns the current "status" of the SegmentBuffer linked to the buffer
+   * Returns the current "status" of the SegmentSink linked to the buffer
    * type given.
    *
    * This function will return  an object containing a key named `type` which
    * can be equal to either one of those three value:
    *
-   *   - "initialized": A SegmentBuffer has been created for that type.
+   *   - "initialized": A SegmentSink has been created for that type.
    *     You will in this case also have a second key, `value`, which will
-   *     contain the related SegmentBuffer instance.
+   *     contain the related SegmentSink instance.
    *     Please note that you will need to wait until
    *     `this.waitForUsableBuffers()` has emitted before pushing segment
-   *     data to a SegmentBuffer relying on a SourceBuffer.
+   *     data to a SegmentSink relying on a SourceBuffer.
    *
-   *   - "disabled": The SegmentBuffer has been explicitely disabled for this
+   *   - "disabled": The SegmentSink has been explicitely disabled for this
    *     type.
    *
-   *   - "uninitialized": No action has yet been yet for that SegmentBuffer.
+   *   - "uninitialized": No action has yet been yet for that SegmentSink.
    *
    * @param {string} bufferType
    * @returns {Object|null}
    */
   public getStatus(bufferType : IBufferType) : { type : "initialized";
-                                                 value : SegmentBuffer; } |
+                                                 value : SegmentSink; } |
                                                { type : "uninitialized" } |
                                                { type : "disabled" }
   {
-    const initializedBuffer = this._initializedSegmentBuffers[bufferType];
+    const initializedBuffer = this._initializedSegmentSinks[bufferType];
     return initializedBuffer === undefined ? { type: "uninitialized" } :
            initializedBuffer === null      ? { type: "disabled" } :
                                              { type: "initialized",
@@ -172,7 +172,7 @@ export default class SegmentBuffersStore {
 
   /**
    * Native media buffers (audio and video) needed for playing the current
-   * content need to all be created (by creating SegmentBuffers linked to them)
+   * content need to all be created (by creating SegmentSinks linked to them)
    * before any one can be used.
    *
    * This function will return a Promise resolving when any and all native
@@ -214,132 +214,132 @@ export default class SegmentBuffersStore {
   }
 
   /**
-   * Explicitely disable the SegmentBuffer for a given buffer type.
+   * Explicitely disable the SegmentSink for a given buffer type.
    * A call to this function is needed at least for unused native buffer types
    * (usually "audio" and "video"), to be able to emit through
    * `waitForUsableBuffers` when conditions are met.
    * @param {string} bufferType
    */
-  public disableSegmentBuffer(bufferType : IBufferType) : void {
-    const currentValue = this._initializedSegmentBuffers[bufferType];
+  public disableSegmentSink(bufferType : IBufferType) : void {
+    const currentValue = this._initializedSegmentSinks[bufferType];
     if (currentValue === null) {
-      log.warn(`SBS: The ${bufferType} SegmentBuffer was already disabled.`);
+      log.warn(`SBS: The ${bufferType} SegmentSink was already disabled.`);
       return;
     }
     if (currentValue !== undefined) {
-      throw new Error("Cannot disable an active SegmentBuffer.");
+      throw new Error("Cannot disable an active SegmentSink.");
     }
-    this._initializedSegmentBuffers[bufferType] = null;
-    if (SegmentBuffersStore.isNative(bufferType)) {
+    this._initializedSegmentSinks[bufferType] = null;
+    if (SegmentSinksStore.isNative(bufferType)) {
       this._onNativeBufferAddedOrDisabled.forEach(cb => cb());
     }
   }
 
   /**
-   * Creates a new SegmentBuffer associated to a type.
-   * Reuse an already created one if a SegmentBuffer for the given type
+   * Creates a new SegmentSink associated to a type.
+   * Reuse an already created one if a SegmentSink for the given type
    * already exists.
    *
    * Please note that you will need to wait until `this.waitForUsableBuffers()`
-   * has emitted before pushing segment data to a SegmentBuffer of a native
+   * has emitted before pushing segment data to a SegmentSink of a native
    * type.
    * @param {string} bufferType
    * @param {string} codec
    * @returns {Object}
    */
-  public createSegmentBuffer(
+  public createSegmentSink(
     bufferType : IBufferType,
     codec : string
-  ) : SegmentBuffer {
-    const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
+  ) : SegmentSink {
+    const memorizedSegmentSink = this._initializedSegmentSinks[bufferType];
     if (shouldHaveNativeBuffer(bufferType)) {
-      if (memorizedSegmentBuffer != null) {
-        if (memorizedSegmentBuffer instanceof AudioVideoSegmentBuffer &&
-            memorizedSegmentBuffer.codec !== codec)
+      if (memorizedSegmentSink != null) {
+        if (memorizedSegmentSink instanceof AudioVideoSegmentSink &&
+            memorizedSegmentSink.codec !== codec)
         {
-          log.warn("SB: Reusing native SegmentBuffer with codec",
-                   memorizedSegmentBuffer.codec, "for codec", codec);
+          log.warn("SB: Reusing native SegmentSink with codec",
+                   memorizedSegmentSink.codec, "for codec", codec);
         } else {
-          log.info("SB: Reusing native SegmentBuffer with codec", codec);
+          log.info("SB: Reusing native SegmentSink with codec", codec);
         }
-        return memorizedSegmentBuffer;
+        return memorizedSegmentSink;
       }
-      log.info("SB: Adding native SegmentBuffer with codec", codec);
+      log.info("SB: Adding native SegmentSink with codec", codec);
       const sourceBufferType = bufferType === "audio" ? SourceBufferType.Audio :
                                                         SourceBufferType.Video;
-      const nativeSegmentBuffer = new AudioVideoSegmentBuffer(sourceBufferType,
-                                                              codec,
-                                                              this._mediaSource);
-      this._initializedSegmentBuffers[bufferType] = nativeSegmentBuffer;
+      const nativeSegmentSink = new AudioVideoSegmentSink(sourceBufferType,
+                                                          codec,
+                                                          this._mediaSource);
+      this._initializedSegmentSinks[bufferType] = nativeSegmentSink;
       this._onNativeBufferAddedOrDisabled.forEach(cb => cb());
-      return nativeSegmentBuffer;
+      return nativeSegmentSink;
     }
 
-    if (memorizedSegmentBuffer != null) {
-      log.info("SB: Reusing a previous custom SegmentBuffer for the type", bufferType);
-      return memorizedSegmentBuffer;
+    if (memorizedSegmentSink != null) {
+      log.info("SB: Reusing a previous custom SegmentSink for the type", bufferType);
+      return memorizedSegmentSink;
     }
 
-    let segmentBuffer : SegmentBuffer;
+    let segmentSink : SegmentSink;
     if (bufferType === "text") {
-      log.info("SB: Creating a new text SegmentBuffer");
+      log.info("SB: Creating a new text SegmentSink");
       if (this._textInterface === null) {
         throw new Error("HTML Text track feature not activated");
       }
-      segmentBuffer = new TextSegmentBuffer(this._textInterface);
-      this._initializedSegmentBuffers.text = segmentBuffer;
-      return segmentBuffer;
+      segmentSink = new TextSegmentSink(this._textInterface);
+      this._initializedSegmentSinks.text = segmentSink;
+      return segmentSink;
     }
 
     log.error("SB: Unknown buffer type:", bufferType);
     throw new MediaError("BUFFER_TYPE_UNKNOWN",
-                         "The player wants to create a SegmentBuffer " +
+                         "The player wants to create a SegmentSink " +
                          "of an unknown type.");
   }
 
   /**
-   * Dispose of the active SegmentBuffer for the given type.
+   * Dispose of the active SegmentSink for the given type.
    * @param {string} bufferType
    */
-  public disposeSegmentBuffer(bufferType : IBufferType) : void {
-    const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
-    if (memorizedSegmentBuffer == null) {
-      log.warn("SB: Trying to dispose a SegmentBuffer that does not exist");
+  public disposeSegmentSink(bufferType : IBufferType) : void {
+    const memorizedSegmentSink = this._initializedSegmentSinks[bufferType];
+    if (memorizedSegmentSink == null) {
+      log.warn("SB: Trying to dispose a SegmentSink that does not exist");
       return;
     }
 
-    log.info("SB: Aborting SegmentBuffer", bufferType);
-    memorizedSegmentBuffer.dispose();
-    delete this._initializedSegmentBuffers[bufferType];
+    log.info("SB: Aborting SegmentSink", bufferType);
+    memorizedSegmentSink.dispose();
+    delete this._initializedSegmentSinks[bufferType];
   }
 
   /**
-   * Dispose of all SegmentBuffer created on this SegmentBuffersStore.
+   * Dispose of all SegmentSink created on this SegmentSinksStore.
    */
   public disposeAll() : void {
     POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {
       if (this.getStatus(bufferType).type === "initialized") {
-        this.disposeSegmentBuffer(bufferType);
+        this.disposeSegmentSink(bufferType);
       }
     });
   }
 
   /**
    * Returns `true` when we're ready to push and decode contents to
-   * SourceBuffers created by SegmentBuffers of a native buffer type.
+   * SourceBuffers created by SegmentSinks of a native buffer type.
    */
   private _areNativeBuffersUsable() {
     const nativeBufferTypes = this.getNativeBufferTypes();
 
     const hasUnitializedBuffers = nativeBufferTypes.some(sbType =>
-      this._initializedSegmentBuffers[sbType] === undefined);
+      this._initializedSegmentSinks[sbType] === undefined);
     if (hasUnitializedBuffers) {
       // one is not yet initialized/disabled
       return false;
     }
 
     const areAllDisabled = nativeBufferTypes.every(sbType =>
-      this._initializedSegmentBuffers[sbType] === null);
+      this._initializedSegmentSinks[sbType] === null);
     if (areAllDisabled) {
       // they all are disabled: we can't play the content
       return false;

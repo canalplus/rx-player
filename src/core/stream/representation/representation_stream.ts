@@ -50,13 +50,13 @@ import pushMediaSegment from "./utils/push_media_segment";
 
 /**
  * Perform the logic to load the right segments for the given Representation and
- * push them to the given `SegmentBuffer`.
+ * push them to the given `SegmentSink`.
  *
  * In essence, this is the entry point of the core streaming logic of the
  * RxPlayer, the one actually responsible for finding which are the current
  * right segments to load, loading them, and pushing them so they can be decoded.
  *
- * Multiple RepresentationStream can run on the same SegmentBuffer.
+ * Multiple RepresentationStream can run on the same SegmentSink.
  * This allows for example smooth transitions between multiple periods.
  *
  * @param {Object} args - Various arguments allowing to know which segments to
@@ -87,7 +87,7 @@ export default function RepresentationStream<TSegmentDataType>(
   { content,
     options,
     playbackObserver,
-    segmentBuffer,
+    segmentSink,
     segmentFetcher,
     terminate } : IRepresentationStreamArguments<TSegmentDataType>,
   callbacks : IRepresentationStreamCallbacks,
@@ -118,7 +118,7 @@ export default function RepresentationStream<TSegmentDataType>(
   globalCanceller.signal.register(() => {
     // Free initialization segment if one has been declared
     if (initSegmentState.uniqueId !== null) {
-      segmentBuffer.freeInitSegment(initSegmentState.uniqueId);
+      segmentSink.freeInitSegment(initSegmentState.uniqueId);
     }
   });
 
@@ -190,7 +190,7 @@ export default function RepresentationStream<TSegmentDataType>(
     }
   });
   downloadingQueue.addEventListener("fullyLoadedSegment", (segment) => {
-    segmentBuffer.signalSegmentComplete(objectAssign({ segment }, content))
+    segmentSink.signalSegmentComplete(objectAssign({ segment }, content))
       .catch(onFatalBufferError);
   });
   downloadingQueue.start();
@@ -238,7 +238,7 @@ export default function RepresentationStream<TSegmentDataType>(
                                    fastSwitchThreshold.getValue(),
                                    bufferGoal.getValue(),
                                    maxBufferSize.getValue(),
-                                   segmentBuffer);
+                                   segmentSink);
     const { neededSegments } = status;
 
     let neededInitSegment : IQueuedSegment | null = null;
@@ -321,7 +321,7 @@ export default function RepresentationStream<TSegmentDataType>(
         0,
         initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
       if (gcedPosition > 0) {
-        segmentBuffer.removeBuffer(0, gcedPosition)
+        segmentSink.removeBuffer(0, gcedPosition)
           .catch(onFatalBufferError);
       }
     }
@@ -332,7 +332,7 @@ export default function RepresentationStream<TSegmentDataType>(
 
   /**
    * Process a chunk that has just been parsed by pushing it to the
-   * SegmentBuffer and emitting the right events.
+   * SegmentSink and emitting the right events.
    * @param {Object} evt
    */
   function onParsedChunk(
@@ -383,15 +383,15 @@ export default function RepresentationStream<TSegmentDataType>(
       if (evt.initializationData !== null) {
         const initSegmentUniqueId = representation.uniqueId;
         initSegmentState.uniqueId = initSegmentUniqueId;
-        segmentBuffer.declareInitSegment(initSegmentUniqueId,
-                                         evt.initializationData);
+        segmentSink.declareInitSegment(initSegmentUniqueId,
+                                       evt.initializationData);
         pushInitSegment({ playbackObserver,
                           bufferGoal,
                           content,
                           initSegmentUniqueId,
                           segment: evt.segment,
                           segmentData: evt.initializationData,
-                          segmentBuffer },
+                          segmentSink },
                         globalCanceller.signal)
           .then((result) => {
             if (result !== null) {
@@ -433,7 +433,7 @@ export default function RepresentationStream<TSegmentDataType>(
                          initSegmentUniqueId,
                          parsedSegment: evt,
                          segment: evt.segment,
-                         segmentBuffer },
+                         segmentSink },
                        globalCanceller.signal)
         .then((result) => {
           if (result !== null) {
@@ -474,7 +474,7 @@ interface IInitSegmentState {
   segment : ISegment | null;
   /**
    * Unique identifier used to identify the initialization segment data, used by
-   * the `SegmentBuffer`.
+   * the `SegmentSink`.
    * `null` either when it doesn't exist or when it has not been declared yet.
    */
   uniqueId : string | null;

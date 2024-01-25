@@ -28,11 +28,11 @@ import {
   insertInto,
 } from "../../../utils/ranges";
 import type {
-  SegmentBuffer } from "../../segment_sinks";
+  SegmentSink } from "../../segment_sinks";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  SegmentBufferOperation,
+  SegmentSinkOperation,
 } from "../../segment_sinks";
 import type {
   IRepresentationsChoice,
@@ -43,14 +43,14 @@ export default function getRepresentationsSwitchingStrategy(
   period : IPeriod,
   adaptation : IAdaptation,
   settings : IRepresentationsChoice,
-  segmentBuffer : SegmentBuffer,
+  segmentSink : SegmentSink,
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>
 ) : IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };
   }
 
-  const inventory = segmentBuffer.getLastKnownInventory();
+  const inventory = segmentSink.getLastKnownInventory();
   const unwantedRange: IRange[] = [];
   for (const elt of inventory) {
     if (
@@ -64,9 +64,9 @@ export default function getRepresentationsSwitchingStrategy(
     }
   }
 
-  const pendingOperations = segmentBuffer.getPendingOperations();
+  const pendingOperations = segmentSink.getPendingOperations();
   for (const operation of pendingOperations) {
-    if (operation.type === SegmentBufferOperation.Push) {
+    if (operation.type === SegmentSinkOperation.Push) {
       const info = operation.value.inventoryInfos;
       if (
         info.period.id === period.id && (

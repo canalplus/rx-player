@@ -35,7 +35,7 @@ import type {
  *
  * It will rely on the IRepresentationEstimator to choose at any time the
  * best Representation for this Adaptation and then run the logic to download
- * and push the corresponding segments in the SegmentBuffer.
+ * and push the corresponding segments in the SegmentSink.
  *
  * @param {Object} args - Various arguments allowing the `AdaptationStream` to
  * determine which Representation to choose and which segments to load from it.
@@ -64,7 +64,7 @@ export default function AdaptationStream(
     content,
     options,
     representationEstimator,
-    segmentBuffer,
+    segmentSink,
     segmentFetcherCreator,
     wantedBufferAhead,
     maxVideoBufferSize } : IAdaptationStreamArguments,
@@ -196,7 +196,7 @@ export default function AdaptationStream(
     const switchStrat = getRepresentationsSwitchingStrategy(period,
                                                             adaptation,
                                                             choice,
-                                                            segmentBuffer,
+                                                            segmentSink,
                                                             playbackObserver);
 
     switch (switchStrat.type) {
@@ -224,7 +224,7 @@ export default function AdaptationStream(
       case "flush-buffer": // Clean + flush
       case "clean-buffer": // Just clean
         for (const range of switchStrat.value) {
-          await segmentBuffer.removeBuffer(range.start, range.end);
+          await segmentSink.removeBuffer(range.start, range.end);
           if (fnCancelSignal.isCancelled()) {
             return;
           }
@@ -399,7 +399,7 @@ export default function AdaptationStream(
                                       adaptation,
                                       period,
                                       manifest },
-                           segmentBuffer,
+                           segmentSink,
                            segmentFetcher,
                            terminate: terminateCurrentStream,
                            options: { bufferGoal,

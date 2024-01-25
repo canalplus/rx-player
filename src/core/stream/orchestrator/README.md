@@ -15,14 +15,14 @@ everything that may be imported by outside code).
 
 To be able to play a content, the player has to be able to download chunks of
 media data - called segments - and has to push them to media buffers, called
-`SegmentBuffers` in the RxPlayer code.
+`SegmentSinks` in the RxPlayer code.
 
 In the RxPlayer, the _StreamOrchestrator_ is the entry point for performing all
 those tasks.
 
 Basically, the _StreamOrchestrator_:
 
-  - dynamically creates various `SegmentBuffers` depending on the needs of the
+  - dynamically creates various `SegmentSinks` depending on the needs of the
     given content
 
   - orchestrates segment downloading and "pushing" to allow the content to
