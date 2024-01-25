@@ -15,18 +15,19 @@
  */
 
 import config from "../../../../config";
-import Manifest, {
-  Adaptation,
+import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import {
+  IManifest,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
 import { ISegmentParserParsedMediaChunk } from "../../../../transports";
 import objectAssign from "../../../../utils/object_assign";
 import { IReadOnlySharedReference } from "../../../../utils/reference";
 import { CancellationSignal } from "../../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../../api";
-import { SegmentBuffer } from "../../../segment_buffers";
+import { SegmentBuffer } from "../../../segment_sinks";
 import {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
@@ -50,10 +51,10 @@ export default async function pushMediaSegment<T>(
   { playbackObserver : IReadOnlyPlaybackObserver<
       IRepresentationStreamPlaybackObservation
     >;
-    content: { adaptation : Adaptation;
-               manifest : Manifest;
-               period : Period;
-               representation : Representation; };
+    content: { adaptation : IAdaptation;
+               manifest : IManifest;
+               period : IPeriod;
+               representation : IRepresentation; };
     bufferGoal : IReadOnlySharedReference<number>;
     initSegmentUniqueId : string | null;
     parsedSegment : ISegmentParserParsedMediaChunk<T>;

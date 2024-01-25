@@ -1,5 +1,5 @@
-import createDebugElement from "../../../core/api/debug";
-import { IFeaturesObject } from "../../../features/types";
+import type { IFeaturesObject } from "../../../features/types";
+import createDebugElement from "../../../main_thread/api/debug";
 import addDebugElementFeature from "../debug_element";
 
 describe("Features list - DEBUG_ELEMENT", () => {

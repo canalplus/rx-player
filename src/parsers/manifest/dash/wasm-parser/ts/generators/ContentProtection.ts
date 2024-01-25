@@ -16,15 +16,15 @@
 
 import { base64ToBytes } from "../../../../../../utils/base64";
 import { hexToBytes } from "../../../../../../utils/string_parsing";
-import {
+import type {
   IContentProtectionIntermediateRepresentation,
 } from "../../../node_parser_types";
-import { IAttributeParser } from "../parsers_stack";
+import type { IAttributeParser } from "../parsers_stack";
 import { AttributeName } from "../types";
 import { parseString } from "../utils";
 
 /**
- * @param {Object} cpAttrs
+ * @param {Object} cp
  * @param {WebAssembly.Memory} linearMemory
  * @returns {Function}
  */

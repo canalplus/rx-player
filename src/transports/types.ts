@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { IInbandEvent } from "../core/stream";
-import Manifest, {
+import type { IInbandEvent } from "../core/types";
+import type {
+  IManifest,
   ISegment,
 } from "../manifest";
-import { ICdnMetadata } from "../parsers/manifest";
-import {
+import type { ICdnMetadata } from "../parsers/manifest";
+import type {
   ITrackType,
   ILoadedManifestFormat,
   IManifestLoader,
@@ -289,7 +290,7 @@ export interface IManifestParserOptions {
   /** Original URL used for the full version of the Manifest. */
   originalUrl : string | undefined;
   /** The previous value of the Manifest (when updating). */
-  previousManifest : Manifest | null;
+  previousManifest : IManifest | null;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a
@@ -364,7 +365,7 @@ export type IManifestParserRequestScheduler =
 /** Event emitted when a Manifest has been parsed by a Manifest parser. */
 export interface IManifestParserResult {
   /** The parsed Manifest Object itself. */
-  manifest : Manifest;
+  manifest : IManifest;
   /**
    * Minor issues seen while constructing the Manifest object.
    * Empty if no issue was seen.

@@ -15,20 +15,17 @@
  */
 
 import log from "../../../../log";
-import {
-  Period,
-  SUPPORTED_ADAPTATIONS_TYPE,
-} from "../../../../manifest";
-import { ITrackType } from "../../../../public_types";
+import { IPeriod, SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
+import type { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import {
+import type {
   IParsedAdaptation,
   IParsedAdaptations,
 } from "../../types";
-import {
+import type {
   IAdaptationSetIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
 } from "../node_parser_types";
@@ -556,7 +553,7 @@ export interface IAdaptationSetContext extends IInheritedRepresentationContext {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousPeriod : Period | null;
+  unsafelyBaseOnPreviousPeriod : IPeriod | null;
 }
 
 /**

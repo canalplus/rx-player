@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import initDirectFile from "../../../main_thread/init/directfile_content_initializer";
 // eslint-disable-next-line max-len
-import mediaElementTracksStore from "../../../core/api/track_management/media_element_tracks_store";
-import initDirectFile from "../../../core/init/directfile_content_initializer";
-import { IFeaturesObject } from "../../types";
+import mediaElementTracksStore from "../../../main_thread/tracks_store/media_element_tracks_store";
+import type { IFeaturesObject } from "../../types";
 import addDirectfileFeature from "../directfile";
 
 describe("Features list - Directfile", () => {

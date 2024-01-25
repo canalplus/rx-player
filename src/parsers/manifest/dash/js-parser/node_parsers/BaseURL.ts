@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
+import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
 
 /**
  * Parse an BaseURL element into an BaseURL intermediate

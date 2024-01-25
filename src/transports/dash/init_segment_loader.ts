@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../manifest";
+import type { ISegment } from "../../manifest";
 import { concat } from "../../utils/byte_parsing";
 import request from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,

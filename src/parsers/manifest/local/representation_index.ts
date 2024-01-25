@@ -15,11 +15,11 @@
  */
 
 import log from "../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import {
+import type {
   ILocalIndex,
   ILocalIndexSegment,
 } from "./types";
