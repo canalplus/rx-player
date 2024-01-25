@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { events } from "../compat";
-import log from "../log";
+import { events } from "../../compat";
+import log from "../../log";
 import type {
   CancellationSignal,
-} from "../utils/task_canceller";
-import TaskCanceller from "../utils/task_canceller";
+} from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 
 const { onRemoveSourceBuffers,
         onSourceOpen,

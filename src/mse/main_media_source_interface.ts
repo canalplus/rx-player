@@ -21,8 +21,6 @@ import {
 import TaskCanceller, {
   CancellationError,
 } from "../utils/task_canceller";
-import { maintainEndOfStream } from "./end_of_stream";
-import MediaSourceDurationUpdater from "./media_source_duration_updater";
 import type {
   IMediaSourceHandle,
   IMediaSourceInterface,
@@ -31,6 +29,8 @@ import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
 } from "./types";
+import { maintainEndOfStream } from "./utils/end_of_stream";
+import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 
 /**
  * `IMediaSourceInterface` object for when the MSE API are directly available.
