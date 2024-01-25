@@ -26,17 +26,18 @@ import type {
   ISegmentTemplateIntermediateRepresentation,
   IScheme,
 } from "../node_parser_types";
+import type {
+  IBaseIndexContextArgument,
+  IListIndexContextArgument,
+  ITemplateIndexContextArgument,
+  ITimelineIndexContextArgument } from "./indexes";
 import {
   BaseRepresentationIndex,
   ListRepresentationIndex,
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
-  IBaseIndexContextArgument,
-  IListIndexContextArgument,
-  ITemplateIndexContextArgument,
-  ITimelineIndexContextArgument,
 } from "./indexes";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
+import type ManifestBoundsCalculator from "./manifest_bounds_calculator";
 import type { IResolvedBaseUrl } from "./resolve_base_urls";
 
 /**

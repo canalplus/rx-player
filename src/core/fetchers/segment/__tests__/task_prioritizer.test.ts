@@ -1,10 +1,12 @@
-import TaskCanceller, {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../../../../utils/task_canceller";
-import TaskPrioritizer, {
+import TaskCanceller from "../../../../utils/task_canceller";
+import type {
   ITaskFn,
 } from "../task_prioritizer";
+import TaskPrioritizer from "../task_prioritizer";
 
 /* eslint-disable @typescript-eslint/no-floating-promises */
 

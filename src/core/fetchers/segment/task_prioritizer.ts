@@ -1,9 +1,10 @@
 import log from "../../../log";
 import arrayFindIndex from "../../../utils/array_find_index";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
+import type {
+  CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller, {
   CancellationError,
-  CancellationSignal,
 } from "../../../utils/task_canceller";
 
 export default class TaskPrioritizer<T> {

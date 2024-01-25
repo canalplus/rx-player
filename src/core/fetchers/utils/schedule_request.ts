@@ -26,10 +26,11 @@ import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 import getTimestamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import { RequestError } from "../../../utils/request";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import CdnPrioritizer from "../cdn_prioritizer";
+import TaskCanceller from "../../../utils/task_canceller";
+import type CdnPrioritizer from "../cdn_prioritizer";
 
 /**
  * Called on a loader error.

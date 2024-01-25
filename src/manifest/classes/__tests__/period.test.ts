@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Adaptation from "../adaptation";
+import type Adaptation from "../adaptation";
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

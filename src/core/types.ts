@@ -8,10 +8,8 @@ import type {
   ISegmentFetcherCreatorBackoffOptions,
 } from "./fetchers";
 import type { ICorePlaybackObservation } from "./main";
-import SegmentBuffersStore, {
-  IBufferedChunk,
-  IBufferType,
-} from "./segment_sinks";
+import type { IBufferedChunk, IBufferType } from "./segment_sinks";
+import type SegmentBuffersStore from "./segment_sinks";
 import type {
   IAdaptationChoice,
   IPausedPlaybackObservation,
