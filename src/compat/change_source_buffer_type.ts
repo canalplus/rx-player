@@ -15,7 +15,7 @@
  */
 
 import log from "../log";
-import { IEventEmitter } from "../utils/event_emitter";
+import type { IEventEmitter } from "../utils/event_emitter";
 
 interface ICompatSourceBufferEvents { updatestart : Event|undefined;
                                       update : Event|undefined;

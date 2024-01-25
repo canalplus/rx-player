@@ -1,5 +1,5 @@
 import isCodecSupported from "../compat/is_codec_supported";
-import { ICodecSupportProber } from "./types";
+import type { ICodecSupportProber } from "./types";
 
 /**
  * Maximum size the `MainCodecSupportProber`'s inner cache can be.

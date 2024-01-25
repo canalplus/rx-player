@@ -6,7 +6,8 @@
  * __NOT__ part of the RxPlayer API.
  */
 
-import DEFAULT_CONFIG, { IDefaultConfig } from "./default_config";
+import type { IDefaultConfig } from "./default_config";
+import DEFAULT_CONFIG from "./default_config";
 import deepMerge from "./utils/deep_merge";
 
 class ConfigHandler {

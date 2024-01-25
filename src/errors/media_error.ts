@@ -15,9 +15,10 @@
  */
 
 import type { ITaggedTrack } from "../manifest";
+import type {
+  IMediaErrorCode } from "./error_codes";
 import {
   ErrorTypes,
-  IMediaErrorCode,
 } from "./error_codes";
 import errorMessage from "./error_message";
 

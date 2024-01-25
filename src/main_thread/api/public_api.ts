@@ -36,32 +36,35 @@ import type {
   IBufferedChunk,
   IBufferType,
 } from "../../core/types";
+import type {
+  IErrorCode,
+  IErrorType } from "../../errors";
 import {
   ErrorCodes,
   ErrorTypes,
   formatError,
-  IErrorCode,
-  IErrorType,
   MediaError,
 } from "../../errors";
+import type {
+  IFeature } from "../../features";
 import features, {
   addFeatures,
-  IFeature,
 } from "../../features";
 import log from "../../log";
-import {
-  getLivePosition,
-  getMaximumSafePosition,
-  getMinimumSafePosition,
-  ManifestMetadataFormat,
-  createRepresentationFilterFromFnString,
+import type {
   IDecipherabilityStatusChangedElement,
   IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
   IPeriodsUpdateResult,
-  IManifest,
+  IManifest } from "../../manifest";
+import {
+  getLivePosition,
+  getMaximumSafePosition,
+  getMinimumSafePosition,
+  ManifestMetadataFormat,
+  createRepresentationFilterFromFnString,
 } from "../../manifest";
 import { MainThreadMessageType } from "../../multithread_types";
 import type {
@@ -104,43 +107,49 @@ import arrayIncludes from "../../utils/array_includes";
 import assert, {
   assertUnreachable,
 } from "../../utils/assert";
-import EventEmitter, {
+import type {
   IEventPayload,
   IListener,
 } from "../../utils/event_emitter";
+import EventEmitter from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import Logger from "../../utils/logger";
+import type Logger from "../../utils/logger";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import objectAssign from "../../utils/object_assign";
 import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
+import type {
+  IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference, {
   createMappedReference,
-  IReadOnlySharedReference,
 } from "../../utils/reference";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 import {
   clearOnStop,
   disposeDecryptionResources,
   getKeySystemConfiguration,
 } from "../decrypt";
 import type { ContentInitializer } from "../init";
-import TracksStore, {
+import type {
   IMediaElementTracksStore,
   ITSPeriodObject,
 } from "../tracks_store";
-import {
+import TracksStore from "../tracks_store";
+import type {
   IParsedLoadVideoOptions,
-  IParsedStartAtOption,
+  IParsedStartAtOption } from "./option_utils";
+import {
   checkReloadOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_utils";
-import PlaybackObserver, {
+import type {
   IPlaybackObservation,
 } from "./playback_observer";
+import PlaybackObserver from "./playback_observer";
 import {
   constructPlayerStateReference,
   emitPlayPauseEvents,

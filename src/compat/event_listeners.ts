@@ -16,16 +16,15 @@
 
 import config from "../config";
 import log from "../log";
-import { IEventEmitter } from "../utils/event_emitter";
+import type { IEventEmitter } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import noop from "../utils/noop";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../utils/reference";
-import { CancellationSignal } from "../utils/task_canceller";
-import {
+import type { IReadOnlySharedReference } from "../utils/reference";
+import SharedReference from "../utils/reference";
+import type { CancellationSignal } from "../utils/task_canceller";
+import type {
   ICompatDocument,
   ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,

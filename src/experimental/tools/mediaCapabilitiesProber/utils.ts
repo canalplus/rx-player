@@ -15,7 +15,7 @@
  */
 
 import arrayFind from "../../../utils/array_find";
-import {
+import type {
   ICapabilities,
   IMediaConfiguration,
 } from "./types";

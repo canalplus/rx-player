@@ -25,23 +25,24 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import { ISegment } from "../../../manifest";
+import type { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import SharedReference from "../../../utils/reference";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller, {
   CancellationError,
-  CancellationSignal,
 } from "../../../utils/task_canceller";
-import {
+import type {
   IQueuedSegment,
   IRepresentationStreamArguments,
   IRepresentationStreamCallbacks,
 } from "./types";
-import DownloadingQueue, {
+import type {
   IDownloadQueueItem,
   IParsedInitSegmentPayload,
   IParsedSegmentPayload,
 } from "./utils/downloading_queue";
+import DownloadingQueue from "./utils/downloading_queue";
 import getBufferStatus from "./utils/get_buffer_status";
 import getSegmentPriority from "./utils/get_segment_priority";
 import pushInitSegment from "./utils/push_init_segment";

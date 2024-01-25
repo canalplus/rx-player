@@ -16,14 +16,16 @@
 
 import arrayFind from "../../../../utils/array_find";
 import log from "../log";
-import {
+import type {
   ICompatibleKeySystem,
   IDisplayConfiguration,
   IMediaConfiguration,
-  IMediaKeySystemConfiguration,
+  IMediaKeySystemConfiguration } from "../types";
+import {
   ProberStatus,
 } from "../types";
-import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
+import type { IBrowserAPIS } from "./probeMediaConfiguration";
+import probeMediaConfiguration from "./probeMediaConfiguration";
 
 /**
  * Probe configuration and get status from result.

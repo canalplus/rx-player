@@ -3,10 +3,11 @@ import assert from "../../utils/assert";
 import globalScope from "../../utils/global_scope";
 import isNode from "../../utils/is_node";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { CancellationSignal } from "../../utils/task_canceller";
-import { ICompatHTMLMediaElement } from "../browser_compatibility_types";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type { ICompatHTMLMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
-import { createCompatibleEventListener, IEventTargetLike } from "../event_listeners";
+import type { IEventTargetLike } from "../event_listeners";
+import { createCompatibleEventListener } from "../event_listeners";
 import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
@@ -18,7 +19,7 @@ import getMozMediaKeysCallbacks, {
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
-import {
+import type {
   ICustomMediaKeys,
 } from "./custom_media_keys/types";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";

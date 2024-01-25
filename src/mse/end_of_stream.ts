@@ -16,9 +16,10 @@
 
 import { events } from "../compat";
 import log from "../log";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../utils/task_canceller";
+import TaskCanceller from "../utils/task_canceller";
 
 const { onRemoveSourceBuffers,
         onSourceOpen,

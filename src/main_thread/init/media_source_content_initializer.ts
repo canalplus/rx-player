@@ -16,73 +16,68 @@
 
 import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
 import config from "../../config";
-import AdaptiveRepresentationSelector, {
+import type {
   IAdaptiveRepresentationSelectorArguments,
   IRepresentationEstimator,
 } from "../../core/adaptive";
-import {
-  ManifestFetcher,
-  SegmentFetcherCreator,
-  IManifestFetcherSettings,
-} from "../../core/fetchers";
+import AdaptiveRepresentationSelector from "../../core/adaptive";
+import type { IManifestFetcherSettings } from "../../core/fetchers";
+import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
 /* eslint-disable-next-line max-len */
 import createContentTimeBoundariesObserver from "../../core/main/utils/create_content_time_boundaries_observer";
 // eslint-disable-next-line max-len
 import DecipherabilityFreezeDetector from "../../core/main/utils/DecipherabilityFreezeDetector";
 // eslint-disable-next-line max-len
 import MainThreadTextInterface from "../../core/main/utils/main_thread_text_displayer_interface";
-import SegmentBuffersStore, {
-  ITextDisplayerInterface,
-} from "../../core/segment_sinks";
-import StreamOrchestrator, {
+import type { ITextDisplayerInterface } from "../../core/segment_sinks";
+import SegmentBuffersStore from "../../core/segment_sinks";
+import type {
   IStreamOrchestratorOptions,
   IStreamOrchestratorCallbacks,
   INeedsBufferFlushPayload,
 } from "../../core/stream";
+import StreamOrchestrator from "../../core/stream";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import {
+import type {
   IManifest,
   IPeriodMetadata,
 } from "../../manifest";
-import MainMediaSourceInterface from "../../mse/main_media_source_interface";
-import {
+import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
+import type {
   IKeySystemOption,
   IPlayerError,
 } from "../../public_types";
 /* eslint-disable-next-line max-len */
-import { ITransportPipelines } from "../../transports";
+import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
-import SyncOrAsync, {
-  ISyncOrAsyncValue,
-} from "../../utils/sync_or_async";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../utils/task_canceller";
-import { PlaybackObserver } from "../api";
-import {
-  getKeySystemConfiguration,
+import SharedReference from "../../utils/reference";
+import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
+import SyncOrAsync from "../../utils/sync_or_async";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
+import type { PlaybackObserver } from "../api";
+import type {
   IContentProtection,
-  IProcessedProtectionData,
-} from "../decrypt";
+  IProcessedProtectionData } from "../decrypt";
+import { getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
-import {
-  ContentInitializer,
-  ITextDisplayerOptions,
-} from "./types";
+import type { ITextDisplayerOptions } from "./types";
+import { ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import createMediaSource from "./utils/create_media_source";
-import getInitialTime, {
+import type {
   IInitialTimeOptions,
 } from "./utils/get_initial_time";
+import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";

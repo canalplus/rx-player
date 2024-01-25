@@ -1,4 +1,4 @@
-import { IFeaturesObject } from "../../features/types";
+import type { IFeaturesObject } from "../../features/types";
 // eslint-disable-next-line max-len
 import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 

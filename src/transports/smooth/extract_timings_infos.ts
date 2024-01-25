@@ -21,8 +21,9 @@ import {
   getTRAF,
 } from "../../parsers/containers/isobmff";
 import type { IChunkTimeInfo } from "../types";
+import type {
+  IISOBMFFBasicSegment } from "./isobmff";
 import {
-  IISOBMFFBasicSegment,
   parseTfrf,
   parseTfxd,
 } from "./isobmff";
