@@ -3,10 +3,11 @@ import type { ITextDisplayer } from "../../../../main_thread/types";
 import type { ITextTrackSegmentData } from "../../../../transports";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
-import {
+import type {
   ICompleteSegmentInfo,
   IPushChunkInfos,
-  ISBOperation,
+  ISBOperation } from "../types";
+import {
   SegmentBuffer,
   SegmentBufferOperation,
 } from "../types";

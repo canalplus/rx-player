@@ -20,35 +20,40 @@ import {
   MediaError,
 } from "../../../errors";
 import log from "../../../log";
-import { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
-import {
+import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
+import type {
   IAdaptation,
-  IPeriod,
+  IPeriod } from "../../../manifest";
+import {
   toTaggedTrack,
 } from "../../../manifest";
-import { ITrackType } from "../../../public_types";
+import type { ITrackType } from "../../../public_types";
 import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
+import type {
+  CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller, {
   CancellationError,
-  CancellationSignal,
 } from "../../../utils/task_canceller";
-import SegmentBuffersStore, {
+import type {
   IBufferType,
   SegmentBuffer,
 } from "../../segment_sinks";
-import AdaptationStream, {
+import SegmentBuffersStore from "../../segment_sinks";
+import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamPlaybackObservation,
 } from "../adaptation";
-import { IRepresentationsChoice } from "../representation";
-import {
+import AdaptationStream from "../adaptation";
+import type { IRepresentationsChoice } from "../representation";
+import type {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
   IPeriodStreamPlaybackObservation,

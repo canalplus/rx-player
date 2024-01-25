@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import type {
+  IHTMLCue } from "../utils";
 import {
-  IHTMLCue,
   areNearlyEqual,
   getCuesAfter,
   getCuesBefore,

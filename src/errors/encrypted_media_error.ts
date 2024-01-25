@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import { IEncryptedMediaErrorKeyStatusObject } from "../public_types";
+import type { IEncryptedMediaErrorKeyStatusObject } from "../public_types";
+import type {
+  IEncryptedMediaErrorCode } from "./error_codes";
 import {
   ErrorTypes,
-  IEncryptedMediaErrorCode,
 } from "./error_codes";
 import errorMessage from "./error_message";
 

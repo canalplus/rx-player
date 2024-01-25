@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
 } from "../../../manifest";
-import { IRange } from "../../../utils/ranges";
-import SegmentInventory, {
+import type { IRange } from "../../../utils/ranges";
+import type {
   IBufferedChunk,
   IBufferedHistoryEntry,
   IChunkContext,
   IInsertedChunkInfos,
 } from "../inventory";
+import SegmentInventory from "../inventory";
 
 /**
  * Class allowing to push segments and remove data to a buffer to be able

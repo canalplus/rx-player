@@ -76,6 +76,7 @@ module.exports = {
         "accessibility": "explicit"
       }
     ],
+    "@typescript-eslint/consistent-type-imports": "error",
     "@typescript-eslint/member-delimiter-style": [
       "error",
       {
@@ -269,6 +270,7 @@ module.exports = {
         "caseInsensitive": true
       }
     }],
+    "import/no-duplicates": "error",
     "jsdoc/check-alignment": "error",
     "jsdoc/no-types": "off",
     "linebreak-style": [
@@ -296,7 +298,6 @@ module.exports = {
     "no-console": "error",
     "no-debugger": "error",
     "no-duplicate-case": "error",
-    "no-duplicate-imports": "error",
     "no-empty": "error",
     "no-eval": "error",
     "no-fallthrough": "error",

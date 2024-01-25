@@ -23,7 +23,7 @@ import type {
 import assert from "../../../../../utils/assert";
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type { IEMSG } from "../../../../containers/isobmff";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import {
   createDashUrlDetokenizer,

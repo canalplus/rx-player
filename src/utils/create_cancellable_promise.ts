@@ -1,4 +1,4 @@
-import {
+import type {
   CancellationError,
   CancellationSignal,
 } from "./task_canceller";

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import type {
+  ICompatVTTCue } from "../../../../compat/index";
 import {
-  ICompatVTTCue,
   makeVTTCue,
 } from "../../../../compat/index";
 

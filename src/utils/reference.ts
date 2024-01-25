@@ -16,7 +16,7 @@
 
 import arrayFindIndex from "./array_find_index";
 import noop from "./noop";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 /**
  * A value behind a shared reference, meaning that any update to its value from

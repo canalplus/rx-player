@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-import {
+import type {
   RequestError,
   ISerializedRequestError,
 } from "../utils/request";
+import type {
+  INetworkErrorCode,
+  INetworkErrorType } from "./error_codes";
 import {
   ErrorTypes,
-  INetworkErrorCode,
-  INetworkErrorType,
   NetworkErrorTypes,
 } from "./error_codes";
 import errorMessage from "./error_message";

@@ -1,7 +1,8 @@
 import assert from "../../../utils/assert";
-import {
+import type {
   IHTMLCue,
-  ICuesGroup,
+  ICuesGroup } from "./utils";
+import {
   areNearlyEqual,
   getCuesAfter,
   getCuesBefore,
