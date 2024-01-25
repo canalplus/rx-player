@@ -142,11 +142,12 @@ export default class PlaybackObserver {
     this._pendingSeek = null;
 
     const onLoadedMetadata = () => {
-      if (this._pendingSeek !== null) {
-        const positionToSeekTo = this._pendingSeek;
-        this._pendingSeek = null;
-        this._actuallySetCurrentTime(positionToSeekTo);
-      }
+      setTimeout(() => {
+        if (this._pendingSeek !== null) {
+          const positionToSeekTo = this._pendingSeek;
+          this._pendingSeek = null;
+          this._actuallySetCurrentTime(positionToSeekTo);
+        }}, 0);
     };
     mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
     this._canceller.signal.register(() => {
