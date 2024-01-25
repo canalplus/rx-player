@@ -16,8 +16,8 @@
 
 import globalScope from "../../../utils/global_scope";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
-import { ICustomMediaKeys } from "./types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICustomMediaKeys } from "./types";
 
 interface IMozMediaKeysConstructor {
   new(keySystem: string): ICustomMediaKeys;

@@ -17,13 +17,14 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import {
+import type {
   IManifest,
   IAdaptation,
-  getLoggableSegmentId,
   ISegment,
   IPeriod,
-  IRepresentation,
+  IRepresentation } from "../../../manifest";
+import {
+  getLoggableSegmentId,
 } from "../../../manifest";
 import type { ICdnMetadata } from "../../../parsers/manifest";
 import type { IPlayerError } from "../../../public_types";
@@ -40,9 +41,10 @@ import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getTimestamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
+import type {
+  CancellationSignal } from "../../../utils/task_canceller";
 import {
   CancellationError,
-  CancellationSignal,
 } from "../../../utils/task_canceller";
 import type {
   IMetricsCallbackPayload,
@@ -51,7 +53,7 @@ import type {
   IRequestProgressCallbackPayload,
 } from "../../adaptive";
 import type { IBufferType } from "../../segment_sinks";
-import CdnPrioritizer from "../cdn_prioritizer";
+import type CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
 import { scheduleRequestWithCdns } from "../utils/schedule_request";
 import InitializationSegmentCache from "./initialization_segment_cache";

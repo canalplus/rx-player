@@ -17,7 +17,7 @@
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
 import getMonotonicTimeStamp from "../monotonic_timestamp";
-import {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../task_canceller";

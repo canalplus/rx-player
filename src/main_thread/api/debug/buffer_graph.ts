@@ -1,5 +1,5 @@
-import { IBufferedChunk } from "../../../core/types";
-import { IRepresentation } from "../../../manifest";
+import type { IBufferedChunk } from "../../../core/types";
+import type { IRepresentation } from "../../../manifest";
 
 const BUFFER_WIDTH_IN_SECONDS = 30 * 60;
 

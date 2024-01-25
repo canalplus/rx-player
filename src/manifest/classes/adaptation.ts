@@ -28,9 +28,10 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
-import Representation, {
+import type {
   ICodecSupportList,
 } from "./representation";
+import Representation from "./representation";
 
 /**
  * Normalized Adaptation structure.

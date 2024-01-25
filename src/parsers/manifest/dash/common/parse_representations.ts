@@ -31,9 +31,10 @@ import type {
 } from "../node_parser_types";
 import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs";
 import { getWEBMHDRInformation } from "./get_hdr_information";
-import parseRepresentationIndex, {
+import type {
   IRepresentationIndexContext,
 } from "./parse_representation_index";
+import parseRepresentationIndex from "./parse_representation_index";
 import resolveBaseURLs from "./resolve_base_urls";
 
 /**

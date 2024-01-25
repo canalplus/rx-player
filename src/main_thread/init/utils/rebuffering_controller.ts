@@ -18,10 +18,11 @@ import config from "../../../config";
 import type { IBufferType } from "../../../core/types";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
+import type {
+  IManifestMetadata,
+  IPeriodMetadata } from "../../../manifest";
 import {
   getPeriodAfter,
-  IManifestMetadata,
-  IPeriodMetadata,
 } from "../../../manifest";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";

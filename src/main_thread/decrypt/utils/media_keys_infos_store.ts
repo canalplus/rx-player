@@ -20,7 +20,7 @@ import type {
   IEmeApiImplementation,
 } from "../../../compat/eme";
 import type { IKeySystemOption } from "../../../public_types";
-import LoadedSessionsStore from "./loaded_sessions_store";
+import type LoadedSessionsStore from "./loaded_sessions_store";
 
 /** DRM-related state that can be associated to a single HTMLMediaElement. */
 export interface IMediaElementMediaKeysInfos {

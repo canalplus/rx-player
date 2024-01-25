@@ -17,14 +17,11 @@
 import EventEmitter from "../../../utils/event_emitter";
 import TaskCanceller from "../../../utils/task_canceller";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
-import {
-  MSMediaKeysConstructor,
-  MSMediaKeys,
-  MSMediaKeySession,
-} from "./ms_media_keys_constructor";
-import {
+import type { MSMediaKeys, MSMediaKeySession } from "./ms_media_keys_constructor";
+import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
+import type {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,

@@ -18,18 +18,20 @@ import {
 } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import {
+import type {
   ICodecSupportList,
-  IManifestMetadata,
+  IManifestMetadata } from "../../manifest";
+import {
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
-import {
+import type {
   ICreateMediaSourceWorkerMessage,
   ISentError,
-  IWorkerMessage,
+  IWorkerMessage } from "../../multithread_types";
+import {
   MainThreadMessageType,
   WorkerMessageType,
 } from "../../multithread_types";
@@ -46,31 +48,36 @@ import assert, {
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
+import type {
+  CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, {
   CancellationError,
-  CancellationSignal,
 } from "../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver, PlaybackObserver } from "../api";
+import type { IReadOnlyPlaybackObserver, PlaybackObserver } from "../api";
+import type {
+  IContentProtection } from "../decrypt";
 import {
   ContentDecryptorState,
   getKeySystemConfiguration,
-  IContentProtection,
 } from "../decrypt";
-import { ITextDisplayer } from "../text_displayer";
+import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
+import type {
+  ITextDisplayerOptions } from "./types";
 import {
   ContentInitializer,
-  ITextDisplayerOptions,
 } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import { resetMediaElement } from "./utils/create_media_source";
-import getInitialTime, {
+import type {
   IInitialTimeOptions,
 } from "./utils/get_initial_time";
+import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import RebufferingController from "./utils/rebuffering_controller";

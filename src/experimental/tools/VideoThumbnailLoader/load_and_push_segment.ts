@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {
+import type {
   ISegmentFetcher,
   ISegmentLoaderContent,
 } from "../../../core/fetchers/segment/segment_fetcher";
 import log from "../../../log";
-import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * @param {Object} segmentInfo

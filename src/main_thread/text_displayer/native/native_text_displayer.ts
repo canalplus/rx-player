@@ -1,13 +1,15 @@
+import type {
+  ICompatTextTrack } from "../../../compat";
 import {
   addTextTrack,
-  ICompatTextTrack,
 } from "../../../compat";
 import removeCue from "../../../compat/remove_cue";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";
+import type {
+  IRange } from "../../../utils/ranges";
 import {
   convertToRanges,
-  IRange,
 } from "../../../utils/ranges";
 import ManualTimeRanges from "../manual_time_ranges";
 import type { ITextDisplayer, ITextDisplayerData } from "../types";

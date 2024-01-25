@@ -16,7 +16,7 @@
 
 import { areSameContent } from "../../../manifest";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { IChunkContext } from "./types";
+import type { IChunkContext } from "./types";
 
 /**
  * Entry of a `BufferedHistory`, added when the initial buffered range of a

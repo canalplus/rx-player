@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ICustomMediaKeys } from "./custom_media_keys";
+import type { ICustomMediaKeys } from "./custom_media_keys";
 
 // MediaKeySystemAccess implementation
 export interface ICustomMediaKeySystemAccess {

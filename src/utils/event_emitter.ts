@@ -15,7 +15,7 @@
  */
 
 import isNullOrUndefined from "./is_null_or_undefined";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 export interface IEventEmitter<T> {
   addEventListener<TEventName extends keyof T>(evt : TEventName,

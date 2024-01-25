@@ -1,4 +1,4 @@
-import Manifest, {
+import type {
   IDecipherabilityUpdateElement,
   ICodecSupportList,
   Period,
@@ -8,7 +8,9 @@ import Manifest, {
   IPeriodsUpdateResult,
   IRepresentationIndex,
   IMetaPlaylistPrivateInfos,
-  IPrivateInfos,
+  IPrivateInfos } from "./classes";
+import type Manifest from "./classes";
+import {
   areSameContent,
   getLoggableSegmentId,
 } from "./classes";

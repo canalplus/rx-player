@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import LoadedSessionsStore from "./loaded_sessions_store";
+import type LoadedSessionsStore from "./loaded_sessions_store";
 
 /**
  * Close sessions from the loadedSessionsStore to allow at maximum `limit`

@@ -5,13 +5,15 @@ import {
 import config from "../../../config";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";
+import type {
+  IRange } from "../../../utils/ranges";
 import {
   convertToRanges,
-  IRange,
 } from "../../../utils/ranges";
-import TaskCanceller, {
+import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
 import ManualTimeRanges from "../manual_time_ranges";
 import type {
   ITextDisplayer,

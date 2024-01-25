@@ -20,7 +20,7 @@
  */
 
 import { clearElementSrc } from "../../compat";
-import { MediaError } from "../../errors";
+import type { MediaError } from "../../errors";
 import log from "../../log";
 import type {
   IKeySystemOption,
@@ -29,9 +29,10 @@ import type {
 import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 import type { PlaybackObserver } from "../api";
 import { ContentInitializer } from "./types";

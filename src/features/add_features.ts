@@ -16,7 +16,7 @@
 
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import features from "./features_object";
-import { IFeature } from "./types";
+import type { IFeature } from "./types";
 
 /**
  * @param {Array.<Object>} featureFuncList

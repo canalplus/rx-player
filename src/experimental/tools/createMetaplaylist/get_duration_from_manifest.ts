@@ -15,7 +15,7 @@
  */
 
 import config from "../../../config";
-import { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
+import type { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import request from "../../../utils/request/xhr";
 import TaskCanceller from "../../../utils/task_canceller";

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICompatVTTCue } from "../../../../compat/index";
+import type { ICompatVTTCue } from "../../../../compat/index";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 

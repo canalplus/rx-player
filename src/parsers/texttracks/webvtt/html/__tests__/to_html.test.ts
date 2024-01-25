@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { IStyleElements } from "../parse_style_block";
+import type { IStyleElements } from "../parse_style_block";
 
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {

@@ -16,8 +16,9 @@
 
 import config from "../../../config";
 import log from "../../../log";
+import type {
+  IManifestMetadata } from "../../../manifest";
 import {
-  IManifestMetadata,
   getLivePosition,
   getMaximumSafePosition,
   getMinimumSafePosition,

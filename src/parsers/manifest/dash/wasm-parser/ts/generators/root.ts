@@ -18,7 +18,7 @@ import noop from "../../../../../../utils/noop";
 import type {
   IMPDIntermediateRepresentation,
 } from "../../../node_parser_types";
-import ParsersStack from "../parsers_stack";
+import type ParsersStack from "../parsers_stack";
 import { TagName } from "../types";
 import {
   generateMPDAttrParser,

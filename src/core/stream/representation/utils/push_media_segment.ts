@@ -15,20 +15,20 @@
  */
 
 import config from "../../../../config";
-import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
-import {
+import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import { ISegmentParserParsedMediaChunk } from "../../../../transports";
+import type { ISegmentParserParsedMediaChunk } from "../../../../transports";
 import objectAssign from "../../../../utils/object_assign";
-import { IReadOnlySharedReference } from "../../../../utils/reference";
-import { CancellationSignal } from "../../../../utils/task_canceller";
-import { SegmentBuffer } from "../../../segment_sinks";
-import {
+import type { IReadOnlySharedReference } from "../../../../utils/reference";
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type { SegmentBuffer } from "../../../segment_sinks";
+import type {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
 } from "../types";

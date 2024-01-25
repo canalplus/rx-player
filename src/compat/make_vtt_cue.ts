@@ -17,7 +17,7 @@
 import log from "../log";
 import globalScope from "../utils/global_scope";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
-import { ICompatVTTCue } from "./browser_compatibility_types";
+import type { ICompatVTTCue } from "./browser_compatibility_types";
 
 /**
  * Creates a cue using the best platform-specific interface available.

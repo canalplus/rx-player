@@ -15,7 +15,7 @@
  */
 
 import createCancellablePromise from "./create_cancellable_promise";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 /**
  * Wait the given `delay`, resolving the Promise when finished.

@@ -21,9 +21,9 @@ import type {
   IRepresentationMetadata,
 } from "../../manifest";
 import type { IPlayerError } from "../../public_types";
-import InitDataValuesContainer from "./utils/init_data_values_container";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
-import PersistentSessionsStore from "./utils/persistent_sessions_store";
+import type InitDataValuesContainer from "./utils/init_data_values_container";
+import type LoadedSessionsStore from "./utils/loaded_sessions_store";
+import type PersistentSessionsStore from "./utils/persistent_sessions_store";
 
 /** Events sent by the `ContentDecryptor`, in a `{ event: payload }` format. */
 export interface IContentDecryptorEvent {

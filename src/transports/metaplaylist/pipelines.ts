@@ -16,14 +16,15 @@
 
 import config from "../../config";
 import features from "../../features";
-import {
+import type {
   IMetaPlaylistPrivateInfos,
   ISegment,
 } from "../../manifest";
 import Manifest from "../../manifest/classes";
-import parseMetaPlaylist, {
+import type {
   IParserResponse as IMPLParserResponse,
 } from "../../parsers/manifest/metaplaylist";
+import parseMetaPlaylist from "../../parsers/manifest/metaplaylist";
 import type {
   ICdnMetadata,
   IParsedManifest,

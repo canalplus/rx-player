@@ -19,9 +19,10 @@ import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
 import parseStyleBlocks from "./parse_style_block";
-import toHTML, {
+import type {
   IVTTHTMLCue,
 } from "./to_html";
+import toHTML from "./to_html";
 
 /**
  * Parse WebVTT from text. Returns an array with:

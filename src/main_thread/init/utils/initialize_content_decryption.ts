@@ -1,21 +1,13 @@
 import { EncryptedMediaError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
-import {
-  IKeySystemOption,
-  IPlayerError,
-} from "../../../public_types";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import {
-  ContentDecryptorState,
-  IContentProtection,
-  IProcessedProtectionData,
-} from "../../decrypt";
+import type { IKeySystemOption, IPlayerError } from "../../../public_types";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
+import TaskCanceller from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import { ContentDecryptorState } from "../../decrypt";
+import type { IContentProtection, IProcessedProtectionData } from "../../decrypt";
 
 /**
  * Initialize content decryption capabilities on the given `HTMLMediaElement`.

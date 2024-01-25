@@ -19,7 +19,7 @@ import cancellableSleep from "../../utils/cancellable_sleep";
 import TaskCanceller, {
   CancellationError,
 } from "../../utils/task_canceller";
-import { ICustomMediaKeySession } from "./custom_media_keys";
+import type { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
  * Close the given `MediaKeySession` and returns a Promise resolving when the

@@ -1,5 +1,5 @@
 import log from "../../log";
-import { IMainThreadMessage } from "../../multithread_types";
+import type { IMainThreadMessage } from "../../multithread_types";
 
 export default function sendMessage(
   worker : Worker,

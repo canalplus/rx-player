@@ -18,12 +18,12 @@ import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import Manifest from "../../../manifest/classes";
-import {
+import type {
   IInitialManifest,
   ILoadedManifestFormat,
   IPlayerError,
 } from "../../../public_types";
-import {
+import type {
   IRequestedData,
   ITransportManifestPipeline,
   ITransportPipelines,
@@ -33,8 +33,9 @@ import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller from "../../../utils/task_canceller";
 import errorSelector from "../utils/error_selector";
+import type {
+  IBackoffSettings } from "../utils/schedule_request";
 import {
-  IBackoffSettings,
   scheduleRequestPromise,
 } from "../utils/schedule_request";
 

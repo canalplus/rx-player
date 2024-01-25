@@ -21,7 +21,7 @@
  * But rewritten to a more rx-player style.
  */
 
-import { ITTParameters } from "./get_parameters";
+import type { ITTParameters } from "./get_parameters";
 import {
   REGXP_TIME_COLON,
   REGXP_TIME_COLON_FRAMES,

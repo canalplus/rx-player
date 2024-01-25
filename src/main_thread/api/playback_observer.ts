@@ -21,12 +21,14 @@ import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import { getBufferedTimeRange } from "../../utils/ranges";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
-import TaskCanceller, {
+import SharedReference from "../../utils/reference";
+import type {
   CancellationSignal,
 } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 
 /**
  * HTMLMediaElement Events for which playback observations are calculated and

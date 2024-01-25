@@ -15,9 +15,9 @@
  */
 
 import features from "../../../features";
-import { IParsedRepresentation } from "../../../parsers/manifest";
+import type { IParsedRepresentation } from "../../../parsers/manifest";
 import Representation from "../representation";
-import { IRepresentationIndex } from "../representation_index";
+import type { IRepresentationIndex } from "../representation_index";
 
 const minimalIndex : IRepresentationIndex = {
   getInitSegment() {

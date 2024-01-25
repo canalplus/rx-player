@@ -16,13 +16,14 @@
 
 import config from "../../../../config";
 import log from "../../../../log";
-import {
+import type {
   IManifest,
   IAdaptation,
-  areSameContent,
   ISegment,
   IPeriod,
-  IRepresentation,
+  IRepresentation } from "../../../../manifest";
+import {
+  areSameContent,
 } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
 import type {

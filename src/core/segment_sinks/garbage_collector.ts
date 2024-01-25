@@ -16,11 +16,12 @@
 
 import log from "../../log";
 import type { IReadOnlyPlaybackObserver } from "../../main_thread/types";
-import { getInnerAndOuterRanges, IRange } from "../../utils/ranges";
+import type { IRange } from "../../utils/ranges";
+import { getInnerAndOuterRanges } from "../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IStreamOrchestratorPlaybackObservation } from "../stream";
-import { SegmentBuffer } from "./implementations";
+import type { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 
 /**
  * Remove buffer around wanted time, considering a margin around

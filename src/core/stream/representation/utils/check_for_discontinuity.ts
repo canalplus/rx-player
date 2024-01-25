@@ -15,14 +15,14 @@
  */
 
 import log from "../../../../log";
-import {
+import type {
   IManifest,
   IAdaptation,
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import { IBufferedChunk } from "../../../segment_sinks";
-import { IBufferDiscontinuity } from "../types";
+import type { IBufferedChunk } from "../../../segment_sinks";
+import type { IBufferDiscontinuity } from "../types";
 
 /**
  * Check if there is a soon-to-be-encountered discontinuity in the buffer that

@@ -26,10 +26,11 @@ import type {
 } from "../../core/types";
 import { MediaError } from "../../errors";
 import log from "../../log";
-import {
+import type {
   IAdaptationMetadata,
   IManifestMetadata,
-  IPeriodMetadata,
+  IPeriodMetadata } from "../../manifest";
+import {
   getSupportedAdaptations,
   toAudioTrack,
   toTextTrack,

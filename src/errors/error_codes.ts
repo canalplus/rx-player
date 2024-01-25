@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { IRequestErrorType, RequestErrorTypes } from "../utils/request";
+import type { IRequestErrorType } from "../utils/request";
+import { RequestErrorTypes } from "../utils/request";
 
 export type IErrorType = "NETWORK_ERROR" |
                          "MEDIA_ERROR" |

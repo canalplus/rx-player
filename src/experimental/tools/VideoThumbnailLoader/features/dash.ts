@@ -15,7 +15,7 @@
  */
 
 import dash from "../../../../transports/dash";
-import { ILoaders } from "../types";
+import type { ILoaders } from "../types";
 
 export default function addDashFeature(loaders: ILoaders): void {
   const transports = dash({ lowLatencyMode: false });

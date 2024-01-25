@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+import type {
+  IFeature } from "../../features";
 import {
   addFeatures,
-  IFeature,
 } from "../../features";
 import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
 

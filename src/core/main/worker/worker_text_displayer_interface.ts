@@ -1,11 +1,12 @@
 import log from "../../../log";
 import type { ITextDisplayerData } from "../../../main_thread/types";
-import {
+import type {
   IRemoveTextDataWorkerMessage,
   IStopTextDisplayerWorkerMessage,
   IResetTextDisplayerWorkerMessage,
+  IPushTextDataWorkerMessage } from "../../../multithread_types";
+import {
   WorkerMessageType,
-  IPushTextDataWorkerMessage,
 } from "../../../multithread_types";
 import type { IRange } from "../../../utils/ranges";
 import { CancellationError } from "../../../utils/task_canceller";

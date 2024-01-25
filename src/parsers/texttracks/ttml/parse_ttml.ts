@@ -17,11 +17,13 @@
 import arrayFind from "../../../utils/array_find";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import objectAssign from "../../../utils/object_assign";
-import getParameters, { ITTParameters } from "./get_parameters";
+import type { ITTParameters } from "./get_parameters";
+import getParameters from "./get_parameters";
+import type {
+  IStyleObject } from "./get_styling";
 import {
   getStylingAttributes,
   getStylingFromElement,
-  IStyleObject,
 } from "./get_styling";
 import resolveStylesInheritance from "./resolve_styles_inheritance";
 import {

@@ -27,9 +27,10 @@ import {
   checkDiscontinuity,
   getIndexSegmentEnd,
 } from "../utils/index_helpers";
-import SharedSmoothSegmentTimeline, {
+import type {
   IIndexSegment,
 } from "./shared_smooth_segment_timeline";
+import type SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
 /**

@@ -27,16 +27,17 @@ import assert from "../../../../../../utils/assert";
 import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp";
 import type { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
+import type {
+  IIndexSegment } from "../../../../utils/index_helpers";
 import {
   checkDiscontinuity,
   fromIndexTime,
   getIndexSegmentEnd,
-  IIndexSegment,
   toIndexTime,
 } from "../../../../utils/index_helpers";
 import updateSegmentTimeline from "../../../../utils/update_segment_timeline";
 import type { ISegmentTimelineElement } from "../../../node_parser_types";
-import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
+import type ManifestBoundsCalculator from "../../manifest_bounds_calculator";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import { constructRepresentationUrl } from "../tokens";

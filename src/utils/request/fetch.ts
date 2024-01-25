@@ -18,7 +18,7 @@ import log from "../../log";
 import globalScope from "../global_scope";
 import isNullOrUndefined from "../is_null_or_undefined";
 import getMonotonicTimeStamp from "../monotonic_timestamp";
-import {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../task_canceller";

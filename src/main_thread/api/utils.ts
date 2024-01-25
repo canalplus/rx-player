@@ -17,17 +17,19 @@
 import config from "../../config";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
-import SharedReference, {
+import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type {
   ContentInitializer,
   IStallingSituation,
 } from "../init";
-import {
+import type {
   IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
+  IReadOnlyPlaybackObserver } from "./playback_observer";
+import {
   SeekingState,
 } from "./playback_observer";
 

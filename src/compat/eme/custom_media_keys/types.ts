@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IEventEmitter } from "../../../utils/event_emitter";
+import type { IEventEmitter } from "../../../utils/event_emitter";
 
 export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEvents> {
   // Attributes

@@ -16,18 +16,19 @@
 
 import log from "../../../../log";
 import { getLoggableSegmentId } from "../../../../manifest";
-import {
+import type {
   IMediaSourceInterface,
   ISourceBufferInterface,
   SourceBufferType,
 } from "../../../../mse";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import { IRange } from "../../../../utils/ranges";
-import {
+import type { IRange } from "../../../../utils/ranges";
+import type {
   ICompleteSegmentInfo,
   IPushChunkInfos,
   IPushedChunkData,
-  ISBOperation,
+  ISBOperation } from "../types";
+import {
   SegmentBuffer,
   SegmentBufferOperation,
 } from "../types";

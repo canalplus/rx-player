@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import type {
+  IMediaConfiguration } from "../types";
 import {
-  IMediaConfiguration,
   ProberStatus,
 } from "../types";
 

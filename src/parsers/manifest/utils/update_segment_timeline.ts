@@ -16,9 +16,10 @@
 
 import { MediaError } from "../../../errors";
 import log from "../../../log";
+import type {
+  IIndexSegment } from "./index_helpers";
 import {
   getIndexSegmentEnd,
-  IIndexSegment,
 } from "./index_helpers";
 
 /**

@@ -19,7 +19,7 @@ import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import { utf8ToStr } from "../../../utils/string_parsing";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import {
+import type {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,

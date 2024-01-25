@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+import type {
+  ICustomMediaKeys,
+  ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, {
   getInitData,
-  ICustomMediaKeys,
-  ICustomMediaKeySystemAccess,
 } from "../../compat/eme";
 import config from "../../config";
 import {
@@ -45,17 +46,19 @@ import attachMediaKeys from "./attach_media_keys";
 import createOrLoadSession from "./create_or_load_session";
 import type { IMediaKeysInfos } from "./get_media_keys";
 import initMediaKeys from "./init_media_keys";
+import type { IKeyUpdateValue } from "./session_events_listener";
 import SessionEventsListener, {
-  BlacklistedSessionError, IKeyUpdateValue,
+  BlacklistedSessionError,
 } from "./session_events_listener";
 import setServerCertificate from "./set_server_certificate";
-import {
+import type {
   IProtectionData,
   IMediaKeySessionStores,
-  MediaKeySessionLoadingType,
   IProcessedProtectionData,
+  IContentDecryptorEvent } from "./types";
+import {
+  MediaKeySessionLoadingType,
   ContentDecryptorState,
-  IContentDecryptorEvent,
 } from "./types";
 import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
@@ -65,7 +68,7 @@ import {
   areAllKeyIdsContainedIn,
   areSomeKeyIdsContainedIn,
 } from "./utils/key_id_comparison";
-import KeySessionRecord from "./utils/key_session_record";
+import type KeySessionRecord from "./utils/key_session_record";
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able

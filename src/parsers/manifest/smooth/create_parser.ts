@@ -41,10 +41,11 @@ import {
   getVideoCodecs,
 } from "./get_codecs";
 import parseCNodes from "./parse_C_nodes";
-import parseProtectionNode, {
+import type {
   IContentProtectionSmooth,
   IKeySystem,
 } from "./parse_protection_node";
+import parseProtectionNode from "./parse_protection_node";
 import RepresentationIndex from "./representation_index";
 import SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
 import parseBoolean from "./utils/parseBoolean";

@@ -19,7 +19,8 @@ import {
   applyDefaultTTMLStyle,
   shouldApplyDefaultTTMLStyle,
 } from "./apply_default_ttml_paragraph_style";
-import parseCue, { ITTMLHTMLCue } from "./parse_cue";
+import type { ITTMLHTMLCue } from "./parse_cue";
+import parseCue from "./parse_cue";
 
 /**
  * Create array of objects which should represent the given TTML text track.
