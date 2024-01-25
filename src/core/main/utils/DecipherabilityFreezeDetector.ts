@@ -17,12 +17,12 @@
 import log from "../../../log";
 import type { IFreezingStatus, IRebufferingStatus } from "../../../main_thread/types";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import type SegmentBuffersStore from "../../segment_sinks";
+import type SegmentSinksStore from "../../segment_sinks";
 
 export default class DecipherabilityFreezeDetector {
 
   /** Emit the current playback conditions */
-  private _segmentBuffersStore : SegmentBuffersStore;
+  private _segmentSinksStore : SegmentSinksStore;
 
   /**
    * If set to something else than `null`, this is the monotonically-raising
@@ -36,8 +36,8 @@ export default class DecipherabilityFreezeDetector {
    */
   private _currentFreezeTimestamp : number | null;
 
-  constructor(segmentBuffersStore : SegmentBuffersStore) {
-    this._segmentBuffersStore = segmentBuffersStore;
+  constructor(segmentSinksStore : SegmentSinksStore) {
+    this._segmentSinksStore = segmentSinksStore;
     this._currentFreezeTimestamp = null;
   }
 
@@ -92,8 +92,8 @@ export default class DecipherabilityFreezeDetector {
       (rebufferingForTooLong || frozenForTooLong) &&
       getMonotonicTimeStamp() - this._currentFreezeTimestamp > 4000
     ) {
-      const statusAudio = this._segmentBuffersStore.getStatus("audio");
-      const statusVideo = this._segmentBuffersStore.getStatus("video");
+      const statusAudio = this._segmentSinksStore.getStatus("audio");
+      const statusVideo = this._segmentSinksStore.getStatus("video");
       let hasOnlyDecipherableSegments = true;
       let isClear = true;
       for (const status of [statusAudio, statusVideo]) {

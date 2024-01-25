@@ -14,7 +14,7 @@ import type { IRepresentationEstimator } from "../../adaptive";
 import type { SegmentFetcherCreator } from "../../fetchers";
 import type {
   IBufferType,
-  SegmentBuffer,
+  SegmentSink,
 } from "../../segment_sinks";
 import type {
   IRepresentationsChoice,
@@ -124,7 +124,7 @@ export interface INeedsBufferFlushPayload {
 export interface IAdaptationStreamPlaybackObservation extends
   IRepresentationStreamPlaybackObservation {
     /**
-     * For the current SegmentBuffer, difference in seconds between the next position
+     * For the current SegmentSink, difference in seconds between the next position
      * where no segment data is available and the current position.
      */
     bufferGap : number;
@@ -147,12 +147,12 @@ export interface IAdaptationStreamArguments {
   /** Estimate the right Representation to play. */
   representationEstimator : IRepresentationEstimator;
   /** SourceBuffer wrapper - needed to push media segments. */
-  segmentBuffer : SegmentBuffer;
+  segmentSink : SegmentSink;
   /** Module used to fetch the wanted media segments. */
   segmentFetcherCreator : SegmentFetcherCreator;
   /**
    * "Buffer goal" wanted, or the ideal amount of time ahead of the current
-   * position in the current SegmentBuffer. When this amount has been reached
+   * position in the current SegmentSink. When this amount has been reached
    * this AdaptationStream won't try to download new segments.
    */
   wantedBufferAhead : IReadOnlySharedReference<number>;

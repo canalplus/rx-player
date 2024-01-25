@@ -15,7 +15,7 @@
  */
 
 /* eslint-disable max-len */
-import type { SegmentBuffer } from "../core/segment_sinks";
+import type { SegmentSink } from "../core/segment_sinks";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
 import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer";
@@ -45,11 +45,11 @@ import type { CancellationSignal } from "../utils/task_canceller";
  * tracks should be synced to.
  * @param {HTMLElement} textTrackElement - The parent `HTMLElement` where all
  * text tracks-related `HTMLElement` should be put.
- * @returns {Object} - `SegmentBuffer` implementation.
+ * @returns {Object} - `SegmentSink` implementation.
  */
 export type IHTMLTextTracksBuffer =
   new(mediaElement : HTMLMediaElement,
-      textTrackElement : HTMLElement) => SegmentBuffer;
+      textTrackElement : HTMLElement) => SegmentSink;
 
 /**
  * Function allowing to implement a text track rendered by displaying them
@@ -58,10 +58,10 @@ export type IHTMLTextTracksBuffer =
  * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` the text
  * tracks should be synced to. The `<track>` `HTMLElement` on which the text
  * tracks will be displayed will also be linked to this `HTMLMediaElement`.
- * @returns {Object} - `SegmentBuffer` implementation.
+ * @returns {Object} - `SegmentSink` implementation.
  */
 export type INativeTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement) => SegmentBuffer;
+  new(mediaElement : HTMLMediaElement) => SegmentSink;
 
 export type IDashJsParser = (
   document: Document,

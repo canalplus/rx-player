@@ -8,15 +8,15 @@ import type {
   IPushChunkInfos,
   ISBOperation } from "../types";
 import {
-  SegmentBuffer,
-  SegmentBufferOperation,
+  SegmentSink,
+  SegmentSinkOperation,
 } from "../types";
 
 /**
- * SegmentBuffer implementation to add text data, most likely subtitles.
- * @class TextSegmentBuffer
+ * SegmentSink implementation to add text data, most likely subtitles.
+ * @class TextSegmentSink
  */
-export default class TextSegmentBuffer extends SegmentBuffer {
+export default class TextSegmentSink extends SegmentSink {
   readonly bufferType : "text";
 
   private _sender : ITextDisplayerInterface;
@@ -30,7 +30,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
    * @param {Object} textDisplayerSender
    */
   constructor(textDisplayerSender : ITextDisplayerInterface) {
-    log.debug("HTSB: Creating TextSegmentBuffer");
+    log.debug("HTSB: Creating TextSegmentSink");
     super();
     this.bufferType = "text";
     this._sender = textDisplayerSender;
@@ -42,7 +42,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
    * @param {string} uniqueId
    */
   public declareInitSegment(uniqueId : string): void {
-    log.warn("HTSB: Declaring initialization segment for  Text SegmentBuffer",
+    log.warn("HTSB: Declaring initialization segment for  Text SegmentSink",
              uniqueId);
   }
 
@@ -50,12 +50,12 @@ export default class TextSegmentBuffer extends SegmentBuffer {
    * @param {string} uniqueId
    */
   public freeInitSegment(uniqueId : string): void {
-    log.warn("HTSB: Freeing initialization segment for  Text SegmentBuffer",
+    log.warn("HTSB: Freeing initialization segment for  Text SegmentSink",
              uniqueId);
   }
 
   /**
-   * Push text segment to the TextSegmentBuffer.
+   * Push text segment to the TextSegmentSink.
    * @param {Object} infos
    * @returns {Promise}
    */
@@ -67,7 +67,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
       ...data,
       chunk: data.chunk,
     });
-    this._addToOperationQueue(promise, { type: SegmentBufferOperation.Push,
+    this._addToOperationQueue(promise, { type: SegmentSinkOperation.Push,
                                          value: infos });
     const ranges = await promise;
     if (infos.inventoryInfos !== null) {
@@ -87,7 +87,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
    */
   public async removeBuffer(start : number, end : number) : Promise<IRange[]> {
     const promise = this._sender.remove(start, end);
-    this._addToOperationQueue(promise, { type: SegmentBufferOperation.Remove,
+    this._addToOperationQueue(promise, { type: SegmentSinkOperation.Remove,
                                          value: { start, end } });
     const ranges = await promise;
     this._segmentInventory.synchronizeBuffered(ranges);
@@ -103,7 +103,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
       // Only validate after preceding operation
       const { promise } = this._pendingOperations[this._pendingOperations.length - 1];
       this._addToOperationQueue(promise, {
-        type: SegmentBufferOperation.SignalSegmentComplete,
+        type: SegmentSinkOperation.SignalSegmentComplete,
         value: infos,
       });
       try {
@@ -123,7 +123,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
   }
 
   public dispose() : void {
-    log.debug("HTSB: Disposing TextSegmentBuffer");
+    log.debug("HTSB: Disposing TextSegmentSink");
     this._sender.reset();
   }
 
@@ -143,7 +143,7 @@ export default class TextSegmentBuffer extends SegmentBuffer {
   }
 }
 
-/** Data of chunks that should be pushed to the HTMLTextSegmentBuffer. */
+/** Data of chunks that should be pushed to the HTMLTextSegmentSink. */
 export interface ITextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
   data : string;
@@ -191,7 +191,7 @@ function assertChunkIsTextTrackSegmentData(
       typeof (chunk as ITextTracksBufferSegmentData).end !== "number"
     )
   ) {
-    throw new Error("Invalid format given to a TextSegmentBuffer");
+    throw new Error("Invalid format given to a TextSegmentSink");
   }
 }
 
@@ -227,7 +227,7 @@ export interface ITextDisplayerInterface {
 /*
  * The following ugly code is here to provide a compile-time check that an
  * `ITextTracksBufferSegmentData` (type of data pushed to a
- * `TextSegmentBuffer`) can be derived from a `ITextTrackSegmentData`
+ * `TextSegmentSink`) can be derived from a `ITextTrackSegmentData`
  * (text track data parsed from a segment).
  *
  * It doesn't correspond at all to real code that will be called. This is just

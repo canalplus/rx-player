@@ -43,9 +43,9 @@ import TaskCanceller, {
 } from "../../../utils/task_canceller";
 import type {
   IBufferType,
-  SegmentBuffer,
+  SegmentSink,
 } from "../../segment_sinks";
-import SegmentBuffersStore from "../../segment_sinks";
+import SegmentSinksStore from "../../segment_sinks";
 import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
@@ -62,9 +62,9 @@ import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy"
 
 /**
  * Create a single PeriodStream:
- *   - Lazily create (or reuse) a SegmentBuffer for the given type.
+ *   - Lazily create (or reuse) a SegmentSink for the given type.
  *   - Create a Stream linked to an Adaptation each time it changes, to
- *     download and append the corresponding segments to the SegmentBuffer.
+ *     download and append the corresponding segments to the SegmentSink.
  *   - Announce when the Stream is full or is awaiting new Segments through
  *     events
  *
@@ -98,7 +98,7 @@ export default function PeriodStream(
     playbackObserver,
     representationEstimator,
     segmentFetcherCreator,
-    segmentBuffersStore,
+    segmentSinksStore,
     options,
     wantedBufferAhead,
     maxVideoBufferSize } : IPeriodStreamArguments,
@@ -139,26 +139,26 @@ export default function PeriodStream(
 
       if (choice === null) { // Current type is disabled for that Period
         log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
-        const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
+        const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
 
-        if (segmentBufferStatus.type === "initialized") {
-          log.info(`Stream: Clearing previous ${bufferType} SegmentBuffer`);
-          if (SegmentBuffersStore.isNative(bufferType)) {
+        if (segmentSinkStatus.type === "initialized") {
+          log.info(`Stream: Clearing previous ${bufferType} SegmentSink`);
+          if (SegmentSinksStore.isNative(bufferType)) {
             return askForMediaSourceReload(0, true, streamCanceller.signal);
           } else {
             const periodEnd = period.end ?? Infinity;
             if (period.start > periodEnd) {
               log.warn("Stream: Can't free buffer: period's start is after its end");
             } else {
-              await segmentBufferStatus.value.removeBuffer(period.start,
-                                                           periodEnd);
+              await segmentSinkStatus.value.removeBuffer(period.start,
+                                                         periodEnd);
               if (streamCanceller.isUsed()) {
                 return; // The stream has been cancelled
               }
             }
           }
-        } else if (segmentBufferStatus.type === "uninitialized") {
-          segmentBuffersStore.disableSegmentBuffer(bufferType);
+        } else if (segmentSinkStatus.type === "uninitialized") {
+          segmentSinksStore.disableSegmentSink(bufferType);
           if (streamCanceller.isUsed()) {
             return; // The stream has been cancelled
           }
@@ -217,8 +217,8 @@ export default function PeriodStream(
       }
       isFirstAdaptationSwitch = false;
 
-      if (SegmentBuffersStore.isNative(bufferType) &&
-          segmentBuffersStore.getStatus(bufferType).type === "disabled")
+      if (SegmentSinksStore.isNative(bufferType) &&
+          segmentSinksStore.getStatus(bufferType).type === "disabled")
       {
         return askForMediaSourceReload(relativePosAfterSwitch,
                                        true,
@@ -253,10 +253,10 @@ export default function PeriodStream(
         return; // Previous call has provoken cancellation by side-effect
       }
 
-      const segmentBuffer = createOrReuseSegmentBuffer(segmentBuffersStore,
-                                                       bufferType,
-                                                       adaptation);
-      const strategy = getAdaptationSwitchStrategy(segmentBuffer,
+      const segmentSink = createOrReuseSegmentSink(segmentSinksStore,
+                                                   bufferType,
+                                                   adaptation);
+      const strategy = getAdaptationSwitchStrategy(segmentSink,
                                                    period,
                                                    adaptation,
                                                    choice.switchingMode,
@@ -267,13 +267,13 @@ export default function PeriodStream(
                                        true,
                                        streamCanceller.signal);
       }
-      await segmentBuffersStore.waitForUsableBuffers(streamCanceller.signal);
+      await segmentSinksStore.waitForUsableBuffers(streamCanceller.signal);
       if (streamCanceller.isUsed()) {
         return; // The Stream has since been cancelled
       }
       if (strategy.type === "flush-buffer" || strategy.type === "clean-buffer") {
         for (const { start, end } of strategy.value) {
-          await segmentBuffer.removeBuffer(start, end);
+          await segmentSink.removeBuffer(start, end);
           if (streamCanceller.isUsed()) {
             return; // The Stream has since been cancelled
           }
@@ -290,10 +290,10 @@ export default function PeriodStream(
         }
       }
 
-      garbageCollectors.get(segmentBuffer)(streamCanceller.signal);
+      garbageCollectors.get(segmentSink)(streamCanceller.signal);
       createAdaptationStream(adaptation,
                              representations,
-                             segmentBuffer,
+                             segmentSink,
                              streamCanceller.signal);
     })().catch((err) => {
       if (err instanceof CancellationError) {
@@ -307,13 +307,13 @@ export default function PeriodStream(
   /**
    * @param {Object} adaptation
    * @param {Object} representations
-   * @param {Object} segmentBuffer
+   * @param {Object} segmentSink
    * @param {Object} cancelSignal
    */
   function createAdaptationStream(
     adaptation : IAdaptation,
     representations : IReadOnlySharedReference<IRepresentationsChoice>,
-    segmentBuffer : SegmentBuffer,
+    segmentSink : SegmentSink,
     cancelSignal : CancellationSignal
   ) : void {
     const adaptationPlaybackObserver =
@@ -326,7 +326,7 @@ export default function PeriodStream(
                        options,
                        playbackObserver: adaptationPlaybackObserver,
                        representationEstimator,
-                       segmentBuffer,
+                       segmentSink,
                        segmentFetcherCreator,
                        wantedBufferAhead,
                        maxVideoBufferSize },
@@ -337,10 +337,10 @@ export default function PeriodStream(
       // Stream linked to a non-native media buffer should not impact the
       // stability of the player. ie: if a text buffer sends an error, we want
       // to continue playing without any subtitles
-      if (!SegmentBuffersStore.isNative(bufferType)) {
+      if (!SegmentSinksStore.isNative(bufferType)) {
         log.error(`Stream: ${bufferType} Stream crashed. Aborting it.`,
                   error instanceof Error ? error : "");
-        segmentBuffersStore.disposeSegmentBuffer(bufferType);
+        segmentSinksStore.disposeSegmentSink(bufferType);
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",
@@ -412,20 +412,20 @@ export default function PeriodStream(
  * @param {Object} adaptation
  * @returns {Object}
  */
-function createOrReuseSegmentBuffer(
-  segmentBuffersStore : SegmentBuffersStore,
+function createOrReuseSegmentSink(
+  segmentSinksStore : SegmentSinksStore,
   bufferType : IBufferType,
   adaptation : IAdaptation
-) : SegmentBuffer {
-  const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-  if (segmentBufferStatus.type === "initialized") {
-    log.info("Stream: Reusing a previous SegmentBuffer for the type", bufferType);
+) : SegmentSink {
+  const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
+  if (segmentSinkStatus.type === "initialized") {
+    log.info("Stream: Reusing a previous SegmentSink for the type", bufferType);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return segmentBufferStatus.value;
+    return segmentSinkStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return segmentBuffersStore.createSegmentBuffer(bufferType, codec);
+  return segmentSinksStore.createSegmentSink(bufferType, codec);
 }
 
 /**

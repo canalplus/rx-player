@@ -15,7 +15,7 @@
  */
 
 import type {
-  ISegmentBuffersStore,
+  ISegmentSinksStore,
   IBufferType,
   IAdaptationChoice,
   IInbandEvent,
@@ -143,7 +143,7 @@ export interface IContentInitializerEvents {
    * Event sent just as the content is considered as "loaded".
    * From this point on, the user can reliably play/pause/resume the stream.
    */
-  loaded : { segmentBuffersStore: ISegmentBuffersStore | null };
+  loaded : { segmentSinksStore: ISegmentSinksStore | null };
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent |
                IPublicNonFiniteStreamEvent;

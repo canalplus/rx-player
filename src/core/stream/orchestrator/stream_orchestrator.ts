@@ -39,8 +39,8 @@ import type { IRepresentationEstimator } from "../../adaptive";
 import type { SegmentFetcherCreator } from "../../fetchers";
 import type {
   IBufferType,
-  SegmentBuffer } from "../../segment_sinks";
-import type SegmentBuffersStore from "../../segment_sinks";
+  SegmentSink } from "../../segment_sinks";
+import type SegmentSinksStore from "../../segment_sinks";
 import {
   BufferGarbageCollector,
 } from "../../segment_sinks";
@@ -59,9 +59,9 @@ import getTimeRangesForContent from "./get_time_ranges_for_content";
  * Create and manage the various "Streams" needed for the content to
  * play:
  *
- *   - Create or dispose SegmentBuffers depending on the chosen Adaptations.
+ *   - Create or dispose SegmentSinks depending on the chosen Adaptations.
  *
- *   - Push the right segments to those SegmentBuffers depending on the user's
+ *   - Push the right segments to those SegmentSinks depending on the user's
  *     preferences, the current position, the bandwidth, the decryption
  *     conditions...
  *
@@ -74,8 +74,8 @@ import getTimeRangesForContent from "./get_time_ranges_for_content";
  * @param {Object} playbackObserver - Emit position information
  * @param {Object} representationEstimator - Emit bitrate estimates and best
  * Representation to play.
- * @param {Object} segmentBuffersStore - Will be used to lazily create
- * SegmentBuffer instances associated with the current content.
+ * @param {Object} segmentSinksStore - Will be used to lazily create
+ * SegmentSink instances associated with the current content.
  * @param {Object} segmentFetcherCreator - Allow to download segments.
  * @param {Object} options
  * @param {Object} callbacks - The `StreamOrchestrator` relies on a system of
@@ -102,7 +102,7 @@ export default function StreamOrchestrator(
               initialPeriod : IPeriod; },
   playbackObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
   representationEstimator : IRepresentationEstimator,
-  segmentBuffersStore : SegmentBuffersStore,
+  segmentSinksStore : SegmentSinksStore,
   segmentFetcherCreator : SegmentFetcherCreator,
   options : IStreamOrchestratorOptions,
   callbacks : IStreamOrchestratorCallbacks,
@@ -119,15 +119,15 @@ export default function StreamOrchestrator(
           MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
 
   // Keep track of a unique BufferGarbageCollector created per
-  // SegmentBuffer.
+  // SegmentSink.
   const garbageCollectors =
-    new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
-      const { bufferType } = segmentBuffer;
+    new WeakMapMemory((segmentSink : SegmentSink) => {
+      const { bufferType } = segmentSink;
       const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ?? Infinity;
       const maxAheadHigherBound = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ?? Infinity;
       return (gcCancelSignal : CancellationSignal) => {
         BufferGarbageCollector(
-          { segmentBuffer,
+          { segmentSink,
             playbackObserver,
             maxBufferBehind: createMappedReference(maxBufferBehind,
                                                    (val) =>
@@ -144,7 +144,7 @@ export default function StreamOrchestrator(
     });
 
   // Create automatically the right `PeriodStream` for every possible types
-  for (const bufferType of segmentBuffersStore.getBufferTypes()) {
+  for (const bufferType of segmentSinksStore.getBufferTypes()) {
     manageEveryStreams(bufferType, initialPeriod);
   }
 
@@ -288,13 +288,13 @@ export default function StreamOrchestrator(
     async function onDecipherabilityUpdates(
       updates : IDecipherabilityUpdateElement[]
     ) : Promise<void> {
-      const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
+      const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
       const ofCurrentType = updates
         .filter(update => update.adaptation.type === bufferType);
       if (
         // No update concerns the current type of data
         ofCurrentType.length === 0 ||
-        segmentBufferStatus.type !== "initialized" ||
+        segmentSinkStatus.type !== "initialized" ||
         // The update only notifies of now-decipherable streams
         ofCurrentType.every(x => x.representation.decipherable === true)
       ) {
@@ -303,7 +303,7 @@ export default function StreamOrchestrator(
         return ;
       }
 
-      const segmentBuffer = segmentBufferStatus.value;
+      const segmentSink = segmentSinkStatus.value;
       const resettedContent = ofCurrentType.filter(update =>
         update.representation.decipherable === undefined);
       const undecipherableContent = ofCurrentType.filter(update =>
@@ -315,7 +315,7 @@ export default function StreamOrchestrator(
        * need Supplementary actions as playback issues may remain even after
        * removal.
        */
-      const undecipherableRanges = getTimeRangesForContent(segmentBuffer,
+      const undecipherableRanges = getTimeRangesForContent(segmentSink,
                                                            undecipherableContent);
 
       /**
@@ -324,7 +324,7 @@ export default function StreamOrchestrator(
        * To simplify its handling, those are just removed from the buffer.
        * Less considerations have to be taken than for the `undecipherableRanges`.
        */
-      const rangesToRemove = getTimeRangesForContent(segmentBuffer,
+      const rangesToRemove = getTimeRangesForContent(segmentSink,
                                                      resettedContent);
 
       // First close all Stream currently active so they don't continue to
@@ -343,7 +343,7 @@ export default function StreamOrchestrator(
       currentCanceller = new TaskCanceller();
       currentCanceller.linkToSignal(orchestratorCancelSignal);
 
-      /** Remove from the `SegmentBuffer` all the concerned time ranges. */
+      /** Remove from the `SegmentSink` all the concerned time ranges. */
       for (const { start, end } of [...undecipherableRanges, ...rangesToRemove]) {
         if (orchestratorCancelSignal.isCancelled()) {
           return;
@@ -352,7 +352,7 @@ export default function StreamOrchestrator(
           if (orchestratorCancelSignal.isCancelled()) {
             return;
           }
-          await segmentBuffer.removeBuffer(start, end);
+          await segmentSink.removeBuffer(start, end);
         }
       }
 
@@ -476,7 +476,7 @@ export default function StreamOrchestrator(
                                garbageCollectors,
                                maxVideoBufferSize,
                                segmentFetcherCreator,
-                               segmentBuffersStore,
+                               segmentSinksStore,
                                options,
                                playbackObserver,
                                representationEstimator,
@@ -653,7 +653,7 @@ export interface IStreamOrchestratorCallbacks
    */
   lockedStream(payload : ILockedStreamPayload) : void;
   /**
-   * Called after the SegmentBuffer have been "cleaned" to remove from it
+   * Called after the SegmentSink have been "cleaned" to remove from it
    * every non-decipherable segments - usually following an update of the
    * decipherability status of some `Representation`(s).
    *

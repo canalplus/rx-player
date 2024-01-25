@@ -28,11 +28,11 @@ import {
   insertInto,
 } from "../../../../utils/ranges";
 import type {
-  SegmentBuffer } from "../../../segment_sinks";
+  SegmentSink } from "../../../segment_sinks";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  SegmentBufferOperation,
+  SegmentSinkOperation,
 } from "../../../segment_sinks";
 import type { ITrackSwitchingMode } from "../../adaptation";
 import type { IPeriodStreamPlaybackObservation } from "../types";
@@ -61,14 +61,14 @@ export interface IAdaptationSwitchOptions {
 /**
  * Find out what to do when switching Adaptation, based on the current
  * situation.
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @param {Object} period
  * @param {Object} adaptation
  * @param {Object} playbackObserver
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  segmentBuffer : SegmentBuffer,
+  segmentSink : SegmentSink,
   period : IPeriod,
   adaptation : IAdaptation,
   switchingMode : ITrackSwitchingMode,
@@ -77,14 +77,14 @@ export default function getAdaptationSwitchStrategy(
   >,
   options : IAdaptationSwitchOptions
 ) : IAdaptationSwitchStrategy {
-  if (segmentBuffer.codec !== undefined &&
+  if (segmentSink.codec !== undefined &&
       options.onCodecSwitch === "reload" &&
-      !hasCompatibleCodec(adaptation, segmentBuffer.codec))
+      !hasCompatibleCodec(adaptation, segmentSink.codec))
   {
     return { type: "needs-reload", value: undefined };
   }
 
-  const inventory = segmentBuffer.getLastKnownInventory();
+  const inventory = segmentSink.getLastKnownInventory();
 
   const unwantedRange: IRange[] = [];
   for (const elt of inventory) {
@@ -94,9 +94,9 @@ export default function getAdaptationSwitchStrategy(
     }
   }
 
-  const pendingOperations = segmentBuffer.getPendingOperations();
+  const pendingOperations = segmentSink.getPendingOperations();
   for (const operation of pendingOperations) {
-    if (operation.type === SegmentBufferOperation.Push) {
+    if (operation.type === SegmentSinkOperation.Push) {
       const info = operation.value.inventoryInfos;
       if (info.period.id === period.id && info.adaptation.id !== adaptation.id) {
         const start = info.segment.time;
@@ -190,17 +190,17 @@ export default function getAdaptationSwitchStrategy(
 
 /**
  * Returns `true` if at least one codec of the Representations in the given
- * Adaptation has a codec compatible with the given SegmentBuffer's codec.
+ * Adaptation has a codec compatible with the given SegmentSink's codec.
  * @param {Object} adaptation
- * @param {string} segmentBufferCodec
+ * @param {string} segmentSinkCodec
  * @returns {boolean}
  */
 function hasCompatibleCodec(
   adaptation : IAdaptation,
-  segmentBufferCodec : string
+  segmentSinkCodec : string
 ) : boolean {
   return adaptation.representations.some(rep =>
     rep.isSupported === true &&
     rep.decipherable !== false &&
-    areCodecsCompatible(rep.getMimeTypeString(), segmentBufferCodec));
+    areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec));
 }

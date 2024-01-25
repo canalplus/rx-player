@@ -26,10 +26,10 @@ import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
   IBufferedChunk,
   ISignalCompleteSegmentOperation,
-  SegmentBuffer } from "../../../segment_sinks";
-import SegmentBuffersStore, {
+  SegmentSink } from "../../../segment_sinks";
+import SegmentSinksStore, {
   ChunkStatus,
-  SegmentBufferOperation,
+  SegmentSinkOperation,
 } from "../../../segment_sinks";
 import type {
   IBufferDiscontinuity,
@@ -44,7 +44,7 @@ import getSegmentPriority from "./get_segment_priority";
 /** Analysis of the current buffer's status. */
 export interface IBufferStatus {
   /**
-   * Future discontinuity found in the SegmentBuffer's buffer: hole that won't
+   * Future discontinuity found in the SegmentSink's buffer: hole that won't
    * be filled by a segment.
    * `null` if no such discontinuity is found in the near future.
    */
@@ -86,7 +86,7 @@ export interface IBufferStatus {
  * @param {number|undefined} fastSwitchThreshold
  * @param {number} bufferGoal
  * @param {number} maxBufferSize
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @returns {Object}
  */
 export default function getBufferStatus(
@@ -99,7 +99,7 @@ export default function getBufferStatus(
   fastSwitchThreshold : number | undefined,
   bufferGoal : number,
   maxBufferSize : number,
-  segmentBuffer : SegmentBuffer
+  segmentSink : SegmentSink
 ) : IBufferStatus {
   const { representation } = content;
   const isPaused =
@@ -125,18 +125,18 @@ export default function getBufferStatus(
   /**
    * Every segment awaiting an "SignalSegmentComplete" operation, which
    * indicates that a completely-loaded segment is still being pushed to the
-   * SegmentBuffer.
+   * SegmentSink.
    */
-  const segmentsBeingPushed = segmentBuffer.getPendingOperations()
+  const segmentsBeingPushed = segmentSink.getPendingOperations()
     .filter((operation) : operation is ISignalCompleteSegmentOperation =>
-      operation.type === SegmentBufferOperation.SignalSegmentComplete
+      operation.type === SegmentSinkOperation.SignalSegmentComplete
     ).map(operation => operation.value);
 
   /** Data on every segments buffered around `neededRange`. */
   const bufferedSegments =
     getPlayableBufferedSegments({ start: Math.max(neededRange.start - 0.5, 0),
                                   end: neededRange.end + 0.5 },
-                                segmentBuffer.getLastKnownInventory());
+                                segmentSink.getLastKnownInventory());
   let currentPlaybackTime = playbackObserver.getCurrentTime();
   if (currentPlaybackTime === undefined) {
     // We're in a WebWorker, just consider the last known position
@@ -144,7 +144,7 @@ export default function getBufferStatus(
   }
 
   /** Callback allowing to retrieve a segment's history in the buffer. */
-  const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
+  const getBufferedHistory = segmentSink.getSegmentHistory.bind(segmentSink);
 
   /** List of segments we will need to download. */
   const { segmentsToLoad,
@@ -235,7 +235,7 @@ function getRangeOfNeededSegments(
   // avoid ending the last Period - and by extension the content - with a
   // segment which isn't the last one.
   if (!isNullOrUndefined(lastIndexPosition) &&
-      SegmentBuffersStore.isNative(content.adaptation.type) &&
+      SegmentSinksStore.isNative(content.adaptation.type) &&
       initialWantedTime >= lastIndexPosition &&
       representationIndex.isInitialized() &&
       !representationIndex.isStillAwaitingFutureSegments() &&

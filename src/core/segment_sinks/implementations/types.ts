@@ -34,10 +34,10 @@ import SegmentInventory from "../inventory";
  * to decode them in the future as well as retrieving information about which
  * segments have already been pushed.
  *
- * A `SegmentBuffer` can rely on a browser's SourceBuffer as well as being
+ * A `SegmentSink` can rely on a browser's SourceBuffer as well as being
  * entirely defined in the code.
  *
- * A SegmentBuffer is associated to a given "bufferType" (e.g. "audio",
+ * A SegmentSink is associated to a given "bufferType" (e.g. "audio",
  * "video", "text") and allows to push segments as well as removing part of
  * already-pushed segments for that type.
  *
@@ -51,14 +51,14 @@ import SegmentInventory from "../inventory";
  * underlying implementation.
  * TODO reflect that in the API?
  *
- * A SegmentBuffer also maintains an "inventory", which is the current
+ * A SegmentSink also maintains an "inventory", which is the current
  * list of segments contained in the underlying buffer.
  * This inventory has to be manually "synchronized" (through the
  * `synchronizeInventory` method) before being retrieved (through the
  * `getInventory` method).
  *
  * Also depending on the underlying implementation, the various operations
- * performed on a `SegmentBuffer` (push/remove/segmentComplete) can happen
+ * performed on a `SegmentSink` (push/remove/segmentComplete) can happen
  * synchronously or asynchronously.
  *
  * You can retrieve the current queue of operations by calling the
@@ -66,7 +66,7 @@ import SegmentInventory from "../inventory";
  * If operations happens synchronously, this method will just return an empty
  * array.
  */
-export abstract class SegmentBuffer {
+export abstract class SegmentSink {
   /** "Type" of the buffer (e.g. "audio", "video", "text"). */
   public readonly abstract bufferType : IBufferType;
 
@@ -74,12 +74,12 @@ export abstract class SegmentBuffer {
   protected _segmentInventory : SegmentInventory;
 
   /**
-   * Mimetype+codec combination the SegmentBuffer is currently working with.
+   * Mimetype+codec combination the SegmentSink is currently working with.
    * Depending on the implementation, segments with a different codecs could be
    * incompatible.
    *
    * `undefined` if unknown and if this property does not matter for this
-   * SegmentBuffer implementation.
+   * SegmentSink implementation.
    */
   public codec : string | undefined;
 
@@ -167,10 +167,10 @@ export abstract class SegmentBuffer {
 
   /**
    * Returns an inventory of the last known segments to be currently contained in
-   * the SegmentBuffer.
+   * the SegmentSink.
    *
    * /!\ Note that this data may not be up-to-date with the real current content
-   * of the SegmentBuffer.
+   * of the SegmentSink.
    * Generally speaking, pushed segments are added right away to it but segments
    * may have been since removed, which might not be known right away.
    * Please consider this when using this method, by considering that it does
@@ -183,7 +183,7 @@ export abstract class SegmentBuffer {
   }
 
   /**
-   * Returns the list of every operations that the `SegmentBuffer` is still
+   * Returns the list of every operations that the `SegmentSink` is still
    * processing. From the one with the highest priority to the lowest priority.
    * @returns {Array.<Object>}
    */
@@ -207,14 +207,14 @@ export abstract class SegmentBuffer {
   }
 
   /**
-   * Dispose of the resources used by this SegmentBuffer.
-   * /!\ You won't be able to use the SegmentBuffer after calling this
+   * Dispose of the resources used by this SegmentSink.
+   * /!\ You won't be able to use the SegmentSink after calling this
    * function.
    */
   public abstract dispose() : void;
 }
 
-/** Every SegmentBuffer types. */
+/** Every SegmentSink types. */
 export type IBufferType = "audio" |
                           "video" |
                           "text";
@@ -248,7 +248,7 @@ export interface IPushedChunkData<T> {
    * String corresponding to the mime-type + codec of the last segment pushed.
    * This might then be used by a SourceBuffer to infer the right codec to use.
    *
-   * If set to `undefined`, the SegmentBuffer implementation will just rely on
+   * If set to `undefined`, the SegmentSink implementation will just rely on
    * a default codec it is linked to, if one.
    */
   codec : string | undefined;
@@ -307,56 +307,56 @@ export interface IPushChunkInfos<T> {
    inventoryInfos : IInsertedChunkInfos;
 }
 
-/** "Operations" scheduled by a SegmentBuffer. */
+/** "Operations" scheduled by a SegmentSink. */
 export type ISBOperation<T> = IPushOperation<T> |
                               IRemoveOperation |
                               ISignalCompleteSegmentOperation;
 
 /**
- * Enum used by a SegmentBuffer as a discriminant in its queue of
+ * Enum used by a SegmentSink as a discriminant in its queue of
  * "operations".
  */
-export enum SegmentBufferOperation { Push,
-                                     Remove,
-                                     SignalSegmentComplete }
+export enum SegmentSinkOperation { Push,
+                                   Remove,
+                                   SignalSegmentComplete }
 
 /**
- * "Operation" created by a `SegmentBuffer` when asked to push a chunk.
+ * "Operation" created by a `SegmentSink` when asked to push a chunk.
  *
  * It represents a queued "Push" operation (created due to a `pushChunk` method
- * call) that is not yet fully processed by a `SegmentBuffer`.
+ * call) that is not yet fully processed by a `SegmentSink`.
  */
 export interface IPushOperation<T> {
   /** Discriminant (allows to tell its a "Push operation"). */
-  type : SegmentBufferOperation.Push;
+  type : SegmentSinkOperation.Push;
   /** Arguments for that push. */
   value : IPushChunkInfos<T>;
 }
 
 /**
- * "Operation" created by a SegmentBuffer when asked to remove buffer.
+ * "Operation" created by a SegmentSink when asked to remove buffer.
  *
  * It represents a queued "Remove" operation (created due to a `removeBuffer`
- * method call) that is not yet fully processed by a SegmentBuffer.
+ * method call) that is not yet fully processed by a SegmentSink.
  */
 export interface IRemoveOperation {
   /** Discriminant (allows to tell its a "Remove operation"). */
-  type : SegmentBufferOperation.Remove;
+  type : SegmentSinkOperation.Remove;
   /** Arguments for that remove (absolute start and end time, in seconds). */
   value : { start : number;
             end : number; }; }
 
 /**
- * "Operation" created by a `SegmentBuffer` when asked to validate that a full
+ * "Operation" created by a `SegmentSink` when asked to validate that a full
  * segment has been pushed through earlier `Push` operations.
  *
  * It represents a queued "SignalSegmentComplete" operation (created due to a
  * `signalSegmentComplete` method call) that is not yet fully processed by a
- * `SegmentBuffer.`
+ * `SegmentSink.`
  */
 export interface ISignalCompleteSegmentOperation {
   /** Discriminant (allows to tell its an "SignalSegmentComplete operation"). */
-  type : SegmentBufferOperation.SignalSegmentComplete;
+  type : SegmentSinkOperation.SignalSegmentComplete;
   /** Arguments for that operation. */
   value : ICompleteSegmentInfo;
 }

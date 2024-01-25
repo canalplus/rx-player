@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import AudioVideoSegmentBuffer from "./audio_video";
+import AudioVideoSegmentSink from "./audio_video";
 import { ITextDisplayerInterface } from "./text";
 export * from "./types";
 
 export {
-  AudioVideoSegmentBuffer,
+  AudioVideoSegmentSink,
   ITextDisplayerInterface,
 };
