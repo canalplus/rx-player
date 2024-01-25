@@ -31,7 +31,7 @@ import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import type {
   IAdaptationChoice,
   IInbandEvent,
-  ISegmentBuffersStore,
+  ISegmentSinksStore,
   IABRThrottlers,
   IBufferedChunk,
   IBufferType,
@@ -751,7 +751,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throttlers,
       };
 
-      /** Options used by the TextTrack SegmentBuffer. */
+      /** Options used by the TextTrack SegmentSink. */
       const textTrackOptions = options.textTrackMode === "native" ?
         { textTrackMode: "native" as const } :
         { textTrackMode: "html" as const,
@@ -879,7 +879,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       defaultAudioTrackSwitchingMode,
       initializer,
       isDirectFile,
-      segmentBuffersStore: null,
+      segmentSinksStore: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
@@ -902,7 +902,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("warning", formattedError);
     });
     initializer.addEventListener("reloadingMediaSource", (payload) => {
-      contentInfos.segmentBuffersStore = null;
+      contentInfos.segmentSinksStore = null;
       if (contentInfos.tracksStore !== null) {
         contentInfos.tracksStore.resetPeriodObjects();
       }
@@ -933,7 +933,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("decipherabilityUpdate", (updates) =>
       this._priv_onDecipherabilityUpdate(contentInfos, updates));
     initializer.addEventListener("loaded", (evt) => {
-      contentInfos.segmentBuffersStore = evt.segmentBuffersStore;
+      contentInfos.segmentSinksStore = evt.segmentSinksStore;
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -2211,20 +2211,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * /!\ For demo use only! Do not touch!
    *
    * Returns every chunk buffered for a given buffer type.
-   * Returns `null` if no SegmentBuffer was created for this type of buffer.
+   * Returns `null` if no SegmentSink was created for this type of buffer.
    * @param {string} bufferType
    * @returns {Array.<Object>|null}
    */
-  __priv_getSegmentBufferContent(bufferType : IBufferType) : IBufferedChunk[] | null {
+  __priv_getSegmentSinkContent(bufferType : IBufferType) : IBufferedChunk[] | null {
     if (this._priv_contentInfos === null ||
-        this._priv_contentInfos.segmentBuffersStore === null)
+        this._priv_contentInfos.segmentSinksStore === null)
     {
       return null;
     }
-    const segmentBufferStatus = this._priv_contentInfos
-      .segmentBuffersStore.getStatus(bufferType);
-    if (segmentBufferStatus.type === "initialized") {
-      return segmentBufferStatus.value.getLastKnownInventory();
+    const segmentSinkStatus = this._priv_contentInfos
+      .segmentSinksStore.getStatus(bufferType);
+    if (segmentSinkStatus.type === "initialized") {
+      return segmentSinkStatus.value.getLastKnownInventory();
     }
     return null;
   }
@@ -3109,8 +3109,8 @@ interface IPublicApiContentInfos {
   activeRepresentations : {
     [periodId : string] : Partial<Record<IBufferType, IRepresentationMetadata|null>>;
   } | null;
-  /** Keep information on the active SegmentBuffers. */
-  segmentBuffersStore : ISegmentBuffersStore | null;
+  /** Keep information on the active SegmentSinks. */
+  segmentSinksStore : ISegmentSinksStore | null;
   /**
    * TracksStore instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
