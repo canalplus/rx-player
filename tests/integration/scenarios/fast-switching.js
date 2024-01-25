@@ -34,7 +34,7 @@ describe("Fast-switching", function () {
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
     await sleep(1000);
-    const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
+    const videoSegmentBuffered = player.__priv_getSegmentSinkContent("video")
       .map(({ infos }) => {
         return { bitrate: infos.representation.bitrate,
                  time: infos.segment.time,
@@ -58,7 +58,7 @@ describe("Fast-switching", function () {
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
     await sleep(1000);
-    const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
+    const videoSegmentBuffered = player.__priv_getSegmentSinkContent("video")
       .map(({ infos }) => {
         return { bitrate: infos.representation.bitrate,
                  time: infos.segment.time,
@@ -82,7 +82,7 @@ describe("Fast-switching", function () {
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
     await sleep(1000);
-    const videoSegmentBuffered = player.__priv_getSegmentBufferContent("video")
+    const videoSegmentBuffered = player.__priv_getSegmentSinkContent("video")
       .map(({ infos }) => {
         return { bitrate: infos.representation.bitrate,
                  time: infos.segment.time,

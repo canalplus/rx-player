@@ -9,7 +9,7 @@ import type {
 } from "./fetchers";
 import type { ICorePlaybackObservation } from "./main";
 import type { IBufferedChunk, IBufferType } from "./segment_sinks";
-import type SegmentBuffersStore from "./segment_sinks";
+import type SegmentSinksStore from "./segment_sinks";
 import type {
   IAdaptationChoice,
   IPausedPlaybackObservation,
@@ -22,8 +22,8 @@ import type {
 // NOTE: Only types should be exported by this file: Importing it should
 // not increase a JavaScript bundle's size
 
-/** Type of an `SegmentBuffersStore` class. */
-export type ISegmentBuffersStore = SegmentBuffersStore;
+/** Type of an `SegmentSinksStore` class. */
+export type ISegmentSinksStore = SegmentSinksStore;
 
 export type {
   // Adaptive Metadata
@@ -38,7 +38,7 @@ export type {
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
 
-  // Buffer Sinks Metadata
+  // Segment Sinks Metadata
   IBufferType,
   IBufferedChunk,
 

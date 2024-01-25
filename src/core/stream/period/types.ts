@@ -19,9 +19,9 @@ import type { IRepresentationEstimator } from "../../adaptive";
 import type { SegmentFetcherCreator } from "../../fetchers";
 import type {
   IBufferType,
-  SegmentBuffer,
+  SegmentSink,
 } from "../../segment_sinks";
-import type SegmentBuffersStore from "../../segment_sinks";
+import type SegmentSinksStore from "../../segment_sinks";
 import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
@@ -115,10 +115,10 @@ export interface IPeriodStreamArguments {
   bufferType : IBufferType;
   content : { manifest : IManifest;
               period : IPeriod; };
-  garbageCollectors : WeakMapMemory<SegmentBuffer,
+  garbageCollectors : WeakMapMemory<SegmentSink,
                                     (cancelSignal : CancellationSignal) => void>;
   segmentFetcherCreator : SegmentFetcherCreator;
-  segmentBuffersStore : SegmentBuffersStore;
+  segmentSinksStore : SegmentSinksStore;
   playbackObserver : IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;
   representationEstimator : IRepresentationEstimator;
