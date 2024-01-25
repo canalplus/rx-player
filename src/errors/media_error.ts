@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ITaggedTrack } from "../manifest";
+import type { ITaggedTrack } from "../manifest";
 import {
   ErrorTypes,
   IMediaErrorCode,

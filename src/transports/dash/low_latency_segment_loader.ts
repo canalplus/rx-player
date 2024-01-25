@@ -18,8 +18,8 @@ import { concat } from "../../utils/byte_parsing";
 import fetchRequest, {
   IFetchedDataObject,
 } from "../../utils/request/fetch";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,

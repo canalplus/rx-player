@@ -17,7 +17,7 @@
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
  * container
- * @param {Representation} representation
+ * @param {string|undefined} mimeType
  * @returns {Boolean}
  */
 export default function isMP4EmbeddedTrack(mimeType : string | undefined) : boolean {

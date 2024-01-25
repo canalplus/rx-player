@@ -15,7 +15,7 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import { IPeriodIntermediateRepresentation } from "../../../node_parser_types";
+import type { IPeriodIntermediateRepresentation } from "../../../node_parser_types";
 import ParsersStack, {
   IChildrenParser,
 } from "../parsers_stack";

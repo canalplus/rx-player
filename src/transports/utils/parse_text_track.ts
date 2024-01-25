@@ -15,10 +15,10 @@
  */
 
 import log from "../../log";
-import { ISegment } from "../../manifest";
+import type { ISegment } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../utils/string_parsing";
-import {
+import type {
   IChunkTimeInfo,
   ISegmentContext,
   ITextTrackSegmentData,
@@ -38,7 +38,7 @@ export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
 /**
  * Returns the a string expliciting the format of a text track when that text
  * track is embedded into a ISOBMFF file.
- * @param {Object} representation
+ * @param {string|undefined} codecs
  * @returns {string}
  */
 export function getISOBMFFTextTrackFormat(

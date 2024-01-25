@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IInitializationAttributes } from "../../node_parser_types";
+import type { IInitializationAttributes } from "../../node_parser_types";
 import {
   parseByteRange,
   ValueParser,

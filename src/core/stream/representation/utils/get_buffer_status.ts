@@ -15,20 +15,21 @@
  */
 
 import config from "../../../../config";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
+import {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import { IReadOnlyPlaybackObserver } from "../../../api";
 import SegmentBuffersStore, {
   ChunkStatus,
   IBufferedChunk,
   ISignalCompleteSegmentOperation,
   SegmentBuffer,
   SegmentBufferOperation,
-} from "../../../segment_buffers";
+} from "../../../segment_sinks";
 import {
   IBufferDiscontinuity,
   IRepresentationStreamPlaybackObservation,
@@ -88,10 +89,10 @@ export interface IBufferStatus {
  * @returns {Object}
  */
 export default function getBufferStatus(
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; },
+  content: { adaptation : IAdaptation;
+             manifest : IManifest;
+             period : IPeriod;
+             representation : IRepresentation; },
   initialWantedTime : number,
   playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
   fastSwitchThreshold : number | undefined,
@@ -214,10 +215,10 @@ export default function getBufferStatus(
  * @returns {Object}
  */
 function getRangeOfNeededSegments(
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; },
+  content: { adaptation : IAdaptation;
+             manifest : IManifest;
+             period : IPeriod;
+             representation : IRepresentation; },
   initialWantedTime : number,
   bufferGoal : number
 ) : { start : number; end : number; hasReachedPeriodEnd : boolean } {
@@ -283,8 +284,8 @@ function getRangeOfNeededSegments(
  * @returns {boolean}
  */
 function isPeriodTheCurrentAndLastOne(
-  manifest : Manifest,
-  period : Period,
+  manifest : IManifest,
+  period : IPeriod,
   time : number
 ) : boolean {
   const nextPeriod = manifest.getPeriodAfter(period);

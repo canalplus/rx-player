@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../../../../manifest";
-import { IPrivateInfos } from "../../../../../manifest/representation_index/types";
-import { IEMSG } from "../../../../containers/isobmff";
+import type {
+  IPrivateInfos,
+  ISegment,
+} from "../../../../../manifest";
+import type { IEMSG } from "../../../../containers/isobmff";
 
 /**
  * Construct init segment for the given index.

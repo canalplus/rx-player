@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../../../../manifest";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { ISegment } from "../../../../../manifest";
+import type { IEMSG } from "../../../../containers/isobmff";
 import {
   calculateRepeat,
   IIndexSegment,

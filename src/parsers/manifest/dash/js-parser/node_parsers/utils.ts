@@ -22,7 +22,7 @@
 import log from "../../../../../log";
 import { base64ToBytes } from "../../../../../utils/base64";
 import isNonEmptyString from "../../../../../utils/is_non_empty_string";
-import { IScheme } from "../../node_parser_types";
+import type { IScheme } from "../../node_parser_types";
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
