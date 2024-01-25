@@ -20,7 +20,7 @@ import {
   NetworkErrorTypes,
 } from "../../../errors";
 import log from "../../../log";
-import { ICdnMetadata } from "../../../parsers/manifest";
+import type { ICdnMetadata } from "../../../parsers/manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 import getTimestamp from "../../../utils/monotonic_timestamp";

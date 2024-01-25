@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IRepresentationIndex } from "../../../../manifest";
+import type { IRepresentationIndex } from "../../../../manifest";
 import getLastPositionFromAdaptation from "../get_last_time_from_adaptation";
 
 function generateRepresentationIndex(

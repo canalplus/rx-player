@@ -15,16 +15,16 @@
  */
 
 import { CustomLoaderError } from "../../errors";
-import {
+import type {
   IManifestLoader,
   ILoadedManifestFormat,
 } from "../../public_types";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
-import {
+import type {
   IManifestLoaderOptions,
   IRequestedData,
 } from "../types";

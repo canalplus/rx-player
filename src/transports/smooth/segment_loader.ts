@@ -15,14 +15,14 @@
  */
 
 import { CustomLoaderError } from "../../errors";
-import { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
+import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
 import assert from "../../utils/assert";
 import request from "../../utils/request";
-import {
+import type {
   CancellationError,
   CancellationSignal,
 } from "../../utils/task_canceller";
-import {
+import type {
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,

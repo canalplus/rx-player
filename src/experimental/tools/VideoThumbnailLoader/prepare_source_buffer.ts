@@ -15,8 +15,8 @@
  */
 
 import { MediaSource_ } from "../../../compat";
-import { resetMediaElement } from "../../../core/init/utils/create_media_source";
 import log from "../../../log";
+import { resetMediaElement } from "../../../main_thread/init/utils/create_media_source";
 import { SourceBufferType } from "../../../mse";
 import MainMediaSourceInterface, {
   MainSourceBufferInterface,

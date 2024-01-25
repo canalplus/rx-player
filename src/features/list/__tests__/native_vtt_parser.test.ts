@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import NativeTextDisplayer from "../../../main_thread/text_displayer/native";
 import vttParser from "../../../parsers/texttracks/webvtt/native";
-import NativeTextDisplayer from "../../../text_displayer/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativevttFeature from "../native_vtt_parser";
 
 describe("Features list - native vtt Parser", () => {

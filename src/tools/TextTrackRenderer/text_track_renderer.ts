@@ -18,7 +18,7 @@ import {
   addFeatures,
   IFeature,
 } from "../../features";
-import HTMLTextDisplayer from "../../text_displayer/html";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
 
 /** Argument for the `setTextTrack` method. */
 export interface ISetTextTrackArguments {

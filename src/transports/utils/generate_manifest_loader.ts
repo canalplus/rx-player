@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IManifestLoader,
   ILoadedManifestFormat,
 } from "../../public_types";
 import { assertUnreachable } from "../../utils/assert";
 import request from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IManifestLoaderOptions,
   IRequestedData,
 } from "../types";

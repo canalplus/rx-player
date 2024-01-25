@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IParsedPeriod } from "../../types";
+import type { IParsedPeriod } from "../../types";
 import getMaximumPositions from "../../utils/get_maximum_positions";
 import getMinimumPosition from "../../utils/get_minimum_position";
 

@@ -15,14 +15,13 @@
  */
 
 import config from "../../../config";
-import Player from "../../../core/api";
 import createSegmentFetcher, {
   ISegmentFetcher,
 } from "../../../core/fetchers/segment/segment_fetcher";
 import log from "../../../log";
-import Manifest, {
-  ISegment,
-} from "../../../manifest";
+import type { IRxPlayer } from "../../../main_thread/types";
+import type { ISegment } from "../../../manifest";
+import Manifest from "../../../manifest/classes";
 import { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import arrayFind from "../../../utils/array_find";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -33,7 +32,7 @@ import TaskCanceller, {
 import loadAndPushSegment from "./load_and_push_segment";
 import prepareSourceBuffer from "./prepare_source_buffer";
 import removeBufferAroundTime from "./remove_buffer_around_time";
-import {
+import type {
   IContentInfo,
   ILoaders,
 } from "./types";
@@ -52,10 +51,10 @@ const loaders : ILoaders = {};
  */
 export default class VideoThumbnailLoader {
   private readonly _videoElement: HTMLVideoElement;
-  private _player: Player;
+  private _player: IRxPlayer;
   private _lastRepresentationInfo : IVideoThumbnailLoaderRepresentationInfo | null;
 
-  constructor(videoElement: HTMLVideoElement, player: Player) {
+  constructor(videoElement: HTMLVideoElement, player: IRxPlayer) {
     this._videoElement = videoElement;
     this._player = player;
     this._lastRepresentationInfo = null;

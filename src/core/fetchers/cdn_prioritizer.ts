@@ -15,10 +15,10 @@
  */
 
 import config from "../../config";
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import arrayFindIndex from "../../utils/array_find_index";
 import EventEmitter from "../../utils/event_emitter";
-import { CancellationSignal } from "../../utils/task_canceller";
+import type { CancellationSignal } from "../../utils/task_canceller";
 
 /**
  * Class storing and signaling the priority between multiple CDN available for

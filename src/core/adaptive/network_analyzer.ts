@@ -16,16 +16,16 @@
 
 import config from "../../config";
 import log from "../../log";
-import { Representation } from "../../manifest";
+import type { IRepresentation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import {
+import type {
   IRepresentationEstimatorPlaybackObservation,
 } from "./adaptive_representation_selector";
 import BandwidthEstimator from "./utils/bandwidth_estimator";
 import EWMA from "./utils/ewma";
-import {
+import type {
   IPendingRequestStoreProgress,
   IRequestInfo,
 } from "./utils/pending_requests_store";
@@ -143,7 +143,7 @@ function estimateRemainingTime(
 function estimateStarvationModeBitrate(
   pendingRequests : IRequestInfo[],
   playbackInfo : IPlaybackConditionsInfo,
-  currentRepresentation : Representation | null,
+  currentRepresentation : IRepresentation | null,
   lowLatencyMode : boolean,
   lastEstimatedBitrate : number|undefined
 ) : number|undefined {
@@ -321,7 +321,7 @@ export default class NetworkAnalyzer {
   public getBandwidthEstimate(
     playbackInfo: IPlaybackConditionsInfo,
     bandwidthEstimator : BandwidthEstimator,
-    currentRepresentation : Representation | null,
+    currentRepresentation : IRepresentation | null,
     currentRequests : IRequestInfo[],
     lastEstimatedBitrate: number|undefined
   ) : { bandwidthEstimate? : number | undefined; bitrateChosen : number } {
@@ -405,7 +405,7 @@ export default class NetworkAnalyzer {
    */
   public isUrgent(
     bitrate: number,
-    currentRepresentation : Representation | null,
+    currentRepresentation : IRepresentation | null,
     currentRequests : IRequestInfo[],
     playbackInfo: IPlaybackConditionsInfo
   ) : boolean {

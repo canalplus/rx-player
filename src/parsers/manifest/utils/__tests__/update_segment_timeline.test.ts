@@ -21,7 +21,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { IIndexSegment } from "../index_helpers";
+import type { IIndexSegment } from "../index_helpers";
 
 describe("Manifest Parsers utils - updateSegmentTimeline", () => {
   let mockLogWarn : jest.MockInstance<void, unknown[]> | undefined;
