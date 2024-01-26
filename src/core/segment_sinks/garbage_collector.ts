@@ -16,6 +16,7 @@
 
 import log from "../../log";
 import type { IReadOnlyPlaybackObserver } from "../../main_thread/types";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IRange } from "../../utils/ranges";
 import { getInnerAndOuterRanges } from "../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../utils/reference";
@@ -138,7 +139,7 @@ async function clearBuffer(
                                end: position - maxBufferBehind });
       }
     }
-    if (innerRange != null) {
+    if (!isNullOrUndefined(innerRange)) {
       if (position - maxBufferBehind > innerRange.start) {
         cleanedupRanges.push({ start: innerRange.start,
                                end: position - maxBufferBehind });
@@ -165,7 +166,7 @@ async function clearBuffer(
                                end: outerRange.end });
       }
     }
-    if (innerRange != null) {
+    if (!isNullOrUndefined(innerRange)) {
       if (position + maxBufferAhead < innerRange.end) {
         cleanedupRanges.push({ start: position + maxBufferAhead,
                                end: innerRange.end });

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IMPDAttributes } from "../node_parser_types";
 
 /**
@@ -29,8 +30,8 @@ export default function parseAvailabilityStartTime(
   if (rootAttributes.type !== "dynamic") {
     return 0;
   }
-  if (rootAttributes.availabilityStartTime == null) {
-    return referenceDateTime == null ? 0 : referenceDateTime;
+  if (isNullOrUndefined(rootAttributes.availabilityStartTime)) {
+    return referenceDateTime ?? 0;
   }
   return rootAttributes.availabilityStartTime;
 }

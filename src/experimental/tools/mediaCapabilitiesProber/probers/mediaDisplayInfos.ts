@@ -15,6 +15,7 @@
  */
 
 import globalScope from "../../../../utils/global_scope";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
   IMediaConfiguration } from "../types";
 import {
@@ -35,7 +36,7 @@ export default function probeMatchMedia(
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "matchMedia not available");
     }
-    if (config.display == null ||
+    if (isNullOrUndefined(config.display) ||
         config.display.colorSpace === undefined ||
         config.display.colorSpace.length === 0) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +

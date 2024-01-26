@@ -22,6 +22,7 @@ import {
   SourceBufferType,
 } from "../../mse";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type {
   IBufferType,
@@ -253,7 +254,7 @@ export default class SegmentSinksStore {
   ) : SegmentSink {
     const memorizedSegmentSink = this._initializedSegmentSinks[bufferType];
     if (shouldHaveNativeBuffer(bufferType)) {
-      if (memorizedSegmentSink != null) {
+      if (!isNullOrUndefined(memorizedSegmentSink)) {
         if (memorizedSegmentSink instanceof AudioVideoSegmentSink &&
             memorizedSegmentSink.codec !== codec)
         {
@@ -275,7 +276,7 @@ export default class SegmentSinksStore {
       return nativeSegmentSink;
     }
 
-    if (memorizedSegmentSink != null) {
+    if (!isNullOrUndefined(memorizedSegmentSink)) {
       log.info("SB: Reusing a previous custom SegmentSink for the type", bufferType);
       return memorizedSegmentSink;
     }
@@ -303,7 +304,7 @@ export default class SegmentSinksStore {
    */
   public disposeSegmentSink(bufferType : IBufferType) : void {
     const memorizedSegmentSink = this._initializedSegmentSinks[bufferType];
-    if (memorizedSegmentSink == null) {
+    if (isNullOrUndefined(memorizedSegmentSink)) {
       log.warn("SB: Trying to dispose a SegmentSink that does not exist");
       return;
     }

@@ -23,7 +23,7 @@
 /* eslint-disable max-len */
 
 function testStringAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse a ContentProtection element with a correct ${attributeName} attribute`, () => {
     const parseContentProtection = jest.requireActual("../ContentProtection").default;

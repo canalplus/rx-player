@@ -20,6 +20,7 @@ import type {
   ISegment,
 } from "../../../../../manifest";
 import type { ISegmentInformation } from "../../../../../transports";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type { IEMSG } from "../../../../containers/isobmff";
 import type {
   IIndexSegment } from "../../../utils/index_helpers";
@@ -202,9 +203,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
             isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
-    const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset : 0;
-
+    const presentationTimeOffset = index.presentationTimeOffset ?? 0;
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
     const initializationUrl = index.initialization?.media === undefined ?
@@ -238,8 +237,9 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
                     timescale };
     this._manifestBoundsCalculator = context.manifestBoundsCalculator;
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
-    this._scaledPeriodEnd = periodEnd == null ? undefined :
-                                                toIndexTime(periodEnd, this._index);
+    this._scaledPeriodEnd = isNullOrUndefined(periodEnd) ?
+      undefined :
+      toIndexTime(periodEnd, this._index);
     this._isInitialized = this._index.timeline.length > 0;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
   }

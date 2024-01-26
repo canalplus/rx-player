@@ -15,6 +15,7 @@
  */
 
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type { ITTParameters } from "./get_parameters";
 import parseTime from "./time_parsing";
 
@@ -38,12 +39,14 @@ export default function getTimeDelimiters(
                                                     null;
   const parsedEnd = isNonEmptyString(endAttr) ? parseTime(endAttr, ttParams) :
                     null;
-  if (start == null || (parsedEnd == null && duration == null)) {
+  if (
+    isNullOrUndefined(start) ||
+    (isNullOrUndefined(parsedEnd) && isNullOrUndefined(duration))
+  ) {
     throw new Error("Invalid text cue");
   }
 
-// Huh? Is TypeScript that dumb here?
-  const end = parsedEnd == null ? start + (duration as number) :
-                                  parsedEnd;
+  const end = isNullOrUndefined(parsedEnd) ? start + (duration as number) :
+                                             parsedEnd;
   return { start, end };
 }

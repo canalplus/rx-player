@@ -15,6 +15,7 @@
  */
 
 import EventEmitter from "../../../utils/event_emitter";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import TaskCanceller from "../../../utils/task_canceller";
 import wrapInPromise from "../../../utils/wrapInPromise";
 import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
@@ -87,7 +88,7 @@ class IE11MediaKeySession
   }
   close(): Promise<void> {
     return new Promise((resolve) => {
-      if (this._ss != null) {
+      if (!isNullOrUndefined(this._ss)) {
         this._ss.close();
         this._ss = undefined;
       }

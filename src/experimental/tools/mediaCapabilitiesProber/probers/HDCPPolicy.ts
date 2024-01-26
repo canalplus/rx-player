@@ -42,7 +42,7 @@ export default function probeHDCPPolicy(
     return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "API not available");
   }
-  if (config.hdcp == null) {
+  if (isNullOrUndefined(config.hdcp)) {
     return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "Missing policy argument for calling getStatusForPolicy.");
   }

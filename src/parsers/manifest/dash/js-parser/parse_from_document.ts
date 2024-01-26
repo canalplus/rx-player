@@ -98,7 +98,7 @@ export default function parseFromDocument(
               }
               const wrappedData = "<root>" + xlinkResp.data + "</root>";
               const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
-              if (dataAsXML == null || dataAsXML.children.length === 0) {
+              if (isNullOrUndefined(dataAsXML) || dataAsXML.children.length === 0) {
                 throw new Error("DASH parser: Invalid external ressources");
               }
               const periods = dataAsXML.children[0].children;

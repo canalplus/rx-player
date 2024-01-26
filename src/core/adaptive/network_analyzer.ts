@@ -201,7 +201,7 @@ function estimateStarvationModeBitrate(
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const reasonableElapsedTime = requestElapsedTime <=
     ((chunkDuration * 1.5 + 2) / speed);
-  if (currentRepresentation == null || reasonableElapsedTime) {
+  if (isNullOrUndefined(currentRepresentation) || reasonableElapsedTime) {
     return undefined;
   }
 
@@ -370,7 +370,7 @@ export default class NetworkAnalyzer {
     }
 
     // if newBitrateCeil is not yet defined, do the normal estimation
-    if (newBitrateCeil == null) {
+    if (isNullOrUndefined(newBitrateCeil)) {
       bandwidthEstimate = bandwidthEstimator.getEstimate();
 
       if (bandwidthEstimate !== undefined) {

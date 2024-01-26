@@ -17,12 +17,8 @@
 import eme from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
-import type {
-  ICompatibleKeySystem,
-  IMediaConfiguration } from "../types";
-import {
-  ProberStatus,
-} from "../types";
+import type { ICompatibleKeySystem, IMediaConfiguration } from "../types";
+import { ProberStatus } from "../types";
 
 export interface IMediaKeySystemInfos {
   name: string;
@@ -37,7 +33,7 @@ export default function probeDRMInfos(
   mediaConfig: IMediaConfiguration
 ): Promise<[ProberStatus, ICompatibleKeySystem?]> {
   const keySystem = mediaConfig.keySystem;
-  if (keySystem == null || keySystem.type == null) {
+  if (isNullOrUndefined(keySystem) || isNullOrUndefined(keySystem.type)) {
     return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
       "Missing a type argument to request a media key system access.");
   }

@@ -50,11 +50,11 @@ export function replacePeriods(
     const newPeriod = newPeriods[i];
     let j = firstUnhandledPeriodIdx;
     let oldPeriod = oldPeriods[j];
-    while (oldPeriod != null && oldPeriod.id !== newPeriod.id) {
+    while (oldPeriod !== undefined && oldPeriod.id !== newPeriod.id) {
       j++;
       oldPeriod = oldPeriods[j];
     }
-    if (oldPeriod != null) {
+    if (oldPeriod !== undefined) {
       const result = updatePeriodInPlace(oldPeriod, newPeriod, MANIFEST_UPDATE_TYPE.Full);
       res.updatedPeriods.push({
         period: {

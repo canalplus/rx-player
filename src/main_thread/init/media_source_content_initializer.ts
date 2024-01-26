@@ -65,9 +65,7 @@ import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import type { PlaybackObserver } from "../api";
-import type {
-  IContentProtection,
-  IProcessedProtectionData } from "../decrypt";
+import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
 import { getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";

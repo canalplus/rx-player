@@ -24,6 +24,7 @@ import type {
 import {
   areSameContent,
 } from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../utils/ranges";
 import type {
@@ -347,7 +348,7 @@ export default class SegmentInventory {
 
     // if we still have segments left, they are not affiliated to any range.
     // They might have been garbage collected, delete them from here.
-    if (thisSegment != null) {
+    if (!isNullOrUndefined(thisSegment)) {
       log.debug("SI: last segments have been GCed",
                 bufferType, inventoryIndex, inventory.length);
       const removed = inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
@@ -899,7 +900,7 @@ function bufferedEndLooksCoherent(
           MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE } = config.getCurrent();
   return Math.abs(end - thisSegment.bufferedEnd) <=
            MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE &&
-         thisSegment.bufferedStart != null &&
+         thisSegment.bufferedStart !== undefined &&
          thisSegment.bufferedEnd > thisSegment.bufferedStart &&
          Math.abs(thisSegment.bufferedEnd - thisSegment.bufferedStart -
            duration) <= Math.min(MAX_MANIFEST_BUFFERED_DURATION_DIFFERENCE,

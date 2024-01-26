@@ -324,7 +324,7 @@ function getScreenResolutionRef(
 ) : IReadOnlySharedReference<{ width : number | undefined;
                                height : number | undefined;
                                pixelRatio : number; }> {
-  const pixelRatio = globalScope.devicePixelRatio == null ||
+  const pixelRatio = isNullOrUndefined(globalScope.devicePixelRatio) ||
                      globalScope.devicePixelRatio === 0 ? 1 :
                                                           globalScope.devicePixelRatio;
   const ref = new SharedReference<{
@@ -369,7 +369,7 @@ function getElementResolutionRef(
                                height : number | undefined;
                                pixelRatio : number; }> {
 
-  const pixelRatio = globalScope.devicePixelRatio == null ||
+  const pixelRatio = isNullOrUndefined(globalScope.devicePixelRatio) ||
                      globalScope.devicePixelRatio === 0 ? 1 :
                                                           globalScope.devicePixelRatio;
   const ref = new SharedReference<{

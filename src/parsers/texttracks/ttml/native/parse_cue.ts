@@ -21,6 +21,7 @@ import {
   makeVTTCue,
 } from "../../../../compat";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
   IStyleList,
 } from "../get_styling";
@@ -175,7 +176,7 @@ function addStyle(cue : ICompatVTTCue, style : IStyleList) {
   const extent = style.extent;
   if (isNonEmptyString(extent)) {
     const results = REGXP_PERCENT_VALUES.exec(extent);
-    if (results != null) {
+    if (!isNullOrUndefined(results)) {
       // Use width value of the extent attribute for size.
       // Height value is ignored.
       cue.size = Number(results[1]);
@@ -200,7 +201,7 @@ function addStyle(cue : ICompatVTTCue, style : IStyleList) {
   const origin = style.origin;
   if (isNonEmptyString(origin)) {
     const results = REGXP_PERCENT_VALUES.exec(origin);
-    if (results != null) {
+    if (!isNullOrUndefined(results)) {
       // for vertical text use first coordinate of tts:origin
       // to represent line of the cue and second - for position.
       // Otherwise (horizontal), use them the other way around.

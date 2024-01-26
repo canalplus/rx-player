@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type {
   IRepresentationAttributes,
   IRepresentationChildren,
@@ -95,7 +96,7 @@ function parseRepresentationChildren(
           }
           break;
         case "SupplementalProperty":
-          if (children.supplementalProperties == null) {
+          if (isNullOrUndefined(children.supplementalProperties)) {
             children.supplementalProperties = [parseScheme(currentElement)];
           } else {
             children.supplementalProperties.push(parseScheme(currentElement));

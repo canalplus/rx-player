@@ -248,9 +248,9 @@ function getDirectFileInitialTime(
 
   if (!isNullOrUndefined(startAt.position)) {
     return startAt.position;
-  } else if (startAt.wallClockTime != null) {
+  } else if (!isNullOrUndefined(startAt.wallClockTime)) {
     return startAt.wallClockTime;
-  } else if (startAt.fromFirstPosition != null) {
+  } else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
     return startAt.fromFirstPosition;
   }
 
@@ -273,7 +273,7 @@ function getDirectFileInitialTime(
       return 0;
     }
     return Math.max(0, livePosition + startAt.fromLivePosition);
-  } else if (startAt.percentage != null) {
+  } else if (!isNullOrUndefined(startAt.percentage)) {
     if (isNullOrUndefined(duration) || !isFinite(duration)) {
       log.warn("startAt.percentage set but no known duration, " +
                "beginning at 0.");
