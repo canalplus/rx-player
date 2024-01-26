@@ -27,9 +27,9 @@ import type { IStyleElements } from "./parse_style_block";
  * @returns {Node}
  */
 export default function createStyledElement(
-  baseNode : Node,
-  styleElements : IStyleElements
-) : HTMLElement {
+  baseNode: Node,
+  styleElements: IStyleElements,
+): HTMLElement {
   const HTMLTags = ["u", "i", "b"];
   const authorizedNodeNames = ["u", "i", "b", "c", "#text"];
 
@@ -37,8 +37,7 @@ export default function createStyledElement(
   let nodeWithStyle;
   if (arrayIncludes(authorizedNodeNames, mainNodeName)) {
     if (mainNodeName === "#text") {
-      const linifiedText = (baseNode as Text).wholeText
-        .split("\n");
+      const linifiedText = (baseNode as Text).wholeText.split("\n");
 
       nodeWithStyle = document.createElement("span");
       for (let i = 0; i < linifiedText.length; i++) {
@@ -52,41 +51,35 @@ export default function createStyledElement(
       }
     } else {
       const nodeClasses = baseNode.nodeName.toLowerCase().split(".");
-      const styleContents : string[] = [];
-      nodeClasses.forEach(nodeClass => {
+      const styleContents: string[] = [];
+      nodeClasses.forEach((nodeClass) => {
         if (isNonEmptyString(styleElements[nodeClass])) {
           styleContents.push(styleElements[nodeClass]);
         }
       });
-      if (styleContents.length !== 0) { // If style must be applied
+      if (styleContents.length !== 0) {
+        // If style must be applied
         const attr = document.createAttribute("style");
         styleContents.forEach((styleContent) => {
           attr.value += styleContent;
         });
-        const nameClass = arrayIncludes(HTMLTags, mainNodeName) ?
-          mainNodeName : "span";
+        const nameClass = arrayIncludes(HTMLTags, mainNodeName) ? mainNodeName : "span";
         nodeWithStyle = document.createElement(nameClass);
         nodeWithStyle.setAttributeNode(attr);
-      } else { // If style mustn't be applied. Rebuild element with tag name
-        const elementTag = !arrayIncludes(HTMLTags, mainNodeName) ?
-          "span" : mainNodeName;
+      } else {
+        // If style mustn't be applied. Rebuild element with tag name
+        const elementTag = !arrayIncludes(HTMLTags, mainNodeName) ? "span" : mainNodeName;
         nodeWithStyle = document.createElement(elementTag);
       }
       for (let j = 0; j < baseNode.childNodes.length; j++) {
-        const child = createStyledElement(
-          baseNode.childNodes[j],
-          styleElements
-        );
+        const child = createStyledElement(baseNode.childNodes[j], styleElements);
         nodeWithStyle.appendChild(child);
       }
     }
   } else {
     nodeWithStyle = document.createElement("span");
     for (let j = 0; j < baseNode.childNodes.length; j++) {
-      const child = createStyledElement(
-        baseNode.childNodes[j],
-        styleElements
-      );
+      const child = createStyledElement(baseNode.childNodes[j], styleElements);
       nodeWithStyle.appendChild(child);
     }
   }

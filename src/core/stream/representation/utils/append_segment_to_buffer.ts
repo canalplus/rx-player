@@ -18,10 +18,7 @@
  * This file allows any Stream to push data to a SegmentSink.
  */
 
-import {
-  MediaError,
-  SourceBufferError,
-} from "../../../../errors";
+import { MediaError, SourceBufferError } from "../../../../errors";
 import log from "../../../../log";
 import { toTaggedTrack } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
@@ -49,21 +46,22 @@ import type { IRepresentationStreamPlaybackObservation } from "../types";
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
-  segmentSink : SegmentSink,
-  dataInfos : IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
-  bufferGoal : IReadOnlySharedReference<number>,
-  cancellationSignal : CancellationSignal
-) : Promise<IRange[]> {
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  segmentSink: SegmentSink,
+  dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
+  bufferGoal: IReadOnlySharedReference<number>,
+  cancellationSignal: CancellationSignal,
+): Promise<IRange[]> {
   try {
     return await segmentSink.pushChunk(dataInfos);
-  } catch (appendError : unknown) {
+  } catch (appendError: unknown) {
     if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
     } else if (!(appendError instanceof SourceBufferError) || !appendError.isBufferFull) {
-      const reason = appendError instanceof Error ?
-        appendError.toString() :
-        "An unknown error happened when pushing content";
+      const reason =
+        appendError instanceof Error
+          ? appendError.toString()
+          : "An unknown error happened when pushing content";
       throw new MediaError("BUFFER_APPEND_ERROR", reason, {
         tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
       });
@@ -85,8 +83,8 @@ export default async function appendSegmentToBuffer<T>(
       if (err2 instanceof CancellationError) {
         throw err2;
       }
-      const reason = err2 instanceof Error ? err2.toString() :
-                                             "Could not clean the buffer";
+      const reason =
+        err2 instanceof Error ? err2.toString() : "Could not clean the buffer";
 
       throw new MediaError("BUFFER_FULL_ERROR", reason, {
         tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],

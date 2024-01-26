@@ -17,7 +17,7 @@ const MANIFEST_URL_INFOS = manifestInfos.url;
  *  @param {Number} [ms=0]
  *  @returns {Promise}
  */
-const sleepWithoutSinonStub = (function() {
+const sleepWithoutSinonStub = (function () {
   const timeoutFn = window.setTimeout;
   return function _nextTick(ms = 0) {
     return new Promise((res) => {
@@ -45,8 +45,7 @@ describe("manifest error management", function () {
 
   it("should retry to download the manifest 5 times", async () => {
     const clock = sinon.useFakeTimers();
-    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, res =>
-      res.respond(500));
+    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (res) => res.respond(500));
 
     player.loadVideo({
       url: manifestInfos.url,

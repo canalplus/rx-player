@@ -21,7 +21,7 @@ Use this method to display the current position to the user.
 const wallClockTime = player.getWallClockTime();
 ```
 
-  - **return value** `number`: Current "wall-clock" position.
+- **return value** `number`: Current "wall-clock" position.
 
 ## Example
 

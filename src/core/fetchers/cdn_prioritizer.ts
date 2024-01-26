@@ -41,12 +41,12 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    * Downgraded CDN immediately have a lower priority than any non-downgraded
    * CDN for a specific amount of time.
    */
-  private _downgradedCdnList : {
+  private _downgradedCdnList: {
     /**
      * Metadata of downgraded CDN, sorted by the time at which they have
      * been downgraded ascending.
      */
-    metadata : ICdnMetadata[];
+    metadata: ICdnMetadata[];
     /**
      * Timeout ID (to give to `clearTimeout`) of elements in the `metadata`
      * array, for the element at the same index in the `metadata` array.
@@ -56,13 +56,13 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
      * `metadata` array which is used considerably more than the `timeouts`
      * array.
      */
-    timeouts : number[];
+    timeouts: number[];
   };
 
   /**
    * @param {Object} destroySignal
    */
-  constructor(destroySignal : CancellationSignal) {
+  constructor(destroySignal: CancellationSignal) {
     super();
     this._downgradedCdnList = { metadata: [], timeouts: [] };
     destroySignal.register(() => {
@@ -92,8 +92,8 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    * `CdnPrioritizer`'s own list of priorities.
    */
   public getCdnPreferenceForResource(
-    everyCdnForResource : ICdnMetadata[]
-  ) : ICdnMetadata[] {
+    everyCdnForResource: ICdnMetadata[],
+  ): ICdnMetadata[] {
     if (everyCdnForResource.length <= 1) {
       // The huge majority of contents have only one CDN available.
       // Here, prioritizing make no sense.
@@ -112,7 +112,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    * a wanted resource.
    * @param {string} metadata
    */
-  public downgradeCdn(metadata : ICdnMetadata) : void {
+  public downgradeCdn(metadata: ICdnMetadata): void {
     const indexOf = indexOfMetadata(this._downgradedCdnList.metadata, metadata);
     if (indexOf >= 0) {
       this._removeIndexFromDowngradeList(indexOf);
@@ -151,26 +151,30 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    * `CdnPrioritizer`'s own list of priorities.
    */
   private _innerGetCdnPreferenceForResource(
-    everyCdnForResource : ICdnMetadata[]
-  ) : ICdnMetadata[] {
-    const [allowedInOrder, downgradedInOrder] = everyCdnForResource
-      .reduce((acc : [ICdnMetadata[], ICdnMetadata[]], elt : ICdnMetadata) => {
-        if (this._downgradedCdnList.metadata.some(c => c.id === elt.id &&
-                                                       c.baseUrl === elt.baseUrl))
-        {
+    everyCdnForResource: ICdnMetadata[],
+  ): ICdnMetadata[] {
+    const [allowedInOrder, downgradedInOrder] = everyCdnForResource.reduce(
+      (acc: [ICdnMetadata[], ICdnMetadata[]], elt: ICdnMetadata) => {
+        if (
+          this._downgradedCdnList.metadata.some(
+            (c) => c.id === elt.id && c.baseUrl === elt.baseUrl,
+          )
+        ) {
           acc[1].push(elt);
         } else {
           acc[0].push(elt);
         }
         return acc;
-      }, [[], []]);
+      },
+      [[], []],
+    );
     return allowedInOrder.concat(downgradedInOrder);
   }
 
   /**
    * @param {number} index
    */
-  private _removeIndexFromDowngradeList(index : number) : void {
+  private _removeIndexFromDowngradeList(index: number): void {
     this._downgradedCdnList.metadata.splice(index, 1);
     const oldTimeout = this._downgradedCdnList.timeouts.splice(index, 1);
     clearTimeout(oldTimeout[0]);
@@ -185,7 +189,7 @@ export interface ICdnPrioritizerEvents {
    * You might want to re-check if a CDN should still be used when this event
    * is triggered.
    */
-  priorityChange : null;
+  priorityChange: null;
 }
 
 /**
@@ -195,13 +199,11 @@ export interface ICdnPrioritizerEvents {
  * @param {Object} elt
  * @returns {number}
  */
-function indexOfMetadata(
-  arr : ICdnMetadata[],
-  elt : ICdnMetadata
-) : number {
+function indexOfMetadata(arr: ICdnMetadata[], elt: ICdnMetadata): number {
   if (arr.length === 0) {
     return -1;
   }
-  return elt.id !== undefined ? arrayFindIndex(arr, m => m.id === elt.id) :
-                                arrayFindIndex(arr, m => m.baseUrl === elt.baseUrl);
+  return elt.id !== undefined
+    ? arrayFindIndex(arr, (m) => m.id === elt.id)
+    : arrayFindIndex(arr, (m) => m.baseUrl === elt.baseUrl);
 }

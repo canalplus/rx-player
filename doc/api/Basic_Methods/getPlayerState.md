@@ -49,7 +49,8 @@ we have a special [page of documentation on player states](../Player_States.md).
 ```js
 const state = player.getPlayerState();
 ```
-  - **return value** `string`:  The current state of the player.
+
+- **return value** `string`: The current state of the player.
 
 ## Example
 

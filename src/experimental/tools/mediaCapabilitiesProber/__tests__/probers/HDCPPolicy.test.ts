@@ -36,12 +36,12 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   });
 
   it("should throw if no requestMediaKeySystemAccess", () => {
-    jest.mock("../../../../../compat/eme", () => ({
-    }));
+    jest.mock("../../../../../compat/eme", () => ({}));
     const probeHDCPPolicy = jest.requireActual("../../probers/HDCPPolicy").default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toEqual(
-      "MediaCapabilitiesProber >>> API_CALL: API not available");
+      "MediaCapabilitiesProber >>> API_CALL: API not available",
+    );
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
@@ -58,7 +58,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
-      "Missing policy argument for calling getStatusForPolicy."
+        "Missing policy argument for calling getStatusForPolicy.",
     );
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
@@ -150,4 +150,3 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
   });
 });
-

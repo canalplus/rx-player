@@ -26,53 +26,50 @@ describe("Compat - canRelyOnVideoVisibilityAndSize", () => {
 
   it("should return true on any browser but Firefox", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: false };
+      return { __esModule: true as const, isFirefox: false };
     });
-    const canRelyOnVideoVisibilityAndSize =
-      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
+    const canRelyOnVideoVisibilityAndSize = jest.requireActual(
+      "../can_rely_on_video_visibility_and_size.ts",
+    );
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
   it("should return true on Firefox but the version is unknown", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: true };
+      return { __esModule: true as const, isFirefox: true };
     });
     jest.mock("../browser_version", () => {
-      return { __esModule: true as const,
-               getFirefoxVersion: () => -1 };
+      return { __esModule: true as const, getFirefoxVersion: () => -1 };
     });
-    const canRelyOnVideoVisibilityAndSize =
-      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
+    const canRelyOnVideoVisibilityAndSize = jest.requireActual(
+      "../can_rely_on_video_visibility_and_size.ts",
+    );
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
   it("should return true on Firefox < 67>", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: true };
+      return { __esModule: true as const, isFirefox: true };
     });
     jest.mock("../browser_version", () => {
-      return { __esModule: true as const,
-               getFirefoxVersion: () => 60 };
+      return { __esModule: true as const, getFirefoxVersion: () => 60 };
     });
-    const canRelyOnVideoVisibilityAndSize =
-      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
+    const canRelyOnVideoVisibilityAndSize = jest.requireActual(
+      "../can_rely_on_video_visibility_and_size.ts",
+    );
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(true);
   });
 
   it("should return false on Firefox >= 67", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: true };
+      return { __esModule: true as const, isFirefox: true };
     });
     jest.mock("../browser_version", () => {
-      return { __esModule: true as const,
-               getFirefoxVersion: () => 83 };
+      return { __esModule: true as const, getFirefoxVersion: () => 83 };
     });
-    const canRelyOnVideoVisibilityAndSize =
-      jest.requireActual("../can_rely_on_video_visibility_and_size.ts");
+    const canRelyOnVideoVisibilityAndSize = jest.requireActual(
+      "../can_rely_on_video_visibility_and_size.ts",
+    );
     expect(canRelyOnVideoVisibilityAndSize.default()).toBe(false);
   });
 });

@@ -15,12 +15,7 @@
     "types": [],
     "moduleResolution": "node",
     "jsx": "react",
-    "typeRoots": [
-      "../../node_modules/@types"
-    ]
+    "typeRoots": ["../../node_modules/@types"],
   },
-  "include": [
-    "../../src/globals.prod.d.ts",
-    "./scripts/**/*"
-  ]
+  "include": ["../../src/globals.prod.d.ts", "./scripts/**/*"],
 }

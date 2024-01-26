@@ -24,117 +24,117 @@ import {
 } from "../utils";
 
 const webvtt1 = [
-  "WEBVTT",                                                                   // 0
-  "",                                                                         // 1
-  "STYLE",                                                                    // 2
-  "::cue {",                                                                  // 3
-  "  background-image: linear-gradient(to bottom, dimgray, lightgray);",      // 4
-  "  color: papayawhip;",                                                     // 5
-  "}",                                                                        // 6
-  "/* Style blocks cannot use blank lines nor \"dash dash greater than\" */", // 7
-  "",                                                                         // 8
-  "NOTE comment blocks can be used between style blocks.",                    // 9
-  "",                                                                         // 10
-  "STYLE",                                                                    // 11
-  "::cue(b) {",                                                               // 12
-  "  color: peachpuff;",                                                      // 13
-  "}",                                                                        // 14
-  "",                                                                         // 15
-  "00:00:00.000 --> 00:00:10.000",                                            // 16
-  "- Hello <b>world</b>.",                                                    // 17
-  "",                                                                         // 18
-  "NOTE style blocks cannot appear after the first cue.",                     // 19
-  "",                                                                         // 20
-  "00:05:00.000 --> 00:06:10.000",                                            // 21
-  "Rendez-vous on Champs-Elysees",                                            // 22
-  "",                                                                         // 23
+  "WEBVTT", // 0
+  "", // 1
+  "STYLE", // 2
+  "::cue {", // 3
+  "  background-image: linear-gradient(to bottom, dimgray, lightgray);", // 4
+  "  color: papayawhip;", // 5
+  "}", // 6
+  '/* Style blocks cannot use blank lines nor "dash dash greater than" */', // 7
+  "", // 8
+  "NOTE comment blocks can be used between style blocks.", // 9
+  "", // 10
+  "STYLE", // 11
+  "::cue(b) {", // 12
+  "  color: peachpuff;", // 13
+  "}", // 14
+  "", // 15
+  "00:00:00.000 --> 00:00:10.000", // 16
+  "- Hello <b>world</b>.", // 17
+  "", // 18
+  "NOTE style blocks cannot appear after the first cue.", // 19
+  "", // 20
+  "00:05:00.000 --> 00:06:10.000", // 21
+  "Rendez-vous on Champs-Elysees", // 22
+  "", // 23
 ];
 
 const webvtt2 = [
   "00:00:00.000 --> 00:00:10.000", // 0
-  "Toussaint Louverture",          // 1
-  "",                              // 2
-  "",                              // 3
+  "Toussaint Louverture", // 1
+  "", // 2
+  "", // 3
   "00:02:00.000 --> 00:02:10.000", // 4
-  "Liberte",                       // 5
-  "Egalite",                       // 6
-  "",                              // 7
+  "Liberte", // 5
+  "Egalite", // 6
+  "", // 7
   "00:07:00.000 --> 00:07:10.000", // 8
-  "Fraternite",                    // 9
+  "Fraternite", // 9
 ];
 
 const webvtt3 = [
-  "WEBVTT",                          // 0
-  "",                                // 1
-  "NOTE",                            // 2
-  "00:17:31.080 --> 00:17:32.200",   // 3
-  "Je suis le petit chevalier",      // 4
-  "Avec le ciel dessus mes yeux",    // 5
-  "Je ne peux pas me effroyer",      // 6
-  "",                                // 7
-  "",                                // 8
-  "00:17:55.520 --> 00:17:57.640",   // 9
-  "Je suis le petit chevalier",      // 10
-  "",                                // 11
-  "00:18:01.520 --> 00:18:09.640",   // 12
-  "",                                // 13
+  "WEBVTT", // 0
+  "", // 1
+  "NOTE", // 2
+  "00:17:31.080 --> 00:17:32.200", // 3
+  "Je suis le petit chevalier", // 4
+  "Avec le ciel dessus mes yeux", // 5
+  "Je ne peux pas me effroyer", // 6
+  "", // 7
+  "", // 8
+  "00:17:55.520 --> 00:17:57.640", // 9
+  "Je suis le petit chevalier", // 10
+  "", // 11
+  "00:18:01.520 --> 00:18:09.640", // 12
+  "", // 13
   "Avec la terre dessous mes pieds", // 14
-  "",                                // 15
-  "112",                             // 16
-  "00:18:31.080 --> 00:18:32.200",   // 17
-  "NOTE",                            // 18
-  "TOTO",                            // 19
-  "",                                // 20
-  "113",                             // 21
-  "00:18:51.080 --> 00:18:52.200",   // 22
-  "J'irai te visiter",               // 23
-  "J'irai te visiter",               // 24
-  "",                                // 25
+  "", // 15
+  "112", // 16
+  "00:18:31.080 --> 00:18:32.200", // 17
+  "NOTE", // 18
+  "TOTO", // 19
+  "", // 20
+  "113", // 21
+  "00:18:51.080 --> 00:18:52.200", // 22
+  "J'irai te visiter", // 23
+  "J'irai te visiter", // 24
+  "", // 25
 ];
 
 const webvtt4 = [
-  "WEBVTT",                          // 0
-  "",                                // 1
-  "STYLE",                           // 2
-  "00:17:31.080 --> 00:17:32.200",   // 3
-  "Ce que j'ai fais, ce soir la",    // 4
-  "Ce qu'elle a dit, ce soir la",    // 5
-  "",                                // 6
-  "",                                // 7
-  "",                                // 8
-  "Realisant mon espoir",            // 9
-  "",                                // 10
-  "",                                // 11
-  "",                                // 12
+  "WEBVTT", // 0
+  "", // 1
+  "STYLE", // 2
+  "00:17:31.080 --> 00:17:32.200", // 3
+  "Ce que j'ai fais, ce soir la", // 4
+  "Ce qu'elle a dit, ce soir la", // 5
+  "", // 6
+  "", // 7
+  "", // 8
+  "Realisant mon espoir", // 9
+  "", // 10
+  "", // 11
+  "", // 12
   "Je me lance, vers la gloire, OK", // 13
 ];
 
 const webvtt5 = [
-  "WEBVTT",                                // 0
-  " Some Header",                          // 1
-  "BLALABAL",                              // 2
-  "",                                      // 3
-  "",                                      // 4
-  "",                                      // 5
-  "REGION",                                // 6
-  "00:17:31.080 --> 00:17:32.200",         // 7
+  "WEBVTT", // 0
+  " Some Header", // 1
+  "BLALABAL", // 2
+  "", // 3
+  "", // 4
+  "", // 5
+  "REGION", // 6
+  "00:17:31.080 --> 00:17:32.200", // 7
   "Je n'ai plus peur de perdre mon temps", // 8
-  "",                                      // 9
-  "00:18:51.080 --> 00:18:52.200",         // 10
+  "", // 9
+  "00:18:51.080 --> 00:18:52.200", // 10
   "Je n'ai plus peur de perdre mes dents", // 11
 ];
 
 const webvtt6 = [
-  "",                                        // 0
-  "112",                                     // 1
-  "00:17:31.080 --> 00:17:32.200",           // 2
-  "J'ai tres tres peur ca c'est certain",    // 3
-  "",                                        // 4
-  "NOTE",                                    // 5
-  "",                                        // 6
+  "", // 0
+  "112", // 1
+  "00:17:31.080 --> 00:17:32.200", // 2
+  "J'ai tres tres peur ca c'est certain", // 3
+  "", // 4
+  "NOTE", // 5
+  "", // 6
   "J'ai tres tres peur mais beaucoup moins", // 7
-  "",                                        // 8
-  "",                                        // 9
+  "", // 8
+  "", // 9
 ];
 
 describe("parsers - webvtt - utils", () => {
@@ -156,7 +156,7 @@ describe("parsers - webvtt - utils", () => {
     });
 
     it("should return 0 if there is no content", () => {
-      const webvttFile : string[] = [];
+      const webvttFile: string[] = [];
       expect(getFirstLineAfterHeader(webvttFile)).toBe(0);
     });
   });
@@ -217,16 +217,12 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfNoteBlock(["", "NOTE ", "TOTO"], 1)).toBe(true);
     });
 
-    /* eslint-disable max-len */
     it("should return true if called on line containing `NOTE` and spaces and text", () => {
-    /* eslint-enable max-len */
       expect(isStartOfNoteBlock(webvtt1, 9)).toBe(true);
       expect(isStartOfNoteBlock(webvtt1, 19)).toBe(true);
     });
 
-    /* eslint-disable max-len */
     it("should return false if called on a line containing `NOTE` and text attached", () => {
-    /* eslint-enable max-len */
       expect(isStartOfNoteBlock(["NOTEdsj f"], 0)).toBe(false);
       expect(isStartOfNoteBlock(["aaa", "NOTEoej ewj ", "aaa"], 1)).toBe(false);
     });
@@ -259,17 +255,13 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfRegionBlock(["REGION         "], 0)).toBe(true);
     });
 
-    /* eslint-disable max-len */
     it("should return true if called on line containing `REGION` and spaces and text", () => {
-    /* eslint-enable max-len */
       expect(isStartOfRegionBlock(["REGION dsj f"], 0)).toBe(true);
       expect(isStartOfRegionBlock(["REGION   oej ewj "], 0)).toBe(true);
       expect(isStartOfRegionBlock(["REGION         eowj pogj qpeoj"], 0)).toBe(true);
     });
 
-    /* eslint-disable max-len */
     it("should return false if called on a line containing `REGION` and text attached", () => {
-    /* eslint-enable max-len */
       expect(isStartOfRegionBlock(["REGIONdsj f"], 0)).toBe(false);
       expect(isStartOfRegionBlock(["REGIONoej ewj "], 0)).toBe(false);
       expect(isStartOfRegionBlock(["REGIONeowj pogj qpeoj"], 0)).toBe(false);
@@ -310,17 +302,13 @@ describe("parsers - webvtt - utils", () => {
       expect(isStartOfStyleBlock(["STYLE         "], 0)).toBe(true);
     });
 
-    /* eslint-disable max-len */
     it("should return true if called on line containing `STYLE` and spaces and text", () => {
-    /* eslint-enable max-len */
       expect(isStartOfStyleBlock(["STYLE dsj f"], 0)).toBe(true);
       expect(isStartOfStyleBlock(["STYLE   oej ewj "], 0)).toBe(true);
       expect(isStartOfStyleBlock(["STYLE         eowj pogj qpeoj"], 0)).toBe(true);
     });
 
-    /* eslint-disable max-len */
     it("should return false if called on a line containing `STYLE` and text attached", () => {
-    /* eslint-enable max-len */
       expect(isStartOfStyleBlock(["STYLEdsj f"], 0)).toBe(false);
       expect(isStartOfStyleBlock(["STYLEoej ewj "], 0)).toBe(false);
       expect(isStartOfStyleBlock(["STYLEeowj pogj qpeoj"], 0)).toBe(false);

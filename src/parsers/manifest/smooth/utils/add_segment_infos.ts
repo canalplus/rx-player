@@ -16,9 +16,11 @@
 
 import { getIndexSegmentEnd } from "../../utils/index_helpers";
 
-export interface IIndexSegment { start : number;
-                                 duration : number;
-                                 repeatCount: number; }
+export interface IIndexSegment {
+  start: number;
+  duration: number;
+  repeatCount: number;
+}
 
 /**
  * Add a new segment to the index.
@@ -31,22 +33,21 @@ export interface IIndexSegment { start : number;
  * @returns {Boolean} - true if the segment has been added
  */
 export default function _addSegmentInfos(
-  timeline : IIndexSegment[],
-  timescale : number,
-  newSegment : { time : number;
-                 duration : number;
-                 timescale : number; },
-  currentSegment : { time : number;
-                     duration : number; }
-) : boolean {
+  timeline: IIndexSegment[],
+  timescale: number,
+  newSegment: { time: number; duration: number; timescale: number },
+  currentSegment: { time: number; duration: number },
+): boolean {
   const timelineLength = timeline.length;
   const last = timeline[timelineLength - 1];
 
-  const scaledNewSegment = newSegment.timescale === timescale ?
-    { time: newSegment.time,
-      duration: newSegment.duration } :
-    { time: (newSegment.time / newSegment.timescale) * timescale,
-      duration: (newSegment.duration / newSegment.timescale) * timescale };
+  const scaledNewSegment =
+    newSegment.timescale === timescale
+      ? { time: newSegment.time, duration: newSegment.duration }
+      : {
+          time: (newSegment.time / newSegment.timescale) * timescale,
+          duration: (newSegment.duration / newSegment.timescale) * timescale,
+        };
 
   // in some circumstances, the new segment information are only duration
   // information that we could use to deduct the start of the next segment.
@@ -64,9 +65,11 @@ export default function _addSegmentInfos(
     if (last.duration === scaledNewSegment.duration) {
       last.repeatCount++;
     } else {
-      timeline.push({ duration: scaledNewSegment.duration,
-                      start: scaledNewSegment.time,
-                      repeatCount: 0 });
+      timeline.push({
+        duration: scaledNewSegment.duration,
+        start: scaledNewSegment.time,
+        repeatCount: 0,
+      });
     }
     return true;
   }

@@ -38,14 +38,14 @@ Can be either:
   player](../Getting_Started/Minimal_Player.md), you will need to add at least
   either one of the following features to be able to play DASH contents:
 
-   - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
+  - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
 
-   - the `DASH_WASM` feature (backed by a WebAssembly parser, more efficient
-     when handling very large MPDs).
-     More information in the [`DASH_WASM` feature
-     documentation](./Miscellaneous/DASH_WASM_Parser.md).
+  - the `DASH_WASM` feature (backed by a WebAssembly parser, more efficient
+    when handling very large MPDs).
+    More information in the [`DASH_WASM` feature
+    documentation](./Miscellaneous/DASH_WASM_Parser.md).
 
-   - or both (which will use the latter only when available)
+  - or both (which will use the latter only when available)
 
 - **`"smooth"` - for Microsoft Smooth Streaming contents**
 
@@ -137,7 +137,6 @@ decrypted but unnecessary if the content is not encrypted.
 As `keySystems` options are numerous, they are described in its own documentation
 page, [Decryption Options](./Decryption_Options.md).
 
-
 ### autoPlay
 
 _type_: `Boolean|undefined`
@@ -159,7 +158,6 @@ containing a `MEDIA_ERROR` with the code: `MEDIA_ERR_BLOCKED_AUTOPLAY`.
 A solution in that case would be to propose to your users an UI element to
 trigger the play with an interaction.
 </div>
-
 
 ### startAt
 
@@ -201,7 +199,6 @@ can be either:
     by the manifest.
   - for VoD contents, it is the difference between the starting position and
     the end position of the content.
-
 
 - **fromLivePosition** relative position relative to the content's live edge
   (for live contents, it is the position that is intended to be broadcasted
@@ -288,7 +285,6 @@ player.loadVideo({
 });
 ```
 
-
 ### requestConfig
 
 _type_: `Object`
@@ -307,73 +303,73 @@ This object can take the following properties (all are optional):
 - `segment` (`object|undefined`): If set, segment-specific request
   configuration. That object can contain any of the following properties:
 
-    - `maxRetry` (`number|undefined`): Maximum number of times a segment
-      request will be retried when an error happen - only on some condition [1].
+  - `maxRetry` (`number|undefined`): Maximum number of times a segment
+    request will be retried when an error happen - only on some condition [1].
 
-      Those retry will be done with a progressive delay, to avoid overloading a
-      CDN. When this count is reached, the player will stop and throw a fatal
-      error.
+    Those retry will be done with a progressive delay, to avoid overloading a
+    CDN. When this count is reached, the player will stop and throw a fatal
+    error.
 
-      Defaults to `4`.
+    Defaults to `4`.
 
-    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
-      that the client can wait for downloading all the data of the request response.
-      If all data are not downloaded within the specified timeout, segment request are
-      aborted and, depending on other options, retried.
+  - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
+    that the client can wait for downloading all the data of the request response.
+    If all data are not downloaded within the specified timeout, segment request are
+    aborted and, depending on other options, retried.
 
-      To set to `-1` for no timeout.
+    To set to `-1` for no timeout.
 
-      `undefined` (the default) will lead to a default, large, timeout being
-      used.
+    `undefined` (the default) will lead to a default, large, timeout being
+    used.
 
-    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
-      that the client can wait for receiving the responses headers and status code.
-      If they are not received within the specified timeout, segment requests are aborted and,
-      depending on other options, retried.
-      It differs from `timeout` option as `connectionTimeout` will not time out if the download
-      of the response body took too long.
-      The `connectionTimeout` should be lower than `timeout`
+  - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
+    that the client can wait for receiving the responses headers and status code.
+    If they are not received within the specified timeout, segment requests are aborted and,
+    depending on other options, retried.
+    It differs from `timeout` option as `connectionTimeout` will not time out if the download
+    of the response body took too long.
+    The `connectionTimeout` should be lower than `timeout`
 
-      To set to `-1` for no timeout.
+    To set to `-1` for no timeout.
 
-      `undefined` (the default) will lead to a default, large, timeout being
-      used.
+    `undefined` (the default) will lead to a default, large, timeout being
+    used.
 
 - `manifest` (`object|undefined`): If set, manifest-specific request
   configuration. That object can contain any of the following properties:
 
-    - `maxRetry` (`number|undefined`): Maximum number of times a Manifest request
-      will be retried when a request error happen - only on some condition [1].
-      Defaults to `4`.
+  - `maxRetry` (`number|undefined`): Maximum number of times a Manifest request
+    will be retried when a request error happen - only on some condition [1].
+    Defaults to `4`.
 
-      Those retry will be done with a progressive delay, to avoid overloading a
-      CDN. When this count is reached, the player will stop and throw a fatal
-      error.
+    Those retry will be done with a progressive delay, to avoid overloading a
+    CDN. When this count is reached, the player will stop and throw a fatal
+    error.
 
-      Defaults to `4`.
+    Defaults to `4`.
 
-    - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
-      that the client can wait for downloading all the data of the request response.
-      If all data are not downloaded within the specified timeout, manifest requests are
-      aborted and, depending on other options, retried.
+  - `timeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
+    that the client can wait for downloading all the data of the request response.
+    If all data are not downloaded within the specified timeout, manifest requests are
+    aborted and, depending on other options, retried.
 
-      To set to `-1` for no timeout.
+    To set to `-1` for no timeout.
 
-      `undefined` (the default) will lead to a default, large, timeout being
-      used.
+    `undefined` (the default) will lead to a default, large, timeout being
+    used.
 
-    - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
-      that the client can wait for receiving the responses headers and status code.
-      If they are not received within the specified timeout, manifest requests are aborted and,
-      depending on other options, retried.
-      It differs from `timeout` option as `connectionTimeout` will not time out if the download
-      of the response body took too long.
-      The `connectionTimeout` should be lower than `timeout`
+  - `connectionTimeout` (`number|undefined`): Specifies the maximum time, in milliseconds,
+    that the client can wait for receiving the responses headers and status code.
+    If they are not received within the specified timeout, manifest requests are aborted and,
+    depending on other options, retried.
+    It differs from `timeout` option as `connectionTimeout` will not time out if the download
+    of the response body took too long.
+    The `connectionTimeout` should be lower than `timeout`
 
-      To set to `-1` for no timeout.
+    To set to `-1` for no timeout.
 
-      `undefined` (the default) will lead to a default, large, timeout being
-      used.
+    `undefined` (the default) will lead to a default, large, timeout being
+    used.
 
 [1] To retry a request, one of the following condition should be met:
 
@@ -385,7 +381,6 @@ This object can take the following properties (all are optional):
 
 - the request failed because of an unknown request error (might be a
   parsing/interface error)
-
 
 ### textTrackMode
 
@@ -424,7 +419,6 @@ mode.
 More infos on supported text tracks can be found in the [text track
 documentation](./Miscellaneous/Text_Tracks.md).
 
-
 ### textTrackElement
 
 _type_: `HTMLElement|undefined`
@@ -443,7 +437,6 @@ than the media element it applies to (this allows us to properly place the
 subtitles position without polling where the video is in your UI).
 You can however re-size or update the style of it as you wish, to better suit
 your UI needs.
-
 
 ### minimumManifestUpdateInterval
 
@@ -484,7 +477,6 @@ rxPlayer.loadVideo({
   },
 });
 ```
-
 
 ### initialManifest
 
@@ -527,7 +519,6 @@ Because of that, it is recommended to only set that options for live/dynamic
 contents if its request was done immediately before the `loadVideo`
 call.
 
-
 ### representationFilter
 
 _type_: `Function|string|undefined`
@@ -539,7 +530,7 @@ transport option</a>)
 
 Allows to filter out `Representation`s (i.e. media qualities) seen in the
 Manifest, to prevent the RxPlayer from ever playing them but also from listing
-them through the tracks and `Representation` API.  It will be as if they weren't
+them through the tracks and `Representation` API. It will be as if they weren't
 present in the content's Manifest in the first place.
 
 Note that you generally don't need to set this advanced option as it is
@@ -555,16 +546,17 @@ avoid them by using other RxPlayer API like `setVideoTrack` and/or
 This function receives information on each `Representation` encountered in
 a Manifest, and should return `true` if you want to keep such Representation or
 to `false` if you want to filter it out. For example:
+
 ```js
 rxPlayer.loadVideo({
-    // Filter out video content with a higher resolution than 1080p:
-    representationFilter(representation, infos) {
-        if (context.trackType !== "video") {
-            return true;
-        }
-        const height = representation.height;
-        return typeof height === "number" ? height <= 1080 : true;
-    },
+  // Filter out video content with a higher resolution than 1080p:
+  representationFilter(representation, infos) {
+    if (context.trackType !== "video") {
+      return true;
+    }
+    const height = representation.height;
+    return typeof height === "number" ? height <= 1080 : true;
+  },
 });
 ```
 
@@ -576,51 +568,50 @@ Note that if you're running in the "multithread" mode, the
 `representationFilter` function might be run in a WebWorker environment and
 thus face several restrictions.
 
--   The function has to be defined as a string (note that defining a
-    `representationFilter` as a string also works in the regular "main" mode)
-    which contains the function.
+- The function has to be defined as a string (note that defining a
+  `representationFilter` as a string also works in the regular "main" mode)
+  which contains the function.
 
-    For example to filter only video Representation which are 1080p or lower,
-    you should write it completely under string form, like this:
+  For example to filter only video Representation which are 1080p or lower,
+  you should write it completely under string form, like this:
 
-    ```js
-    `function (representation, context) {
-        if (context.trackType !== 'video') {
-          return true;
-        }
-        const height = representation.height;
-        return typeof height === 'number' ? height <= 1080 : true;
-      }`;
-    ```
+  ```js
+  `function (representation, context) {
+      if (context.trackType !== 'video') {
+        return true;
+      }
+      const height = representation.height;
+      return typeof height === 'number' ? height <= 1080 : true;
+    }`;
+  ```
 
-    To explain succintly how it works, the RxPlayer is then transforming it to
-    a function when in the right environment (WebWorker or main thread) by
-    passing it through the `Function` constructor (new Function(...)).
+  To explain succintly how it works, the RxPlayer is then transforming it to
+  a function when in the right environment (WebWorker or main thread) by
+  passing it through the `Function` constructor (new Function(...)).
 
-    As the provided string will be executed, this option is sensible to attacks
-    like cross-site scripting. It is __VERY__ important to either not rely on
-    external (config, user) input at all to produce that string, or if not
-    possible to make sure that all potential inputs will lead to expected
-    behavior (an easy way of doing this for example is too only allow inputed
-    JS numbers, a whitelisted choice of properties etc.).
+  As the provided string will be executed, this option is sensible to attacks
+  like cross-site scripting. It is **VERY** important to either not rely on
+  external (config, user) input at all to produce that string, or if not
+  possible to make sure that all potential inputs will lead to expected
+  behavior (an easy way of doing this for example is too only allow inputed
+  JS numbers, a whitelisted choice of properties etc.).
 
--   As you do not control the scope nor the realm in which it is run in,
-    this function should not use variables declared in its current outer
-    scope, only on its declared parameters.
-    This also means that you should not rely on variables declared in
-    things like `window`.
+- As you do not control the scope nor the realm in which it is run in,
+  this function should not use variables declared in its current outer
+  scope, only on its declared parameters.
+  This also means that you should not rely on variables declared in
+  things like `window`.
 
--   It cannot access API that may not be available in a WebWorker or main
-    thread environment, as this function may run in one or the other.
-    In particular this means: no `document`, no `window`, no
-    `localStorage`.
-    Still note that many API are still available in both environments:
-    `JSON`, `Math`, `performance`, most JavaScript features...
+- It cannot access API that may not be available in a WebWorker or main
+  thread environment, as this function may run in one or the other.
+  In particular this means: no `document`, no `window`, no
+  `localStorage`.
+  Still note that many API are still available in both environments:
+  `JSON`, `Math`, `performance`, most JavaScript features...
 
--   It probably won't be transpiled by your building dependencies.
-    This means that you should refrain from using too new JS features that may
-    not be supported natively by targeted devices.
-
+- It probably won't be transpiled by your building dependencies.
+  This means that you should refrain from using too new JS features that may
+  not be supported natively by targeted devices.
 
 ### segmentLoader
 
@@ -641,10 +632,10 @@ yourself.
 
 ```js
 rxPlayer.loadVideo({
-    // ...
-    segmentLoader(infos, callbacks) {
-        // logic to download a segment
-    },
+  // ...
+  segmentLoader(infos, callbacks) {
+    // logic to download a segment
+  },
 });
 ```
 
@@ -669,10 +660,10 @@ Manifest request).
 
 ```js
 rxPlayer.loadVideo({
-    // ...
-    manifestLoader(url, callbacks) {
-        // logic to fetch the Manifest
-    },
+  // ...
+  manifestLoader(url, callbacks) {
+    // logic to fetch the Manifest
+  },
 });
 ```
 
@@ -717,7 +708,6 @@ Can be set to one of those two values:
 
   _More information about the `"RELOADING"` state can be found in [the
   player states documentation](./Player_States.md)._
-
 
 ### defaultAudioTrackSwitchingMode
 
@@ -767,7 +757,6 @@ Those are the possible values for that option:
   More information about the `"RELOADING"` state can be found in [the
   player states documentation](./Player_States.md).
 
-
 ### lowLatencyMode
 
 _type_: `Boolean|undefined`
@@ -785,7 +774,6 @@ through the `startAt` option.
 
 More information on playing low-latency DASH contents can be found in the
 [corresponding documentation page](./Miscellaneous/Low_Latency.md).
-
 
 ### enableFastSwitching
 
@@ -833,7 +821,6 @@ would even break playback in some situations: when multi-Period DASH contents
 have overlapping segments, when the browser garbage-collect partially a
 segment...
 
-
 ### mode
 
 _type_: `string|undefined`
@@ -850,33 +837,32 @@ The default `"auto"` mode should be sufficient for most use cases.
 
 It can be set to the following values:
 
--   `"main"`: the player's main logic will run on the main thread, even if
-    multithread features have been enabled.
+- `"main"`: the player's main logic will run on the main thread, even if
+  multithread features have been enabled.
 
-    If using the [minimal build](../Getting_Started/Minimal_Player.md) of the
-    RxPlayer, you will have to have imported at least one streaming protocol
-    parser (e.g. `DASH` or `SMOOTH`) for the `"main"` mode to be able to run.
-    In other cases, a `loadVideo` call will throw.
+  If using the [minimal build](../Getting_Started/Minimal_Player.md) of the
+  RxPlayer, you will have to have imported at least one streaming protocol
+  parser (e.g. `DASH` or `SMOOTH`) for the `"main"` mode to be able to run.
+  In other cases, a `loadVideo` call will throw.
 
--   `"multithread"`: the player's main logic will run on a WebWorker and
-    the player's API on the main thread alongside the application.
-    This hopefully improves your application's as well as the player's responsivity
-    on low-end devices while the content is playing.
+- `"multithread"`: the player's main logic will run on a WebWorker and
+  the player's API on the main thread alongside the application.
+  This hopefully improves your application's as well as the player's responsivity
+  on low-end devices while the content is playing.
 
-    Note that there is several requirements to be able to run on `"multithread"`
-    mode and several limitations, they are all documentend [in the
-    MultiThreading documentation page](Miscellaneous/MultiThreading.md).
+  Note that there is several requirements to be able to run on `"multithread"`
+  mode and several limitations, they are all documentend [in the
+  MultiThreading documentation page](Miscellaneous/MultiThreading.md).
 
--   `"auto"`; the RxPlayer will select either of those modes based on
-    features enabled and options used. Basically it will run in `"multithread"`
-    mode if possible and the `"main"` mode in other cases, which should be what
-    you want in most cases.
+- `"auto"`; the RxPlayer will select either of those modes based on
+  features enabled and options used. Basically it will run in `"multithread"`
+  mode if possible and the `"main"` mode in other cases, which should be what
+  you want in most cases.
 
 If not set or set to `"auto"`, you can see which mode is effective by calling
 the [`getCurrentModeInformation` method](./Playback_Information/getCurrentModeInformation.md).
 If the `useWorker` property is set to `false`, you're running in `"main"` mode,
 if set to `true`, you're running in `"multithread"` mode.
-
 
 ### checkMediaSegmentIntegrity
 
@@ -904,7 +890,6 @@ rxPlayer.loadVideo({
   checkMediaSegmentIntegrity: true,
 });
 ```
-
 
 ### serverSyncInfos
 
@@ -961,7 +946,6 @@ added/substracted to unix time. However we consider those situations rare enough
 (and the effect should be relatively weak) to let this as is for the moment. For
 a complete explanation, you can look at the [corresponding chapter of the
 low-latency documentation](./Miscellaneous/Low_Latency.md#note-about-time-synchronization).
-
 
 ### referenceDateTime
 

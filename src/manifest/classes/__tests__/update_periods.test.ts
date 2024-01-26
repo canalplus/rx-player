@@ -40,7 +40,7 @@ function generateFakePeriod({
 }: {
   id?: string | undefined;
   start?: number;
-  end? : number | undefined;
+  end?: number | undefined;
 }) {
   return {
     id: id ?? String(start),
@@ -58,7 +58,7 @@ function generateFakePeriod({
       return [];
     },
     getAdaptation() {
-      return ;
+      return;
     },
     getSupportedAdaptations() {
       return [];
@@ -100,30 +100,34 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p2" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const newPeriods = [
-      generateFakePeriod({ id: "p2" }),
-    ];
+    const newPeriods = [generateFakePeriod({ id: "p2" })];
     const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
       removedPeriods: [{ start: 0, id: "p1", end: undefined }],
       updatedPeriods: [
-        { period: { id: initialPeriods[1].id,
-                    start: initialPeriods[1].start,
-                    end: initialPeriods[1].end,
-                    duration: initialPeriods[1].duration,
-                    streamEvents: initialPeriods[1].streamEvents },
-          result: fakeUpdatePeriodInPlaceRes },
+        {
+          period: {
+            id: initialPeriods[1].id,
+            start: initialPeriods[1].start,
+            end: initialPeriods[1].end,
+            duration: initialPeriods[1].duration,
+            streamEvents: initialPeriods[1].streamEvents,
+          },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
       ],
     });
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            initialPeriods[1],
-                                                            newPeriods[0],
-                                                            0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      0,
+    );
   });
 
   // Case 2 :
@@ -138,9 +142,7 @@ describe("Manifest - replacePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [
-      generateFakePeriod({ id: "p2" }),
-    ];
+    const oldPeriods = [generateFakePeriod({ id: "p2" })];
     const initialPeriods = oldPeriods.slice();
     const newPeriods = [
       generateFakePeriod({ id: "p2" }),
@@ -152,22 +154,28 @@ describe("Manifest - replacePeriods", () => {
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
       removedPeriods: [],
       updatedPeriods: [
-        { period: { id: initialPeriods[0].id,
-                    start: initialPeriods[0].start,
-                    end: initialPeriods[0].end,
-                    duration: initialPeriods[0].duration,
-                    streamEvents: initialPeriods[0].streamEvents },
-          result: fakeUpdatePeriodInPlaceRes },
+        {
+          period: {
+            id: initialPeriods[0].id,
+            start: initialPeriods[0].start,
+            end: initialPeriods[0].end,
+            duration: initialPeriods[0].duration,
+            streamEvents: initialPeriods[0].streamEvents,
+          },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
       ],
     });
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p2");
     expect(oldPeriods[1].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            initialPeriods[0],
-                                                            newPeriods[0],
-                                                            0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[0],
+      newPeriods[0],
+      0,
+    );
   });
 
   // Case 3 :
@@ -182,12 +190,8 @@ describe("Manifest - replacePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [
-      generateFakePeriod({ id: "p1" }),
-    ];
-    const newPeriods = [
-      generateFakePeriod({ id: "p2" }),
-    ];
+    const oldPeriods = [generateFakePeriod({ id: "p1" })];
+    const newPeriods = [generateFakePeriod({ id: "p2" })];
     const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
@@ -235,10 +239,14 @@ describe("Manifest - replacePeriods", () => {
       ],
       removedPeriods: [{ id: "p0", start: 0 }],
       updatedPeriods: [
-        { period: { id: "p1", start: 0, streamEvents: [] },
-          result: fakeUpdatePeriodInPlaceRes },
-        { period: { id: "p2", start: 0, streamEvents: [] },
-          result: fakeUpdatePeriodInPlaceRes },
+        {
+          period: { id: "p1", start: 0, streamEvents: [] },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
+        {
+          period: { id: "p2", start: 0, streamEvents: [] },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
       ],
     });
     expect(oldPeriods.length).toBe(5);
@@ -249,14 +257,18 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods[3].id).toBe("p2");
     expect(oldPeriods[4].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            initialPeriods[1],
-                                                            newPeriods[0],
-                                                            0);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(2,
-                                                            initialPeriods[2],
-                                                            newPeriods[3],
-                                                            0);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      0,
+    );
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      2,
+      initialPeriods[2],
+      newPeriods[3],
+      0,
+    );
   });
 
   // Case 5 :
@@ -271,9 +283,7 @@ describe("Manifest - replacePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [
-      generateFakePeriod({ id: "p2" }),
-    ];
+    const oldPeriods = [generateFakePeriod({ id: "p2" })];
     const newPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
@@ -282,23 +292,25 @@ describe("Manifest - replacePeriods", () => {
     const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
-      addedPeriods: [
-        newPeriods[0].getMetadataSnapshot(),
-      ],
+      addedPeriods: [newPeriods[0].getMetadataSnapshot()],
       removedPeriods: [],
       updatedPeriods: [
-        { period: { id: "p2", start: 0, streamEvents: [] },
-          result: fakeUpdatePeriodInPlaceRes },
+        {
+          period: { id: "p2", start: 0, streamEvents: [] },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
       ],
     });
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            initialPeriods[0],
-                                                            newPeriods[1],
-                                                            MANIFEST_UPDATE_TYPE.Full);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[0],
+      newPeriods[1],
+      MANIFEST_UPDATE_TYPE.Full,
+    );
   });
 
   // Case 6 :
@@ -383,9 +395,11 @@ describe("Manifest - updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ generateFakePeriod({ id: "p1", start: 50, end: 60 }),
-                         generateFakePeriod({ id: "p2", start: 60 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p2", start: 60 }) ];
+    const oldPeriods = [
+      generateFakePeriod({ id: "p1", start: 50, end: 60 }),
+      generateFakePeriod({ id: "p2", start: 60 }),
+    ];
+    const newPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
     const initialPeriods = oldPeriods.slice();
 
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
@@ -394,17 +408,21 @@ describe("Manifest - updatePeriods", () => {
       addedPeriods: [],
       removedPeriods: [],
       updatedPeriods: [
-        { period: { id: "p2", start: 60, streamEvents: [] },
-          result: fakeUpdatePeriodInPlaceRes },
+        {
+          period: { id: "p2", start: 60, streamEvents: [] },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
       ],
     });
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(1,
-                                                            initialPeriods[1],
-                                                            newPeriods[0],
-                                                            MANIFEST_UPDATE_TYPE.Partial);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
   });
 
   // Case 2 :
@@ -419,31 +437,34 @@ describe("Manifest - updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ generateFakePeriod({ id: "p2", start: 60 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p2", start: 60, end: 80 }),
-                         generateFakePeriod({ id: "p3", start: 80 }) ];
+    const oldPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
+    const newPeriods = [
+      generateFakePeriod({ id: "p2", start: 60, end: 80 }),
+      generateFakePeriod({ id: "p3", start: 80 }),
+    ];
     const initialPeriods = oldPeriods.slice();
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
-      addedPeriods: [
-        newPeriods[1].getMetadataSnapshot(),
-      ],
+      addedPeriods: [newPeriods[1].getMetadataSnapshot()],
       removedPeriods: [],
       updatedPeriods: [
-        { period: { id: "p2", start: 60, streamEvents: [] },
-          result: fakeUpdatePeriodInPlaceRes },
+        {
+          period: { id: "p2", start: 60, streamEvents: [] },
+          result: fakeUpdatePeriodInPlaceRes,
+        },
       ],
     });
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p2");
     expect(oldPeriods[1].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               initialPeriods[0],
-                               newPeriods[0],
-                               MANIFEST_UPDATE_TYPE.Partial);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[0],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
   });
 
   // Case 3 :
@@ -458,8 +479,8 @@ describe("Manifest - updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ generateFakePeriod({ id: "p1", start: 50, end: 60 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p3", start: 70, end: 80 }) ];
+    const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
+    const newPeriods = [generateFakePeriod({ id: "p3", start: 70, end: 80 })];
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     let error: unknown = null;
@@ -475,10 +496,10 @@ describe("Manifest - updatePeriods", () => {
     if (!(error instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
-    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
-    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect((error as { type?: string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code?: string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data",
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p1");
@@ -493,17 +514,23 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ generateFakePeriod({ id: "p0", start: 50, end: 60 }),
-                         generateFakePeriod({ id: "p1", start: 60, end: 69 }),
-                         generateFakePeriod({ id: "p1.5", start: 69, end: 70 }),
-                         generateFakePeriod({ id: "p2", start: 70 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p1", start: 60, end: 65  }),
-                         generateFakePeriod({ id: "a", start: 65, end: 68  }),
-                         generateFakePeriod({ id: "b", start: 68, end: 70 }),
-                         generateFakePeriod({ id: "p2", start: 70, end: 80  }),
-                         generateFakePeriod({ id: "p3", start: 80 }) ];
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
+    const oldPeriods = [
+      generateFakePeriod({ id: "p0", start: 50, end: 60 }),
+      generateFakePeriod({ id: "p1", start: 60, end: 69 }),
+      generateFakePeriod({ id: "p1.5", start: 69, end: 70 }),
+      generateFakePeriod({ id: "p2", start: 70 }),
+    ];
+    const newPeriods = [
+      generateFakePeriod({ id: "p1", start: 60, end: 65 }),
+      generateFakePeriod({ id: "a", start: 65, end: 68 }),
+      generateFakePeriod({ id: "b", start: 68, end: 70 }),
+      generateFakePeriod({ id: "p2", start: 70, end: 80 }),
+      generateFakePeriod({ id: "p3", start: 80 }),
+    ];
     const initialPeriods = oldPeriods.slice();
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
@@ -513,9 +540,7 @@ describe("Manifest - updatePeriods", () => {
         newPeriods[2].getMetadataSnapshot(),
         newPeriods[4].getMetadataSnapshot(),
       ],
-      removedPeriods: [
-        { id: "p1.5", start: 69, end: 70 },
-      ],
+      removedPeriods: [{ id: "p1.5", start: 69, end: 70 }],
       updatedPeriods: [
         {
           period: { id: "p1", start: 60, end: 69, streamEvents: [] },
@@ -536,16 +561,18 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[4].id).toBe("p2");
     expect(oldPeriods[5].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               initialPeriods[1],
-                               newPeriods[0],
-                               MANIFEST_UPDATE_TYPE.Partial);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(2,
-                               initialPeriods[3],
-                               newPeriods[3],
-                               MANIFEST_UPDATE_TYPE.Full);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      2,
+      initialPeriods[3],
+      newPeriods[3],
+      MANIFEST_UPDATE_TYPE.Full,
+    );
   });
 
   // Case 5 :
@@ -556,11 +583,15 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ generateFakePeriod({ id: "p2", start: 70 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p1", start: 50, end: 70 }),
-                         generateFakePeriod({ id: "p2", start: 70 }) ];
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
+    const oldPeriods = [generateFakePeriod({ id: "p2", start: 70 })];
+    const newPeriods = [
+      generateFakePeriod({ id: "p1", start: 50, end: 70 }),
+      generateFakePeriod({ id: "p2", start: 70 }),
+    ];
 
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
@@ -577,10 +608,10 @@ describe("Manifest - updatePeriods", () => {
     if (!(error instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
-    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
-    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect((error as { type?: string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code?: string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: incoherent data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: incoherent data",
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
@@ -595,10 +626,14 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ generateFakePeriod({ id: "p1" }),
-                         generateFakePeriod({ id: "p2" }) ];
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
+    const oldPeriods = [
+      generateFakePeriod({ id: "p1" }),
+      generateFakePeriod({ id: "p2" }),
+    ];
     const newPeriods = [] as any[];
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
@@ -621,11 +656,15 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
     const oldPeriods = [] as any[];
-    const newPeriods = [ generateFakePeriod({ id: "p1" }),
-                         generateFakePeriod({ id: "p2" }) ];
+    const newPeriods = [
+      generateFakePeriod({ id: "p1" }),
+      generateFakePeriod({ id: "p2" }),
+    ];
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
@@ -650,12 +689,16 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
-    const oldPeriods = [ generateFakePeriod({ id: "p0", start: 50, end: 60 }),
-                         generateFakePeriod({ id: "p1", start: 60, end: 70 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p3", start: 80 }) ];
+    const oldPeriods = [
+      generateFakePeriod({ id: "p0", start: 50, end: 60 }),
+      generateFakePeriod({ id: "p1", start: 60, end: 70 }),
+    ];
+    const newPeriods = [generateFakePeriod({ id: "p3", start: 80 })];
 
     let error: unknown = null;
     try {
@@ -670,10 +713,10 @@ describe("Manifest - updatePeriods", () => {
     if (!(error instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
-    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
-    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect((error as { type?: string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code?: string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: not enough data",
     );
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p0");
@@ -693,15 +736,13 @@ describe("Manifest - updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ generateFakePeriod({ id: "p1", start: 50, end: 60 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p2", start: 60, end: 80 }) ];
+    const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
+    const newPeriods = [generateFakePeriod({ id: "p2", start: 60, end: 80 })];
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
-      addedPeriods: [
-        newPeriods[0].getMetadataSnapshot(),
-      ],
+      addedPeriods: [newPeriods[0].getMetadataSnapshot()],
       removedPeriods: [],
       updatedPeriods: [],
     });
@@ -715,9 +756,7 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p1
   // new periods: px
-  /* eslint-disable max-len */
   it("should throw when encountering two completely different Periods with the same start", () => {
-  /* eslint-enable max-len */
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
@@ -725,8 +764,8 @@ describe("Manifest - updatePeriods", () => {
       __esModule: true as const,
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [ generateFakePeriod({ id: "p1", start: 50, end: 60 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "px", start: 50, end: 70 }) ];
+    const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
+    const newPeriods = [generateFakePeriod({ id: "px", start: 50, end: 70 })];
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
 
     let error: unknown = null;
@@ -742,10 +781,10 @@ describe("Manifest - updatePeriods", () => {
     if (!(error instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
-    expect((error as { type? : string }).type).toEqual("MEDIA_ERROR");
-    expect((error as { code? : string }).code).toEqual("MANIFEST_UPDATE_ERROR");
+    expect((error as { type?: string }).type).toEqual("MEDIA_ERROR");
+    expect((error as { code?: string }).code).toEqual("MANIFEST_UPDATE_ERROR");
     expect(error.message).toEqual(
-      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: incoherent data"
+      "MANIFEST_UPDATE_ERROR: Cannot perform partial update: incoherent data",
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p1");
@@ -760,23 +799,26 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ generateFakePeriod({ id: "p0", start: 50, end: 60 }),
-                         generateFakePeriod({ id: "p1", start: 60, end: 70 }),
-                         generateFakePeriod({ id: "p2", start: 70 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p1", start: 60, end: 65  }),
-                         generateFakePeriod({ id: "p2", start: 65, end: 80  }),
-                         generateFakePeriod({ id: "p3", start: 80 }) ];
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
+    const oldPeriods = [
+      generateFakePeriod({ id: "p0", start: 50, end: 60 }),
+      generateFakePeriod({ id: "p1", start: 60, end: 70 }),
+      generateFakePeriod({ id: "p2", start: 70 }),
+    ];
+    const newPeriods = [
+      generateFakePeriod({ id: "p1", start: 60, end: 65 }),
+      generateFakePeriod({ id: "p2", start: 65, end: 80 }),
+      generateFakePeriod({ id: "p3", start: 80 }),
+    ];
     const initialPeriods = oldPeriods.slice();
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
-      addedPeriods: [
-        newPeriods[2].getMetadataSnapshot(),
-      ],
-      removedPeriods: [
-      ],
+      addedPeriods: [newPeriods[2].getMetadataSnapshot()],
+      removedPeriods: [],
       updatedPeriods: [
         {
           period: { id: "p1", start: 60, end: 70, streamEvents: [] },
@@ -795,16 +837,18 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[2].id).toBe("p2");
     expect(oldPeriods[3].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               initialPeriods[1],
-                               newPeriods[0],
-                               MANIFEST_UPDATE_TYPE.Partial);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(2,
-                               initialPeriods[2],
-                               newPeriods[1],
-                               MANIFEST_UPDATE_TYPE.Full);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      2,
+      initialPeriods[2],
+      newPeriods[1],
+      MANIFEST_UPDATE_TYPE.Full,
+    );
   });
 
   // Case 12 :
@@ -815,22 +859,26 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ generateFakePeriod({ id: "p0", start: 50, end: 60 }),
-                         generateFakePeriod({ id: "p1", start: 60, end: 70 }),
-                         generateFakePeriod({ id: "p2", start: 70, end: 80 }),
-                         generateFakePeriod({ id: "p3", start: 80 }) ];
-    const newPeriods = [ generateFakePeriod({ id: "p1", start: 60, end: 70  }),
-                         generateFakePeriod({ id: "p3", start: 80 }) ];
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
+    const oldPeriods = [
+      generateFakePeriod({ id: "p0", start: 50, end: 60 }),
+      generateFakePeriod({ id: "p1", start: 60, end: 70 }),
+      generateFakePeriod({ id: "p2", start: 70, end: 80 }),
+      generateFakePeriod({ id: "p3", start: 80 }),
+    ];
+    const newPeriods = [
+      generateFakePeriod({ id: "p1", start: 60, end: 70 }),
+      generateFakePeriod({ id: "p3", start: 80 }),
+    ];
     const initialPeriods = oldPeriods.slice();
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
-      removedPeriods: [
-        { id: "p2", start: 70, end: 80 },
-      ],
+      removedPeriods: [{ id: "p2", start: 70, end: 80 }],
       updatedPeriods: [
         {
           period: { id: "p1", start: 60, end: 70, streamEvents: [] },
@@ -848,16 +896,18 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[1].id).toBe("p1");
     expect(oldPeriods[2].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               initialPeriods[1],
-                               newPeriods[0],
-                               MANIFEST_UPDATE_TYPE.Partial);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(2,
-                               initialPeriods[3],
-                               newPeriods[1],
-                               MANIFEST_UPDATE_TYPE.Full);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      2,
+      initialPeriods[3],
+      newPeriods[1],
+      MANIFEST_UPDATE_TYPE.Full,
+    );
   });
 
   // Case 13 :
@@ -868,16 +918,22 @@ describe("Manifest - updatePeriods", () => {
     const fakeUpdatePeriodInPlace = jest.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({ __esModule: true as const,
-                                                    default: fakeUpdatePeriodInPlace }));
-    const oldPeriods = [ generateFakePeriod({ id: "p0", start: 50, end: 60 }),
-                         generateFakePeriod({ id: "p1", start: 60, end: 70 }),
-                         generateFakePeriod({ id: "p2", start: 70, end: 80 }),
-                         generateFakePeriod({ id: "p3", start: 80, end: 90 }),
-                         generateFakePeriod({ id: "p4", start: 90 }) ];
+    jest.mock("../update_period_in_place", () => ({
+      __esModule: true as const,
+      default: fakeUpdatePeriodInPlace,
+    }));
+    const oldPeriods = [
+      generateFakePeriod({ id: "p0", start: 50, end: 60 }),
+      generateFakePeriod({ id: "p1", start: 60, end: 70 }),
+      generateFakePeriod({ id: "p2", start: 70, end: 80 }),
+      generateFakePeriod({ id: "p3", start: 80, end: 90 }),
+      generateFakePeriod({ id: "p4", start: 90 }),
+    ];
     const initialPeriods = oldPeriods.slice();
-    const newPeriods = [ generateFakePeriod({ id: "p1", start: 60, end: 70  }),
-                         generateFakePeriod({ id: "p3", start: 80, end: 90 }) ];
+    const newPeriods = [
+      generateFakePeriod({ id: "p1", start: 60, end: 70 }),
+      generateFakePeriod({ id: "p3", start: 80, end: 90 }),
+    ];
     const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
@@ -888,17 +944,11 @@ describe("Manifest - updatePeriods", () => {
       ],
       updatedPeriods: [
         {
-          period: { id: "p1",
-                    start: 60,
-                    end: 70,
-                    streamEvents: [] },
+          period: { id: "p1", start: 60, end: 70, streamEvents: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
         {
-          period: { id: "p3",
-                    start: 80,
-                    end: 90,
-                    streamEvents: [] },
+          period: { id: "p3", start: 80, end: 90, streamEvents: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],
@@ -909,15 +959,17 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[1].id).toBe("p1");
     expect(oldPeriods[2].id).toBe("p3");
     expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(1,
-                               initialPeriods[1],
-                               newPeriods[0],
-                               MANIFEST_UPDATE_TYPE.Partial);
-    expect(fakeUpdatePeriodInPlace)
-      .toHaveBeenNthCalledWith(2,
-                               initialPeriods[3],
-                               newPeriods[1],
-                               MANIFEST_UPDATE_TYPE.Full);
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      1,
+      initialPeriods[1],
+      newPeriods[0],
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
+    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+      2,
+      initialPeriods[3],
+      newPeriods[1],
+      MANIFEST_UPDATE_TYPE.Full,
+    );
   });
 });

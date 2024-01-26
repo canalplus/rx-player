@@ -17,9 +17,11 @@
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import parseTimestamp from "./parse_timestamp";
 
-export interface ISRTCueObject { start : number;
-                                 end : number;
-                                 payload : string[]; }
+export interface ISRTCueObject {
+  start: number;
+  end: number;
+  payload: string[];
+}
 
 /**
  * Parse cue block into a cue object which contains:
@@ -31,31 +33,27 @@ export interface ISRTCueObject { start : number;
  * @returns {Object}
  */
 export default function parseCueBlock(
-  cueLines : string[],
-  timeOffset : number
-) : ISRTCueObject | null {
+  cueLines: string[],
+  timeOffset: number,
+): ISRTCueObject | null {
   if (cueLines.length === 0) {
     return null;
   }
 
-  let startTimeString : string|undefined;
-  let endTimeString : string|undefined;
-  let payload : string[] = [];
+  let startTimeString: string | undefined;
+  let endTimeString: string | undefined;
+  let payload: string[] = [];
 
   // normally in srt, the timing is at second position.
   // We still authorize to put it in the first position for resilience
   if (isNonEmptyString(cueLines[1]) && cueLines[1].indexOf("-->") !== -1) {
-    [startTimeString, endTimeString] = cueLines[1].split("-->")
-      .map(s => s.trim());
+    [startTimeString, endTimeString] = cueLines[1].split("-->").map((s) => s.trim());
     payload = cueLines.slice(2, cueLines.length);
   }
 
-  if (!isNonEmptyString(startTimeString) ||
-      !isNonEmptyString(endTimeString))
-  {
+  if (!isNonEmptyString(startTimeString) || !isNonEmptyString(endTimeString)) {
     // Try to see if we find them in the first position
-    [startTimeString, endTimeString] = cueLines[0].split("-->")
-      .map(s => s.trim());
+    [startTimeString, endTimeString] = cueLines[0].split("-->").map((s) => s.trim());
     payload = cueLines.slice(1, cueLines.length);
   }
 
@@ -70,7 +68,5 @@ export default function parseCueBlock(
     return null;
   }
 
-  return { start: start + timeOffset,
-           end : end + timeOffset,
-           payload };
+  return { start: start + timeOffset, end: end + timeOffset, payload };
 }

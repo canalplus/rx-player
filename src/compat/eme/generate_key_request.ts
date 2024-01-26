@@ -16,10 +16,7 @@
 
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
-import {
-  be4toi,
-  concat,
-} from "../../utils/byte_parsing";
+import { be4toi, concat } from "../../utils/byte_parsing";
 import { PSSH_TO_INTEGER } from "./constants";
 import type { ICustomMediaKeySession } from "./custom_media_keys";
 
@@ -49,7 +46,7 @@ import type { ICustomMediaKeySession } from "./custom_media_keys";
  * @param {Uint8Array} initData - Initialization data you want to patch
  * @returns {Uint8Array} - Initialization data, patched
  */
-export function patchInitData(initData : Uint8Array) : Uint8Array {
+export function patchInitData(initData: Uint8Array): Uint8Array {
   log.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
   let foundCencV1 = false;
   let concatenatedCencs = new Uint8Array();
@@ -57,8 +54,9 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
 
   let offset = 0;
   while (offset < initData.length) {
-    if (initData.length < offset + 8 ||
-        be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
+    if (
+      initData.length < offset + 8 ||
+      be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
       log.warn("Compat: unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
@@ -72,26 +70,26 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
 
     const currentPSSH = initData.subarray(offset, offset + len);
     // yep
-    if (initData[offset + 12] === 0x10 &&
-        initData[offset + 13] === 0x77 &&
-        initData[offset + 14] === 0xEF &&
-        initData[offset + 15] === 0xEC &&
-        initData[offset + 16] === 0xC0 &&
-        initData[offset + 17] === 0xB2 &&
-        initData[offset + 18] === 0x4D &&
-        initData[offset + 19] === 0x02 &&
-        initData[offset + 20] === 0xAC &&
-        initData[offset + 21] === 0xE3 &&
-        initData[offset + 22] === 0x3C &&
-        initData[offset + 23] === 0x1E &&
-        initData[offset + 24] === 0x52 &&
-        initData[offset + 25] === 0xE2 &&
-        initData[offset + 26] === 0xFB &&
-        initData[offset + 27] === 0x4B
+    if (
+      initData[offset + 12] === 0x10 &&
+      initData[offset + 13] === 0x77 &&
+      initData[offset + 14] === 0xef &&
+      initData[offset + 15] === 0xec &&
+      initData[offset + 16] === 0xc0 &&
+      initData[offset + 17] === 0xb2 &&
+      initData[offset + 18] === 0x4d &&
+      initData[offset + 19] === 0x02 &&
+      initData[offset + 20] === 0xac &&
+      initData[offset + 21] === 0xe3 &&
+      initData[offset + 22] === 0x3c &&
+      initData[offset + 23] === 0x1e &&
+      initData[offset + 24] === 0x52 &&
+      initData[offset + 25] === 0xe2 &&
+      initData[offset + 26] === 0xfb &&
+      initData[offset + 27] === 0x4b
     ) {
       const cencOffsets = getNextBoxOffsets(currentPSSH);
-      const version = cencOffsets === null ? undefined :
-                                             currentPSSH[cencOffsets[1]];
+      const version = cencOffsets === null ? undefined : currentPSSH[cencOffsets[1]];
       log.info("Compat: CENC PSSH found with version", version);
       if (version === undefined) {
         log.warn("Compat: could not read version of CENC PSSH");
@@ -99,13 +97,13 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
         // Either `concatenatedCencs` only contains v1 or does not contain any
         concatenatedCencs = concat(concatenatedCencs, currentPSSH);
       } else if (version === 1) {
-        log.warn("Compat: cenc version 1 encountered, " +
-                 "removing every other cenc pssh box.");
+        log.warn(
+          "Compat: cenc version 1 encountered, " + "removing every other cenc pssh box.",
+        );
         concatenatedCencs = currentPSSH;
         foundCencV1 = true;
       } else {
-        log.warn("Compat: filtering out cenc pssh box with wrong version",
-                 version);
+        log.warn("Compat: filtering out cenc pssh box with wrong version", version);
       }
     } else {
       resInitData = concat(resInitData, currentPSSH);
@@ -131,32 +129,33 @@ export function patchInitData(initData : Uint8Array) : Uint8Array {
  * @returns {Promise} - Emit when done. Errors if fails.
  */
 export default function generateKeyRequest(
-  session: MediaKeySession|ICustomMediaKeySession,
-  initializationDataType : string | undefined,
-  initializationData : Uint8Array
-) : Promise<unknown> {
+  session: MediaKeySession | ICustomMediaKeySession,
+  initializationDataType: string | undefined,
+  initializationData: Uint8Array,
+): Promise<unknown> {
   log.debug("Compat: Calling generateRequest on the MediaKeySession");
-  let patchedInit : Uint8Array;
+  let patchedInit: Uint8Array;
   try {
     patchedInit = patchInitData(initializationData);
   } catch (_e) {
     patchedInit = initializationData;
   }
   const initDataType = initializationDataType ?? "";
-  return session.generateRequest(initDataType, patchedInit)
-    .catch((error) => {
-      if (initDataType !== "" || !(error instanceof TypeError)) {
-        throw error;
-      }
+  return session.generateRequest(initDataType, patchedInit).catch((error) => {
+    if (initDataType !== "" || !(error instanceof TypeError)) {
+      throw error;
+    }
 
-      // On newer EME versions of the specification, the initialization data
-      // type given to generateRequest cannot be an empty string (it returns
-      // a rejected promise with a TypeError in that case).
-      // Retry with a default "cenc" value for initialization data type if
-      // we're in that condition.
-      log.warn("Compat: error while calling `generateRequest` with an empty " +
-               "initialization data type. Retrying with a default \"cenc\" value.",
-               error);
-      return session.generateRequest("cenc", patchedInit);
-    });
+    // On newer EME versions of the specification, the initialization data
+    // type given to generateRequest cannot be an empty string (it returns
+    // a rejected promise with a TypeError in that case).
+    // Retry with a default "cenc" value for initialization data type if
+    // we're in that condition.
+    log.warn(
+      "Compat: error while calling `generateRequest` with an empty " +
+        'initialization data type. Retrying with a default "cenc" value.',
+      error,
+    );
+    return session.generateRequest("cenc", patchedInit);
+  });
 }

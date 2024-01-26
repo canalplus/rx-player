@@ -1,8 +1,5 @@
 import assert from "../../utils/assert";
-import {
-  insertInto,
-  keepRangeIntersection,
-} from "../../utils/ranges";
+import { insertInto, keepRangeIntersection } from "../../utils/ranges";
 
 /**
  * Simulate TimeRanges as returned by SourceBuffer.prototype.buffered.
@@ -10,11 +7,11 @@ import {
  * @class ManualTimeRanges
  */
 export default class ManualTimeRanges implements TimeRanges {
-  public length : number;
+  public length: number;
 
-  private _ranges : Array<{
-    start : number;
-    end : number;
+  private _ranges: Array<{
+    start: number;
+    end: number;
   }>;
 
   constructor() {
@@ -22,8 +19,8 @@ export default class ManualTimeRanges implements TimeRanges {
     this.length = 0;
   }
 
-  insert(start : number, end : number) : void {
-    if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+  insert(start: number, end: number): void {
+    if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }
@@ -31,13 +28,12 @@ export default class ManualTimeRanges implements TimeRanges {
     this.length = this._ranges.length;
   }
 
-  remove(start : number, end : number) : void {
-    if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+  remove(start: number, end: number): void {
+    if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
     }
-    const rangesToIntersect : Array<{ start : number;
-                                      end: number; }> = [];
+    const rangesToIntersect: Array<{ start: number; end: number }> = [];
     if (start > 0) {
       rangesToIntersect.push({ start: 0, end: start });
     }
@@ -48,14 +44,14 @@ export default class ManualTimeRanges implements TimeRanges {
     this.length = this._ranges.length;
   }
 
-  start(index : number) : number {
+  start(index: number): number {
     if (index >= this._ranges.length) {
       throw new Error("INDEX_SIZE_ERROR");
     }
     return this._ranges[index].start;
   }
 
-  end(index : number) : number {
+  end(index: number): number {
     if (index >= this._ranges.length) {
       throw new Error("INDEX_SIZE_ERROR");
     }

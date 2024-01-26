@@ -30,11 +30,11 @@ interface IPeriodTimeInformation {
 /** Additionnal context needed to retrieve the period time information. */
 export interface IParsedPeriodsContext {
   /** Value of MPD@availabilityStartTime. */
-  availabilityStartTime : number;
+  availabilityStartTime: number;
   /** Value of MPD@mediaPresentationDuration. */
-  duration? : number | undefined;
+  duration?: number | undefined;
   /** `true` if MPD@type is equal to "dynamic". */
-  isDynamic : boolean;
+  isDynamic: boolean;
 }
 
 /**
@@ -45,25 +45,24 @@ export interface IParsedPeriodsContext {
  * @return {Array.<Object>}
  */
 export default function getPeriodsTimeInformation(
-  periodsIR : IPeriodIntermediateRepresentation[],
-  manifestInfos : IParsedPeriodsContext
+  periodsIR: IPeriodIntermediateRepresentation[],
+  manifestInfos: IParsedPeriodsContext,
 ): IPeriodTimeInformation[] {
   const periodsTimeInformation: IPeriodTimeInformation[] = [];
   periodsIR.forEach((currentPeriod, i) => {
-
-    let periodStart : number;
+    let periodStart: number;
     if (!isNullOrUndefined(currentPeriod.attributes.start)) {
       periodStart = currentPeriod.attributes.start;
     } else {
       if (i === 0) {
-        periodStart = (!manifestInfos.isDynamic ||
-                       isNullOrUndefined(manifestInfos.availabilityStartTime)) ?
-                         0 :
-                         manifestInfos.availabilityStartTime;
+        periodStart =
+          !manifestInfos.isDynamic ||
+          isNullOrUndefined(manifestInfos.availabilityStartTime)
+            ? 0
+            : manifestInfos.availabilityStartTime;
       } else {
         // take time information from previous period
-        const prevPeriodInfos =
-          periodsTimeInformation[periodsTimeInformation.length - 1];
+        const prevPeriodInfos = periodsTimeInformation[periodsTimeInformation.length - 1];
         if (
           !isNullOrUndefined(prevPeriodInfos) &&
           !isNullOrUndefined(prevPeriodInfos.periodEnd)
@@ -75,7 +74,7 @@ export default function getPeriodsTimeInformation(
       }
     }
 
-    let periodDuration : number | undefined;
+    let periodDuration: number | undefined;
     const nextPeriod = periodsIR[i + 1];
     if (!isNullOrUndefined(currentPeriod.attributes.duration)) {
       periodDuration = currentPeriod.attributes.duration;
@@ -85,12 +84,10 @@ export default function getPeriodsTimeInformation(
       periodDuration = nextPeriod.attributes.start - periodStart;
     }
 
-    const periodEnd = !isNullOrUndefined(periodDuration) ?
-      (periodStart + periodDuration) :
-      undefined;
-    periodsTimeInformation.push({ periodStart,
-                                  periodDuration,
-                                  periodEnd });
+    const periodEnd = !isNullOrUndefined(periodDuration)
+      ? periodStart + periodDuration
+      : undefined;
+    periodsTimeInformation.push({ periodStart, periodDuration, periodEnd });
   });
   return periodsTimeInformation;
 }

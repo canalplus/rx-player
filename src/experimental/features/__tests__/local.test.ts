@@ -15,7 +15,6 @@
  */
 
 import type { IFeaturesObject } from "../../../features/types";
-/* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import local from "../../../transports/local";
@@ -31,9 +30,7 @@ describe("Features list - LOCAL_MANIFEST", () => {
       codecSupportProber: mainCodecSupportProber,
     });
     expect(featureObject.transports.local).toBe(local);
-    expect(featureObject.mainThreadMediaSourceInit)
-      .toBe(MediaSourceContentInitializer);
-    expect(featureObject.codecSupportProber)
-      .toBe(mainCodecSupportProber);
+    expect(featureObject.mainThreadMediaSourceInit).toBe(MediaSourceContentInitializer);
+    expect(featureObject.codecSupportProber).toBe(mainCodecSupportProber);
   });
 });

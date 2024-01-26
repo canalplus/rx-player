@@ -37,8 +37,8 @@ current state has to be different than `LOADING`, `RELOADING` or `STOPPED`).
 player.play();
 ```
 
-  - **return value** `Promise.<void>`: Resolves when the play operation
-    succeeded or reject when it failed.
+- **return value** `Promise.<void>`: Resolves when the play operation
+  succeeded or reject when it failed.
 
 ## Example
 

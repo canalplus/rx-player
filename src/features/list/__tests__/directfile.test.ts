@@ -15,7 +15,6 @@
  */
 
 import initDirectFile from "../../../main_thread/init/directfile_content_initializer";
-// eslint-disable-next-line max-len
 import mediaElementTracksStore from "../../../main_thread/tracks_store/media_element_tracks_store";
 import type { IFeaturesObject } from "../../types";
 import addDirectfileFeature from "../directfile";
@@ -25,11 +24,11 @@ describe("Features list - Directfile", () => {
     const featureObject = {} as unknown as IFeaturesObject;
     addDirectfileFeature(featureObject);
     expect(featureObject).toEqual({
-      directfile: { initDirectFile,
-                    mediaElementTracksStore },
+      directfile: { initDirectFile, mediaElementTracksStore },
     });
     expect(featureObject.directfile?.initDirectFile).toEqual(initDirectFile);
-    expect(featureObject.directfile?.mediaElementTracksStore)
-      .toEqual(mediaElementTracksStore);
+    expect(featureObject.directfile?.mediaElementTracksStore).toEqual(
+      mediaElementTracksStore,
+    );
   });
 });

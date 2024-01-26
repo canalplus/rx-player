@@ -23,8 +23,8 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @returns {Array|null}
  */
 export default function getKeySystemConfiguration(
-  mediaElement : HTMLMediaElement
-) : [string, MediaKeySystemConfiguration] | null {
+  mediaElement: HTMLMediaElement,
+): [string, MediaKeySystemConfiguration] | null {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   if (currentState === null) {
     return null;

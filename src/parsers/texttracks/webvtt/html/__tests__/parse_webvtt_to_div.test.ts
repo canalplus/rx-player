@@ -28,14 +28,14 @@ describe("parsers - webvtt - parseWebVTT", () => {
 
   it("should throw if text is empty", () => {
     const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
-    expect(() => parseWebVTT("", 0))
-      .toThrowError("Can't parse WebVTT: Invalid File.");
+    expect(() => parseWebVTT("", 0)).toThrowError("Can't parse WebVTT: Invalid File.");
   });
 
   it("should throw if file seems to be invalid", () => {
     const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
-    expect(() => parseWebVTT("WEBWTT\n", 0))
-      .toThrowError("Can't parse WebVTT: Invalid File.");
+    expect(() => parseWebVTT("WEBWTT\n", 0)).toThrowError(
+      "Can't parse WebVTT: Invalid File.",
+    );
   });
 
   it("should return cues if inner contains right cues", () => {
@@ -96,20 +96,18 @@ describe("parsers - webvtt - parseWebVTT", () => {
     }));
 
     const parseWebVTT = jest.requireActual("../parse_webvtt_to_div").default;
-    expect(parseWebVTT("WEBVTT\n", 0)).toEqual(
-      [
-        {
-          element: document.createElement("div"),
-          end: 100,
-          start: 0,
-        },
-        {
-          element: document.createElement("div"),
-          end: 100,
-          start: 0,
-        },
-      ]
-    );
+    expect(parseWebVTT("WEBVTT\n", 0)).toEqual([
+      {
+        element: document.createElement("div"),
+        end: 100,
+        start: 0,
+      },
+      {
+        element: document.createElement("div"),
+        end: 100,
+        start: 0,
+      },
+    ]);
     expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
     expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);
     expect(spyGetCueBlock).toHaveBeenCalledTimes(1);

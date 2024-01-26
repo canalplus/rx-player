@@ -16,9 +16,7 @@
 
 import { base64ToBytes } from "../../../../../../utils/base64";
 import { hexToBytes } from "../../../../../../utils/string_parsing";
-import type {
-  IContentProtectionIntermediateRepresentation,
-} from "../../../node_parser_types";
+import type { IContentProtectionIntermediateRepresentation } from "../../../node_parser_types";
 import type { IAttributeParser } from "../parsers_stack";
 import { AttributeName } from "../types";
 import { parseString } from "../utils";
@@ -29,17 +27,13 @@ import { parseString } from "../utils";
  * @returns {Function}
  */
 export function generateContentProtectionAttrParser(
-  cp : IContentProtectionIntermediateRepresentation,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  cp: IContentProtectionIntermediateRepresentation,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   const cpAttrs = cp.attributes;
   const cpChildren = cp.children;
   const textDecoder = new TextDecoder();
-  return function onContentProtectionAttribute(
-    attr : number,
-    ptr : number,
-    len : number
-  ) {
+  return function onContentProtectionAttribute(attr: number, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.SchemeIdUri:
         cpAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
@@ -55,7 +49,9 @@ export function generateContentProtectionAttrParser(
         try {
           const b64 = parseString(textDecoder, linearMemory.buffer, ptr, len);
           cpChildren.cencPssh.push(base64ToBytes(b64));
-        } catch (_) { /* TODO log error? register as warning? */ }
+        } catch (_) {
+          /* TODO log error? register as warning? */
+        }
         break;
     }
   };

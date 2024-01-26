@@ -20,9 +20,10 @@ documentation page](../Miscellaneous/Debug_Element.md).
 const debugInfo = player.createDebugElement(myElement);
 ```
 
-  - **arguments**:
-    1. _element_ `HTMLElement`: HTML element in which the debugging information
-       should be displayed.
+- **arguments**:
 
- - **return value** `Object`: Object with a `dispose method, allowing to remove
-   and stop updating the debugging element.
+  1. _element_ `HTMLElement`: HTML element in which the debugging information
+     should be displayed.
+
+- **return value** `Object`: Object with a `dispose method, allowing to remove
+  and stop updating the debugging element.

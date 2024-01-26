@@ -15,19 +15,13 @@
  */
 
 import log from "../../../log";
-import type {
-  IRepresentationIndex,
-  ISegment,
-} from "../../../manifest";
-import type {
-  ILocalIndex,
-  ILocalIndexSegment,
-} from "./types";
+import type { IRepresentationIndex, ISegment } from "../../../manifest";
+import type { ILocalIndex, ILocalIndexSegment } from "./types";
 
 export default class LocalRepresentationIndex implements IRepresentationIndex {
-  private _index : ILocalIndex;
-  private _representationId : string;
-  constructor(index : ILocalIndex, representationId : string) {
+  private _index: ILocalIndex;
+  private _representationId: string;
+  constructor(index: ILocalIndex, representationId: string) {
     this._index = index;
     this._representationId = representationId;
   }
@@ -35,7 +29,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Object}
    */
-  getInitSegment() : ISegment|null {
+  getInitSegment(): ISegment | null {
     return {
       id: `${this._representationId}_init`,
       isInit: true,
@@ -46,7 +40,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       url: null,
       complete: true,
       privateInfos: {
-        localManifestInitSegment: { load: this._index.loadInitSegment } },
+        localManifestInitSegment: { load: this._index.loadInitSegment },
+      },
     };
   }
 
@@ -55,10 +50,10 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
    * @param {Number} duration
    * @returns {Array.<Object>}
    */
-  getSegments(up : number, duration : number) : ISegment[] {
+  getSegments(up: number, duration: number): ISegment[] {
     const startTime = up;
     const endTime = up + duration;
-    const wantedSegments : ILocalIndexSegment[] = [];
+    const wantedSegments: ILocalIndexSegment[] = [];
     for (let i = 0; i < this._index.segments.length; i++) {
       const segment = this._index.segments[i];
       const segmentStart = segment.time;
@@ -71,30 +66,31 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       }
     }
 
-    return wantedSegments
-      .map(wantedSegment => {
-        return {
-          id: `${this._representationId}_${wantedSegment.time}`,
-          isInit: false,
-          time: wantedSegment.time,
-          end: wantedSegment.time + wantedSegment.duration,
-          duration: wantedSegment.duration,
-          timescale: 1,
-          timestampOffset: wantedSegment.timestampOffset,
-          url: null,
-          complete: true,
-          privateInfos: {
-            localManifestSegment: { load: this._index.loadSegment,
-                                    segment: wantedSegment },
+    return wantedSegments.map((wantedSegment) => {
+      return {
+        id: `${this._representationId}_${wantedSegment.time}`,
+        isInit: false,
+        time: wantedSegment.time,
+        end: wantedSegment.time + wantedSegment.duration,
+        duration: wantedSegment.duration,
+        timescale: 1,
+        timestampOffset: wantedSegment.timestampOffset,
+        url: null,
+        complete: true,
+        privateInfos: {
+          localManifestSegment: {
+            load: this._index.loadSegment,
+            segment: wantedSegment,
           },
-        };
-      });
+        },
+      };
+    });
   }
 
   /**
    * @returns {Number|undefined}
    */
-  getFirstAvailablePosition() : number|undefined {
+  getFirstAvailablePosition(): number | undefined {
     if (this._index.segments.length === 0) {
       return undefined;
     }
@@ -105,7 +101,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Number|undefined}
    */
-  getLastAvailablePosition() : number|undefined {
+  getLastAvailablePosition(): number | undefined {
     if (this._index.segments.length === 0) {
       return undefined;
     }
@@ -118,7 +114,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
    * `undefined` if unknown.
    * @returns {number|undefined}
    */
-  getEnd() : number | undefined {
+  getEnd(): number | undefined {
     if (this._index.isFinished) {
       return this.getLastAvailablePosition();
     }
@@ -155,69 +151,70 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     if (this._index.incomingRanges === undefined) {
       return undefined;
     }
-    return this._index.incomingRanges.some((range) =>
-      range.start < end && range.end > start);
+    return this._index.incomingRanges.some(
+      (range) => range.start < end && range.end > start,
+    );
   }
 
   /**
    * @returns {Boolean}
    */
-  shouldRefresh() : false {
+  shouldRefresh(): false {
     return false;
   }
 
   /**
    * @returns {Boolean}
    */
-  isSegmentStillAvailable() : true {
+  isSegmentStillAvailable(): true {
     return true;
   }
 
-  isStillAwaitingFutureSegments() : boolean {
+  isStillAwaitingFutureSegments(): boolean {
     return !this._index.isFinished;
   }
 
   /**
    * @returns {Boolean}
    */
-  canBeOutOfSyncError() : false {
+  canBeOutOfSyncError(): false {
     return false;
   }
 
   /**
    * @returns {null}
    */
-  checkDiscontinuity() : null {
+  checkDiscontinuity(): null {
     return null;
   }
 
   /**
    * @returns {Boolean}
    */
-  isInitialized() : true {
+  isInitialized(): true {
     return true;
   }
 
-  initialize() : void {
+  initialize(): void {
     log.error("A `LocalRepresentationIndex` does not need to be initialized");
   }
 
-  addPredictedSegments() : void {
+  addPredictedSegments(): void {
     log.warn("Cannot add predicted segments to a `LocalRepresentationIndex`");
   }
 
-  _replace(newIndex : LocalRepresentationIndex) : void {
+  _replace(newIndex: LocalRepresentationIndex): void {
     this._index.segments = newIndex._index.segments;
     this._index.loadSegment = newIndex._index.loadSegment;
     this._index.loadInitSegment = newIndex._index.loadInitSegment;
   }
 
-  _update(newIndex : LocalRepresentationIndex) : void {
+  _update(newIndex: LocalRepresentationIndex): void {
     const newSegments = newIndex._index.segments;
     if (newSegments.length <= 0) {
       return;
     }
-    const insertNewIndexAtPosition = (pos : number) : void => {
+    const insertNewIndexAtPosition = (pos: number): void => {
       this._index.segments.splice(pos, oldIndexLength - pos, ...newSegments);
       this._index.loadSegment = newIndex._index.loadSegment;
       this._index.loadInitSegment = newIndex._index.loadInitSegment;
@@ -231,8 +228,9 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
       } else if (currSegment.time < newIndexStart) {
         if (currSegment.time + currSegment.duration > newIndexStart) {
           // the new Manifest overlaps a previous segment (weird). Remove the latter.
-          log.warn("Local RepresentationIndex: Manifest update removed" +
-            " previous segments");
+          log.warn(
+            "Local RepresentationIndex: Manifest update removed" + " previous segments",
+          );
           return insertNewIndexAtPosition(i);
         }
         return insertNewIndexAtPosition(i + 1);
@@ -242,10 +240,12 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     // if we got here, it means that every segments in the previous manifest are
     // after the new one. This is unusual.
     // Either the new one has more depth or it's an older one.
-    const oldIndexEnd = this._index.segments[oldIndexLength - 1].time +
-                        this._index.segments[oldIndexLength - 1].duration;
-    const newIndexEnd = newSegments[newSegments.length - 1].time +
-                          newSegments[newSegments.length - 1].duration;
+    const oldIndexEnd =
+      this._index.segments[oldIndexLength - 1].time +
+      this._index.segments[oldIndexLength - 1].duration;
+    const newIndexEnd =
+      newSegments[newSegments.length - 1].time +
+      newSegments[newSegments.length - 1].duration;
     if (oldIndexEnd >= newIndexEnd) {
       return;
     }

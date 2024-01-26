@@ -8,6 +8,7 @@ application.
 
 Here is some high level schema of how the RxPlayer roughly works without and
 with a WebWorker:
+
 ```
 Running the RxPlayer without a WebWorker (the default):
 
@@ -106,6 +107,7 @@ the future.
 ## Quick start
 
 You can just test this feature quickly by running the following code:
+
 ```js
 // Import the RxPlayer (here the minimal version, but it also works with the
 // default import)
@@ -118,7 +120,7 @@ import { MULTI_THREAD } from "rx-player/experimental/features";
 // supplementary code used by the `MULTI_THREAD` feature.
 // We could also load them on demand through URLs
 import {
-    EMBEDDED_WORKER,    // Code which will run in the "Worker"
+    EMBEDDED_WORKER, // Code which will run in the "Worker"
     EMBEDDED_DASH_WASM, // To be able to play DASH contents
 } from "rx-player/experimental/features/embeds";
 
@@ -130,17 +132,19 @@ const player = new RxPlayer(/* your usual options */);
 
 // After instantiation, you can at any time "attach" a WebWorker so any
 // following `loadVideo` call can rely on it when possible.
-player.attachWorker({
-    workerUrl: EMBEDDED_WORKER,
-    dashWasmUrl: EMBEDDED_DASH_WASM,
-}).catch(err => {
-    console.error("An error arised while initializing the worker", err);
-    // Note the if `attachWorker` rejects, the next `loadVideo` / `reload` calls
-    // will not rely on the "multithread" mode anymore.
-    //
-    // However the last-loaded content may fail on error if it was already
-    // loading in "multithread" mode.
-});
+player
+    .attachWorker({
+        workerUrl: EMBEDDED_WORKER,
+        dashWasmUrl: EMBEDDED_DASH_WASM,
+    })
+    .catch((err) => {
+        console.error("An error arised while initializing the worker", err);
+        // Note the if `attachWorker` rejects, the next `loadVideo` / `reload` calls
+        // will not rely on the "multithread" mode anymore.
+        //
+        // However the last-loaded content may fail on error if it was already
+        // loading in "multithread" mode.
+    });
 
 // Any further call to `loadVideo` may rely on WebWorker if possible (see
 // limitations below)
@@ -153,7 +157,7 @@ player.loadVideo({
 const currentModeInfo = player.getCurrentModeInformation();
 if (currentModeInfo === null) {
     console.info("No content loaded."); // Note that this may also happen when an
-                                        // error prevented the content from loading.
+    // error prevented the content from loading.
 } else if (currentModeInfo.useWorker) {
     console.info("We're running the RxPlayer's main logic in a WebWorker!");
 } else {
@@ -239,44 +243,45 @@ some contents have already been played on the main thread.
 The RxPlayer will need to be able to obtain two files to be able to run in
 multithread mode:
 
-  - `worker.js`: The "worker" file, which will run in a WebWorker concurrently
+-   `worker.js`: The "worker" file, which will run in a WebWorker concurrently
     to your application.
 
-  - `mpd-parser.wasm`: The DASH WebAssembly parser, today the only supported
+-   `mpd-parser.wasm`: The DASH WebAssembly parser, today the only supported
     transport's parser in a "multithread" scenario (Microsoft Smooth streaming,
     local contents and Metaplaylist are not yet supported).
 
 You can find them at any of the following places:
 
-- The easiest way is to just import in your application the "embedded" versions
-  of each of them, exported through the
-  `"rx-player/experimental/features/embeds"` path:
-  ```js
-  import {
-    EMBEDDED_WORKER, // "embedded" version of the `worker.js` file
-    EMBEDDED_DASH_WASM, // "embedded" version of the `mpd-parser.wasm` file
-  } from "rx-player/experimental/features/embeds";
-  ```
+-   The easiest way is to just import in your application the "embedded" versions
+    of each of them, exported through the
+    `"rx-player/experimental/features/embeds"` path:
 
-  This allows to bypass the need to store and serve separately those two files.
-  Note however that including those "embeds" in your application may sensibly
-  increase its size.
+    ```js
+    import {
+        EMBEDDED_WORKER, // "embedded" version of the `worker.js` file
+        EMBEDDED_DASH_WASM, // "embedded" version of the `mpd-parser.wasm` file
+    } from "rx-player/experimental/features/embeds";
+    ```
 
-  If you would prefer more control and a smaller bundle size, you may instead
-  consider the other following ways to load those as separate files.
-  This will lead to smaller file sizes and they will only be loaded on demand,
-  but at a maintenance cost: you'll have to store and serve those files yourself
-  as well as not forget to update them each time you update the RxPlayer.
+    This allows to bypass the need to store and serve separately those two files.
+    Note however that including those "embeds" in your application may sensibly
+    increase its size.
 
-- With every release note published on GitHub (you should only use
-  the files linked to the RxPlayer's version you're using), as `worker.js` and
-  `mpd-parser.wasm` respectively.
+    If you would prefer more control and a smaller bundle size, you may instead
+    consider the other following ways to load those as separate files.
+    This will lead to smaller file sizes and they will only be loaded on demand,
+    but at a maintenance cost: you'll have to store and serve those files yourself
+    as well as not forget to update them each time you update the RxPlayer.
 
-- They are also available as respectively as `dist/worker.js` and
-  `dist/mpd-parser.wasm` from the root directory of the project published on
-  npm. As such, they might already be found in your project's directory, for
-  example in the `node_modules` directory (most probably in
-  `node_modules/rx-player/dist/` depending on your project).
+-   With every release note published on GitHub (you should only use
+    the files linked to the RxPlayer's version you're using), as `worker.js` and
+    `mpd-parser.wasm` respectively.
+
+-   They are also available as respectively as `dist/worker.js` and
+    `dist/mpd-parser.wasm` from the root directory of the project published on
+    npm. As such, they might already be found in your project's directory, for
+    example in the `node_modules` directory (most probably in
+    `node_modules/rx-player/dist/` depending on your project).
 
 Once you've retrieved those files and unless you relied on the embedded versions,
 you will need to store them and give its URL to the RxPlayer so it will be able
@@ -310,16 +315,20 @@ After instantiating an `RxPlayer`, you can link it to its own `WebWorker` by
 calling the `attachWorker` method on this instance and by providing both the
 `worker.js` and `mpd-parser.wasm` files by providing their URL (obtained in
 step 1) - or the embedded version - to it:
+
 ```js
-const player = new RxPlayer({ /* ... */ });
-player.attachWorker({
-    workerUrl: URL_TO_WORKER_FILE,
-    dashWasmUrl: URL_TO_DASH_WASM_FILE,
-})
-  .then(() => console.log("Worker succesfully attached!"))
-  .catch(err => {
-    console.error("An error arised while initializing the worker", err);
-  });
+const player = new RxPlayer({
+    /* ... */
+});
+player
+    .attachWorker({
+        workerUrl: URL_TO_WORKER_FILE,
+        dashWasmUrl: URL_TO_DASH_WASM_FILE,
+    })
+    .then(() => console.log("Worker succesfully attached!"))
+    .catch((err) => {
+        console.error("An error arised while initializing the worker", err);
+    });
 ```
 
 As you can see, `attachWorker` returns a Promise resolving once the Worker
@@ -340,21 +349,26 @@ anymore (excepted cases where `attachWorker` is called another time and if the
 Consequently, unless you want to optimize the loading time of the first loaded
 content, it can be considered safer and simpler to just await `attachWorker`'s
 returned Promise before loading a content:
+
 ```js
-const player = new RxPlayer({ /* ... */ });
+const player = new RxPlayer({
+    /* ... */
+});
 try {
-  await player.attachWorker({
-    workerUrl: URL_TO_WORKER_FILE,
-    dashWasmUrl: URL_TO_DASH_WASM_FILE,
-  })
-  console.log("Worker succesfully attached!");
+    await player.attachWorker({
+        workerUrl: URL_TO_WORKER_FILE,
+        dashWasmUrl: URL_TO_DASH_WASM_FILE,
+    });
+    console.log("Worker succesfully attached!");
 } catch (err) {
-  console.warn("An error arised while initializing the Worker", err);
+    console.warn("An error arised while initializing the Worker", err);
 }
 
 // This loaded content may only load in "multithread" mode if `attachWorker`
 // succeeded
-player.loadVideo({ /* ... */ });
+player.loadVideo({
+    /* ... */
+});
 ```
 
 ### Step 4: Load a content
@@ -369,6 +383,7 @@ mode for other contents.
 You can know at any time whether a loaded content is relying on a WebWorker
 ("multithread" mode) or not ("main" mode), by calling the
 [`getCurrentModeInformation` method](../Playback_Information/getCurrentModeInformation.md):
+
 ```js
 const currentModeInfo = player.getCurrentModeInformation();
 if (currentModeInfo === null) {

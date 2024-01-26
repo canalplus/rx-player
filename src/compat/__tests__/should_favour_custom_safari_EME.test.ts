@@ -25,8 +25,8 @@ import globalScope from "../../utils/global_scope";
 
 describe("compat - shouldFavourSafariMediaKeys", () => {
   const gs = globalScope as unknown as typeof globalThis & {
-    WebKitMediaKeys? : unknown;
-    HTMLMediaElement : typeof HTMLMediaElement;
+    WebKitMediaKeys?: unknown;
+    HTMLMediaElement: typeof HTMLMediaElement;
   };
 
   const originalWebKitMediaKeys = gs.WebKitMediaKeys;
@@ -41,49 +41,49 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
 
   it("should return false if we are not on Safari", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isSafariDesktop: false,
-               isSafariMobile: false };
+      return {
+        __esModule: true as const,
+        isSafariDesktop: false,
+        isSafariMobile: false,
+      };
     });
-    const shouldFavourCustomSafariEME =
-      jest.requireActual("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME = jest.requireActual(
+      "../should_favour_custom_safari_EME",
+    );
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
-  /* eslint-disable max-len */
   it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", () => {
-  /* eslint-enable max-len */
-
     gs.WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isSafariDesktop: true,
-               isSafariMobile: false };
+      return {
+        __esModule: true as const,
+        isSafariDesktop: true,
+        isSafariMobile: false,
+      };
     });
-    const shouldFavourCustomSafariEME =
-      jest.requireActual("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME = jest.requireActual(
+      "../should_favour_custom_safari_EME",
+    );
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
-  /* eslint-disable max-len */
   it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", () => {
-  /* eslint-enable max-len */
-
     gs.WebKitMediaKeys = undefined;
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isSafariDesktop: false,
-               isSafariMobile: true };
+      return {
+        __esModule: true as const,
+        isSafariDesktop: false,
+        isSafariMobile: true,
+      };
     });
-    const shouldFavourCustomSafariEME =
-      jest.requireActual("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME = jest.requireActual(
+      "../should_favour_custom_safari_EME",
+    );
     expect(shouldFavourCustomSafariEME.default()).toBe(false);
   });
 
-  /* eslint-disable max-len */
   it("should return true if we are on Safari Desktop and a WebKitMediaKeys implementation is available", () => {
-  /* eslint-enable max-len */
-
     gs.WebKitMediaKeys = {
       isTypeSupported: () => ({}),
       prototype: {
@@ -91,23 +91,23 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
       },
     };
     const proto = gs.HTMLMediaElement.prototype as unknown as {
-      webkitSetMediaKeys : () => Record<string, never>;
+      webkitSetMediaKeys: () => Record<string, never>;
     };
     proto.webkitSetMediaKeys = () => ({});
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isSafariDesktop: true,
-               isSafariMobile: false };
+      return {
+        __esModule: true as const,
+        isSafariDesktop: true,
+        isSafariMobile: false,
+      };
     });
-    const shouldFavourCustomSafariEME =
-      jest.requireActual("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME = jest.requireActual(
+      "../should_favour_custom_safari_EME",
+    );
     expect(shouldFavourCustomSafariEME.default()).toBe(true);
   });
 
-  /* eslint-disable max-len */
   it("should return true if we are on Safari Mobile and a WebKitMediaKeys implementation is available", () => {
-  /* eslint-enable max-len */
-
     gs.WebKitMediaKeys = {
       isTypeSupported: () => ({}),
       prototype: {
@@ -115,16 +115,19 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
       },
     };
     const proto = gs.HTMLMediaElement.prototype as unknown as {
-      webkitSetMediaKeys : () => Record<string, never>;
+      webkitSetMediaKeys: () => Record<string, never>;
     };
     proto.webkitSetMediaKeys = () => ({});
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isSafariDesktop: false,
-               isSafariMobile: true };
+      return {
+        __esModule: true as const,
+        isSafariDesktop: false,
+        isSafariMobile: true,
+      };
     });
-    const shouldFavourCustomSafariEME =
-      jest.requireActual("../should_favour_custom_safari_EME");
+    const shouldFavourCustomSafariEME = jest.requireActual(
+      "../should_favour_custom_safari_EME",
+    );
     expect(shouldFavourCustomSafariEME.default()).toBe(true);
   });
 });

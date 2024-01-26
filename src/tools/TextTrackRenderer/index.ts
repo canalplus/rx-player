@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import TextTrackRenderer, {
-  ISetTextTrackArguments,
-} from "./text_track_renderer";
+import TextTrackRenderer, { ISetTextTrackArguments } from "./text_track_renderer";
 
 // -- exported parsers --
 export { HTML_SAMI_PARSER as SAMI_PARSER } from "../../features/list/html_sami_parser";

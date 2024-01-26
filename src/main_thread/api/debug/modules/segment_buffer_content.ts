@@ -2,10 +2,9 @@ import type { IBufferType } from "../../../../core/types";
 import type {
   IAdaptationMetadata,
   IPeriodMetadata,
-  IRepresentationMetadata } from "../../../../manifest";
-import {
-  getPeriodForTime,
+  IRepresentationMetadata,
 } from "../../../../manifest";
+import { getPeriodForTime } from "../../../../manifest";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type RxPlayer from "../../public_api";
@@ -19,12 +18,12 @@ import {
 } from "../utils";
 
 export default function createSegmentSinkGraph(
-  instance : RxPlayer,
-  bufferType : IBufferType,
-  title : string,
-  parentElt : HTMLElement,
-  cancelSignal : CancellationSignal
-) : HTMLElement {
+  instance: RxPlayer,
+  bufferType: IBufferType,
+  title: string,
+  parentElt: HTMLElement,
+  cancelSignal: CancellationSignal,
+): HTMLElement {
   const bufferGraphWrapper = createElement("div");
   const bufferTitle = createMetricTitle(title);
   const canvasElt = createGraphCanvas();
@@ -80,13 +79,18 @@ export default function createSegmentSinkGraph(
       for (let i = 0; i < inventory.length; i++) {
         const rangeInfo = inventory[i];
         const { bufferedStart, bufferedEnd, infos } = rangeInfo;
-        if (bufferedStart !== undefined && bufferedEnd !== undefined &&
-            currentTime >= bufferedStart && currentTime < bufferedEnd)
-        {
+        if (
+          bufferedStart !== undefined &&
+          bufferedEnd !== undefined &&
+          currentTime >= bufferedStart &&
+          currentTime < bufferedEnd
+        ) {
           currentRangeRepInfoElt.appendChild(createMetricTitle("play"));
-          currentRangeRepInfoElt.appendChild(createElement("span", {
-            textContent: constructRepresentationInfo(infos),
-          }));
+          currentRangeRepInfoElt.appendChild(
+            createElement("span", {
+              textContent: constructRepresentationInfo(infos),
+            }),
+          );
           break;
         }
       }
@@ -99,33 +103,35 @@ export default function createSegmentSinkGraph(
         const period = getPeriodForTime(manifest, currentTime);
         if (period !== undefined) {
           loadingRangeRepInfoElt.appendChild(createMetricTitle("load"));
-          loadingRangeRepInfoElt.appendChild(createElement("span", {
-            textContent: constructRepresentationInfo({
-              period,
-              adaptation: adap,
-              representation: rep,
+          loadingRangeRepInfoElt.appendChild(
+            createElement("span", {
+              textContent: constructRepresentationInfo({
+                period,
+                adaptation: adap,
+                representation: rep,
+              }),
             }),
-          }));
+          );
         }
       }
     }
   }
 }
 
-function constructRepresentationInfo(
-  content : {
-    period : IPeriodMetadata;
-    adaptation : IAdaptationMetadata;
-    representation : IRepresentationMetadata;
-  }
-) : string {
+function constructRepresentationInfo(content: {
+  period: IPeriodMetadata;
+  adaptation: IAdaptationMetadata;
+  representation: IRepresentationMetadata;
+}): string {
   const period = content.period;
-  const { language,
-          isAudioDescription,
-          isClosedCaption,
-          isTrickModeTrack,
-          isSignInterpreted,
-          type: bufferType } = content.adaptation;
+  const {
+    language,
+    isAudioDescription,
+    isClosedCaption,
+    isTrickModeTrack,
+    isSignInterpreted,
+    type: bufferType,
+  } = content.adaptation;
   const { id, height, width, bitrate, codecs } = content.representation;
   let representationInfo = `"${id}" `;
   if (height !== undefined && width !== undefined) {

@@ -28,21 +28,21 @@ describe("isSeekingApproximate", () => {
 
   it("should be true if on Tizen", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isTizen: true };
+      return { __esModule: true as const, isTizen: true };
     });
-    const shouldAppendBufferAfterPadding =
-      jest.requireActual("../is_seeking_approximate").default;
+    const shouldAppendBufferAfterPadding = jest.requireActual(
+      "../is_seeking_approximate",
+    ).default;
     expect(shouldAppendBufferAfterPadding).toBe(true);
   });
 
   it("should be false if not on tizen", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isTizen: false };
+      return { __esModule: true as const, isTizen: false };
     });
-    const shouldAppendBufferAfterPadding =
-      jest.requireActual("../is_seeking_approximate").default;
+    const shouldAppendBufferAfterPadding = jest.requireActual(
+      "../is_seeking_approximate",
+    ).default;
     expect(shouldAppendBufferAfterPadding).toBe(false);
   });
 });

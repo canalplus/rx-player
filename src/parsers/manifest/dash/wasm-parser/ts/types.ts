@@ -29,7 +29,7 @@ export const enum CustomEventType {
    */
   Log = 0,
 
-    /** Variant used to report parsing errors to the RxPlayer. */
+  /** Variant used to report parsing errors to the RxPlayer. */
   Error = 1,
 }
 
@@ -182,7 +182,6 @@ export const enum AttributeName {
 
   // Period + AdaptationSet + SegmentTemplate
   BitstreamSwitching = 32, // u8 (bool)
-
 
   // MPD
   Type = 33, // String

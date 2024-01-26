@@ -118,7 +118,7 @@ function getLicense(challenge) {
         resolve(license);
       } else {
         const error = new Error(
-          "getLicense's request finished with a " + `${xhr.status} HTTP error`
+          "getLicense's request finished with a " + `${xhr.status} HTTP error`,
         );
         reject(error);
       }
@@ -149,7 +149,7 @@ function getLicense(challenge) {
         resolve(license);
       } else {
         const error = new Error(
-          "getLicense's request finished with a " + `${xhr.status} HTTP error`
+          "getLicense's request finished with a " + `${xhr.status} HTTP error`,
         );
         reject(error);
       }
@@ -298,7 +298,7 @@ rxPlayer.loadVideo({
                 "The license server had a problem and" +
                   ` responded with ${xhr.status} HTTP ` +
                   "error. We will now fallback to another" +
-                  "quality."
+                  "quality.",
               );
               error.noRetry = true;
               error.fallbackOnLastTry = true;
@@ -306,8 +306,7 @@ rxPlayer.loadVideo({
             } else {
               // else continue to retry
               const error = new Error(
-                "getLicense's request finished with a " +
-                  `${xhr.status} HTTP error`
+                "getLicense's request finished with a " + `${xhr.status} HTTP error`,
               );
               reject(error);
             }
@@ -416,6 +415,7 @@ cannot be copied. It might thus refuse to use one of the decryption key found in
 a license, especially the one needed for the higher content qualities.
 
 Those options then allows to fallback when this happens.
+
 - `onKeyInternalError`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   `"internal-error"`. We found that most widevine implementation use

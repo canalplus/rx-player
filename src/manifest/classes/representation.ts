@@ -22,10 +22,7 @@ import type {
   IContentProtections,
   IParsedRepresentation,
 } from "../../parsers/manifest";
-import type {
-  ITrackType,
-  IHDRInformation,
-} from "../../public_types";
+import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
 import type { IRepresentationIndex } from "./representation_index";
@@ -38,24 +35,24 @@ const generateRepresentationUniqueId = idGenerator();
  */
 class Representation implements IRepresentationMetadata {
   /** ID uniquely identifying the Representation in its parent Adaptation. */
-  public readonly id : string;
+  public readonly id: string;
   /**
    * @see IRepresentationMetadata
    */
-  public readonly uniqueId : string;
+  public readonly uniqueId: string;
   /**
    * @see IRepresentationMetadata
    */
-  public bitrate : number;
+  public bitrate: number;
   /**
    * @see IRepresentationMetadata
    */
-  public frameRate? : number;
+  public frameRate?: number;
   /**
    * Interface allowing to get information about segments available for this
    * Representation.
    */
-  public index : IRepresentationIndex;
+  public index: IRepresentationIndex;
   /**
    * Information on the CDN(s) on which requests should be done to request this
    * Representation's initialization and media segments.
@@ -66,7 +63,7 @@ class Representation implements IRepresentationMetadata {
    * An empty array means that no CDN are left to request the resource. As such,
    * no resource can be loaded in that situation.
    */
-  public cdnMetadata : ICdnMetadata[] | null;
+  public cdnMetadata: ICdnMetadata[] | null;
   /**
    * @see IRepresentationMetadata
    */
@@ -74,23 +71,23 @@ class Representation implements IRepresentationMetadata {
   /**
    * @see IRepresentationMetadata
    */
-  public codecs : string[];
+  public codecs: string[];
   /**
    * @see IRepresentationMetadata
    */
-  public mimeType? : string;
+  public mimeType?: string;
   /**
    * @see IRepresentationMetadata
    */
-  public width? : number;
+  public width?: number;
   /**
    * @see IRepresentationMetadata
    */
-  public height? : number;
+  public height?: number;
   /**
    * @see IRepresentationMetadata
    */
-  public contentProtections? : IContentProtections;
+  public contentProtections?: IContentProtections;
   /**
    * @see IRepresentationMetadata
    */
@@ -98,20 +95,17 @@ class Representation implements IRepresentationMetadata {
   /**
    * @see IRepresentationMetadata
    */
-  public decipherable? : boolean  | undefined;
+  public decipherable?: boolean | undefined;
   /**
    * @see IRepresentationMetadata
    */
-  public isSupported : boolean | undefined;
+  public isSupported: boolean | undefined;
 
   /**
    * @param {Object} args
    * @param {string} trackType
    */
-  constructor(
-    args : IParsedRepresentation,
-    trackType : ITrackType
-  ) {
+  constructor(args: IParsedRepresentation, trackType: ITrackType) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
@@ -155,7 +149,7 @@ class Representation implements IRepresentationMetadata {
         if (args.supplementalCodecs !== undefined) {
           const isSupplementaryCodecSupported = features.codecSupportProber.isSupported(
             this.mimeType ?? "",
-            args.supplementalCodecs ?? ""
+            args.supplementalCodecs ?? "",
           );
           if (isSupplementaryCodecSupported !== false) {
             this.codecs = [args.supplementalCodecs];
@@ -174,11 +168,10 @@ class Representation implements IRepresentationMetadata {
             this.codecs = args.codecs === undefined ? [] : [args.codecs];
             this.isSupported = features.codecSupportProber.isSupported(
               this.mimeType ?? "",
-              args.codecs ?? ""
+              args.codecs ?? "",
             );
           }
         }
-
       } else {
         if (args.supplementalCodecs !== undefined) {
           this.codecs.push(args.supplementalCodecs);
@@ -246,7 +239,7 @@ class Representation implements IRepresentationMetadata {
    * which is often needed when interacting with the browser's APIs.
    * @returns {string}
    */
-  public getMimeTypeString() : string {
+  public getMimeTypeString(): string {
     return `${this.mimeType ?? ""};codecs="${this.codecs?.[0] ?? ""}"`;
   }
 
@@ -270,7 +263,7 @@ class Representation implements IRepresentationMetadata {
    * @param {string} drmSystemId - The hexa-encoded DRM system ID
    * @returns {Array.<Object>}
    */
-  public getEncryptionData(drmSystemId : string) : IRepresentationProtectionData[] {
+  public getEncryptionData(drmSystemId: string): IRepresentationProtectionData[] {
     const allInitData = this.getAllEncryptionData();
     const filtered = [];
     for (let i = 0; i < allInitData.length; i++) {
@@ -279,10 +272,12 @@ class Representation implements IRepresentationMetadata {
       for (let j = 0; j < initData.values.length; j++) {
         if (initData.values[j].systemId.toLowerCase() === drmSystemId.toLowerCase()) {
           if (!createdObjForType) {
-            const keyIds = this.contentProtections?.keyIds?.map(val => val.keyId);
-            filtered.push({ type: initData.type,
-                            keyIds,
-                            values: [initData.values[j]] });
+            const keyIds = this.contentProtections?.keyIds?.map((val) => val.keyId);
+            filtered.push({
+              type: initData.type,
+              keyIds,
+              values: [initData.values[j]],
+            });
             createdObjForType = true;
           } else {
             filtered[filtered.length - 1].values.push(initData.values[j]);
@@ -292,7 +287,6 @@ class Representation implements IRepresentationMetadata {
     }
     return filtered;
   }
-
 
   /**
    * Returns all currently-known encryption initialization data linked to this
@@ -320,17 +314,16 @@ class Representation implements IRepresentationMetadata {
    * after parsing this Representation's initialization segment, if one exists.
    * @returns {Array.<Object>}
    */
-  public getAllEncryptionData() : IRepresentationProtectionData[] {
-    if (this.contentProtections === undefined ||
-        this.contentProtections.initData.length === 0)
-    {
+  public getAllEncryptionData(): IRepresentationProtectionData[] {
+    if (
+      this.contentProtections === undefined ||
+      this.contentProtections.initData.length === 0
+    ) {
       return [];
     }
-    const keyIds = this.contentProtections?.keyIds?.map(val => val.keyId);
+    const keyIds = this.contentProtections?.keyIds?.map((val) => val.keyId);
     return this.contentProtections.initData.map((x) => {
-      return { type: x.type,
-               keyIds,
-               values: x.values };
+      return { type: x.type, keyIds, values: x.values };
     });
   }
 
@@ -351,18 +344,19 @@ class Representation implements IRepresentationMetadata {
    * @returns {boolean}
    */
   public addProtectionData(
-    initDataType : string,
+    initDataType: string,
     keyId: Uint8Array | undefined,
-    data : Array<{
-      systemId : string;
-      data : Uint8Array;
-    }>
-  ) : boolean {
+    data: Array<{
+      systemId: string;
+      data: Uint8Array;
+    }>,
+  ): boolean {
     let hasUpdatedProtectionData = false;
     if (this.contentProtections === undefined) {
-      this.contentProtections = { keyIds: keyId !== undefined ? [{ keyId }] : [],
-                                  initData: [ { type: initDataType,
-                                                values: data } ] };
+      this.contentProtections = {
+        keyIds: keyId !== undefined ? [{ keyId }] : [],
+        initData: [{ type: initDataType, values: data }],
+      };
       return true;
     }
 
@@ -414,8 +408,7 @@ class Representation implements IRepresentationMetadata {
     }
     // If we are here, this means that we didn't find the corresponding
     // init data type in this.contentProtections.initData.
-    this.contentProtections.initData.push({ type: initDataType,
-                                            values: data });
+    this.contentProtections.initData.push({ type: initDataType, values: data });
     return true;
   }
 
@@ -433,19 +426,21 @@ class Representation implements IRepresentationMetadata {
    *
    * @returns {Object}
    */
-  public getMetadataSnapshot() : IRepresentationMetadata {
-    return { id: this.id,
-             uniqueId: this.uniqueId,
-             bitrate: this.bitrate,
-             codecs: this.codecs,
-             mimeType: this.mimeType,
-             width: this.width,
-             height: this.height,
-             frameRate: this.frameRate,
-             isSupported: this.isSupported,
-             hdrInfo: this.hdrInfo,
-             contentProtections: this.contentProtections,
-             decipherable: this.decipherable };
+  public getMetadataSnapshot(): IRepresentationMetadata {
+    return {
+      id: this.id,
+      uniqueId: this.uniqueId,
+      bitrate: this.bitrate,
+      codecs: this.codecs,
+      mimeType: this.mimeType,
+      width: this.width,
+      height: this.height,
+      frameRate: this.frameRate,
+      isSupported: this.isSupported,
+      hdrInfo: this.hdrInfo,
+      contentProtections: this.contentProtections,
+      decipherable: this.decipherable,
+    };
   }
 }
 
@@ -466,7 +461,7 @@ export interface IRepresentationProtectionData {
    * `undefined` when not known (different from an empty array - which would
    * just mean that there's no key id involved).
    */
-  keyIds : Uint8Array[] | undefined;
+  keyIds: Uint8Array[] | undefined;
   /** Every initialization data for that type. */
   values: Array<{
     /**
@@ -479,7 +474,7 @@ export interface IRepresentationProtectionData {
      * For example, with "cenc" initialization data found in an ISOBMFF file,
      * this will be the whole PSSH box.
      */
-     data: Uint8Array;
+    data: Uint8Array;
   }>;
 }
 

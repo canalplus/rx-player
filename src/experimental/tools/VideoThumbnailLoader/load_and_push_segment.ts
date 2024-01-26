@@ -30,42 +30,46 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
  * @returns {Promise}
  */
 export default function loadAndPushSegment(
-  segmentInfo : ISegmentLoaderContent,
+  segmentInfo: ISegmentLoaderContent,
   sourceBufferInterface: MainSourceBufferInterface,
   segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>,
-  cancelSignal: CancellationSignal
+  cancelSignal: CancellationSignal,
 ): Promise<unknown> {
-  const pushOperations : Array<Promise<unknown>> = [];
-  return segmentFetcher(segmentInfo, {
-    onChunk(parseChunk) {
-      const parsed = parseChunk(undefined);
-      let data : BufferSource | null;
-      let timestampOffset : number;
-      const codec = segmentInfo.representation.getMimeTypeString();
-      if (parsed.segmentType === "init") {
-        data = parsed.initializationData;
-        timestampOffset = 0;
-      } else {
-        data = parsed.chunkData;
-        timestampOffset = parsed.chunkOffset;
-      }
-      let pushOperation;
-      if (data === null) {
-        pushOperation = Promise.resolve(null);
-      } else {
-        pushOperation = sourceBufferInterface.appendBuffer(data, {
-          appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
-          timestampOffset,
-          codec,
-        });
-      }
-      pushOperations.push(pushOperation);
+  const pushOperations: Array<Promise<unknown>> = [];
+  return segmentFetcher(
+    segmentInfo,
+    {
+      onChunk(parseChunk) {
+        const parsed = parseChunk(undefined);
+        let data: BufferSource | null;
+        let timestampOffset: number;
+        const codec = segmentInfo.representation.getMimeTypeString();
+        if (parsed.segmentType === "init") {
+          data = parsed.initializationData;
+          timestampOffset = 0;
+        } else {
+          data = parsed.chunkData;
+          timestampOffset = parsed.chunkOffset;
+        }
+        let pushOperation;
+        if (data === null) {
+          pushOperation = Promise.resolve(null);
+        } else {
+          pushOperation = sourceBufferInterface.appendBuffer(data, {
+            appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
+            timestampOffset,
+            codec,
+          });
+        }
+        pushOperations.push(pushOperation);
+      },
+      onAllChunksReceived() {
+        return;
+      },
+      onRetry(error) {
+        log.warn("Retrying segment request", error);
+      },
     },
-    onAllChunksReceived() {
-      return ;
-    },
-    onRetry(error) {
-      log.warn("Retrying segment request", error);
-    },
-  }, cancelSignal).then(() => Promise.all(pushOperations));
+    cancelSignal,
+  ).then(() => Promise.all(pushOperations));
 }

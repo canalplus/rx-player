@@ -1,11 +1,11 @@
-# Compatibility files ##########################################################
+# Compatibility files
 
-| Consideration           | Status                                      |
-|-------------------------|---------------------------------------------|
-| Preferred import style  | Compat files can be imported directly       |
-| Multithread environment | Main thread or WebWorker depending on file  |
+| Consideration           | Status                                     |
+| ----------------------- | ------------------------------------------ |
+| Preferred import style  | Compat files can be imported directly      |
+| Multithread environment | Main thread or WebWorker depending on file |
 
-## Overview ####################################################################
+## Overview
 
 Those are "Compat" files, which regroups any compatibility-related logic.
 

@@ -17,29 +17,29 @@ export interface IWorkerPlaybackObservation {
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused : IPausedPlaybackObservation;
+  paused: IPausedPlaybackObservation;
   /**
    * Information on the current media position in seconds at the time of the
    * Observation.
    */
-  position : ObservationPosition;
+  position: ObservationPosition;
   /** `duration` property of the HTMLMediaElement. */
-  duration : number;
+  duration: number;
   /** `readyState` property of the HTMLMediaElement. */
-  readyState : number;
+  readyState: number;
   /** Target playback rate at which we want to play the content. */
-  speed : number;
+  speed: number;
   /** Theoretical maximum position on the content that can currently be played. */
-  maximumPosition : number;
+  maximumPosition: number;
   /**
    * Ranges of buffered data per type of media.
    * `null` if no buffer exists for that type of media.
    */
-  buffered : Record<ITrackType, IRange[] | null>;
+  buffered: Record<ITrackType, IRange[] | null>;
   rebuffering: IRebufferingStatus | null;
   freezing: IFreezingStatus | null;
   bufferGap: number | undefined;
-};
+}
 
 /** Pause-related information linked to an emitted Playback observation. */
 export interface IPausedPlaybackObservation {
@@ -52,28 +52,28 @@ export interface IPausedPlaybackObservation {
    * information, you should recuperate it from the HTMLMediaElement directly
    * through another mean.
    */
-  last : boolean;
+  last: boolean;
   /**
    * Actually wanted paused state not yet reached.
    * This might for example be set to `false` when the content is currently
    * loading (and thus paused) but with autoPlay enabled.
    */
-  pending : boolean | undefined;
+  pending: boolean | undefined;
 }
 
-export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver<
-  IWorkerPlaybackObservation
-> {
-  private _src : IReadOnlySharedReference<IWorkerPlaybackObservation>;
-  private _cancelSignal : CancellationSignal;
-  private _messageSender : (msg: IUpdatePlaybackRateWorkerMessage) => void;
-  private _contentId : string;
+export default class WorkerPlaybackObserver
+  implements IReadOnlyPlaybackObserver<IWorkerPlaybackObservation>
+{
+  private _src: IReadOnlySharedReference<IWorkerPlaybackObservation>;
+  private _cancelSignal: CancellationSignal;
+  private _messageSender: (msg: IUpdatePlaybackRateWorkerMessage) => void;
+  private _contentId: string;
 
   constructor(
-    src : IReadOnlySharedReference<IWorkerPlaybackObservation>,
-    contentId : string,
-    sendMessage : (msg: IUpdatePlaybackRateWorkerMessage) => void,
-    cancellationSignal : CancellationSignal
+    src: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+    contentId: string,
+    sendMessage: (msg: IUpdatePlaybackRateWorkerMessage) => void,
+    cancellationSignal: CancellationSignal,
   ) {
     this._src = src;
     this._contentId = contentId;
@@ -93,31 +93,34 @@ export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver
     return undefined;
   }
 
-  public getReference() : IReadOnlySharedReference<IWorkerPlaybackObservation> {
+  public getReference(): IReadOnlySharedReference<IWorkerPlaybackObservation> {
     return this._src;
   }
 
-  public setPlaybackRate(playbackRate : number) : void {
-    this._messageSender({ type: WorkerMessageType.UpdatePlaybackRate,
-                          contentId: this._contentId,
-                          value: playbackRate });
+  public setPlaybackRate(playbackRate: number): void {
+    this._messageSender({
+      type: WorkerMessageType.UpdatePlaybackRate,
+      contentId: this._contentId,
+      value: playbackRate,
+    });
   }
 
-  public getPlaybackRate() : number | undefined {
+  public getPlaybackRate(): number | undefined {
     return undefined;
   }
 
   public listen(
-    cb : (
-      observation : IWorkerPlaybackObservation,
-      stopListening : () => void
-    ) => void,
-    options? : { includeLastObservation? : boolean | undefined;
-                 clearSignal? : CancellationSignal | undefined; }
-  ) : void {
-    if (this._cancelSignal.isCancelled() ||
-        options?.clearSignal?.isCancelled() === true) {
-      return ;
+    cb: (observation: IWorkerPlaybackObservation, stopListening: () => void) => void,
+    options?: {
+      includeLastObservation?: boolean | undefined;
+      clearSignal?: CancellationSignal | undefined;
+    },
+  ): void {
+    if (
+      this._cancelSignal.isCancelled() ||
+      options?.clearSignal?.isCancelled() === true
+    ) {
+      return;
     }
 
     this._src.onUpdate(cb, {
@@ -127,11 +130,11 @@ export default class WorkerPlaybackObserver implements IReadOnlyPlaybackObserver
   }
 
   public deriveReadOnlyObserver<TDest>(
-    transform : (
-      observationRef : IReadOnlySharedReference<IWorkerPlaybackObservation>,
-      cancellationSignal : CancellationSignal
-    ) => IReadOnlySharedReference<TDest>
-  ) : IReadOnlyPlaybackObserver<TDest> {
+    transform: (
+      observationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+      cancellationSignal: CancellationSignal,
+    ) => IReadOnlySharedReference<TDest>,
+  ): IReadOnlyPlaybackObserver<TDest> {
     return generateReadOnlyObserver(this, transform, this._cancelSignal);
   }
 }

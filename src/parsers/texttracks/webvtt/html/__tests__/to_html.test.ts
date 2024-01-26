@@ -32,10 +32,7 @@ describe("parsers - webvtt - toHTML", () => {
     jest.mock("../convert_payload_to_html", () => ({
       __esModule: true as const,
       default: () => {
-        return [
-          document.createElement("b"),
-          document.createTextNode("Hello"),
-        ];
+        return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
@@ -47,36 +44,34 @@ describe("parsers - webvtt - toHTML", () => {
       payload: ["<body><b></b><p>Hello<p><body>"],
     };
 
-    const classes : IStyleElements = {};
+    const classes: IStyleElements = {};
 
-    const { element, start, end } = toHTML(cueObject, { classes  });
+    const { element, start, end } = toHTML(cueObject, { classes });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
       "<div style=" +
-        "\"width:100%;" +
+        '"width:100%;' +
         "height:100%;" +
         "display:flex;" +
         "flex-direction:column;" +
         "justify-content:flex-end;" +
-        "align-items:center;\">" +
-        "<p style=\"text-align:center\">" +
-          "<span style=\"background-color:rgba(0,0,0,0.8);color:white;\">" +
-            "<b></b>" +
-            "Hello" +
-          "</span>" +
+        'align-items:center;">' +
+        '<p style="text-align:center">' +
+        '<span style="background-color:rgba(0,0,0,0.8);color:white;">' +
+        "<b></b>" +
+        "Hello" +
+        "</span>" +
         "</p>" +
-      "</div>");
+        "</div>",
+    );
   });
 
   it("should include payload HTML and apply correclty style class element", () => {
     jest.mock("../convert_payload_to_html", () => ({
       __esModule: true as const,
       default: () => {
-        return [
-          document.createElement("b"),
-          document.createTextNode("Hello"),
-        ];
+        return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
@@ -88,38 +83,36 @@ describe("parsers - webvtt - toHTML", () => {
       payload: ["<body><b></b><p>Hello<p><body>"],
     };
 
-    const classes : IStyleElements = {
+    const classes: IStyleElements = {
       b: "color:yellow;",
     };
 
-    const { element, start, end } = toHTML(cueObject, { classes  });
+    const { element, start, end } = toHTML(cueObject, { classes });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
       "<div style=" +
-        "\"width:100%;" +
+        '"width:100%;' +
         "height:100%;" +
         "display:flex;" +
         "flex-direction:column;" +
         "justify-content:flex-end;" +
-        "align-items:center;\">" +
-        "<p style=\"text-align:center\">" +
-          "<span style=\"background-color:rgba(0,0,0,0.8);color:white;color:yellow;\">" +
-            "<b></b>" +
-            "Hello" +
-          "</span>" +
+        'align-items:center;">' +
+        '<p style="text-align:center">' +
+        '<span style="background-color:rgba(0,0,0,0.8);color:white;color:yellow;">' +
+        "<b></b>" +
+        "Hello" +
+        "</span>" +
         "</p>" +
-      "</div>");
+        "</div>",
+    );
   });
 
   it("should include payload HTML and apply correctly global style element", () => {
     jest.mock("../convert_payload_to_html", () => ({
       __esModule: true as const,
       default: () => {
-        return [
-          document.createElement("b"),
-          document.createTextNode("Hello"),
-        ];
+        return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
@@ -131,37 +124,35 @@ describe("parsers - webvtt - toHTML", () => {
       payload: ["<body><b></b><p>Hello<p><body>"],
     };
 
-    const classes : IStyleElements = {};
+    const classes: IStyleElements = {};
     const global = "color:yellow;";
 
-    const { element, start, end } = toHTML(cueObject, { classes , global });
+    const { element, start, end } = toHTML(cueObject, { classes, global });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
       "<div style=" +
-        "\"width:100%;" +
+        '"width:100%;' +
         "height:100%;" +
         "display:flex;" +
         "flex-direction:column;" +
         "justify-content:flex-end;" +
-        "align-items:center;\">" +
-        "<p style=\"text-align:center\">" +
-          "<span style=\"background-color:rgba(0,0,0,0.8);color:white;color:yellow;\">" +
-            "<b></b>" +
-            "Hello" +
-          "</span>" +
+        'align-items:center;">' +
+        '<p style="text-align:center">' +
+        '<span style="background-color:rgba(0,0,0,0.8);color:white;color:yellow;">' +
+        "<b></b>" +
+        "Hello" +
+        "</span>" +
         "</p>" +
-      "</div>");
+        "</div>",
+    );
   });
 
   it("should apply both the global style element and a given class", () => {
     jest.mock("../convert_payload_to_html", () => ({
       __esModule: true as const,
       default: () => {
-        return [
-          document.createElement("b"),
-          document.createTextNode("Hello"),
-        ];
+        return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
@@ -173,28 +164,29 @@ describe("parsers - webvtt - toHTML", () => {
       payload: ["<body><b></b><p>Hello<p><body>"],
     };
 
-    const classes : IStyleElements = { b: "bar: baz;" };
+    const classes: IStyleElements = { b: "bar: baz;" };
     const global = "color:yellow;";
 
-    const { element, start, end } = toHTML(cueObject, { classes , global });
+    const { element, start, end } = toHTML(cueObject, { classes, global });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
       "<div style=" +
-        "\"width:100%;" +
+        '"width:100%;' +
         "height:100%;" +
         "display:flex;" +
         "flex-direction:column;" +
         "justify-content:flex-end;" +
-        "align-items:center;\">" +
-        "<p style=\"text-align:center\">" +
-          "<span style=\"background-color:rgba(0,0,0,0.8);color:white;" +
-            "color:yellow;bar: baz;\">" +
-            "<b></b>" +
-            "Hello" +
-          "</span>" +
+        'align-items:center;">' +
+        '<p style="text-align:center">' +
+        '<span style="background-color:rgba(0,0,0,0.8);color:white;' +
+        'color:yellow;bar: baz;">' +
+        "<b></b>" +
+        "Hello" +
+        "</span>" +
         "</p>" +
-      "</div>");
+        "</div>",
+    );
   });
 
   it("should return default element if no payload", () => {
@@ -212,23 +204,24 @@ describe("parsers - webvtt - toHTML", () => {
       payload: [],
     };
 
-    const classes : IStyleElements = {};
+    const classes: IStyleElements = {};
 
-    const { element, start, end } = toHTML(cueObject, { classes  });
+    const { element, start, end } = toHTML(cueObject, { classes });
     expect(start).toBe(0);
     expect(end).toBe(100);
     expect(element.outerHTML).toBe(
       "<div style=" +
-        "\"width:100%;" +
+        '"width:100%;' +
         "height:100%;" +
         "display:flex;" +
         "flex-direction:column;" +
         "justify-content:flex-end;" +
-        "align-items:center;\">" +
-        "<p style=\"text-align:center\">" +
-          "<span style=\"background-color:rgba(0,0,0,0.8);color:white;\">" +
-          "</span>" +
+        'align-items:center;">' +
+        '<p style="text-align:center">' +
+        '<span style="background-color:rgba(0,0,0,0.8);color:white;">' +
+        "</span>" +
         "</p>" +
-      "</div>");
+        "</div>",
+    );
   });
 });

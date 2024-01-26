@@ -53,11 +53,11 @@ describe("utils - idGenerator", () => {
     expect(generateNewID2()).toBe("4");
     expect(generateNewID3()).toBe("0");
   });
-  it ("should preprend a 0 after A LOT of ID generation", () => {
+  it("should preprend a 0 after A LOT of ID generation", () => {
     // Ugly but I don't care
     globalScope.Number = {
       MAX_SAFE_INTEGER: 3,
-      isSafeInteger: (x : number) => x <= 3,
+      isSafeInteger: (x: number) => x <= 3,
     } as typeof globalScope.Number;
     const generateNewID1 = idGenerator();
     const generateNewID2 = idGenerator();

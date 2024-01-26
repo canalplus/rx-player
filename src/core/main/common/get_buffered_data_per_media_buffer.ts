@@ -16,7 +16,7 @@ import type { IRange } from "../../../utils/ranges";
  */
 export default function getBufferedDataPerMediaBuffer(
   mediaSourceInterface: IMediaSourceInterface | null,
-  textDisplayer: ITextDisplayer | null
+  textDisplayer: ITextDisplayer | null,
 ): Record<ITrackType, IRange[] | null> {
   const buffered: Record<ITrackType, IRange[] | null> = {
     audio: null,
@@ -29,10 +29,14 @@ export default function getBufferedDataPerMediaBuffer(
   if (mediaSourceInterface === null) {
     return buffered;
   }
-  const audioBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
-                                s => s.type === SourceBufferType.Audio);
-  const videoBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
-                                s => s.type === SourceBufferType.Video);
+  const audioBuffer = arrayFind(
+    mediaSourceInterface.sourceBuffers,
+    (s) => s.type === SourceBufferType.Audio,
+  );
+  const videoBuffer = arrayFind(
+    mediaSourceInterface.sourceBuffers,
+    (s) => s.type === SourceBufferType.Video,
+  );
   const audioBuffered = audioBuffer?.getBuffered();
   if (audioBuffered !== undefined) {
     buffered.audio = audioBuffered;
@@ -43,4 +47,3 @@ export default function getBufferedDataPerMediaBuffer(
   }
   return buffered;
 }
-

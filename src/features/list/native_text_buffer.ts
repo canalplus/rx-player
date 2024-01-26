@@ -21,7 +21,7 @@ import type { IFeaturesObject } from "../types";
  * Add ability to display text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeTextBuffer(features : IFeaturesObject) : void {
+function addNativeTextBuffer(features: IFeaturesObject): void {
   features.nativeTextDisplayer = NativeTextDisplayer;
 }
 

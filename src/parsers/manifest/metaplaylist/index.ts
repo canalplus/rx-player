@@ -21,8 +21,4 @@ import parseMetaPlaylist, {
 } from "./metaplaylist_parser";
 
 export default parseMetaPlaylist;
-export {
-  IMetaPlaylist,
-  IMetaPlaylistTextTrack,
-  IParserResponse,
-};
+export { IMetaPlaylist, IMetaPlaylistTextTrack, IParserResponse };

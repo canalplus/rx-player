@@ -1,10 +1,9 @@
-# MetaPlaylist #################################################################
+# MetaPlaylist
 
 The MetaPlaylist is a specific kind of transport: a playlist of multiple
 Manifests.
 
-
-## How the original Manifest files are considered ##############################
+## How the original Manifest files are considered
 
 To play a MetaPlaylist content, each manifest it depends on has to be
 downloaded and parsed through their original logic (a `MPD` through DASH's
@@ -23,9 +22,7 @@ content is lost.
 Each of those Period is then concatenated one after the other thanks to the time
 information announced in the MetaPlaylist file.
 
-
-
-## How about the segments ######################################################
+## How about the segments
 
 The exploitation of segment metadata is even trickier.
 
@@ -89,6 +86,7 @@ To illustrate, it kind of goes like this:
 
 To make sure the segment is pushed at the right moment and doesn't overlap other
 contents, we make heavy use of some specific `SourceBuffer` properties:
-  - the `timestampOffset` property allows to set a specific offset
-  - `appendWindowStart` allows to limit the starting time of the pushed segment
-  - `appendWindowEnd` allows to limit the ending time of the pushed segment
+
+- the `timestampOffset` property allows to set a specific offset
+- `appendWindowStart` allows to limit the starting time of the pushed segment
+- `appendWindowEnd` allows to limit the ending time of the pushed segment

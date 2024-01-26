@@ -6,7 +6,9 @@ import {
   EMBEDDED_DASH_WASM,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import sleep from "../../utils/sleep.js";
-import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import waitForState, {
+  waitForLoadedStateAfterLoadVideo,
+} from "../../utils/waitForPlayerState";
 import tryTestMultipleTimes from "../../utils/try_test_multiple_times";
 import { lockLowestBitrates } from "../../utils/bitrates";
 
@@ -55,21 +57,20 @@ import { lockLowestBitrates } from "../../utils/bitrates";
  * if the RxPlayer runs in multithread mode.
  * In any other cases, tests will run in monothread mode.
  */
-export default function launchTestsForContent(
-  manifestInfos,
-  { multithread } = {}
-) {
+export default function launchTestsForContent(manifestInfos, { multithread } = {}) {
   let player;
 
   if (multithread === true) {
     RxPlayer.addFeatures([MULTI_THREAD]);
   }
 
-  const { isLive,
-          maximumPosition,
-          minimumPosition,
-          periods: periodsInfos,
-          transport } = manifestInfos;
+  const {
+    isLive,
+    maximumPosition,
+    minimumPosition,
+    periods: periodsInfos,
+    transport,
+  } = manifestInfos;
 
   const firstPeriodIndex = isLive ? periodsInfos.length - 1 : 0;
 
@@ -120,8 +121,7 @@ export default function launchTestsForContent(
         await waitForLoadedStateAfterLoadVideo(player);
         expect(performance.now() - loadingTime).to.be.at.most(1000);
 
-        const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex]
-          .adaptations;
+        const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex].adaptations;
         const audioRepresentationInfos =
           firstPeriodAdaptationsInfos.audio &&
           firstPeriodAdaptationsInfos.audio[0] &&
@@ -136,45 +136,41 @@ export default function launchTestsForContent(
           (videoRepresentationInfos && videoRepresentationInfos.index.init)
         ) {
           if (
-            (audioRepresentationInfos && audioRepresentationInfos.index.init) &&
-            (videoRepresentationInfos && videoRepresentationInfos.index.init)
+            audioRepresentationInfos &&
+            audioRepresentationInfos.index.init &&
+            videoRepresentationInfos &&
+            videoRepresentationInfos.index.init
           ) {
             expect(requestedSegments.length).to.be.at.least(2);
-            const hasRequestedVideoInitSegment = requestedSegments.some(r => {
+            const hasRequestedVideoInitSegment = requestedSegments.some((r) => {
               const relativeUrl =
-                videoRepresentationInfos.index.init.url === null ?
-                  "" :
-                  videoRepresentationInfos.index.init.url;
+                videoRepresentationInfos.index.init.url === null
+                  ? ""
+                  : videoRepresentationInfos.index.init.url;
               return r.endsWith(relativeUrl);
             });
-            const hasRequestedAudioInitSegment = requestedSegments.some(r => {
+            const hasRequestedAudioInitSegment = requestedSegments.some((r) => {
               const relativeUrl =
-                audioRepresentationInfos.index.init.url === null ?
-                  "" :
-                  audioRepresentationInfos.index.init.url;
+                audioRepresentationInfos.index.init.url === null
+                  ? ""
+                  : audioRepresentationInfos.index.init.url;
               return r.endsWith(relativeUrl);
             });
             expect(hasRequestedVideoInitSegment).to.equal(true);
             expect(hasRequestedAudioInitSegment).to.equal(true);
-          } else if (!(
-            audioRepresentationInfos && audioRepresentationInfos.index.init)
-          ) {
+          } else if (!(audioRepresentationInfos && audioRepresentationInfos.index.init)) {
             expect(requestedSegments.length).to.be.at.least(1);
-            expect(requestedSegments)
-              .to.include(videoRepresentationInfos.index.init.url);
+            expect(requestedSegments).to.include(videoRepresentationInfos.index.init.url);
           } else {
             expect(requestedSegments.length).to.be.at.least(1);
-            expect(requestedSegments)
-              .to.include(audioRepresentationInfos.index.init.url);
+            expect(requestedSegments).to.include(audioRepresentationInfos.index.init.url);
           }
         }
       });
 
       if (transport === "dash" || transport === "smooth") {
         it("should not do the initial manifest request if an `initialManifest` option is set as a string", async function () {
-          const initialManifest = await (
-            (await fetch(manifestInfos.url))
-              .text());
+          const initialManifest = await (await fetch(manifestInfos.url)).text();
           let manifestLoaderCalledTimes = 0;
           let segmentLoaderLoaderCalledTimes = 0;
           const manifestLoader = (_, callbacks) => {
@@ -198,10 +194,11 @@ export default function launchTestsForContent(
           expect(segmentLoaderLoaderCalledTimes).to.be.at.least(1);
         });
         it("should not do the initial manifest request if an `initialManifest` option is set as a document", async function () {
-          const initialManifestStr = await (
-            (await fetch(manifestInfos.url))
-              .text());
-          const initialManifest = new DOMParser().parseFromString(initialManifestStr, "text/xml");
+          const initialManifestStr = await (await fetch(manifestInfos.url)).text();
+          const initialManifest = new DOMParser().parseFromString(
+            initialManifestStr,
+            "text/xml",
+          );
           let manifestLoaderCalledTimes = 0;
           let segmentLoaderLoaderCalledTimes = 0;
           const manifestLoader = () => {
@@ -226,7 +223,7 @@ export default function launchTestsForContent(
     });
 
     describe("getError", () => {
-      it("should return null if no fatal error has happened", async function() {
+      it("should return null if no fatal error has happened", async function () {
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -246,97 +243,105 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         if (!manifestInfos.isLive) {
-          expect(player.getPosition())
-            .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+          expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         } else {
-          expect(player.getPosition())
-            .to.be.closeTo(manifestInfos.maximumPosition - 10, 5);
+          expect(player.getPosition()).to.be.closeTo(
+            manifestInfos.maximumPosition - 10,
+            5,
+          );
         }
         player.reload({
-          reloadAt: { position: manifestInfos.minimumPosition + 5 }
+          reloadAt: { position: manifestInfos.minimumPosition + 5 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+        expect(player.getPosition()).to.be.closeTo(
+          manifestInfos.minimumPosition + 5,
+          0.1,
+        );
       });
       it("should reload at given relative position", async function () {
         lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: manifestInfos.minimumPosition + 2 }
+          startAt: { position: manifestInfos.minimumPosition + 2 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 2, 0.1);
-        player.reload({ reloadAt: { relative: 5 }});
+        expect(player.getPosition()).to.be.closeTo(
+          manifestInfos.minimumPosition + 2,
+          0.1,
+        );
+        player.reload({ reloadAt: { relative: 5 } });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 7, 0.1);
+        expect(player.getPosition()).to.be.closeTo(
+          manifestInfos.minimumPosition + 7,
+          0.1,
+        );
       });
       it("should reload after stop, at given relative position", async function () {
         lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: manifestInfos.minimumPosition + 2 }
+          startAt: { position: manifestInfos.minimumPosition + 2 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 2, 1);
+        expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition + 2, 1);
         player.stop();
-        player.reload({ reloadAt: { relative: 5 }});
+        player.reload({ reloadAt: { relative: 5 } });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 7, 1.5);
+        expect(player.getPosition()).to.be.closeTo(
+          manifestInfos.minimumPosition + 7,
+          1.5,
+        );
       });
       it("should reload when seeking at last playback position", async function () {
         lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: manifestInfos.minimumPosition }
+          startAt: { position: manifestInfos.minimumPosition },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+        expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         player.seekTo({ position: manifestInfos.minimumPosition + 5 });
         await sleep(1);
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+        expect(player.getPosition()).to.be.closeTo(
+          manifestInfos.minimumPosition + 5,
+          0.1,
+        );
       });
       it("should reload even when the current content is not yet loaded", async function () {
         lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: manifestInfos.minimumPosition }
+          startAt: { position: manifestInfos.minimumPosition },
         });
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be
-          .closeTo(manifestInfos.minimumPosition, 2);
+        expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 2);
       });
       it("should reload even when the last content was not yet loaded", async function () {
         lockLowestBitrates(player);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: manifestInfos.minimumPosition }
+          startAt: { position: manifestInfos.minimumPosition },
         });
         player.stop();
         await sleep(5);
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be
-          .closeTo(manifestInfos.minimumPosition, 2);
+        expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 2);
       });
       it("should not reload when no content was yet loaded", async function () {
         lockLowestBitrates(player);
-        expect(() => player.reload())
-          .to.throw("API: Can't reload without having previously loaded a content.");
+        expect(() => player.reload()).to.throw(
+          "API: Can't reload without having previously loaded a content.",
+        );
       });
       it("should reload with autoplay when the current content was is yet loaded with autoPlay on", async function () {
         lockLowestBitrates(player);
@@ -346,9 +351,13 @@ export default function launchTestsForContent(
           autoPlay: true,
         });
         player.reload();
-        await waitForState(player,
-                           "PLAYING",
-                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", [
+          "LOADING",
+          "LOADED",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload without autoplay when the current content is not yet loaded with autoPlay off", async function () {
         lockLowestBitrates(player);
@@ -358,9 +367,12 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         player.reload();
-        await waitForState(player,
-                           "LOADED",
-                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "LOADED", [
+          "LOADING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload with autoplay when the current content is loaded and playing", async function () {
         lockLowestBitrates(player);
@@ -370,13 +382,15 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await waitForState(player,
-                           "PLAYING",
-                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", ["BUFFERING", "SEEKING", "RELOADING"]);
         player.reload();
-        await waitForState(player,
-                           "PLAYING",
-                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", [
+          "LOADING",
+          "LOADED",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload without autoplay when the current content is loaded and paused", async function () {
         lockLowestBitrates(player);
@@ -386,18 +400,22 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await waitForState(player,
-                           "PLAYING",
-                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", ["BUFFERING", "SEEKING", "RELOADING"]);
         await sleep(500);
         player.pause();
-        await waitForState(player,
-                           "PAUSED",
-                           ["PLAYING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PAUSED", [
+          "PLAYING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
         player.reload();
-        await waitForState(player,
-                           "LOADED",
-                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "LOADED", [
+          "LOADING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload with autoplay when the last content was not yet loaded with autoPlay on", async function () {
         lockLowestBitrates(player);
@@ -409,9 +427,13 @@ export default function launchTestsForContent(
         player.stop();
         await sleep(50);
         player.reload();
-        await waitForState(player,
-                           "PLAYING",
-                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", [
+          "LOADING",
+          "LOADED",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload without autoplay when the last content was not yet loaded with autoPlay off", async function () {
         lockLowestBitrates(player);
@@ -423,9 +445,12 @@ export default function launchTestsForContent(
         player.stop();
         await sleep(50);
         player.reload();
-        await waitForState(player,
-                           "LOADED",
-                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "LOADED", [
+          "LOADING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload with autoplay when the last content was loaded and playing", async function () {
         lockLowestBitrates(player);
@@ -435,15 +460,17 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await waitForState(player,
-                           "PLAYING",
-                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", ["BUFFERING", "SEEKING", "RELOADING"]);
         player.stop();
         await sleep(50);
         player.reload();
-        await waitForState(player,
-                           "PLAYING",
-                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", [
+          "LOADING",
+          "LOADED",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should reload without autoplay when the last content was loaded and paused", async function () {
         lockLowestBitrates(player);
@@ -453,20 +480,24 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await waitForState(player,
-                           "PLAYING",
-                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", ["BUFFERING", "SEEKING", "RELOADING"]);
         await sleep(500);
         player.pause();
-        await waitForState(player,
-                           "PAUSED",
-                           ["PLAYING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PAUSED", [
+          "PLAYING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
         player.stop();
         await sleep(50);
         player.reload();
-        await waitForState(player,
-                           "LOADED",
-                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "LOADED", [
+          "LOADING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should respect `autoPlay` reload setting even if the non-yet loaded content had a different autoPlay setting", async () => {
         lockLowestBitrates(player);
@@ -476,9 +507,13 @@ export default function launchTestsForContent(
           autoPlay: false,
         });
         player.reload({ autoPlay: true });
-        await waitForState(player,
-                           "PLAYING",
-                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", [
+          "LOADING",
+          "LOADED",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
 
         player.loadVideo({
           url: manifestInfos.url,
@@ -486,9 +521,12 @@ export default function launchTestsForContent(
           autoPlay: true,
         });
         player.reload({ autoPlay: false });
-        await waitForState(player,
-                           "LOADED",
-                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "LOADED", [
+          "LOADING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should respect `autoPlay` reload setting even if the current content is loaded and playing", async function () {
         lockLowestBitrates(player);
@@ -498,13 +536,14 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await waitForState(player,
-                           "PLAYING",
-                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", ["BUFFERING", "SEEKING", "RELOADING"]);
         player.reload({ autoPlay: false });
-        await waitForState(player,
-                           "LOADED",
-                           ["LOADING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "LOADED", [
+          "LOADING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
       it("should respect `autoPlay` reload setting even if the current content is loaded and paused", async function () {
         lockLowestBitrates(player);
@@ -514,18 +553,23 @@ export default function launchTestsForContent(
         });
         await waitForLoadedStateAfterLoadVideo(player);
         player.play();
-        await waitForState(player,
-                           "PLAYING",
-                           ["BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", ["BUFFERING", "SEEKING", "RELOADING"]);
         await sleep(500);
         player.pause();
-        await waitForState(player,
-                           "PAUSED",
-                           ["PLAYING", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PAUSED", [
+          "PLAYING",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
         player.reload({ autoPlay: true });
-        await waitForState(player,
-                           "PLAYING",
-                           ["LOADING", "LOADED", "BUFFERING", "SEEKING", "RELOADING"]);
+        await waitForState(player, "PLAYING", [
+          "LOADING",
+          "LOADED",
+          "BUFFERING",
+          "SEEKING",
+          "RELOADING",
+        ]);
       });
     });
 
@@ -561,7 +605,7 @@ export default function launchTestsForContent(
         expect(player.getPlayerState()).to.equal("LOADED");
       });
 
-      it("should go to PLAYING when play is called", async function() {
+      it("should go to PLAYING when play is called", async function () {
         this.timeout(5000);
         expect(player.getPlayerState()).to.equal("STOPPED");
 
@@ -711,7 +755,7 @@ export default function launchTestsForContent(
 
     describe("getCurrentBufferGap", () => {
       // TODO handle live contents
-      it("should return the buffer gap of the current range", async function() {
+      it("should return the buffer gap of the current range", async function () {
         this.timeout(20000);
 
         lockLowestBitrates(player);
@@ -754,12 +798,12 @@ export default function launchTestsForContent(
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
         await sleep(4000);
         bufferGap = player.getCurrentBufferGap();
-        expect(bufferGap).to.be
-          .at.least(player.getMaximumPosition() -
-                      minimumPosition - (10 + 30) - 2);
-        expect(bufferGap).to.be
-          .at.most(player.getMaximumPosition() -
-                     minimumPosition - (10 + 30) + 10);
+        expect(bufferGap).to.be.at.least(
+          player.getMaximumPosition() - minimumPosition - (10 + 30) - 2,
+        );
+        expect(bufferGap).to.be.at.most(
+          player.getMaximumPosition() - minimumPosition - (10 + 30) + 10,
+        );
       });
     });
 
@@ -782,8 +826,7 @@ export default function launchTestsForContent(
           startAt: { position: minimumPosition + 4 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getWallClockTime()).to.be
-          .closeTo(minimumPosition + 4, 0.001);
+        expect(player.getWallClockTime()).to.be.closeTo(minimumPosition + 4, 0.001);
       });
 
       it("should update as soon as we seek", async () => {
@@ -836,17 +879,18 @@ export default function launchTestsForContent(
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          startAt: { position: manifestInfos.minimumPosition }
+          startAt: { position: manifestInfos.minimumPosition },
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
+        expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         player.seekTo({ position: manifestInfos.minimumPosition + 5 });
         await sleep(0);
         player.stop();
         await sleep(100);
-        expect(player.getLastStoredContentPosition())
-          .to.be.closeTo(manifestInfos.minimumPosition + 5, 0.1);
+        expect(player.getLastStoredContentPosition()).to.be.closeTo(
+          manifestInfos.minimumPosition + 5,
+          0.1,
+        );
       });
     });
 
@@ -886,7 +930,7 @@ export default function launchTestsForContent(
 
     describe("setPlaybackRate", () => {
       // TODO handle live contents
-      it("should update the speed accordingly", async function() {
+      it("should update the speed accordingly", async function () {
         this.timeout(15000);
         player.loadVideo({
           url: manifestInfos.url,
@@ -908,8 +952,7 @@ export default function launchTestsForContent(
         await sleep(2000);
         const duration2 = (performance.now() - before2) / 1000;
         const secondPosition = player.getPosition();
-        expect(secondPosition).to.be
-          .closeTo(initialPosition + duration2 * 3, 2);
+        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 3, 2);
       });
     });
 
@@ -1025,11 +1068,7 @@ export default function launchTestsForContent(
             // For that test specifically, we want to avoid that situation and
             // just relaunch the test if that happens.
             player.addEventListener("playerStateChange", (state) => {
-              if (
-                state === "BUFFERING" ||
-                state === "RELOADING" ||
-                state === "SEEKING"
-              ) {
+              if (state === "BUFFERING" || state === "RELOADING" || state === "SEEKING") {
                 cancelTest();
               }
             });
@@ -1049,7 +1088,7 @@ export default function launchTestsForContent(
           3,
           function cleanUp() {
             player.removeEventListener("playerStateChange");
-          }
+          },
         );
       });
 
@@ -1449,15 +1488,18 @@ export default function launchTestsForContent(
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          segmentLoader: () => { /* do nothing */ },
+          segmentLoader: () => {
+            /* do nothing */
+          },
         });
         await sleep(50);
 
         const audioTracks = player.getAvailableAudioTracks();
 
         const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
-        expect(audioTracks.length).to
-          .equal(audioAdaptations ? audioAdaptations.length : 0);
+        expect(audioTracks.length).to.equal(
+          audioAdaptations ? audioAdaptations.length : 0,
+        );
 
         if (audioAdaptations) {
           for (let i = 0; i < audioAdaptations.length; i++) {
@@ -1468,15 +1510,17 @@ export default function launchTestsForContent(
               if (audioTrack.id === adaptation.id) {
                 found = true;
                 expect(audioTrack.language).to.equal(adaptation.language || "");
-                expect(audioTrack.normalized).to
-                  .equal(adaptation.normalizedLanguage || "");
-                expect(audioTrack.audioDescription)
-                  .to.equal(!!adaptation.isAudioDescription);
+                expect(audioTrack.normalized).to.equal(
+                  adaptation.normalizedLanguage || "",
+                );
+                expect(audioTrack.audioDescription).to.equal(
+                  !!adaptation.isAudioDescription,
+                );
 
                 const activeAudioTrack = player.getAudioTrack();
-                expect(audioTrack.active).to
-                  .equal(activeAudioTrack ?
-                    activeAudioTrack.id === audioTrack.id : false);
+                expect(audioTrack.active).to.equal(
+                  activeAudioTrack ? activeAudioTrack.id === audioTrack.id : false,
+                );
               }
             }
             expect(found).to.equal(true);
@@ -1490,15 +1534,16 @@ export default function launchTestsForContent(
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          segmentLoader: () => { /* do nothing */ },
+          segmentLoader: () => {
+            /* do nothing */
+          },
         });
         await sleep(50);
 
         const textTracks = player.getAvailableTextTracks();
 
         const textAdaptations = manifestInfos.periods[0].adaptations.text;
-        expect(textTracks.length).to
-          .equal(textAdaptations ? textAdaptations.length : 0);
+        expect(textTracks.length).to.equal(textAdaptations ? textAdaptations.length : 0);
 
         if (textAdaptations) {
           for (let i = 0; i < textAdaptations.length; i++) {
@@ -1509,15 +1554,15 @@ export default function launchTestsForContent(
               if (textTrack.id === adaptation.id) {
                 found = true;
                 expect(textTrack.language).to.equal(adaptation.language || "");
-                expect(textTrack.normalized).to
-                  .equal(adaptation.normalizedLanguage || "");
-                expect(textTrack.closedCaption)
-                  .to.equal(!!adaptation.isClosedCaption);
+                expect(textTrack.normalized).to.equal(
+                  adaptation.normalizedLanguage || "",
+                );
+                expect(textTrack.closedCaption).to.equal(!!adaptation.isClosedCaption);
 
                 const activeTextTrack = player.getTextTrack();
-                expect(textTrack.active).to
-                  .equal(activeTextTrack ?
-                    activeTextTrack.id === textTrack.id : false);
+                expect(textTrack.active).to.equal(
+                  activeTextTrack ? activeTextTrack.id === textTrack.id : false,
+                );
               }
             }
             expect(found).to.equal(true);
@@ -1531,15 +1576,18 @@ export default function launchTestsForContent(
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          segmentLoader: () => { /* do nothing */ },
+          segmentLoader: () => {
+            /* do nothing */
+          },
         });
         await sleep(50);
 
         const videoTracks = player.getAvailableVideoTracks();
 
         const videoAdaptations = manifestInfos.periods[0].adaptations.video;
-        expect(videoTracks.length).to
-          .equal(videoAdaptations ? videoAdaptations.length : 0);
+        expect(videoTracks.length).to.equal(
+          videoAdaptations ? videoAdaptations.length : 0,
+        );
 
         if (videoAdaptations) {
           for (let i = 0; i < videoAdaptations.length; i++) {
@@ -1555,21 +1603,20 @@ export default function launchTestsForContent(
                   representationIndex < videoTrack.representations.length;
                   representationIndex++
                 ) {
-                  const reprTrack = videoTrack
-                    .representations[representationIndex];
-                  const representation = adaptation.representations
-                    .find(({ id }) => id === reprTrack.id);
+                  const reprTrack = videoTrack.representations[representationIndex];
+                  const representation = adaptation.representations.find(
+                    ({ id }) => id === reprTrack.id,
+                  );
                   expect(reprTrack.bitrate).to.equal(representation.bitrate);
-                  expect(reprTrack.frameRate).to
-                    .equal(representation.frameRate);
+                  expect(reprTrack.frameRate).to.equal(representation.frameRate);
                   expect(reprTrack.width).to.equal(representation.width);
                   expect(reprTrack.height).to.equal(representation.height);
                 }
 
                 const activeVideoTrack = player.getVideoTrack();
-                expect(videoTrack.active).to
-                  .equal(activeVideoTrack ?
-                    activeVideoTrack.id === videoTrack.id : false);
+                expect(videoTrack.active).to.equal(
+                  activeVideoTrack ? activeVideoTrack.id === videoTrack.id : false,
+                );
               }
             }
             expect(found).to.equal(true);
@@ -1580,7 +1627,7 @@ export default function launchTestsForContent(
 
     describe("setWantedBufferAhead", () => {
       // TODO handle live contents
-      it("should download until a set wanted buffer ahead", async function() {
+      it("should download until a set wanted buffer ahead", async function () {
         this.timeout(20000);
         lockLowestBitrates(player);
         player.setWantedBufferAhead(10);
@@ -1597,10 +1644,8 @@ export default function launchTestsForContent(
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
         let endOfCurrentRange = buffered.end(0);
-        expect(endOfCurrentRange).to.be
-          .at.least(minimumPosition + 9.7);
-        expect(endOfCurrentRange).to.be
-          .at.most(minimumPosition + 10 + 10);
+        expect(endOfCurrentRange).to.be.at.least(minimumPosition + 9.7);
+        expect(endOfCurrentRange).to.be.at.most(minimumPosition + 10 + 10);
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
@@ -1609,10 +1654,8 @@ export default function launchTestsForContent(
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
         endOfCurrentRange = buffered.end(0);
-        expect(endOfCurrentRange).to.be
-          .at.least(minimumPosition + 19.7);
-        expect(endOfCurrentRange).to.be
-          .at.most(minimumPosition + 20 + 10);
+        expect(endOfCurrentRange).to.be.at.least(minimumPosition + 19.7);
+        expect(endOfCurrentRange).to.be.at.most(minimumPosition + 20 + 10);
 
         player.seekTo(minimumPosition + 10);
         await sleep(3000);
@@ -1621,42 +1664,37 @@ export default function launchTestsForContent(
         expect(buffered.length).to.equal(1);
         expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
         endOfCurrentRange = buffered.end(0);
-        expect(endOfCurrentRange).to.be
-          .at.least(Math.min(
-            minimumPosition + 10 + 19.7,
-            player.getMaximumPosition() - 2
-          ));
-        expect(endOfCurrentRange).to.be
-          .at.most(minimumPosition + 10 + 20 + 10);
+        expect(endOfCurrentRange).to.be.at.least(
+          Math.min(minimumPosition + 10 + 19.7, player.getMaximumPosition() - 2),
+        );
+        expect(endOfCurrentRange).to.be.at.most(minimumPosition + 10 + 20 + 10);
 
         player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
         await sleep(3000);
         buffered = player.getVideoElement().buffered;
         expect(player.getWantedBufferAhead()).to.equal(20);
         expect(buffered.length).to.equal(2);
-        expect(buffered.start(1)).to.be
-          .at.most(minimumPosition + 10 + 20 + 10 + 10);
+        expect(buffered.start(1)).to.be.at.most(minimumPosition + 10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
-        expect(endOfCurrentRange).to.be
-          .at.least(Math.min(
-            minimumPosition + 10 + 20 + 10 +10 + 19.4,
-            player.getMaximumPosition() - 2
-          ));
-        expect(endOfCurrentRange).to.be
-          .at.most(minimumPosition + 10 + 20 + 10 +10 + 20 + 10);
+        expect(endOfCurrentRange).to.be.at.least(
+          Math.min(
+            minimumPosition + 10 + 20 + 10 + 10 + 19.4,
+            player.getMaximumPosition() - 2,
+          ),
+        );
+        expect(endOfCurrentRange).to.be.at.most(
+          minimumPosition + 10 + 20 + 10 + 10 + 20 + 10,
+        );
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
         await sleep(3000);
         buffered = player.getVideoElement().buffered;
         expect(buffered.length).to.equal(2);
-        expect(buffered.start(1)).to.be
-          .at.most(minimumPosition + 10 + 20 + 10 + 10);
+        expect(buffered.start(1)).to.be.at.most(minimumPosition + 10 + 20 + 10 + 10);
         endOfCurrentRange = buffered.end(1);
-        expect(endOfCurrentRange).to.be
-          .at.least(player.getMaximumPosition() - 2);
-        expect(endOfCurrentRange).to.be
-          .at.most(player.getMaximumPosition() + 10);
+        expect(endOfCurrentRange).to.be.at.least(player.getMaximumPosition() - 2);
+        expect(endOfCurrentRange).to.be.at.most(player.getMaximumPosition() + 10);
       });
     });
   });

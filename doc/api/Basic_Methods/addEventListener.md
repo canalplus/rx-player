@@ -17,12 +17,13 @@ page](../Player_Events.md).
 ```js
 player.addEventListener(event, callback);
 ```
-  - **arguments**:
 
-    1. _event_ `string`: The wanted event's name.
+- **arguments**:
 
-    2. _callback_ `Function`: The callback for the event.
-       The same callback may be used again when calling `removeEventListener`.
+  1. _event_ `string`: The wanted event's name.
+
+  2. _callback_ `Function`: The callback for the event.
+     The same callback may be used again when calling `removeEventListener`.
 
 ## Example
 

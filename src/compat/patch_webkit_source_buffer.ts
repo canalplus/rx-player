@@ -20,30 +20,34 @@ import isNode from "../utils/is_node";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import queueMicrotask from "../utils/queue_microtask";
 
-type IWebKitSourceBufferConstructor = new() => IWebKitSourceBuffer;
+type IWebKitSourceBufferConstructor = new () => IWebKitSourceBuffer;
 
-interface IWebKitSourceBuffer { append(data : ArrayBuffer) : void;
-                                remove(from : number, to : number) : void; }
+interface IWebKitSourceBuffer {
+  append(data: ArrayBuffer): void;
+  remove(from: number, to: number): void;
+}
 
 // TODO This is the last ugly side-effect here.
 // Either remove it or find the best way to implement that
-export default function patchWebkitSourceBuffer() : void {
+export default function patchWebkitSourceBuffer(): void {
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   /* eslint-disable @typescript-eslint/no-unsafe-call */
   /* eslint-disable @typescript-eslint/no-explicit-any */
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
   if (
-    !isNode && !isNullOrUndefined((globalScope as any).WebKitSourceBuffer) &&
-    (globalScope as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
-  {
-  /* eslint-enable @typescript-eslint/no-explicit-any */
+    !isNode &&
+    !isNullOrUndefined((globalScope as any).WebKitSourceBuffer) &&
+    (globalScope as any).WebKitSourceBuffer.prototype.addEventListener === undefined
+  ) {
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    const sourceBufferWebkitRef : IWebKitSourceBufferConstructor =
-      (globalScope as unknown as {
-        WebKitSourceBuffer : IWebKitSourceBufferConstructor;
-      }).WebKitSourceBuffer;
+    const sourceBufferWebkitRef: IWebKitSourceBufferConstructor = (
+      globalScope as unknown as {
+        WebKitSourceBuffer: IWebKitSourceBufferConstructor;
+      }
+    ).WebKitSourceBuffer;
     const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
 
     for (const fnName in EventEmitter.prototype) {
@@ -56,35 +60,33 @@ export default function patchWebkitSourceBuffer() : void {
 
     sourceBufferWebkitProto._listeners = [];
 
-    sourceBufferWebkitProto._emitUpdate =
-      function(eventName : string, val : unknown) {
-        queueMicrotask(() => {
-          /* eslint-disable no-invalid-this */
-          this.trigger(eventName, val);
-          this.updating = false;
-          this.trigger("updateend");
-          /* eslint-enable no-invalid-this */
-        });
-      };
-
-    sourceBufferWebkitProto.appendBuffer =
-      function(data : unknown) {
+    sourceBufferWebkitProto._emitUpdate = function (eventName: string, val: unknown) {
+      queueMicrotask(() => {
         /* eslint-disable no-invalid-this */
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-        if (this.updating) {
-          throw new Error("updating");
-        }
-        this.trigger("updatestart");
-        this.updating = true;
-        try {
-          this.append(data);
-        } catch (error) {
-          this._emitUpdate("error", error);
-          return;
-        }
-        this._emitUpdate("update");
+        this.trigger(eventName, val);
+        this.updating = false;
+        this.trigger("updateend");
         /* eslint-enable no-invalid-this */
-      };
+      });
+    };
+
+    sourceBufferWebkitProto.appendBuffer = function (data: unknown) {
+      /* eslint-disable no-invalid-this */
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+      if (this.updating) {
+        throw new Error("updating");
+      }
+      this.trigger("updatestart");
+      this.updating = true;
+      try {
+        this.append(data);
+      } catch (error) {
+        this._emitUpdate("error", error);
+        return;
+      }
+      this._emitUpdate("update");
+      /* eslint-enable no-invalid-this */
+    };
   }
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
   /* eslint-enable @typescript-eslint/no-unsafe-call */

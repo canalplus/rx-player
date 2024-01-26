@@ -6,7 +6,7 @@ import {
 } from "../../contents/DASH_dynamic_SegmentTemplate";
 import sleep from "../../utils/sleep.js";
 
-describe("DASH live content (SegmentTemplate)", function() {
+describe("DASH live content (SegmentTemplate)", function () {
   let player;
 
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe("DASH live content (SegmentTemplate)", function() {
     player.dispose();
   });
 
-  it("should fetch and parse the manifest", async function() {
+  it("should fetch and parse the manifest", async function () {
     let manifestLoaderCalledTimes = 0;
     const requestedSegments = [];
     const manifestLoader = (man, callbacks) => {
@@ -71,8 +71,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       const audioTracks = player.getAvailableAudioTracks();
 
       const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
-      expect(audioTracks.length).to
-        .equal(audioAdaptations ? audioAdaptations.length : 0);
+      expect(audioTracks.length).to.equal(audioAdaptations ? audioAdaptations.length : 0);
 
       if (audioAdaptations) {
         for (let i = 0; i < audioAdaptations.length; i++) {
@@ -84,15 +83,15 @@ describe("DASH live content (SegmentTemplate)", function() {
             if (audioTrack.id === adaptation.id) {
               found = true;
               expect(audioTrack.language).to.equal(adaptation.language || "");
-              expect(audioTrack.normalized).to
-                .equal(adaptation.normalizedLanguage || "");
-              expect(audioTrack.audioDescription)
-                .to.equal(!!adaptation.isAudioDescription);
+              expect(audioTrack.normalized).to.equal(adaptation.normalizedLanguage || "");
+              expect(audioTrack.audioDescription).to.equal(
+                !!adaptation.isAudioDescription,
+              );
 
               const activeAudioTrack = player.getAudioTrack();
-              expect(audioTrack.active).to
-                .equal(activeAudioTrack ?
-                  activeAudioTrack.id === audioTrack.id : false);
+              expect(audioTrack.active).to.equal(
+                activeAudioTrack ? activeAudioTrack.id === audioTrack.id : false,
+              );
             }
             expect(found).to.equal(true);
           }
@@ -118,8 +117,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       const textTracks = player.getAvailableTextTracks();
 
       const textAdaptations = manifestInfos.periods[0].adaptations.text;
-      expect(textTracks.length).to
-        .equal(textAdaptations ? textAdaptations.length : 0);
+      expect(textTracks.length).to.equal(textAdaptations ? textAdaptations.length : 0);
 
       if (textAdaptations) {
         for (let i = 0; i < textAdaptations.length; i++) {
@@ -131,15 +129,13 @@ describe("DASH live content (SegmentTemplate)", function() {
             if (textTrack.id === adaptation.id) {
               found = true;
               expect(textTrack.language).to.equal(adaptation.language || "");
-              expect(textTrack.normalized).to
-                .equal(adaptation.normalizedLanguage || "");
-              expect(textTrack.closedCaption)
-                .to.equal(!!adaptation.isClosedCaption);
+              expect(textTrack.normalized).to.equal(adaptation.normalizedLanguage || "");
+              expect(textTrack.closedCaption).to.equal(!!adaptation.isClosedCaption);
 
               const activeTextTrack = player.getTextTrack();
-              expect(textTrack.active).to
-                .equal(activeTextTrack ?
-                  activeTextTrack.id === textTrack.id : false);
+              expect(textTrack.active).to.equal(
+                activeTextTrack ? activeTextTrack.id === textTrack.id : false,
+              );
             }
             expect(found).to.equal(true);
           }
@@ -152,7 +148,7 @@ describe("DASH live content (SegmentTemplate)", function() {
     it("should list the right video tracks", async function () {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         requestConfig: {
           segment: {
             maxRetry: Infinity,
@@ -165,8 +161,7 @@ describe("DASH live content (SegmentTemplate)", function() {
       const videoTracks = player.getAvailableVideoTracks();
 
       const videoAdaptations = manifestInfos.periods[0].adaptations.video;
-      expect(videoTracks.length).to
-        .equal(videoAdaptations ? videoAdaptations.length : 0);
+      expect(videoTracks.length).to.equal(videoAdaptations ? videoAdaptations.length : 0);
 
       if (videoAdaptations) {
         for (let i = 0; i < videoAdaptations.length; i++) {
@@ -183,21 +178,20 @@ describe("DASH live content (SegmentTemplate)", function() {
                 representationIndex < videoTrack.representations.length;
                 representationIndex++
               ) {
-                const reprTrack = videoTrack
-                  .representations[representationIndex];
-                const representation = adaptation.representations
-                  .find(({ id }) => id === reprTrack.id);
+                const reprTrack = videoTrack.representations[representationIndex];
+                const representation = adaptation.representations.find(
+                  ({ id }) => id === reprTrack.id,
+                );
                 expect(reprTrack.bitrate).to.equal(representation.bitrate);
-                expect(reprTrack.frameRate).to
-                  .equal(representation.frameRate);
+                expect(reprTrack.frameRate).to.equal(representation.frameRate);
                 expect(reprTrack.width).to.equal(representation.width);
                 expect(reprTrack.height).to.equal(representation.height);
               }
 
               const activeVideoTrack = player.getVideoTrack();
-              expect(videoTrack.active).to
-                .equal(activeVideoTrack ?
-                  activeVideoTrack.id === videoTrack.id : false);
+              expect(videoTrack.active).to.equal(
+                activeVideoTrack ? activeVideoTrack.id === videoTrack.id : false,
+              );
             }
             expect(found).to.equal(true);
           }
@@ -210,7 +204,7 @@ describe("DASH live content (SegmentTemplate)", function() {
     it("should return the last position minus the TimeShift window", async () => {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         requestConfig: {
           segment: {
             maxRetry: Infinity,
@@ -228,7 +222,7 @@ describe("DASH live content (SegmentTemplate)", function() {
     it("should return the last playable position", async () => {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
 
       expect(player.getMaximumPosition()).to.eql(null);
@@ -238,7 +232,7 @@ describe("DASH live content (SegmentTemplate)", function() {
   });
 });
 
-describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", function() {
+describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", function () {
   let player;
 
   beforeEach(() => {
@@ -249,7 +243,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     player.dispose();
   });
 
-  it("should fetch and parse the manifest", async function() {
+  it("should fetch and parse the manifest", async function () {
     let manifestLoaderCalledTimes = 0;
     const requestedSegments = [];
     const manifestLoader = (man, callbacks) => {
@@ -279,8 +273,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     await sleep(100);
     expect(manifestLoaderCalledTimes).to.equal(1);
     expect(player.isLive()).to.equal(true);
-    expect(player.getContentUrls())
-      .to.eql([noTimeShiftBufferDepthManifestInfos.url]);
+    expect(player.getContentUrls()).to.eql([noTimeShiftBufferDepthManifestInfos.url]);
     expect(requestedSegments.length).to.be.at.least(2);
   });
 
@@ -301,8 +294,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       const audioTracks = player.getAvailableAudioTracks();
 
       const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
-      expect(audioTracks.length).to
-        .equal(audioAdaptations ? audioAdaptations.length : 0);
+      expect(audioTracks.length).to.equal(audioAdaptations ? audioAdaptations.length : 0);
 
       if (audioAdaptations) {
         for (let i = 0; i < audioAdaptations.length; i++) {
@@ -314,15 +306,15 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
             if (audioTrack.id === adaptation.id) {
               found = true;
               expect(audioTrack.language).to.equal(adaptation.language || "");
-              expect(audioTrack.normalized).to
-                .equal(adaptation.normalizedLanguage || "");
-              expect(audioTrack.audioDescription)
-                .to.equal(!!adaptation.isAudioDescription);
+              expect(audioTrack.normalized).to.equal(adaptation.normalizedLanguage || "");
+              expect(audioTrack.audioDescription).to.equal(
+                !!adaptation.isAudioDescription,
+              );
 
               const activeAudioTrack = player.getAudioTrack();
-              expect(audioTrack.active).to
-                .equal(activeAudioTrack ?
-                  activeAudioTrack.id === audioTrack.id : false);
+              expect(audioTrack.active).to.equal(
+                activeAudioTrack ? activeAudioTrack.id === audioTrack.id : false,
+              );
             }
             expect(found).to.equal(true);
           }
@@ -333,7 +325,6 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
   describe("getAvailableTextTracks", () => {
     it("should list the right text languages", async function () {
-
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
         transport: noTimeShiftBufferDepthManifestInfos.transport,
@@ -348,8 +339,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       const textTracks = player.getAvailableTextTracks();
 
       const textAdaptations = manifestInfos.periods[0].adaptations.text;
-      expect(textTracks.length).to
-        .equal(textAdaptations ? textAdaptations.length : 0);
+      expect(textTracks.length).to.equal(textAdaptations ? textAdaptations.length : 0);
 
       if (textAdaptations) {
         for (let i = 0; i < textAdaptations.length; i++) {
@@ -361,15 +351,13 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
             if (textTrack.id === adaptation.id) {
               found = true;
               expect(textTrack.language).to.equal(adaptation.language || "");
-              expect(textTrack.normalized).to
-                .equal(adaptation.normalizedLanguage || "");
-              expect(textTrack.closedCaption)
-                .to.equal(!!adaptation.isClosedCaption);
+              expect(textTrack.normalized).to.equal(adaptation.normalizedLanguage || "");
+              expect(textTrack.closedCaption).to.equal(!!adaptation.isClosedCaption);
 
               const activeTextTrack = player.getTextTrack();
-              expect(textTrack.active).to
-                .equal(activeTextTrack ?
-                  activeTextTrack.id === textTrack.id : false);
+              expect(textTrack.active).to.equal(
+                activeTextTrack ? activeTextTrack.id === textTrack.id : false,
+              );
             }
             expect(found).to.equal(true);
           }
@@ -382,7 +370,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     it("should list the right video tracks", async function () {
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
-        transport:noTimeShiftBufferDepthManifestInfos.transport,
+        transport: noTimeShiftBufferDepthManifestInfos.transport,
         requestConfig: {
           segment: {
             maxRetry: Infinity,
@@ -395,8 +383,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
       const videoTracks = player.getAvailableVideoTracks();
 
       const videoAdaptations = manifestInfos.periods[0].adaptations.video;
-      expect(videoTracks.length).to
-        .equal(videoAdaptations ? videoAdaptations.length : 0);
+      expect(videoTracks.length).to.equal(videoAdaptations ? videoAdaptations.length : 0);
 
       if (videoAdaptations) {
         for (let i = 0; i < videoAdaptations.length; i++) {
@@ -413,21 +400,20 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
                 representationIndex < videoTrack.representations.length;
                 representationIndex++
               ) {
-                const reprTrack = videoTrack
-                  .representations[representationIndex];
-                const representation = adaptation.representations
-                  .find(({ id }) => id === reprTrack.id);
+                const reprTrack = videoTrack.representations[representationIndex];
+                const representation = adaptation.representations.find(
+                  ({ id }) => id === reprTrack.id,
+                );
                 expect(reprTrack.bitrate).to.equal(representation.bitrate);
-                expect(reprTrack.frameRate).to
-                  .equal(representation.frameRate);
+                expect(reprTrack.frameRate).to.equal(representation.frameRate);
                 expect(reprTrack.width).to.equal(representation.width);
                 expect(reprTrack.height).to.equal(representation.height);
               }
 
               const activeVideoTrack = player.getVideoTrack();
-              expect(videoTrack.active).to
-                .equal(activeVideoTrack ?
-                  activeVideoTrack.id === videoTrack.id : false);
+              expect(videoTrack.active).to.equal(
+                activeVideoTrack ? activeVideoTrack.id === videoTrack.id : false,
+              );
             }
             expect(found).to.equal(true);
           }
@@ -440,7 +426,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     it("should return the period start if one", async () => {
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
-        transport:noTimeShiftBufferDepthManifestInfos.transport,
+        transport: noTimeShiftBufferDepthManifestInfos.transport,
         requestConfig: {
           segment: {
             maxRetry: Infinity,
@@ -458,7 +444,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
     it("should return the last playable position", async () => {
       player.loadVideo({
         url: noTimeShiftBufferDepthManifestInfos.url,
-        transport:noTimeShiftBufferDepthManifestInfos.transport,
+        transport: noTimeShiftBufferDepthManifestInfos.transport,
         requestConfig: {
           segment: {
             maxRetry: Infinity,
@@ -468,8 +454,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
 
       expect(player.getMaximumPosition()).to.eql(null);
       await sleep(100);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553521448, 3);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553521448, 3);
     });
   });
 });

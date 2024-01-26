@@ -1,22 +1,20 @@
-# Transport code ###############################################################
+# Transport code
 
+## Overview
 
-## Overview ####################################################################
-
-The `transports` code in the ``transports/`` directory is the code translating
+The `transports` code in the `transports/` directory is the code translating
 the streaming protocols available into a unified API.
 
 Its roles are to:
 
-  - download the Manifest and parse it into an object that can be understood
-    by the core of the rx-player
+- download the Manifest and parse it into an object that can be understood
+  by the core of the rx-player
 
-  - download segments, convert them into a decodable format if needed, and
-    report important information about them (like the duration of a segment)
+- download segments, convert them into a decodable format if needed, and
+  report important information about them (like the duration of a segment)
 
-  - give networking metrics to allow the core to better adapt to poor networking
-    conditions
-
+- give networking metrics to allow the core to better adapt to poor networking
+  conditions
 
 As such, most network request needed by the player are directly performed by
 the `transports` code.
@@ -25,12 +23,10 @@ Note: the only HTTP request which might be done elsewhere would be the request
 for a `directfile` content. That request is not done explicely with a JavaScript
 API but implicitely by the browser (inclusion of an `src` attribute).
 
-
-
-## Implementation ##############################################################
+## Implementation
 
 This code is completely divided by streaming protocols used.
-E.g.  `DASH` streaming is entirely defined in its own directory and the same
+E.g. `DASH` streaming is entirely defined in its own directory and the same
 thing is true for `Smooth Streaming` or `MetaPlaylist` contents.
 
 When playing a `DASH` content only the DASH-related code will be called. When
@@ -55,26 +51,23 @@ a single `transport` function.
 The object returned by that function is often referenced as the `transport
 pipelines`.
 
-
-
-## Transport pipeline ##########################################################
+## Transport pipeline
 
 Each streaming protocol defines a function that takes some options in arguments
 and returns an object. This object is often referenced as the `transport
 pipelines` of the streaming protocol.
 
 This object then contains the following functions:
-  - a Manifest "loader"
-  - a Manifest "parser"
-  - multiple segment "loaders" (one per type of buffer, like "audio", "video",
-    "text"...).
-  - multiple segment "parsers"
+
+- a Manifest "loader"
+- a Manifest "parser"
+- multiple segment "loaders" (one per type of buffer, like "audio", "video",
+  "text"...).
+- multiple segment "parsers"
 
 As you can see, there's two recurrent concepts here: the loader and the parser.
 
-
-
-### A loader ###################################################################
+### A loader
 
 A loader in the transport pipeline is a function whose role is to "load" the
 resource.
@@ -83,6 +76,7 @@ Depending on the streaming technology, this can mean doing a request or just
 creating it from the information given.
 
 Its concept can be illustrated as such:
+
 ```
   INPUT:                                 OUTPUT:
   ------                                 -------
@@ -108,9 +102,7 @@ by cutting it into chunks and emitting them through a callback as it becomes
 available.
 This is better explained in the related chapter below.
 
-
-
-### A parser ###################################################################
+### A parser
 
 A parser's role is to extract the data and other important information from a
 loaded resource.
@@ -119,6 +111,7 @@ loaded resource) and will be the last step before that resource is actually
 handled by the rest of the player.
 
 Its concept can be illustrated as such:
+
 ```
   INPUT:                                OUTPUT:
   ------                                -------
@@ -145,15 +138,14 @@ In such cases, the parser is given a special callback, which allows it to
 receive the same error-handling perks than a loader, such as multiple retries,
 just for those requests.
 
-
-
-### Manifest loader ############################################################
+### Manifest loader
 
 The Manifest loader is the "loader" downloading the Manifest (or MPD) file.
 
 It is a function which receives as argument the URL of the manifest and then
 returns a Promise resolving with the corresponding loaded Manifest when it
 finished downloading it:
+
 ```
   INPUT:                              OUTPUT:
   ------                              -------
@@ -165,9 +157,7 @@ finished downloading it:
                         +----------+
 ```
 
-
-
-### Manifest parser ############################################################
+### Manifest parser
 
 The Manifest parser is a function whose role is to parse the Manifest in its
 original form to convert it to the RxPlayer's internal representation of it.
@@ -180,6 +170,7 @@ at parse-time).
 
 This function returns either the parsed Manifest object directly or wrapped in a
 Promise:
+
 ```
  INPUT:                                       OUTPUT:
  ------                                       -------
@@ -191,9 +182,7 @@ Promise:
                                  +----------+
 ```
 
-
-
-### Segment loader #############################################################
+### Segment loader
 
 A Transport pipeline declares one Segment loader per type of buffer (e.g. audio,
 text, video...)
@@ -202,11 +191,12 @@ A segment loader is the "loader" for any segment. Its role is to retrieve a give
 segment's data.
 
 It receives information linked to the segment you want to download:
-  - The related `Manifest` data structure
-  - The `Period` it is linked to
-  - The `Adaptation` it is linked to
-  - The `Representation` it is linked to
-  - The `Segment` object it is linked to
+
+- The related `Manifest` data structure
+- The `Period` it is linked to
+- The `Adaptation` it is linked to
+- The `Representation` it is linked to
+- The `Segment` object it is linked to
 
 It then return a Promise resolving when the segment is loaded.
 
@@ -224,19 +214,20 @@ It then return a Promise resolving when the segment is loaded.
 The events sent in output depend on the "mode" chosen by the loader to download
 the segment. There are two possible modes:
 
-  - the regular mode, where the loader wait for the segments to be completely
-    downloaded before sending it
+- the regular mode, where the loader wait for the segments to be completely
+  downloaded before sending it
 
-  - the low-latency mode, where the loader emits segments by chunks at the same
-    time they are downloaded.
+- the low-latency mode, where the loader emits segments by chunks at the same
+  time they are downloaded.
 
 The latter mode is usually active under the following conditions:
-  - low-latency streaming is enabled through the corresponding `loadVideo`
-    option
-  - we're loading a DASH content.
-  - we're not loading an initialization segment.
-  - the segment is in a CMAF container
-  - the `Fetch` JS API is available
+
+- low-latency streaming is enabled through the corresponding `loadVideo`
+  option
+- we're loading a DASH content.
+- we're not loading an initialization segment.
+- the segment is in a CMAF container
+- the `Fetch` JS API is available
 
 In most other cases, it will be in the regular mode, where the segment is fully
 communicated as the returned Promise resolves.
@@ -245,20 +236,20 @@ In the low-latency mode, chunks of the data are sent through a callback given
 to the segment loaded and the promise only resolves once all chunks have been
 communicated that way.
 
-
-
-### Segment parser #############################################################
+### Segment parser
 
 A segment parser is a function whose role is to extract some information from
 the segment's data:
-  - what its precize start time and duration is
-  - whether the segment should be offseted when decoded and by what amount
-  - the decodable data (which can be wrapped in a container e.g. subtitles in an
-    ISOBMFF container).
-  - the attached protection information and data to be able to decrypt that
-    segment.
+
+- what its precize start time and duration is
+- whether the segment should be offseted when decoded and by what amount
+- the decodable data (which can be wrapped in a container e.g. subtitles in an
+  ISOBMFF container).
+- the attached protection information and data to be able to decrypt that
+  segment.
 
 It receives the segment or sub-segment as argument and related information:
+
 ```
  INPUT:                                       OUTPUT:
  ------                                       -------

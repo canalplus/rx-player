@@ -32,30 +32,30 @@
 import Logger from "../logger";
 
 describe("utils - Logger", () => {
-  it("should set a default logger level of \"NONE\"", () => {
+  it('should set a default logger level of "NONE"', () => {
     const logger = new Logger();
     expect(logger.getLevel()).toEqual("NONE");
   });
 
-  it("should be able to change the logger level to \"ERROR\"", () => {
+  it('should be able to change the logger level to "ERROR"', () => {
     const logger = new Logger();
     logger.setLevel("ERROR");
     expect(logger.getLevel()).toEqual("ERROR");
   });
 
-  it("should be able to change the logger level to \"WARNING\"", () => {
+  it('should be able to change the logger level to "WARNING"', () => {
     const logger = new Logger();
     logger.setLevel("WARNING");
     expect(logger.getLevel()).toEqual("WARNING");
   });
 
-  it("should be able to change the logger level to \"INFO\"", () => {
+  it('should be able to change the logger level to "INFO"', () => {
     const logger = new Logger();
     logger.setLevel("INFO");
     expect(logger.getLevel()).toEqual("INFO");
   });
 
-  it("should be able to change the logger level to \"DEBUG\"", () => {
+  it('should be able to change the logger level to "DEBUG"', () => {
     const logger = new Logger();
     logger.setLevel("DEBUG");
     expect(logger.getLevel()).toEqual("DEBUG");
@@ -77,7 +77,7 @@ describe("utils - Logger", () => {
     expect(logger.getLevel()).toEqual("ERROR");
   });
 
-  it("should default unrecognized logger levels to \"NONE\"", () => {
+  it('should default unrecognized logger levels to "NONE"', () => {
     const logger = new Logger();
     logger.setLevel("TOTO");
     expect(logger.getLevel()).toEqual("NONE");
@@ -86,7 +86,7 @@ describe("utils - Logger", () => {
     expect(logger.getLevel()).toEqual("NONE");
   });
 
-  it("should never call console.* functions if logger level is set to \"NONE\"", () => {
+  it('should never call console.* functions if logger level is set to "NONE"', () => {
     const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
     const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
     const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
@@ -110,7 +110,7 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  it("should only call console.error if logger level is set to \"ERROR\"", () => {
+  it('should only call console.error if logger level is set to "ERROR"', () => {
     const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
     const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
     const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
@@ -135,7 +135,7 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  it("should call console.{error,warn} if logger level is set to \"WARNING\"", () => {
+  it('should call console.{error,warn} if logger level is set to "WARNING"', () => {
     const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
     const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
     const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
@@ -160,7 +160,7 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  it("should call console.{error,warn,info} if logger level is set to \"INFO\"", () => {
+  it('should call console.{error,warn,info} if logger level is set to "INFO"', () => {
     const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
     const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
     const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
@@ -185,9 +185,7 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  /* eslint-disable max-len */
-  it("should call console.{error,warn,info, log} if logger level is set to \"DEBUG\"", () => {
-  /* eslint-enable max-len */
+  it('should call console.{error,warn,info, log} if logger level is set to "DEBUG"', () => {
     const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
     const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
     const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());

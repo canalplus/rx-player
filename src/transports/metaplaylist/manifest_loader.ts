@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  IManifestLoader,
-  ILoadedManifestFormat,
-} from "../../public_types";
+import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types";
 import request from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IManifestLoaderOptions, IRequestedData } from "../types";
@@ -30,18 +27,20 @@ import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
  * @param {Object} cancelSignal
  */
 function regularManifestLoader(
-  url : string | undefined,
-  loaderOptions : IManifestLoaderOptions,
-  cancelSignal : CancellationSignal
-) : Promise< IRequestedData<ILoadedManifestFormat> > {
+  url: string | undefined,
+  loaderOptions: IManifestLoaderOptions,
+  cancelSignal: CancellationSignal,
+): Promise<IRequestedData<ILoadedManifestFormat>> {
   if (url === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
-  return request({ url,
-                   responseType: "text",
-                   timeout: loaderOptions.timeout,
-                   connectionTimeout: loaderOptions.connectionTimeout,
-                   cancelSignal });
+  return request({
+    url,
+    responseType: "text",
+    timeout: loaderOptions.timeout,
+    connectionTimeout: loaderOptions.connectionTimeout,
+    cancelSignal,
+  });
 }
 
 /**
@@ -49,15 +48,16 @@ function regularManifestLoader(
  * @param {Function} [customManifestLoader]
  * @returns {Function}
  */
-export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: IManifestLoader | undefined }
-) : (
-    url : string | undefined,
-    loaderOptions : IManifestLoaderOptions,
-    cancelSignal : CancellationSignal
-  ) => Promise<IRequestedData<ILoadedManifestFormat>>
-{
-  return typeof customManifestLoader !== "function" ?
-    regularManifestLoader :
-    callCustomManifestLoader(customManifestLoader, regularManifestLoader);
+export default function generateManifestLoader({
+  customManifestLoader,
+}: {
+  customManifestLoader?: IManifestLoader | undefined;
+}): (
+  url: string | undefined,
+  loaderOptions: IManifestLoaderOptions,
+  cancelSignal: CancellationSignal,
+) => Promise<IRequestedData<ILoadedManifestFormat>> {
+  return typeof customManifestLoader !== "function"
+    ? regularManifestLoader
+    : callCustomManifestLoader(customManifestLoader, regularManifestLoader);
 }

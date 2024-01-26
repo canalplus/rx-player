@@ -28,12 +28,13 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * @returns {Object|undefined}
  */
 export default function selectOptimalRepresentation(
-  representations : IRepresentation[],
-  wantedBitrate : number
-) : IRepresentation {
+  representations: IRepresentation[],
+  wantedBitrate: number,
+): IRepresentation {
   const firstIndexTooHigh = arrayFindIndex(
     representations,
-    (representation) => representation.bitrate > wantedBitrate);
+    (representation) => representation.bitrate > wantedBitrate,
+  );
   if (firstIndexTooHigh === -1) {
     return representations[representations.length - 1];
   } else if (firstIndexTooHigh === 0) {

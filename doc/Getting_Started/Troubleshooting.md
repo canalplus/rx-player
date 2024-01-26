@@ -5,80 +5,77 @@ the RxPlayer associated to the found solution.
 
 If that solution does not work for you, do not hesitate to create an issue.
 
-
 ## `autoPlay` doesn't work
 
-  - If the media plays automatically despite not setting the
-    [`autoPlay`](../api/Loading_a_Content.md#autoplay) `loadVideo` option or
-    setting it to `false`, check that the media element does not already have an
-    `autoplay` attribute.
+- If the media plays automatically despite not setting the
+  [`autoPlay`](../api/Loading_a_Content.md#autoplay) `loadVideo` option or
+  setting it to `false`, check that the media element does not already have an
+  `autoplay` attribute.
 
-    If it has, you should remove it so the `autoPlay` `loadVideo` option work as
-    intended.
-    We hesitated doing it ourselves but finally chose not to, to not break other
-    applications putting it there for a reason
+  If it has, you should remove it so the `autoPlay` `loadVideo` option work as
+  intended.
+  We hesitated doing it ourselves but finally chose not to, to not break other
+  applications putting it there for a reason
 
-  - If the media does not play despite setting the
-    [`autoPlay`](../api/Loading_a_Content.md#autoplay) `loadVideo` option
-    to `true`, it is probably due to the browser blocking it (and in that case,
-    you should also have received a `MEDIA_ERROR` `warning` event, with the code
-    `MEDIA_ERR_BLOCKED_AUTOPLAY`).
+- If the media does not play despite setting the
+  [`autoPlay`](../api/Loading_a_Content.md#autoplay) `loadVideo` option
+  to `true`, it is probably due to the browser blocking it (and in that case,
+  you should also have received a `MEDIA_ERROR` `warning` event, with the code
+  `MEDIA_ERR_BLOCKED_AUTOPLAY`).
 
-    In that scenario, the content will only be able to play after a user
-    interaction is done on the page (e.g. user clicking on a "play" button).
+  In that scenario, the content will only be able to play after a user
+  interaction is done on the page (e.g. user clicking on a "play" button).
 
-    This is a behavior forced by multiple browsers to prevent annoying
-    autoplaying video, generally those who have sound enabled (on that matter,
-    muting the media element might also work).
-
+  This is a behavior forced by multiple browsers to prevent annoying
+  autoplaying video, generally those who have sound enabled (on that matter,
+  muting the media element might also work).
 
 ## Text tracks does not respect the format's style
 
-  - Check that you're not in the default `"native"`
-    [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode) (when either
-    the `textTrackMode` `loadVideo` option is not set or is set to `native`, or
-    when the `textTrackElement` `loadVideo` option is not set).
+- Check that you're not in the default `"native"`
+  [`textTrackMode`](../api/Loading_a_Content.md#texttrackmode) (when either
+  the `textTrackMode` `loadVideo` option is not set or is set to `native`, or
+  when the `textTrackElement` `loadVideo` option is not set).
 
-    If you're in that case, style-enriched subtitles are only available in the
-    `"html"` `textTrackMode`. Please set both `textTrackMode` to `"html"` and a
-    `textTrackElement` to display text tracks into.
-
+  If you're in that case, style-enriched subtitles are only available in the
+  `"html"` `textTrackMode`. Please set both `textTrackMode` to `"html"` and a
+  `textTrackElement` to display text tracks into.
 
 ## Issues when switching the audio track
 
-  - If audio tracks take a LOT of time on some devices to change, it may be due
-    to how often low-level audio buffers are updated (from higher-level browser
-    audio buffers) on that device.
+- If audio tracks take a LOT of time on some devices to change, it may be due
+  to how often low-level audio buffers are updated (from higher-level browser
+  audio buffers) on that device.
 
-    To fix that solution, you might want to set either [the
-    `defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode)
-    `loadVideo` option or [the `switchingMode` property on
-    calls to `setAudioTrack`](../api/Track_Selection/setAudioTrack.md) to
-    `"direct"`, or `"reload"` if you have issues with the former value.
+  To fix that solution, you might want to set either [the
+  `defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode)
+  `loadVideo` option or [the `switchingMode` property on
+  calls to `setAudioTrack`](../api/Track_Selection/setAudioTrack.md) to
+  `"direct"`, or `"reload"` if you have issues with the former value.
 
-  - If you lose sound after switching the audio track and you're in the
-    `"direct"` `switchingMode`, this is a known issue on some browser versions.
-    Please change the `switchingMode` to any other value (the closest to
-    `"direct"` being `"reload"`.
-
+- If you lose sound after switching the audio track and you're in the
+  `"direct"` `switchingMode`, this is a known issue on some browser versions.
+  Please change the `switchingMode` to any other value (the closest to
+  `"direct"` being `"reload"`.
 
 ## Parts of a content are automatically skipped/seeked over
 
 The RxPlayer has two complex inner mechanisms that may lead to subparts of a
 content being seemingly automatically skipped:
 
-  - A buffer discontinuity detection mechanism that tend to prioritize
-    uninterrupted content playback over content completeness
+- A buffer discontinuity detection mechanism that tend to prioritize
+  uninterrupted content playback over content completeness
 
-  - A browser's garbage collection detection mechanism that also prioritize the
-    same aspect
+- A browser's garbage collection detection mechanism that also prioritize the
+  same aspect
 
 When some media data appears to be skipped, it generally means to the RxPlayer
 that either:
-  - no media data was available at that position
-  - media data was available, but the browser stalled trying to play it
-  - media data was available at that position, but was immediately garbage
-    collected by the browser, potentially multiple times in a row.
+
+- no media data was available at that position
+- media data was available, but the browser stalled trying to play it
+- media data was available at that position, but was immediately garbage
+  collected by the browser, potentially multiple times in a row.
 
 You can investigate in which scenario you are by looking at the RxPlayer's logs.
 
@@ -88,13 +85,12 @@ If it appears to be insistent, you may want to check the remaining available
 memory on the device when it happens. If it looks very low, you might want to
 configure the RxPlayer so less media data is buffered in advance, through
 either:
-  - the [`maxVideoBufferSize`](../api/Creating_a_Player.md#maxvideobuffersize)
-    constructor option, or
 
-  - the [`setMaxVideoBufferSize`](../api/Buffer_Control/setMaxVideoBufferSize.md)
-    method
+- the [`maxVideoBufferSize`](../api/Creating_a_Player.md#maxvideobuffersize)
+  constructor option, or
 
-
+- the [`setMaxVideoBufferSize`](../api/Buffer_Control/setMaxVideoBufferSize.md)
+  method
 
 ## Codec switching does not work
 
@@ -104,7 +100,6 @@ all devices.
 Please check the [`onCodecSwitch`](../api/Loading_a_Content.md#oncodecswitch)
 `loadVideo` option, and set it to `"reload"` - if that's not already the
 case - to see if it fixes the issue.
-
 
 ## The RxPlayer uses a lot of memory
 
@@ -116,13 +111,13 @@ media data is kept at maximum behind and ahead of the current position, you
 can set respectively a "maximum buffer behind" or a "maximum buffer ahead" in
 seconds through either:
 
-  - the [`maxBufferBehind`](../api/Creating_a_Player.md#maxbufferbehind)
-    and [`maxBufferAhead`](../api/Creating_a_Player.md#maxbufferahead)
-    constructor options.
+- the [`maxBufferBehind`](../api/Creating_a_Player.md#maxbufferbehind)
+  and [`maxBufferAhead`](../api/Creating_a_Player.md#maxbufferahead)
+  constructor options.
 
-  - the [`setMaxBufferBehind`](../api/Buffer_Control/setMaxBufferBehind.md) and
-    the [`setMaxBufferAhead`](../api/Buffer_Control/setMaxBufferAhead.md)
-    methods
+- the [`setMaxBufferBehind`](../api/Buffer_Control/setMaxBufferBehind.md) and
+  the [`setMaxBufferAhead`](../api/Buffer_Control/setMaxBufferAhead.md)
+  methods
 
 If you're setting a "maximum buffer ahead", please keep in mind that it should
 always be higher than the set "wanted buffer ahead" option
@@ -139,13 +134,11 @@ can set the "maximum video buffer size" setting through either:
 - the [`setMaxVideoBufferSize`](../api/Buffer_Control/setMaxVideoBufferSize.md)
   method
 
-
 ## Playback issues related to DRMs
 
 There is a lot of compatibility issues that may be linked to DRMs.
 
 Here is some of them.
-
 
 ### Issues with fallbacking with the Edge browser and PlayReady
 
@@ -159,7 +152,6 @@ trying to create a reproducible scenario and document that issue so it can
 hopefully be fixed in the future. In the meantime, you're encouraged either to
 use Widevine (only on Chromium-based Edge) or to not make use of the
 `fallBackOnLastTry` option on that browser.
-
 
 ### The Player do not download any segment when playing encrypted contents
 

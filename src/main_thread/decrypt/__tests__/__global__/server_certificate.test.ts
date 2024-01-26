@@ -23,16 +23,13 @@
 /* eslint-disable no-restricted-properties */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-import {
-  MediaKeysImpl,
-  MediaKeySystemAccessImpl,
-  mockCompat,
-} from "./utils";
+import { MediaKeysImpl, MediaKeySystemAccessImpl, mockCompat } from "./utils";
 
 describe("decrypt - global tests - server certificate", () => {
-
   const mockGetLicense = jest.fn(() => {
-    return new Promise(() => { /* noop */ });
+    return new Promise(() => {
+      /* noop */
+    });
   });
 
   /** Default video element used in our tests. */
@@ -41,9 +38,13 @@ describe("decrypt - global tests - server certificate", () => {
   const serverCertificate = [1, 2, 3];
 
   /** Default keySystems configuration used in our tests. */
-  const ksConfigCert = [{ type: "com.widevine.alpha",
-                          getLicense: mockGetLicense,
-                          serverCertificate }];
+  const ksConfigCert = [
+    {
+      type: "com.widevine.alpha",
+      getLicense: mockGetLicense,
+      serverCertificate,
+    },
+  ];
 
   beforeEach(() => {
     jest.resetModules();
@@ -58,13 +59,13 @@ describe("decrypt - global tests - server certificate", () => {
       return Promise.resolve();
     });
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate =
-      jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-        .mockImplementation((_serverCertificate : BufferSource) => {
-          expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          return Promise.resolve(true);
-        });
+    const mockSetServerCertificate = jest
+      .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
+      .mockImplementation((_serverCertificate: BufferSource) => {
+        expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockCreateSession).not.toHaveBeenCalled();
+        return Promise.resolve(true);
+      });
 
     const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
@@ -98,13 +99,13 @@ describe("decrypt - global tests - server certificate", () => {
       return Promise.resolve();
     });
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate =
-      jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-        .mockImplementation((_serverCertificate : BufferSource) => {
-          expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          return Promise.resolve(true);
-        });
+    const mockSetServerCertificate = jest
+      .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
+      .mockImplementation((_serverCertificate: BufferSource) => {
+        expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockCreateSession).not.toHaveBeenCalled();
+        return Promise.resolve(true);
+      });
 
     const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
@@ -120,7 +121,7 @@ describe("decrypt - global tests - server certificate", () => {
           const initData = new Uint8Array([54, 55, 75]);
           contentDecryptor.onInitializationData({
             type: "cenc2",
-            values: [ { systemId: "15", data: initData } ],
+            values: [{ systemId: "15", data: initData }],
           });
           contentDecryptor.attach();
         }, 5);
@@ -135,17 +136,14 @@ describe("decrypt - global tests - server certificate", () => {
     }, 100);
   });
 
-  /* eslint-disable max-len */
   it("should emit warning if serverCertificate call rejects but still continue", (done) => {
-  /* eslint-enable max-len */
-
     const { mockSetMediaKeys } = mockCompat();
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate =
-      jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-        .mockImplementation((_serverCertificate : BufferSource) => {
-          throw new Error("some error");
-        });
+    const mockSetServerCertificate = jest
+      .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
+      .mockImplementation((_serverCertificate: BufferSource) => {
+        throw new Error("some error");
+      });
 
     const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
@@ -174,17 +172,14 @@ describe("decrypt - global tests - server certificate", () => {
     }, 10);
   });
 
-  /* eslint-disable max-len */
   it("should emit warning if serverCertificate call throws but still continue", (done) => {
-  /* eslint-enable max-len */
-
     const { mockSetMediaKeys } = mockCompat();
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate =
-      jest.spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-        .mockImplementation((_serverCertificate : BufferSource) => {
-          return Promise.reject(new Error("some error"));
-        });
+    const mockSetServerCertificate = jest
+      .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
+      .mockImplementation((_serverCertificate: BufferSource) => {
+        return Promise.reject(new Error("some error"));
+      });
 
     const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
@@ -213,15 +208,14 @@ describe("decrypt - global tests - server certificate", () => {
     }, 10);
   });
 
-  /* eslint-disable max-len */
   it("should just continue if setServerCertificate is undefined", (done) => {
-  /* eslint-enable max-len */
     const { mockSetMediaKeys } = mockCompat();
-    jest.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
+    jest
+      .spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
       .mockImplementation(() => {
         const mediaKeys = new MediaKeysImpl();
-        (mediaKeys as { setServerCertificate? : unknown })
-          .setServerCertificate = undefined;
+        (mediaKeys as { setServerCertificate?: unknown }).setServerCertificate =
+          undefined;
         return Promise.resolve(mediaKeys);
       });
     mockSetMediaKeys.mockImplementation(() => {
@@ -230,8 +224,10 @@ describe("decrypt - global tests - server certificate", () => {
       return Promise.resolve();
     });
     const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate = jest.spyOn(MediaKeysImpl.prototype,
-                                                "setServerCertificate");
+    const mockSetServerCertificate = jest.spyOn(
+      MediaKeysImpl.prototype,
+      "setServerCertificate",
+    );
     const { ContentDecryptorState } = jest.requireActual("../../types");
     const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
@@ -246,7 +242,7 @@ describe("decrypt - global tests - server certificate", () => {
           const initData = new Uint8Array([54, 55, 75]);
           contentDecryptor.onInitializationData({
             type: "cenc2",
-            values: [ { systemId: "15", data: initData } ],
+            values: [{ systemId: "15", data: initData }],
           });
 
           contentDecryptor.attach();

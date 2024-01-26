@@ -20,13 +20,12 @@ import startsWith from "../../../utils/starts_with";
  * @param {string} keySystem
  * @returns {string|undefined}
  */
-export default function getDrmSystemId(
-  keySystem : string
-) : string | undefined {
-  if (startsWith(keySystem, "com.microsoft.playready") ||
-      keySystem === "com.chromecast.playready" ||
-      keySystem === "com.youtube.playready")
-  {
+export default function getDrmSystemId(keySystem: string): string | undefined {
+  if (
+    startsWith(keySystem, "com.microsoft.playready") ||
+    keySystem === "com.chromecast.playready" ||
+    keySystem === "com.youtube.playready"
+  ) {
     return "9a04f07998404286ab92e65be0885f95";
   }
   if (keySystem === "com.widevine.alpha") {

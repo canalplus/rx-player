@@ -31,19 +31,20 @@ export default function removeBufferAroundTime(
   videoElement: HTMLMediaElement,
   sourceBufferInterface: MainSourceBufferInterface,
   time: number,
-  margin: number | undefined
+  margin: number | undefined,
 ): Promise<unknown> {
   const removalMargin = margin ?? 10 * 60;
   if (videoElement.buffered.length === 0) {
     return Promise.resolve();
   }
   const bufferRemovals = [];
-  if ((time - removalMargin) > 0) {
+  if (time - removalMargin > 0) {
     bufferRemovals.push(sourceBufferInterface.remove(0, time - removalMargin));
   }
-  if ((time + removalMargin) < videoElement.duration) {
-    bufferRemovals.push(sourceBufferInterface.remove(time + removalMargin,
-                                                     videoElement.duration));
+  if (time + removalMargin < videoElement.duration) {
+    bufferRemovals.push(
+      sourceBufferInterface.remove(time + removalMargin, videoElement.duration),
+    );
   }
   return Promise.all(bufferRemovals);
 }

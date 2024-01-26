@@ -96,6 +96,7 @@ You can find it at any of the following places:
 
 - The easiest way is to just import in your application its "embedded" version,
   exported through the `"rx-player/experimental/features/embeds"` path:
+
   ```js
   import { EMBEDDED_DASH_WASM } from "rx-player/experimental/features/embeds";
   ```
@@ -128,6 +129,7 @@ URL, in the `initialize` method shown below).
 
 The `DASH_WASM` feature needs to be imported through the
 `rx-player/features` path:
+
 ```js
 import { DASH_WASM } from "rx-player/features";
 ```

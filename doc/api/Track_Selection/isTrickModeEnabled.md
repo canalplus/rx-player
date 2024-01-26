@@ -21,4 +21,4 @@ track returned by the [`getVideoTrack`](./getVideoTrack.md) method has its
 const isTrickModeEnabled = player.isTrickModeEnabled();
 ```
 
- - **return value** `boolean`
+- **return value** `boolean`

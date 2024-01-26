@@ -15,10 +15,7 @@
  */
 
 import { getMDHDTimescale } from "../../parsers/containers/isobmff";
-import {
-  strToUtf8,
-  utf8ToStr,
-} from "../../utils/string_parsing";
+import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type {
   ILoadedTextSegmentFormat,
   ISegmentContext,
@@ -49,42 +46,48 @@ import {
  * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  data : string | Uint8Array | ArrayBuffer,
-  isChunked : boolean,
-  context : ISegmentContext,
-  initTimescale : number | undefined
-) : ISegmentParserParsedInitChunk<null> |
-    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
-{
+  data: string | Uint8Array | ArrayBuffer,
+  isChunked: boolean,
+  context: ISegmentContext,
+  initTimescale: number | undefined,
+):
+  | ISegmentParserParsedInitChunk<null>
+  | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null> {
   const { periodStart, periodEnd, segment } = context;
 
-  const chunkBytes = typeof data === "string" ? strToUtf8(data) :
-                     data instanceof Uint8Array ? data :
-                                                  new Uint8Array(data);
+  const chunkBytes =
+    typeof data === "string"
+      ? strToUtf8(data)
+      : data instanceof Uint8Array
+        ? data
+        : new Uint8Array(data);
   if (segment.isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    return { segmentType: "init",
-             initializationData: null,
-             initializationDataSize: 0,
-             initTimescale: mdhdTimescale,
-             protectionData: [] };
+    return {
+      segmentType: "init",
+      initializationData: null,
+      initializationDataSize: 0,
+      initTimescale: mdhdTimescale,
+      protectionData: [],
+    };
   }
-  const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
-                                           isChunked,
-                                           segment,
-                                           initTimescale);
-  const chunkData = getISOBMFFEmbeddedTextTrackData(context,
-                                                    chunkBytes,
-                                                    chunkInfos,
-                                                    isChunked);
+  const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
+  const chunkData = getISOBMFFEmbeddedTextTrackData(
+    context,
+    chunkBytes,
+    chunkInfos,
+    isChunked,
+  );
   const chunkOffset = segment.timestampOffset ?? 0;
-  return { segmentType: "media",
-           chunkData,
-           chunkSize: chunkBytes.length,
-           chunkInfos,
-           chunkOffset,
-           protectionData: [],
-           appendWindow: [periodStart, periodEnd] };
+  return {
+    segmentType: "media",
+    chunkData,
+    chunkSize: chunkBytes.length,
+    chunkInfos,
+    chunkOffset,
+    protectionData: [],
+    appendWindow: [periodStart, periodEnd],
+  };
 }
 
 /**
@@ -98,26 +101,27 @@ function parseISOBMFFEmbeddedTextTrack(
  * @returns {Object}
  */
 function parsePlainTextTrack(
-  data : string | Uint8Array | ArrayBuffer,
-  isChunked : boolean,
-  context : ISegmentContext
-) : ISegmentParserParsedInitChunk<null> |
-    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
-{
+  data: string | Uint8Array | ArrayBuffer,
+  isChunked: boolean,
+  context: ISegmentContext,
+):
+  | ISegmentParserParsedInitChunk<null>
+  | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null> {
   const { segment, periodStart, periodEnd } = context;
   if (segment.isInit) {
-    return { segmentType: "init",
-             initializationData: null,
-             initializationDataSize: 0,
-             initTimescale: undefined,
-             protectionData: [] };
+    return {
+      segmentType: "init",
+      initializationData: null,
+      initializationDataSize: 0,
+      initTimescale: undefined,
+      protectionData: [],
+    };
   }
 
-  let textTrackData : string;
-  let chunkSize : number | undefined;
+  let textTrackData: string;
+  let chunkSize: number | undefined;
   if (typeof data !== "string") {
-    const bytesData = data instanceof Uint8Array ? data :
-                                                   new Uint8Array(data);
+    const bytesData = data instanceof Uint8Array ? data : new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
     chunkSize = bytesData.length;
   } else {
@@ -125,13 +129,15 @@ function parsePlainTextTrack(
   }
   const chunkData = getPlainTextTrackData(context, textTrackData, isChunked);
   const chunkOffset = segment.timestampOffset ?? 0;
-  return { segmentType: "media",
-           chunkData,
-           chunkSize,
-           chunkInfos: null,
-           chunkOffset,
-           protectionData: [],
-           appendWindow: [periodStart, periodEnd] };
+  return {
+    segmentType: "media",
+    chunkData,
+    chunkSize,
+    chunkInfos: null,
+    chunkOffset,
+    protectionData: [],
+    appendWindow: [periodStart, periodEnd],
+  };
 }
 
 /**
@@ -142,33 +148,36 @@ function parsePlainTextTrack(
  * @returns {Object}
  */
 export default function textTrackParser(
-  loadedSegment : { data : ILoadedTextSegmentFormat;
-                    isChunked : boolean; },
-  context : ISegmentContext,
-  initTimescale : number | undefined
-) : ISegmentParserParsedInitChunk<null> |
-    ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
-{
+  loadedSegment: { data: ILoadedTextSegmentFormat; isChunked: boolean },
+  context: ISegmentContext,
+  initTimescale: number | undefined,
+):
+  | ISegmentParserParsedInitChunk<null>
+  | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null> {
   const { segment, periodStart, periodEnd } = context;
   const { data, isChunked } = loadedSegment;
 
   if (data === null) {
     // No data, just return an empty placeholder object
     if (segment.isInit) {
-      return { segmentType: "init",
-               initializationData: null,
-               initializationDataSize: 0,
-               protectionData: [],
-               initTimescale: undefined };
+      return {
+        segmentType: "init",
+        initializationData: null,
+        initializationDataSize: 0,
+        protectionData: [],
+        initTimescale: undefined,
+      };
     }
     const chunkOffset = segment.timestampOffset ?? 0;
-    return { segmentType: "media",
-             chunkData: null,
-             chunkSize: 0,
-             chunkInfos: null,
-             chunkOffset,
-             protectionData: [],
-             appendWindow: [periodStart, periodEnd] };
+    return {
+      segmentType: "media",
+      chunkData: null,
+      chunkSize: 0,
+      chunkInfos: null,
+      chunkOffset,
+      protectionData: [],
+      appendWindow: [periodStart, periodEnd],
+    };
   }
 
   const containerType = inferSegmentContainer(context.type, context.mimeType);

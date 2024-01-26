@@ -15,7 +15,6 @@
  */
 
 import directfile from "../../main_thread/init/directfile_content_initializer";
-// eslint-disable-next-line max-len
 import mediaElementTracksStore from "../../main_thread/tracks_store/media_element_tracks_store";
 import type { IFeaturesObject } from "../types";
 
@@ -24,9 +23,8 @@ import type { IFeaturesObject } from "../types";
  * (`directfile` transport)
  * @param {Object} features
  */
-function addDirectfileFeature(features : IFeaturesObject) : void {
-  features.directfile = { initDirectFile: directfile,
-                          mediaElementTracksStore };
+function addDirectfileFeature(features: IFeaturesObject): void {
+  features.directfile = { initDirectFile: directfile, mediaElementTracksStore };
 }
 
 export { addDirectfileFeature as DIRECTFILE };

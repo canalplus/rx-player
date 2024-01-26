@@ -160,28 +160,26 @@ const keySystems = [
   { type: "com.microsoft.playready", configuration: mksConfiguration },
 ];
 
-mediaCapabilitiesProber
-  .getCompatibleDRMConfigurations(keySystems)
-  .then((drmConfigs) => {
-    drmConfigs.forEach((config) => {
-      const { type, configuration, compatibleConfiguration } = config;
+mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems).then((drmConfigs) => {
+  drmConfigs.forEach((config) => {
+    const { type, configuration, compatibleConfiguration } = config;
 
-      if (compatibleConfiguration !== undefined) {
-        console.log("# Compatible configuration #############################");
-        console.log("Key System:", type);
-        console.log("Wanted configuration:", configuration);
-        console.log("Compatible configuration:", compatibleConfiguration);
-        console.log("########################################################");
-        console.log("");
-      } else {
-        console.log("# Incompatible configuration ###########################");
-        console.log("Key System:", type);
-        console.log("Wanted configuration:", configuration);
-        console.log("########################################################");
-        console.log("");
-      }
-    });
+    if (compatibleConfiguration !== undefined) {
+      console.log("# Compatible configuration #############################");
+      console.log("Key System:", type);
+      console.log("Wanted configuration:", configuration);
+      console.log("Compatible configuration:", compatibleConfiguration);
+      console.log("########################################################");
+      console.log("");
+    } else {
+      console.log("# Incompatible configuration ###########################");
+      console.log("Key System:", type);
+      console.log("Wanted configuration:", configuration);
+      console.log("########################################################");
+      console.log("");
+    }
   });
+});
 
 // Example output (please note that in this example, one of the widevine
 // robustness is not supported):

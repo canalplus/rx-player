@@ -16,9 +16,7 @@
 
 import log from "../../log";
 import cancellableSleep from "../../utils/cancellable_sleep";
-import TaskCanceller, {
-  CancellationError,
-} from "../../utils/task_canceller";
+import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
 import type { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
@@ -35,17 +33,19 @@ import type { ICustomMediaKeySession } from "./custom_media_keys";
  * @returns {Promise.<undefined>}
  */
 export default function closeSession(
-  session: MediaKeySession | ICustomMediaKeySession
+  session: MediaKeySession | ICustomMediaKeySession,
 ): Promise<void> {
   const timeoutCanceller = new TaskCanceller();
 
   return Promise.race([
-    session.close()
-      .then(() => { timeoutCanceller.cancel(); }),
+    session.close().then(() => {
+      timeoutCanceller.cancel();
+    }),
     // The `closed` promise may resolve, even if `close()` result has not
     // (seen at some point on Firefox).
-    session.closed
-      .then(() => { timeoutCanceller.cancel(); }),
+    session.closed.then(() => {
+      timeoutCanceller.cancel();
+    }),
     waitTimeoutAndCheck(),
   ]);
 
@@ -58,17 +58,19 @@ export default function closeSession(
    * The returned Promise will never reject.
    * @returns {Promise.<undefined>}
    */
-  async function waitTimeoutAndCheck() : Promise<void> {
+  async function waitTimeoutAndCheck(): Promise<void> {
     try {
       await cancellableSleep(1000, timeoutCanceller.signal);
       await tryUpdatingSession();
     } catch (err) {
-      if (err instanceof CancellationError) { // cancelled == session closed
+      if (err instanceof CancellationError) {
+        // cancelled == session closed
         return;
       }
-      const message = err instanceof Error ?
-        err.message :
-        "Unknown error made it impossible to close the session";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Unknown error made it impossible to close the session";
       log.error(`DRM: ${message}`);
     }
   }
@@ -82,27 +84,27 @@ export default function closeSession(
    * rejects if we couldn't know or it doesn't.
    * @returns {Promise.<undefined>}
    */
-  async function tryUpdatingSession() : Promise<void> {
+  async function tryUpdatingSession(): Promise<void> {
     try {
       await session.update(new Uint8Array(1));
     } catch (err) {
-      if (timeoutCanceller.isUsed()) { // Reminder: cancelled == session closed
+      if (timeoutCanceller.isUsed()) {
+        // Reminder: cancelled == session closed
         return;
       }
 
       // The caught error can tell if session is closed
       // (Chrome may throw this error)
       // I know... Checking the error message is not the best practice ever.
-      if (err instanceof Error &&
-          err.message === "The session is already closed."
-      ) {
+      if (err instanceof Error && err.message === "The session is already closed.") {
         return;
       }
 
       await cancellableSleep(1000, timeoutCanceller.signal);
     }
 
-    if (timeoutCanceller.isUsed()) { // Reminder: cancelled == session closed
+    if (timeoutCanceller.isUsed()) {
+      // Reminder: cancelled == session closed
       return;
     }
 

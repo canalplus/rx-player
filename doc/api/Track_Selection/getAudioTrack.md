@@ -67,7 +67,7 @@ return an object with the following properties:
     if does not make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
-     deciphered (in the eventuality it had DRM-related protection).
+    deciphered (in the eventuality it had DRM-related protection).
 
     Note that because elements of the `representations` array only contains
     playable Representation, this value here cannot be set to `false` when
@@ -103,11 +103,11 @@ const audioTrack = player.getAudioTrack();
 const audioTrack = player.getAudioTrack(periodId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want
       to get information about its current audio track.
       If not defined, the information associated to the currently-playing Period
       will be returned.
 
- - **return value** `Object|null|undefined`
+- **return value** `Object|null|undefined`

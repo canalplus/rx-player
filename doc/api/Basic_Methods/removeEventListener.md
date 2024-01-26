@@ -20,12 +20,12 @@ player.removeEventListener(event);
 player.removeEventListener(event, callback);
 ```
 
-  - **arguments**:
+- **arguments**:
 
-     1. _event_ `string`: The event name.
+  1.  _event_ `string`: The event name.
 
-     2. _callback_ (optional) `Function`|`undefined`: The callback given when
-        calling the corresponding `addEventListener` API.
+  2.  _callback_ (optional) `Function`|`undefined`: The callback given when
+      calling the corresponding `addEventListener` API.
 
 ## Example
 

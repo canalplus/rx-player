@@ -2,17 +2,13 @@ import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type RxPlayer from "../../public_api";
 import BufferSizeGraph from "../buffer_size_graph";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
-import {
-  createElement,
-  createGraphCanvas,
-  createMetricTitle,
-} from "../utils";
+import { createElement, createGraphCanvas, createMetricTitle } from "../utils";
 
 export default function createSegmentSinkSizeGraph(
-  instance : RxPlayer,
-  parentElt : HTMLElement,
-  cancelSignal : CancellationSignal
-) : HTMLElement {
+  instance: RxPlayer,
+  parentElt: HTMLElement,
+  cancelSignal: CancellationSignal,
+): HTMLElement {
   const bufferSizeGraphWrapperElt = createElement("div");
   const bufferSizeTitle = createMetricTitle("bgap");
   const canvasElt = createGraphCanvas();
@@ -45,4 +41,3 @@ export default function createSegmentSinkSizeGraph(
     bufferSizeGraph.reRender(width, 10);
   }
 }
-

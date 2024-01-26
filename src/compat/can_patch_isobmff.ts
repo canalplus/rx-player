@@ -25,6 +25,6 @@ import { isIEOrEdge } from "./browser_detection";
  * new one from scratch instead.
  * @returns {Boolean}
  */
-export default function canPatchISOBMFFSegment() : boolean {
+export default function canPatchISOBMFFSegment(): boolean {
   return !isIEOrEdge;
 }

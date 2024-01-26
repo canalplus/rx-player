@@ -29,22 +29,19 @@ import type { ITrackType } from "../../public_types";
  * @returns {string | undefined}
  */
 export default function inferSegmentContainer(
-  adaptationType : ITrackType,
-  mimeType : string | undefined
-) : "webm" | "mp4" | undefined {
+  adaptationType: ITrackType,
+  mimeType: string | undefined,
+): "webm" | "mp4" | undefined {
   if (adaptationType === "audio" || adaptationType === "video") {
     if (mimeType === "video/mp4" || mimeType === "audio/mp4") {
       return "mp4";
     }
-    if (mimeType === "video/webm" || mimeType === "audio/webm")
-    {
+    if (mimeType === "video/webm" || mimeType === "audio/webm") {
       return "webm";
     }
     return undefined;
   } else if (adaptationType === "text") {
-    return mimeType === "application/mp4" ?
-      "mp4" :
-      undefined;
+    return mimeType === "application/mp4" ? "mp4" : undefined;
   }
   return undefined;
 }

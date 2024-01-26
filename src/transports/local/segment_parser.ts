@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  getMDHDTimescale,
-  takePSSHOut,
-} from "../../parsers/containers/isobmff";
+import { getMDHDTimescale, takePSSHOut } from "../../parsers/containers/isobmff";
 import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import type {
@@ -30,32 +27,35 @@ import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import inferSegmentContainer from "../utils/infer_segment_container";
 
 export default function segmentParser(
-  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
-                    isChunked : boolean; },
-  context : ISegmentContext,
-  initTimescale : number | undefined
-) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
-    ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
-{
+  loadedSegment: { data: ArrayBuffer | Uint8Array | null; isChunked: boolean },
+  context: ISegmentContext,
+  initTimescale: number | undefined,
+):
+  | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null>
+  | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null> {
   const { segment, periodStart, periodEnd } = context;
   const { data } = loadedSegment;
-  const appendWindow : [ number, number | undefined ] = [ periodStart, periodEnd ];
+  const appendWindow: [number, number | undefined] = [periodStart, periodEnd];
 
   if (data === null) {
     if (segment.isInit) {
-      return { segmentType: "init",
-               initializationData: null,
-               initializationDataSize: 0,
-               protectionData: [],
-               initTimescale: undefined };
+      return {
+        segmentType: "init",
+        initializationData: null,
+        initializationDataSize: 0,
+        protectionData: [],
+        initTimescale: undefined,
+      };
     }
-    return { segmentType: "media",
-             chunkData: null,
-             chunkSize: 0,
-             chunkInfos: null,
-             chunkOffset: 0,
-             protectionData: [],
-             appendWindow };
+    return {
+      segmentType: "media",
+      chunkData: null,
+      chunkSize: 0,
+      chunkInfos: null,
+      chunkOffset: 0,
+      protectionData: [],
+      appendWindow,
+    };
   }
 
   const chunkData = new Uint8Array(data);
@@ -63,7 +63,7 @@ export default function segmentParser(
 
   // TODO take a look to check if this is an ISOBMFF/webm?
   const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
-  const protectionData : IProtectionDataInfo[] = [];
+  const protectionData: IProtectionDataInfo[] = [];
   if (seemsToBeMP4) {
     const psshInfo = takePSSHOut(chunkData);
     let keyId;
@@ -76,27 +76,31 @@ export default function segmentParser(
   }
 
   if (segment.isInit) {
-    const timescale = containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
-                                                 // assume ISOBMFF-compliance
-                                                 getMDHDTimescale(chunkData);
-    return { segmentType: "init",
-             initializationData: chunkData,
-             initializationDataSize: 0,
-             initTimescale: timescale ?? undefined,
-             protectionData };
+    const timescale =
+      containerType === "webm"
+        ? getTimeCodeScale(chunkData, 0)
+        : // assume ISOBMFF-compliance
+          getMDHDTimescale(chunkData);
+    return {
+      segmentType: "init",
+      initializationData: chunkData,
+      initializationDataSize: 0,
+      initTimescale: timescale ?? undefined,
+      protectionData,
+    };
   }
 
-  const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
-                                                          false,
-                                                          segment,
-                                                          initTimescale) :
-                                    null; // TODO extract time info from webm
+  const chunkInfos = seemsToBeMP4
+    ? getISOBMFFTimingInfos(chunkData, false, segment, initTimescale)
+    : null; // TODO extract time info from webm
   const chunkOffset = segment.timestampOffset ?? 0;
-  return { segmentType: "media",
-           chunkData,
-           chunkSize: chunkData.length,
-           chunkInfos,
-           chunkOffset,
-           protectionData,
-           appendWindow };
+  return {
+    segmentType: "media",
+    chunkData,
+    chunkSize: chunkData.length,
+    chunkInfos,
+    chunkOffset,
+    protectionData,
+    appendWindow,
+  };
 }

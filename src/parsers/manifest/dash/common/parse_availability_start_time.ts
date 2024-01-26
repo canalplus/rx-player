@@ -24,9 +24,9 @@ import type { IMPDAttributes } from "../node_parser_types";
  * @returns {number}
  */
 export default function parseAvailabilityStartTime(
-  rootAttributes : IMPDAttributes,
-  referenceDateTime? : number
-) : number {
+  rootAttributes: IMPDAttributes,
+  referenceDateTime?: number,
+): number {
   if (rootAttributes.type !== "dynamic") {
     return 0;
   }

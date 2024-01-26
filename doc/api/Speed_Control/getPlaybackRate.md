@@ -18,4 +18,4 @@ console.log(`Playing at a x${currentPlaybackRate}} speed`);
 const rate = player.getPlaybackRate();
 ```
 
- - **return value** `number`
+- **return value** `number`

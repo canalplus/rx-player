@@ -1,6 +1,5 @@
 import deepMerge from "../deep_merge";
 
-
 describe("utils - deep_merge", () => {
   it("should return the first argument if no other arguments", () => {
     const obj1 = { a: 1 };

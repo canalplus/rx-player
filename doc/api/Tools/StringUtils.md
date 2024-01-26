@@ -53,17 +53,7 @@ console.log(strToUtf8("hello😀"));
 
   ```js
   import { StringUtils } from "rx-player/tools";
-  const uint8Arr = new Uint8Array([
-    104,
-    101,
-    108,
-    108,
-    111,
-    240,
-    159,
-    152,
-    128,
-  ]);
+  const uint8Arr = new Uint8Array([104, 101, 108, 108, 111, 240, 159, 152, 128]);
   StringUtils.utf8ToStr(uint8Arr);
   // => "hello😀"
   ```

@@ -46,44 +46,49 @@ export default function buildStandaloneDemo(opts) {
 
   const compiler = Webpack(config);
 
-  const compilerWatching = compiler.watch({
-    aggregateTimeout: 300,
-  }, (err, stats) => {
-    if (err) {
-      /* eslint-disable no-console */
-      console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m Could not compile demo:`, err);
-      /* eslint-enable no-console */
-      return;
-    }
+  const compilerWatching = compiler.watch(
+    {
+      aggregateTimeout: 300,
+    },
+    (err, stats) => {
+      if (err) {
+        /* eslint-disable no-console */
+        console.error(
+          `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Could not compile demo:`,
+          err,
+        );
+        /* eslint-enable no-console */
+        return;
+      }
 
-    if (
-      stats.compilation.errors && stats.compilation.errors.length ||
-      stats.compilation.warnings && stats.compilation.warnings.length
-    ) {
-      const errors = stats.compilation.errors || [];
-      const warnings = stats.compilation.warnings || [];
-      displayWebpackErrors(errors, warnings);
-      /* eslint-disable no-console */
-      console.log(
-        `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-        `Demo built with ${errors.length} error(s) and ` +
-        ` ${warnings.length} warning(s) (in ${stats.endTime - stats.startTime} ms).`
-      );
-      /* eslint-enable no-console */
-    } else {
-      /* eslint-disable no-console */
-      console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m Demo built (in ${stats.endTime - stats.startTime} ms).`);
-      /* eslint-enable no-console */
-    }
-  });
+      if (
+        (stats.compilation.errors && stats.compilation.errors.length) ||
+        (stats.compilation.warnings && stats.compilation.warnings.length)
+      ) {
+        const errors = stats.compilation.errors || [];
+        const warnings = stats.compilation.warnings || [];
+        displayWebpackErrors(errors, warnings);
+        /* eslint-disable no-console */
+        console.log(
+          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+            `Demo built with ${errors.length} error(s) and ` +
+            ` ${warnings.length} warning(s) (in ${stats.endTime - stats.startTime} ms).`,
+        );
+        /* eslint-enable no-console */
+      } else {
+        /* eslint-disable no-console */
+        console.log(
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m Demo built (in ${stats.endTime - stats.startTime} ms).`,
+        );
+        /* eslint-enable no-console */
+      }
+    },
+  );
 
   compilerWatching.compiler.hooks.watchRun.intercept({
     call() {
       /* eslint-disable no-console */
-      console.log(
-        `\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` +
-        "Building demo..."
-      );
+      console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` + "Building demo...");
       /* eslint-enable no-console */
     },
   });
@@ -96,14 +101,14 @@ export default function buildStandaloneDemo(opts) {
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node build_demo.mjs [options]
+    /* eslint-disable indent */
+    `Usage: node build_demo.mjs [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
   -r, --report           Produce a size report when done, opening a web browser page`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

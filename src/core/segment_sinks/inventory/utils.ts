@@ -25,9 +25,9 @@ import type { IBufferedChunk } from "./segment_inventory";
  * @returns {Object|null}
  */
 export function getLastSegmentBeforePeriod(
-  inventory : IBufferedChunk[],
-  period : IPeriod
-) : IBufferedChunk | null {
+  inventory: IBufferedChunk[],
+  period: IPeriod,
+): IBufferedChunk | null {
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].infos.period.start >= period.start) {
       if (i > 0) {
@@ -36,8 +36,7 @@ export function getLastSegmentBeforePeriod(
       return null;
     }
   }
-  return inventory.length > 0 ? inventory[inventory.length - 1] :
-                                null;
+  return inventory.length > 0 ? inventory[inventory.length - 1] : null;
 }
 
 /**
@@ -48,9 +47,9 @@ export function getLastSegmentBeforePeriod(
  * @returns {Object|null}
  */
 export function getFirstSegmentAfterPeriod(
-  inventory : IBufferedChunk[],
-  period : IPeriod
-) : IBufferedChunk | null {
+  inventory: IBufferedChunk[],
+  period: IPeriod,
+): IBufferedChunk | null {
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].infos.period.start > period.start) {
       return inventory[i];
@@ -58,4 +57,3 @@ export function getFirstSegmentAfterPeriod(
   }
   return null;
 }
-

@@ -7,12 +7,8 @@ import {
   Regular,
 } from "../../contents/Smooth_static";
 
-const {
-  manifestInfos: emptyTextTrackManifestInfos,
-} = EmptyTextTrack;
-const {
-  manifestInfos: NotStartingAt0ManifestInfos,
-} = NotStartingAt0;
+const { manifestInfos: emptyTextTrackManifestInfos } = EmptyTextTrack;
+const { manifestInfos: NotStartingAt0ManifestInfos } = NotStartingAt0;
 const { manifestInfos: regularManifestInfos } = Regular;
 const { manifestInfos: customAttributesManifestInfos } = CustomAttributes;
 

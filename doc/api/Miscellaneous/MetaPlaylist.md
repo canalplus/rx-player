@@ -226,6 +226,7 @@ should be the same value than the `startTime` of the following one).
 The `"METAPLAYLIST"` feature is not included in the default RxPlayer build.
 
 You will need to import the `LOCAL_MANIFEST` experimental feature:
+
 ```js
 // Import the RxPlayer
 // (here through the "minimal" build, though it doesn't change for other builds)

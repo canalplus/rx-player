@@ -21,7 +21,9 @@ import addNativevttFeature from "../native_vtt_parser";
 
 describe("Features list - native vtt Parser", () => {
   it("should add an native vtt Parser in the current features", () => {
-    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
+    const featureObject = {
+      nativeTextTracksParsers: {},
+    } as unknown as IFeaturesObject;
     addNativevttFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { vtt: vttParser },

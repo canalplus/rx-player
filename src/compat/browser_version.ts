@@ -24,7 +24,7 @@ import { isFirefox } from "./browser_detection";
  * - A number above 0 that is the Firefox version number
  * @returns {number|null}
  */
-function getFirefoxVersion(): number|null {
+function getFirefoxVersion(): number | null {
   if (!isFirefox) {
     log.warn("Compat: Can't access Firefox version on no firefox browser.");
     return null;

@@ -13,10 +13,7 @@ Returns `undefined` if no content is loaded yet or if no URL is known.
 ```js
 const urls = player.getContentUrls();
 if (urls !== undefined && urls.length > 0) {
-  console.log(
-    "We are playing a content reachable through the following URLs:",
-    urls
-  );
+  console.log("We are playing a content reachable through the following URLs:", urls);
 }
 ```
 
@@ -26,4 +23,4 @@ if (urls !== undefined && urls.length > 0) {
 const urls = player.getContentUrls();
 ```
 
- - **return value** `Array.<string>|undefined`
+- **return value** `Array.<string>|undefined`

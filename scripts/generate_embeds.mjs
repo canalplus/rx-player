@@ -68,11 +68,7 @@ async function generateEmbeds() {
     if (!fs.existsSync(codeGenDir)) {
       fs.mkdirSync(codeGenDir);
     }
-    await Promise.all([
-      writeWebAssemblyEmbed(),
-      writeWorkerEmbed(),
-      writeIndexCode(),
-    ]);
+    await Promise.all([writeWebAssemblyEmbed(), writeWorkerEmbed(), writeIndexCode()]);
   } catch (err) {
     console.log(err);
     return Promise.reject(err);
@@ -82,7 +78,8 @@ async function generateEmbeds() {
 async function writeWebAssemblyEmbed() {
   const wasmData = await readFile(originalWasmFilePath, null);
   const u8Arr = new Uint8Array(wasmData);
-  const wasmDataStr = "const wasmArrayBuffer = new Uint8Array([" +
+  const wasmDataStr =
+    "const wasmArrayBuffer = new Uint8Array([" +
     u8Arr.toString() +
     `]).buffer;
 export { wasmArrayBuffer as EMBEDDED_DASH_WASM };
@@ -92,9 +89,10 @@ export default wasmArrayBuffer;`;
 
 async function writeWorkerEmbed() {
   const workerData = await readFile(originalWorkerFilePath, "utf-8");
-  const workerEmbedCode = "const blob = new Blob([" +
-`"(function(){" + ${JSON.stringify(workerData)} + "})()"` +
-`], { type: "application/javascript" });
+  const workerEmbedCode =
+    "const blob = new Blob([" +
+    `"(function(){" + ${JSON.stringify(workerData)} + "})()"` +
+    `], { type: "application/javascript" });
 export { blob as EMBEDDED_WORKER };
 export default blob;`;
   await writeFile(workerEmbedPath, workerEmbedCode);

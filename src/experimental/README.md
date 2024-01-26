@@ -1,11 +1,12 @@
-# Experimental tools and features ##############################################
+# Experimental tools and features
 
 This directory defines "experimental" tools and features, which are tools and
 features that:
-  - might rapidly evolve and change without needing to publish a new major
-    version.
-  - might be removed at any new RxPlayer version.
-  - have less stability guarantees than other features and tools in the RxPlayer
+
+- might rapidly evolve and change without needing to publish a new major
+  version.
+- might be removed at any new RxPlayer version.
+- have less stability guarantees than other features and tools in the RxPlayer
 
 The experimental tools' code is often directly written in that directory.
 

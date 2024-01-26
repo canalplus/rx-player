@@ -17,16 +17,12 @@
 import { MediaError } from "../../errors";
 import log from "../../log";
 import type { IPeriodMetadata } from "../../manifest";
-import type {
-  IPeriod,
-} from "../../public_types";
+import type { IPeriod } from "../../public_types";
 import arrayFindIndex from "../../utils/array_find_index";
 import objectAssign from "../../utils/object_assign";
 import type Period from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
-import type {
-  IUpdatedPeriodResult,
-} from "./update_period_in_place";
+import type { IUpdatedPeriodResult } from "./update_period_in_place";
 import updatePeriodInPlace from "./update_period_in_place";
 
 /**
@@ -38,9 +34,9 @@ import updatePeriodInPlace from "./update_period_in_place";
  */
 export function replacePeriods(
   oldPeriods: Period[],
-  newPeriods: Period[]
-) : IPeriodsUpdateResult {
-  const res : IPeriodsUpdateResult = {
+  newPeriods: Period[],
+): IPeriodsUpdateResult {
+  const res: IPeriodsUpdateResult = {
     updatedPeriods: [],
     addedPeriods: [],
     removedPeriods: [],
@@ -68,15 +64,19 @@ export function replacePeriods(
       });
       const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
       const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
-      const removed = oldPeriods.splice(firstUnhandledPeriodIdx,
-                                        nbrOfPeriodsToRemove,
-                                        ...periodsToInclude);
-      res.removedPeriods.push(...removed.map(p => ({
-        id: p.id,
-        start: p.start,
-        end: p.end,
-      })));
-      res.addedPeriods.push(...periodsToInclude.map(p => p.getMetadataSnapshot()));
+      const removed = oldPeriods.splice(
+        firstUnhandledPeriodIdx,
+        nbrOfPeriodsToRemove,
+        ...periodsToInclude,
+      );
+      res.removedPeriods.push(
+        ...removed.map((p) => ({
+          id: p.id,
+          start: p.start,
+          end: p.end,
+        })),
+      );
+      res.addedPeriods.push(...periodsToInclude.map((p) => p.getMetadataSnapshot()));
       firstUnhandledPeriodIdx = i + 1;
     }
   }
@@ -86,19 +86,25 @@ export function replacePeriods(
     return res;
   }
   if (firstUnhandledPeriodIdx < oldPeriods.length) {
-    const removed = oldPeriods.splice(firstUnhandledPeriodIdx,
-                                      oldPeriods.length - firstUnhandledPeriodIdx);
-    res.removedPeriods.push(...removed.map(p => ({
-      id: p.id,
-      start: p.start,
-      end: p.end,
-    })));
+    const removed = oldPeriods.splice(
+      firstUnhandledPeriodIdx,
+      oldPeriods.length - firstUnhandledPeriodIdx,
+    );
+    res.removedPeriods.push(
+      ...removed.map((p) => ({
+        id: p.id,
+        start: p.start,
+        end: p.end,
+      })),
+    );
   }
-  const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx,
-                                               newPeriods.length);
+  const remainingNewPeriods = newPeriods.slice(
+    firstUnhandledPeriodIdx,
+    newPeriods.length,
+  );
   if (remainingNewPeriods.length > 0) {
     oldPeriods.push(...remainingNewPeriods);
-    res.addedPeriods.push(...remainingNewPeriods.map(p => p.getMetadataSnapshot()));
+    res.addedPeriods.push(...remainingNewPeriods.map((p) => p.getMetadataSnapshot()));
   }
   return res;
 }
@@ -112,16 +118,16 @@ export function replacePeriods(
  */
 export function updatePeriods(
   oldPeriods: Period[],
-  newPeriods: Period[]
-) : IPeriodsUpdateResult {
-  const res : IPeriodsUpdateResult = {
+  newPeriods: Period[],
+): IPeriodsUpdateResult {
+  const res: IPeriodsUpdateResult = {
     updatedPeriods: [],
     addedPeriods: [],
     removedPeriods: [],
   };
   if (oldPeriods.length === 0) {
     oldPeriods.splice(0, 0, ...newPeriods);
-    res.addedPeriods.push(...newPeriods.map(p => p.getMetadataSnapshot()));
+    res.addedPeriods.push(...newPeriods.map((p) => p.getMetadataSnapshot()));
     return res;
   }
   if (newPeriods.length === 0) {
@@ -130,26 +136,34 @@ export function updatePeriods(
   const oldLastPeriod = oldPeriods[oldPeriods.length - 1];
   if (oldLastPeriod.start < newPeriods[0].start) {
     if (oldLastPeriod.end !== newPeriods[0].start) {
-      throw new MediaError("MANIFEST_UPDATE_ERROR",
-                           "Cannot perform partial update: not enough data");
+      throw new MediaError(
+        "MANIFEST_UPDATE_ERROR",
+        "Cannot perform partial update: not enough data",
+      );
     }
     oldPeriods.push(...newPeriods);
-    res.addedPeriods.push(...newPeriods.map(p => p.getMetadataSnapshot()));
+    res.addedPeriods.push(...newPeriods.map((p) => p.getMetadataSnapshot()));
     return res;
   }
 
   /** Index, in `oldPeriods` of the first element of `newPeriods` */
-  const indexOfNewFirstPeriod = arrayFindIndex(oldPeriods,
-                                               ({ id }) => id === newPeriods[0].id);
+  const indexOfNewFirstPeriod = arrayFindIndex(
+    oldPeriods,
+    ({ id }) => id === newPeriods[0].id,
+  );
   if (indexOfNewFirstPeriod < 0) {
-    throw new MediaError("MANIFEST_UPDATE_ERROR",
-                         "Cannot perform partial update: incoherent data");
+    throw new MediaError(
+      "MANIFEST_UPDATE_ERROR",
+      "Cannot perform partial update: incoherent data",
+    );
   }
 
   // The first updated Period can only be a partial part
-  const updateRes = updatePeriodInPlace(oldPeriods[indexOfNewFirstPeriod],
-                                        newPeriods[0],
-                                        MANIFEST_UPDATE_TYPE.Partial);
+  const updateRes = updatePeriodInPlace(
+    oldPeriods[indexOfNewFirstPeriod],
+    newPeriods[0],
+    MANIFEST_UPDATE_TYPE.Partial,
+  );
   res.updatedPeriods.push({
     period: objectAssign(oldPeriods[indexOfNewFirstPeriod].getMetadataSnapshot(), {
       adaptations: undefined,
@@ -170,7 +184,8 @@ export function updatePeriods(
       }
     }
 
-    if (indexOfNewPeriod < 0) { // Next element of `newPeriods` not found: insert it
+    if (indexOfNewPeriod < 0) {
+      // Next element of `newPeriods` not found: insert it
       let toRemoveUntil = -1;
       for (let j = prevIndexOfNewPeriod; j < oldPeriods.length; j++) {
         if (newPeriod.start < oldPeriods[j].start) {
@@ -179,33 +194,43 @@ export function updatePeriods(
         }
       }
       const nbElementsToRemove = toRemoveUntil - prevIndexOfNewPeriod;
-      const removed = oldPeriods.splice(prevIndexOfNewPeriod,
-                                        nbElementsToRemove,
-                                        newPeriod);
+      const removed = oldPeriods.splice(
+        prevIndexOfNewPeriod,
+        nbElementsToRemove,
+        newPeriod,
+      );
       res.addedPeriods.push(newPeriod.getMetadataSnapshot());
-      res.removedPeriods.push(...removed.map(p => ({
-        id: p.id,
-        start: p.start,
-        end: p.end,
-      })));
+      res.removedPeriods.push(
+        ...removed.map((p) => ({
+          id: p.id,
+          start: p.start,
+          end: p.end,
+        })),
+      );
     } else {
       if (indexOfNewPeriod > prevIndexOfNewPeriod) {
         // Some old periods were not found: remove
         log.warn("Manifest: old Periods not found in new when updating, removing");
-        const removed = oldPeriods.splice(prevIndexOfNewPeriod,
-                                          indexOfNewPeriod - prevIndexOfNewPeriod);
-        res.removedPeriods.push(...removed.map(p => ({
-          id: p.id,
-          start: p.start,
-          end: p.end,
-        })));
+        const removed = oldPeriods.splice(
+          prevIndexOfNewPeriod,
+          indexOfNewPeriod - prevIndexOfNewPeriod,
+        );
+        res.removedPeriods.push(
+          ...removed.map((p) => ({
+            id: p.id,
+            start: p.start,
+            end: p.end,
+          })),
+        );
         indexOfNewPeriod = prevIndexOfNewPeriod;
       }
 
       // Later Periods can be fully replaced
-      const result = updatePeriodInPlace(oldPeriods[indexOfNewPeriod],
-                                         newPeriod,
-                                         MANIFEST_UPDATE_TYPE.Full);
+      const result = updatePeriodInPlace(
+        oldPeriods[indexOfNewPeriod],
+        newPeriod,
+        MANIFEST_UPDATE_TYPE.Full,
+      );
       res.updatedPeriods.push({
         period: objectAssign(oldPeriods[indexOfNewPeriod].getMetadataSnapshot(), {
           adaptations: undefined,
@@ -216,37 +241,39 @@ export function updatePeriods(
     prevIndexOfNewPeriod++;
   }
 
-  if (prevIndexOfNewPeriod < oldPeriods.length)  {
+  if (prevIndexOfNewPeriod < oldPeriods.length) {
     log.warn("Manifest: Ending Periods not found in new when updating, removing");
-    const removed = oldPeriods.splice(prevIndexOfNewPeriod,
-                                      oldPeriods.length - prevIndexOfNewPeriod);
-    res.removedPeriods.push(...removed.map(p => ({
-      id: p.id,
-      start: p.start,
-      end: p.end,
-    })));
+    const removed = oldPeriods.splice(
+      prevIndexOfNewPeriod,
+      oldPeriods.length - prevIndexOfNewPeriod,
+    );
+    res.removedPeriods.push(
+      ...removed.map((p) => ({
+        id: p.id,
+        start: p.start,
+        end: p.end,
+      })),
+    );
   }
   return res;
 }
 
-export type IUpdatePeriodInformation = Pick<IPeriodMetadata, "id" |
-                                                             "start" |
-                                                             "end" |
-                                                             "duration" |
-                                                             "streamEvents">;
-
+export type IUpdatePeriodInformation = Pick<
+  IPeriodMetadata,
+  "id" | "start" | "end" | "duration" | "streamEvents"
+>;
 
 /** Object describing a Manifest update at the Periods level. */
 export interface IPeriodsUpdateResult {
   /** Information on Periods that have been updated. */
-  updatedPeriods : Array<{
+  updatedPeriods: Array<{
     /** The concerned Period's information. */
-    period : IUpdatePeriodInformation;
+    period: IUpdatePeriodInformation;
     /** The updates performed. */
-    result : IUpdatedPeriodResult;
+    result: IUpdatedPeriodResult;
   }>;
   /** Periods that have been added. */
-  addedPeriods : IPeriodMetadata[];
+  addedPeriods: IPeriodMetadata[];
   /** Periods that have been removed. */
-  removedPeriods : IPeriod[];
+  removedPeriods: IPeriod[];
 }

@@ -19,22 +19,26 @@ import isNullOrUndefined from "../is_null_or_undefined";
 import ISO_MAP_1_TO_3 from "./ISO_639-1_to_ISO_639-3";
 import ISO_MAP_2_TO_3 from "./ISO_639-2_to_ISO_639-3";
 
-interface IMinimalAudioTrackObject { language: string;
-                                     isDub? : boolean;
-                                     audioDescription?: boolean; }
+interface IMinimalAudioTrackObject {
+  language: string;
+  isDub?: boolean;
+  audioDescription?: boolean;
+}
 
-interface IMinimalTextTrackObject { language: string;
-                                    closedCaption?: boolean; }
+interface IMinimalTextTrackObject {
+  language: string;
+  closedCaption?: boolean;
+}
 
 interface INormalizedAudioTrackObject extends IMinimalAudioTrackObject {
   normalized: string;
-  isDub? : boolean;
-  audioDescription : boolean;
+  isDub?: boolean;
+  audioDescription: boolean;
 }
 
 interface INormalizedTextTrackObject extends IMinimalTextTrackObject {
   normalized: string;
-  closedCaption : boolean;
+  closedCaption: boolean;
 }
 /**
  * Normalize language given.
@@ -45,7 +49,7 @@ interface INormalizedTextTrackObject extends IMinimalTextTrackObject {
  * @param {string} _language
  * @returns {string}
  */
-function normalizeLanguage(_language : string) : string {
+function normalizeLanguage(_language: string): string {
   if (isNullOrUndefined(_language) || _language === "") {
     return "";
   }
@@ -64,7 +68,7 @@ function normalizeLanguage(_language : string) : string {
  * @param {string} base
  * @returns {string}
  */
-function normalizeBase(base : string) : string|undefined {
+function normalizeBase(base: string): string | undefined {
   let result;
   switch (base.length) {
     case 2:
@@ -88,8 +92,8 @@ function normalizeBase(base : string) : string|undefined {
  * @returns {Object|null|undefined}
  */
 function normalizeTextTrack(
-  _language : string|IMinimalTextTrackObject|null|undefined
-) : INormalizedTextTrackObject|null|undefined {
+  _language: string | IMinimalTextTrackObject | null | undefined,
+): INormalizedTextTrackObject | null | undefined {
   if (!isNullOrUndefined(_language)) {
     let language;
     let closedCaption = false;
@@ -102,9 +106,7 @@ function normalizeTextTrack(
       }
     }
 
-    return { language,
-             closedCaption,
-             normalized: normalizeLanguage(language) };
+    return { language, closedCaption, normalized: normalizeLanguage(language) };
   }
 
   return _language;
@@ -122,17 +124,19 @@ function normalizeTextTrack(
  * @returns {Object|null|undefined}
  */
 function normalizeAudioTrack(
-  _language : string|IMinimalAudioTrackObject|null|undefined
-) : INormalizedAudioTrackObject|null|undefined {
+  _language: string | IMinimalAudioTrackObject | null | undefined,
+): INormalizedAudioTrackObject | null | undefined {
   if (isNullOrUndefined(_language)) {
     return _language;
   }
   if (typeof _language === "string") {
-    return { language: _language,
-             audioDescription: false,
-             normalized: normalizeLanguage(_language) };
+    return {
+      language: _language,
+      audioDescription: false,
+      normalized: normalizeLanguage(_language),
+    };
   }
-  const normalized : INormalizedAudioTrackObject = {
+  const normalized: INormalizedAudioTrackObject = {
     language: _language.language,
     audioDescription: _language.audioDescription === true,
     normalized: normalizeLanguage(normalizeLanguage(_language.language)),

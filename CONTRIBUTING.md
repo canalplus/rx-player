@@ -10,8 +10,6 @@ We'll try to acknowledge it as soon as possible.
 If that issue is not already worked on, we will usually accept pull requests.
 Those have to follow the conventions defined below.
 
-
-
 ## Important code concepts
 
 ### Code documentation
@@ -46,7 +44,6 @@ Some files should not be imported directly but only be accessed by going through
 the `features` object exported at `/src/features`. This is to reduce bundle size
 when an application doesn't need all of the RxPlayer's features.
 
-
 ### Multithreading
 
 Some parts of the code are intented to be runnable in a WebWorker. In that
@@ -57,8 +54,6 @@ an asynchronous `postMessage` round-trip).
 Whether the code needs to be runnable or not in a WebWorker is generally
 documented in the `README.md` of concerned directories.
 
-
-
 ## Code style
 
 ### Linting
@@ -66,10 +61,11 @@ documented in the `README.md` of concerned directories.
 The code style in `src` is automatically checked by a "linter", `eslint`.
 
 It basically follows those principles:
-  - 2 spaces indentation
-  - 90 columns maximum
-  - readability and being explicit is generally better than performance and
-    being smart
+
+- 2 spaces indentation
+- 90 columns maximum
+- readability and being explicit is generally better than performance and
+  being smart
 
 You can easily check if you followed our style rules by calling `npm run lint`.
 
@@ -77,15 +73,14 @@ You can also check the style of the demo page (in the `demo` directory) by
 calling `npm run lint:demo`, or the style of the test files (in the `tests`
 directory) by calling `npm run lint:tests`.
 
-
 ### Types
 
 We try to be as strict as possible with types:
 
-  - the `any` type should be avoided
+- the `any` type should be avoided
 
-  - the `as` TypeScript keyword, used for type casting, should also be avoided
-    as much as possible.
+- the `as` TypeScript keyword, used for type casting, should also be avoided
+  as much as possible.
 
 This is to be sure we can detect as much as possible type errors automatically
 with TypeScript.
@@ -94,18 +89,19 @@ with TypeScript.
 
 TypeScript's `type` and `interface` should all be named beginning with the
 letter `I`, for easier identification purposes\*:
+
 ```ts
 interface IMyObject {
   someKey: string;
 }
 
-type IStringOrNumber = string |
-                       number;
+type IStringOrNumber = string | number;
 ```
 
 `enum`s and `const enum`s, which have the particularity in TypeScript of
 actually having an influence on the outputed code, do not follow this rule
 however (because those are not just types erased during transpilation):
+
 ```ts
 enum MyEnum {
   ValueA = 1,
@@ -128,19 +124,20 @@ compatibility with most browsers. To work around those, we usually rely on
 "ponyfills" which are JavaScript re-implementations.
 
 This concerns the following static methods:
-  - `Object.assign`: use `src/utils/object_assign.ts` instead
-  - `Object.values`: use `src/utils/object_values.ts` instead
+
+- `Object.assign`: use `src/utils/object_assign.ts` instead
+- `Object.values`: use `src/utils/object_values.ts` instead
 
 And the following methods:
-  - `Array.prototype.includes`: use `src/utils/array_includes.ts` instead
-  - `Array.prototype.find`: use `src/utils/array_find.ts` instead
-  - `Array.prototype.findIndex`: use `src/utils/array_find_index.ts` instead
-  - `String.prototype.startsWith`: use `src/utils/starts_with.ts` instead
-  - `String.prototype.substr`: use `String.prototype.substring` instead
-  - `NodeList.prototype.forEach`: use a regular for loop instead
-  - `Promise.prototype.finally`: Use `then` or both `then` and `catch` of that
-    Promise's methods instead.
 
+- `Array.prototype.includes`: use `src/utils/array_includes.ts` instead
+- `Array.prototype.find`: use `src/utils/array_find.ts` instead
+- `Array.prototype.findIndex`: use `src/utils/array_find_index.ts` instead
+- `String.prototype.startsWith`: use `src/utils/starts_with.ts` instead
+- `String.prototype.substr`: use `String.prototype.substring` instead
+- `NodeList.prototype.forEach`: use a regular for loop instead
+- `Promise.prototype.finally`: Use `then` or both `then` and `catch` of that
+  Promise's methods instead.
 
 ## The demo page
 
@@ -150,30 +147,32 @@ You might want to quickly test your code modification(s) on a real use case.
 
 For those types of need, we developped two demo pages:
 
-  - the _full demo_ page, which is also the one used to showcase the player.
+- the _full demo_ page, which is also the one used to showcase the player.
 
-    This demo has a user-friendly interface and allow the most frequent API
-    interactions.
+  This demo has a user-friendly interface and allow the most frequent API
+  interactions.
 
-    It also exposes both the RxPlayer class through `window.RxPlayer` and the
-    rxPlayer instance through `window.rxPlayer` - both in the global scope. You
-    can thus open a debugger/inspector in your favorite browser to exploit
-    directly the player's API.
+  It also exposes both the RxPlayer class through `window.RxPlayer` and the
+  rxPlayer instance through `window.rxPlayer` - both in the global scope. You
+  can thus open a debugger/inspector in your favorite browser to exploit
+  directly the player's API.
 
-  - the _standalone demo_ page, which is just a `<video />` tag linked to a
-    RxPlayer instance.
+- the _standalone demo_ page, which is just a `<video />` tag linked to a
+  RxPlayer instance.
 
-    In this demo too, `window.RxPlayer` and `window.rxPlayer` link to the
-    RxPlayer class and the rxPlayer instance respectively.
+  In this demo too, `window.RxPlayer` and `window.rxPlayer` link to the
+  RxPlayer class and the rxPlayer instance respectively.
 
 To use the full demo page, you can build it and run a local HTTP server on the
 port 8000 by running the following npm script.
+
 ```sh
 npm run start
 ```
 
 To use the standalone demo page, you can build it and run a local HTTP server on
 the port 8001 by running the following npm script.
+
 ```sh
 npm run standalone
 ```
@@ -190,6 +189,7 @@ able to play encrypted contents in Chrome.
 
 Thankfully, we have an npm script which generates a local self-signed
 certificate with the help of `openssl`:
+
 ```sh
 npm run certificate
 ```
@@ -204,7 +204,6 @@ suspicious by web browsers. As such, you might first encounter a warning screen
 when going to one of the demo pages in HTTPS. In most browsers, you can however
 safely ignore that warning.
 
-
 ## Creating a commit
 
 ### Checks
@@ -212,7 +211,6 @@ safely ignore that warning.
 Every commits in a PR should pass our quick checks (linter and TypeScript
 check). To check if that's the case, you can run locally the `check`
 script by calling `npm run check`.
-
 
 ## The test suite
 
@@ -232,7 +230,6 @@ following way: `filename_containing_the_function_tested.test.ts`.
 To understand how to create a new test file, you can take inspiration from
 the current unit tests.
 
-
 ### Integration tests
 
 What we call integration tests are tests testing the entire API of the RxPlayer.
@@ -249,15 +246,12 @@ We also use a homemade library and server to serve media contents to our tests.
 If you want to know how it works, we invite you to rely on the already created
 tests and to read the corresponding files.
 
-
 ### Memory tests
 
 Memory tests replicate simple scenarios and try to detect memory leaks.
 
 You can also help us improving our memory tests. Those are written in
 `test/memory`. The testing stack used is Mocha, Chai and Sinon.
-
-
 
 ## Documentation
 
@@ -266,8 +260,6 @@ The documentation is written in the `doc` directory, at the root of the project.
 The content of `doc/generated` contains an HTML version of the Markdown files
 written in the other directories. It is automatically generated from those by
 calling the `doc` script through `npm run doc`.
-
-
 
 ## Opening a pull request
 

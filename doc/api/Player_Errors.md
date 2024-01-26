@@ -245,77 +245,77 @@ thus there is only one object inside that array).
 
 Each object has two sub-properties:
 
-  - `type`: The type of track: `"audio"` for an audio track, `"text"` for a text
-    track, or `"video"` for a video track.
+- `type`: The type of track: `"audio"` for an audio track, `"text"` for a text
+  track, or `"video"` for a video track.
 
-  - `track`: Characteristics of the track. Its format depends on the
-    `type` property and is described below.
+- `track`: Characteristics of the track. Its format depends on the
+  `type` property and is described below.
 
 ##### For video tracks
 
 When `tracksInfo[].type` is set to `"video"`, `track` describes a video track.
 It contains the following properties:
 
-  - `id` (`string`): The id used to identify this track. No other
-    video track for the same [Period](../Getting_Started/Glossary.md#period)
-    will have the same `id`.
+- `id` (`string`): The id used to identify this track. No other
+  video track for the same [Period](../Getting_Started/Glossary.md#period)
+  will have the same `id`.
 
-  - `label` (`string|undefined`): A human readable label that may be displayed in
-    the user interface providing a choice between video tracks.
+- `label` (`string|undefined`): A human readable label that may be displayed in
+  the user interface providing a choice between video tracks.
 
-    This information is usually set only if the current Manifest contains one.
+  This information is usually set only if the current Manifest contains one.
 
-  - `representations` (`Array.<Object>`):
-    [Representations](../Getting_Started/Glossary.md#representation) of this
-    video track, with attributes:
+- `representations` (`Array.<Object>`):
+  [Representations](../Getting_Started/Glossary.md#representation) of this
+  video track, with attributes:
 
-    - `id` (`string`): The id used to identify this Representation.
-      No other Representation from this track will have the same `id`.
+  - `id` (`string`): The id used to identify this Representation.
+    No other Representation from this track will have the same `id`.
 
-    - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-      seconds.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
+    seconds.
 
-    - `width` (`Number|undefined`): The width of video, in pixels.
+  - `width` (`Number|undefined`): The width of video, in pixels.
 
-    - `height` (`Number|undefined`): The height of video, in pixels.
+  - `height` (`Number|undefined`): The height of video, in pixels.
 
-    - `codec` (`string|undefined`): The video codec the Representation is
-      in, as announced in the corresponding Manifest.
+  - `codec` (`string|undefined`): The video codec the Representation is
+    in, as announced in the corresponding Manifest.
 
-    - `frameRate` (`string|undefined`): The video frame rate.
+  - `frameRate` (`string|undefined`): The video frame rate.
 
-    - `hdrInfo` (`Object|undefined`) Information about the hdr
-      characteristics of the track.
-      (see [HDR support documentation](./Miscellaneous/hdr.md#hdrinfo))
+  - `hdrInfo` (`Object|undefined`) Information about the hdr
+    characteristics of the track.
+    (see [HDR support documentation](./Miscellaneous/hdr.md#hdrinfo))
 
-    - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
-      Representation is supported by the current platform.
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
 
-      `undefined` (or not set) if support of that Representation is unknown or
-      if does not make sense here.
+    `undefined` (or not set) if support of that Representation is unknown or
+    if does not make sense here.
 
-    - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
-       deciphered (in the eventuality it had DRM-related protection).
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
+    deciphered (in the eventuality it had DRM-related protection).
 
-  - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is
-    known to contain an interpretation in sign language.
-    If set to `false`, the track is known to not contain that type of content.
-    If not set or set to undefined we don't know whether that video track
-    contains an interpretation in sign language.
+- `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is
+  known to contain an interpretation in sign language.
+  If set to `false`, the track is known to not contain that type of content.
+  If not set or set to undefined we don't know whether that video track
+  contains an interpretation in sign language.
 
-  - `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
-    is a trick mode track. This type of tracks proposes video content that is
-    often encoded with a very low framerate with the purpose to be played more
-    efficiently at a much higher speed.
+- `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
+  is a trick mode track. This type of tracks proposes video content that is
+  often encoded with a very low framerate with the purpose to be played more
+  efficiently at a much higher speed.
 
-  - `trickModeTracks` (`Array.<Object> | undefined`): Trick mode video tracks
-    attached to this video track.
+- `trickModeTracks` (`Array.<Object> | undefined`): Trick mode video tracks
+  attached to this video track.
 
-    Each of those objects contain the same properties that a regular video track
-    (same properties than what is documented here).
+  Each of those objects contain the same properties that a regular video track
+  (same properties than what is documented here).
 
-    It this property is either `undefined` or not set, then this track has no
-    linked trickmode video track.
+  It this property is either `undefined` or not set, then this track has no
+  linked trickmode video track.
 
 ##### For audio tracks
 
@@ -408,7 +408,6 @@ contains the following properties:
   It is often used to clarify dialogue, alternate languages, texted graphics or
   location and person identification.
 
-
 ### ENCRYPTED_MEDIA_ERROR
 
 Those errors are linked to the "Encrypted Media Extensions" API.
@@ -452,11 +451,12 @@ property):
   `EncryptedMediaError` having the `KEY_STATUS_CHANGE_ERROR` code will also have
   a `keyStatuses` property, which is an array of objects - each describing a
   problematic key status with the following properties:
-    - `keyId` (`ArrayBuffer`): The key id concerned by the status change
-      indicated by `keyStatus`
-    - `keyStatus` ([`MediaKeyStatus`](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)):
-      The problematic key status encountered linked to the `keyId` of the same
-      object.
+
+  - `keyId` (`ArrayBuffer`): The key id concerned by the status change
+    indicated by `keyStatus`
+  - `keyStatus` ([`MediaKeyStatus`](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)):
+    The problematic key status encountered linked to the `keyId` of the same
+    object.
 
   If multiple objects are found in the `keyStatuses` property, it means that
   multiple keys changed to a problematic status roughly around the same time.

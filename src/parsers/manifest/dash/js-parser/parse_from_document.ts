@@ -16,20 +16,12 @@
 
 import { assertUnreachable } from "../../../../utils/assert";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type {
-  IIrParserResponse,
-  ILoadedXlinkData,
-  IMPDParserArguments,
-} from "../common";
+import type { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments } from "../common";
 import parseMpdIr from "../common";
 import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
 import type { IDashParserResponse, ILoadedResource } from "../parsers_types";
-import {
-  createMPDIntermediateRepresentation,
-} from "./node_parsers/MPD";
-import {
-  createPeriodIntermediateRepresentation,
-} from "./node_parsers/Period";
+import { createMPDIntermediateRepresentation } from "./node_parsers/MPD";
+import { createPeriodIntermediateRepresentation } from "./node_parsers/Period";
 
 /**
  * Parse MPD through the JS parser, on a `Document` instance.
@@ -39,15 +31,14 @@ import {
  */
 export default function parseFromDocument(
   document: Document,
-  args : IMPDParserArguments
-) : IDashParserResponse<string> {
+  args: IMPDParserArguments,
+): IDashParserResponse<string> {
   const root = document.documentElement;
   if (isNullOrUndefined(root) || root.nodeName !== "MPD") {
     throw new Error("DASH Parser: document root should be MPD");
   }
 
-  const [mpdIR,
-         warnings] = createMPDIntermediateRepresentation(root);
+  const [mpdIR, warnings] = createMPDIntermediateRepresentation(root);
   const ret = parseMpdIr(mpdIR, args, warnings);
   return processReturn(ret);
 
@@ -58,7 +49,7 @@ export default function parseFromDocument(
    * @param {Object} initialRes
    * @returns {Object}
    */
-  function processReturn(initialRes : IIrParserResponse) : IDashParserResponse<string> {
+  function processReturn(initialRes: IIrParserResponse): IDashParserResponse<string> {
     if (initialRes.type === "done") {
       return initialRes;
     } else if (initialRes.type === "needs-clock") {
@@ -68,8 +59,8 @@ export default function parseFromDocument(
           urls: [initialRes.value.url],
           format: "string",
           continue(
-            loadedClock : Array<ILoadedResource<string>>
-          ) : IDashParserResponse<string> {
+            loadedClock: Array<ILoadedResource<string>>,
+          ): IDashParserResponse<string> {
             if (loadedClock.length !== 1) {
               throw new Error("DASH parser: wrong number of loaded ressources.");
             }
@@ -85,14 +76,16 @@ export default function parseFromDocument(
           urls: initialRes.value.xlinksUrls,
           format: "string",
           continue(
-            loadedXlinks : Array<ILoadedResource<string>>
-          ) : IDashParserResponse<string> {
-            const resourceInfos : ILoadedXlinkData[] = [];
+            loadedXlinks: Array<ILoadedResource<string>>,
+          ): IDashParserResponse<string> {
+            const resourceInfos: ILoadedXlinkData[] = [];
             for (let i = 0; i < loadedXlinks.length; i++) {
-              const { responseData: xlinkResp,
-                      receivedTime,
-                      sendingTime,
-                      url } = loadedXlinks[i];
+              const {
+                responseData: xlinkResp,
+                receivedTime,
+                sendingTime,
+                url,
+              } = loadedXlinks[i];
               if (!xlinkResp.success) {
                 throw xlinkResp.error;
               }
@@ -102,8 +95,8 @@ export default function parseFromDocument(
                 throw new Error("DASH parser: Invalid external ressources");
               }
               const periods = dataAsXML.children[0].children;
-              const periodsIR : IPeriodIntermediateRepresentation[] = [];
-              const periodsIRWarnings : Error[] = [];
+              const periodsIR: IPeriodIntermediateRepresentation[] = [];
+              const periodsIRWarnings: Error[] = [];
               for (let j = 0; j < periods.length; j++) {
                 if (periods[j].nodeType === Node.ELEMENT_NODE) {
                   const [periodIR, periodWarnings] =
@@ -112,11 +105,13 @@ export default function parseFromDocument(
                   periodsIR.push(periodIR);
                 }
               }
-              resourceInfos.push({ url,
-                                   receivedTime,
-                                   sendingTime,
-                                   parsed: periodsIR,
-                                   warnings: periodsIRWarnings });
+              resourceInfos.push({
+                url,
+                receivedTime,
+                sendingTime,
+                parsed: periodsIR,
+                warnings: periodsIRWarnings,
+              });
             }
             const newRet = initialRes.value.continue(resourceInfos);
             return processReturn(newRet);

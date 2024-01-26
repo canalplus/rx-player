@@ -1,7 +1,7 @@
 /* eslint-env node */
 
 import * as path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 import karma from "karma";
 import TestContentServer from "../contents/server.mjs";
 import generateTestWebpackConfig from "../generate_test_webpack_config.mjs";
@@ -48,7 +48,7 @@ const karmaConf = {
   customLaunchers: {
     ChromeHeadlessAutoPlay: {
       base: "ChromeHeadless",
-      flags: [ "--autoplay-policy=no-user-gesture-required" ],
+      flags: ["--autoplay-policy=no-user-gesture-required"],
     },
     FirefoxHeadlessAutoPlay: {
       base: "FirefoxHeadless",
@@ -63,7 +63,7 @@ const karmaConf = {
     },
     ChromeAutoPlay: {
       base: "Chrome",
-      flags: [ "--autoplay-policy=no-user-gesture-required" ],
+      flags: ["--autoplay-policy=no-user-gesture-required"],
     },
   },
   singleRun,
@@ -73,7 +73,7 @@ const karmaConf = {
     "karma-chrome-launcher",
     "karma-firefox-launcher",
     "karma-mocha",
-    "karma-webpack"
+    "karma-webpack",
   ],
   webpack: webpackConfig,
   webpackMiddleware: { stats: { colors: true, chunks: false } },
@@ -84,7 +84,7 @@ const karmaConf = {
     {
       pattern: path.resolve(currentDirectory, "./scenarios/**/*.js"),
       watched: false,
-    }
+    },
   ],
   client: {
     captureConsole: true,
@@ -93,26 +93,25 @@ const karmaConf = {
 };
 
 const testContentServer = TestContentServer(CONTENT_SERVER_PORT);
-parseConfig(
-  null,
-  karmaConf,
-  { promiseConfig: true, throwErrors: true }
-).then((parsedConfig) => {
-  const server = new Server(parsedConfig, function(exitCode) {
-    testContentServer.close();
-    process.exit(exitCode);
-  });
-  server.start();
-}, (rejectReason) => {
-  /* eslint-disable-next-line no-console */
-  console.error("Karma config rejected:", rejectReason);
-});
+parseConfig(null, karmaConf, { promiseConfig: true, throwErrors: true }).then(
+  (parsedConfig) => {
+    const server = new Server(parsedConfig, function (exitCode) {
+      testContentServer.close();
+      process.exit(exitCode);
+    });
+    server.start();
+  },
+  (rejectReason) => {
+    /* eslint-disable-next-line no-console */
+    console.error("Karma config rejected:", rejectReason);
+  },
+);
 
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node run.mjs [options]
+    /* eslint-disable indent */
+    `Usage: node run.mjs [options]
 Options:
   -h, --help    Display this help
   --bchrome     Launch tests on Chrome
@@ -120,7 +119,7 @@ Options:
   --bfirefox    Launch tests on Firefox
   --bfirefoxhl  Launch tests on headless Firefox
   --watch       Re-run tests on modifications`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

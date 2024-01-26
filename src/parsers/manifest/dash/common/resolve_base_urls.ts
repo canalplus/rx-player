@@ -18,8 +18,8 @@ import resolveURL from "../../../../utils/resolve_url";
 import type { IBaseUrlIntermediateRepresentation } from "../node_parser_types";
 
 export interface IResolvedBaseUrl {
-  url : string;
-  serviceLocation? : string | undefined;
+  url: string;
+  serviceLocation?: string | undefined;
 }
 
 /**
@@ -28,30 +28,30 @@ export interface IResolvedBaseUrl {
  * @returns {Array.<string>}
  */
 export default function resolveBaseURLs(
-  currentBaseURLs : IResolvedBaseUrl[],
-  newBaseUrlsIR : IBaseUrlIntermediateRepresentation[]
-) : IResolvedBaseUrl[] {
+  currentBaseURLs: IResolvedBaseUrl[],
+  newBaseUrlsIR: IBaseUrlIntermediateRepresentation[],
+): IResolvedBaseUrl[] {
   if (newBaseUrlsIR.length === 0) {
     return currentBaseURLs;
   }
 
-  const newBaseUrls : IResolvedBaseUrl[] = newBaseUrlsIR.map(ir => {
+  const newBaseUrls: IResolvedBaseUrl[] = newBaseUrlsIR.map((ir) => {
     return { url: ir.value };
   });
   if (currentBaseURLs.length === 0) {
     return newBaseUrls;
   }
 
-  const result : IResolvedBaseUrl[] = [];
+  const result: IResolvedBaseUrl[] = [];
   for (let i = 0; i < currentBaseURLs.length; i++) {
     const curBaseUrl = currentBaseURLs[i];
     for (let j = 0; j < newBaseUrls.length; j++) {
       const newBaseUrl = newBaseUrls[j];
       const newUrl = resolveURL(curBaseUrl.url, newBaseUrl.url);
-      result.push({ url: newUrl,
-                    serviceLocation: newBaseUrl.serviceLocation ??
-                                     curBaseUrl.serviceLocation });
-
+      result.push({
+        url: newUrl,
+        serviceLocation: newBaseUrl.serviceLocation ?? curBaseUrl.serviceLocation,
+      });
     }
   }
   return result;

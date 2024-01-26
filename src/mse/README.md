@@ -1,7 +1,7 @@
-# MSE APIs #####################################################################
+# MSE APIs
 
 | Consideration           | Status                                            |
-|-------------------------|---------------------------------------------------|
+| ----------------------- | ------------------------------------------------- |
 | Preferred import style  | Either through `features` or mixed _[1]_          |
 | Multithread environment | May run in WebWorker depending on the abstraction |
 
@@ -11,7 +11,7 @@ Other imports may be performed through the `mse` directory itself - if
 `index.ts` exports the wanted values and/or types, or from the file/directory
 which does if not.
 
-## Overview ####################################################################
+## Overview
 
 This directory regroups abstractions over the Media Source Extensions - the set
 of browser API allowing to buffer media - so a common API is provided to the
@@ -27,7 +27,7 @@ potential messages).
 In some cases, specific implementations provided here may be importable through
 the `features` object (see `features` directory), ensuring that the right
 implementation is always relied on for the current environment.
-Though there is  exceptions to this rule when you're sure of the implementation
+Though there is exceptions to this rule when you're sure of the implementation
 wanted, e.g. you may directly import an MSE-backed implementation when you know
 your code is running on an environment which has the necessary MSE API (such as
 the main thread in a web browser environment).

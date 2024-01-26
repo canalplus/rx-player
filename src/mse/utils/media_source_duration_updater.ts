@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  onSourceOpen,
-  onSourceEnded,
-  onSourceClose,
-} from "../../compat/event_listeners";
-/* eslint-disable-next-line max-len */
+import { onSourceOpen, onSourceEnded, onSourceClose } from "../../compat/event_listeners";
 import hasIssuesWithHighMediaSourceDuration from "../../compat/has_issues_with_high_media_source_duration";
 import log from "../../log";
-import type {
-  IReadOnlySharedReference,
-} from "../../utils/reference";
+import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
-import type {
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 
 /** Number of seconds in a regular year. */
@@ -43,20 +34,20 @@ export default class MediaSourceDurationUpdater {
   /**
    * `MediaSource` on which we're going to update the `duration` attribute.
    */
-  private _mediaSource : MediaSource;
+  private _mediaSource: MediaSource;
 
   /**
    * Abort the current duration-setting logic.
    * `null` if no such logic is pending.
    */
-  private _currentMediaSourceDurationUpdateCanceller : TaskCanceller | null;
+  private _currentMediaSourceDurationUpdateCanceller: TaskCanceller | null;
 
   /**
    * Create a new `MediaSourceDurationUpdater`,
    * @param {MediaSource} mediaSource - The MediaSource on which the content is
    * played.
    */
-  constructor(mediaSource : MediaSource) {
+  constructor(mediaSource: MediaSource) {
     this._mediaSource = mediaSource;
     this._currentMediaSourceDurationUpdateCanceller = null;
   }
@@ -77,10 +68,7 @@ export default class MediaSourceDurationUpdater {
    * side-effects of having a too low duration (such as the impossibility to
    * seek over that value).
    */
-  public updateDuration(
-    newDuration : number,
-    isRealEndKnown : boolean
-  ) : void {
+  public updateDuration(newDuration: number, isRealEndKnown: boolean): void {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
       this._currentMediaSourceDurationUpdateCanceller.cancel();
     }
@@ -88,15 +76,18 @@ export default class MediaSourceDurationUpdater {
 
     const mediaSource = this._mediaSource;
     const currentSignal = this._currentMediaSourceDurationUpdateCanceller.signal;
-    const isMediaSourceOpened = createMediaSourceOpenReference(mediaSource,
-                                                               currentSignal);
+    const isMediaSourceOpened = createMediaSourceOpenReference(
+      mediaSource,
+      currentSignal,
+    );
 
     /** TaskCanceller triggered each time the MediaSource switches to and from "open". */
     let msOpenStatusCanceller = new TaskCanceller();
     msOpenStatusCanceller.linkToSignal(currentSignal);
-    isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged,
-                                 { emitCurrentValue: true,
-                                   clearSignal: currentSignal });
+    isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged, {
+      emitCurrentValue: true,
+      clearSignal: currentSignal,
+    });
 
     function onMediaSourceOpenedStatusChanged() {
       msOpenStatusCanceller.cancel();
@@ -107,25 +98,30 @@ export default class MediaSourceDurationUpdater {
       msOpenStatusCanceller.linkToSignal(currentSignal);
       const areSourceBuffersUpdating = createSourceBuffersUpdatingReference(
         mediaSource.sourceBuffers,
-        msOpenStatusCanceller.signal
+        msOpenStatusCanceller.signal,
       );
       /** TaskCanceller triggered each time SourceBuffers' updating status changes */
       let sourceBuffersUpdatingCanceller = new TaskCanceller();
       sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
 
-      return areSourceBuffersUpdating.onUpdate((areUpdating) => {
-        sourceBuffersUpdatingCanceller.cancel();
-        sourceBuffersUpdatingCanceller = new TaskCanceller();
-        sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
-        if (areUpdating) {
-          return;
-        }
+      return areSourceBuffersUpdating.onUpdate(
+        (areUpdating) => {
+          sourceBuffersUpdatingCanceller.cancel();
+          sourceBuffersUpdatingCanceller = new TaskCanceller();
+          sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
+          if (areUpdating) {
+            return;
+          }
 
-        recursivelyForceDurationUpdate(mediaSource,
-                                       newDuration,
-                                       isRealEndKnown,
-                                       sourceBuffersUpdatingCanceller.signal);
-      }, { clearSignal: msOpenStatusCanceller.signal, emitCurrentValue: true });
+          recursivelyForceDurationUpdate(
+            mediaSource,
+            newDuration,
+            isRealEndKnown,
+            sourceBuffersUpdatingCanceller.signal,
+          );
+        },
+        { clearSignal: msOpenStatusCanceller.signal, emitCurrentValue: true },
+      );
     }
   }
 
@@ -155,19 +151,19 @@ export default class MediaSourceDurationUpdater {
  */
 function setMediaSourceDuration(
   mediaSource: MediaSource,
-  duration : number,
-  isRealEndKnown : boolean
-) : MediaSourceDurationUpdateStatus {
+  duration: number,
+  isRealEndKnown: boolean,
+): MediaSourceDurationUpdateStatus {
   let newDuration = duration;
 
   if (!isRealEndKnown) {
-    newDuration = hasIssuesWithHighMediaSourceDuration() ?
-      Infinity :
-      getMaximumLiveSeekablePosition(duration);
+    newDuration = hasIssuesWithHighMediaSourceDuration()
+      ? Infinity
+      : getMaximumLiveSeekablePosition(duration);
   }
 
-  let maxBufferedEnd : number = 0;
-  for  (let i = 0; i < mediaSource.sourceBuffers.length; i++) {
+  let maxBufferedEnd: number = 0;
+  for (let i = 0; i < mediaSource.sourceBuffers.length; i++) {
     const sourceBuffer = mediaSource.sourceBuffers[i];
     const sbBufferedLen = sourceBuffer.buffered.length;
     if (sbBufferedLen > 0) {
@@ -185,8 +181,10 @@ function setMediaSourceDuration(
         log.info("Init: Updating duration to what is currently buffered", maxBufferedEnd);
         mediaSource.duration = maxBufferedEnd;
       } catch (err) {
-        log.warn("Duration Updater: Can't update duration on the MediaSource.",
-                 err instanceof Error ? err : "");
+        log.warn(
+          "Duration Updater: Can't update duration on the MediaSource.",
+          err instanceof Error ? err : "",
+        );
         return MediaSourceDurationUpdateStatus.Failed;
       }
     }
@@ -202,15 +200,18 @@ function setMediaSourceDuration(
         mediaSource.setLiveSeekableRange(0, maxSeekable);
       }
     } catch (err) {
-      log.warn("Duration Updater: Can't update duration on the MediaSource.",
-               err instanceof Error ? err : "");
+      log.warn(
+        "Duration Updater: Can't update duration on the MediaSource.",
+        err instanceof Error ? err : "",
+      );
       return MediaSourceDurationUpdateStatus.Failed;
     }
     const deltaToExpected = Math.abs(mediaSource.duration - newDuration);
     if (deltaToExpected >= 0.1) {
       const deltaToBefore = Math.abs(mediaSource.duration - oldDuration);
-      return deltaToExpected < deltaToBefore ? MediaSourceDurationUpdateStatus.Partial :
-                                               MediaSourceDurationUpdateStatus.Failed;
+      return deltaToExpected < deltaToBefore
+        ? MediaSourceDurationUpdateStatus.Partial
+        : MediaSourceDurationUpdateStatus.Failed;
     }
     return MediaSourceDurationUpdateStatus.Success;
   }
@@ -244,9 +245,9 @@ const enum MediaSourceDurationUpdateStatus {
  * @returns {Object}
  */
 function createSourceBuffersUpdatingReference(
-  sourceBuffers : SourceBufferList,
-  cancelSignal : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
+  sourceBuffers: SourceBufferList,
+  cancelSignal: CancellationSignal,
+): IReadOnlySharedReference<boolean> {
   if (sourceBuffers.length === 0) {
     const notOpenedRef = new SharedReference(false);
     notOpenedRef.finish();
@@ -288,23 +289,37 @@ function createSourceBuffersUpdatingReference(
  * @returns {Object}
  */
 function createMediaSourceOpenReference(
-  mediaSource : MediaSource,
-  cancelSignal : CancellationSignal
+  mediaSource: MediaSource,
+  cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
-  const isMediaSourceOpen = new SharedReference(mediaSource.readyState === "open",
-                                                cancelSignal);
-  onSourceOpen(mediaSource, () => {
-    log.debug("Init: Reacting to MediaSource open in duration updater");
-    isMediaSourceOpen.setValueIfChanged(true);
-  }, cancelSignal);
-  onSourceEnded(mediaSource, () => {
-    log.debug("Init: Reacting to MediaSource ended in duration updater");
-    isMediaSourceOpen.setValueIfChanged(false);
-  }, cancelSignal);
-  onSourceClose(mediaSource, () => {
-    log.debug("Init: Reacting to MediaSource close in duration updater");
-    isMediaSourceOpen.setValueIfChanged(false);
-  }, cancelSignal);
+  const isMediaSourceOpen = new SharedReference(
+    mediaSource.readyState === "open",
+    cancelSignal,
+  );
+  onSourceOpen(
+    mediaSource,
+    () => {
+      log.debug("Init: Reacting to MediaSource open in duration updater");
+      isMediaSourceOpen.setValueIfChanged(true);
+    },
+    cancelSignal,
+  );
+  onSourceEnded(
+    mediaSource,
+    () => {
+      log.debug("Init: Reacting to MediaSource ended in duration updater");
+      isMediaSourceOpen.setValueIfChanged(false);
+    },
+    cancelSignal,
+  );
+  onSourceClose(
+    mediaSource,
+    () => {
+      log.debug("Init: Reacting to MediaSource close in duration updater");
+      isMediaSourceOpen.setValueIfChanged(false);
+    },
+    cancelSignal,
+  );
   return isMediaSourceOpen;
 }
 
@@ -320,14 +335,14 @@ function createMediaSourceOpenReference(
  * @param {Object} cancelSignal
  */
 function recursivelyForceDurationUpdate(
-  mediaSource : MediaSource,
-  duration : number,
-  isRealEndKnown : boolean,
-  cancelSignal : CancellationSignal
-) : void {
+  mediaSource: MediaSource,
+  duration: number,
+  isRealEndKnown: boolean,
+  cancelSignal: CancellationSignal,
+): void {
   const res = setMediaSourceDuration(mediaSource, duration, isRealEndKnown);
   if (res === MediaSourceDurationUpdateStatus.Success) {
-    return ;
+    return;
   }
   const timeoutId = setTimeout(() => {
     unregisterClear();
@@ -338,7 +353,7 @@ function recursivelyForceDurationUpdate(
   });
 }
 
-function getMaximumLiveSeekablePosition(contentLastPosition : number) : number {
+function getMaximumLiveSeekablePosition(contentLastPosition: number): number {
   // Some targets poorly support setting a very high number for seekable
   // ranges.
   // Yet, in contents whose end is not yet known (e.g. live contents), we

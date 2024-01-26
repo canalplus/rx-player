@@ -1,10 +1,5 @@
 import type { IProcessedProtectionData } from "../main_thread/types";
-import type {
-  IManifest,
-  IPeriod,
-  IAdaptation,
-  IPeriodsUpdateResult,
-} from "../manifest";
+import type { IManifest, IPeriod, IAdaptation, IPeriodsUpdateResult } from "../manifest";
 import type {
   IAudioRepresentation,
   IAudioTrack,
@@ -36,14 +31,14 @@ export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text
  * @param {Object} manifest
  * @returns {number}
  */
-export function getMinimumSafePosition(manifest : IManifestMetadata) : number {
+export function getMinimumSafePosition(manifest: IManifestMetadata): number {
   const windowData = manifest.timeBounds;
   if (windowData.timeshiftDepth === null) {
     return windowData.minimumSafePosition ?? 0;
   }
 
   const { maximumTimeData } = windowData;
-  let maximumTime : number;
+  let maximumTime: number;
   if (!windowData.maximumTimeData.isLinear) {
     maximumTime = maximumTimeData.maximumSafePosition;
   } else {
@@ -60,7 +55,7 @@ export function getMinimumSafePosition(manifest : IManifestMetadata) : number {
  * @param {Object} manifest
  * @returns {number|undefined}
  */
-export function getLivePosition(manifest : IManifestMetadata) : number | undefined {
+export function getLivePosition(manifest: IManifestMetadata): number | undefined {
   const { maximumTimeData } = manifest.timeBounds;
   if (!manifest.isLive || maximumTimeData.livePosition === undefined) {
     return undefined;
@@ -79,7 +74,7 @@ export function getLivePosition(manifest : IManifestMetadata) : number | undefin
  * @param {Object} manifest
  * @returns {number}
  */
-export function getMaximumSafePosition(manifest : IManifestMetadata) : number {
+export function getMaximumSafePosition(manifest: IManifestMetadata): number {
   const { maximumTimeData } = manifest.timeBounds;
   if (!maximumTimeData.isLinear) {
     return maximumTimeData.maximumSafePosition;
@@ -95,19 +90,19 @@ export function getMaximumSafePosition(manifest : IManifestMetadata) : number {
  * @returns {Array.<Adaptation>}
  */
 export function getSupportedAdaptations(
-  period : IPeriod,
-  type? : ITrackType | undefined
-) : IAdaptation[];
+  period: IPeriod,
+  type?: ITrackType | undefined,
+): IAdaptation[];
 export function getSupportedAdaptations(
-  period : IPeriodMetadata,
-  type? : ITrackType | undefined
-) : IAdaptationMetadata[];
+  period: IPeriodMetadata,
+  type?: ITrackType | undefined,
+): IAdaptationMetadata[];
 export function getSupportedAdaptations(
-  period : IPeriod | IPeriodMetadata,
-  type? : ITrackType | undefined
-) : IAdaptationMetadata[] | IAdaptation[] {
+  period: IPeriod | IPeriodMetadata,
+  type?: ITrackType | undefined,
+): IAdaptationMetadata[] | IAdaptation[] {
   if (type === undefined) {
-    return getAdaptations(period).filter(ada => {
+    return getAdaptations(period).filter((ada) => {
       return ada.isSupported === true;
     });
   }
@@ -115,7 +110,7 @@ export function getSupportedAdaptations(
   if (adaptationsForType === undefined) {
     return [];
   }
-  return adaptationsForType.filter(ada => {
+  return adaptationsForType.filter((ada) => {
     return ada.isSupported === true;
   });
 }
@@ -130,11 +125,11 @@ export function getSupportedAdaptations(
 export function getPeriodForTime(manifest: IManifest, time: number): IPeriod | undefined;
 export function getPeriodForTime(
   manifest: IManifestMetadata,
-  time: number
+  time: number,
 ): IPeriodMetadata | undefined;
 export function getPeriodForTime(
   manifest: IManifestMetadata | IManifest,
-  time: number
+  time: number,
 ): IPeriod | IPeriodMetadata | undefined {
   let nextPeriod = null;
   for (let i = manifest.periods.length - 1; i >= 0; i--) {
@@ -153,17 +148,14 @@ export function getPeriodForTime(
  * @param {Object} period
  * @returns {Object|null}
  */
-export function getPeriodAfter(
-  manifest: IManifest,
-  period: IPeriod
-): IPeriod | null;
+export function getPeriodAfter(manifest: IManifest, period: IPeriod): IPeriod | null;
 export function getPeriodAfter(
   manifest: IManifestMetadata,
-  period: IPeriodMetadata
+  period: IPeriodMetadata,
 ): IPeriodMetadata | null;
 export function getPeriodAfter(
   manifest: IManifestMetadata | IManifest,
-  period: IPeriodMetadata | IPeriod
+  period: IPeriodMetadata | IPeriod,
 ): IPeriod | IPeriodMetadata | null {
   const endOfPeriod = period.end;
   if (endOfPeriod === undefined) {
@@ -172,8 +164,7 @@ export function getPeriodAfter(
   const nextPeriod = arrayFind(manifest.periods, (_period) => {
     return _period.end === undefined || endOfPeriod < _period.end;
   });
-  return nextPeriod === undefined ? null :
-                                    nextPeriod;
+  return nextPeriod === undefined ? null : nextPeriod;
 }
 
 /**
@@ -185,15 +176,16 @@ export function getPeriodAfter(
  * @returns {boolean}
  */
 export function periodContainsTime(
-  period : IPeriodMetadata,
-  time : number,
-  nextPeriod : IPeriodMetadata | null
-) : boolean {
+  period: IPeriodMetadata,
+  time: number,
+  nextPeriod: IPeriodMetadata | null,
+): boolean {
   if (time >= period.start && (period.end === undefined || time < period.end)) {
     return true;
-  } else if (time === period.end && (nextPeriod === null ||
-                                     nextPeriod.start > period.end))
-  {
+  } else if (
+    time === period.end &&
+    (nextPeriod === null || nextPeriod.start > period.end)
+  ) {
     // The last possible timed position of a Period is ambiguous as it is
     // frequently in common with the start of the next one: is it part of
     // the current or of the next Period?
@@ -209,17 +201,18 @@ export function periodContainsTime(
  * Array.
  * @returns {Array.<Object>}
  */
-export function getAdaptations(period : IPeriod) : IAdaptation[];
-export function getAdaptations(period : IPeriodMetadata) : IAdaptationMetadata[];
+export function getAdaptations(period: IPeriod): IAdaptation[];
+export function getAdaptations(period: IPeriodMetadata): IAdaptationMetadata[];
 export function getAdaptations(
-  period : IPeriodMetadata | IPeriod
-) : IAdaptationMetadata[] | IAdaptation[] {
+  period: IPeriodMetadata | IPeriod,
+): IAdaptationMetadata[] | IAdaptation[] {
   const adaptationsByType = period.adaptations;
   return objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
     // Note: the second case cannot happen. TS is just being dumb here
-    (acc, adaptations) => !isNullOrUndefined(adaptations) ? acc.concat(adaptations) :
-                                                            acc,
-    []);
+    (acc, adaptations) =>
+      !isNullOrUndefined(adaptations) ? acc.concat(adaptations) : acc,
+    [],
+  );
 }
 
 /**
@@ -231,19 +224,18 @@ export function getAdaptations(
  */
 export function toAudioTrack(
   adaptation: IAdaptationMetadata,
-  filterPlayable: boolean
-) : IAudioTrack {
-  const formatted : IAudioTrack = {
+  filterPlayable: boolean,
+): IAudioTrack {
+  const formatted: IAudioTrack = {
     language: adaptation.language ?? "",
     normalized: adaptation.normalizedLanguage ?? "",
     audioDescription: adaptation.isAudioDescription === true,
     id: adaptation.id,
-    representations: (
-      filterPlayable ?
-        adaptation.representations.filter(
-          r => r.isSupported === true && r.decipherable !== false
-        ) :
-        adaptation.representations
+    representations: (filterPlayable
+      ? adaptation.representations.filter(
+          (r) => r.isSupported === true && r.decipherable !== false,
+        )
+      : adaptation.representations
     ).map(toAudioRepresentation),
     label: adaptation.label,
   };
@@ -258,9 +250,7 @@ export function toAudioTrack(
  * @param {Object} adaptation
  * @returns {Object}
  */
-export function toTextTrack(
-  adaptation: IAdaptationMetadata
-) : ITextTrack {
+export function toTextTrack(adaptation: IAdaptationMetadata): ITextTrack {
   return {
     language: adaptation.language ?? "",
     normalized: adaptation.normalizedLanguage ?? "",
@@ -280,35 +270,37 @@ export function toTextTrack(
  */
 export function toVideoTrack(
   adaptation: IAdaptationMetadata,
-  filterPlayable: boolean
-) : IVideoTrack {
-  const trickModeTracks = adaptation.trickModeTracks !== undefined ?
-    adaptation.trickModeTracks.map((trickModeAdaptation) => {
-      const representations = (
-        filterPlayable ?
-          trickModeAdaptation.representations.filter(
-            r => r.isSupported === true && r.decipherable !== false
-          ) :
-          trickModeAdaptation.representations
-      ).map(toVideoRepresentation);
-      const trickMode : IVideoTrack = { id: trickModeAdaptation.id,
-                                        representations,
-                                        isTrickModeTrack: true };
-      if (trickModeAdaptation.isSignInterpreted === true) {
-        trickMode.signInterpreted = true;
-      }
-      return trickMode;
-    }) :
-    undefined;
+  filterPlayable: boolean,
+): IVideoTrack {
+  const trickModeTracks =
+    adaptation.trickModeTracks !== undefined
+      ? adaptation.trickModeTracks.map((trickModeAdaptation) => {
+          const representations = (
+            filterPlayable
+              ? trickModeAdaptation.representations.filter(
+                  (r) => r.isSupported === true && r.decipherable !== false,
+                )
+              : trickModeAdaptation.representations
+          ).map(toVideoRepresentation);
+          const trickMode: IVideoTrack = {
+            id: trickModeAdaptation.id,
+            representations,
+            isTrickModeTrack: true,
+          };
+          if (trickModeAdaptation.isSignInterpreted === true) {
+            trickMode.signInterpreted = true;
+          }
+          return trickMode;
+        })
+      : undefined;
 
   const videoTrack: IVideoTrack = {
     id: adaptation.id,
-    representations: (
-      filterPlayable ?
-        adaptation.representations.filter(
-          r => r.isSupported === true && r.decipherable !== false
-        ) :
-        adaptation.representations
+    representations: (filterPlayable
+      ? adaptation.representations.filter(
+          (r) => r.isSupported === true && r.decipherable !== false,
+        )
+      : adaptation.representations
     ).map(toVideoRepresentation),
     label: adaptation.label,
   };
@@ -329,20 +321,18 @@ export function toVideoTrack(
  * @returns {Object}
  */
 function toAudioRepresentation(
-  representation: IRepresentationMetadata
+  representation: IRepresentationMetadata,
 ): IAudioRepresentation {
-  const { id,
-          bitrate,
-          codecs,
-          isSpatialAudio,
-          isSupported,
-          decipherable } = representation;
-  return { id,
-           bitrate,
-           codec: codecs?.[0],
-           isSpatialAudio,
-           isCodecSupported: isSupported,
-           decipherable };
+  const { id, bitrate, codecs, isSpatialAudio, isSupported, decipherable } =
+    representation;
+  return {
+    id,
+    bitrate,
+    codec: codecs?.[0],
+    isSpatialAudio,
+    isCodecSupported: isSupported,
+    decipherable,
+  };
 }
 
 /**
@@ -350,41 +340,40 @@ function toAudioRepresentation(
  * @returns {Object}
  */
 function toVideoRepresentation(
-  representation: IRepresentationMetadata
+  representation: IRepresentationMetadata,
 ): IVideoRepresentation {
-  const { id,
-          bitrate,
-          frameRate,
-          width,
-          height,
-          codecs,
-          hdrInfo,
-          isSupported,
-          decipherable } = representation;
-  return { id,
-           bitrate,
-           frameRate,
-           width,
-           height,
-           codec: codecs?.[0],
-           hdrInfo,
-           isCodecSupported: isSupported,
-           decipherable };
+  const {
+    id,
+    bitrate,
+    frameRate,
+    width,
+    height,
+    codecs,
+    hdrInfo,
+    isSupported,
+    decipherable,
+  } = representation;
+  return {
+    id,
+    bitrate,
+    frameRate,
+    width,
+    height,
+    codec: codecs?.[0],
+    hdrInfo,
+    isCodecSupported: isSupported,
+    decipherable,
+  };
 }
 
-export function toTaggedTrack(
-  adaptation: IAdaptation
-): ITaggedTrack {
+export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
   switch (adaptation.type) {
     case "audio":
-      return { type: "audio",
-               track: toAudioTrack(adaptation, false) };
+      return { type: "audio", track: toAudioTrack(adaptation, false) };
     case "video":
-      return { type: "video",
-               track: toVideoTrack(adaptation, false) };
+      return { type: "video", track: toVideoTrack(adaptation, false) };
     case "text":
-      return { type: "text",
-               track: toTextTrack(adaptation) };
+      return { type: "text", track: toTextTrack(adaptation) };
   }
 }
 
@@ -392,10 +381,10 @@ export function toTaggedTrack(
  * Information on a Representation affected by a `decipherabilityUpdates` event.
  */
 export interface IDecipherabilityStatusChangedElement {
-  manifest : IManifestMetadata;
-  period : IPeriodMetadata;
-  adaptation : IAdaptationMetadata;
-  representation : IRepresentationMetadata;
+  manifest: IManifestMetadata;
+  period: IPeriodMetadata;
+  adaptation: IAdaptationMetadata;
+  representation: IRepresentationMetadata;
 }
 
 /**
@@ -417,13 +406,13 @@ export interface IDecipherabilityStatusChangedElement {
  * @param {Array.<Uint8Array>} delistedKeyIds
  */
 export function updateDecipherabilityFromKeyIds(
-  manifest : IManifestMetadata,
-  updates : {
-    whitelistedKeyIds : Uint8Array[];
-    blacklistedKeyIds : Uint8Array[];
-    delistedKeyIds : Uint8Array[];
-  }
-) : IDecipherabilityStatusChangedElement[] {
+  manifest: IManifestMetadata,
+  updates: {
+    whitelistedKeyIds: Uint8Array[];
+    blacklistedKeyIds: Uint8Array[];
+    delistedKeyIds: Uint8Array[];
+  },
+): IDecipherabilityStatusChangedElement[] {
   const { whitelistedKeyIds, blacklistedKeyIds, delistedKeyIds } = updates;
   return updateRepresentationsDeciperability(manifest, (representation) => {
     if (representation.contentProtections === undefined) {
@@ -460,25 +449,25 @@ export function updateDecipherabilityFromKeyIds(
  * @param {Object} initData
  */
 export function updateDecipherabilityFromProtectionData(
-  manifest : IManifestMetadata,
-  initData : IProcessedProtectionData
-) : IDecipherabilityStatusChangedElement[] {
+  manifest: IManifestMetadata,
+  initData: IProcessedProtectionData,
+): IDecipherabilityStatusChangedElement[] {
   return updateRepresentationsDeciperability(manifest, (representation) => {
     if (representation.decipherable === false) {
       return false;
     }
     const segmentProtections = representation.contentProtections?.initData ?? [];
     for (const protection of segmentProtections) {
-      if (initData.type === undefined ||
-          protection.type === initData.type)
-      {
-        const containedInitData = initData.values.getFormattedValues()
-          .every(undecipherableVal => {
-            return protection.values.some(currVal => {
-              return (undecipherableVal.systemId === undefined ||
-                      currVal.systemId === undecipherableVal.systemId) &&
-                      areArraysOfNumbersEqual(currVal.data,
-                                              undecipherableVal.data);
+      if (initData.type === undefined || protection.type === initData.type) {
+        const containedInitData = initData.values
+          .getFormattedValues()
+          .every((undecipherableVal) => {
+            return protection.values.some((currVal) => {
+              return (
+                (undecipherableVal.systemId === undefined ||
+                  currVal.systemId === undecipherableVal.systemId) &&
+                areArraysOfNumbersEqual(currVal.data, undecipherableVal.data)
+              );
             });
           });
         if (containedInitData) {
@@ -502,25 +491,22 @@ export function updateDecipherabilityFromProtectionData(
  * @returns {Array.<Object>}
  */
 function updateRepresentationsDeciperability(
-  manifest : IManifestMetadata,
-  isDecipherable : (rep : IRepresentationMetadata) => boolean | undefined
-) : IDecipherabilityStatusChangedElement[] {
-  const updates : IDecipherabilityStatusChangedElement[] = [];
+  manifest: IManifestMetadata,
+  isDecipherable: (rep: IRepresentationMetadata) => boolean | undefined,
+): IDecipherabilityStatusChangedElement[] {
+  const updates: IDecipherabilityStatusChangedElement[] = [];
   for (const period of manifest.periods) {
     const adaptationsByType = period.adaptations;
     const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
       // Note: the second case cannot happen. TS is just being dumb here
-      (acc, adaps) => !isNullOrUndefined(adaps) ? acc.concat(adaps) :
-                                                  acc,
-      []);
+      (acc, adaps) => (!isNullOrUndefined(adaps) ? acc.concat(adaps) : acc),
+      [],
+    );
     for (const adaptation of adaptations) {
       for (const representation of adaptation.representations) {
         const result = isDecipherable(representation);
         if (result !== representation.decipherable) {
-          updates.push({ manifest,
-                         period,
-                         adaptation,
-                         representation });
+          updates.push({ manifest, period, adaptation, representation });
           representation.decipherable = result;
         }
       }
@@ -540,7 +526,7 @@ function updateRepresentationsDeciperability(
 export function replicateUpdatesOnManifestMetadata(
   baseManifest: IManifestMetadata,
   newManifest: Omit<IManifestMetadata, "periods">,
-  updates: IPeriodsUpdateResult
+  updates: IPeriodsUpdateResult,
 ) {
   for (const prop of Object.keys(newManifest)) {
     if (prop !== "periods") {
@@ -588,9 +574,7 @@ export function replicateUpdatesOnManifestMetadata(
           for (let adapIdx = 0; adapIdx < adaptationsForType.length; adapIdx++) {
             if (adaptationsForType[adapIdx].id === newAdaptation) {
               const baseAdaptation = adaptationsForType[adapIdx];
-              for (
-                const removedRepresentation of updatedAdaptation.removedRepresentations
-              ) {
+              for (const removedRepresentation of updatedAdaptation.removedRepresentations) {
                 for (
                   let repIdx = 0;
                   repIdx < baseAdaptation.representations.length;
@@ -605,9 +589,7 @@ export function replicateUpdatesOnManifestMetadata(
                 }
               }
 
-              for (
-                const newRepresentation of updatedAdaptation.updatedRepresentations
-              ) {
+              for (const newRepresentation of updatedAdaptation.updatedRepresentations) {
                 for (
                   let repIdx = 0;
                   repIdx < baseAdaptation.representations.length;
@@ -617,11 +599,9 @@ export function replicateUpdatesOnManifestMetadata(
                     baseAdaptation.representations[repIdx].id === newRepresentation.id
                   ) {
                     const baseRepresentation = baseAdaptation.representations[repIdx];
-                    for (
-                      const prop of Object.keys(newRepresentation) as Array<
+                    for (const prop of Object.keys(newRepresentation) as Array<
                       keyof IRepresentationMetadata
-                      >
-                    ) {
+                    >) {
                       if (prop !== "decipherable" && prop !== "isSupported") {
                         // eslint-disable-next-line
                         (baseRepresentation as any)[prop] = newRepresentation[prop];
@@ -666,29 +646,27 @@ export function replicateUpdatesOnManifestMetadata(
 }
 
 export function createRepresentationFilterFromFnString(
-  fnString: string
+  fnString: string,
 ): IRepresentationFilter {
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
   return new Function(
-    `return (${fnString}(arguments[0], arguments[1]))`
+    `return (${fnString}(arguments[0], arguments[1]))`,
   ) as IRepresentationFilter;
 }
 
 interface ITaggedAudioTrack {
-  type : "audio";
-  track : IAudioTrack;
+  type: "audio";
+  track: IAudioTrack;
 }
 
 interface ITaggedVideoTrack {
-  type : "video";
-  track : IVideoTrack;
+  type: "video";
+  track: IVideoTrack;
 }
 
 interface ITaggedTextTrack {
-  type : "text";
-  track : ITextTrack;
+  type: "text";
+  track: ITextTrack;
 }
 
-export type ITaggedTrack = ITaggedAudioTrack |
-                           ITaggedVideoTrack |
-                           ITaggedTextTrack;
+export type ITaggedTrack = ITaggedAudioTrack | ITaggedVideoTrack | ITaggedTextTrack;

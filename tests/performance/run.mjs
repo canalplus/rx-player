@@ -59,7 +59,7 @@ const CHROME_OPTIONS = [
 
   // We don't even care about that one but Chrome may not launch without this
   // for some unknown reason
-  "--remote-debugging-port=9222"
+  "--remote-debugging-port=9222",
 ];
 
 /** Options used when starting the Firefox browser. */
@@ -95,10 +95,7 @@ let nextTaskIndex = 0;
  *   - the first one contains the test results of the current RxPlayer version
  *   - the second one contains the test results of the last RxPlayer version
  */
-const allSamples = [
-  [],
-  []
-];
+const allSamples = [[], []];
 
 /**
  * Current results for the tests being run in `currentBrowser`.
@@ -219,12 +216,14 @@ async function prepareLastRxPlayerTests() {
 async function linkCurrentRxPlayer() {
   await removeFile(path.join(currentDirectory, "node_modules"));
   await fs.mkdir(path.join(currentDirectory, "node_modules"));
-  await spawnProc("npm run build",
-                  [],
-                  (code) => new Error(`npm install exited with code ${code}`)).promise;
+  await spawnProc(
+    "npm run build",
+    [],
+    (code) => new Error(`npm install exited with code ${code}`),
+  ).promise;
   await fs.symlink(
     path.join(currentDirectory, "..", ".."),
-    path.join(currentDirectory, "node_modules", "rx-player")
+    path.join(currentDirectory, "node_modules", "rx-player"),
   );
 }
 
@@ -235,9 +234,11 @@ async function linkCurrentRxPlayer() {
  */
 async function linkLastRxPlayer() {
   await removeFile(path.join(currentDirectory, "node_modules"));
-  await spawnProc("npm install",
-                  ["--prefix", currentDirectory, "rx-player"],
-                  (code) => new Error(`npm install exited with code ${code}`)).promise;
+  await spawnProc(
+    "npm install",
+    ["--prefix", currentDirectory, "rx-player"],
+    (code) => new Error(`npm install exited with code ${code}`),
+  ).promise;
 }
 
 /**
@@ -247,12 +248,8 @@ async function linkLastRxPlayer() {
 async function startAllTestsOnChrome() {
   CHROME_CMD = await getChromeCmd();
   for (let i = 0; i < TEST_ITERATIONS; i++) {
-    tasks.push(
-      () => startCurrentPlayerTestsOnChrome(i * 2, TEST_ITERATIONS * 2)
-    );
-    tasks.push(
-      () => startLastPlayerTestsOnChrome(i * 2 + 1, TEST_ITERATIONS * 2)
-    );
+    tasks.push(() => startCurrentPlayerTestsOnChrome(i * 2, TEST_ITERATIONS * 2));
+    tasks.push(() => startLastPlayerTestsOnChrome(i * 2 + 1, TEST_ITERATIONS * 2));
   }
   if (CHROME_CMD === null) {
     // eslint-disable-next-line no-console
@@ -275,12 +272,8 @@ async function startAllTestsOnChrome() {
 async function _startAllTestsOnFirefox() {
   FIREFOX_CMD = await getFirefoxCmd();
   for (let i = 0; i < TEST_ITERATIONS; i++) {
-    tasks.push(
-      () => startCurrentPlayerTestsOnFirefox(i * 2, TEST_ITERATIONS * 2)
-    );
-    tasks.push(
-      () => startLastPlayerTestsOnFirefox(i * 2 + 1, TEST_ITERATIONS * 2)
-    );
+    tasks.push(() => startCurrentPlayerTestsOnFirefox(i * 2, TEST_ITERATIONS * 2));
+    tasks.push(() => startLastPlayerTestsOnFirefox(i * 2 + 1, TEST_ITERATIONS * 2));
   }
   if (FIREFOX_CMD === null) {
     // eslint-disable-next-line no-console
@@ -326,8 +319,10 @@ function startNextTaskOrFinish() {
  */
 async function startCurrentPlayerTestsOnChrome(testNb, testTotal) {
   // eslint-disable-next-line no-console
-  console.log("Running tests on Chrome on the current RxPlayer version " +
-              `(${testNb}/${testTotal})`);
+  console.log(
+    "Running tests on Chrome on the current RxPlayer version " +
+      `(${testNb}/${testTotal})`,
+  );
   startPerfhomepageOnChrome("index1.html").catch((err) => {
     // eslint-disable-next-line no-console
     console.error("Could not launch page on Chrome:", err);
@@ -342,8 +337,10 @@ async function startCurrentPlayerTestsOnChrome(testNb, testTotal) {
  */
 async function startCurrentPlayerTestsOnFirefox(testNb, testTotal) {
   // eslint-disable-next-line no-console
-  console.log("Running tests on Firefox on the current RxPlayer version " +
-              `(${testNb}/${testTotal})`);
+  console.log(
+    "Running tests on Firefox on the current RxPlayer version " +
+      `(${testNb}/${testTotal})`,
+  );
   startPerfhomepageOnFirefox("index1.html").catch((err) => {
     // eslint-disable-next-line no-console
     console.error("Could not launch page on Firefox:", err);
@@ -358,8 +355,10 @@ async function startCurrentPlayerTestsOnFirefox(testNb, testTotal) {
  */
 async function startLastPlayerTestsOnChrome(testNb, testTotal) {
   // eslint-disable-next-line no-console
-  console.log("Running tests on Chrome on the previous RxPlayer version " +
-              `(${testNb}/${testTotal})`);
+  console.log(
+    "Running tests on Chrome on the previous RxPlayer version " +
+      `(${testNb}/${testTotal})`,
+  );
   startPerfhomepageOnChrome("index2.html").catch((err) => {
     // eslint-disable-next-line no-console
     console.error("Could not launch page on Chrome:", err);
@@ -374,8 +373,10 @@ async function startLastPlayerTestsOnChrome(testNb, testTotal) {
  */
 async function startLastPlayerTestsOnFirefox(testNb, testTotal) {
   // eslint-disable-next-line no-console
-  console.log("Running tests on Firefox on the previous RxPlayer version " +
-              `(${testNb}/${testTotal})`);
+  console.log(
+    "Running tests on Firefox on the previous RxPlayer version " +
+      `(${testNb}/${testTotal})`,
+  );
   startPerfhomepageOnFirefox("index2.html").catch((err) => {
     // eslint-disable-next-line no-console
     console.error("Could not launch page on Firefox:", err);
@@ -398,7 +399,7 @@ async function startPerfhomepageOnChrome(homePage) {
   }
   const spawned = spawnProc(CHROME_CMD, [
     ...CHROME_OPTIONS,
-    `http://localhost:${PERF_TESTS_PORT}/${homePage}`
+    `http://localhost:${PERF_TESTS_PORT}/${homePage}`,
   ]);
   currentBrowser = spawned.child;
 }
@@ -418,7 +419,7 @@ async function startPerfhomepageOnFirefox(homePage) {
   }
   const spawned = spawnProc(FIREFOX_CMD, [
     ...FIREFOX_OPTIONS,
-    `http://localhost:${PERF_TESTS_PORT}/${homePage}`
+    `http://localhost:${PERF_TESTS_PORT}/${homePage}`,
   ]);
   currentBrowser = spawned.child;
 }
@@ -435,7 +436,9 @@ function createResultServer() {
         res();
       });
     }),
-    close() { server.close(); },
+    close() {
+      server.close();
+    },
   };
 
   function onRequest(request, response) {
@@ -465,7 +468,7 @@ function createResultServer() {
           }
           answerWithCORS(response, 200, "OK");
           return;
-        } catch (err){
+        } catch (err) {
           answerWithCORS(response, 500, "Invalid data format.");
           return;
         }
@@ -506,28 +509,28 @@ function createResultServer() {
  */
 function rankSamples(list) {
   list.sort((a, b) => a - b);
-  const withRank = list.map(function(item, index) {
+  const withRank = list.map(function (item, index) {
     return {
       rank: index + 1,
       value: item,
     };
   });
 
-  for (let i = 0; i < withRank.length;) {
+  for (let i = 0; i < withRank.length; ) {
     let count = 1;
     let total = withRank[i].rank;
 
     for (
       let j = 0;
       withRank[i + j + 1] !== undefined &&
-        (withRank[i + j].value === withRank[i + j + 1].value);
+      withRank[i + j].value === withRank[i + j + 1].value;
       j++
     ) {
       total += withRank[i + j + 1].rank;
       count++;
     }
 
-    const rank = (total / count);
+    const rank = total / count;
     for (let k = 0; k < count; k++) {
       withRank[i + k].rank = rank;
     }
@@ -548,8 +551,10 @@ function compareSamples() {
   if (allSamples.length !== 2) {
     throw new Error("Not enough result");
   }
-  const samplesPerScenario = [getSamplePerScenarios(allSamples[0]),
-                              getSamplePerScenarios(allSamples[1])];
+  const samplesPerScenario = [
+    getSamplePerScenarios(allSamples[0]),
+    getSamplePerScenarios(allSamples[1]),
+  ];
 
   let hasSucceeded = true;
   for (const testName of Object.keys(samplesPerScenario[0])) {
@@ -564,26 +569,28 @@ function compareSamples() {
     const result2 = getResultsForSample(sample2);
 
     // eslint-disable-next-line no-console
-    console.log("For current Player:\n" +
-                "===================");
+    console.log("For current Player:\n" + "===================");
     // eslint-disable-next-line no-console
-    console.log(`test name: ${testName}\n` +
-                `mean: ${result1.mean}\n` +
-                `variance: ${result1.variance}\n` +
-                `standardDeviation: ${result1.standardDeviation}\n` +
-                `standardErrorOfMean: ${result1.standardErrorOfMean}\n` +
-                `moe: ${result1.moe}\n`);
+    console.log(
+      `test name: ${testName}\n` +
+        `mean: ${result1.mean}\n` +
+        `variance: ${result1.variance}\n` +
+        `standardDeviation: ${result1.standardDeviation}\n` +
+        `standardErrorOfMean: ${result1.standardErrorOfMean}\n` +
+        `moe: ${result1.moe}\n`,
+    );
 
     // eslint-disable-next-line no-console
-    console.log("\nFor previous Player:\n" +
-                "===================");
+    console.log("\nFor previous Player:\n" + "===================");
     // eslint-disable-next-line no-console
-    console.log(`test name: ${testName}\n` +
-                `mean: ${result2.mean}\n` +
-                `variance: ${result2.variance}\n` +
-                `standardDeviation: ${result2.standardDeviation}\n` +
-                `standardErrorOfMean: ${result2.standardErrorOfMean}\n` +
-                `moe: ${result2.moe}\n`);
+    console.log(
+      `test name: ${testName}\n` +
+        `mean: ${result2.mean}\n` +
+        `variance: ${result2.variance}\n` +
+        `standardDeviation: ${result2.standardDeviation}\n` +
+        `standardErrorOfMean: ${result2.standardErrorOfMean}\n` +
+        `moe: ${result2.moe}\n`,
+    );
 
     const difference = (result2.mean - result1.mean) / result1.mean;
 
@@ -591,9 +598,7 @@ function compareSamples() {
     console.log(`\nDifference: ${difference * 100}`);
 
     const uValue = getUValueFromSamples(sample1, sample2);
-    const zScore = Math.abs(calculateZScore(uValue,
-                                            sample1.length,
-                                            sample2.length));
+    const zScore = Math.abs(calculateZScore(uValue, sample1.length, sample2.length));
     const isSignificant = zScore > 1.96;
     if (isSignificant) {
       // eslint-disable-next-line no-console
@@ -608,8 +613,7 @@ function compareSamples() {
   }
   return hasSucceeded;
   function calculateZScore(u, len1, len2) {
-    return (u - ((len1 * len2) / 2)) /
-                Math.sqrt((len1 * len2 * (len1 + len2 + 1)) / 12);
+    return (u - (len1 * len2) / 2) / Math.sqrt((len1 * len2 * (len1 + len2 + 1)) / 12);
   }
 }
 
@@ -632,14 +636,14 @@ function getUValueFromSamples(sample1, sample2) {
   const u2 = calculateUValue(summedRanks2, n2, n1);
 
   function calculateUValue(rank, currLen, otherLen) {
-    return (currLen * otherLen) + ((currLen*(currLen+1)) / 2) - rank;
+    return currLen * otherLen + (currLen * (currLen + 1)) / 2 - rank;
   }
   return Math.min(u1, u2);
 
   function sumRanks(rankedList, observations) {
     const remainingToFind = observations.slice();
     let rank = 0;
-    rankedList.forEach(function(observation) {
+    rankedList.forEach(function (observation) {
       const index = remainingToFind.indexOf(observation.value);
       if (index > -1) {
         rank += observation.rank;
@@ -658,14 +662,14 @@ function getUValueFromSamples(sample1, sample2) {
  * @returns {Object}
  */
 function getResultsForSample(sample) {
-  const mean = sample
-    .reduce((acc, x) => acc + x, 0) / sample.length;
-  const variance = sample.reduce((acc, x) => {
-    return acc + Math.pow(x - mean, 2);
-  }, 0) / (sample.length - 1) || 0;
+  const mean = sample.reduce((acc, x) => acc + x, 0) / sample.length;
+  const variance =
+    sample.reduce((acc, x) => {
+      return acc + Math.pow(x - mean, 2);
+    }, 0) /
+      (sample.length - 1) || 0;
   const standardDeviation = Math.sqrt(variance);
-  const standardErrorOfMean = standardDeviation /
-    Math.sqrt(sample.length);
+  const standardErrorOfMean = standardDeviation / Math.sqrt(sample.length);
   const criticalVal = 1.96;
   const moe = standardErrorOfMean * criticalVal;
   return { mean, variance, standardErrorOfMean, standardDeviation, moe };
@@ -699,14 +703,16 @@ function displayTemporaryResults() {
     const scenarioSample = testedScenarios[testName];
     const results = getResultsForSample(scenarioSample);
     // eslint-disable-next-line no-console
-    console.log(`test name: ${testName}\n` +
-                `mean: ${results.mean}\n` +
-                `first sample: ${scenarioSample[0]}\n` +
-                `last sample: ${scenarioSample[scenarioSample.length - 1]}\n` +
-                `variance: ${results.variance}\n` +
-                `standard deviation: ${results.standardDeviation}\n` +
-                `standard error of mean: ${results.standardErrorOfMean}\n` +
-                `moe: ${results.moe}\n`);
+    console.log(
+      `test name: ${testName}\n` +
+        `mean: ${results.mean}\n` +
+        `first sample: ${scenarioSample[0]}\n` +
+        `last sample: ${scenarioSample[scenarioSample.length - 1]}\n` +
+        `variance: ${results.variance}\n` +
+        `standard deviation: ${results.standardDeviation}\n` +
+        `standard error of mean: ${results.standardErrorOfMean}\n` +
+        `moe: ${results.moe}\n`,
+    );
   }
 }
 
@@ -723,34 +729,43 @@ function createBundle(options) {
   const minify = !!options.minify;
   const isDevMode = !options.production;
   return new Promise((res) => {
-    esbuild.build({
-      entryPoints: [path.join(currentDirectory, "src", "main.js")],
-      bundle: true,
-      minify,
-      outfile: path.join(currentDirectory, options.output),
-      define: {
-        __TEST_CONTENT_SERVER__: JSON.stringify({
-          URL: "127.0.0.1",
-          PORT: "3000",
-        }),
-        "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-        __ENVIRONMENT__: JSON.stringify({
-          PRODUCTION: 0,
-          DEV: 1,
-          CURRENT_ENV: isDevMode ? 1 : 0,
-        }),
-        __LOGGER_LEVEL__: JSON.stringify({
-          CURRENT_LEVEL: "INFO",
-        }),
-      }
-    }).then(
-      () => { res(); },
-      (err) => {
-        // eslint-disable-next-line no-console
-        console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
-                      err);
-        process.exit(1);
-      });
+    esbuild
+      .build({
+        entryPoints: [path.join(currentDirectory, "src", "main.js")],
+        bundle: true,
+        minify,
+        outfile: path.join(currentDirectory, options.output),
+        define: {
+          __TEST_CONTENT_SERVER__: JSON.stringify({
+            URL: "127.0.0.1",
+            PORT: "3000",
+          }),
+          "process.env.NODE_ENV": JSON.stringify(
+            isDevMode ? "development" : "production",
+          ),
+          __ENVIRONMENT__: JSON.stringify({
+            PRODUCTION: 0,
+            DEV: 1,
+            CURRENT_ENV: isDevMode ? 1 : 0,
+          }),
+          __LOGGER_LEVEL__: JSON.stringify({
+            CURRENT_LEVEL: "INFO",
+          }),
+        },
+      })
+      .then(
+        () => {
+          res();
+        },
+        (err) => {
+          // eslint-disable-next-line no-console
+          console.error(
+            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
+            err,
+          );
+          process.exit(1);
+        },
+      );
   });
 }
 
@@ -771,13 +786,15 @@ function removeFile(fileName) {
 function spawnProc(command, args, errorOnCode) {
   let child;
   const prom = new Promise((res, rej) => {
-    child = spawn(command, args, { shell: true, stdio: "inherit" })
-      .on("close", (code) => {
+    child = spawn(command, args, { shell: true, stdio: "inherit" }).on(
+      "close",
+      (code) => {
         if (code !== 0 && typeof errorOnCode === "function") {
           rej(errorOnCode(code));
         }
         res();
-      });
+      },
+    );
   });
   return {
     promise: prom,
@@ -793,7 +810,11 @@ async function getChromeCmd() {
   switch (process.platform) {
     case "win32": {
       const suffix = "\\Google\\Chrome\\Application\\chrome.exe";
-      const prefixes = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"]];
+      const prefixes = [
+        process.env.LOCALAPPDATA,
+        process.env.PROGRAMFILES,
+        process.env["PROGRAMFILES(X86)"],
+      ];
       for (const prefix of prefixes) {
         try {
           const windowsChromeDirectory = path.join(prefix, suffix);
@@ -851,7 +872,7 @@ async function getFirefoxCmd() {
 }
 
 function execCommandAndGetFirstOutput(command) {
-  return new Promise((res,rej) => {
+  return new Promise((res, rej) => {
     exec(command, (error, stdout) => {
       if (error) {
         rej(error);

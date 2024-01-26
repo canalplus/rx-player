@@ -29,21 +29,22 @@ import type { IParsedAdaptation } from "../types";
  * @returns {Number|undefined|null}
  */
 export default function getLastPositionFromAdaptation(
-  adaptation: IParsedAdaptation
-) : number | undefined | null {
+  adaptation: IParsedAdaptation,
+): number | undefined | null {
   const { representations } = adaptation;
-  let min : null | number = null;
+  let min: null | number = null;
   for (let i = 0; i < representations.length; i++) {
     const lastPosition = representations[i].index.getLastAvailablePosition();
-    if (lastPosition === undefined) { // we cannot tell
+    if (lastPosition === undefined) {
+      // we cannot tell
       return undefined;
     }
     if (lastPosition !== null) {
-      min = min === null ? lastPosition :
-                           Math.min(min, lastPosition);
+      min = min === null ? lastPosition : Math.min(min, lastPosition);
     }
   }
-  if (min === null) { // It means that all positions were null === no segments (yet?)
+  if (min === null) {
+    // It means that all positions were null === no segments (yet?)
     return null;
   }
   return min;

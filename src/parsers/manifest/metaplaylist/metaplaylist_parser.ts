@@ -33,27 +33,30 @@ import type {
 import MetaRepresentationIndex from "./representation_index";
 
 export type IParserResponse<T> =
-  { type : "needs-manifest-loader";
-    value : {
-      ressources : Array<{ url : string; transportType : string }>;
-      continue : (loadedRessources : IManifest[]) => IParserResponse<T>;
-    }; } |
-  { type : "done"; value : T };
+  | {
+      type: "needs-manifest-loader";
+      value: {
+        ressources: Array<{ url: string; transportType: string }>;
+        continue: (loadedRessources: IManifest[]) => IParserResponse<T>;
+      };
+    }
+  | { type: "done"; value: T };
 
 export interface IMetaPlaylistTextTrack {
-  url : string;
-  language : string;
-  closedCaption : boolean;
-  mimeType : string;
-  codecs? : string;
+  url: string;
+  language: string;
+  closedCaption: boolean;
+  mimeType: string;
+  codecs?: string;
 }
 
 export interface IMetaPlaylist {
-  type : "MPL"; // Obligatory token
-  version : string; // MAJOR.MINOR
-  dynamic? : boolean; // The MetaPlaylist could need to be updated
-  pollInterval? : number; // Refresh interval in seconds
-  contents: Array<{ // Sub-Manifests
+  type: "MPL"; // Obligatory token
+  version: string; // MAJOR.MINOR
+  dynamic?: boolean; // The MetaPlaylist could need to be updated
+  pollInterval?: number; // Refresh interval in seconds
+  contents: Array<{
+    // Sub-Manifests
     url: string; // URL of the Manifest
     startTime: number; // start timestamp in seconds
     endTime: number; // end timestamp in seconds
@@ -70,14 +73,16 @@ export interface IMetaPlaylist {
  * @returns {Object}
  */
 export default function parseMetaPlaylist(
-  data : unknown,
-  parserOptions : {
+  data: unknown,
+  parserOptions: {
     url?: string | undefined;
-    serverSyncInfos?: {
-      serverTimestamp: number;
-      clientTime: number;
-    } | undefined;
-  }
+    serverSyncInfos?:
+      | {
+          serverTimestamp: number;
+          clientTime: number;
+        }
+      | undefined;
+  },
 ): IParserResponse<IParsedManifest> {
   let parsedData;
   if (typeof data === "object" && data !== null) {
@@ -90,15 +95,18 @@ export default function parseMetaPlaylist(
       throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
     }
   } else {
-    throw new Error("MPL Parser: Parser input must be either a string " +
-                    "or the MetaPlaylist data directly.");
+    throw new Error(
+      "MPL Parser: Parser input must be either a string " +
+        "or the MetaPlaylist data directly.",
+    );
   }
 
   const { contents, version, type } = parsedData as IMetaPlaylist;
 
   if (type !== "MPL") {
-    throw new Error("MPL Parser: Bad MetaPlaylist. " +
-                    "The `type` property is not set to `MPL`");
+    throw new Error(
+      "MPL Parser: Bad MetaPlaylist. " + "The `type` property is not set to `MPL`",
+    );
   }
 
   if (version !== "0.1") {
@@ -109,7 +117,7 @@ export default function parseMetaPlaylist(
   if (isNullOrUndefined(contents) || contents.length === 0) {
     throw new Error("MPL Parser: No content found.");
   }
-  const ressources : Array<{ url : string; transportType : string }> = [];
+  const ressources: Array<{ url: string; transportType: string }> = [];
   for (let i = 0; i < contents.length; i++) {
     const content = contents[i];
     if (
@@ -123,15 +131,17 @@ export default function parseMetaPlaylist(
     ressources.push({ url: content.url, transportType: content.transport });
   }
 
-  const metaPlaylist : IMetaPlaylist = parsedData as IMetaPlaylist;
+  const metaPlaylist: IMetaPlaylist = parsedData as IMetaPlaylist;
   return {
-    type : "needs-manifest-loader",
-    value : {
+    type: "needs-manifest-loader",
+    value: {
       ressources,
-      continue : function parseWholeMPL(loadedRessources : IManifest[]) {
-        const parsedManifest = createManifest(metaPlaylist,
-                                              loadedRessources,
-                                              parserOptions);
+      continue: function parseWholeMPL(loadedRessources: IManifest[]) {
+        const parsedManifest = createManifest(
+          metaPlaylist,
+          loadedRessources,
+          parserOptions,
+        );
         return { type: "done", value: parsedManifest };
       },
     },
@@ -148,35 +158,34 @@ export default function parseMetaPlaylist(
  * @returns {Object}
  */
 function createManifest(
-  mplData : IMetaPlaylist,
-  manifests : IManifest[],
-  parserOptions:  { url?: string | undefined;
-                    serverSyncInfos?: { serverTimestamp: number;
-                                        clientTime: number; } | undefined; }
+  mplData: IMetaPlaylist,
+  manifests: IManifest[],
+  parserOptions: {
+    url?: string | undefined;
+    serverSyncInfos?: { serverTimestamp: number; clientTime: number } | undefined;
+  },
 ): IParsedManifest {
   const { url, serverSyncInfos } = parserOptions;
-  const clockOffset = serverSyncInfos !== undefined ?
-    serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime :
-    undefined;
+  const clockOffset =
+    serverSyncInfos !== undefined
+      ? serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime
+      : undefined;
   const generateAdaptationID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
-  const minimumTime = contents.length > 0 ? contents[0].startTime :
-                                            0;
-  const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime :
-                                            0;
+  const minimumTime = contents.length > 0 ? contents[0].startTime : 0;
+  const maximumTime = contents.length > 0 ? contents[contents.length - 1].endTime : 0;
   const isDynamic = mplData.dynamic === true;
 
-  let firstStart: number|null = null;
-  let lastEnd: number|null = null;
+  let firstStart: number | null = null;
+  let lastEnd: number | null = null;
 
-  const periods : IParsedPeriod[] = [];
+  const periods: IParsedPeriod[] = [];
   for (let iMan = 0; iMan < contents.length; iMan++) {
     const content = contents[iMan];
-    firstStart = firstStart !== null ? Math.min(firstStart, content.startTime) :
-                                       content.startTime;
-    lastEnd = lastEnd !== null ? Math.max(lastEnd, content.endTime) :
-                                 content.endTime;
+    firstStart =
+      firstStart !== null ? Math.min(firstStart, content.startTime) : content.startTime;
+    lastEnd = lastEnd !== null ? Math.max(lastEnd, content.endTime) : content.endTime;
     const currentManifest = manifests[iMan];
     if (currentManifest.periods.length <= 0) {
       continue;
@@ -187,18 +196,18 @@ function createManifest(
     const manifestPeriods = [];
     for (let iPer = 0; iPer < currentManifest.periods.length; iPer++) {
       const currentPeriod = currentManifest.periods[iPer];
-      const adaptations = SUPPORTED_ADAPTATIONS_TYPE
-        .reduce<IParsedAdaptations>((acc, type : ITrackType) => {
+      const adaptations = SUPPORTED_ADAPTATIONS_TYPE.reduce<IParsedAdaptations>(
+        (acc, type: ITrackType) => {
           const currentAdaptations = currentPeriod.adaptations[type];
           if (isNullOrUndefined(currentAdaptations)) {
             return acc;
           }
 
-          const adaptationsForCurrentType : IParsedAdaptation[] = [];
+          const adaptationsForCurrentType: IParsedAdaptation[] = [];
           for (let iAda = 0; iAda < currentAdaptations.length; iAda++) {
             const currentAdaptation = currentAdaptations[iAda];
 
-            const representations : IParsedRepresentation[] = [];
+            const representations: IParsedRepresentation[] = [];
             for (let iRep = 0; iRep < currentAdaptation.representations.length; iRep++) {
               const currentRepresentation = currentAdaptation.representations[iRep];
 
@@ -209,20 +218,24 @@ function createManifest(
                 periodEnd: currentPeriod.end,
               };
 
-              const newIndex = new MetaRepresentationIndex(currentRepresentation.index,
-                                                           [contentOffset, contentEnd],
-                                                           content.transport,
-                                                           baseContentMetadata);
+              const newIndex = new MetaRepresentationIndex(
+                currentRepresentation.index,
+                [contentOffset, contentEnd],
+                content.transport,
+                baseContentMetadata,
+              );
               let supplementalCodecs: string | undefined;
               if (currentRepresentation.codecs.length > 1) {
                 if (currentRepresentation.codecs.length > 2) {
-                  log.warn("MP: MetaPlaylist relying on more than 2 groups of " +
-                           "codecs with retro-compatibility");
+                  log.warn(
+                    "MP: MetaPlaylist relying on more than 2 groups of " +
+                      "codecs with retro-compatibility",
+                  );
                 }
                 supplementalCodecs = currentRepresentation.codecs[0];
               }
-              const codecs = currentRepresentation
-                .codecs[currentRepresentation.codecs.length - 1];
+              const codecs =
+                currentRepresentation.codecs[currentRepresentation.codecs.length - 1];
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,
@@ -251,13 +264,14 @@ function createManifest(
             acc[type] = adaptationsForCurrentType;
           }
           return acc;
-        }, {});
+        },
+        {},
+      );
 
       // TODO only first period?
-      const textTracks : IMetaPlaylistTextTrack[] =
-        content.textTracks === undefined ? [] :
-                                           content.textTracks;
-      const newTextAdaptations : IParsedAdaptation[] = textTracks.map((track) => {
+      const textTracks: IMetaPlaylistTextTrack[] =
+        content.textTracks === undefined ? [] : content.textTracks;
+      const newTextAdaptations: IParsedAdaptation[] = textTracks.map((track) => {
         const adaptationID = "gen-text-ada-" + generateAdaptationID();
         const representationID = "gen-text-rep-" + generateRepresentationID();
         const indexOfFilename = getFilenameIndexInUrl(track.url);
@@ -270,7 +284,8 @@ function createManifest(
           closedCaption: track.closedCaption,
           manuallyAdded: true,
           representations: [
-            { bitrate: 0,
+            {
+              bitrate: 0,
               cdnMetadata: [{ baseUrl: cdnUrl }],
               id: representationID,
               mimeType: track.mimeType,
@@ -289,7 +304,7 @@ function createManifest(
         }
       }
 
-      const newPeriod : IParsedPeriod = {
+      const newPeriod: IParsedPeriod = {
         id: formatId(currentManifest.id) + "_" + formatId(currentPeriod.id),
         adaptations,
         duration: currentPeriod.duration,
@@ -314,35 +329,38 @@ function createManifest(
   }
 
   const time = getMonotonicTimeStamp();
-  const isLastPeriodKnown = !isDynamic ||
-                            mplData.pollInterval === undefined &&
-                            (manifests.length <= 0 ||
-                             manifests[manifests.length - 1].isLastPeriodKnown);
-  const manifest = { availabilityStartTime: 0,
-                     clockOffset,
-                     suggestedPresentationDelay: 10,
-                     periods,
-                     transportType: "metaplaylist",
-                     isLive: isDynamic,
-                     isDynamic,
-                     isLastPeriodKnown,
-                     uris: isNullOrUndefined(url) ? [] :
-                                                    [url],
+  const isLastPeriodKnown =
+    !isDynamic ||
+    (mplData.pollInterval === undefined &&
+      (manifests.length <= 0 || manifests[manifests.length - 1].isLastPeriodKnown));
+  const manifest = {
+    availabilityStartTime: 0,
+    clockOffset,
+    suggestedPresentationDelay: 10,
+    periods,
+    transportType: "metaplaylist",
+    isLive: isDynamic,
+    isDynamic,
+    isLastPeriodKnown,
+    uris: isNullOrUndefined(url) ? [] : [url],
 
-                     // TODO more precize time bounds?
-                     timeBounds: { minimumSafePosition: minimumTime,
-                                   timeshiftDepth: null,
-                                   maximumTimeData: {
-                                     isLinear: false,
-                                     maximumSafePosition: maximumTime,
-                                     livePosition: undefined,
-                                     time,
-                                   } },
-                     lifetime: mplData.pollInterval };
+    // TODO more precize time bounds?
+    timeBounds: {
+      minimumSafePosition: minimumTime,
+      timeshiftDepth: null,
+      maximumTimeData: {
+        isLinear: false,
+        maximumSafePosition: maximumTime,
+        livePosition: undefined,
+        time,
+      },
+    },
+    lifetime: mplData.pollInterval,
+  };
 
   return manifest;
 }
 
-function formatId(str : string) {
-  return str.replace(/_/g, "\_");
+function formatId(str: string) {
+  return str.replace(/_/g, "_");
 }

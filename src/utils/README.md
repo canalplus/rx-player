@@ -1,11 +1,11 @@
-# Utils ########################################################################
+# Utils
 
-| Consideration           | Status                                      |
-|-------------------------|---------------------------------------------|
-| Preferred import style  | Util files can be imported directly         |
-| Multithread environment | Main thread or WebWorker depending on file  |
+| Consideration           | Status                                     |
+| ----------------------- | ------------------------------------------ |
+| Preferred import style  | Util files can be imported directly        |
+| Multithread environment | Main thread or WebWorker depending on file |
 
-## Overview ####################################################################
+## Overview
 
 This directory regroups utils function, which are small stand-alone (they
 shouldn't rely on any outside code, beside dependencies) functions that might be

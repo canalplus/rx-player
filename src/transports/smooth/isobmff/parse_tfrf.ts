@@ -15,27 +15,24 @@
  */
 
 import { getUuidContent } from "../../../parsers/containers/isobmff";
-import {
-  be4toi,
-  be8toi,
-} from "../../../utils/byte_parsing";
+import { be4toi, be8toi } from "../../../utils/byte_parsing";
 
 export interface IISOBMFFBasicSegment {
-  time : number;
-  duration : number;
+  time: number;
+  duration: number;
 }
 
 /**
  * @param {Uint8Array} traf
  * @returns {Array.<Object>}
  */
-export default function parseTfrf(traf : Uint8Array) : IISOBMFFBasicSegment[] {
-  const tfrf = getUuidContent(traf, 0xD4807EF2, 0xCA394695, 0x8E5426CB, 0x9E46A79F);
+export default function parseTfrf(traf: Uint8Array): IISOBMFFBasicSegment[] {
+  const tfrf = getUuidContent(traf, 0xd4807ef2, 0xca394695, 0x8e5426cb, 0x9e46a79f);
   if (tfrf === undefined) {
     return [];
   }
 
-  const frags : Array<{ time: number; duration: number }> = [];
+  const frags: Array<{ time: number; duration: number }> = [];
   const version = tfrf[0];
   const fragCount = tfrf[4];
   for (let i = 0; i < fragCount; i++) {
@@ -43,7 +40,7 @@ export default function parseTfrf(traf : Uint8Array) : IISOBMFFBasicSegment[] {
     let time;
     if (version === 1) {
       time = be8toi(tfrf, i * 16 + 5);
-      duration  = be8toi(tfrf, i * 16 + 5 + 8);
+      duration = be8toi(tfrf, i * 16 + 5 + 8);
     } else {
       time = be4toi(tfrf, i * 8 + 5);
       duration = be4toi(tfrf, i * 8 + 5 + 4);

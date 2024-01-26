@@ -54,11 +54,7 @@ class WorkerCodecSupportProber implements ICodecSupportProber {
    * @param {string} codec
    * @param {boolean} isSupported
    */
-  public updateCache(
-    mimeType: string,
-    codec: string,
-    isSupported: boolean
-  ): void {
+  public updateCache(mimeType: string, codec: string, isSupported: boolean): void {
     if (this._currentCacheSize >= MAX_CODEC_CACHE_SIZE) {
       // For simplicity, just clear everything here, we don't care that much
       // about implementing a true LRU cache here

@@ -9,8 +9,8 @@ export function strToLeUtf16(str: string): Uint8Array {
   const res = new Uint8Array(buffer);
   for (let i = 0; i < res.length; i += 2) {
     const value = str.charCodeAt(i / 2);
-    res[i] = value & 0xFF;
-    res[i + 1] = value >> 8 & 0xFF;
+    res[i] = value & 0xff;
+    res[i + 1] = (value >> 8) & 0xff;
   }
   return res;
 }
@@ -80,21 +80,23 @@ export function strToUtf8(str: string): Uint8Array {
     for (let i = 0; i < pcStr.length; i++) {
       let wasPercentEncoded = false;
       if (pcStr[i] === "%") {
-        if (i <= pcStrLen - 6 &&
-            pcStr[i + 1] === "u" &&
-            isHexChar.test(pcStr[i + 2]) &&
-            isHexChar.test(pcStr[i + 3]) &&
-            isHexChar.test(pcStr[i + 4]) &&
-            isHexChar.test(pcStr[i + 5]))
-        {
+        if (
+          i <= pcStrLen - 6 &&
+          pcStr[i + 1] === "u" &&
+          isHexChar.test(pcStr[i + 2]) &&
+          isHexChar.test(pcStr[i + 3]) &&
+          isHexChar.test(pcStr[i + 4]) &&
+          isHexChar.test(pcStr[i + 5])
+        ) {
           const charCode = parseInt(pcStr.substring(i + 1, i + 6), 16);
           utf8Str += String.fromCharCode(charCode);
           wasPercentEncoded = true;
           i += 5; // Skip the next 5 chars
-        } else if (i <= pcStrLen - 3 &&
-            isHexChar.test(pcStr[i + 1]) &&
-            isHexChar.test(pcStr[i + 2]))
-        {
+        } else if (
+          i <= pcStrLen - 3 &&
+          isHexChar.test(pcStr[i + 1]) &&
+          isHexChar.test(pcStr[i + 2])
+        ) {
           const charCode = parseInt(pcStr.substring(i + 1, i + 3), 16);
           utf8Str += String.fromCharCode(charCode);
           wasPercentEncoded = true;
@@ -111,7 +113,7 @@ export function strToUtf8(str: string): Uint8Array {
   // UTF-16 representation
   const res = new Uint8Array(utf8Str.length);
   for (let i = 0; i < utf8Str.length; i++) {
-    res[i] = utf8Str.charCodeAt(i) & 0xFF; // first byte should be 0x00 anyway
+    res[i] = utf8Str.charCodeAt(i) & 0xff; // first byte should be 0x00 anyway
   }
   return res;
 }
@@ -149,9 +151,9 @@ export function stringFromCharCodes(args: Uint8Array): string {
  */
 function intToHex(num: number, size: number): string {
   const toStr = num.toString(16);
-  return toStr.length >= size ?
-    toStr :
-    new Array(size - toStr.length + 1).join("0") + toStr;
+  return toStr.length >= size
+    ? toStr
+    : new Array(size - toStr.length + 1).join("0") + toStr;
 }
 
 /**
@@ -163,7 +165,7 @@ export function utf8ToStr(data: Uint8Array): string {
   let uint8 = data;
 
   // If present, strip off the UTF-8 BOM.
-  if (uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) {
+  if (uint8[0] === 0xef && uint8[1] === 0xbb && uint8[2] === 0xbf) {
     uint8 = uint8.subarray(3);
   }
 
@@ -187,9 +189,8 @@ export function utf8ToStr(data: Uint8Array): string {
         escaped += utf8Str[i];
       } else {
         const charCode = utf8Str.charCodeAt(i);
-        escaped += charCode >= 256 ?
-          "%u" + intToHex(charCode, 4) :
-          "%" + intToHex(charCode, 2);
+        escaped +=
+          charCode >= 256 ? "%u" + intToHex(charCode, 4) : "%" + intToHex(charCode, 2);
       }
     }
   }

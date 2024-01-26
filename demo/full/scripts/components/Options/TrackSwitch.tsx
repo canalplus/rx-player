@@ -36,8 +36,7 @@ function TrackSwitchConfig({
         "Smooth transition when the audio track is changed";
       break;
     default:
-      defaultAudioTrackSwitchingModeDescMsg =
-        "Unknown value";
+      defaultAudioTrackSwitchingModeDescMsg = "Unknown value";
       break;
   }
 
@@ -47,25 +46,21 @@ function TrackSwitchConfig({
       onCodecSwitchDescMsg = "Reloading buffers when the codec changes";
       break;
     case "continue":
-      onCodecSwitchDescMsg =
-        "Keeping the same buffers even when the codec changes";
+      onCodecSwitchDescMsg = "Keeping the same buffers even when the codec changes";
       break;
     default:
-      onCodecSwitchDescMsg =
-        "Unknown value";
+      onCodecSwitchDescMsg = "Unknown value";
       break;
   }
 
   const onCodecSwitchSelection = React.useCallback(
-    ({ value }: { value: string }) =>
-      onCodecSwitchChange(value),
-    [onCodecSwitchChange]
+    ({ value }: { value: string }) => onCodecSwitchChange(value),
+    [onCodecSwitchChange],
   );
 
   const onDefaultAudioTrackSwitchingModeSelection = React.useCallback(
-    ({ value }: { value: string }) =>
-      onDefaultAudioTrackSwitchingModeChange(value),
-    [onDefaultAudioTrackSwitchingModeChange]
+    ({ value }: { value: string }) => onDefaultAudioTrackSwitchingModeChange(value),
+    [onDefaultAudioTrackSwitchingModeChange],
   );
 
   return (
@@ -81,9 +76,9 @@ function TrackSwitchConfig({
           Fast Switching
         </Checkbox>
         <span className="option-desc">
-          {enableFastSwitching ?
-            "Fast quality switch by replacing lower qualities in the buffer by higher ones when possible." :
-            "Not replacing lower qualities in the buffer by an higher one when possible."}
+          {enableFastSwitching
+            ? "Fast quality switch by replacing lower qualities in the buffer by higher ones when possible."
+            : "Not replacing lower qualities in the buffer by an higher one when possible."}
         </span>
       </li>
       <li className="featureWrapperWithSelectMode">
@@ -96,11 +91,9 @@ function TrackSwitchConfig({
           selected={{ value: defaultAudioTrackSwitchingMode, index: undefined }}
           options={["seamless", "direct", "reload"]}
         >
-            Audio track switching mode
+          Audio track switching mode
         </Select>
-        <span className="option-desc">
-          {defaultAudioTrackSwitchingModeDescMsg}
-        </span>
+        <span className="option-desc">{defaultAudioTrackSwitchingModeDescMsg}</span>
       </li>
       <li className="featureWrapperWithSelectMode">
         <Select
@@ -114,9 +107,7 @@ function TrackSwitchConfig({
         >
           On Codec Switch
         </Select>
-        <span className="option-desc">
-          {onCodecSwitchDescMsg}
-        </span>
+        <span className="option-desc">{onCodecSwitchDescMsg}</span>
       </li>
     </>
   );

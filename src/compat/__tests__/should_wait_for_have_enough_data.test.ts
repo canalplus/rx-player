@@ -17,8 +17,9 @@ describe("compat - shouldWaitForHaveEnoughData", () => {
         isPlayStation5: false,
       };
     });
-    const shouldWaitForHaveEnoughData =
-      jest.requireActual("../should_wait_for_have_enough_data");
+    const shouldWaitForHaveEnoughData = jest.requireActual(
+      "../should_wait_for_have_enough_data",
+    );
     expect(shouldWaitForHaveEnoughData.default()).toBe(false);
   });
 
@@ -29,8 +30,9 @@ describe("compat - shouldWaitForHaveEnoughData", () => {
         isPlayStation5: true,
       };
     });
-    const shouldWaitForHaveEnoughData =
-      jest.requireActual("../should_wait_for_have_enough_data");
+    const shouldWaitForHaveEnoughData = jest.requireActual(
+      "../should_wait_for_have_enough_data",
+    );
     expect(shouldWaitForHaveEnoughData.default()).toBe(true);
   });
 });

@@ -36,4 +36,4 @@ player.setMaxVideoBufferSize(bufferSize);
 - **arguments**:
 
   1. _bufferSize_ `number`: Maximum amount of memory the buffer can download,
-    in kilobytes
+     in kilobytes

@@ -21,9 +21,7 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
  * @param {string} timestampString
  * @returns {Number|undefined}
  */
-export default function parseTimestamp(
-  timestampString : string
-) : number|undefined {
+export default function parseTimestamp(timestampString: string): number | undefined {
   const splittedTS = timestampString.split(":");
   if (isNonEmptyString(splittedTS[2])) {
     const hours = parseInt(splittedTS[0], 10);

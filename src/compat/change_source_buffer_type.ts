@@ -17,28 +17,29 @@
 import log from "../log";
 import type { IEventEmitter } from "../utils/event_emitter";
 
-interface ICompatSourceBufferEvents { updatestart : Event|undefined;
-                                      update : Event|undefined;
-                                      updateend : Event|undefined;
-                                      error : Event; }
+interface ICompatSourceBufferEvents {
+  updatestart: Event | undefined;
+  update: Event | undefined;
+  updateend: Event | undefined;
+  error: Event;
+}
 
 /**
  * Definition of a SourceBuffer Object.
  * Adds some non-standard APIs to the regular one like `changeType`, which exist
  * on some browsers.
  */
-export interface ICompatSourceBuffer
-  extends IEventEmitter<ICompatSourceBufferEvents> {
-    buffered : TimeRanges;
-    changeType? : (type: string) => void;
-    updating : boolean;
-    appendWindowStart : number;
-    appendWindowEnd : number;
-    timestampOffset : number;
-    appendBuffer(data : BufferSource) : void;
-    remove(from : number, to : number) : void;
-    abort() : void;
-  }
+export interface ICompatSourceBuffer extends IEventEmitter<ICompatSourceBufferEvents> {
+  buffered: TimeRanges;
+  changeType?: (type: string) => void;
+  updating: boolean;
+  appendWindowStart: number;
+  appendWindowEnd: number;
+  timestampOffset: number;
+  appendBuffer(data: BufferSource): void;
+  remove(from: number, to: number): void;
+  abort(): void;
+}
 
 /**
  * If the changeType MSE API is implemented, update the current codec of the
@@ -49,15 +50,17 @@ export interface ICompatSourceBuffer
  * @returns {boolean}
  */
 export default function tryToChangeSourceBufferType(
-  sourceBuffer : ICompatSourceBuffer,
-  codec : string
-) : boolean {
+  sourceBuffer: ICompatSourceBuffer,
+  codec: string,
+): boolean {
   if (typeof sourceBuffer.changeType === "function") {
     try {
       sourceBuffer.changeType(codec);
     } catch (e) {
-      log.warn("Could not call 'changeType' on the given SourceBuffer:",
-                e instanceof Error ? e : "");
+      log.warn(
+        "Could not call 'changeType' on the given SourceBuffer:",
+        e instanceof Error ? e : "",
+      );
       return false;
     }
     return true;

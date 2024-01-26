@@ -27,12 +27,9 @@ import SegmentFetcherCreator, {
 export {
   ManifestFetcher,
   SegmentFetcherCreator,
-
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
-
   IPrioritizedSegmentFetcher,
-
   ISegmentFetcherCreatorBackoffOptions,
 };

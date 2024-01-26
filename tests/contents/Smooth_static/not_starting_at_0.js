@@ -1,9 +1,11 @@
-const BASE_URL = "http://" +
-               /* eslint-disable no-undef */
-               __TEST_CONTENT_SERVER__.URL + ":" +
-               __TEST_CONTENT_SERVER__.PORT +
-               /* eslint-enable no-undef */
-               "/Smooth_static/media/";
+const BASE_URL =
+  "http://" +
+  /* eslint-disable no-undef */
+  __TEST_CONTENT_SERVER__.URL +
+  ":" +
+  __TEST_CONTENT_SERVER__.PORT +
+  /* eslint-enable no-undef */
+  "/Smooth_static/media/";
 
 const manifestInfos = {
   url: BASE_URL + "Manifest_Not_Starting_at_0.xml",
@@ -53,7 +55,7 @@ const manifestInfos = {
             normalizedLanguage: "und",
             representations: [
               {
-                id:"video_und_video-video/mp4-avc1.42800d-300000",
+                id: "video_und_video-video/mp4-avc1.42800d-300000",
                 bitrate: 300000,
                 height: 224,
                 width: 400,
@@ -212,7 +214,6 @@ const manifestInfos = {
                   ],
                 },
               },
-
             ],
           },
         ],

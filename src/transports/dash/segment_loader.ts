@@ -17,13 +17,8 @@
 import { CustomLoaderError } from "../../errors";
 import type { ICdnMetadata } from "../../parsers/manifest";
 import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
-import request, {
-  fetchIsSupported,
-} from "../../utils/request";
-import type {
-  CancellationError,
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import request, { fetchIsSupported } from "../../utils/request";
+import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import type {
   ILoadedAudioVideoSegmentFormat,
@@ -53,16 +48,17 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  * @returns {Promise}
  */
 export function regularSegmentLoader(
-  url : string,
-  context : ISegmentContext,
-  lowLatencyMode : boolean,
-  options : ISegmentLoaderOptions,
-  callbacks : ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
-  cancelSignal : CancellationSignal
-) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
-            ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
-            ISegmentLoaderResultChunkedComplete>
-{
+  url: string,
+  context: ISegmentContext,
+  lowLatencyMode: boolean,
+  options: ISegmentLoaderOptions,
+  callbacks: ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
+  cancelSignal: CancellationSignal,
+): Promise<
+  | ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat>
+  | ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>
+  | ISegmentLoaderResultChunkedComplete
+> {
   if (context.segment.isInit) {
     return initSegmentLoader(url, context.segment, options, cancelSignal, callbacks);
   }
@@ -72,38 +68,42 @@ export function regularSegmentLoader(
     if (fetchIsSupported()) {
       return lowLatencySegmentLoader(url, context, options, callbacks, cancelSignal);
     } else {
-      warnOnce("DASH: Your browser does not have the fetch API. You will have " +
-               "a higher chance of rebuffering when playing close to the live edge");
+      warnOnce(
+        "DASH: Your browser does not have the fetch API. You will have " +
+          "a higher chance of rebuffering when playing close to the live edge",
+      );
     }
   }
 
   const { segment } = context;
-  return request({ url,
-                   responseType: "arraybuffer",
-                   headers: segment.range !== undefined ?
-                     { Range: byteRange(segment.range) } :
-                     undefined,
-                   timeout: options.timeout,
-                   connectionTimeout: options.connectionTimeout,
-                   cancelSignal,
-                   onProgress: callbacks.onProgress })
-    .then((data) => ({ resultType: "segment-loaded",
-                       resultData: data }));
+  return request({
+    url,
+    responseType: "arraybuffer",
+    headers:
+      segment.range !== undefined ? { Range: byteRange(segment.range) } : undefined,
+    timeout: options.timeout,
+    connectionTimeout: options.connectionTimeout,
+    cancelSignal,
+    onProgress: callbacks.onProgress,
+  }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
 }
 
 /**
  * @param {Object} config
  * @returns {Function}
  */
-export default function generateSegmentLoader(
-  { lowLatencyMode,
-    segmentLoader: customSegmentLoader,
-    checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     segmentLoader? : ICustomSegmentLoader | undefined;
-                                     checkMediaSegmentIntegrity? : boolean | undefined; }
-) : ISegmentLoader<Uint8Array | ArrayBuffer | null> {
-  return checkMediaSegmentIntegrity !== true ? segmentLoader :
-                                               addSegmentIntegrityChecks(segmentLoader);
+export default function generateSegmentLoader({
+  lowLatencyMode,
+  segmentLoader: customSegmentLoader,
+  checkMediaSegmentIntegrity,
+}: {
+  lowLatencyMode: boolean;
+  segmentLoader?: ICustomSegmentLoader | undefined;
+  checkMediaSegmentIntegrity?: boolean | undefined;
+}): ISegmentLoader<Uint8Array | ArrayBuffer | null> {
+  return checkMediaSegmentIntegrity !== true
+    ? segmentLoader
+    : addSegmentIntegrityChecks(segmentLoader);
 
   /**
    * @param {Object|null} wantedCdn
@@ -114,28 +114,33 @@ export default function generateSegmentLoader(
    * @returns {Promise.<Object>}
    */
   function segmentLoader(
-    wantedCdn : ICdnMetadata | null,
-    context : ISegmentContext,
-    options : ISegmentLoaderOptions,
-    cancelSignal : CancellationSignal,
-    callbacks : ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>
-  ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat> |
-              ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat> |
-              ISegmentLoaderResultChunkedComplete>
-  {
+    wantedCdn: ICdnMetadata | null,
+    context: ISegmentContext,
+    options: ISegmentLoaderOptions,
+    cancelSignal: CancellationSignal,
+    callbacks: ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
+  ): Promise<
+    | ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat>
+    | ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>
+    | ISegmentLoaderResultChunkedComplete
+  > {
     const url = constructSegmentUrl(wantedCdn, context.segment);
     if (url === null) {
-      return Promise.resolve({ resultType: "segment-created",
-                               resultData: null });
+      return Promise.resolve({
+        resultType: "segment-created",
+        resultData: null,
+      });
     }
 
     if (lowLatencyMode || customSegmentLoader === undefined) {
-      return regularSegmentLoader(url,
-                                  context,
-                                  lowLatencyMode,
-                                  options,
-                                  callbacks,
-                                  cancelSignal);
+      return regularSegmentLoader(
+        url,
+        context,
+        lowLatencyMode,
+        options,
+        callbacks,
+        cancelSignal,
+      );
     }
 
     return new Promise((res, rej) => {
@@ -146,27 +151,31 @@ export default function generateSegmentLoader(
        * Callback triggered when the custom segment loader has a response.
        * @param {Object} _args
        */
-      const resolve = (
-        _args : { data : ArrayBuffer|Uint8Array;
-                  size? : number | undefined;
-                  duration? : number | undefined; }
-      ) => {
+      const resolve = (_args: {
+        data: ArrayBuffer | Uint8Array;
+        size?: number | undefined;
+        duration?: number | undefined;
+      }) => {
         if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        res({ resultType: "segment-loaded",
-              resultData: { responseData: _args.data,
-                            size: _args.size,
-                            requestDuration: _args.duration } });
+        res({
+          resultType: "segment-loaded",
+          resultData: {
+            responseData: _args.data,
+            size: _args.size,
+            requestDuration: _args.duration,
+          },
+        });
       };
 
       /**
        * Callback triggered when the custom segment loader fails
        * @param {*} err - The corresponding error encountered
        */
-      const reject = (err : unknown) : void => {
+      const reject = (err: unknown): void => {
         if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
@@ -174,29 +183,35 @@ export default function generateSegmentLoader(
         cancelSignal.deregister(abortCustomLoader);
 
         // Format error and send it
-        const castedErr = err as (null | undefined | { message? : string;
-                                                       canRetry? : boolean;
-                                                       xhr? : XMLHttpRequest; });
-        const message = castedErr?.message ??
-                        "Unknown error when fetching a DASH segment through a " +
-                        "custom segmentLoader.";
-        const emittedErr = new CustomLoaderError(message,
-                                                 castedErr?.canRetry ?? false,
-                                                 castedErr?.xhr);
+        const castedErr = err as
+          | null
+          | undefined
+          | { message?: string; canRetry?: boolean; xhr?: XMLHttpRequest };
+        const message =
+          castedErr?.message ??
+          "Unknown error when fetching a DASH segment through a " +
+            "custom segmentLoader.";
+        const emittedErr = new CustomLoaderError(
+          message,
+          castedErr?.canRetry ?? false,
+          castedErr?.xhr,
+        );
         rej(emittedErr);
       };
 
-      const progress = (
-        _args : { duration : number;
-                  size : number;
-                  totalSize? : number | undefined; }
-      ) => {
+      const progress = (_args: {
+        duration: number;
+        size: number;
+        totalSize?: number | undefined;
+      }) => {
         if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
-        callbacks.onProgress({ duration: _args.duration,
-                               size: _args.size,
-                               totalSize: _args.totalSize });
+        callbacks.onProgress({
+          duration: _args.duration,
+          size: _args.size,
+          totalSize: _args.totalSize,
+        });
       };
 
       /**
@@ -209,29 +224,32 @@ export default function generateSegmentLoader(
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        regularSegmentLoader(url,
-                             context,
-                             lowLatencyMode,
-                             options,
-                             callbacks,
-                             cancelSignal)
-          .then(res, rej);
+        regularSegmentLoader(
+          url,
+          context,
+          lowLatencyMode,
+          options,
+          callbacks,
+          cancelSignal,
+        ).then(res, rej);
       };
 
       const customCallbacks = { reject, resolve, progress, fallback };
 
-      let byteRanges : Array<[number, number]> | undefined;
+      let byteRanges: Array<[number, number]> | undefined;
       if (context.segment.range !== undefined) {
         byteRanges = [context.segment.range];
         if (context.segment.indexRange !== undefined) {
           byteRanges.push(context.segment.indexRange);
         }
       }
-      const args = { isInit: context.segment.isInit,
-                     timeout: options.timeout,
-                     byteRanges,
-                     trackType: context.type,
-                     url };
+      const args = {
+        isInit: context.segment.isInit,
+        timeout: options.timeout,
+        byteRanges,
+        trackType: context.type,
+        url,
+      };
       const abort = customSegmentLoader(args, customCallbacks);
 
       cancelSignal.register(abortCustomLoader);
@@ -240,7 +258,7 @@ export default function generateSegmentLoader(
        * The logic to run when the custom loader is cancelled while pending.
        * @param {Error} err
        */
-      function abortCustomLoader(err : CancellationError) {
+      function abortCustomLoader(err: CancellationError) {
         if (hasFinished) {
           return;
         }

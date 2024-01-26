@@ -22,7 +22,7 @@ import type { IFeaturesObject } from "../types";
  * Add ability to parse SRT text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLSRTFeature(features : IFeaturesObject) : void {
+function addHTMLSRTFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.srt = srtParser;
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }

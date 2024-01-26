@@ -3,10 +3,7 @@ import type {
   IRepresentationsChoice,
   ITrackSwitchingMode,
 } from "../../core/types";
-import type {
-  IAdaptationMetadata,
-  IRepresentationMetadata,
-} from "../../manifest";
+import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
 import type {
   IAudioRepresentationsSwitchingMode,
   IVideoRepresentationsSwitchingMode,
@@ -14,9 +11,7 @@ import type {
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import noop from "../../utils/noop";
-import type {
-  IReadOnlySharedReference,
-} from "../../utils/reference";
+import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 
@@ -40,18 +35,20 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * Reference through which the wanted track will be emitted.
    * `null` is emitted if no track for that type is wanted.
    */
-  private readonly _adaptationRef : SharedReference<{
-    /** Wanted track chosen by the user. */
-    adaptationId : string;
-    /** "Switching mode" in which the track switch should happen. */
-    switchingMode : ITrackSwitchingMode;
-    /** Representations "locked" for this `Adaptation`. */
-    representations : IReadOnlySharedReference<IRepresentationsChoice>;
-    /** Relative resuming position after a track change */
-    relativeResumingPosition: number | undefined;
-  } |
-  null |
-  undefined>;
+  private readonly _adaptationRef: SharedReference<
+    | {
+        /** Wanted track chosen by the user. */
+        adaptationId: string;
+        /** "Switching mode" in which the track switch should happen. */
+        switchingMode: ITrackSwitchingMode;
+        /** Representations "locked" for this `Adaptation`. */
+        representations: IReadOnlySharedReference<IRepresentationsChoice>;
+        /** Relative resuming position after a track change */
+        relativeResumingPosition: number | undefined;
+      }
+    | null
+    | undefined
+  >;
 
   /**
    * Last values emitted through `adaptationRef`.
@@ -61,14 +58,17 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * side-effects already led to the "nexting" of `adaptationRef` with the wanted
    * settings, preventing the the `TrackDispatcher` from doing it again.
    */
-  private _lastEmitted : { adaptation: IAdaptationMetadata;
-                           switchingMode: ITrackSwitchingMode;
-                           lockedRepresentations: IRepresentationMetadata[] | null; } |
-                         null |
-                         undefined;
+  private _lastEmitted:
+    | {
+        adaptation: IAdaptationMetadata;
+        switchingMode: ITrackSwitchingMode;
+        lockedRepresentations: IRepresentationMetadata[] | null;
+      }
+    | null
+    | undefined;
 
   /** Interface allowing to clean-up resources when they are not needed anymore. */
-  private _canceller : TaskCanceller;
+  private _canceller: TaskCanceller;
 
   /**
    * Boolean set to `true` when a track-updating method is called and to `false`
@@ -86,9 +86,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * synchronously.
    * @param {Object} adaptationRef
    */
-  constructor(
-    adaptationRef : SharedReference<IAdaptationChoice | null | undefined>
-  ) {
+  constructor(adaptationRef: SharedReference<IAdaptationChoice | null | undefined>) {
     super();
     this._canceller = new TaskCanceller();
     this._adaptationRef = adaptationRef;
@@ -99,7 +97,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
   /**
    * @param {Object|null} initialTrackInfo
    */
-  public start(initialTrackInfo : ITrackSetting | null) : void {
+  public start(initialTrackInfo: ITrackSetting | null): void {
     this._updateToken = true;
     if (initialTrackInfo === null) {
       this._lastEmitted = null;
@@ -111,14 +109,17 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     if (!this._updateToken) {
       return;
     }
-    this._lastEmitted = { adaptation: initialTrackInfo.adaptation,
-                          switchingMode: initialTrackInfo.switchingMode,
-                          lockedRepresentations: null };
+    this._lastEmitted = {
+      adaptation: initialTrackInfo.adaptation,
+      switchingMode: initialTrackInfo.switchingMode,
+      lockedRepresentations: null,
+    };
     this._updateToken = false;
-    this._adaptationRef.setValue({ adaptationId: initialTrackInfo.adaptation.id,
-                                   switchingMode: initialTrackInfo.switchingMode,
-                                   representations: reference,
-                                   relativeResumingPosition: undefined,
+    this._adaptationRef.setValue({
+      adaptationId: initialTrackInfo.adaptation.id,
+      switchingMode: initialTrackInfo.switchingMode,
+      representations: reference,
+      relativeResumingPosition: undefined,
     });
   }
 
@@ -126,7 +127,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * Update the wanted track on the Reference linked to this `TrackDispatcher`.
    * @param {Object|null} newTrackInfo
    */
-  public updateTrack(newTrackInfo : ITrackSetting | null) : void {
+  public updateTrack(newTrackInfo: ITrackSetting | null): void {
     this._updateToken = true;
     if (newTrackInfo === null) {
       if (this._lastEmitted === null) {
@@ -148,12 +149,18 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     if (!this._updateToken) {
       return;
     }
-    this._lastEmitted = { adaptation, switchingMode, lockedRepresentations: null };
+    this._lastEmitted = {
+      adaptation,
+      switchingMode,
+      lockedRepresentations: null,
+    };
     this._updateToken = false;
-    this._adaptationRef.setValue({ adaptationId: adaptation.id,
-                                   switchingMode,
-                                   representations: reference,
-                                   relativeResumingPosition });
+    this._adaptationRef.setValue({
+      adaptationId: adaptation.id,
+      switchingMode,
+      representations: reference,
+      relativeResumingPosition,
+    });
   }
 
   /**
@@ -164,8 +171,8 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * @returns {Object}
    */
   private _constructLockedRepresentationsReference(
-    trackInfo : ITrackSetting
-  ) : SharedReference<IRepresentationsChoice> {
+    trackInfo: ITrackSetting,
+  ): SharedReference<IRepresentationsChoice> {
     /* Initialize it. Will be at its true value at the end of the function. */
     const reference = new SharedReference<IRepresentationsChoice>({
       representationIds: [],
@@ -184,31 +191,37 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
 
     return reference;
 
-    function updateReferenceIfNeeded() : void {
+    function updateReferenceIfNeeded(): void {
       const repSettings = trackInfo.lockedRepresentations.getValue();
       /* eslint-disable @typescript-eslint/no-duplicate-type-constituents */
-      let switchingMode : IAudioRepresentationsSwitchingMode |
-                          IVideoRepresentationsSwitchingMode;
+      let switchingMode:
+        | IAudioRepresentationsSwitchingMode
+        | IVideoRepresentationsSwitchingMode;
       /* eslint-enable @typescript-eslint/no-duplicate-type-constituents */
 
       /** Representations for which a `RepresentationStream` can be created. */
       let playableRepresentations;
-      if (repSettings === null) { // unlocking
-        playableRepresentations = trackInfo.adaptation.representations
-          .filter(representation => {
-            return representation.isSupported === true &&
-                   representation.decipherable !== false;
-          });
+      if (repSettings === null) {
+        // unlocking
+        playableRepresentations = trackInfo.adaptation.representations.filter(
+          (representation) => {
+            return (
+              representation.isSupported === true && representation.decipherable !== false
+            );
+          },
+        );
 
         // No need to remove the previous content when unlocking
         switchingMode = "lazy";
       } else {
         const { representationIds } = repSettings;
         switchingMode = repSettings.switchingMode;
-        const representations = trackInfo.adaptation.representations
-          .filter(r => arrayIncludes(representationIds, r.id));
-        playableRepresentations = representations
-          .filter(r => r.isSupported === true && r.decipherable !== false);
+        const representations = trackInfo.adaptation.representations.filter((r) =>
+          arrayIncludes(representationIds, r.id),
+        );
+        playableRepresentations = representations.filter(
+          (r) => r.isSupported === true && r.decipherable !== false,
+        );
         if (playableRepresentations.length === 0) {
           self.trigger("noPlayableLockedRepresentation", null);
           return;
@@ -222,7 +235,10 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
 
       // Check if Locked Representations have changed
       const oldRef = reference.getValue();
-      const sortedReps = playableRepresentations.map(r => r.id).slice().sort();
+      const sortedReps = playableRepresentations
+        .map((r) => r.id)
+        .slice()
+        .sort();
       if (sortedReps.length !== oldRef.representationIds.length) {
         reference.setValue({ representationIds: sortedReps, switchingMode });
         return;
@@ -230,7 +246,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       for (let i = 0; i < sortedReps.length; i++) {
         if (oldRef.representationIds[i] !== sortedReps[i]) {
           reference.setValue({ representationIds: sortedReps, switchingMode });
-          return ;
+          return;
         }
       }
     }
@@ -244,7 +260,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    * Free the resources (e.g. `Manifest` event listeners) linked to this
    * `TrackDispatcher`.
    */
-  public dispose() : void {
+  public dispose(): void {
     this.removeEventListener();
     this._canceller.cancel();
     this._adaptationRef.finish();
@@ -256,18 +272,18 @@ export interface ITrackDispatcherEvent {
    * Event sent when given locked Representations cannot be respected because
    * none of them are currently "playable".
    */
-  noPlayableLockedRepresentation : null;
+  noPlayableLockedRepresentation: null;
   noPlayableRepresentation: null;
 }
 
 /** Define a new Track preference given to the `TrackDispatcher`. */
 export interface ITrackSetting {
   /** Contains the `Adaptation` wanted by the user. */
-  adaptation : IAdaptationMetadata;
+  adaptation: IAdaptationMetadata;
   /** "Switching mode" in which the track switch should happen. */
-  switchingMode : ITrackSwitchingMode;
+  switchingMode: ITrackSwitchingMode;
   /** Relative resuming position after a track change */
-  relativeResumingPosition? : number | undefined;
+  relativeResumingPosition?: number | undefined;
   /**
    * Contains the last locked `Representation`s for this `Adaptation` wanted
    * by the user.
@@ -276,5 +292,5 @@ export interface ITrackSetting {
    * Can be updated continuously while the `TrackDispatcher` is in possession
    * of this shared reference.
    */
-  lockedRepresentations : IReadOnlySharedReference<IRepresentationsChoice | null>;
+  lockedRepresentations: IReadOnlySharedReference<IRepresentationsChoice | null>;
 }

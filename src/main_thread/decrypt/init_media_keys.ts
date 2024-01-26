@@ -20,9 +20,7 @@ import type { IKeySystemOption } from "../../public_types";
 import noop from "../../utils/noop";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import { disableMediaKeys } from "./attach_media_keys";
-import type {
-  IMediaKeysInfos,
-} from "./get_media_keys";
+import type { IMediaKeysInfos } from "./get_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
 
 /**
@@ -35,10 +33,13 @@ import getMediaKeysInfos from "./get_media_keys";
 export default async function initMediaKeys(
   mediaElement: HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  cancelSignal: CancellationSignal
+  cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {
-  const mediaKeysInfo =
-    await getMediaKeysInfos(mediaElement, keySystemsConfigs, cancelSignal);
+  const mediaKeysInfo = await getMediaKeysInfos(
+    mediaElement,
+    keySystemsConfigs,
+    cancelSignal,
+  );
 
   const { mediaKeys } = mediaKeysInfo;
   const shouldDisableOldMediaKeys =

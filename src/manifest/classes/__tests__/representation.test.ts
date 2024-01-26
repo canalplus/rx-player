@@ -19,7 +19,7 @@ import type { IParsedRepresentation } from "../../../parsers/manifest";
 import Representation from "../representation";
 import type { IRepresentationIndex } from "../representation_index";
 
-const minimalIndex : IRepresentationIndex = {
+const minimalIndex: IRepresentationIndex = {
   getInitSegment() {
     return null;
   },
@@ -70,10 +70,9 @@ const minimalIndex : IRepresentationIndex = {
   },
 };
 
-const defaultIsCodecSupported = jest.fn((
-  _mimetype: string,
-  _codec: string
-): boolean | undefined => true);
+const defaultIsCodecSupported = jest.fn(
+  (_mimetype: string, _codec: string): boolean | undefined => true,
+);
 
 describe("Manifest - Representation", () => {
   beforeEach(() => {
@@ -102,7 +101,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe(";codecs=\"\"");
+    expect(representation.getMimeTypeString()).toBe(';codecs=""');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -126,7 +125,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(57);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe(";codecs=\"\"");
+    expect(representation.getMimeTypeString()).toBe(';codecs=""');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -149,7 +148,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(2);
-    expect(representation.getMimeTypeString()).toBe(";codecs=\"\"");
+    expect(representation.getMimeTypeString()).toBe(';codecs=""');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -172,7 +171,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe(";codecs=\"vp9\"");
+    expect(representation.getMimeTypeString()).toBe(';codecs="vp9"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -196,7 +195,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe(";codecs=\"test\"");
+    expect(representation.getMimeTypeString()).toBe(';codecs="test"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -219,7 +218,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe("audio/mp4");
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe("audio/mp4;codecs=\"\"");
+    expect(representation.getMimeTypeString()).toBe('audio/mp4;codecs=""');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -254,7 +253,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe("video/mp4");
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe("video/mp4;codecs=\"vp12\"");
+    expect(representation.getMimeTypeString()).toBe('video/mp4;codecs="vp12"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -279,9 +278,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe("audio/mp4");
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe(
-      "audio/mp4;codecs=\"mp4a.40.2\""
-    );
+    expect(representation.getMimeTypeString()).toBe('audio/mp4;codecs="mp4a.40.2"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -293,9 +290,7 @@ describe("Manifest - Representation", () => {
       id: "test",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    expect(
-      new Representation(args1, "audio").getMimeTypeString()
-    ).toBe(";codecs=\"\"");
+    expect(new Representation(args1, "audio").getMimeTypeString()).toBe(';codecs=""');
 
     const args2 = {
       bitrate: 12,
@@ -303,9 +298,7 @@ describe("Manifest - Representation", () => {
       mimeType: "foo",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    expect(
-      new Representation(args2, "audio").getMimeTypeString()
-    ).toBe("foo;codecs=\"\"");
+    expect(new Representation(args2, "audio").getMimeTypeString()).toBe('foo;codecs=""');
 
     const args3 = {
       bitrate: 12,
@@ -313,9 +306,7 @@ describe("Manifest - Representation", () => {
       codecs: "bar",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    expect(
-      new Representation(args3, "audio").getMimeTypeString()
-    ).toBe(";codecs=\"bar\"");
+    expect(new Representation(args3, "audio").getMimeTypeString()).toBe(';codecs="bar"');
 
     const args4 = {
       bitrate: 12,
@@ -324,9 +315,9 @@ describe("Manifest - Representation", () => {
       codecs: "bar",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    expect(
-      new Representation(args4, "audio").getMimeTypeString()
-    ).toBe("foo;codecs=\"bar\"");
+    expect(new Representation(args4, "audio").getMimeTypeString()).toBe(
+      'foo;codecs="bar"',
+    );
   });
 
   it("should set `isSupported` of non-supported codecs or mime-type to `false`", () => {
@@ -349,9 +340,7 @@ describe("Manifest - Representation", () => {
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe("audio/mp4");
     expect(representation.width).toBe(undefined);
-    expect(representation.getMimeTypeString()).toBe(
-      "audio/mp4;codecs=\"mp4a.40.2\""
-    );
+    expect(representation.getMimeTypeString()).toBe('audio/mp4;codecs="mp4a.40.2"');
     expect(representation.isSupported).toBe(false);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
@@ -370,7 +359,7 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "text");
     expect(representation.codecs).toEqual(["boop"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"boop\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(0);
@@ -389,7 +378,7 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "audio");
     expect(representation.codecs).toEqual(["boop"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"boop\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(0);
@@ -408,13 +397,12 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "audio");
     expect(representation.codecs).toEqual(["boop"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"boop\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  // eslint-disable-next-line max-len
   it("should have both supplementalCodecs and codecs if support prober returns undefined", () => {
     defaultIsCodecSupported.mockImplementation(() => undefined);
     const args = {
@@ -429,20 +417,18 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "audio");
     expect(representation.codecs).toEqual(["bap", "boop"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"bap\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="bap"');
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);
   });
 
-  // eslint-disable-next-line max-len
   it("should only have codecs if support prober returns false for the supplementalCodecs and true for the codecs", () => {
-    defaultIsCodecSupported.mockImplementation((
-      _arg1: string,
-      arg2: string
-    ): boolean | undefined => {
-      return arg2 === "boop";
-    });
+    defaultIsCodecSupported.mockImplementation(
+      (_arg1: string, arg2: string): boolean | undefined => {
+        return arg2 === "boop";
+      },
+    );
     const args = {
       bitrate: 12,
       id: "test",
@@ -455,20 +441,18 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "audio");
     expect(representation.codecs).toEqual(["boop"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"boop\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalled();
   });
 
-  // eslint-disable-next-line max-len
   it("should have both supplementalCodecs and codecs if support prober returns undefined for the former and true for the latter", () => {
-    defaultIsCodecSupported.mockImplementation((
-      _arg1: string,
-      arg2: string
-    ): boolean | undefined => {
-      return arg2 === "boop" ? true : undefined;
-    });
+    defaultIsCodecSupported.mockImplementation(
+      (_arg1: string, arg2: string): boolean | undefined => {
+        return arg2 === "boop" ? true : undefined;
+      },
+    );
     const args = {
       bitrate: 12,
       id: "test",
@@ -481,20 +465,18 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "audio");
     expect(representation.codecs).toEqual(["bap", "boop"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"bap\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="bap"');
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalled();
   });
 
-  // eslint-disable-next-line max-len
   it("should only have supplementalCodecs if support prober returns true for the former", () => {
-    defaultIsCodecSupported.mockImplementation((
-      _arg1: string,
-      arg2: string
-    ): boolean | undefined => {
-      return arg2 === "bap" ? true : undefined;
-    });
+    defaultIsCodecSupported.mockImplementation(
+      (_arg1: string, arg2: string): boolean | undefined => {
+        return arg2 === "bap" ? true : undefined;
+      },
+    );
     const args = {
       bitrate: 12,
       id: "test",
@@ -507,7 +489,7 @@ describe("Manifest - Representation", () => {
     const representation = new Representation(args, "audio");
     expect(representation.codecs).toEqual(["bap"]);
     expect(representation.mimeType).toBe("bip");
-    expect(representation.getMimeTypeString()).toBe("bip;codecs=\"bap\"");
+    expect(representation.getMimeTypeString()).toBe('bip;codecs="bap"');
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(defaultIsCodecSupported).toHaveBeenCalledTimes(1);

@@ -22,10 +22,10 @@
  * @returns {*}
  */
 export default function reduceChildren<T>(
-  root : Element,
-  fn : (accu : T, nodeName : string, nodeElt : Element) => T,
-  init : T
-) : T {
+  root: Element,
+  fn: (accu: T, nodeName: string, nodeElt: Element) => T,
+  init: T,
+): T {
   let node = root.firstElementChild;
   let accumulator = init;
   while (node !== null) {

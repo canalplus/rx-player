@@ -7,7 +7,6 @@ import SharedReference from "../../../utils/reference";
 import type { IAdaptationChoice, IRepresentationsChoice } from "../../stream";
 
 export default class TrackChoiceSetter {
-
   /**
    * Store SharedReference through which track choices and Representation
    * choices will be emitted to the rest of the code.
@@ -35,7 +34,8 @@ export default class TrackChoiceSetter {
           representations: SharedReference<IRepresentationsChoice>;
         }
       >
-  >>;
+    >
+  >;
 
   constructor() {
     this._refs = new Map();
@@ -58,9 +58,9 @@ export default class TrackChoiceSetter {
   }
 
   public addTrackSetter(
-    periodId : string,
-    bufferType : ITrackType,
-    ref: SharedReference<IAdaptationChoice | null | undefined>
+    periodId: string,
+    bufferType: ITrackType,
+    ref: SharedReference<IAdaptationChoice | null | undefined>,
   ) {
     let obj = this._refs.get(periodId);
     if (obj === undefined) {
@@ -85,11 +85,13 @@ export default class TrackChoiceSetter {
       // Re-add `representations` key as a SharedReference so we're able to
       // update it.
       representations = new SharedReference<IRepresentationsChoice>(
-        val.representations.getValue()
+        val.representations.getValue(),
       );
-      ref.setValue(objectAssign({}, val, {
-        representations,
-      }));
+      ref.setValue(
+        objectAssign({}, val, {
+          representations,
+        }),
+      );
     }
     obj[bufferType] = {
       trackReference: ref,
@@ -98,10 +100,10 @@ export default class TrackChoiceSetter {
   }
 
   public setTrack(
-    periodId : string,
-    bufferType : ITrackType,
-    choice: ITrackUpdateChoiceObject | null | undefined
-  ) : boolean {
+    periodId: string,
+    bufferType: ITrackType,
+    choice: ITrackUpdateChoiceObject | null | undefined,
+  ): boolean {
     const ref = this._refs.get(periodId)?.[bufferType];
     if (ref === undefined) {
       log.debug("WP: Setting track for inexistent periodId", periodId, bufferType);
@@ -127,11 +129,11 @@ export default class TrackChoiceSetter {
   }
 
   public updateRepresentations(
-    periodId : string,
-    adaptationId : string,
-    bufferType : ITrackType,
-    choice: IRepresentationsChoice
-  ) : boolean {
+    periodId: string,
+    adaptationId: string,
+    bufferType: ITrackType,
+    choice: IRepresentationsChoice,
+  ): boolean {
     const ref = this._refs.get(periodId)?.[bufferType];
     if (ref === undefined) {
       log.debug("WP: Setting track for inexistent periodId", periodId, bufferType);
@@ -146,13 +148,15 @@ export default class TrackChoiceSetter {
     return true;
   }
 
-  public removeTrackSetter(periodId : string, bufferType : ITrackType) : boolean {
+  public removeTrackSetter(periodId: string, bufferType: ITrackType): boolean {
     const obj = this._refs.get(periodId);
     const ref = obj?.[bufferType];
     if (obj === undefined || ref === undefined) {
-      log.debug("WP: Removing track setter for inexistent periodId",
-                periodId,
-                bufferType);
+      log.debug(
+        "WP: Removing track setter for inexistent periodId",
+        periodId,
+        bufferType,
+      );
       return false;
     }
     ref.trackReference.finish();

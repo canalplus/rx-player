@@ -24,32 +24,32 @@ import type LoadedSessionsStore from "./loaded_sessions_store";
 
 /** DRM-related state that can be associated to a single HTMLMediaElement. */
 export interface IMediaElementMediaKeysInfos {
-  emeImplementation : IEmeApiImplementation;
+  emeImplementation: IEmeApiImplementation;
 
   /** Last keySystemOptions used with that HTMLMediaElement. */
-  keySystemOptions : IKeySystemOption;
+  keySystemOptions: IKeySystemOption;
 
   /**
    * Last MediaKeySystemAccess used to create a MediaKeys bound to that
    * HTMLMediaElement.
    */
-  mediaKeySystemAccess : ICustomMediaKeySystemAccess |
-                         MediaKeySystemAccess;
+  mediaKeySystemAccess: ICustomMediaKeySystemAccess | MediaKeySystemAccess;
 
   /** Last MediaKeys instance bound to that HTMLMediaElement. */
-  mediaKeys : MediaKeys |
-              ICustomMediaKeys;
+  mediaKeys: MediaKeys | ICustomMediaKeys;
 
   /**
    * Store containing information about every MediaKeySession active on the
    * MediaKeys instance bound to that HTMLMediaElement.
    */
-  loadedSessionsStore : LoadedSessionsStore;
+  loadedSessionsStore: LoadedSessionsStore;
 }
 
 // Store the MediaKeys infos attached to a media element.
-const currentMediaState = new WeakMap<HTMLMediaElement, IMediaElementMediaKeysInfos |
-                                                        null >();
+const currentMediaState = new WeakMap<
+  HTMLMediaElement,
+  IMediaElementMediaKeysInfos | null
+>();
 
 export default {
   /**
@@ -58,9 +58,9 @@ export default {
    * @param {Object} state
    */
   setState(
-    mediaElement : HTMLMediaElement,
-    state : IMediaElementMediaKeysInfos | null
-  ) : void {
+    mediaElement: HTMLMediaElement,
+    state: IMediaElementMediaKeysInfos | null,
+  ): void {
     currentMediaState.set(mediaElement, state);
   },
 
@@ -69,17 +69,16 @@ export default {
    * @param {HTMLMediaElement} mediaElement
    * @returns {Object}
    */
-  getState(mediaElement : HTMLMediaElement) : IMediaElementMediaKeysInfos | null {
+  getState(mediaElement: HTMLMediaElement): IMediaElementMediaKeysInfos | null {
     const currentState = currentMediaState.get(mediaElement);
-    return currentState === undefined ? null :
-                                        currentState;
+    return currentState === undefined ? null : currentState;
   },
 
   /**
    * Remove MediaKeys infos currently set on a HMTLMediaElement
    * @param {HTMLMediaElement} mediaElement
    */
-  clearState(mediaElement : HTMLMediaElement) : void {
+  clearState(mediaElement: HTMLMediaElement): void {
     currentMediaState.set(mediaElement, null);
   },
 };

@@ -25,7 +25,7 @@ following rule:
 const position = player.getPosition();
 ```
 
-  - **return value** `number`: The current media element's position.
+- **return value** `number`: The current media element's position.
 
 ## Example
 

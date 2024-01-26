@@ -17,13 +17,13 @@ resolution, if you want to be ready with a higher resolution in case the user
 enables fullscreen mode.
 
 To replace `limitVideoWidth`, you can write:
+
 ```js
 const rxPlayer = new RxPlayer({
   // ...
   videoResolutionLimit: "videoElement",
 });
 ```
-
 
 ### `initialAudioBitrate` / `initialVideoBitrate`
 
@@ -41,6 +41,7 @@ now the default behavior - thus it doesn't need to be replaced by anything.
 If you previously set this property to `true` or didn't set this property
 however, you might want to explicitly stop the content when the `"ENDED"` player
 state is reached:
+
 ```js
 rxPlayer.addEventListener("playerStateChange", (state) => {
   if (state === "ENDED") {

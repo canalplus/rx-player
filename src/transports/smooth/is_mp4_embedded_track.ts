@@ -20,6 +20,6 @@
  * @param {string|undefined} mimeType
  * @returns {Boolean}
  */
-export default function isMP4EmbeddedTrack(mimeType : string | undefined) : boolean {
+export default function isMP4EmbeddedTrack(mimeType: string | undefined): boolean {
   return typeof mimeType === "string" && mimeType.indexOf("mp4") >= 0;
 }

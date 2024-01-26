@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import dashJsParser from "../../parsers/manifest/dash/js-parser";
@@ -25,7 +24,7 @@ import type { IFeaturesObject } from "../types";
  * Add ability to play DASH contents.
  * @param {Object} features
  */
-function addDASHFeature(features : IFeaturesObject) : void {
+function addDASHFeature(features: IFeaturesObject): void {
   if (features.transports.dash === undefined) {
     features.transports.dash = dash;
   }

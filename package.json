@@ -167,6 +167,8 @@
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
     "list": "node scripts/list-npm-scripts.mjs",
     "prepublishOnly": "npm run build:all",
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier . --check",
     "releases:dev": "./scripts/make-dev-releases",
     "standalone": "node ./scripts/run_standalone_demo.mjs",
     "start": "node ./scripts/start_demo_web_server.mjs",
@@ -209,6 +211,7 @@
     "core-js": "3.34.0",
     "esbuild": "0.19.10",
     "eslint": "8.56.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-ban": "1.6.0",
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-jsdoc": "46.9.1",
@@ -226,6 +229,7 @@
     "karma-webpack": "5.0.0",
     "mocha": "10.2.0",
     "mocha-loader": "5.1.5",
+    "prettier": "^3.2.4",
     "raw-loader": "4.0.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -253,14 +257,16 @@
       "standalone": "Build and launch the \"standalone\" demo (without any UI) on a local server. Re-build on file updates.",
       "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)"
     },
-    "Type-check or lint the current code": {
+    "Type-check, format, or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
       "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
       "check:types": "Check TypeScript typings in src",
       "check:types:watch": "Check TypeScript typings in src each time files change",
       "lint": "Lint rx-player source files",
       "lint:demo": "Lint demo source files",
-      "lint:tests": "Lint integration tests source files"
+      "lint:tests": "Lint integration tests source files",
+      "prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML and Markdown files",
+      "prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML and Markdown files are well-formatted"
     },
     "Run tests": {
       "Integration tests (test the whole API, ensure the RxPlayer build is made BEFORE running them)": {

@@ -29,9 +29,7 @@ const fakeMediaElement = {
     { language: "el", mode: "hidden" },
     { language: "pt-BR", mode: "hidden" },
   ],
-  videoTracks: [
-    { language: "", selected: true },
-  ],
+  videoTracks: [{ language: "", selected: true }],
 } as unknown as HTMLVideoElement;
 
 describe("API - MediaElementTracksStore", () => {
@@ -98,33 +96,33 @@ describe("API - MediaElementTracksStore", () => {
   it("should emit available tracks change when changing text contents", (done) => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
-    trackManager
-      .addEventListener("availableTextTracksChange", (tracks) => {
-        expect(tracks.length).toBe(5);
-        expect(tracks[0].id).toBe("gen_text_es_1");
-        expect(tracks[1].id).toBe("gen_text_en_1");
-        expect(tracks[2].id).toBe("gen_text_fr_1");
-        expect(tracks[3].id).toBe("gen_text_el_1");
-        expect(tracks[4].id).toBe("gen_text_pt-BR_1");
-        done();
-      });
+    trackManager.addEventListener("availableTextTracksChange", (tracks) => {
+      expect(tracks.length).toBe(5);
+      expect(tracks[0].id).toBe("gen_text_es_1");
+      expect(tracks[1].id).toBe("gen_text_en_1");
+      expect(tracks[2].id).toBe("gen_text_fr_1");
+      expect(tracks[3].id).toBe("gen_text_el_1");
+      expect(tracks[4].id).toBe("gen_text_pt-BR_1");
+      done();
+    });
 
     // Fake browser behavior
-    (fakeMediaElement.textTracks as unknown as TextTrack[])
-      .unshift({ language: "es", mode: "hidden" } as TextTrack);
+    (fakeMediaElement.textTracks as unknown as TextTrack[]).unshift({
+      language: "es",
+      mode: "hidden",
+    } as TextTrack);
     fakeMediaElement.textTracks.onaddtrack?.({} as TrackEvent);
   });
 
   it("should emit available tracks change when changing video contents", (done) => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
-    trackManager
-      .addEventListener("availableVideoTracksChange", (tracks) => {
-        expect(tracks.length).toBe(2);
-        expect(tracks[0].id).toBe("gen_video_en_1");
-        expect(tracks[1].id).toBe("gen_video_nolang_1");
-        done();
-      });
+    trackManager.addEventListener("availableVideoTracksChange", (tracks) => {
+      expect(tracks.length).toBe(2);
+      expect(tracks[0].id).toBe("gen_video_en_1");
+      expect(tracks[1].id).toBe("gen_video_nolang_1");
+      done();
+    });
 
     // Fake browser behavior
     /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -142,16 +140,15 @@ describe("API - MediaElementTracksStore", () => {
   it("should emit available tracks change when changing audio contents", (done) => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
-    trackManager
-      .addEventListener("availableAudioTracksChange", (tracks) => {
-        expect(tracks.length).toBe(5);
-        expect(tracks[0].id).toBe("gen_audio_en_1");
-        expect(tracks[1].id).toBe("gen_audio_en_2");
-        expect(tracks[2].id).toBe("gen_audio_fr_1");
-        expect(tracks[3].id).toBe("gen_audio_el_1");
-        expect(tracks[4].id).toBe("gen_audio_pt-BR_1");
-        done();
-      });
+    trackManager.addEventListener("availableAudioTracksChange", (tracks) => {
+      expect(tracks.length).toBe(5);
+      expect(tracks[0].id).toBe("gen_audio_en_1");
+      expect(tracks[1].id).toBe("gen_audio_en_2");
+      expect(tracks[2].id).toBe("gen_audio_fr_1");
+      expect(tracks[3].id).toBe("gen_audio_el_1");
+      expect(tracks[4].id).toBe("gen_audio_pt-BR_1");
+      done();
+    });
 
     // Fake browser behavior
     /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -169,11 +166,10 @@ describe("API - MediaElementTracksStore", () => {
   it("should emit chosen track when changing text content", (done) => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
-    trackManager
-      .addEventListener("textTrackChange", (chosenTrack) => {
-        expect(chosenTrack?.id).toBe("gen_text_fr_1");
-        done();
-      });
+    trackManager.addEventListener("textTrackChange", (chosenTrack) => {
+      expect(chosenTrack?.id).toBe("gen_text_fr_1");
+      done();
+    });
 
     trackManager.setTextTrackById("gen_text_fr_1");
 

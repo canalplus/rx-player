@@ -34,8 +34,7 @@ const iso8601Duration =
  * @param {string} val - The value to parse
  * @returns {number | null}
  */
-function parseDuration(val : string) : number | null {
-
+function parseDuration(val: string): number | null {
   if (!isNonEmptyString(val)) {
     return null;
   }
@@ -46,18 +45,12 @@ function parseDuration(val : string) : number | null {
   }
 
   const duration =
-    (parseFloat(isNonEmptyString(match[2]) ? match[2] :
-                                             "0") * 365 * 24 * 60 * 60 +
-     parseFloat(isNonEmptyString(match[4]) ? match[4] :
-                                             "0") * 30 * 24 * 60 * 60 +
-     parseFloat(isNonEmptyString(match[6]) ? match[6] :
-                                             "0") * 24 * 60 * 60 +
-     parseFloat(isNonEmptyString(match[8]) ? match[8] :
-                                             "0") * 60 * 60 +
-     parseFloat(isNonEmptyString(match[10]) ? match[10] :
-                                              "0") * 60 +
-     parseFloat(isNonEmptyString(match[12]) ? match[12] :
-                                              "0"));
+    parseFloat(isNonEmptyString(match[2]) ? match[2] : "0") * 365 * 24 * 60 * 60 +
+    parseFloat(isNonEmptyString(match[4]) ? match[4] : "0") * 30 * 24 * 60 * 60 +
+    parseFloat(isNonEmptyString(match[6]) ? match[6] : "0") * 24 * 60 * 60 +
+    parseFloat(isNonEmptyString(match[8]) ? match[8] : "0") * 60 * 60 +
+    parseFloat(isNonEmptyString(match[10]) ? match[10] : "0") * 60 +
+    parseFloat(isNonEmptyString(match[12]) ? match[12] : "0");
   return duration;
 }
 
@@ -69,12 +62,9 @@ function parseDuration(val : string) : number | null {
  */
 async function getDurationFromManifest(
   url: string,
-  transport: "dash" | "smooth" | "metaplaylist"
+  transport: "dash" | "smooth" | "metaplaylist",
 ): Promise<number> {
-
-  if (transport !== "dash" &&
-      transport !== "smooth" &&
-      transport !== "metaplaylist") {
+  if (transport !== "dash" && transport !== "smooth" && transport !== "metaplaylist") {
     throw new Error("createMetaplaylist: Unknown transport type.");
   }
 
@@ -97,12 +87,12 @@ async function getDurationFromManifest(
       const periodElements = root.getElementsByTagName("Period");
       const firstDASHStartAttribute = periodElements[0]?.getAttribute("start");
       const firstDASHStart =
-        firstDASHStartAttribute !== null ? parseDuration(firstDASHStartAttribute) :
-                                           0;
+        firstDASHStartAttribute !== null ? parseDuration(firstDASHStartAttribute) : 0;
       const dashDuration = parseDuration(dashDurationAttribute);
       if (firstDASHStart === null || dashDuration === null) {
-        throw new Error("createMetaplaylist: Cannot parse " +
-                        "the duration from a DASH content.");
+        throw new Error(
+          "createMetaplaylist: Cannot parse " + "the duration from a DASH content.",
+        );
       }
       return dashDuration - firstDASHStart;
     }
@@ -112,10 +102,11 @@ async function getDurationFromManifest(
     if (smoothDurationAttribute === null) {
       throw new Error("createMetaplaylist: No duration on smooth content.");
     }
-    const timescale = smoothTimeScaleAttribute !== null ?
-      parseInt(smoothTimeScaleAttribute, 10) :
-      10000000;
-    return (parseInt(smoothDurationAttribute, 10)) / timescale;
+    const timescale =
+      smoothTimeScaleAttribute !== null
+        ? parseInt(smoothTimeScaleAttribute, 10)
+        : 10000000;
+    return parseInt(smoothDurationAttribute, 10) / timescale;
   }
 
   // metaplaylist
@@ -129,9 +120,11 @@ async function getDurationFromManifest(
   });
   const { responseData } = response;
   const metaplaylist = JSON.parse(responseData) as IMetaPlaylist;
-  if (metaplaylist.contents === undefined ||
-      metaplaylist.contents.length === undefined ||
-      metaplaylist.contents.length === 0) {
+  if (
+    metaplaylist.contents === undefined ||
+    metaplaylist.contents.length === undefined ||
+    metaplaylist.contents.length === 0
+  ) {
     throw new Error("createMetaplaylist: No duration on Metaplaylist content.");
   }
   const { contents } = metaplaylist;

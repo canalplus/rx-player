@@ -451,7 +451,6 @@ video track when in directfile mode to avoid that case (this is documented
 in the corresponding APIs).
 </div>
 
-
 ## Representation selection events
 
 This chapter describes events linked to the current audio, video or
@@ -466,20 +465,21 @@ changes.
 
 The payload is an object describing this new Representation, with the following
 properties:
-  - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
-    per seconds.
+- `id` (`string`): The id used to identify this Representation.
 
-    `undefined` if unknown.
+- `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+  per seconds.
 
-  - `width` (`Number|undefined`): The width of video, in pixels.
+  `undefined` if unknown.
 
-  - `height` (`Number|undefined`): The height of video, in pixels.
+- `width` (`Number|undefined`): The width of video, in pixels.
 
-  - `codec` (`string|undefined`): The codec of the Representation.
+- `height` (`Number|undefined`): The height of video, in pixels.
 
-  - `frameRate` (`number|undefined`): The video framerate.
+- `codec` (`string|undefined`): The codec of the Representation.
+
+- `frameRate` (`number|undefined`): The video framerate.
 
 A `null` payload means that no video track is available now.
 
@@ -500,12 +500,13 @@ changes.
 
 The payload is an object describing the new Representation, with the following
 properties:
-  - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
-    per seconds.
+- `id` (`string`): The id used to identify this Representation.
 
-  - `codec` (`string|undefined`): The codec of the representation
+- `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits
+  per seconds.
+
+- `codec` (`string|undefined`): The codec of the representation
 
 This event only concerns the currently-playing
 [Period](../Getting_Started/Glossary.md).
@@ -528,18 +529,18 @@ Triggered when the current [Period](../Getting_Started/Glossary.md#period) being
 
 The payload of this event is an object containing the following properties:
 
-  - `start` (`number`): The starting position at which the Period starts, in
-    seconds.
+- `start` (`number`): The starting position at which the Period starts, in
+  seconds.
 
-  - `end` (`number|undefined`): The position at which the Period ends, in
-    seconds.
+- `end` (`number|undefined`): The position at which the Period ends, in
+  seconds.
 
-    `undefined` either if not known or if the Period has no end yet (e.g. for
-    live contents, the end might not be known for now).
+  `undefined` either if not known or if the Period has no end yet (e.g. for
+  live contents, the end might not be known for now).
 
-  - `id` (`string`): `id` of the Period, allowing to call track and
-    Representation selection APIs (such as `setAudioTrack` and
-    `lockVideoRepresentations` for example) even when the Period changes.
+- `id` (`string`): `id` of the Period, allowing to call track and
+  Representation selection APIs (such as `setAudioTrack` and
+  `lockVideoRepresentations` for example) even when the Period changes.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -565,19 +566,19 @@ The payload of this event is an array of object, each describing a single Period
 in chronological order.
 Those objects all contain the following properties:
 
-  - `start` (`number`): The starting position at which the Period starts, in
-    seconds.
+- `start` (`number`): The starting position at which the Period starts, in
+  seconds.
 
-  - `end` (`number|undefined`): The position at which the Period ends, in
-    seconds.
+- `end` (`number|undefined`): The position at which the Period ends, in
+  seconds.
 
-    `undefined` either if not known or if the Period has no end yet (e.g. for
-    live contents, the end might not be known for now).
+  `undefined` either if not known or if the Period has no end yet (e.g. for
+  live contents, the end might not be known for now).
 
-  - `id` (`string`): `id` for this Period, allowing to call track and
-    Representation selection APIs (such as `setAudioTrack` and
-    `lockVideoRepresentations` for example) even if that Period is not currently
-    playing.
+- `id` (`string`): `id` for this Period, allowing to call track and
+  Representation selection APIs (such as `setAudioTrack` and
+  `lockVideoRepresentations` for example) even if that Period is not currently
+  playing.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -601,73 +602,72 @@ you can rely on the `newAvailablePeriods` event.
 
 Cases where the track changes include:
 
-  - when the application updates a track manually (for example through a
-    `setAudioTrack` call)
+- when the application updates a track manually (for example through a
+  `setAudioTrack` call)
 
-  - when it had to be done as a side-effect of another API (for example after
-    enabling trickmode video tracks through a `setPlaybackRate` call)
+- when it had to be done as a side-effect of another API (for example after
+  enabling trickmode video tracks through a `setPlaybackRate` call)
 
-  - or in the extremely rare situation where the RxPlayer had to do it by itself
-    automatically (one situation would be when a refreshed content's Manifest
-    removes the previously-chosen track. There, the RxPlayer will send the
-    `trackUpdate` event and - if no new track is chosen since - will
-    automatically switch to that track so playback can continue).
+- or in the extremely rare situation where the RxPlayer had to do it by itself
+  automatically (one situation would be when a refreshed content's Manifest
+  removes the previously-chosen track. There, the RxPlayer will send the
+  `trackUpdate` event and - if no new track is chosen since - will
+  automatically switch to that track so playback can continue).
 
 The payload for this event is an object with the following properties:
 
-  - `trackType` (`string`): The type of track concerned. Can for example be
-    `audio` for an audio track, `video` for a video track or `text` for a text
-    track.
+- `trackType` (`string`): The type of track concerned. Can for example be
+  `audio` for an audio track, `video` for a video track or `text` for a text
+  track.
 
-  - `period` (`Object`): Information about the concerned
-    [Period](../Getting_Started/Glossary.md#period). This object contains as
-    properties:
+- `period` (`Object`): Information about the concerned
+  [Period](../Getting_Started/Glossary.md#period). This object contains as
+  properties:
 
-    - `start` (`number`): The starting position at which the Period starts, in
-      seconds.
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
 
-    - `end` (`number|undefined`): The position at which the Period ends, in
-      seconds.
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
 
-      `undefined` either if not known or if the Period has no end yet (e.g. for
-      live contents, the end might not be known for now).
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
-    - `id` (`string`): `id` of the Period, allowing to call track and
-      Representation selection APIs (such as `setAudioTrack` and
-      `lockVideoRepresentations` for example) even when the Period changes.
+  - `id` (`string`): `id` of the Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even when the Period changes.
 
-  - `reason` (`string`): The reason for the track update.
-    For now, it can be set to:
+- `reason` (`string`): The reason for the track update.
+  For now, it can be set to:
 
-      - `"manual"`: the track was updated because the application called a
-        method to directly update it.
+  - `"manual"`: the track was updated because the application called a
+    method to directly update it.
 
-        This event is the direct consequence of calling `setAudioTrack`,
-        `setTextTrack`, `setVideoTrack`, `disableTextTrack` or
-        `disableVideoTrack`, so it corresponds to track updates you should
-        already be aware of.
+    This event is the direct consequence of calling `setAudioTrack`,
+    `setTextTrack`, `setVideoTrack`, `disableTextTrack` or
+    `disableVideoTrack`, so it corresponds to track updates you should
+    already be aware of.
 
-      - `"trickmode-enabled"`: The track is being updated because the
-        application wanted to enable video trickmode tracks (usually by setting
-        the `preferTrickModeTracks` option of the `setPlaybackRate` method to
-        `true`).
+  - `"trickmode-enabled"`: The track is being updated because the
+    application wanted to enable video trickmode tracks (usually by setting
+    the `preferTrickModeTracks` option of the `setPlaybackRate` method to
+    `true`).
 
-      - `"trickmode-disabled"`: The track is being updated because the
-        application wanted to disable video trickmode tracks (usually by setting
-        the `preferTrickModeTracks` option of the `setPlaybackRate` method to
-        `false`).
+  - `"trickmode-disabled"`: The track is being updated because the
+    application wanted to disable video trickmode tracks (usually by setting
+    the `preferTrickModeTracks` option of the `setPlaybackRate` method to
+    `false`).
 
-      - `"missing"` the previously-chosen track was missing from the content's
-        refreshed Manifest.
+  - `"missing"` the previously-chosen track was missing from the content's
+    refreshed Manifest.
 
-      - `"no-playable-representation"`: the previously-chosen track had none of
-        its `Representation` playable, most likely because of decipherability
-        issues and thus the RxPlayer decided to switch to a new track.
+  - `"no-playable-representation"`: the previously-chosen track had none of
+    its `Representation` playable, most likely because of decipherability
+    issues and thus the RxPlayer decided to switch to a new track.
 
-    Though other reasons may be added in the future (for future reasons not
-    covered by those values), so you should expect this possibility in your
-    application's logic.
-
+  Though other reasons may be added in the future (for future reasons not
+  covered by those values), so you should expect this possibility in your
+  application's logic.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -680,7 +680,7 @@ _payload type_: `Object`
 
 Event triggered if the list of available [`Representation`](../Getting_Started/Glossary.md#representation)
 linked to the currently-chosen video, audio or text track for any
-[Period](../Getting_Started/Glossary.md#period)  (for example inspectable
+[Period](../Getting_Started/Glossary.md#period) (for example inspectable
 through the `representations` property of audio and video track objects) may
 have changed compared to what it was before.
 
@@ -696,39 +696,38 @@ Representations choice when they depend on the list of available Representation.
 
 The payload for this event is an object with the following properties:
 
-  - `trackType` (`string`): The type of track concerned. Can for example be
-    `audio` for an audio track, `video` for a video track or `text` for a text
-    track.
+- `trackType` (`string`): The type of track concerned. Can for example be
+  `audio` for an audio track, `video` for a video track or `text` for a text
+  track.
 
-  - `period` (`Object`): Information about the concerned
-    [Period](../Getting_Started/Glossary.md#period). This object contains as
-    properties:
+- `period` (`Object`): Information about the concerned
+  [Period](../Getting_Started/Glossary.md#period). This object contains as
+  properties:
 
-    - `start` (`number`): The starting position at which the Period starts, in
-      seconds.
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
 
-    - `end` (`number|undefined`): The position at which the Period ends, in
-      seconds.
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
 
-      `undefined` either if not known or if the Period has no end yet (e.g. for
-      live contents, the end might not be known for now).
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
-    - `id` (`string`): `id` of the Period, allowing to call track and
-      Representation selection APIs (such as `setAudioTrack` and
-      `lockVideoRepresentations` for example) even when the Period changes.
+  - `id` (`string`): `id` of the Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even when the Period changes.
 
-  - `reason` (`string`): The reason for the update.
-    For now, it can be set to:
+- `reason` (`string`): The reason for the update.
+  For now, it can be set to:
 
-      - `"decipherability-update"`: The list of available `Representation`s is
-        being updated either because at least one of that track's
-        `Representation` became undecipherable or because it became decipherable
-        again.
+  - `"decipherability-update"`: The list of available `Representation`s is
+    being updated either because at least one of that track's
+    `Representation` became undecipherable or because it became decipherable
+    again.
 
-    Though other reasons may be added in the future (for future reasons not
-    covered by those values), so you should expect this possibility in your
-    application's logic.
-
+  Though other reasons may be added in the future (for future reasons not
+  covered by those values), so you should expect this possibility in your
+  application's logic.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -751,26 +750,26 @@ synchronously locking Representations you wish to play and thus avoid playing
 the others.
 
 The payload for this event is an object with the following properties:
-  - `period` (`Object`): Information about the concerned
-    [Period](../Getting_Started/Glossary.md#period). This object contains as
-    properties:
 
-    - `start` (`number`): The starting position at which the Period starts, in
-      seconds.
+- `period` (`Object`): Information about the concerned
+  [Period](../Getting_Started/Glossary.md#period). This object contains as
+  properties:
 
-    - `end` (`number|undefined`): The position at which the Period ends, in
-      seconds.
+  - `start` (`number`): The starting position at which the Period starts, in
+    seconds.
 
-      `undefined` either if not known or if the Period has no end yet (e.g. for
-      live contents, the end might not be known for now).
+  - `end` (`number|undefined`): The position at which the Period ends, in
+    seconds.
 
-    - `id` (`string`): `id` of the Period, allowing to call track and
-      Representation selection APIs (such as `setAudioTrack` and
-      `lockVideoRepresentations` for example) even when the Period changes.
+    `undefined` either if not known or if the Period has no end yet (e.g. for
+    live contents, the end might not be known for now).
 
-  - `trackType` (`string`): The type of track concerned. Can for example be
-    `audio` for audio Representations or `video` for video Representations.
+  - `id` (`string`): `id` of the Period, allowing to call track and
+    Representation selection APIs (such as `setAudioTrack` and
+    `lockVideoRepresentations` for example) even when the Period changes.
 
+- `trackType` (`string`): The type of track concerned. Can for example be
+  `audio` for audio Representations or `video` for video Representations.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -900,10 +899,10 @@ Notify about a change of audio volume and/or of muted status.
 
 The sent payload contains the following properties:
 
-  - `volume` (`number`): The currently set audio volume from `0` (silent) to
-    `1` (the loudest).
+- `volume` (`number`): The currently set audio volume from `0` (silent) to
+  `1` (the loudest).
 
-  - `muted` (`boolean`): If `true`, the media element is currently muted (e.g.
-    through the `mute` RxPlayer method), meaning that audio will be silent even
-    if a volume higher than `0` is set.
-    You can remove the `muted` status by calling the `unMute` RxPlayer method.
+- `muted` (`boolean`): If `true`, the media element is currently muted (e.g.
+  through the `mute` RxPlayer method), meaning that audio will be silent even
+  if a volume higher than `0` is set.
+  You can remove the `muted` status by calling the `unMute` RxPlayer method.

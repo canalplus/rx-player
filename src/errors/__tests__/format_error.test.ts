@@ -26,35 +26,44 @@ describe("errors - formatError", () => {
   });
 
   it("should just return the error if it is a Custom Error", () => {
-    jest.mock("../is_known_error", () => ({ __esModule: true as const,
-                                            default: () => true }));
+    jest.mock("../is_known_error", () => ({
+      __esModule: true as const,
+      default: () => true,
+    }));
     const formatError = jest.requireActual("../format_error").default;
     const error1 = new Error("Aaaaaa");
-    expect(formatError(error1, { defaultCode: "toto",
-                                 defaultReason: "a" })).toBe(error1);
+    expect(formatError(error1, { defaultCode: "toto", defaultReason: "a" })).toBe(error1);
   });
 
   it("should stringify error if it is an Error but not a Custom Error", () => {
-    jest.mock("../is_known_error", () => ({ __esModule: true as const,
-                                            default: () => false }));
+    jest.mock("../is_known_error", () => ({
+      __esModule: true as const,
+      default: () => false,
+    }));
     const OtherError = jest.requireActual("../other_error").default;
     const formatError = jest.requireActual("../format_error").default;
     const error1 = new Error("Abcdef");
-    const formattedError = formatError(error1, { defaultCode: "toto",
-                                                 defaultReason: "a" });
+    const formattedError = formatError(error1, {
+      defaultCode: "toto",
+      defaultReason: "a",
+    });
     expect(formattedError).toBeInstanceOf(OtherError);
     expect(formattedError.message).toBe("toto: Error: Abcdef");
     expect(formattedError.code).toBe("toto");
   });
 
   it("should stringify error if it is an Error but not a Custom Error", () => {
-    jest.mock("../is_known_error", () => ({ __esModule: true as const,
-                                            default: () => false }));
+    jest.mock("../is_known_error", () => ({
+      __esModule: true as const,
+      default: () => false,
+    }));
     const OtherError = jest.requireActual("../other_error").default;
     const formatError = jest.requireActual("../format_error").default;
     const error1 = {};
-    const formattedError = formatError(error1, { defaultCode: "toto",
-                                                 defaultReason: "a" });
+    const formattedError = formatError(error1, {
+      defaultCode: "toto",
+      defaultReason: "a",
+    });
     expect(formattedError).toBeInstanceOf(OtherError);
     expect(formattedError.message).toBe("toto: a");
     expect(formattedError.code).toBe("toto");

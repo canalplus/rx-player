@@ -16,10 +16,7 @@
 
 import type { IManifestMetadata } from "../../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
-import type {
-  INonFiniteStreamEventPayload,
-  IStreamEventPayload,
-} from "./types";
+import type { INonFiniteStreamEventPayload, IStreamEventPayload } from "./types";
 
 /**
  * Refresh local scheduled events list
@@ -28,10 +25,10 @@ import type {
  * @returns {Array.<Object>}
  */
 function refreshScheduledEventsList(
-  oldScheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
-  manifest: IManifestMetadata
-): Array<IStreamEventPayload|INonFiniteStreamEventPayload> {
-  const scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload> = [];
+  oldScheduledEvents: Array<IStreamEventPayload | INonFiniteStreamEventPayload>,
+  manifest: IManifestMetadata,
+): Array<IStreamEventPayload | INonFiniteStreamEventPayload> {
+  const scheduledEvents: Array<IStreamEventPayload | INonFiniteStreamEventPayload> = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
@@ -55,41 +52,41 @@ function refreshScheduledEventsList(
         // encountering unknown namespaced attributes or elements in the given
         // `<Event>` xml subset.
         let parentNode = data.value.xmlData.namespaces.reduce((acc, ns) => {
-          return acc + "xmlns:" + ns.key + "=\"" + ns.value + "\" ";
+          return acc + "xmlns:" + ns.key + '="' + ns.value + '" ';
         }, "<toremove ");
         parentNode += ">";
 
-        const parsedDom = new DOMParser()
-          .parseFromString(parentNode + data.value.xmlData.data + "</toremove>",
-                           "application/xml")
-          .documentElement;
+        const parsedDom = new DOMParser().parseFromString(
+          parentNode + data.value.xmlData.data + "</toremove>",
+          "application/xml",
+        ).documentElement;
 
-        element = parsedDom.children.length > 0 ?
-          parsedDom.children[0] :
-          parsedDom.childNodes[0] as HTMLElement;
+        element =
+          parsedDom.children.length > 0
+            ? parsedDom.children[0]
+            : (parsedDom.childNodes[0] as HTMLElement);
       } else {
         return;
       }
-      const actualData = { type: data.type,
-                           value: { ...data.value, element } };
+      const actualData = { type: data.type, value: { ...data.value, element } };
       if (end === undefined) {
-        const newScheduledEvent = { start,
-                                    id,
-                                    data: actualData,
-                                    publicEvent: { start,
-                                                   data: actualData } };
+        const newScheduledEvent = {
+          start,
+          id,
+          data: actualData,
+          publicEvent: { start, data: actualData },
+        };
         scheduledEvents.push(newScheduledEvent);
       } else {
-        const newScheduledEvent = { start,
-                                    end,
-                                    id,
-                                    data: actualData,
-                                    publicEvent: { start,
-                                                   end,
-                                                   data: actualData } };
+        const newScheduledEvent = {
+          start,
+          end,
+          id,
+          data: actualData,
+          publicEvent: { start, end, data: actualData },
+        };
         scheduledEvents.push(newScheduledEvent);
       }
-
     });
   }
   return scheduledEvents;
