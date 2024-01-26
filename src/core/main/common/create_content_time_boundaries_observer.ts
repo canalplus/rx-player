@@ -3,12 +3,12 @@ import type {
   IStreamOrchestratorPlaybackObservation,
 } from "../../../core/types";
 import log from "../../../log";
-import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
 import type {
   IManifest,
   IPeriod,
 } from "../../../manifest";
 import type { IMediaSourceInterface } from "../../../mse";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import ContentTimeBoundariesObserver from "./content_time_boundaries_observer";
