@@ -18,6 +18,8 @@ import { shouldValidateMetadata } from "../../../compat";
 import { isSafariMobile } from "../../../compat/browser_detection";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
+import type { IMediaElementPlaybackObserver } from "../../../playback_observer";
+import { SeekingState } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
@@ -25,8 +27,6 @@ import type {
   CancellationError,
   CancellationSignal,
 } from "../../../utils/task_canceller";
-import type { PlaybackObserver } from "../../api";
-import { SeekingState } from "../../api/playback_observer";
 
 /** Event emitted when trying to perform the initial `play`. */
 export type IInitialPlayEvent =
@@ -66,7 +66,7 @@ export default function performInitialSeekAndPlay(
     mustAutoPlay,
     isDirectfile,
     onWarning }: { mediaElement : HTMLMediaElement;
-                   playbackObserver : PlaybackObserver;
+                   playbackObserver : IMediaElementPlaybackObserver;
                    startTime : number|(() => number);
                    mustAutoPlay : boolean;
                    isDirectfile: boolean;
