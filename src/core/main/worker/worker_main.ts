@@ -46,8 +46,8 @@ import type {
 } from "../../stream";
 import StreamOrchestrator from "../../stream";
 /* eslint-disable-next-line max-len */
-import createContentTimeBoundariesObserver from "../utils/create_content_time_boundaries_observer";
-import getBufferedDataPerMediaBuffer from "../utils/get_buffered_data_per_media_buffer";
+import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
+import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
 import ContentPreparer from "./content_preparer";
 import {
   limitVideoResolution,
