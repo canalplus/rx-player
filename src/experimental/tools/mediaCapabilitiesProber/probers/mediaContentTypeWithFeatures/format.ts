@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type { IMediaConfiguration } from "../../types";
 import { findDefaultVideoCodec } from "../defaultCodecsFinder";
 
@@ -41,7 +42,7 @@ export default function formatTypeSupportedWithFeaturesConfigForAPI(
       audio.contentType.length > 0) {
     const regex = /codecs="(.*?)"/;
     const match = regex.exec(audio.contentType);
-    if (match != null) {
+    if (!isNullOrUndefined(match)) {
       const codec = match[1];
       str = str.substring(0, str.length - 2) + "," + codec;
     }

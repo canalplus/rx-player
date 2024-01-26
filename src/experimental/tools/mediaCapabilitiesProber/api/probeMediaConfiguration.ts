@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { ICapabilitiesTypes } from "../capabilities";
 import getProbedConfiguration from "../capabilities";
 import log from "../log";
@@ -76,7 +77,7 @@ function probeMediaConfiguration(
       const prom = probeWithBrowser(config).then(([currentStatus, result]) => {
         resultsFromAPIS.push({ APIName: browserAPI, result });
 
-        if (globalStatus == null) {
+        if (isNullOrUndefined(globalStatus)) {
           globalStatus = currentStatus;
         } else {
           switch (currentStatus) {

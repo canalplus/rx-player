@@ -16,6 +16,7 @@ import type {
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import { objectValues } from "../utils/object_values";
 import type {
@@ -216,8 +217,8 @@ export function getAdaptations(
   const adaptationsByType = period.adaptations;
   return objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
     // Note: the second case cannot happen. TS is just being dumb here
-    (acc, adaptations) => adaptations != null ? acc.concat(adaptations) :
-                                                acc,
+    (acc, adaptations) => !isNullOrUndefined(adaptations) ? acc.concat(adaptations) :
+                                                            acc,
     []);
 }
 
@@ -509,8 +510,8 @@ function updateRepresentationsDeciperability(
     const adaptationsByType = period.adaptations;
     const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
       // Note: the second case cannot happen. TS is just being dumb here
-      (acc, adaps) => adaps != null ? acc.concat(adaps) :
-                                      acc,
+      (acc, adaps) => !isNullOrUndefined(adaps) ? acc.concat(adaps) :
+                                                  acc,
       []);
     for (const adaptation of adaptations) {
       for (const representation of adaptation.representations) {

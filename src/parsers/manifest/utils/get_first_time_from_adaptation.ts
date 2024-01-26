@@ -37,8 +37,8 @@ export default function getFirstPositionFromAdaptation(
       return undefined;
     }
     if (firstPosition !== null) {
-      max = max == null ? firstPosition :
-                          Math.max(max, firstPosition);
+      max = max === null ? firstPosition :
+                           Math.max(max, firstPosition);
     }
   }
   if (max === null) { // It means that all positions were null === no segments (yet?)

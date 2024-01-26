@@ -15,6 +15,7 @@
  */
 
 import arrayFind from "../../../utils/array_find";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type {
   ICapabilities,
   IMediaConfiguration,
@@ -92,7 +93,9 @@ export function filterConfigurationWithCapabilities(
       if (
         Object.keys(subProbedConfig).length > 0 ||
         (
-          (configuration as {[id: string]: IMediaConfiguration})[key] != null &&
+          !isNullOrUndefined(
+            (configuration as {[id: string]: IMediaConfiguration})[key]
+          ) &&
           Object.keys(
             (configuration as {[id: string]: IMediaConfiguration})[key]
           ).length === 0

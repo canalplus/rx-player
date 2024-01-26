@@ -57,9 +57,9 @@ export default function parseVTTStringToVTTCues(
   const cues : Array<ICompatVTTCue|TextTrackCue> = [];
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
-    if (cueObject != null) {
+    if (cueObject !== null) {
       const nativeCue = toNativeCue(cueObject);
-      if (nativeCue != null) {
+      if (nativeCue !== null) {
         if (isVTTCue(nativeCue)) {
           setSettingsOnCue(cueObject.settings, nativeCue);
         }

@@ -248,10 +248,7 @@ module.exports = {
     "curly": "error",
     "default-case": "off",
     "eol-last": "error",
-    "eqeqeq": [
-      "error",
-      "smart"
-    ],
+    "eqeqeq": "error",
     "guard-for-in": "warn",
     "id-blacklist": "off",
     "id-match": "off",

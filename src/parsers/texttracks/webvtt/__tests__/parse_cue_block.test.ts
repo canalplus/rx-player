@@ -220,9 +220,9 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   /* eslint-disable max-len */
-  it("should return null if parseTimestamp returns null either for the starting timestamp", () => {
+  it("should return null if parseTimestamp returns undefined either for the starting timestamp", () => {
   /* eslint-enable max-len */
-    const parseTimestamp = jest.fn((arg) => arg === "00:00:31.080" ? null : 10);
+    const parseTimestamp = jest.fn((arg) => arg === "00:00:31.080" ? undefined : 10);
     jest.mock("../parse_timestamp", () => ({
       __esModule: true as const,
       default: parseTimestamp,
@@ -234,9 +234,9 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   /* eslint-disable max-len */
-  it("should return null if parseTimestamp returns null either for the ending timestamp", () => {
+  it("should return null if parseTimestamp returns undefined either for the ending timestamp", () => {
   /* eslint-enable max-len */
-    const parseTimestamp = jest.fn((arg) => arg === "00:07:32.200" ? null : 10);
+    const parseTimestamp = jest.fn((arg) => arg === "00:07:32.200" ? undefined : 10);
     jest.mock("../parse_timestamp", () => ({
       __esModule: true as const,
       default: parseTimestamp,

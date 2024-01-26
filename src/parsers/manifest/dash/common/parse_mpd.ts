@@ -18,6 +18,7 @@ import config from "../../../../config";
 import log from "../../../../log";
 import type { IManifest } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
 import type { IParsedManifest } from "../../types";
@@ -136,28 +137,28 @@ export default function parseMpdIr(
 ) : IIrParserResponse {
   const { children: rootChildren,
           attributes: rootAttributes } = mpdIR;
-  if (args.externalClockOffset == null) {
+  if (isNullOrUndefined(args.externalClockOffset)) {
     const isDynamic : boolean = rootAttributes.type === "dynamic";
 
     const directTiming = arrayFind(rootChildren.utcTimings, (utcTiming) => {
       return utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
-             utcTiming.value != null;
+             !isNullOrUndefined(utcTiming.value);
     });
 
     const clockOffsetFromDirectUTCTiming =
-      directTiming != null &&
-      directTiming.value != null ? getClockOffset(directTiming.value) :
-                                   undefined;
-    const clockOffset = clockOffsetFromDirectUTCTiming != null &&
+      !isNullOrUndefined(directTiming) &&
+      !isNullOrUndefined(directTiming.value) ? getClockOffset(directTiming.value) :
+                                               undefined;
+    const clockOffset = !isNullOrUndefined(clockOffsetFromDirectUTCTiming) &&
                         !isNaN(clockOffsetFromDirectUTCTiming) ?
                           clockOffsetFromDirectUTCTiming :
                           undefined;
 
-    if (clockOffset != null && hasLoadedClock !== true) {
+    if (!isNullOrUndefined(clockOffset) && hasLoadedClock !== true) {
       args.externalClockOffset = clockOffset;
     } else if (isDynamic && hasLoadedClock !== true) {
       const UTCTimingHTTPURL = getHTTPUTCTimingURL(mpdIR);
-      if (UTCTimingHTTPURL != null && UTCTimingHTTPURL.length > 0) {
+      if (!isNullOrUndefined(UTCTimingHTTPURL) && UTCTimingHTTPURL.length > 0) {
         // TODO fetch UTCTiming and XLinks at the same time
         return {
           type: "needs-clock",
@@ -183,7 +184,7 @@ export default function parseMpdIr(
   const xlinksToLoad : Array<{ index : number; ressource : string }> = [];
   for (let i = 0; i < rootChildren.periods.length; i++) {
     const { xlinkHref, xlinkActuate } = rootChildren.periods[i].attributes;
-    if (xlinkHref != null && xlinkActuate === "onLoad") {
+    if (!isNullOrUndefined(xlinkHref) && xlinkActuate === "onLoad") {
       xlinksToLoad.push({ index: i, ressource: xlinkHref });
     }
   }
@@ -394,8 +395,9 @@ function parseCompleteIntermediateRepresentation(
                   timeshiftDepth,
                   maximumTimeData },
     lifetime,
-    uris: args.url == null ?
-      rootChildren.locations : [args.url, ...rootChildren.locations],
+    uris: isNullOrUndefined(args.url) ?
+      rootChildren.locations :
+      [args.url, ...rootChildren.locations],
   };
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };

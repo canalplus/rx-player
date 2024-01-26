@@ -22,6 +22,7 @@ import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
   IParsedAdaptation,
   IParsedAdaptations,
@@ -226,13 +227,13 @@ function getAdaptationID(
 function getAdaptationSetSwitchingIDs(
   adaptation : IAdaptationSetIntermediateRepresentation
 ) : string[] {
-  if (adaptation.children.supplementalProperties != null) {
+  if (!isNullOrUndefined(adaptation.children.supplementalProperties)) {
     const { supplementalProperties } = adaptation.children;
     for (const supplementalProperty of supplementalProperties) {
       if (
         supplementalProperty.schemeIdUri ===
         "urn:mpeg:dash:adaptation-set-switching:2016" &&
-        supplementalProperty.value != null
+        !isNullOrUndefined(supplementalProperty.value)
       ) {
         return supplementalProperty.value.split(",")
           .map(id => id.trim())
@@ -303,7 +304,7 @@ export default function parseAdaptationSets(
                                      isNonEmptyString(adaptationCodecs) ?
                                        adaptationCodecs :
                                        null,
-                                     adaptationChildren.roles != null ?
+                                     !isNullOrUndefined(adaptationChildren.roles) ?
                                        adaptationChildren.roles :
                                        null);
     if (type === undefined) {
@@ -415,13 +416,13 @@ export default function parseAdaptationSets(
         representations,
         type,
         isTrickModeTrack };
-    if (adaptation.attributes.language != null) {
+    if (!isNullOrUndefined(adaptation.attributes.language)) {
       parsedAdaptationSet.language = adaptation.attributes.language;
     }
-    if (isClosedCaption != null) {
+    if (!isNullOrUndefined(isClosedCaption)) {
       parsedAdaptationSet.closedCaption = isClosedCaption;
     }
-    if (isAudioDescription != null) {
+    if (!isNullOrUndefined(isAudioDescription)) {
       parsedAdaptationSet.audioDescription = isAudioDescription;
     }
     if (isDub === true) {
@@ -483,7 +484,10 @@ export default function parseAdaptationSets(
       }
     }
 
-    if (originalID != null && adaptationSwitchingInfos[originalID] == null) {
+    if (
+      !isNullOrUndefined(originalID) &&
+      isNullOrUndefined(adaptationSwitchingInfos[originalID])
+    ) {
       adaptationSwitchingInfos[originalID] = { newID,
                                                adaptationSetSwitchingIDs };
     }

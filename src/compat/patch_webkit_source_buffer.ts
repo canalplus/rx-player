@@ -17,6 +17,7 @@
 import EventEmitter from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
 import isNode from "../utils/is_node";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
 import queueMicrotask from "../utils/queue_microtask";
 
 type IWebKitSourceBufferConstructor = new() => IWebKitSourceBuffer;
@@ -33,7 +34,7 @@ export default function patchWebkitSourceBuffer() : void {
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
   if (
-    !isNode && (globalScope as any).WebKitSourceBuffer != null &&
+    !isNode && !isNullOrUndefined((globalScope as any).WebKitSourceBuffer) &&
     (globalScope as any).WebKitSourceBuffer.prototype.addEventListener === undefined)
   {
   /* eslint-enable @typescript-eslint/no-explicit-any */

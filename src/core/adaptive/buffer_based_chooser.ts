@@ -16,6 +16,7 @@
 
 import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import getBufferLevels from "./utils/get_buffer_levels";
 import type {
@@ -136,7 +137,7 @@ export default class BufferBasedChooser {
     const bufferLevels = this._levelsMap;
     const bitrates = this._bitrates;
     const { bufferGap, currentBitrate, currentScore, speed } = playbackObservation;
-    if (currentBitrate == null) {
+    if (isNullOrUndefined(currentBitrate)) {
       this._currentEstimate = bitrates[0];
       return ;
     }

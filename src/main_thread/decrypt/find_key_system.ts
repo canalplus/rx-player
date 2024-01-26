@@ -81,7 +81,7 @@ function checkCachedMediaKeySystemAccess(
   keySystemAccess: MediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
-  if (shouldRenewMediaKeySystemAccess() || mksConfiguration == null) {
+  if (shouldRenewMediaKeySystemAccess() || isNullOrUndefined(mksConfiguration)) {
     return null;
   }
 
@@ -107,7 +107,7 @@ function checkCachedMediaKeySystemAccess(
     return true;
   })[0];
 
-  if (firstCompatibleOption != null) {
+  if (firstCompatibleOption !== undefined) {
     return { keySystemOptions: firstCompatibleOption,
              keySystemAccess: currentKeySystemAccess };
   }
@@ -313,7 +313,7 @@ export default function getMediaKeySystemAccess(
       const managedRDNs = EME_KEY_SYSTEMS[keySystemOptions.type];
       let ksType;
 
-      if (managedRDNs != null) {
+      if (!isNullOrUndefined(managedRDNs)) {
         ksType = managedRDNs.map((keyType) => {
           const keyName = keySystemOptions.type;
           return { keyName, keyType, keySystemOptions };
@@ -353,7 +353,7 @@ export default function getMediaKeySystemAccess(
 
     }
 
-    if (eme.requestMediaKeySystemAccess == null) {
+    if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
       throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
     }
 

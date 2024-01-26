@@ -50,14 +50,14 @@ function findNextElement(
   let currentOffset = initialOffset;
   while (currentOffset < maxOffset) {
     const parsedID = getEBMLID(buffer, currentOffset);
-    if (parsedID == null) {
+    if (parsedID === null) {
       return null;
     }
 
     const { value: ebmlTagID, length: ebmlTagLength } = parsedID;
     const sizeOffset = currentOffset + ebmlTagLength;
     const parsedValue = getEBMLValue(buffer, sizeOffset);
-    if (parsedValue == null) {
+    if (parsedValue === null) {
       return null;
     }
 
@@ -92,7 +92,7 @@ export function getTimeCodeScale(
 ) : number|null {
   const timeCodeScaleOffsets = findNextElement(
     TIMECODESCALE_ID, [SEGMENT_ID, INFO_ID], buffer, [initialOffset, buffer.length]);
-  if (timeCodeScaleOffsets == null) {
+  if (timeCodeScaleOffsets === null) {
     return null;
   }
   const length = timeCodeScaleOffsets[1] - timeCodeScaleOffsets[0];
@@ -111,7 +111,7 @@ function getDuration(
 ) : number|null {
   const timeCodeScaleOffsets = findNextElement(
     DURATION_ID, [SEGMENT_ID, INFO_ID], buffer, [initialOffset, buffer.length]);
-  if (timeCodeScaleOffsets == null) {
+  if (timeCodeScaleOffsets === null) {
     return null;
   }
 
@@ -135,25 +135,25 @@ export function getSegmentsFromCues(
 ) : ICuesSegment[]|null {
   const segmentRange = findNextElement(
     SEGMENT_ID, [], buffer, [initialOffset, buffer.length]);
-  if (segmentRange == null) {
+  if (segmentRange === null) {
     return null;
   }
 
   const [ segmentRangeStart, segmentRangeEnd ] = segmentRange;
 
   const timescale = getTimeCodeScale(buffer, segmentRangeStart);
-  if (timescale == null) {
+  if (timescale === null) {
     return null;
   }
 
   const duration = getDuration(buffer, segmentRangeStart);
-  if (duration == null) {
+  if (duration === null) {
     return null;
   }
 
   const cuesRange = findNextElement(
     CUES_ID, [], buffer, [segmentRangeStart, segmentRangeEnd]);
-  if (cuesRange == null) {
+  if (cuesRange === null) {
     return null;
   }
 
@@ -168,13 +168,13 @@ export function getSegmentsFromCues(
     const cuePointRange = findNextElement(
       CUE_POINT_ID, [], buffer, [currentOffset, cuesRange[1]]);
 
-    if (cuePointRange == null) {
+    if (cuePointRange === null) {
       break;
     }
 
     const cueTimeRange = findNextElement(
       CUE_TIME_ID, [], buffer, [cuePointRange[0], cuePointRange[1]]);
-    if (cueTimeRange == null) {
+    if (cueTimeRange === null) {
       return null;
     }
     const time = bytesToNumber(
@@ -183,7 +183,7 @@ export function getSegmentsFromCues(
     const cueOffsetRange = findNextElement(
       CUE_CLUSTER_POSITIONS_ID, [CUE_TRACK_POSITIONS_ID],
       buffer, [cuePointRange[0], cuePointRange[1]]);
-    if (cueOffsetRange == null) {
+    if (cueOffsetRange === null) {
       return null;
     }
 
@@ -234,7 +234,7 @@ function getEBMLID(
   offset : number
 ) : { length : number; value : number }|null {
   const length = getLength(buffer, offset);
-  if (length == null) {
+  if (length === undefined) {
     log.warn("webm: unrepresentable length");
     return null;
   }
@@ -255,7 +255,7 @@ function getEBMLValue(
   offset : number
 ) : { length : number; value : number }|null {
   const length = getLength(buffer, offset);
-  if (length == null) {
+  if (length === undefined) {
     log.warn("webm: unrepresentable length");
     return null;
   }

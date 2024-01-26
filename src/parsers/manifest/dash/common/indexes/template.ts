@@ -186,10 +186,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     this._availabilityTimeOffset = availabilityTimeOffset;
 
     this._manifestBoundsCalculator = manifestBoundsCalculator;
-    const presentationTimeOffset = index.presentationTimeOffset != null ?
-                                     index.presentationTimeOffset :
-                                     0;
-
+    const presentationTimeOffset = index.presentationTimeOffset ?? 0;
     const scaledStart = periodStart * timescale;
     const indexTimeOffset = presentationTimeOffset - scaledStart;
 
@@ -211,7 +208,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
                     timescale,
                     indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization == null ?
+                    initialization: isNullOrUndefined(index.initialization) ?
                       undefined :
                       { url: initializationUrl,
                         range: index.initialization.range },
@@ -257,7 +254,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     const toFromPeriodStart = (fromTime + dur) * timescale - scaledStart;
     const firstSegmentStart = this._getFirstSegmentStart();
     const lastSegmentStart = this._getLastSegmentStart();
-    if (firstSegmentStart == null || lastSegmentStart == null) {
+    if (isNullOrUndefined(firstSegmentStart) || isNullOrUndefined(lastSegmentStart)) {
       return [];
     }
     const startPosition = Math.max(firstSegmentStart, upFromPeriodStart);
@@ -286,7 +283,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
         return segments;
       }
 
-      const realDuration = scaledEnd != null &&
+      const realDuration = !isNullOrUndefined(scaledEnd) &&
                            timeFromPeriodStart + duration > scaledEnd ?
                              scaledEnd - timeFromPeriodStart :
                              duration;
@@ -324,7 +321,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
    */
   getFirstAvailablePosition() : number | null | undefined {
     const firstSegmentStart = this._getFirstSegmentStart();
-    if (firstSegmentStart == null) {
+    if (isNullOrUndefined(firstSegmentStart)) {
       return firstSegmentStart; // return undefined or null
     }
     return (firstSegmentStart / this._index.timescale) + this._periodStart;

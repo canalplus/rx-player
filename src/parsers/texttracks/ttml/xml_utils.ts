@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+
 /**
  * Returns the parent elements which have the given tagName, by order of
  * closeness relative to our element.
@@ -76,7 +78,7 @@ export function getAttributeInElements(
     const element = elements[i];
     if (element !== undefined) {
       const directAttrValue = element.getAttribute(attribute);
-      if (directAttrValue != null) {
+      if (!isNullOrUndefined(directAttrValue)) {
         return directAttrValue;
       }
     }

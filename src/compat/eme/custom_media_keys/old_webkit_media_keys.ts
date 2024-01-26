@@ -16,6 +16,7 @@
 
 import { base64ToBytes } from "../../../utils/base64";
 import EventEmitter from "../../../utils/event_emitter";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
 import { utf8ToStr } from "../../../utils/string_parsing";
 import wrapInPromise from "../../../utils/wrapInPromise";
@@ -178,7 +179,7 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
-    if (this._videoElement == null) {
+    if (isNullOrUndefined(this._videoElement)) {
       throw new Error("Video not attached to the MediaKeys");
     }
     return new OldWebkitMediaKeySession(this._videoElement, this._keySystem);
@@ -201,10 +202,13 @@ export default function getOldWebKitMediaKeysCallbacks() : {
     // get any <video> element from the DOM or create one
     // and try the `canPlayType` method
     let videoElement = document.querySelector("video");
-    if (videoElement == null) {
+    if (isNullOrUndefined(videoElement)) {
       videoElement = document.createElement("video");
     }
-    if (videoElement != null && typeof videoElement.canPlayType === "function") {
+    if (
+      !isNullOrUndefined(videoElement) &&
+      typeof videoElement.canPlayType === "function"
+    ) {
       return !!(videoElement.canPlayType as unknown as (
         mimeType : string,
         keyType? : string

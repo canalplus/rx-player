@@ -15,11 +15,9 @@
  */
 
 import { MediaSource_ } from "../../../../compat";
-import type {
-  IMediaConfiguration } from "../types";
-import {
-  ProberStatus,
-} from "../types";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type { IMediaConfiguration } from "../types";
+import { ProberStatus } from "../types";
 
 /**
  * @param {Object} config
@@ -29,7 +27,7 @@ export default function probeContentType(
   config: IMediaConfiguration
 ): Promise<[ProberStatus]> {
   return new Promise((resolve) => {
-    if (MediaSource_ == null) {
+    if (isNullOrUndefined(MediaSource_)) {
       throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
         "MediaSource API not available");
     }

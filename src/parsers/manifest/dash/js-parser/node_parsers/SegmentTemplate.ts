@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import objectAssign from "../../../../../utils/object_assign";
 import type {
   ISegmentTemplateIntermediateRepresentation,
@@ -61,7 +62,7 @@ export default function parseSegmentTemplate(
     switch (attribute.nodeName) {
 
       case "initialization":
-        if (ret.initialization == null) {
+        if (isNullOrUndefined(ret.initialization)) {
           ret.initialization = { media: attribute.value };
         }
         break;

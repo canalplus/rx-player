@@ -16,13 +16,9 @@
 
 import config from "../../../../config";
 import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
-import type {
-  IAdaptation,
-  IPeriod,
-} from "../../../../manifest";
+import type { IAdaptation, IPeriod } from "../../../../manifest";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
-import type {
-  IRange } from "../../../../utils/ranges";
+import type { IRange } from "../../../../utils/ranges";
 import {
   excludeFromRanges,
   insertInto,
@@ -144,14 +140,8 @@ export default function getAdaptationSwitchStrategy(
     const bufferType = adaptation.type;
     const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
     /** Ranges that won't be cleaned from the current buffer. */
-    let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
-    if (paddingBefore == null) {
-      paddingBefore = 0;
-    }
-    let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
-    if (paddingAfter == null) {
-      paddingAfter = 0;
-    }
+    const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;
+    const paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after ?? 0;
 
     let currentTime = playbackObserver.getCurrentTime();
     if (currentTime === undefined) {

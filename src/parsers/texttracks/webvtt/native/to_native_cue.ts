@@ -21,7 +21,9 @@ import {
 } from "../../../../compat/index";
 
 /**
- * @param {Object} cue Object
+ * @param {number} start
+ * @param {number} end
+ * @param {Array.<string>} payload
  * @returns {TextTrackCue|ICompatVTTCue|null}
  */
 export default function toNativeCue(cueObj : {

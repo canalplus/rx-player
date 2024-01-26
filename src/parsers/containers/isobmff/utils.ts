@@ -25,6 +25,7 @@ import {
   itobe4,
   itobe8,
 } from "../../../utils/byte_parsing";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import {
   hexToBytes,
   readNullTerminatedString,
@@ -359,7 +360,7 @@ function createPssh({ systemId, privateData } : IISOBMFFPSSHInfo) : Uint8Array {
  * @returns {Uint8Array} - The new ISOBMFF generated.
  */
 function patchPssh(buf : Uint8Array, psshList : IISOBMFFPSSHInfo[]) : Uint8Array {
-  if (psshList == null || psshList.length === 0) {
+  if (isNullOrUndefined(psshList) || psshList.length === 0) {
     return buf;
   }
 

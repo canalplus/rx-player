@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import {
   REGXP_4_HEX_COLOR,
   REGXP_8_HEX_COLOR,
@@ -31,7 +32,7 @@ export default function ttmlColorToCSSColor(color : string) : string {
   let regRes;
 
   regRes = REGXP_8_HEX_COLOR.exec(color);
-  if (regRes != null) {
+  if (!isNullOrUndefined(regRes)) {
     return "rgba(" +
       String(parseInt(regRes[1], 16)) + "," +
       String(parseInt(regRes[2], 16)) + "," +
@@ -40,7 +41,7 @@ export default function ttmlColorToCSSColor(color : string) : string {
   }
 
   regRes = REGXP_4_HEX_COLOR.exec(color);
-  if (regRes != null) {
+  if (!isNullOrUndefined(regRes)) {
     return "rgba(" +
       String(parseInt(regRes[1] + regRes[1], 16)) + "," +
       String(parseInt(regRes[2] + regRes[2], 16)) + "," +
@@ -49,7 +50,7 @@ export default function ttmlColorToCSSColor(color : string) : string {
   }
 
   regRes = REGXP_RGB_COLOR.exec(color);
-  if (regRes != null) {
+  if (!isNullOrUndefined(regRes)) {
     return "rgb(" +
       String(+regRes[1]) + "," +
       String(+regRes[2]) + "," +
@@ -57,7 +58,7 @@ export default function ttmlColorToCSSColor(color : string) : string {
   }
 
   regRes = REGXP_RGBA_COLOR.exec(color);
-  if (regRes != null) {
+  if (!isNullOrUndefined(regRes)) {
     return "rgba(" +
       String(+regRes[1]) + "," +
       String(+regRes[2]) + "," +

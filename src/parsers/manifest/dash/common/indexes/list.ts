@@ -19,6 +19,7 @@ import type {
   IRepresentationIndex,
   ISegment,
 } from "../../../../../manifest";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type { IEMSG } from "../../../../containers/isobmff";
 import { getTimescaledRange } from "../../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
@@ -148,9 +149,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._periodStart = periodStart;
     this._periodEnd = periodEnd;
-    const presentationTimeOffset =
-      index.presentationTimeOffset != null ? index.presentationTimeOffset :
-                                             0;
+    const presentationTimeOffset = index.presentationTimeOffset ?? 0;
     const timescale = index.timescale ?? 1;
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
@@ -169,7 +168,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
                     duration: index.duration,
                     indexTimeOffset,
                     indexRange: index.indexRange,
-                    initialization: index.initialization == null ?
+                    initialization: isNullOrUndefined(index.initialization) ?
                       undefined :
                       { url: initializationUrl,
                         range: index.initialization.range } };

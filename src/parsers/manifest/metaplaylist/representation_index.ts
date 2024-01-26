@@ -20,6 +20,7 @@ import type {
 } from "../../../manifest";
 import type { IPlayerError } from "../../../public_types";
 import type { ISegmentInformation } from "../../../transports";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
 
 export interface IBaseContentMetadata {
@@ -121,8 +122,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    */
   public getFirstAvailablePosition(): number|undefined {
     const wrappedFirstPosition = this._wrappedIndex.getFirstAvailablePosition();
-    return wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
-                                          undefined;
+    return !isNullOrUndefined(wrappedFirstPosition) ?
+      wrappedFirstPosition + this._timeOffset :
+      undefined;
   }
 
   /**
@@ -132,8 +134,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    */
   public getLastAvailablePosition(): number|undefined {
     const wrappedLastPosition = this._wrappedIndex.getLastAvailablePosition();
-    return wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
-                                         undefined;
+    return !isNullOrUndefined(wrappedLastPosition) ?
+      wrappedLastPosition + this._timeOffset :
+      undefined;
   }
 
   /**
@@ -143,8 +146,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    */
   public getEnd(): number|undefined|null {
     const wrappedEnd = this._wrappedIndex.getEnd();
-    return wrappedEnd != null ? wrappedEnd + this._timeOffset :
-                                undefined;
+    return !isNullOrUndefined(wrappedEnd) ?
+      wrappedEnd + this._timeOffset :
+      undefined;
   }
 
   /**

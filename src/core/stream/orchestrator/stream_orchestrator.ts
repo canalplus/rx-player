@@ -23,6 +23,7 @@ import type {
   IDecipherabilityUpdateElement,
   IPeriod,
 } from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import queueMicrotask from "../../../utils/queue_microtask";
 import type {
   IReadOnlySharedReference } from "../../../utils/reference";
@@ -272,12 +273,12 @@ export default function StreamOrchestrator(
     function isOutOfPeriodList(time : number) : boolean {
       const head = periodList.head();
       const last = periodList.last();
-      if (head == null || last == null) { // if no period
+      if (head === undefined || last === undefined) { // if no period
         return true;
       }
       return head.start > time ||
-            (last.end == null ? Infinity :
-                                last.end) < time;
+            (isNullOrUndefined(last.end) ? Infinity :
+                                           last.end) < time;
     }
 
     /**
@@ -380,7 +381,7 @@ export default function StreamOrchestrator(
 
         const lastPosition = observation.position.getWanted();
         const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
-        if (newInitialPeriod == null) {
+        if (newInitialPeriod === undefined) {
           callbacks.error(
             new MediaError("MEDIA_TIME_NOT_FOUND",
                            "The wanted position is not found in the Manifest.")

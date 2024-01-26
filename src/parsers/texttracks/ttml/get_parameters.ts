@@ -79,14 +79,10 @@ export default function getParameters(tt : Element) : ITTParameters {
   }
 
   let frameRate = nbFrameRate;
-  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate :
-                                                1;
+  const subFrameRate = nbSubFrameRate ?? 1;
+  const spaceStyle = parsedSpaceStyle ?? "default";
 
-  const spaceStyle = parsedSpaceStyle !== null ? parsedSpaceStyle :
-                                                 "default";
-
-  const tickRate = nbTickRate !== undefined ? nbTickRate :
-                                              nbFrameRate * nbSubFrameRate;
+  const tickRate = nbTickRate ?? nbFrameRate * nbSubFrameRate;
 
   if (parsedFrameRateMultiplier  !== null) {
     const multiplierResults = /^(\d+) (\d+)$/g.exec(parsedFrameRateMultiplier);
