@@ -5,8 +5,6 @@ import {
 } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
-// XXX TODO
-import { ObservationPosition } from "../../../main_thread/api/playback_observer";
 import Manifest, {
   Adaptation,
   Period,
@@ -24,6 +22,11 @@ import {
   WorkerMessageType,
 } from "../../../multithread_types";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
+import { ObservationPosition } from "../../../playback_observer";
+import type {
+  IWorkerPlaybackObservation,
+} from "../../../playback_observer/worker_playback_observer";
+import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
 import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
@@ -60,10 +63,6 @@ import {
 import sendMessage, {
   formatErrorForSender,
 } from "./send_message";
-import type {
-  ICorePlaybackObservation,
-} from "./worker_playback_observer";
-import WorkerPlaybackObserver from "./worker_playback_observer";
 
 export default function initializeWorkerMain() {
   /**
@@ -97,7 +96,7 @@ export default function initializeWorkerMain() {
   /**
    * When set, emit playback observation made on the main thread.
    */
-  let playbackObservationRef : SharedReference<ICorePlaybackObservation> | null = null;
+  let playbackObservationRef : SharedReference<IWorkerPlaybackObservation> | null = null;
 
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
     log.debug("Worker: received message", e.data.type);
@@ -153,7 +152,7 @@ export default function initializeWorkerMain() {
 
         const currentCanceller = new TaskCanceller();
         const currentContentObservationRef = new SharedReference<
-          ICorePlaybackObservation
+          IWorkerPlaybackObservation
         >(objectAssign(msg.value.initialObservation, {
           position: new ObservationPosition(...msg.value.initialObservation.position),
         }));
@@ -467,7 +466,7 @@ interface IBufferingInitializationInformation {
 function loadOrReloadPreparedContent(
   val : IBufferingInitializationInformation,
   contentPreparer : ContentPreparer,
-  playbackObservationRef : IReadOnlySharedReference<ICorePlaybackObservation>,
+  playbackObservationRef : IReadOnlySharedReference<IWorkerPlaybackObservation>,
   parentCancelSignal : CancellationSignal
 ) {
   const currentLoadCanceller = new TaskCanceller();
@@ -536,6 +535,7 @@ function loadOrReloadPreparedContent(
 
   const playbackObserver = new WorkerPlaybackObserver(playbackObservationRef,
                                                       contentId,
+                                                      sendMessage,
                                                       currentLoadCanceller.signal);
 
   const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
