@@ -43,6 +43,7 @@ import type {
   IPeriodMetadata,
 } from "../../manifest";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
+import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type {
   IKeySystemOption,
   IPlayerError,
@@ -62,7 +63,6 @@ import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
-import type { PlaybackObserver } from "../api";
 import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
 import { getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
@@ -163,7 +163,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   public start(
     mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver
+    playbackObserver : IMediaElementPlaybackObserver
   ): void {
     this.prepare(); // Load Manifest if not already done
 
@@ -298,7 +298,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private async _onInitialMediaSourceReady(
     mediaElement : HTMLMediaElement,
     initialMediaSource : MainMediaSourceInterface,
-    playbackObserver : PlaybackObserver,
+    playbackObserver : IMediaElementPlaybackObserver,
     drmSystemId : string | undefined,
     protectionRef : SharedReference<IContentProtection | null>,
     initialMediaSourceCanceller : TaskCanceller
@@ -816,7 +816,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @returns {Object}
    */
   private _createRebufferingController(
-    playbackObserver : PlaybackObserver,
+    playbackObserver : IMediaElementPlaybackObserver,
     manifest : IManifest,
     speed : IReadOnlySharedReference<number>,
     cancelSignal : CancellationSignal
@@ -906,7 +906,7 @@ interface IBufferingMediaSettings {
   /** Media Element on which the content will be played. */
   mediaElement : HTMLMediaElement;
   /** Emit playback conditions regularly. */
-  playbackObserver : PlaybackObserver;
+  playbackObserver : IMediaElementPlaybackObserver;
   /** Estimate the right Representation. */
   representationEstimator : IRepresentationEstimator;
   /** Module to facilitate segment fetching. */
