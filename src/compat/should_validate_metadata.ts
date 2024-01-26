@@ -22,6 +22,6 @@ import { isSamsungBrowser } from "./browser_detection";
  * this event on these browsers).
  * @returns {boolean}
  */
-export default function shouldValidateMetadata() : boolean {
+export default function shouldValidateMetadata(): boolean {
   return isSamsungBrowser;
 }

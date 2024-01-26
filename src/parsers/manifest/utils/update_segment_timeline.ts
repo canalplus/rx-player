@@ -16,11 +16,8 @@
 
 import { MediaError } from "../../../errors";
 import log from "../../../log";
-import type {
-  IIndexSegment } from "./index_helpers";
-import {
-  getIndexSegmentEnd,
-} from "./index_helpers";
+import type { IIndexSegment } from "./index_helpers";
+import { getIndexSegmentEnd } from "./index_helpers";
 
 /**
  * Update a complete array of segments in a given timeline with a [generally]
@@ -39,9 +36,9 @@ import {
  * @returns {boolean}
  */
 export default function updateSegmentTimeline(
-  oldTimeline : IIndexSegment[],
-  newTimeline : IIndexSegment[]
-) : boolean {
+  oldTimeline: IIndexSegment[],
+  newTimeline: IIndexSegment[],
+): boolean {
   if (oldTimeline.length === 0) {
     oldTimeline.push(...newTimeline);
     return true;
@@ -55,8 +52,10 @@ export default function updateSegmentTimeline(
   const oldLastElt = oldTimeline[prevTimelineLength - 1];
   const oldIndexEnd = getIndexSegmentEnd(oldLastElt, newTimeline[0]);
   if (oldIndexEnd < newIndexStart) {
-    throw new MediaError("MANIFEST_UPDATE_ERROR",
-                         "Cannot perform partial update: not enough data");
+    throw new MediaError(
+      "MANIFEST_UPDATE_ERROR",
+      "Cannot perform partial update: not enough data",
+    );
   }
 
   for (let i = prevTimelineLength - 1; i >= 0; i--) {
@@ -66,7 +65,8 @@ export default function updateSegmentTimeline(
       const nbEltsToRemove = prevTimelineLength - i;
       oldTimeline.splice(i, nbEltsToRemove, ...newTimeline);
       return false;
-    } else if (currStart < newIndexStart) { // first to be before
+    } else if (currStart < newIndexStart) {
+      // first to be before
       const currElt = oldTimeline[i];
       if (currElt.start + currElt.duration > newIndexStart) {
         // The new Manifest overlaps a previous segment (weird)
@@ -76,25 +76,27 @@ export default function updateSegmentTimeline(
         return true;
       } else if (currElt.repeatCount === undefined || currElt.repeatCount <= 0) {
         if (currElt.repeatCount < 0) {
-          currElt.repeatCount = Math.floor((newIndexStart - currElt.start) /
-                                              currElt.duration) - 1;
+          currElt.repeatCount =
+            Math.floor((newIndexStart - currElt.start) / currElt.duration) - 1;
         }
         oldTimeline.splice(i + 1, prevTimelineLength - (i + 1), ...newTimeline);
         return false;
       }
       // else, there is a positive repeat we might want to update
       const eltLastTime = currElt.start + currElt.duration * (currElt.repeatCount + 1);
-      if (eltLastTime <= newIndexStart) { // our new index comes directly after
+      if (eltLastTime <= newIndexStart) {
+        // our new index comes directly after
         // put it after this one
         oldTimeline.splice(i + 1, prevTimelineLength - (i + 1), ...newTimeline);
         return false;
       }
 
-      const newCurrRepeat = ((newIndexStart - currElt.start) / currElt.duration) - 1;
+      const newCurrRepeat = (newIndexStart - currElt.start) / currElt.duration - 1;
       if (newCurrRepeat % 1 === 0 && currElt.duration === newTimeline[0].duration) {
-        const newRepeatCount = newTimeline[0].repeatCount < 0 ?
-          -1 : // === maximum possible repeat
-          newTimeline[0].repeatCount + newCurrRepeat + 1;
+        const newRepeatCount =
+          newTimeline[0].repeatCount < 0
+            ? -1 // === maximum possible repeat
+            : newTimeline[0].repeatCount + newCurrRepeat + 1;
 
         // replace that one and those after it
         oldTimeline.splice(i, prevTimelineLength - i, ...newTimeline);
@@ -120,23 +122,24 @@ export default function updateSegmentTimeline(
     if (prevLastElt.start > newLastElt.start) {
       log.warn("RepresentationIndex: The new index is older than the previous one");
       return false;
-    } else { // the new has more depth
-      log.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
+    } else {
+      // the new has more depth
+      log.warn('RepresentationIndex: The new index is "bigger" than the previous one');
       oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
       return true;
     }
   }
-  const prevLastTime = prevLastElt.start + prevLastElt.duration *
-                       (prevLastElt.repeatCount + 1);
-  const newLastTime = newLastElt.start + newLastElt.duration *
-                      (newLastElt.repeatCount + 1);
+  const prevLastTime =
+    prevLastElt.start + prevLastElt.duration * (prevLastElt.repeatCount + 1);
+  const newLastTime =
+    newLastElt.start + newLastElt.duration * (newLastElt.repeatCount + 1);
   if (prevLastTime >= newLastTime) {
     log.warn("RepresentationIndex: The new index is older than the previous one");
     return false;
   }
 
   // the new one has more depth. full update
-  log.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
+  log.warn('RepresentationIndex: The new index is "bigger" than the previous one');
   oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
   return true;
 }

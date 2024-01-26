@@ -27,9 +27,9 @@ import isNonEmptyString from "../../../../utils/is_non_empty_string";
  * @returns {string}
  */
 export default function generateCSSTextOutline(
-  color : string,
-  thickness : string|number
-) : string {
+  color: string,
+  thickness: string | number,
+): string {
   let thick = thickness;
   if (isNonEmptyString(thickness) && thickness.trim().endsWith("%")) {
     // As em and % are basically equivalent in CSS
@@ -39,8 +39,10 @@ export default function generateCSSTextOutline(
     thick = thickness.trim().slice(0, -1);
     thick = (parseInt(thick, 10) / 100).toString() + "em";
   }
-  return `-1px -1px ${thick} ${color},` +
-         `1px -1px ${thick} ${color},` +
-         `-1px 1px ${thick} ${color},` +
-         `1px 1px ${thick} ${color}`;
+  return (
+    `-1px -1px ${thick} ${color},` +
+    `1px -1px ${thick} ${color},` +
+    `-1px 1px ${thick} ${color},` +
+    `1px 1px ${thick} ${color}`
+  );
 }

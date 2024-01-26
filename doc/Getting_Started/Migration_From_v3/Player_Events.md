@@ -5,25 +5,23 @@ the RxPlayer.
 
 Many of them have changed in the v4.0.0. They are all listed here.
 
-
 ## `playerStateChange`
 
 Two player states have been updated:
 
-  - The `"FREEZING"` state has been added to the possible states sent through
-    the `playerStateChange` event.
+- The `"FREEZING"` state has been added to the possible states sent through
+  the `playerStateChange` event.
 
-    This new state, which is sent when playback does not advance despite
-    the fact that the right conditions for it are there, is described in the
-    [overview](./Overview.md).
+  This new state, which is sent when playback does not advance despite
+  the fact that the right conditions for it are there, is described in the
+  [overview](./Overview.md).
 
-    In many case, you might want to handle it like a `"BUFFERING"` state.
+  In many case, you might want to handle it like a `"BUFFERING"` state.
 
-  - The `RELOADING` player state can now happen at any time if it allows to
-    unlock playback.
+- The `RELOADING` player state can now happen at any time if it allows to
+  unlock playback.
 
-    Previously, it could only be sent if specific options have been used.
-
+  Previously, it could only be sent if specific options have been used.
 
 ### `audioBitrateChange` / `videoBitrateChange`
 
@@ -37,6 +35,7 @@ events.
 
 Both new events do not communicate directly the bitrate, but the
 `Representation` which each may contain a `bitrate` property:
+
 ```js
 // What was previously written
 rxPlayer.addEventListener("videoBitrateChange", (bitrate) => {
@@ -59,10 +58,9 @@ rxPlayer.addEventListener("videoRepresentationChange", (representation) => {
 });
 ```
 
+### `availableAudioBitratesChange` / `availableVideoBitratesChange`
 
-###  `availableAudioBitratesChange` / `availableVideoBitratesChange`
-
-The `availableAudioBitratesChange` and  `availableVideoBitratesChange` API have
+The `availableAudioBitratesChange` and `availableVideoBitratesChange` API have
 been removed like most bitrate-oriented API.
 
 If you want to know when the list of audio and video bitrates for the current
@@ -80,7 +78,6 @@ undecipherable.
 Sadly, there's no way for now to be notified when this last event happens. If
 you need this, please open an issue.
 
-
 ### `decipherabilityUpdate`
 
 The `decipherabilityUpdate` event has been removed with no replacement.
@@ -90,19 +87,16 @@ internals.
 
 If you need this, please open an issue.
 
-
 ### `positionUpdate`
 
 The `maximumBufferTime` property from `positionUpdate` events has been renamed
 `maximumPosition`, to align with the other APIs.
-
 
 ### `periodChange`
 
 The [`periodChange`](../../api/Player_Events.md#periodchange) is still present
 but its payload has been reduced to its core properties. See its documentation
 for more information.
-
 
 ### `fullscreenChange`
 
@@ -111,14 +105,12 @@ The deprecated `fullscreenChange` event has been removed.
 Fullscreen functionalities now have to be completely handled by the
 applications, which most likely already did just that anyway.
 
-
 ### `nativeTextTracksChange`
 
 The deprecated `nativeTextTracksChange` event has been removed.
 
 This event was initially added for legacy reasons and should not be relied on
 anymore.
-
 
 ### `bitrateEstimationChange`
 
@@ -129,14 +121,12 @@ the expected bandwidth), because it actually has a very complex relationship
 with the chosen quality and because its structure prevented us to make some
 evolutions to the RxPlayer internals.
 
-
 ### `imageTrackUpdate`
 
 All image related API, like the `imageTrackUpdate` event, have been removed.
 
 If you need to parse BIF file, you can use the
 [`parseBifThumbnails`](../../api/Tools/parseBifThumbnails.md) tool instead.
-
 
 ### `volumeChange`
 
@@ -147,10 +137,10 @@ method actually just setting that volume to `0` until the next `unMute` call.
 Now the `mute` RxPlayer method has been updated and this event accordingly send
 as a payload two properties:
 
-  - `volume` (`number`): The currently set audio volume from `0` to `1`, like
-    before.
+- `volume` (`number`): The currently set audio volume from `0` to `1`, like
+  before.
 
-  - `muted` (`boolean`): If `true`, the media element is currently muted (e.g.
-    through the `mute` RxPlayer method), meaning that audio will be silent even
-    if a volume higher than `0` is set.
-    You can remove the `muted` status by calling the `unMute` RxPlayer method.
+- `muted` (`boolean`): If `true`, the media element is currently muted (e.g.
+  through the `mute` RxPlayer method), meaning that audio will be silent even
+  if a volume higher than `0` is set.
+  You can remove the `muted` status by calling the `unMute` RxPlayer method.

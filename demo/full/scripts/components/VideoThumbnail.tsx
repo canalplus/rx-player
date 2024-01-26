@@ -76,22 +76,23 @@ export default function VideoThumbnail({
     // when the user quickly moves its pointer or whatever is calling this
     loadThumbnailTimeout = window.setTimeout(() => {
       loadThumbnailTimeout = null;
-      videoThumbnailLoader.setTime(
-        roundedTime
-      ).then(hideSpinner).catch((err) => {
-        if (
-          typeof err === "object" &&
-          err !== null &&
-          (err as Partial<Record<string, unknown>>).code === "ABORTED"
-        ) {
-          return;
-        } else {
-          hideSpinner();
+      videoThumbnailLoader
+        .setTime(roundedTime)
+        .then(hideSpinner)
+        .catch((err) => {
+          if (
+            typeof err === "object" &&
+            err !== null &&
+            (err as Partial<Record<string, unknown>>).code === "ABORTED"
+          ) {
+            return;
+          } else {
+            hideSpinner();
 
-          /* eslint-disable-next-line no-console */
-          console.error("Error while loading thumbnails:", err);
-        }
-      });
+            /* eslint-disable-next-line no-console */
+            console.error("Error while loading thumbnails:", err);
+          }
+        });
     }, 40);
     return () => {
       if (loadThumbnailTimeout !== null) {
@@ -135,24 +136,17 @@ export default function VideoThumbnail({
     }
   }, [roundedTime, videoThumbnailLoader]);
 
-  return (<div
-    className="thumbnail-wrapper"
-    style={
-      xPosition !== null ?
-        { transform: `translate(${xPosition}px, -136px)` } :
-        {}
-    }
-    ref={elementRef}
-  >
-    {
-      shouldDisplaySpinner ?
+  return (
+    <div
+      className="thumbnail-wrapper"
+      style={xPosition !== null ? { transform: `translate(${xPosition}px, -136px)` } : {}}
+      ref={elementRef}
+    >
+      {shouldDisplaySpinner ? (
         <div style={DIV_SPINNER_STYLE}>
-          <img
-            src="./assets/spinner.gif"
-            style={IMG_SPINNER_STYLE}
-          />
-        </div> :
-        null
-    }
-  </div>);
+          <img src="./assets/spinner.gif" style={IMG_SPINNER_STYLE} />
+        </div>
+      ) : null}
+    </div>
+  );
 }

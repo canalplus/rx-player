@@ -18,7 +18,7 @@ export interface ITextDisplayer {
    * @returns {Array.<Object>} - Contiguous time ranges where text media data is
    * buffered by the `ITextDisplayer` _AFTER_ the timed media data is pushed.
    */
-  pushTextData(infos : ITextDisplayerData) : IRange[];
+  pushTextData(infos: ITextDisplayerData): IRange[];
   /**
    * Remove media data corresponding to a given range of time, in seconds.
    * @param {number} start
@@ -26,17 +26,17 @@ export interface ITextDisplayer {
    * @returns {Array.<Object>} - Contiguous time ranges where text media data is
    * buffered by the `ITextDisplayer` _AFTER_ the removal operation is finished.
    */
-  removeBuffer(start : number, end : number) : IRange[];
+  removeBuffer(start: number, end: number): IRange[];
   /**
    * Returns current contiguous time ranges where text media data is buffered by
    * the `ITextDisplayer` currently.
    * @returns {Array.<Object>}
    */
-  getBufferedRanges() : IRange[];
+  getBufferedRanges(): IRange[];
   /**
    * Stop the `ITextDisplayer` from running and using resources.
    */
-  stop() : void;
+  stop(): void;
 }
 
 /** Interface describing a timed text media data "chunk". */
@@ -47,14 +47,14 @@ export interface ITextDisplayerData {
    * of it.
    * `null` if you just want to push the initialization segment.
    */
-  chunk : ITextTrackSegmentData;
+  chunk: ITextTrackSegmentData;
   /**
    * Time offset in seconds to apply to this segment.
    * A `timestampOffset` set to `5` will mean that the segment will be decoded
    * 5 seconds after its decode time which was found from the segment data
    * itself.
    */
-  timestampOffset : number;
+  timestampOffset: number;
   /**
    * Append windows for the segment. This is a tuple of two elements.
    *
@@ -70,7 +70,5 @@ export interface ITextDisplayerData {
    * This can be set to `0` or `undefined` to not apply any end append window
    * to that chunk.
    */
-  appendWindow: [ number | undefined,
-                  number | undefined ];
+  appendWindow: [number | undefined, number | undefined];
 }
-

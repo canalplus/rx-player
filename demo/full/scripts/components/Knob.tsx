@@ -20,9 +20,7 @@ function Knob({
 }): JSX.Element {
   return (
     <div className={`knob ${className}`}>
-      <span className="knob-name" >
-        {name}
-      </span>
+      <span className="knob-name">{name}</span>
       <Select
         ariaLabel={ariaLabel}
         name={name}

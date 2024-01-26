@@ -34,7 +34,7 @@ export default (env) => {
         CURRENT_ENV: isDevMode ? 1 : 0,
       },
       __LOGGER_LEVEL__: {
-        CURRENT_LEVEL: isDevMode ? "\"INFO\"" : "\"ERROR\"",
+        CURRENT_LEVEL: isDevMode ? '"INFO"' : '"ERROR"',
       },
     }),
   ];
@@ -78,10 +78,8 @@ export default (env) => {
               loader: "babel-loader",
               options: {
                 cacheDirectory: true,
-                presets: [
-                  [ "@babel/env", { loose: true, modules: false } ],
-                ],
-                plugins: [[ "@babel/plugin-transform-runtime" ]],
+                presets: [["@babel/env", { loose: true, modules: false }]],
+                plugins: [["@babel/plugin-transform-runtime"]],
               },
             },
             { loader: "ts-loader" },

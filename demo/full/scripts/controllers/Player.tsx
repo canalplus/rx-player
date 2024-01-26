@@ -18,12 +18,7 @@ import type {
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
 
-const {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} = React;
+const { useCallback, useEffect, useRef, useState } = React;
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
@@ -31,11 +26,11 @@ const SPINNER_TIMEOUT = 300;
 function Player(): JSX.Element {
   const [
     defaultAudioRepresentationsSwitchingMode,
-    setDefaultAudioRepresentationsSwitchingMode
+    setDefaultAudioRepresentationsSwitchingMode,
   ] = useState<IAudioRepresentationsSwitchingMode>("reload");
   const [
     defaultVideoRepresentationsSwitchingMode,
-    setDefaultVideoRepresentationsSwitchingMode
+    setDefaultVideoRepresentationsSwitchingMode,
   ] = useState<IVideoRepresentationsSwitchingMode>("reload");
   const [playerModule, setPlayerModule] = useState<IPlayerModule | null>(null);
   const [autoPlayBlocked, setAutoPlayBlocked] = useState(false);
@@ -44,13 +39,14 @@ function Player(): JSX.Element {
   const [enableVideoThumbnails, setEnableVideoThumbnails] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [playerOpts, setPlayerOpts] = useState<IConstructorSettings>(
-    defaultOptionsValues.player
+    defaultOptionsValues.player,
   );
-  const [loadVideoOpts, setLoadVideoOpts] =
-    useState<ILoadVideoSettings>(defaultOptionsValues.loadVideo);
+  const [loadVideoOpts, setLoadVideoOpts] = useState<ILoadVideoSettings>(
+    defaultOptionsValues.loadVideo,
+  );
   const [relyOnWorker, setRelyOnWorker] = useState(false);
   const [hasUpdatedPlayerOptions, setHasUpdatedPlayerOptions] = useState(false);
-  const displaySpinnerTimeoutRef = useRef<number|null>(null);
+  const displaySpinnerTimeoutRef = useRef<number | null>(null);
 
   const videoElementRef = useRef<HTMLVideoElement>(null);
   const textTrackElementRef = useRef<HTMLDivElement>(null);
@@ -90,10 +86,10 @@ function Player(): JSX.Element {
         return;
       }
       playerModule.actions.setDefaultAudioRepresentationSwitchingMode(
-        defaultAudioRepresentationsSwitchingMode
+        defaultAudioRepresentationsSwitchingMode,
       );
       playerModule.actions.setDefaultVideoRepresentationSwitchingMode(
-        defaultVideoRepresentationsSwitchingMode
+        defaultVideoRepresentationsSwitchingMode,
       );
       const isSeeking = playerModule.getState("isSeeking");
       const isBuffering = playerModule.getState("isBuffering");
@@ -125,12 +121,12 @@ function Player(): JSX.Element {
     playerModule.listenToState(
       "defaultAudioRepresentationsSwitchingMode",
       (newVal: IAudioRepresentationsSwitchingMode) =>
-        setDefaultAudioRepresentationsSwitchingMode(newVal)
+        setDefaultAudioRepresentationsSwitchingMode(newVal),
     );
     playerModule.listenToState(
       "defaultVideoRepresentationsSwitchingMode",
       (newVal: IVideoRepresentationsSwitchingMode) =>
-        setDefaultVideoRepresentationsSwitchingMode(newVal)
+        setDefaultVideoRepresentationsSwitchingMode(newVal),
     );
     playerModule.listenToState("autoPlayBlocked", (newAutoPlayBlocked) => {
       setAutoPlayBlocked(newAutoPlayBlocked);
@@ -165,8 +161,8 @@ function Player(): JSX.Element {
           textTrackElement: textTrackElementRef.current,
           debugElement: debugElementRef.current,
         },
-        playerOpts
-      )
+        playerOpts,
+      ),
     );
     setPlayerModule(playerMod);
     return playerMod;
@@ -191,25 +187,28 @@ function Player(): JSX.Element {
     }
   }, [playerModule]);
 
-  const startContent = useCallback((contentInfo: ILoadVideoOptions) => {
-    let playerMod = playerModule;
-    if (playerMod === null || hasUpdatedPlayerOptions) {
-      setHasUpdatedPlayerOptions(false);
-      const created = createNewPlayerModule();
-      if (created === undefined) {
-        return;
+  const startContent = useCallback(
+    (contentInfo: ILoadVideoOptions) => {
+      let playerMod = playerModule;
+      if (playerMod === null || hasUpdatedPlayerOptions) {
+        setHasUpdatedPlayerOptions(false);
+        const created = createNewPlayerModule();
+        if (created === undefined) {
+          return;
+        }
+        created.actions.updateWorkerMode(relyOnWorker);
+        playerMod = created;
       }
-      created.actions.updateWorkerMode(relyOnWorker);
-      playerMod = created;
-    }
-    loadContent(playerMod, contentInfo, loadVideoOpts);
-  }, [
-    playerModule,
-    relyOnWorker,
-    hasUpdatedPlayerOptions,
-    createNewPlayerModule,
-    loadVideoOpts,
-  ]);
+      loadContent(playerMod, contentInfo, loadVideoOpts);
+    },
+    [
+      playerModule,
+      relyOnWorker,
+      hasUpdatedPlayerOptions,
+      createNewPlayerModule,
+      loadVideoOpts,
+    ],
+  );
 
   const stopVideo = useCallback(() => {
     playerModule?.actions.stop();
@@ -223,12 +222,13 @@ function Player(): JSX.Element {
     setDisplaySettings(!displaySettings);
   }, [displaySettings]);
 
-  const updatePlayerOptions = useCallback((
-    cb: React.SetStateAction<IConstructorSettings>
-  ) => {
-    setHasUpdatedPlayerOptions(true);
-    setPlayerOpts(cb);
-  }, []);
+  const updatePlayerOptions = useCallback(
+    (cb: React.SetStateAction<IConstructorSettings>) => {
+      setHasUpdatedPlayerOptions(true);
+      setPlayerOpts(cb);
+    },
+    [],
+  );
 
   const updateDefaultAudioRepresentationsSwitchingMode = useCallback(
     (mod: IAudioRepresentationsSwitchingMode) => {
@@ -239,7 +239,7 @@ function Player(): JSX.Element {
       }
       playerModule.actions.setDefaultAudioRepresentationSwitchingMode(mod);
     },
-    [playerModule]
+    [playerModule],
   );
 
   const updateDefaultVideoRepresentationsSwitchingMode = useCallback(
@@ -251,7 +251,7 @@ function Player(): JSX.Element {
       }
       playerModule.actions.setDefaultVideoRepresentationSwitchingMode(mod);
     },
-    [playerModule]
+    [playerModule],
   );
 
   return (
@@ -283,65 +283,43 @@ function Player(): JSX.Element {
           tryRelyOnWorker={relyOnWorker}
           updateTryRelyOnWorker={setRelyOnWorker}
         />
-        <div
-          className="video-player-wrapper"
-          ref={playerWrapperElementRef}
-        >
+        <div className="video-player-wrapper" ref={playerWrapperElementRef}>
           <div className="video-screen-parent">
-            <div
-              className="video-screen"
-              onClick={() => onVideoClick()}
-            >
-              { playerModule ? <ErrorDisplayer player={playerModule} /> : null }
-              {
-                autoPlayBlocked ?
-                  <div className="video-player-manual-play-container" >
-                    <img
-                      className="video-player-manual-play"
-                      alt="Play"
-                      src="./assets/play.svg"/>
-                  </div> :
-                  null
-              }
-              {
-                !autoPlayBlocked && displaySpinner ?
+            <div className="video-screen" onClick={() => onVideoClick()}>
+              {playerModule ? <ErrorDisplayer player={playerModule} /> : null}
+              {autoPlayBlocked ? (
+                <div className="video-player-manual-play-container">
                   <img
-                    src="./assets/spinner.gif"
-                    className="video-player-spinner"
-                  /> :
-                  null
-              }
-              <div
-                className="text-track"
-                ref={textTrackElementRef}
-              />
-              <div
-                className="debug-element"
-                ref={debugElementRef}
-              />
+                    className="video-player-manual-play"
+                    alt="Play"
+                    src="./assets/play.svg"
+                  />
+                </div>
+              ) : null}
+              {!autoPlayBlocked && displaySpinner ? (
+                <img src="./assets/spinner.gif" className="video-player-spinner" />
+              ) : null}
+              <div className="text-track" ref={textTrackElementRef} />
+              <div className="debug-element" ref={debugElementRef} />
               <video ref={videoElementRef} />
-
             </div>
-            {
-              playerModule ?
-                <PlayerKnobsSettings
-                  close={closeSettings}
-                  shouldDisplay={displaySettings}
-                  player={playerModule}
-                /> :
-                null
-            }
-          </div>
-          {
-            playerModule && playerWrapperElementRef ?
-              <ControlBar
+            {playerModule ? (
+              <PlayerKnobsSettings
+                close={closeSettings}
+                shouldDisplay={displaySettings}
                 player={playerModule}
-                playerWrapperElementRef={playerWrapperElementRef}
-                toggleSettings={toggleSettings}
-                stopVideo={stopVideo}
-                enableVideoThumbnails={enableVideoThumbnails}
-              /> : null
-          }
+              />
+            ) : null}
+          </div>
+          {playerModule && playerWrapperElementRef ? (
+            <ControlBar
+              player={playerModule}
+              playerWrapperElementRef={playerWrapperElementRef}
+              toggleSettings={toggleSettings}
+              stopVideo={stopVideo}
+              enableVideoThumbnails={enableVideoThumbnails}
+            />
+          ) : null}
         </div>
         <ChartsManager player={playerModule} />
       </div>
@@ -352,7 +330,7 @@ function Player(): JSX.Element {
 function loadContent(
   playerModule: IPlayerModule,
   contentInfo: ILoadVideoOptions,
-  loadVideoOpts: ILoadVideoSettings
+  loadVideoOpts: ILoadVideoSettings,
 ) {
   if (contentInfo.lowLatencyMode) {
     playerModule.actions.enableLiveCatchUp();

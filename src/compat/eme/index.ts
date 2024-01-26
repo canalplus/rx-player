@@ -15,21 +15,14 @@
  */
 
 import closeSession from "./close_session";
-import {
-  ICustomMediaKeySystemAccess,
-} from "./custom_key_system_access";
-import {
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-} from "./custom_media_keys";
+import { ICustomMediaKeySystemAccess } from "./custom_key_system_access";
+import { ICustomMediaKeys, ICustomMediaKeySession } from "./custom_media_keys";
 import defaultEmeImplementation, {
   IEmeApiImplementation,
   IPreferredEmeApiType,
 } from "./eme-api-implementation";
 import generateKeyRequest from "./generate_key_request";
-import getInitData, {
-  IEncryptedEventData,
-} from "./get_init_data";
+import getInitData, { IEncryptedEventData } from "./get_init_data";
 import loadSession from "./load_session";
 
 export default defaultEmeImplementation;

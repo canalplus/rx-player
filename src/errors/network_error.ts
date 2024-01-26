@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-import type {
-  RequestError,
-  ISerializedRequestError,
-} from "../utils/request";
-import type {
-  INetworkErrorCode,
-  INetworkErrorType } from "./error_codes";
-import {
-  ErrorTypes,
-  NetworkErrorTypes,
-} from "./error_codes";
+import type { RequestError, ISerializedRequestError } from "../utils/request";
+import type { INetworkErrorCode, INetworkErrorType } from "./error_codes";
+import { ErrorTypes, NetworkErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
 /**
@@ -34,21 +26,21 @@ import errorMessage from "./error_message";
  * @extends Error
  */
 export default class NetworkError extends Error {
-  public readonly name : "NetworkError";
-  public readonly type : "NETWORK_ERROR";
-  public readonly message : string;
-  public readonly code : INetworkErrorCode;
-  public readonly url : string;
-  public readonly status : number;
-  public readonly errorType : INetworkErrorType;
-  public fatal : boolean;
-  private _baseError : RequestError;
+  public readonly name: "NetworkError";
+  public readonly type: "NETWORK_ERROR";
+  public readonly message: string;
+  public readonly code: INetworkErrorCode;
+  public readonly url: string;
+  public readonly status: number;
+  public readonly errorType: INetworkErrorType;
+  public fatal: boolean;
+  private _baseError: RequestError;
 
   /**
    * @param {string} code
    * @param {Error} baseError
    */
-  constructor(code : INetworkErrorCode, baseError : RequestError) {
+  constructor(code: INetworkErrorCode, baseError: RequestError) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
@@ -71,9 +63,11 @@ export default class NetworkError extends Error {
    * @param {number} httpErrorCode
    * @returns {Boolean}
    */
-  isHttpError(httpErrorCode : number) : boolean {
-    return this.errorType === NetworkErrorTypes.ERROR_HTTP_CODE &&
-           this.status === httpErrorCode;
+  isHttpError(httpErrorCode: number): boolean {
+    return (
+      this.errorType === NetworkErrorTypes.ERROR_HTTP_CODE &&
+      this.status === httpErrorCode
+    );
   }
 
   /**
@@ -83,15 +77,17 @@ export default class NetworkError extends Error {
    * @returns {Object}
    */
   public serialize(): ISerializedNetworkError {
-    return { name: this.name,
-             code: this.code,
-             baseError: this._baseError.serialize() };
+    return {
+      name: this.name,
+      code: this.code,
+      baseError: this._baseError.serialize(),
+    };
   }
 }
 
 /** Serializable object which allows to create a `NetworkError` later. */
 export interface ISerializedNetworkError {
-  name : "NetworkError";
-  code : INetworkErrorCode;
-  baseError : ISerializedRequestError;
+  name: "NetworkError";
+  code: INetworkErrorCode;
+  baseError: ISerializedRequestError;
 }

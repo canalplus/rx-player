@@ -22,11 +22,11 @@
  * @returns {string}
  */
 function parseString(
-  textDecoder : TextDecoder,
-  buffer : ArrayBuffer,
-  ptr : number,
-  len : number
-) : string {
+  textDecoder: TextDecoder,
+  buffer: ArrayBuffer,
+  ptr: number,
+  len: number,
+): string {
   const arr = new Uint8Array(buffer, ptr, len);
   return textDecoder.decode(arr);
 }
@@ -35,13 +35,8 @@ function parseString(
  * @param {number} val
  * @returns {number|boolean}
  */
-function parseFloatOrBool(val : number) : number | boolean {
-  return val === Infinity  ? true :
-         val === -Infinity ? false :
-                             val;
+function parseFloatOrBool(val: number): number | boolean {
+  return val === Infinity ? true : val === -Infinity ? false : val;
 }
 
-export {
-  parseString,
-  parseFloatOrBool,
-};
+export { parseString, parseFloatOrBool };

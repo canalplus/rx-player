@@ -15,12 +15,11 @@
  */
 
 import type { IFeaturesObject } from "../../features/types";
-// eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import local from "../../transports/local";
 
-function addLocalManifestFeature(features: IFeaturesObject) : void {
+function addLocalManifestFeature(features: IFeaturesObject): void {
   features.transports.local = local;
   features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
   features.codecSupportProber = mainCodecSupportProber;

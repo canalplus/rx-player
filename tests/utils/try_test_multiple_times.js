@@ -20,18 +20,16 @@
  * @returns {Promise} - Returns the same Promise than the last test
  * performed by this function.
  */
-export default async function tryTestMultipleTimes(
-  runTest,
-  maxAttempts,
-  cleanUp
-) {
+export default async function tryTestMultipleTimes(runTest, maxAttempts, cleanUp) {
   let attemptNb = 0;
   return await reCheck();
 
   async function reCheck() {
     let stopCondition = false;
     try {
-      const res = await runTest(() => { stopCondition = true; });
+      const res = await runTest(() => {
+        stopCondition = true;
+      });
       if (cleanUp !== undefined) {
         cleanUp();
       }
@@ -47,4 +45,3 @@ export default async function tryTestMultipleTimes(
     }
   }
 }
-

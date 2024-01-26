@@ -28,11 +28,9 @@
  * @param {HTMLMediaElement} mediaElement
  * @returns {number|undefined}
  */
-export default function getStartDate(
-  mediaElement : HTMLMediaElement
-) : number | undefined {
-  const _mediaElement : HTMLMediaElement & {
-    getStartDate? : () => number | Date | null | undefined;
+export default function getStartDate(mediaElement: HTMLMediaElement): number | undefined {
+  const _mediaElement: HTMLMediaElement & {
+    getStartDate?: () => number | Date | null | undefined;
   } = mediaElement;
   if (typeof _mediaElement.getStartDate === "function") {
     const startDate = _mediaElement.getStartDate();

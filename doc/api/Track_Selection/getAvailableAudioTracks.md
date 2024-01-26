@@ -63,7 +63,7 @@ Each of the objects in the returned array have the following properties:
     if does not make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be
-     deciphered (in the eventuality it had DRM-related protection).
+    deciphered (in the eventuality it had DRM-related protection).
 
     Note that because elements of the `representations` array only contains
     playable Representation, this value here cannot be set to `false` when
@@ -98,11 +98,11 @@ const audioTracks = player.getAvailableAudioTracks();
 const audioTrack = player.getAvailableAudioTracks(periodId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want
       to get the list of available audio tracks.
       If not defined, this method will return the list of audio tracks for the
       currently-playing Period.
 
- - **return value** `Array.<Object>`
+- **return value** `Array.<Object>`

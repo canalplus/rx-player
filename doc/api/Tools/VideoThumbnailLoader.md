@@ -44,10 +44,7 @@ VideoThumbnailLoader.addLoader(DASH_LOADER);
 const thumbnailVideoElement = document.createElement("video");
 
 // Link VideoThumbnailLoader to the RxPlayer instance
-const videoThumbnailLoader = new VideoThumbnailLoader(
-  thumbnailVideoElement,
-  player
-);
+const videoThumbnailLoader = new VideoThumbnailLoader(thumbnailVideoElement, player);
 
 player.loadVideo({
   /* some options */

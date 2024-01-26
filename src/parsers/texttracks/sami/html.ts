@@ -44,9 +44,9 @@ const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
  * @param {string} str
  * @returns {Object}
  */
-function getClassNameByLang(str : string) : Partial<Record<string, string>> {
+function getClassNameByLang(str: string): Partial<Record<string, string>> {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
-  const langs : { [lang : string ] : string } = {};
+  const langs: { [lang: string]: string } = {};
   let m = ruleRe.exec(str);
   while (m !== null) {
     const name = m[1];
@@ -65,7 +65,7 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
  * @param {string} str - The entire styling part.
  * @returns {string}
  */
-function getPCSSRules(str : string) : string {
+function getPCSSRules(str: string): string {
   const pRuleRegex = /p\s*{([^}]*)}/gi;
   const rule = pRuleRegex.exec(str);
   if (rule === null) {
@@ -79,19 +79,17 @@ function getPCSSRules(str : string) : string {
  * @param {string} name - name of the property
  * @returns {string|null} - value of the property. Null if not found.
  */
-function getCSSProperty(str : string, name : string) : string|null {
-  const matches = (new RegExp("\\s*" + name + ":\\s*(\\S+);", "i")).exec(str);
-  return Array.isArray(matches) ? matches[1] :
-                                  null;
+function getCSSProperty(str: string, name: string): string | null {
+  const matches = new RegExp("\\s*" + name + ":\\s*(\\S+);", "i").exec(str);
+  return Array.isArray(matches) ? matches[1] : null;
 }
 
 /**
  * @param {string} text
  * @returns {string}
  */
-function decodeEntities(text : string) : string {
-  return text
-    .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode(Number($1)));
+function decodeEntities(text: string): string {
+  return text.replace(HTML_ENTITIES, (_, $1) => String.fromCharCode(Number($1)));
 }
 
 /**
@@ -105,15 +103,14 @@ function decodeEntities(text : string) : string {
  * @param {Number} timeOffset
  * @param {string} lang
  */
-function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue[] {
-  const syncOpen = /<sync[ >]/ig;
-  const syncClose = /<sync[ >]|<\/body>/ig;
+function parseSami(smi: string, timeOffset: number, lang?: string): IHTMLCue[] {
+  const syncOpen = /<sync[ >]/gi;
+  const syncClose = /<sync[ >]|<\/body>/gi;
 
-  const subs : IHTMLCue[] = [];
+  const subs: IHTMLCue[] = [];
 
   const styleMatches = STYLE.exec(smi);
-  const css = Array.isArray(styleMatches) ? styleMatches[1] :
-                                            "";
+  const css = Array.isArray(styleMatches) ? styleMatches[1] : "";
   let up;
   let to;
 
@@ -124,7 +121,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
   const langs = getClassNameByLang(css);
   const pCSS = getPCSSRules(css);
 
-  let klass : string | undefined;
+  let klass: string | undefined;
   if (isNonEmptyString(lang)) {
     klass = langs[lang];
     if (klass === undefined) {
@@ -158,7 +155,7 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
 
   return subs;
 
-  function appendToSubs(lines : string[], start : number) {
+  function appendToSubs(lines: string[], start: number) {
     let i = lines.length;
     while (--i >= 0) {
       const paragraphInfos = PARAG.exec(lines[i]);
@@ -184,10 +181,11 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
         divEl.style.bottom = "0";
         divEl.style.width = "100%";
         divEl.style.color = "#fff";
-        divEl.style.textShadow = "-1px -1px 0 #000," +
-                                 "1px -1px 0 #000," +
-                                 "-1px 1px 0 #000," +
-                                 "1px 1px 0 #000";
+        divEl.style.textShadow =
+          "-1px -1px 0 #000," +
+          "1px -1px 0 #000," +
+          "-1px 1px 0 #000," +
+          "1px 1px 0 #000";
 
         const pEl = document.createElement("div");
         pEl.className = "rxp-texttrack-p";
@@ -209,9 +207,11 @@ function parseSami(smi : string, timeOffset : number, lang? : string) : IHTMLCue
         divEl.appendChild(pEl);
         wrapperEl.appendChild(divEl);
 
-        subs.push({ element: wrapperEl,
-                    start: start + timeOffset,
-                    end: -1 /* Will be updated on a following iteration */ });
+        subs.push({
+          element: wrapperEl,
+          start: start + timeOffset,
+          end: -1 /* Will be updated on a following iteration */,
+        });
       }
     }
   }

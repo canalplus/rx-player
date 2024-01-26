@@ -26,11 +26,12 @@ import { isStartOfStyleBlock } from "./utils";
  * @returns {Array.<Array.<string>>}
  */
 export default function getStyleBlocks(
-  linified : string[],
-  headerOffset : number
-) : string[][] {
-  const styleBlocks : string[][] = [];
-  for (let i = headerOffset; i < linified.length; i++) { //
+  linified: string[],
+  headerOffset: number,
+): string[][] {
+  const styleBlocks: string[][] = [];
+  for (let i = headerOffset; i < linified.length; i++) {
+    //
     if (isStartOfStyleBlock(linified, i)) {
       const startOfStyleBlock = i;
       i++;

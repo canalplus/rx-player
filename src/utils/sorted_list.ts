@@ -42,13 +42,13 @@ import arrayIncludes from "./array_includes";
  * @class SortedList
  */
 export default class SortedList<T> {
-  private readonly _sortingFn : (a : T, b : T) => number;
-  private _array : T[];
+  private readonly _sortingFn: (a: T, b: T) => number;
+  private _array: T[];
 
   /**
    * @param {Function} sortingFunction
    */
-  constructor(sortingFunction : (a : T, b : T) => number) {
+  constructor(sortingFunction: (a: T, b: T) => number) {
     this._array = [];
     this._sortingFn = sortingFunction;
   }
@@ -62,7 +62,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @param {...*} elements
    */
-  public add(...elements : T[]) : void {
+  public add(...elements: T[]): void {
     elements.sort(this._sortingFn);
 
     let j = 0;
@@ -88,7 +88,7 @@ export default class SortedList<T> {
    * Returns the current length of the list.
    * @returns {number}
    */
-  public length() : number {
+  public length(): number {
     return this._array.length;
   }
 
@@ -103,14 +103,14 @@ export default class SortedList<T> {
    * @param {number} index
    * @returns {*}
    */
-  public get(index : number) : T {
+  public get(index: number): T {
     if (index < 0 || index >= this._array.length) {
       throw new Error("Invalid index.");
     }
     return this._array[index];
   }
 
-  public toArray() : T[] {
+  public toArray(): T[] {
     return this._array.slice();
   }
 
@@ -123,7 +123,7 @@ export default class SortedList<T> {
    * @param {Function} fn
    * @returns {*}
    */
-  public findFirst(fn : (element : T) => boolean) : T | undefined {
+  public findFirst(fn: (element: T) => boolean): T | undefined {
     return arrayFind(this._array, fn);
   }
 
@@ -132,7 +132,7 @@ export default class SortedList<T> {
    * @param {*} element
    * @returns {Boolean}
    */
-  public has(element : T) : boolean {
+  public has(element: T): boolean {
     return arrayIncludes(this._array, element);
   }
 
@@ -141,7 +141,7 @@ export default class SortedList<T> {
    * Returns the index of the removed element. Undefined if not found.
    * @returns {number|undefined}
    */
-  public removeElement(element : T) : number|undefined {
+  public removeElement(element: T): number | undefined {
     const indexOf = this._array.indexOf(element);
     if (indexOf >= 0) {
       this._array.splice(indexOf, 1);
@@ -158,7 +158,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
    */
-  public head() : T|undefined {
+  public head(): T | undefined {
     return this._array[0];
   }
 
@@ -170,7 +170,7 @@ export default class SortedList<T> {
    * You can still re-force the sorting to happen by calling forceSort.
    * @returns {*}
    */
-  public last() : T|undefined {
+  public last(): T | undefined {
     return this._array[this._array.length - 1];
   }
 
@@ -179,7 +179,7 @@ export default class SortedList<T> {
    * Returns the element removed or undefined if no element were removed.
    * @returns {*}
    */
-  public shift() : T|undefined {
+  public shift(): T | undefined {
     return this._array.shift();
   }
 
@@ -188,7 +188,7 @@ export default class SortedList<T> {
    * Returns the element removed or undefined if no element were removed.
    * @returns {*}
    */
-  public pop() : T|undefined {
+  public pop(): T | undefined {
     return this._array.pop();
   }
 

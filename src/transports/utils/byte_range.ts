@@ -19,7 +19,6 @@
  * @param {Array.<string|Number>} arr
  * @returns {string}
  */
-export default function byteRange([start, end] : [number, number]) : string {
-  return end === Infinity ?  `bytes=${start}-` :
-                             `bytes=${start}-${end}`;
+export default function byteRange([start, end]: [number, number]): string {
+  return end === Infinity ? `bytes=${start}-` : `bytes=${start}-${end}`;
 }

@@ -1,7 +1,7 @@
-# `AdaptiveRepresentationSelector` #############################################
+# `AdaptiveRepresentationSelector`
 
 | Consideration           | Status                          |
-|-------------------------|---------------------------------|
+| ----------------------- | ------------------------------- |
 | Preferred import style  | Directory-only _[1]_            |
 | Multithread environment | Should be runnable in WebWorker |
 
@@ -9,35 +9,38 @@ _[1]_ Only the `adaptive` directory itself should be imported and relied on by
 the rest of the code, not its inner files (thus `./index.ts` should export
 everything that may be imported by outside code).
 
-## Overview ####################################################################
+## Overview
 
 The `AdaptiveRepresentationSelector` is a function which facilitates the choice
 between multiple audio/video qualities in function of the network capabilities
 and other specific settings set by the client.
 
 It does so by receiving various values such as:
-  - when network requests begin, progresses or end
-  - stats about the bandwidth of the user
-  - the current status of the buffer (how much of the buffer is left etc.)
-  - DOM events
-  - user settings (maximum authorized bitrate/width etc.)
-  - the available qualities
+
+- when network requests begin, progresses or end
+- stats about the bandwidth of the user
+- the current status of the buffer (how much of the buffer is left etc.)
+- DOM events
+- user settings (maximum authorized bitrate/width etc.)
+- the available qualities
 
 With all those variables at hand, it then proposes the quality which seems to
 be the most adapted, that is the quality which:
-  - will respect user settings (example: a Maximum bitrate is set)
-  - will maximize the user experience (example: a quality too high for the
-    network to handle would lead to excessive re-bufferings, but a too low would
-    be not as pleasant to watch)
+
+- will respect user settings (example: a Maximum bitrate is set)
+- will maximize the user experience (example: a quality too high for the
+  network to handle would lead to excessive re-bufferings, but a too low would
+  be not as pleasant to watch)
 
 In order to estimate the quality that maximizes the playback experience, we rely
 on multiple algorithms:
-  1. One which picks a quality from network conditions.
-  2. Another relies on buffering conditions to make its choices.
-  3. A third, only used in very rare conditions, "guess" the right quality by
-     progressively raising the quality until an un-maintainable one is found.
 
-## Bandwidth-based algorithm ###################################################
+1. One which picks a quality from network conditions.
+2. Another relies on buffering conditions to make its choices.
+3. A third, only used in very rare conditions, "guess" the right quality by
+   progressively raising the quality until an un-maintainable one is found.
+
+## Bandwidth-based algorithm
 
 ```
                  Long
@@ -94,9 +97,7 @@ bitrate threshold. The chosen quality is a quality's bitrate ceiling.
 [5] An immediate bandwidth is computed from last or current request.
 The quality's bitrate ceiling relies on it to return the chosen quality.
 
-
-
-## Buffer-based algorithm ######################################################
+## Buffer-based algorithm
 
 ```
                               Qualities
@@ -112,7 +113,6 @@ The quality's bitrate ceiling relies on it to return the chosen quality.
          +----------> | Compute optimal quality | <---------+
                       +- - - - - - - - - - - - -+
 ```
-
 
 [BOLA Algorithm](https://arxiv.org/pdf/1601.06748.pdf) finds optimal quality
 value to minimize playback buffering and maximize buffered quality.

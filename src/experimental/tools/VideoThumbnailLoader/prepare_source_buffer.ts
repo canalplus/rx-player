@@ -18,9 +18,7 @@ import { MediaSource_ } from "../../../compat";
 import log from "../../../log";
 import { resetMediaElement } from "../../../main_thread/init/utils/create_media_source";
 import { SourceBufferType } from "../../../mse";
-import type {
-  MainSourceBufferInterface,
-} from "../../../mse/main_media_source_interface";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import idGenerator from "../../../utils/id_generator";
@@ -40,7 +38,7 @@ const generateMediaSourceId = idGenerator();
 export default function prepareSourceBuffer(
   videoElement: HTMLVideoElement,
   codec: string,
-  cleanUpSignal: CancellationSignal
+  cleanUpSignal: CancellationSignal,
 ): Promise<MainSourceBufferInterface> {
   return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
     if (isNullOrUndefined(MediaSource_)) {
@@ -48,8 +46,7 @@ export default function prepareSourceBuffer(
     }
 
     // make sure the media has been correctly reset
-    const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src :
-                                                        null;
+    const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src : null;
     resetMediaElement(videoElement, oldSrc);
 
     log.info("Init: Creating MediaSource");
