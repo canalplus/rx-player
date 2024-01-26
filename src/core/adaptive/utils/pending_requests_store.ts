@@ -22,6 +22,7 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../manifest";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectValues from "../../../utils/object_values";
 
 /**
@@ -54,7 +55,7 @@ export default class PendingRequestsStore {
    */
   public addProgress(progress : IPendingRequestStoreProgress) : void {
     const request = this._currentRequests[progress.id];
-    if (request == null) {
+    if (isNullOrUndefined(request)) {
       if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
         throw new Error("ABR: progress for a request not added");
       }
@@ -69,7 +70,7 @@ export default class PendingRequestsStore {
    * @param {string} id
    */
   public remove(id : string) : void {
-    if (this._currentRequests[id] == null) {
+    if (isNullOrUndefined(this._currentRequests[id])) {
       if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
         throw new Error("ABR: can't remove unknown request");
       }
@@ -85,7 +86,7 @@ export default class PendingRequestsStore {
    */
   public getRequests() : IRequestInfo[] {
     return objectValues(this._currentRequests)
-      .filter((x) : x is IRequestInfo => x != null)
+      .filter((x) : x is IRequestInfo => !isNullOrUndefined(x))
       .sort((reqA, reqB) => reqA.content.segment.time - reqB.content.segment.time);
   }
 }

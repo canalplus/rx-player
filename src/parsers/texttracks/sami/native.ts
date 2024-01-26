@@ -25,6 +25,7 @@ import {
   makeVTTCue,
 } from "../../../compat";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
@@ -46,9 +47,9 @@ function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVT
   const nativeCues : Array<TextTrackCue|ICompatVTTCue> = [];
   for (let i = 0; i < cuesArray.length; i++) {
     const { start, end, text } = cuesArray[i];
-    if (isNonEmptyString(text) && end != null) {
+    if (isNonEmptyString(text) && !isNullOrUndefined(end)) {
       const cue = makeVTTCue(start, end, text);
-      if (cue != null) {
+      if (cue !== null) {
         nativeCues.push(cue);
       }
     }
@@ -68,7 +69,7 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
   while (Array.isArray(m)) {
     const name = m[1];
     const lang = getCSSProperty(m[2], "lang");
-    if (name != null && lang != null) {
+    if (!isNullOrUndefined(name) && !isNullOrUndefined(lang)) {
       langs[lang] = name;
     }
     m = ruleRe.exec(str);

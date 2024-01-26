@@ -83,7 +83,7 @@ describe("API - Public API", () => {
 
         // ! HAHA ! NaN is not === to NaN
         const videoElement = player.getVideoElement();
-        if (videoElement == null) {
+        if (videoElement === null) {
           throw new Error("The API is disposed");
         }
         expect(player.getMediaDuration()).toEqual(
@@ -221,7 +221,7 @@ describe("API - Public API", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
-        if (videoElement == null) {
+        if (videoElement === null) {
           throw new Error("The API is disposed");
         }
         player.setVolume(1);
@@ -240,7 +240,7 @@ describe("API - Public API", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
-        if (videoElement == null) {
+        if (videoElement === null) {
           throw new Error("The API is disposed");
         }
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
@@ -267,7 +267,7 @@ describe("API - Public API", () => {
         // back to a "normal" state.
         player.unMute();
         const videoElement = player.getVideoElement();
-        if (videoElement == null) {
+        if (videoElement === null) {
           throw new Error("The API is disposed");
         }
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions

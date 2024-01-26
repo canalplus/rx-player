@@ -23,6 +23,7 @@ import {
   itobe4,
 } from "../../../utils/byte_parsing";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
@@ -164,7 +165,7 @@ function createSmoothStreamingParser(
      */
     function getAttribute(name: string) : string|undefined {
       const attr = q.getAttribute(name);
-      return attr == null ? undefined : attr;
+      return attr === null ? undefined : attr;
     }
 
     switch (streamType) {
@@ -350,12 +351,12 @@ function createSmoothStreamingParser(
         DEFAULT_MIME_TYPES[adaptationType];
       const codecs = qualityLevel.codecs;
       const id =  adaptationID + "_" +
-                  (adaptationType != null ? adaptationType + "-" :
-                                            "") +
-                  (mimeType != null ? mimeType + "-" :
-                                      "") +
-                  (codecs != null ? codecs + "-" :
-                                    "") +
+                  (!isNullOrUndefined(adaptationType) ? adaptationType + "-" :
+                                                        "") +
+                  (!isNullOrUndefined(mimeType) ? mimeType + "-" :
+                                                  "") +
+                  (!isNullOrUndefined(codecs) ? codecs + "-" :
+                                                "") +
                   String(qualityLevel.bitrate);
 
       const keyIDs : IContentProtectionKID[] = [];
@@ -381,7 +382,7 @@ function createSmoothStreamingParser(
 
                                     // TODO set multiple protections here
                                     // instead of the first one
-                                    protection: firstProtection != null ? {
+                                    protection: !isNullOrUndefined(firstProtection) ? {
                                       keyId: firstProtection.keyId,
                                     } : undefined };
 
@@ -427,7 +428,7 @@ function createSmoothStreamingParser(
     const parsedAdaptation : IParsedAdaptation = { id: adaptationID,
                                                    type: adaptationType,
                                                    representations,
-                                                   language: language == null ?
+                                                   language: language === null ?
                                                      undefined :
                                                      language };
 
@@ -449,7 +450,7 @@ function createSmoothStreamingParser(
       baseUrl = url.substring(0, filenameIdx);
     }
     const root = doc.documentElement;
-    if (root == null || root.nodeName !== "SmoothStreamingMedia") {
+    if (isNullOrUndefined(root) || root.nodeName !== "SmoothStreamingMedia") {
       throw new Error("document root should be SmoothStreamingMedia");
     }
     const majorVersionAttr = root.getAttribute("MajorVersion");
@@ -494,7 +495,7 @@ function createSmoothStreamingParser(
     let timeShiftBufferDepth : number|undefined;
     if (isLive) {
       const dvrWindowLength = root.getAttribute("DVRWindowLength");
-      if (dvrWindowLength != null &&
+      if (dvrWindowLength !== null &&
           !isNaN(+dvrWindowLength) &&
           +dvrWindowLength !== 0)
       {
@@ -561,11 +562,11 @@ function createSmoothStreamingParser(
           const lastVideoTimeReference =
             firstVideoRepresentation.index.getLastAvailablePosition();
 
-          if (firstVideoTimeReference != null) {
+          if (!isNullOrUndefined(firstVideoTimeReference)) {
             firstTimeReferences.push(firstVideoTimeReference);
           }
 
-          if (lastVideoTimeReference != null) {
+          if (!isNullOrUndefined(lastVideoTimeReference)) {
             lastTimeReferences.push(lastVideoTimeReference);
           }
         }
@@ -579,11 +580,11 @@ function createSmoothStreamingParser(
           const lastAudioTimeReference =
             firstAudioRepresentation.index.getLastAvailablePosition();
 
-          if (firstAudioTimeReference != null) {
+          if (!isNullOrUndefined(firstAudioTimeReference)) {
             firstTimeReferences.push(firstAudioTimeReference);
           }
 
-          if (lastAudioTimeReference != null) {
+          if (!isNullOrUndefined(lastAudioTimeReference)) {
             lastTimeReferences.push(lastAudioTimeReference);
           }
         }
@@ -655,7 +656,7 @@ function createSmoothStreamingParser(
                   start: periodStart }],
       suggestedPresentationDelay,
       transportType: "smooth",
-      uris: url == null ? [] : [url],
+      uris: isNullOrUndefined(url) ? [] : [url],
     };
     checkManifestIDs(manifest);
     return manifest;
