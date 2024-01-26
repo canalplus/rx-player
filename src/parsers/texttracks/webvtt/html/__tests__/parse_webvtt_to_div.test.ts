@@ -137,7 +137,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
       default: spyGetCueBlock,
     }));
 
-    const spyParseCueBlock = jest.fn(() => undefined);
+    const spyParseCueBlock = jest.fn(() => null);
     jest.mock("../../parse_cue_block", () => ({
       __esModule: true as const,
       default: spyParseCueBlock,

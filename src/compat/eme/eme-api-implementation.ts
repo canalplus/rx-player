@@ -237,7 +237,7 @@ function getEmeApiImplementation(
                 distinctiveIdentifier } = keySystemConfiguration;
         let supported = true;
         supported = supported &&
-                    (initDataTypes == null ||
+                    (isNullOrUndefined(initDataTypes) ||
                      initDataTypes.some((idt) => idt === "cenc"));
         supported = supported && (distinctiveIdentifier !== "required");
 

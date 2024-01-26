@@ -51,9 +51,9 @@ export default function parseSRTStringToHTML(
   const cues : ISRTHTMLCue[] = [];
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
-    if (cueObject != null) {
+    if (cueObject !== null) {
       const htmlCue = toHTML(cueObject);
-      if (htmlCue != null) {
+      if (htmlCue !== null) {
         cues.push(htmlCue);
       }
     }
@@ -63,8 +63,10 @@ export default function parseSRTStringToHTML(
 }
 
 /**
- * @param {Array.<string>} cueLines
- * @param {Number} timeOffset
+ * @param {Object} cueObj
+ * @param {number} cueObj.start
+ * @param {number} cueObj.end
+ * @param {Array.<string>} cueObj.payload
  * @returns {Object|null}
  */
 function toHTML(cueObj : {

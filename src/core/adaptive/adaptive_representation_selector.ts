@@ -27,6 +27,7 @@ import type {
   IRepresentation,
   ISegment,
 } from "../../manifest";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IRange } from "../../utils/ranges";
 import { getLeftSizeOfRange } from "../../utils/ranges";
@@ -136,7 +137,7 @@ export default function createAdaptiveRepresentationSelector(
    */
   function _getBandwidthEstimator(bufferType : IBufferType) : BandwidthEstimator {
     const originalBandwidthEstimator = bandwidthEstimators[bufferType];
-    if (originalBandwidthEstimator == null) {
+    if (isNullOrUndefined(originalBandwidthEstimator)) {
       log.debug("ABR: Creating new BandwidthEstimator for ", bufferType);
       const bandwidthEstimator = new BandwidthEstimator();
       bandwidthEstimators[bufferType] = bandwidthEstimator;

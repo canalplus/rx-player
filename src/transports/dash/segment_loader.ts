@@ -124,7 +124,7 @@ export default function generateSegmentLoader(
               ISegmentLoaderResultChunkedComplete>
   {
     const url = constructSegmentUrl(wantedCdn, context.segment);
-    if (url == null) {
+    if (url === null) {
       return Promise.resolve({ resultType: "segment-created",
                                resultData: null });
     }

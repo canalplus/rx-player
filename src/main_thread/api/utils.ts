@@ -17,6 +17,7 @@
 import config from "../../config";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type {
   IReadOnlySharedReference,
 } from "../../utils/reference";
@@ -209,7 +210,7 @@ export function getLoadedContentState(
     // duration instead.
     const gapBetweenDurationAndCurrentTime = Math.abs(mediaElement.duration -
                                                       mediaElement.currentTime);
-    if (FORCED_ENDED_THRESHOLD != null &&
+    if (!isNullOrUndefined(FORCED_ENDED_THRESHOLD) &&
         gapBetweenDurationAndCurrentTime < FORCED_ENDED_THRESHOLD
     ) {
       return PLAYER_STATES.ENDED;

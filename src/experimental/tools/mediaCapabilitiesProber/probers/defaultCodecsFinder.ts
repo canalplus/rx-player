@@ -15,6 +15,7 @@
  */
 
 import { MediaSource_ } from "../../../../compat";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 
  /**
   * Check if one of given video codecs are supported for decode.
@@ -29,7 +30,10 @@ export function findDefaultVideoCodec(): string {
     "video/webm;codecs=\"vp8\"",
   ];
   /* eslint-disable @typescript-eslint/unbound-method */
-  if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
+  if (
+    isNullOrUndefined(MediaSource_) ||
+    typeof MediaSource_.isTypeSupported !== "function"
+  ) {
   /* eslint-enable @typescript-eslint/unbound-method */
     throw new Error("Cannot check video codec support: No API available.");
   }
@@ -53,7 +57,10 @@ export function findDefaultAudioCodec(): string {
     "audio/webm;codecs=opus",
   ];
   /* eslint-disable @typescript-eslint/unbound-method */
-  if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
+  if (
+    isNullOrUndefined(MediaSource_) ||
+    typeof MediaSource_.isTypeSupported !== "function"
+  ) {
   /* eslint-enable @typescript-eslint/unbound-method */
     throw new Error("Cannot check audio codec support: No API available.");
   }

@@ -18,6 +18,7 @@ import log from "../../log";
 import { getPsshSystemID } from "../../parsers/containers/isobmff";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import { be4toi } from "../../utils/byte_parsing";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { PSSH_TO_INTEGER } from "./constants";
 
 /** Data recuperated from parsing the payload of an `encrypted` event. */
@@ -148,7 +149,7 @@ export default function getInitData(
   encryptedEvent : MediaEncryptedEvent
 ) : IEncryptedEventData | null {
   const { initData, initDataType } = encryptedEvent;
-  if (initData == null) {
+  if (isNullOrUndefined(initData)) {
     log.warn("Compat: No init data found on media encrypted event.");
     return null;
   }

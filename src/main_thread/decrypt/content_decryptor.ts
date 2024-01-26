@@ -995,8 +995,8 @@ function addKeyIdsFromPeriod(
   const adaptationsByType = period.adaptations;
   const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
     // Note: the second case cannot happen. TS is just being dumb here
-    (acc, adaps) => adaps != null ? acc.concat(adaps) :
-                                    acc,
+    (acc, adaps) => !isNullOrUndefined(adaps) ? acc.concat(adaps) :
+                                                acc,
     []);
   for (const adaptation of adaptations) {
     for (const representation of adaptation.representations) {

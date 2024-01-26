@@ -31,6 +31,7 @@ import type {
   IRepresentationFilter,
 } from "../../public_types";
 import arrayFind from "../../utils/array_find";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Adaptation from "./adaptation";
 import type { ICodecSupportList } from "./representation";
 
@@ -85,7 +86,7 @@ export default class Period implements IPeriodMetadata {
     this.adaptations = (Object.keys(args.adaptations) as ITrackType[])
       .reduce<IManifestAdaptations>((acc, type) => {
         const adaptationsForType = args.adaptations[type];
-        if (adaptationsForType == null) {
+        if (isNullOrUndefined(adaptationsForType)) {
           return acc;
         }
         const filteredAdaptations = adaptationsForType
@@ -128,7 +129,7 @@ export default class Period implements IPeriodMetadata {
     this.duration = args.duration;
     this.start = args.start;
 
-    if (this.duration != null && this.start != null) {
+    if (!isNullOrUndefined(this.duration) && !isNullOrUndefined(this.start)) {
       this.end = this.start + this.duration;
     }
     this.streamEvents = args.streamEvents === undefined ?
@@ -204,8 +205,7 @@ export default class Period implements IPeriodMetadata {
    */
   getAdaptationsForType(adaptationType : ITrackType) : Adaptation[] {
     const adaptationsForType = this.adaptations[adaptationType];
-    return adaptationsForType == null ? [] :
-                                        adaptationsForType;
+    return adaptationsForType ?? [];
   }
 
   /**

@@ -41,14 +41,14 @@ export default function parseCNodes(
                                                     start;
     } else { // from second node to the end
       const prev = timeline[i - 1];
-      if (start == null || isNaN(start)) {
-        if (prev.duration == null || isNaN(prev.duration)) {
+      if (start === undefined || isNaN(start)) {
+        if (prev.duration === undefined || isNaN(prev.duration)) {
           throw new Error("Smooth: Invalid CNodes. Missing timestamp.");
         }
         start = prev.start + prev.duration * (prev.repeatCount + 1);
       }
     }
-    if (duration == null || isNaN(duration)) {
+    if (duration === undefined || isNaN(duration)) {
       const nextNode = nodes[i + 1];
       if (nextNode !== undefined) {
         const nextTAttr = nextNode.getAttribute("t");
