@@ -26,19 +26,18 @@ import parseTime from "./time_parsing";
  * @returns {Object}
  */
 export default function getTimeDelimiters(
-  element : Element,
-  ttParams : ITTParameters
-) : { start : number; end : number } {
+  element: Element,
+  ttParams: ITTParameters,
+): { start: number; end: number } {
   const beginAttr = element.getAttribute("begin");
   const durationAttr = element.getAttribute("dur");
   const endAttr = element.getAttribute("end");
 
-  const start = isNonEmptyString(beginAttr) ? parseTime(beginAttr, ttParams) :
-                                              null;
-  const duration = isNonEmptyString(durationAttr) ? parseTime(durationAttr, ttParams) :
-                                                    null;
-  const parsedEnd = isNonEmptyString(endAttr) ? parseTime(endAttr, ttParams) :
-                    null;
+  const start = isNonEmptyString(beginAttr) ? parseTime(beginAttr, ttParams) : null;
+  const duration = isNonEmptyString(durationAttr)
+    ? parseTime(durationAttr, ttParams)
+    : null;
+  const parsedEnd = isNonEmptyString(endAttr) ? parseTime(endAttr, ttParams) : null;
   if (
     isNullOrUndefined(start) ||
     (isNullOrUndefined(parsedEnd) && isNullOrUndefined(duration))
@@ -46,7 +45,6 @@ export default function getTimeDelimiters(
     throw new Error("Invalid text cue");
   }
 
-  const end = isNullOrUndefined(parsedEnd) ? start + (duration as number) :
-                                             parsedEnd;
+  const end = isNullOrUndefined(parsedEnd) ? start + (duration as number) : parsedEnd;
   return { start, end };
 }

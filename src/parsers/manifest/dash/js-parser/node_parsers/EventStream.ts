@@ -18,10 +18,7 @@ import type {
   IEventStreamEventIntermediateRepresentation,
   IEventStreamIntermediateRepresentation,
 } from "../../node_parser_types";
-import {
-  parseMPDInteger,
-  ValueParser,
-} from "./utils";
+import { parseMPDInteger, ValueParser } from "./utils";
 
 /**
  * Parse the EventStream node to extract Event nodes and their
@@ -30,10 +27,10 @@ import {
  * @returns {Array}
  */
 export default function parseEventStream(
-  element: Element
+  element: Element,
 ): [IEventStreamIntermediateRepresentation, Error[]] {
   const eventStreamIR: IEventStreamIntermediateRepresentation = {
-    children: { events : [] },
+    children: { events: [] },
     attributes: {},
   };
   let warnings: Error[] = [];
@@ -43,15 +40,16 @@ export default function parseEventStream(
   for (let i = 0; i < element.attributes.length; i++) {
     const attr = element.attributes[i];
     switch (attr.name) {
-
       case "schemeIdUri":
         eventStreamIR.attributes.schemeIdUri = attr.value;
         break;
 
       case "timescale":
-        parseValue(attr.value, { asKey: "timescale",
-                                 parser: parseMPDInteger,
-                                 dashName: "timescale" });
+        parseValue(attr.value, {
+          asKey: "timescale",
+          parser: parseMPDInteger,
+          dashName: "timescale",
+        });
         break;
 
       case "value":
@@ -65,7 +63,6 @@ export default function parseEventStream(
       const currentElement = element.childNodes[i] as Element;
 
       switch (currentElement.nodeName) {
-
         case "Event":
           const [event, eventWarnings] = parseEvent(currentElement);
           eventStreamIR.children.events.push(event);
@@ -86,12 +83,12 @@ export default function parseEventStream(
  * @returns {Array}
  */
 function parseEvent(
-  element: Element
+  element: Element,
 ): [IEventStreamEventIntermediateRepresentation, Error[]] {
   const eventIR: IEventStreamEventIntermediateRepresentation = {
-    eventStreamData : element,
+    eventStreamData: element,
   };
-  const warnings : Error[] = [];
+  const warnings: Error[] = [];
 
   // 1 - Parse attributes
   const parseValue = ValueParser(eventIR, warnings);
@@ -99,14 +96,18 @@ function parseEvent(
     const attr = element.attributes[i];
     switch (attr.name) {
       case "presentationTime":
-        parseValue(attr.value, { asKey: "presentationTime",
-                                 parser: parseMPDInteger,
-                                 dashName: "presentationTime" });
+        parseValue(attr.value, {
+          asKey: "presentationTime",
+          parser: parseMPDInteger,
+          dashName: "presentationTime",
+        });
         break;
       case "duration":
-        parseValue(attr.value, { asKey: "duration",
-                                 parser: parseMPDInteger,
-                                 dashName: "duration" });
+        parseValue(attr.value, {
+          asKey: "duration",
+          parser: parseMPDInteger,
+          dashName: "duration",
+        });
         break;
       case "id":
         eventIR.id = attr.value;

@@ -64,11 +64,11 @@ describe("mediaCapabilitiesProber - getCompatibleDRMConfigurations", () => {
     initDataTypes: ["cenc"],
     videoCapabilities: [
       {
-        contentType: "video/mp4;codecs=\"avc1.4d401e\"", // standard mp4 codec
+        contentType: 'video/mp4;codecs="avc1.4d401e"', // standard mp4 codec
         robustness: "HW_SECURE_CRYPTO",
       },
       {
-        contentType: "video/mp4;codecs=\"avc1.4d401e\"",
+        contentType: 'video/mp4;codecs="avc1.4d401e"',
         robustness: "SW_SECURE_DECODE",
       },
     ],
@@ -84,8 +84,8 @@ describe("mediaCapabilitiesProber - getCompatibleDRMConfigurations", () => {
 
   it("Should support all configurations.", async () => {
     const resetRMKSA = mockPositivesResultsRMKSA();
-    const results = await mediaCapabilitiesProber
-      .getCompatibleDRMConfigurations(keySystems);
+    const results =
+      await mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems);
 
     expect(results.length).to.be.equal(2);
     for (let i = 0; i < results.length; i++) {
@@ -98,8 +98,8 @@ describe("mediaCapabilitiesProber - getCompatibleDRMConfigurations", () => {
 
   it("Should support half of configurations only.", async () => {
     const resetRMKSA = mockMixedResultsRMKSA();
-    const results = await mediaCapabilitiesProber
-      .getCompatibleDRMConfigurations(keySystems);
+    const results =
+      await mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems);
 
     expect(results.length).to.be.equal(2);
     expect(results[0].configuration).not.to.be.undefined;
@@ -113,8 +113,8 @@ describe("mediaCapabilitiesProber - getCompatibleDRMConfigurations", () => {
 
   it("Should not support configurations.", async () => {
     const resetRMKSA = mockNegativeResultsRMKSA();
-    const results = await mediaCapabilitiesProber
-      .getCompatibleDRMConfigurations(keySystems);
+    const results =
+      await mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems);
 
     expect(results.length).to.be.equal(2);
     expect(results[0].configuration).not.to.be.undefined;

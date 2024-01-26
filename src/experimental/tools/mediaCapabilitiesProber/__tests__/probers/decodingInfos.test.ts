@@ -24,11 +24,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import probeDecodingInfos from "../../probers/decodingInfo";
-import type {
-  IMediaConfiguration } from "../../types";
-import {
-  ProberStatus,
-} from "../../types";
+import type { IMediaConfiguration } from "../../types";
+import { ProberStatus } from "../../types";
 
 const origDecodingInfo = (navigator as any).mediaCapabilities;
 const origMediaCapabilities = (navigator as any).mediaCapabilities;
@@ -85,8 +82,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         done();
       })
       .catch(({ message }: { message: string }) => {
-        expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling mediaCapabilites.");
+        expect(message).toEqual(
+          "MediaCapabilitiesProber >>> API_CALL: " +
+            "Not enough arguments for calling mediaCapabilites.",
+        );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
         done();
@@ -109,8 +108,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         done();
       })
       .catch(({ message }: { message: string }) => {
-        expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
-          "Not enough arguments for calling mediaCapabilites.");
+        expect(message).toEqual(
+          "MediaCapabilitiesProber >>> API_CALL: " +
+            "Not enough arguments for calling mediaCapabilites.",
+        );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
         done();
@@ -133,8 +134,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         done();
       })
       .catch(({ message }: { message: string }) => {
-        expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
-          "Not enough arguments for calling mediaCapabilites.");
+        expect(message).toEqual(
+          "MediaCapabilitiesProber >>> API_CALL: " +
+            "Not enough arguments for calling mediaCapabilites.",
+        );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
         done();
@@ -155,8 +158,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         done();
       })
       .catch(({ message }: { message: string }) => {
-        expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
-          "Not enough arguments for calling mediaCapabilites.");
+        expect(message).toEqual(
+          "MediaCapabilitiesProber >>> API_CALL: " +
+            "Not enough arguments for calling mediaCapabilites.",
+        );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
         done();
@@ -174,8 +179,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         done();
       })
       .catch(({ message }: { message: string }) => {
-        expect(message).toEqual("MediaCapabilitiesProber >>> API_CALL: " +
-          "Not enough arguments for calling mediaCapabilites.");
+        expect(message).toEqual(
+          "MediaCapabilitiesProber >>> API_CALL: " +
+            "Not enough arguments for calling mediaCapabilites.",
+        );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
         done();
@@ -186,7 +193,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     delete (navigator as any).mediaCapabilities;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDecodingInfos({})).rejects.toThrowError(
-      "MediaCapabilitiesProber >>> API_CALL: MediaCapabilities API not available"
+      "MediaCapabilitiesProber >>> API_CALL: MediaCapabilities API not available",
     );
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
@@ -199,7 +206,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     }
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeDecodingInfos({})).rejects.toThrowError(
-      "MediaCapabilitiesProber >>> API_CALL: Decoding Info not available"
+      "MediaCapabilitiesProber >>> API_CALL: Decoding Info not available",
     );
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });

@@ -25,10 +25,7 @@ import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import objectAssign from "../../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type {
-  IPushedChunkData,
-  SegmentSink,
-} from "../../../segment_sinks";
+import type { IPushedChunkData, SegmentSink } from "../../../segment_sinks";
 import type {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
@@ -49,40 +46,43 @@ export default async function pushInitSegment<T>(
     segment,
     segmentSink,
     bufferGoal,
-  } : {
-    playbackObserver : IReadOnlyPlaybackObserver<
-      IRepresentationStreamPlaybackObservation
-    >;
-    content: { adaptation : IAdaptation;
-               manifest : IManifest;
-               period : IPeriod;
-               representation : IRepresentation; };
-    initSegmentUniqueId : string;
-    segmentData : T;
-    segment : ISegment;
-    segmentSink : SegmentSink;
-    bufferGoal : IReadOnlySharedReference<number>;
+  }: {
+    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    content: {
+      adaptation: IAdaptation;
+      manifest: IManifest;
+      period: IPeriod;
+      representation: IRepresentation;
+    };
+    initSegmentUniqueId: string;
+    segmentData: T;
+    segment: ISegment;
+    segmentSink: SegmentSink;
+    bufferGoal: IReadOnlySharedReference<number>;
   },
-  cancelSignal : CancellationSignal
-) : Promise< IStreamEventAddedSegmentPayload | null > {
+  cancelSignal: CancellationSignal,
+): Promise<IStreamEventAddedSegmentPayload | null> {
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError;
   }
   const codec = content.representation.getMimeTypeString();
-  const data : IPushedChunkData<T> = { initSegmentUniqueId,
-                                       chunk: null,
-                                       timestampOffset: 0,
-                                       appendWindow: [ undefined, undefined ],
-                                       codec };
-  const inventoryInfos = objectAssign({ segment,
-                                        chunkSize: undefined,
-                                        start: 0,
-                                        end: 0 },
-                                      content);
-  const buffered = await appendSegmentToBuffer(playbackObserver,
-                                               segmentSink,
-                                               { data, inventoryInfos },
-                                               bufferGoal,
-                                               cancelSignal);
+  const data: IPushedChunkData<T> = {
+    initSegmentUniqueId,
+    chunk: null,
+    timestampOffset: 0,
+    appendWindow: [undefined, undefined],
+    codec,
+  };
+  const inventoryInfos = objectAssign(
+    { segment, chunkSize: undefined, start: 0, end: 0 },
+    content,
+  );
+  const buffered = await appendSegmentToBuffer(
+    playbackObserver,
+    segmentSink,
+    { data, inventoryInfos },
+    bufferGoal,
+    cancelSignal,
+  );
   return { content, segment, buffered };
 }

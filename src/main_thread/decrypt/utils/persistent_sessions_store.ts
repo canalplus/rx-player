@@ -35,10 +35,12 @@ import SerializableBytes from "./serializable_bytes";
  * Throw if the given storage does not respect the right interface.
  * @param {Object} storage
  */
-function checkStorage(storage : IPersistentLicenseConfig) : void {
-  assertInterface(storage,
-                  { save: "function", load: "function" },
-                  "persistentLicenseConfig");
+function checkStorage(storage: IPersistentLicenseConfig): void {
+  assertInterface(
+    storage,
+    { save: "function", load: "function" },
+    "persistentLicenseConfig",
+  );
 }
 
 /**
@@ -51,14 +53,14 @@ function checkStorage(storage : IPersistentLicenseConfig) : void {
  * @class PersistentSessionsStore
  */
 export default class PersistentSessionsStore {
-  private readonly _storage : IPersistentLicenseConfig;
-  private _entries : IPersistentSessionInfo[];
+  private readonly _storage: IPersistentLicenseConfig;
+  private _entries: IPersistentSessionInfo[];
 
   /**
    * Create a new PersistentSessionsStore.
    * @param {Object} storage
    */
-  constructor(storage : IPersistentLicenseConfig) {
+  constructor(storage: IPersistentLicenseConfig) {
     checkStorage(storage);
     this._entries = [];
     this._storage = storage;
@@ -69,8 +71,10 @@ export default class PersistentSessionsStore {
       }
       this._entries = entries;
     } catch (e) {
-      log.warn("DRM-PSS: Could not get entries from license storage",
-               e instanceof Error ? e : "");
+      log.warn(
+        "DRM-PSS: Could not get entries from license storage",
+        e instanceof Error ? e : "",
+      );
       this.dispose();
     }
   }
@@ -79,7 +83,7 @@ export default class PersistentSessionsStore {
    * Returns the number of stored values.
    * @returns {number}
    */
-  public getLength() : number {
+  public getLength(): number {
     return this._entries.length;
   }
 
@@ -88,7 +92,7 @@ export default class PersistentSessionsStore {
    * the MediaKeySession have been created.
    * @returns {Array.<Object>}
    */
-  public getAll() : IPersistentSessionInfo[] {
+  public getAll(): IPersistentSessionInfo[] {
     return this._entries;
   }
 
@@ -98,10 +102,9 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
-  public get(initData : IProcessedProtectionData) : IPersistentSessionInfo | null {
+  public get(initData: IProcessedProtectionData): IPersistentSessionInfo | null {
     const index = this._getIndex(initData);
-    return index === -1 ? null :
-                          this._entries[index];
+    return index === -1 ? null : this._entries[index];
   }
 
   /**
@@ -115,9 +118,7 @@ export default class PersistentSessionsStore {
    * @param {string|undefined} initDataType
    * @returns {*}
    */
-  public getAndReuse(
-    initData : IProcessedProtectionData
-  ) : IPersistentSessionInfo | null {
+  public getAndReuse(initData: IProcessedProtectionData): IPersistentSessionInfo | null {
     const index = this._getIndex(initData);
     if (index === -1) {
       return null;
@@ -134,10 +135,10 @@ export default class PersistentSessionsStore {
    * @param {MediaKeySession} session
    */
   public add(
-    initData : IProcessedProtectionData,
-    keyIds : Uint8Array[] | undefined,
-    session : MediaKeySession|ICustomMediaKeySession
-  ) : void {
+    initData: IProcessedProtectionData,
+    keyIds: Uint8Array[] | undefined,
+    session: MediaKeySession | ICustomMediaKeySession,
+  ): void {
     if (isNullOrUndefined(session) || !isNonEmptyString(session.sessionId)) {
       log.warn("DRM-PSS: Invalid Persisten Session given.");
       return;
@@ -145,8 +146,7 @@ export default class PersistentSessionsStore {
     const { sessionId } = session;
     const currentIndex = this._getIndex(initData);
     if (currentIndex >= 0) {
-      const currVersion = keyIds === undefined ? 3 :
-                                                 4;
+      const currVersion = keyIds === undefined ? 3 : 4;
       const currentEntry = this._entries[currentIndex];
       const entryVersion = currentEntry.version ?? -1;
       if (entryVersion >= currVersion && sessionId === currentEntry.sessionId) {
@@ -160,16 +160,20 @@ export default class PersistentSessionsStore {
 
     const storedValues = prepareValuesForStore(initData.values.getFormattedValues());
     if (keyIds === undefined) {
-      this._entries.push({ version: 3,
-                           sessionId,
-                           values: storedValues,
-                           initDataType: initData.type });
+      this._entries.push({
+        version: 3,
+        sessionId,
+        values: storedValues,
+        initDataType: initData.type,
+      });
     } else {
-      this._entries.push({ version: 4,
-                           sessionId,
-                           keyIds: keyIds.map((k) => new SerializableBytes(k)),
-                           values: storedValues,
-                           initDataType: initData.type });
+      this._entries.push({
+        version: 4,
+        sessionId,
+        keyIds: keyIds.map((k) => new SerializableBytes(k)),
+        values: storedValues,
+        initDataType: initData.type,
+      });
     }
     this._save();
   }
@@ -178,7 +182,7 @@ export default class PersistentSessionsStore {
    * Delete stored MediaKeySession information based on its session id.
    * @param {string} sessionId
    */
-  public delete(sessionId : string) : void {
+  public delete(sessionId: string): void {
     let index = -1;
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
@@ -197,7 +201,7 @@ export default class PersistentSessionsStore {
     this._save();
   }
 
-  public deleteOldSessions(sessionsToDelete : number) : void {
+  public deleteOldSessions(sessionsToDelete: number): void {
     log.info(`DRM-PSS: Deleting last ${sessionsToDelete} sessions.`);
     if (sessionsToDelete <= 0) {
       return;
@@ -205,9 +209,11 @@ export default class PersistentSessionsStore {
     if (sessionsToDelete <= this._entries.length) {
       this._entries.splice(0, sessionsToDelete);
     } else {
-      log.warn("DRM-PSS: Asked to remove more information that it contains",
-               sessionsToDelete,
-               this._entries.length);
+      log.warn(
+        "DRM-PSS: Asked to remove more information that it contains",
+        sessionsToDelete,
+        this._entries.length,
+      );
       this._entries = [];
     }
     this._save();
@@ -216,7 +222,7 @@ export default class PersistentSessionsStore {
   /**
    * Delete all saved entries.
    */
-  public dispose() : void {
+  public dispose(): void {
     this._entries = [];
     this._save();
   }
@@ -227,17 +233,21 @@ export default class PersistentSessionsStore {
    * @param {Object} initData
    * @returns {number}
    */
-  private _getIndex(initData : IProcessedProtectionData) : number {
+  private _getIndex(initData: IProcessedProtectionData): number {
     // Older versions of the format include a concatenation of all
     // initialization data and its hash.
     // This is only computed lazily, the first time it is needed.
-    let lazyConcatenatedData : null | { initData : Uint8Array;
-                                        initDataHash : number; } = null;
+    let lazyConcatenatedData: null | {
+      initData: Uint8Array;
+      initDataHash: number;
+    } = null;
     function getConcatenatedInitDataInfo() {
       if (lazyConcatenatedData === null) {
         const concatInitData = initData.values.constructRequestData();
-        lazyConcatenatedData = { initData: concatInitData,
-                                 initDataHash: hashBuffer(concatInitData) };
+        lazyConcatenatedData = {
+          initData: concatInitData,
+          initDataHash: hashBuffer(concatInitData),
+        };
       }
       return lazyConcatenatedData;
     }
@@ -248,7 +258,7 @@ export default class PersistentSessionsStore {
         switch (entry.version) {
           case 4:
             if (initData.keyIds !== undefined) {
-              const foundCompatible = initData.keyIds.every(keyId => {
+              const foundCompatible = initData.keyIds.every((keyId) => {
                 const keyIdB64 = bytesToBase64(keyId);
                 for (const entryKid of entry.keyIds) {
                   if (typeof entryKid === "string") {
@@ -280,27 +290,30 @@ export default class PersistentSessionsStore {
             break;
 
           case 2: {
-            const { initData: concatInitData,
-                    initDataHash: concatHash } = getConcatenatedInitDataInfo();
+            const { initData: concatInitData, initDataHash: concatHash } =
+              getConcatenatedInitDataInfo();
             if (entry.initDataHash === concatHash) {
               try {
-                const decodedInitData : Uint8Array = typeof entry.initData === "string" ?
-                  SerializableBytes.decode(entry.initData) :
-                  entry.initData.initData;
+                const decodedInitData: Uint8Array =
+                  typeof entry.initData === "string"
+                    ? SerializableBytes.decode(entry.initData)
+                    : entry.initData.initData;
                 if (areArraysOfNumbersEqual(decodedInitData, concatInitData)) {
                   return i;
                 }
               } catch (e) {
-                log.warn("DRM-PSS: Could not decode initialization data.",
-                         e instanceof Error ? e : "");
+                log.warn(
+                  "DRM-PSS: Could not decode initialization data.",
+                  e instanceof Error ? e : "",
+                );
               }
             }
             break;
           }
 
           case 1: {
-            const { initData: concatInitData,
-                    initDataHash: concatHash } = getConcatenatedInitDataInfo();
+            const { initData: concatInitData, initDataHash: concatHash } =
+              getConcatenatedInitDataInfo();
             if (entry.initDataHash === concatHash) {
               if (typeof entry.initData.length === "undefined") {
                 // If length is undefined, it has been linearized. We could still
@@ -330,12 +343,11 @@ export default class PersistentSessionsStore {
   /**
    * Use the given storage to store the current entries.
    */
-  private _save() : void {
+  private _save(): void {
     try {
       this._storage.save(this._entries);
     } catch (e) {
-      const err = e instanceof Error ? e :
-                                       undefined;
+      const err = e instanceof Error ? e : undefined;
       log.warn("DRM-PSS: Could not save MediaKeySession information", err);
     }
   }
@@ -348,13 +360,14 @@ export default class PersistentSessionsStore {
  * @param {Array.<Object>} initialValues
  * @returns {Array.<Object>}
  */
-function prepareValuesForStore(
-  initialValues : IFormattedInitDataValue[]
-) : Array<{ systemId : string | undefined;
-            hash : number;
-            data : SerializableBytes; }> {
-  return initialValues
-    .map(({ systemId, data, hash }) => ({ systemId,
-                                          hash,
-                                          data : new SerializableBytes(data) }));
+function prepareValuesForStore(initialValues: IFormattedInitDataValue[]): Array<{
+  systemId: string | undefined;
+  hash: number;
+  data: SerializableBytes;
+}> {
+  return initialValues.map(({ systemId, data, hash }) => ({
+    systemId,
+    hash,
+    data: new SerializableBytes(data),
+  }));
 }

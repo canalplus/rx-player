@@ -1,10 +1,7 @@
 import * as React from "react";
 import { render } from "github-buttons";
 
-const {
-  useEffect,
-  useRef,
-} = React;
+const { useEffect, useRef } = React;
 
 const GitHubButton = ({
   href,
@@ -32,10 +29,7 @@ const GitHubButton = ({
   useEffect(() => {
     const aElement = aRef.current;
     if (aElement !== null) {
-      render(
-        aElement,
-        newA => aElement?.parentNode?.replaceChild(newA, aElement),
-      );
+      render(aElement, (newA) => aElement?.parentNode?.replaceChild(newA, aElement));
     }
   });
 

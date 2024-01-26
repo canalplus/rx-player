@@ -3,9 +3,9 @@ import log from "../../../log";
 import type { ISentError, IWorkerMessage } from "../../../multithread_types";
 
 export default function sendMessage(
-  msg : IWorkerMessage,
-  transferables? : Transferable[]
-) : void {
+  msg: IWorkerMessage,
+  transferables?: Transferable[],
+): void {
   log.debug("<--- Sending to Main:", msg.type);
   if (transferables === undefined) {
     postMessage(msg);
@@ -16,9 +16,7 @@ export default function sendMessage(
   }
 }
 
-export function formatErrorForSender(
-  error : unknown
-) : ISentError {
+export function formatErrorForSender(error: unknown): ISentError {
   const formattedError = formatError(error, {
     defaultCode: "NONE",
     defaultReason: "An unknown error stopped content playback.",
@@ -26,4 +24,3 @@ export function formatErrorForSender(
 
   return formattedError.serialize();
 }
-

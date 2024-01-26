@@ -21,7 +21,7 @@ import type { IFeaturesObject } from "../types";
  * Add ability to play encrypted contents
  * @param {Object} features
  */
-function addEMEFeature(features : IFeaturesObject) : void {
+function addEMEFeature(features: IFeaturesObject): void {
   features.decrypt = ContentDecryptor;
 }
 

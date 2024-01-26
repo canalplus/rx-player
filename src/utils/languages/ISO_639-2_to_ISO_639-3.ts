@@ -17,7 +17,7 @@
 /**
  * Translate ISO 639-2 synonyms to their ISO 639-3 counterparts.
  */
-const ISO_MAP_2_TO_3 : { [ lang : string ] : string } = {
+const ISO_MAP_2_TO_3: { [lang: string]: string } = {
   alb: "sqi", // Albanian
   arm: "hye", // Armenian
   baq: "eus", // Basque

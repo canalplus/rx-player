@@ -16,40 +16,44 @@
 
 import globalScope from "../../../../utils/global_scope";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type {
-  IMediaConfiguration } from "../types";
-import {
-  ProberStatus,
-} from "../types";
+import type { IMediaConfiguration } from "../types";
+import { ProberStatus } from "../types";
 
 /**
  * @param {Object} config
  * @returns {Promise}
  */
 export default function probeMatchMedia(
-  config: IMediaConfiguration
+  config: IMediaConfiguration,
 ): Promise<[ProberStatus]> {
   return new Promise((resolve) => {
     /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof globalScope.matchMedia !== "function") {
-    /* eslint-enable @typescript-eslint/unbound-method */
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "matchMedia not available");
+      /* eslint-enable @typescript-eslint/unbound-method */
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " + "matchMedia not available",
+      );
     }
-    if (isNullOrUndefined(config.display) ||
-        config.display.colorSpace === undefined ||
-        config.display.colorSpace.length === 0) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling matchMedia.");
+    if (
+      isNullOrUndefined(config.display) ||
+      config.display.colorSpace === undefined ||
+      config.display.colorSpace.length === 0
+    ) {
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " +
+          "Not enough arguments for calling matchMedia.",
+      );
     }
 
     const match = globalScope.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
     if (match.media === "not all") {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Bad arguments for calling matchMedia.");
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " +
+          "Bad arguments for calling matchMedia.",
+      );
     }
 
-    const result : [ProberStatus] = [
+    const result: [ProberStatus] = [
       match.matches ? ProberStatus.Supported : ProberStatus.NotSupported,
     ];
     resolve(result);

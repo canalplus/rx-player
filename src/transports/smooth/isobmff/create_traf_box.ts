@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-import {
-  createBox,
-  createBoxWithChildren,
-} from "../../../parsers/containers/isobmff";
-import {
-  createSAIOBox,
-  createSAIZBox,
-} from "./create_boxes";
+import { createBox, createBoxWithChildren } from "../../../parsers/containers/isobmff";
+import { createSAIOBox, createSAIZBox } from "./create_boxes";
 
 export default function createTrafBox(
-  tfhd : Uint8Array,
-  tfdt : Uint8Array,
-  trun : Uint8Array,
-  mfhd : Uint8Array,
-  senc?: Uint8Array
-) : Uint8Array {
+  tfhd: Uint8Array,
+  tfdt: Uint8Array,
+  trun: Uint8Array,
+  mfhd: Uint8Array,
+  senc?: Uint8Array,
+): Uint8Array {
   const trafs = [tfhd, tfdt, trun];
   if (senc !== undefined) {
-    trafs.push(createBox("senc", senc),
-               createSAIZBox(senc),
-               createSAIOBox(mfhd, tfhd, tfdt, trun));
+    trafs.push(
+      createBox("senc", senc),
+      createSAIZBox(senc),
+      createSAIOBox(mfhd, tfhd, tfdt, trun),
+    );
   }
   return createBoxWithChildren("traf", trafs);
 }

@@ -25,13 +25,13 @@ import globalScope from "../../utils/global_scope";
 
 describe("Compat - isVTTCue", () => {
   interface IFakeWindow {
-    VTTCue? : VTTCue | typeof MockVTTCue;
+    VTTCue?: VTTCue | typeof MockVTTCue;
   }
   class MockVTTCue {
-    public startTime : number;
-    public endTime : number;
-    public text : string;
-    constructor(start : number, end : number, text : string) {
+    public startTime: number;
+    public endTime: number;
+    public text: string;
+    constructor(start: number, end: number, text: string) {
       this.startTime = start;
       this.endTime = end;
       this.text = text;
@@ -61,15 +61,13 @@ describe("Compat - isVTTCue", () => {
     globalScope.VTTCue = originalVTTCue;
   });
 
-  it(
-    "should return false in any case if the global scope does not define a VTTCue",
-    () => {
-      const originalVTTCue = globalScope.VTTCue;
-      gs.VTTCue = MockVTTCue;
-      const cue = new VTTCue(0, 10, "");
-      delete gs.VTTCue;
-      const isVTTCue = jest.requireActual("../is_vtt_cue").default;
-      expect(isVTTCue(cue)).toEqual(false);
-      globalScope.VTTCue = originalVTTCue;
-    });
+  it("should return false in any case if the global scope does not define a VTTCue", () => {
+    const originalVTTCue = globalScope.VTTCue;
+    gs.VTTCue = MockVTTCue;
+    const cue = new VTTCue(0, 10, "");
+    delete gs.VTTCue;
+    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
+    expect(isVTTCue(cue)).toEqual(false);
+    globalScope.VTTCue = originalVTTCue;
+  });
 });

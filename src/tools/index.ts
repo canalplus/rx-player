@@ -18,7 +18,4 @@ import parseBifThumbnails from "./parseBIFThumbnails";
 export * as StringUtils from "./string_utils";
 import TextTrackRenderer from "./TextTrackRenderer";
 
-export {
-  parseBifThumbnails,
-  TextTrackRenderer,
-};
+export { parseBifThumbnails, TextTrackRenderer };

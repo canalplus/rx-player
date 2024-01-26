@@ -1,46 +1,31 @@
 import config from "../../../config";
-import {
-  MediaError,
-  OtherError,
-} from "../../../errors";
+import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../../manifest/classes";
+import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
 import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
   IContentInitializationData,
   IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
-  IReferenceUpdateMessage } from "../../../multithread_types";
-import {
-  MainThreadMessageType,
-  WorkerMessageType,
+  IReferenceUpdateMessage,
 } from "../../../multithread_types";
+import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import { ObservationPosition } from "../../../playback_observer";
-import type {
-  IWorkerPlaybackObservation,
-} from "../../../playback_observer/worker_playback_observer";
+import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
 import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
 import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
-import assert, {
-  assertUnreachable,
-} from "../../../utils/assert";
+import assert, { assertUnreachable } from "../../../utils/assert";
 import type { ILoggerLevel } from "../../../utils/logger";
 import { mainThreadTimestampDiff } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
-import type {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
 import type {
   INeedsMediaSourceReloadPayload,
@@ -48,7 +33,6 @@ import type {
   IStreamStatusPayload,
 } from "../../stream";
 import StreamOrchestrator from "../../stream";
-/* eslint-disable-next-line max-len */
 import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
 import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
 import ContentPreparer from "./content_preparer";
@@ -60,9 +44,7 @@ import {
   throttleVideoBitrate,
   wantedBufferAhead,
 } from "./globals";
-import sendMessage, {
-  formatErrorForSender,
-} from "./send_message";
+import sendMessage, { formatErrorForSender } from "./send_message";
 
 export default function initializeWorkerMain() {
   /**
@@ -96,7 +78,7 @@ export default function initializeWorkerMain() {
   /**
    * When set, emit playback observation made on the main thread.
    */
-  let playbackObservationRef : SharedReference<IWorkerPlaybackObservation> | null = null;
+  let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
 
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
     log.debug("Worker: received message", e.data.type);
@@ -114,18 +96,17 @@ export default function initializeWorkerMain() {
         updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
         dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).then(
           () => {
-            sendMessage({ type: WorkerMessageType.InitSuccess,
-                          value: null });
-          }, (err) => {
-            const error = err instanceof Error ?
-              err.toString() :
-              "Unknown Error";
+            sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+          },
+          (err) => {
+            const error = err instanceof Error ? err.toString() : "Unknown Error";
             log.error("Worker: Could not initialize DASH_WASM parser", error);
-            sendMessage({ type: WorkerMessageType.InitError,
-                          value: { errorMessage: error,
-                                   kind: "dashWasmInitialization" } });
-
-          });
+            sendMessage({
+              type: WorkerMessageType.InitError,
+              value: { errorMessage: error, kind: "dashWasmInitialization" },
+            });
+          }
+        );
 
         if (!msg.value.hasVideo || msg.value.hasMseInWorker) {
           contentPreparer.disposeCurrentContent();
@@ -135,9 +116,9 @@ export default function initializeWorkerMain() {
           });
         }
 
-        features.codecSupportProber = msg.value.hasMseInWorker ?
-          MainCodecSupportProber :
-          WorkerCodecSupportProber;
+        features.codecSupportProber = msg.value.hasMseInWorker
+          ? MainCodecSupportProber
+          : WorkerCodecSupportProber;
         break;
 
       case MainThreadMessageType.LogLevelUpdate:
@@ -159,20 +140,23 @@ export default function initializeWorkerMain() {
         }
 
         const currentCanceller = new TaskCanceller();
-        const currentContentObservationRef = new SharedReference<
-          IWorkerPlaybackObservation
-        >(objectAssign(msg.value.initialObservation, {
-          position: new ObservationPosition(...msg.value.initialObservation.position),
-        }));
+        const currentContentObservationRef =
+          new SharedReference<IWorkerPlaybackObservation>(
+            objectAssign(msg.value.initialObservation, {
+              position: new ObservationPosition(...msg.value.initialObservation.position),
+            })
+          );
         playbackObservationRef = currentContentObservationRef;
         currentLoadedContentTaskCanceller = currentCanceller;
         currentLoadedContentTaskCanceller.signal.register(() => {
           currentContentObservationRef.finish();
         });
-        loadOrReloadPreparedContent(msg.value,
-                                    contentPreparer,
-                                    currentContentObservationRef,
-                                    currentCanceller.signal);
+        loadOrReloadPreparedContent(
+          msg.value,
+          contentPreparer,
+          currentContentObservationRef,
+          currentCanceller.signal
+        );
         break;
       }
 
@@ -183,17 +167,21 @@ export default function initializeWorkerMain() {
         }
         const observation = msg.value;
         const { buffered } = observation;
-        const newBuffered = getBufferedDataPerMediaBuffer(currentContent.mediaSource,
-                                                          null);
+        const newBuffered = getBufferedDataPerMediaBuffer(
+          currentContent.mediaSource,
+          null
+        );
         if (newBuffered.audio !== null) {
           buffered.audio = newBuffered.audio;
         }
         if (newBuffered.video !== null) {
           buffered.video = newBuffered.video;
         }
-        playbackObservationRef?.setValue(objectAssign(observation, {
-          position: new ObservationPosition(...msg.value.position),
-        }));
+        playbackObservationRef?.setValue(
+          objectAssign(observation, {
+            position: new ObservationPosition(...msg.value.position),
+          })
+        );
         break;
       }
 
@@ -218,8 +206,10 @@ export default function initializeWorkerMain() {
           return;
         }
         const { sourceBuffers } = preparedContent.mediaSource;
-        const sourceBuffer = arrayFind(sourceBuffers,
-                                       (s) => s.type === msg.sourceBufferType);
+        const sourceBuffer = arrayFind(
+          sourceBuffers,
+          (s) => s.type === msg.sourceBufferType
+        );
         if (sourceBuffer === undefined) {
           log.info("WP: Success for an unknown SourceBuffer", msg.sourceBufferType);
           return;
@@ -241,8 +231,10 @@ export default function initializeWorkerMain() {
           return;
         }
         const { sourceBuffers } = preparedContent.mediaSource;
-        const sourceBuffer = arrayFind(sourceBuffers,
-                                       (s) => s.type === msg.sourceBufferType);
+        const sourceBuffer = arrayFind(
+          sourceBuffers,
+          (s) => s.type === msg.sourceBufferType
+        );
         if (sourceBuffer === undefined) {
           log.info("WP: Error for an unknown SourceBuffer", msg.sourceBufferType);
           return;
@@ -306,14 +298,18 @@ export default function initializeWorkerMain() {
         try {
           const warning = preparedContent.manifest.refreshCodecSupport(msg.value);
           if (warning !== null) {
-            sendMessage({ type: WorkerMessageType.Warning,
-                          contentId: preparedContent.contentId,
-                          value: formatErrorForSender(warning) });
+            sendMessage({
+              type: WorkerMessageType.Warning,
+              contentId: preparedContent.contentId,
+              value: formatErrorForSender(warning),
+            });
           }
         } catch (err) {
-          sendMessage({ type: WorkerMessageType.Error,
-                        contentId: preparedContent.contentId,
-                        value: formatErrorForSender(err) });
+          sendMessage({
+            type: WorkerMessageType.Error,
+            contentId: preparedContent.contentId,
+            value: formatErrorForSender(err),
+          });
         }
         break;
       }
@@ -335,9 +331,11 @@ export default function initializeWorkerMain() {
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        preparedContent.trackChoiceSetter.setTrack(msg.value.periodId,
-                                                   msg.value.bufferType,
-                                                   msg.value.choice);
+        preparedContent.trackChoiceSetter.setTrack(
+          msg.value.periodId,
+          msg.value.bufferType,
+          msg.value.choice
+        );
         break;
       }
 
@@ -346,10 +344,12 @@ export default function initializeWorkerMain() {
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        preparedContent.trackChoiceSetter.updateRepresentations(msg.value.periodId,
-                                                                msg.value.adaptationId,
-                                                                msg.value.bufferType,
-                                                                msg.value.choice);
+        preparedContent.trackChoiceSetter.updateRepresentations(
+          msg.value.periodId,
+          msg.value.adaptationId,
+          msg.value.bufferType,
+          msg.value.choice
+        );
         break;
       }
 
@@ -405,30 +405,35 @@ export default function initializeWorkerMain() {
         break;
       }
 
-      default: assertUnreachable(msg);
+      default:
+        assertUnreachable(msg);
     }
   };
 }
 
 function prepareNewContent(
-  contentPreparer : ContentPreparer,
-  contentInitData : IContentInitializationData
-) : void {
+  contentPreparer: ContentPreparer,
+  contentInitData: IContentInitializationData
+): void {
   contentPreparer.initializeNewContent(contentInitData).then(
     (manifest) => {
-      sendMessage({ type: WorkerMessageType.ManifestReady,
-                    contentId: contentInitData.contentId,
-                    value: { manifest } });
+      sendMessage({
+        type: WorkerMessageType.ManifestReady,
+        contentId: contentInitData.contentId,
+        value: { manifest },
+      });
     },
-    (err : unknown) => {
-      sendMessage({ type: WorkerMessageType.Error,
-                    contentId: contentInitData.contentId,
-                    value: formatErrorForSender(err) });
+    (err: unknown) => {
+      sendMessage({
+        type: WorkerMessageType.Error,
+        contentId: contentInitData.contentId,
+        value: formatErrorForSender(err),
+      });
     }
   );
 }
 
-function updateGlobalReference(msg: IReferenceUpdateMessage) : void {
+function updateGlobalReference(msg: IReferenceUpdateMessage): void {
   switch (msg.value.name) {
     case "wantedBufferAhead":
       wantedBufferAhead.setValueIfChanged(msg.value.newVal);
@@ -455,27 +460,27 @@ function updateGlobalReference(msg: IReferenceUpdateMessage) : void {
 
 interface IBufferingInitializationInformation {
   /** The start time at which we should play, in seconds. */
-  initialTime : number;
+  initialTime: number;
   /**
    * Hex-encoded string identifying the key system used.
    * May be cross-referenced with the content's metadata when performing
    * optimizations.
    */
-  drmSystemId : string | undefined;
+  drmSystemId: string | undefined;
   /**
    * Enable/Disable fastSwitching: allow to replace lower-quality segments by
    * higher-quality ones to have a faster transition.
    */
-  enableFastSwitching : boolean;
+  enableFastSwitching: boolean;
   /** Behavior when a new video and/or audio codec is encountered. */
-  onCodecSwitch : "continue" | "reload";
+  onCodecSwitch: "continue" | "reload";
 }
 
 function loadOrReloadPreparedContent(
-  val : IBufferingInitializationInformation,
-  contentPreparer : ContentPreparer,
-  playbackObservationRef : IReadOnlySharedReference<IWorkerPlaybackObservation>,
-  parentCancelSignal : CancellationSignal
+  val: IBufferingInitializationInformation,
+  contentPreparer: ContentPreparer,
+  playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+  parentCancelSignal: CancellationSignal
 ) {
   const currentLoadCanceller = new TaskCanceller();
   currentLoadCanceller.linkToSignal(parentCancelSignal);
@@ -488,63 +493,69 @@ function loadOrReloadPreparedContent(
    * This is an optimization to avoid sending too much discontinuity messages to
    * the main thread when it is not needed because nothing changed.
    */
-  const lastSentDiscontinuitiesStore : Map<
+  const lastSentDiscontinuitiesStore: Map<
     Period,
     Map<ITrackType, IDiscontinuityUpdateWorkerMessagePayload>
   > = new Map();
 
   const preparedContent = contentPreparer.getCurrentContent();
   if (preparedContent === null || preparedContent.manifest === null) {
-    const error = new OtherError("NONE",
-                                 "Loading content when none is prepared");
-    sendMessage({ type: WorkerMessageType.Error,
-                  contentId: undefined,
-                  value: formatErrorForSender(error) });
+    const error = new OtherError("NONE", "Loading content when none is prepared");
+    sendMessage({
+      type: WorkerMessageType.Error,
+      contentId: undefined,
+      value: formatErrorForSender(error),
+    });
     return;
   }
-  const { contentId,
-          manifest,
-          mediaSource,
-          representationEstimator,
-          segmentSinksStore,
-          segmentFetcherCreator } = preparedContent;
-  const { drmSystemId,
-          enableFastSwitching,
-          initialTime,
-          onCodecSwitch } = val;
+  const {
+    contentId,
+    manifest,
+    mediaSource,
+    representationEstimator,
+    segmentSinksStore,
+    segmentFetcherCreator,
+  } = preparedContent;
+  const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
   playbackObservationRef.onUpdate((observation) => {
     if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
-      handleMediaSourceReload({ timeOffset: 0,
-                                minimumPosition: 0,
-                                maximumPosition: Infinity });
+      handleMediaSourceReload({
+        timeOffset: 0,
+        minimumPosition: 0,
+        maximumPosition: Infinity,
+      });
     }
 
     // Synchronize SegmentSinks with what has been buffered.
-    ["video" as const, "audio" as const, "text" as const].forEach(tType => {
-      const segmentSinkStatus =  segmentSinksStore.getStatus(tType);
+    ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
+      const segmentSinkStatus = segmentSinksStore.getStatus(tType);
       if (segmentSinkStatus.type === "initialized") {
-        segmentSinkStatus.value.synchronizeInventory(
-          observation.buffered[tType] ?? []
-        );
+        segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
       }
     });
   });
 
-  const initialPeriod = manifest.getPeriodForTime(initialTime) ??
-                        manifest.getNextPeriod(initialTime);
+  const initialPeriod =
+    manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
   if (initialPeriod === undefined) {
-    const error = new MediaError("MEDIA_STARTING_TIME_NOT_FOUND",
-                                 "Wanted starting time not found in the Manifest.");
-    sendMessage({ type: WorkerMessageType.Error,
-                  contentId,
-                  value: formatErrorForSender(error) });
+    const error = new MediaError(
+      "MEDIA_STARTING_TIME_NOT_FOUND",
+      "Wanted starting time not found in the Manifest."
+    );
+    sendMessage({
+      type: WorkerMessageType.Error,
+      contentId,
+      value: formatErrorForSender(error),
+    });
     return;
   }
 
-  const playbackObserver = new WorkerPlaybackObserver(playbackObservationRef,
-                                                      contentId,
-                                                      sendMessage,
-                                                      currentLoadCanceller.signal);
+  const playbackObserver = new WorkerPlaybackObserver(
+    playbackObservationRef,
+    contentId,
+    sendMessage,
+    currentLoadCanceller.signal
+  );
 
   const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
     manifest,
@@ -553,9 +564,11 @@ function loadOrReloadPreparedContent(
     segmentSinksStore,
     {
       onWarning: (err: IPlayerError) =>
-        sendMessage({ type: WorkerMessageType.Warning,
-                      contentId,
-                      value: formatErrorForSender(err) }),
+        sendMessage({
+          type: WorkerMessageType.Warning,
+          contentId,
+          value: formatErrorForSender(err),
+        }),
       onPeriodChanged: (period: Period) => {
         sendMessage({
           type: WorkerMessageType.ActivePeriodChanged,
@@ -567,30 +580,31 @@ function loadOrReloadPreparedContent(
     currentLoadCanceller.signal
   );
 
-
-  StreamOrchestrator({ initialPeriod: manifest.periods[0],
-                       manifest },
-                     playbackObserver,
-                     representationEstimator,
-                     segmentSinksStore,
-                     segmentFetcherCreator,
-                     {  wantedBufferAhead,
-                        maxVideoBufferSize,
-                        maxBufferAhead,
-                        maxBufferBehind,
-                        drmSystemId,
-                        enableFastSwitching,
-                        onCodecSwitch },
-                     handleStreamOrchestratorCallbacks(),
-                     currentLoadCanceller.signal);
-
+  StreamOrchestrator(
+    { initialPeriod: manifest.periods[0], manifest },
+    playbackObserver,
+    representationEstimator,
+    segmentSinksStore,
+    segmentFetcherCreator,
+    {
+      wantedBufferAhead,
+      maxVideoBufferSize,
+      maxBufferAhead,
+      maxBufferBehind,
+      drmSystemId,
+      enableFastSwitching,
+      onCodecSwitch,
+    },
+    handleStreamOrchestratorCallbacks(),
+    currentLoadCanceller.signal
+  );
 
   /**
    * Returns Object handling the callbacks from a `StreamOrchestrator`, which
    * are basically how it communicates about events.
    * @returns {Object}
    */
-  function handleStreamOrchestratorCallbacks() : IStreamOrchestratorCallbacks {
+  function handleStreamOrchestratorCallbacks(): IStreamOrchestratorCallbacks {
     return {
       needsBufferFlush(payload) {
         sendMessage({
@@ -606,17 +620,16 @@ function loadOrReloadPreparedContent(
         // If the status for the last Period indicates that segments are all loaded
         // or on the contrary that the loading resumed, announce it to the
         // ContentTimeBoundariesObserver.
-        if (manifest.isLastPeriodKnown &&
-            value.period.id === manifest.periods[manifest.periods.length - 1].id)
-        {
-          const hasFinishedLoadingLastPeriod = value.hasFinishedLoading ||
-                                               value.isEmptyStream;
+        if (
+          manifest.isLastPeriodKnown &&
+          value.period.id === manifest.periods[manifest.periods.length - 1].id
+        ) {
+          const hasFinishedLoadingLastPeriod =
+            value.hasFinishedLoading || value.isEmptyStream;
           if (hasFinishedLoadingLastPeriod) {
-            contentTimeBoundariesObserver
-              .onLastSegmentFinishedLoading(value.bufferType);
+            contentTimeBoundariesObserver.onLastSegmentFinishedLoading(value.bufferType);
           } else {
-            contentTimeBoundariesObserver
-              .onLastSegmentLoadingResume(value.bufferType);
+            contentTimeBoundariesObserver.onLastSegmentLoadingResume(value.bufferType);
           }
         }
       },
@@ -652,7 +665,8 @@ function loadOrReloadPreparedContent(
         contentTimeBoundariesObserver.onAdaptationChange(
           value.type,
           value.period,
-          value.adaptation);
+          value.adaptation
+        );
         if (currentLoadCanceller.signal.isCancelled()) {
           return;
         }
@@ -693,22 +707,27 @@ function loadOrReloadPreparedContent(
       },
 
       warning(value) {
-        sendMessage({ type: WorkerMessageType.Warning,
-                      contentId,
-                      value: formatErrorForSender(value) });
+        sendMessage({
+          type: WorkerMessageType.Warning,
+          contentId,
+          value: formatErrorForSender(value),
+        });
       },
 
       periodStreamReady(value) {
         if (preparedContent === null) {
           return;
         }
-        preparedContent.trackChoiceSetter.addTrackSetter(value.period.id,
-                                                         value.type,
-                                                         value.adaptationRef);
-        sendMessage({ type: WorkerMessageType.PeriodStreamReady,
-                      contentId,
-                      value: { periodId: value.period.id,
-                               bufferType: value.type } });
+        preparedContent.trackChoiceSetter.addTrackSetter(
+          value.period.id,
+          value.type,
+          value.adaptationRef
+        );
+        sendMessage({
+          type: WorkerMessageType.PeriodStreamReady,
+          contentId,
+          value: { periodId: value.period.id, bufferType: value.type },
+        });
       },
 
       periodStreamCleared(value) {
@@ -724,12 +743,12 @@ function loadOrReloadPreparedContent(
           }
         }
 
-        preparedContent.trackChoiceSetter.removeTrackSetter(value.period.id,
-                                                            value.type);
-        sendMessage({ type: WorkerMessageType.PeriodStreamCleared,
-                      contentId,
-                      value: { periodId: value.period.id,
-                               bufferType: value.type } });
+        preparedContent.trackChoiceSetter.removeTrackSetter(value.period.id, value.type);
+        sendMessage({
+          type: WorkerMessageType.PeriodStreamCleared,
+          contentId,
+          value: { periodId: value.period.id, bufferType: value.type },
+        });
       },
 
       bitrateEstimateChange(payload) {
@@ -751,9 +770,11 @@ function loadOrReloadPreparedContent(
       },
 
       needsDecipherabilityFlush() {
-        sendMessage({ type: WorkerMessageType.NeedsDecipherabilityFlush,
-                      contentId,
-                      value: null });
+        sendMessage({
+          type: WorkerMessageType.NeedsDecipherabilityFlush,
+          contentId,
+          value: null,
+        });
       },
 
       encryptionDataEncountered(values) {
@@ -772,19 +793,25 @@ function loadOrReloadPreparedContent(
           if (content.representation instanceof Representation) {
             content.representation = content.representation.getMetadataSnapshot();
           }
-          sendMessage({ type: WorkerMessageType.EncryptionDataEncountered,
-                        contentId,
-                        value: { keyIds: value.keyIds,
-                                 values: value.values,
-                                 content,
-                                 type: value.type } });
+          sendMessage({
+            type: WorkerMessageType.EncryptionDataEncountered,
+            contentId,
+            value: {
+              keyIds: value.keyIds,
+              values: value.values,
+              content,
+              type: value.type,
+            },
+          });
         }
       },
 
-      error(error : unknown) {
-        sendMessage({ type: WorkerMessageType.Error,
-                      contentId,
-                      value: formatErrorForSender(error) });
+      error(error: unknown) {
+        sendMessage({
+          type: WorkerMessageType.Error,
+          contentId,
+          value: formatErrorForSender(error),
+        });
       },
     };
   }
@@ -812,14 +839,18 @@ function loadOrReloadPreparedContent(
       lastSentDiscontinuitiesStore.set(value.period, periodMap);
     }
 
-    const msgObj = { periodId: value.period.id,
-                     bufferType: value.bufferType,
-                     discontinuity: value.imminentDiscontinuity,
-                     position: value.position };
+    const msgObj = {
+      periodId: value.period.id,
+      bufferType: value.bufferType,
+      discontinuity: value.imminentDiscontinuity,
+      position: value.position,
+    };
     periodMap.set(value.bufferType, msgObj);
-    sendMessage({ type: WorkerMessageType.DiscontinuityUpdate,
-                  contentId,
-                  value: msgObj });
+    sendMessage({
+      type: WorkerMessageType.DiscontinuityUpdate,
+      contentId,
+      value: msgObj,
+    });
   }
 
   function handleMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
@@ -831,18 +862,24 @@ function loadOrReloadPreparedContent(
     }
     contentPreparer.reloadMediaSource(payload).then(
       () => {
-        loadOrReloadPreparedContent({ initialTime: newInitialTime,
-                                      drmSystemId: val.drmSystemId,
-                                      enableFastSwitching: val.enableFastSwitching,
-                                      onCodecSwitch: val.onCodecSwitch },
-                                    contentPreparer,
-                                    playbackObservationRef,
-                                    parentCancelSignal);
+        loadOrReloadPreparedContent(
+          {
+            initialTime: newInitialTime,
+            drmSystemId: val.drmSystemId,
+            enableFastSwitching: val.enableFastSwitching,
+            onCodecSwitch: val.onCodecSwitch,
+          },
+          contentPreparer,
+          playbackObservationRef,
+          parentCancelSignal
+        );
       },
-      (err : unknown) => {
-        sendMessage({ type: WorkerMessageType.Error,
-                      contentId,
-                      value: formatErrorForSender(err) });
+      (err: unknown) => {
+        sendMessage({
+          type: WorkerMessageType.Error,
+          contentId,
+          value: formatErrorForSender(err),
+        });
       }
     );
   }

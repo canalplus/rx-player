@@ -46,7 +46,7 @@ export default function canRelyOnVideoVisibilityAndSize(): boolean {
   if (firefoxVersion === null || firefoxVersion < 67) {
     return true;
   }
-  const proto : (HTMLVideoElement & { requirePictureInPicture? : () => void }) |
-                undefined = HTMLVideoElement?.prototype;
+  const proto: (HTMLVideoElement & { requirePictureInPicture?: () => void }) | undefined =
+    HTMLVideoElement?.prototype;
   return proto?.requirePictureInPicture !== undefined;
 }
