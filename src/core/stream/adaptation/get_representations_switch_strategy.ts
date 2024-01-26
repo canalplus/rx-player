@@ -119,14 +119,8 @@ export default function getRepresentationsSwitchingStrategy(
     const bufferType = adaptation.type;
 
     /** Ranges that won't be cleaned from the current buffer. */
-    let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
-    if (paddingBefore == null) {
-      paddingBefore = 0;
-    }
-    let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
-    if (paddingAfter == null) {
-      paddingAfter = 0;
-    }
+    const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;
+    const paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after ?? 0;
 
     let currentTime = playbackObserver.getCurrentTime();
     if (currentTime === undefined) {

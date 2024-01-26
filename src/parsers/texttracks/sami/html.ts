@@ -30,6 +30,7 @@
  */
 
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type { IHTMLCue } from "../types";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
@@ -50,7 +51,7 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
   while (m !== null) {
     const name = m[1];
     const lang = getCSSProperty(m[2], "lang");
-    if (name != null && lang != null) {
+    if (!isNullOrUndefined(name) && !isNullOrUndefined(lang)) {
       langs[lang] = name;
     }
     m = ruleRe.exec(str);

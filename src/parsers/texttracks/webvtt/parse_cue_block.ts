@@ -65,7 +65,7 @@ function parseTimeAndSettings(
 
   const start = parseTimestamp(matches[1]);
   const end = parseTimestamp(matches[2]);
-  if (start == null || end == null) {
+  if (start === undefined || end === undefined) {
     return null;
   }
 

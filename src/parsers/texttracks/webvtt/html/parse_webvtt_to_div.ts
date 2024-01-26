@@ -59,7 +59,7 @@ export default function parseWebVTT(
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
 
-    if (cueObject != null) {
+    if (cueObject !== null) {
       const htmlCue = toHTML(cueObject, styles);
       cuesArray.push(htmlCue);
     }

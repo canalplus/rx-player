@@ -18,7 +18,7 @@ import log from "../../../../../../../log";
 import parseS from "../parse_s_element";
 
 function testNumberAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an S element with a correct ${attributeName} attribute`, () => {

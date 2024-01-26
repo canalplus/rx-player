@@ -21,7 +21,7 @@ import {
 import { MPDError } from "../utils";
 
 function testBooleanAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
@@ -79,7 +79,7 @@ function testBooleanAttribute(attributeName : string, variableName? : string) : 
 }
 
 function testStringAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
@@ -106,7 +106,7 @@ function testStringAttribute(attributeName : string, variableName? : string) : v
 }
 
 function testMaybeDividedNumber(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
@@ -188,7 +188,7 @@ function testMaybeDividedNumber(attributeName : string, variableName? : string) 
 }
 
 function testFloatAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
@@ -271,7 +271,7 @@ function testFloatAttribute(attributeName : string, variableName? : string) : vo
 
 
 function testIntegerAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
@@ -356,7 +356,7 @@ function testNumberOrBooleanAttribute(
   attributeName : string,
   variableName? : string
 ) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {

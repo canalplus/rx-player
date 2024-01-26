@@ -20,6 +20,7 @@ import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
 import { StaticRepresentationIndex } from "../../../manifest/classes";
 import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import type {
@@ -79,7 +80,7 @@ export default function parseMetaPlaylist(
   }
 ): IParserResponse<IParsedManifest> {
   let parsedData;
-  if (typeof data === "object" && data != null) {
+  if (typeof data === "object" && data !== null) {
     parsedData = data;
   } else if (typeof data === "string") {
     try {
@@ -105,17 +106,17 @@ export default function parseMetaPlaylist(
   }
 
   // quick checks
-  if (contents == null || contents.length === 0) {
+  if (isNullOrUndefined(contents) || contents.length === 0) {
     throw new Error("MPL Parser: No content found.");
   }
   const ressources : Array<{ url : string; transportType : string }> = [];
   for (let i = 0; i < contents.length; i++) {
     const content = contents[i];
     if (
-      content.url == null ||
-      content.startTime == null ||
-      content.endTime == null ||
-      content.transport == null
+      isNullOrUndefined(content.url) ||
+      isNullOrUndefined(content.startTime) ||
+      isNullOrUndefined(content.endTime) ||
+      isNullOrUndefined(content.transport)
     ) {
       throw new Error("MPL Parser: Malformed content.");
     }
@@ -189,7 +190,7 @@ function createManifest(
       const adaptations = SUPPORTED_ADAPTATIONS_TYPE
         .reduce<IParsedAdaptations>((acc, type : ITrackType) => {
           const currentAdaptations = currentPeriod.adaptations[type];
-          if (currentAdaptations == null) {
+          if (isNullOrUndefined(currentAdaptations)) {
             return acc;
           }
 
@@ -281,7 +282,7 @@ function createManifest(
       }, []);
 
       if (newTextAdaptations.length > 0) {
-        if (adaptations.text == null) {
+        if (isNullOrUndefined(adaptations.text)) {
           adaptations.text = newTextAdaptations;
         } else {
           adaptations.text.push(...newTextAdaptations);
@@ -301,7 +302,7 @@ function createManifest(
       const period = manifestPeriods[i];
       if (period.start >= content.endTime) {
         manifestPeriods.splice(i, 1);
-      } else if (period.duration != null) {
+      } else if (!isNullOrUndefined(period.duration)) {
         if (period.start + period.duration > content.endTime) {
           period.duration = content.endTime - period.start;
         }
@@ -325,8 +326,8 @@ function createManifest(
                      isLive: isDynamic,
                      isDynamic,
                      isLastPeriodKnown,
-                     uris: url == null ? [] :
-                                         [url],
+                     uris: isNullOrUndefined(url) ? [] :
+                                                    [url],
 
                      // TODO more precize time bounds?
                      timeBounds: { minimumSafePosition: minimumTime,

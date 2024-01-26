@@ -17,7 +17,7 @@
 import parseContentComponent from "../ContentComponent";
 
 function testStringAttribute(attributeName : string, variableName? : string) : void {
-  const _variableName = variableName == null ? attributeName : variableName;
+  const _variableName = variableName ?? attributeName;
 
   /* eslint-disable max-len */
   it(`should correctly parse a contentComponent element with a correct ${attributeName} attribute`, () => {
