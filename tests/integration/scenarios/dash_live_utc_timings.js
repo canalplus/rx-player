@@ -24,28 +24,26 @@ describe("DASH live - UTCTimings", () => {
     it("should calculate the right bounds", async () => {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521448, 3);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553521748, 3);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 3);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
-      player.loadVideo({ url: manifestInfos.url,
-                         transport:manifestInfos.transport,
-                         serverSyncInfos: {
-                           serverTimestamp,
-                           clientTime: performance.now(),
-                         } });
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport: manifestInfos.transport,
+        serverSyncInfos: {
+          serverTimestamp,
+          clientTime: performance.now(),
+        },
+      });
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 
@@ -64,7 +62,7 @@ describe("DASH live - UTCTimings", () => {
     it("should fetch the clock and then calculate the right bounds", async () => {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         manifestLoader(arg, cbs) {
           cbs.fallback();
         },
@@ -73,15 +71,14 @@ describe("DASH live - UTCTimings", () => {
         },
       });
       await sleep(200);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1558791848, 3);
+      expect(player.getMinimumPosition()).to.be.closeTo(1558791848, 3);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         serverSyncInfos: {
           serverTimestamp,
           clientTime: performance.now(),
@@ -89,14 +86,12 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 
-  describe("DASH live content (SegmentTemplate + Without Timing)", function() {
+  describe("DASH live content (SegmentTemplate + Without Timing)", function () {
     const { manifestInfos } = WithoutTimings;
     let player;
 
@@ -111,26 +106,23 @@ describe("DASH live - UTCTimings", () => {
     it("should calculate the right bounds", async () => {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
       await sleep(100);
 
       const timeShiftBufferDepth = 5 * 60;
-      const maximumPosition = Date.now() / 1000 -
-        manifestInfos.availabilityStartTime;
+      const maximumPosition = Date.now() / 1000 - manifestInfos.availabilityStartTime;
       const minimumPosition = maximumPosition - timeShiftBufferDepth;
 
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(minimumPosition, 3);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(maximumPosition, 3);
+      expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 3);
+      expect(player.getMaximumPosition()).to.be.closeTo(maximumPosition, 3);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         serverSyncInfos: {
           serverTimestamp,
           clientTime: performance.now(),
@@ -138,10 +130,8 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 
@@ -160,19 +150,18 @@ describe("DASH live - UTCTimings", () => {
     it("should not fetch the clock but still calculate the right bounds", async () => {
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
 
       await sleep(200);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521448, 3);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         serverSyncInfos: {
           serverTimestamp,
           clientTime: performance.now(),
@@ -180,10 +169,8 @@ describe("DASH live - UTCTimings", () => {
       });
 
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 });

@@ -66,6 +66,7 @@ More infos on the `manifestLoader` can be found
 The `"LOCAL_MANIFEST"` feature is not included in the default RxPlayer build.
 
 You will need to import the `LOCAL_MANIFEST` experimental feature:
+
 ```js
 // Import the RxPlayer
 // (here through the "minimal" build, though it doesn't change for other builds)
@@ -482,22 +483,26 @@ it contains itself the following properties:
   For example, if in the future a segment will be available from the second `10`
   to the second `12`, another from `12` to `14`, and a third from `18` to `20`,
   you can set `incomingRanges` to:
+
   ```js
   incomingRanges: [
     { start: 10, end: 14 }, // the first two segments
-    { start: 18, end: 20 } // the third one, with its own entry because not
-                           // contiguous with the previous two
-  ]
+    { start: 18, end: 20 }, // the third one, with its own entry because not
+    // contiguous with the previous two
+  ];
   ```
+
   Note that you are not forced to collapse this way contiguous ranges, you may
   also just set it to:
+
   ```js
   incomingRanges: [
     { start: 10, end: 12 }, // the first segment
     { start: 12, end: 14 }, // the second one
-    { start: 18, end: 20 } // the third one
-  ]
+    { start: 18, end: 20 }, // the third one
+  ];
   ```
+
   Both are equivalent.
 
   If set, it is important to communicate about EVERY time ranges where
@@ -507,7 +512,6 @@ it contains itself the following properties:
   loaded, you can let that property to `undefined`.
 
   An empty array will mean that no data is left to be loaded.
-
 
 ### the segments array
 

@@ -29,8 +29,8 @@ which media position is intented to correspond to live content.
 const maximumPosition = player.getMaximumPosition();
 ```
 
-  - **return value** `number|null`: Maximum seekable position.
-    `null` if no content is currently loaded.
+- **return value** `number|null`: Maximum seekable position.
+  `null` if no content is currently loaded.
 
 ## Example
 

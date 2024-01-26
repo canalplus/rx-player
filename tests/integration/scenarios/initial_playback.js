@@ -72,8 +72,9 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPosition()).to.be.above(0);
       expect(player.getPosition()).to.be.below(0.25);
       expect(player.getCurrentBufferGap()).to.be.above(0);
-      expect(player.getVideoElement().buffered.start(0))
-        .to.be.below(player.getPosition());
+      expect(player.getVideoElement().buffered.start(0)).to.be.below(
+        player.getPosition(),
+      );
     });
 
     it("should play slowly for a speed inferior to 1", async function () {
@@ -89,8 +90,9 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPosition()).to.be.below(0.35);
       expect(player.getPosition()).to.be.above(0.05);
       expect(player.getPosition()).to.be.above(lastPosition);
-      expect(player.getVideoElement().buffered.start(0))
-        .to.be.below(player.getPosition());
+      expect(player.getVideoElement().buffered.start(0)).to.be.below(
+        player.getPosition(),
+      );
       expect(player.getPlaybackRate()).to.equal(0.5);
       expect(player.getVideoElement().playbackRate).to.equal(0.5);
     });
@@ -107,15 +109,18 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPosition()).to.be.below(4);
       expect(player.getPosition()).to.be.above(2);
       expect(player.getCurrentBufferGap()).to.be.above(0);
-      expect(player.getVideoElement().buffered.start(0))
-        .to.be.below(player.getPosition());
+      expect(player.getVideoElement().buffered.start(0)).to.be.below(
+        player.getPosition(),
+      );
       expect(player.getPlaybackRate()).to.equal(3);
       expect(player.getVideoElement().playbackRate).to.equal(3);
     });
 
     it("should be able to seek when loaded", async function () {
-      player.loadVideo({ transport: manifestInfos.transport,
-                         url: manifestInfos.url });
+      player.loadVideo({
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
+      });
       await waitForLoadedStateAfterLoadVideo(player);
       player.seekTo(10);
       expect(player.getPosition()).to.equal(10);
@@ -129,8 +134,10 @@ function runInitialPlaybackTests({ multithread } = {}) {
     // TODO This often breaks, presumably due to the badly-encoded content.
     // To check
     xit("should end if seeking to the end when loaded", async function () {
-      player.loadVideo({ transport: manifestInfos.transport,
-                         url: manifestInfos.url });
+      player.loadVideo({
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
+      });
       await waitForLoadedStateAfterLoadVideo(player);
       player.seekTo(player.getMaximumPosition() + 15);
       await sleep(600);
@@ -146,9 +153,11 @@ function runInitialPlaybackTests({ multithread } = {}) {
     // TODO This often breaks, presumably due to the badly-encoded content.
     // To check
     xit("should end if seeking to the end when playing", async function () {
-      player.loadVideo({ transport: manifestInfos.transport,
-                         url: manifestInfos.url,
-                         autoPlay: true });
+      player.loadVideo({
+        transport: manifestInfos.transport,
+        url: manifestInfos.url,
+        autoPlay: true,
+      });
       await waitForLoadedStateAfterLoadVideo(player);
       player.seekTo(player.getMaximumPosition() + 15);
       await sleep(600);
@@ -178,8 +187,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await waitForLoadedStateAfterLoadVideo(player);
       player.seekTo(200);
       expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getPosition())
-        .to.be.closeTo(player.getMaximumPosition(), 0.1);
+      expect(player.getPosition()).to.be.closeTo(player.getMaximumPosition(), 0.1);
     });
 
     it("should seek to minimum position for negative positions after playing", async function () {
@@ -204,8 +212,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPlayerState()).to.equal("LOADED");
       player.play();
       player.seekTo(200);
-      expect(player.getPosition())
-        .to.be.closeTo(player.getMaximumPosition(), 0.1);
+      expect(player.getPosition()).to.be.closeTo(player.getMaximumPosition(), 0.1);
     });
 
     it("should seek to minimum position for negative positions when paused", async function () {
@@ -237,8 +244,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await sleep(10);
       expect(player.getPlayerState()).to.equal("PAUSED");
       player.seekTo(200);
-      expect(player.getPosition())
-        .to.be.closeTo(player.getMaximumPosition(), 0.1);
+      expect(player.getPosition()).to.be.closeTo(player.getMaximumPosition(), 0.1);
       expect(player.getPlayerState()).to.equal("PAUSED");
     });
 
@@ -300,7 +306,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getCurrentBufferGap()).to.be.below(30);
     });
 
-    it("should continue downloading when seek to wanted buffer ahead", async function() {
+    it("should continue downloading when seek to wanted buffer ahead", async function () {
       player.setWantedBufferAhead(2);
       player.loadVideo({
         transport: manifestInfos.transport,
@@ -311,14 +317,15 @@ function runInitialPlaybackTests({ multithread } = {}) {
       const lastPositionWithBuffer = player.getVideoElement().buffered.end(0);
       player.seekTo(lastPositionWithBuffer);
       await sleep(100);
-      expect(player.getVideoElement().buffered.end(0))
-        .to.be.above(lastPositionWithBuffer);
+      expect(player.getVideoElement().buffered.end(0)).to.be.above(
+        lastPositionWithBuffer,
+      );
       player.play();
       await sleep(100);
       expect(player.getPlayerState()).to.equal("PLAYING");
     });
 
-    it("should respect a set max buffer ahead", async function() {
+    it("should respect a set max buffer ahead", async function () {
       player.setWantedBufferAhead(5);
       player.setMaxBufferAhead(10);
       player.loadVideo({
@@ -336,7 +343,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(Math.round(player.getCurrentBufferGap())).to.be.below(13);
     });
 
-    it("should delete buffer behind", async function() {
+    it("should delete buffer behind", async function () {
       player.setMaxBufferAhead(30);
       player.setMaxBufferBehind(2);
 
@@ -350,11 +357,10 @@ function runInitialPlaybackTests({ multithread } = {}) {
       player.seekTo(6);
       await sleep(100);
 
-      expect(Math.round(player.getVideoElement().buffered.start(0)))
-        .to.equal(4);
+      expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
     });
 
-    it("may switch to SEEKING state when seeking to a buffered part when playing", async function() {
+    it("may switch to SEEKING state when seeking to a buffered part when playing", async function () {
       this.timeout(5000);
       player.setWantedBufferAhead(30);
       player.loadVideo({
@@ -375,7 +381,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPlayerState()).to.equal("PLAYING");
     });
 
-    it("may switch to SEEKING state when seeking to a buffered part when paused", async function() {
+    it("may switch to SEEKING state when seeking to a buffered part when paused", async function () {
       this.timeout(5000);
       player.setWantedBufferAhead(30);
       player.loadVideo({
@@ -395,8 +401,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPlayerState()).to.equal("PAUSED");
     });
 
-    it("should be in SEEKING state when seeking to a non-buffered part when playing", async function() {
-
+    it("should be in SEEKING state when seeking to a non-buffered part when playing", async function () {
       player.setWantedBufferAhead(4);
       player.loadVideo({
         transport: manifestInfos.transport,
@@ -421,11 +426,8 @@ function runInitialPlaybackTests({ multithread } = {}) {
 
       // Force a given video Representation
       let hasLockedRepresentation = false;
-      const chosenVideoRepresentation = manifestInfos
-        .periods[0]
-        .adaptations
-        .video[0]
-        .representations[0];
+      const chosenVideoRepresentation =
+        manifestInfos.periods[0].adaptations.video[0].representations[0];
       player.addEventListener("newAvailablePeriods", (p) => {
         if (hasLockedRepresentation || p.length === 0) {
           return;
@@ -439,11 +441,11 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
 
       player.setWantedBufferAhead(100);
-      const {bitrate} = chosenVideoRepresentation;
+      const { bitrate } = chosenVideoRepresentation;
       // A segment is a little bit more than 4sec, so not enough for
       // MIN_BUFF_SIZE ( MIN_BUFF_SIZE is 5sec) so the rx player will
       // download 2 segments So we take two segments : a bit more than 8sec
-      const maxBuffersize = (bitrate/8000)*6;
+      const maxBuffersize = (bitrate / 8000) * 6;
       player.setMaxVideoBufferSize(maxBuffersize);
       player.loadVideo({
         transport: manifestInfos.transport,
@@ -453,18 +455,15 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await sleep(800);
       // And to take into consideration the estimation errors,
       // we round it up to 9sec
-      expect(player.getCurrentBufferGap()).to.be.below(6*3);
-      expect(player.getCurrentBufferGap()).to.be.above(6*1);
+      expect(player.getCurrentBufferGap()).to.be.below(6 * 3);
+      expect(player.getCurrentBufferGap()).to.be.above(6 * 1);
     });
 
-    it("should remove behind if buffer full", async function() {
+    it("should remove behind if buffer full", async function () {
       // Force a given video Representation
       let hasLockedRepresentation = false;
-      const chosenVideoRepresentation = manifestInfos
-        .periods[0]
-        .adaptations
-        .video[0]
-        .representations[0];
+      const chosenVideoRepresentation =
+        manifestInfos.periods[0].adaptations.video[0].representations[0];
       player.addEventListener("newAvailablePeriods", (p) => {
         if (hasLockedRepresentation || p.length === 0) {
           return;
@@ -477,7 +476,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
         hasLockedRepresentation = true;
       });
       player.setWantedBufferAhead(20);
-      const {bitrate} = chosenVideoRepresentation;
+      const { bitrate } = chosenVideoRepresentation;
       player.loadVideo({
         transport: manifestInfos.transport,
         url: manifestInfos.url,
@@ -485,9 +484,8 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await waitForLoadedStateAfterLoadVideo(player);
       await sleep(400);
       expect(player.getCurrentBufferGap()).to.be.above(19);
-      expect(player.getVideoElement().buffered.start(0))
-        .to.be.closeTo(0.0, 0.8);
-      const maxBuffersize = (bitrate/7000);
+      expect(player.getVideoElement().buffered.start(0)).to.be.closeTo(0.0, 0.8);
+      const maxBuffersize = bitrate / 7000;
       player.seekTo(19);
       player.setMaxVideoBufferSize(maxBuffersize);
       await sleep(800);

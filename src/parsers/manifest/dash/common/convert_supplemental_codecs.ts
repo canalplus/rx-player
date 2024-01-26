@@ -17,16 +17,9 @@ const supplementalCodecSeparator = /[, ]+/g;
  * @param {string} val - The codec string to parse
  * @returns { Array.<string | undefined | null>}
  */
-export function convertSupplementalCodecsToRFC6381(
-  val: string
-) : string {
-
+export function convertSupplementalCodecsToRFC6381(val: string): string {
   if (isNonEmptyString(val)) {
-    return val
-      .trim()
-      .replace(supplementalCodecSeparator, ", ");
+    return val.trim().replace(supplementalCodecSeparator, ", ");
   }
   return "";
 }
-
-

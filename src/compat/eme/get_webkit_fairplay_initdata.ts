@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  itole4,
-  le4toi,
-} from "../../utils/byte_parsing";
-import {
-  strToUtf16LE,
-  utf16LEToStr,
-} from "../../utils/string_parsing";
+import { itole4, le4toi } from "../../utils/byte_parsing";
+import { strToUtf16LE, utf16LEToStr } from "../../utils/string_parsing";
 
 /**
  * Create formatted fairplay initdata for WebKit createSession.
@@ -33,30 +27,33 @@ import {
  * @returns {Uint8Array}
  */
 export default function getWebKitFairPlayInitData(
-  initDataBytes: Uint8Array|ArrayBuffer,
-  serverCertificateBytes: Uint8Array|ArrayBuffer
+  initDataBytes: Uint8Array | ArrayBuffer,
+  serverCertificateBytes: Uint8Array | ArrayBuffer,
 ): Uint8Array {
-  const initData = initDataBytes instanceof Uint8Array ? initDataBytes :
-                                                         new Uint8Array(initDataBytes);
-  const serverCertificate = serverCertificateBytes instanceof Uint8Array ?
-    serverCertificateBytes :
-    new Uint8Array(serverCertificateBytes);
+  const initData =
+    initDataBytes instanceof Uint8Array ? initDataBytes : new Uint8Array(initDataBytes);
+  const serverCertificate =
+    serverCertificateBytes instanceof Uint8Array
+      ? serverCertificateBytes
+      : new Uint8Array(serverCertificateBytes);
   const length = le4toi(initData, 0);
   if (length + 4 !== initData.length) {
     throw new Error("Unsupported WebKit initData.");
   }
   const initDataUri = utf16LEToStr(initData);
   const skdIndexInInitData = initDataUri.indexOf("skd://");
-  const contentIdStr = skdIndexInInitData > -1 ?
-    initDataUri.substring(skdIndexInInitData + 6) :
-    initDataUri;
+  const contentIdStr =
+    skdIndexInInitData > -1 ? initDataUri.substring(skdIndexInInitData + 6) : initDataUri;
   const id = strToUtf16LE(contentIdStr);
 
   let offset = 0;
-  const res =
-    new Uint8Array(initData.byteLength
-                   /* id length */ + 4 + id.byteLength
-                   /* certificate length */ + 4 + serverCertificate.byteLength);
+  const res = new Uint8Array(
+    initData.byteLength +
+      /* id length */ 4 +
+      id.byteLength +
+      /* certificate length */ 4 +
+      serverCertificate.byteLength,
+  );
 
   res.set(initData);
   offset += initData.length;

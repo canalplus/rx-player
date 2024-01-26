@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
 
 This file allows to quickly test if:
@@ -17,85 +17,93 @@ To do that:
 -->
 <html lang="en">
   <head>
-    <head>
-      <meta charset="UTF-8">
-      <title>RxPlayer Conformance Test - MediaKeySystemAccess support</title>
-    </head>
-    <body>
-      <script charset="utf-8">
-/* eslint-disable no-console */
-/*
- * Edit those variables to test on a specific MediaKeySystemAccess
- * configuration.
- */
-const keySystem = "com.widevine.alpha";
-const configuration = [{
-  initDataTypes: ["cenc"],
-  audioCapabilities:[{
-    robustness: "",
-    contentType: "audio/mp4; codecs=\"mp4a.40.2\"",
-  }],
-  videoCapabilities:[{
-    robustness: "",
-    contentType: "video/mp4;codecs=\"avc1.640028\"",
-  }],
-  sessionTypes: ["temporary"],
-}];
+    <meta charset="UTF-8" />
+    <title>RxPlayer Conformance Test - MediaKeySystemAccess support</title>
+  </head>
+  <body>
+    <script charset="utf-8">
+      /* eslint-disable no-console */
+      /*
+       * Edit those variables to test on a specific MediaKeySystemAccess
+       * configuration.
+       */
+      const keySystem = "com.widevine.alpha";
+      const configuration = [
+        {
+          initDataTypes: ["cenc"],
+          audioCapabilities: [
+            {
+              robustness: "",
+              contentType: 'audio/mp4; codecs="mp4a.40.2"',
+            },
+          ],
+          videoCapabilities: [
+            {
+              robustness: "",
+              contentType: 'video/mp4;codecs="avc1.640028"',
+            },
+          ],
+          sessionTypes: ["temporary"],
+        },
+      ];
 
-const URL_CERTIFICATE_B = "http://127.0.0.1:8080/service-cert";
-const URL_CERTIFICATE_A = "http://127.0.0.1:8080/cert_license_widevine_com.bin";
+      const URL_CERTIFICATE_B = "http://127.0.0.1:8080/service-cert";
+      const URL_CERTIFICATE_A = "http://127.0.0.1:8080/cert_license_widevine_com.bin";
 
-console.log("Calling requestMediaKeySystemAccess...");
-navigator.requestMediaKeySystemAccess(keySystem, configuration)
-  .then(mediaKeySystemAccess => {
-    console.log("MediaKeySystemAccess created!",
-                mediaKeySystemAccess.getConfiguration());
-    console.log("Creating MediaKeys...");
-    return mediaKeySystemAccess.createMediaKeys();
-  })
-  .then(mediaKeys => {
-    console.log("MediaKeys created!");
-    console.log("Checking setServerCertificate availability...");
-    if (!("setServerCertificate" in mediaKeys)) {
-      console.error("`setServerCertificate` API not available.");
-      return ;
-    }
-    return fetch(URL_CERTIFICATE_A)
-      .then(res => res.arrayBuffer())
-      .catch(err => {
-        console.error("Error while downloading server certificate A", err);
-        throw err;
-      })
-      .then(ab => {
-        console.log("Server certificate A downloaded!");
-        return mediaKeys.setServerCertificate(ab);
-      })
-      .catch(err => {
-        console.error("Error while setting server certificate A", err);
-        throw err;
-      })
-      .then(ab => {
-        console.log("Server certificate A set with success!");
-        return fetch(URL_CERTIFICATE_B);
-      })
-      .then(res => res.arrayBuffer())
-      .catch(err => {
-        console.error("Error while downloading server certificate B", err);
-        throw err;
-      })
-      .then(ab => {
-        console.log("Server certificate B downloaded!");
-        return mediaKeys.setServerCertificate(ab);
-      })
-      .catch(err => {
-        console.error("Error while setting server certificate B", err);
-        throw err;
-      })
-      .then(ab => {
-        console.log("Server certificate B set with success!");
-        return mediaKeys.setServerCertificate(ab);
-      })
-  });
-      </script>
-    </body>
+      console.log("Calling requestMediaKeySystemAccess...");
+      navigator
+        .requestMediaKeySystemAccess(keySystem, configuration)
+        .then((mediaKeySystemAccess) => {
+          console.log(
+            "MediaKeySystemAccess created!",
+            mediaKeySystemAccess.getConfiguration(),
+          );
+          console.log("Creating MediaKeys...");
+          return mediaKeySystemAccess.createMediaKeys();
+        })
+        .then((mediaKeys) => {
+          console.log("MediaKeys created!");
+          console.log("Checking setServerCertificate availability...");
+          if (!("setServerCertificate" in mediaKeys)) {
+            console.error("`setServerCertificate` API not available.");
+            return;
+          }
+          return fetch(URL_CERTIFICATE_A)
+            .then((res) => res.arrayBuffer())
+            .catch((err) => {
+              console.error("Error while downloading server certificate A", err);
+              throw err;
+            })
+            .then((ab) => {
+              console.log("Server certificate A downloaded!");
+              return mediaKeys.setServerCertificate(ab);
+            })
+            .catch((err) => {
+              console.error("Error while setting server certificate A", err);
+              throw err;
+            })
+            .then((ab) => {
+              console.log("Server certificate A set with success!");
+              return fetch(URL_CERTIFICATE_B);
+            })
+            .then((res) => res.arrayBuffer())
+            .catch((err) => {
+              console.error("Error while downloading server certificate B", err);
+              throw err;
+            })
+            .then((ab) => {
+              console.log("Server certificate B downloaded!");
+              return mediaKeys.setServerCertificate(ab);
+            })
+            .catch((err) => {
+              console.error("Error while setting server certificate B", err);
+              throw err;
+            })
+            .then((ab) => {
+              console.log("Server certificate B set with success!");
+              return mediaKeys.setServerCertificate(ab);
+            });
+        });
+    </script>
+  </body>
 </html>

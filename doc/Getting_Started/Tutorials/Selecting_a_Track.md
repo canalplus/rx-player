@@ -1,6 +1,6 @@
 # Tutorial: Selecting a track
 
-## The goal of this tutorial ###################################################
+## The goal of this tutorial
 
 The RxPlayer has an advanced API when it comes to track selection:
 
@@ -13,8 +13,7 @@ intimidating at first.
 This tutorial will help you understand what your options are, why you would use
 an API instead of another and how to use them.
 
-
-## What is a "track"? ##########################################################
+## What is a "track"?
 
 We should first agree on what is a track, as a concept.
 Let's take for example an italian film presented to an english-speaking
@@ -45,8 +44,7 @@ most cases, audiom video and text tracks are currently independent and can such
 be switched in a large number of combination to give a large number of different
 experience for what is effectively the same content.
 
-
-## Listing the available tracks ################################################
+## Listing the available tracks
 
 ### Nominal case: currently played content
 
@@ -99,14 +97,12 @@ const audioDescriptionTracks = rxPlayer
   .filter((track) => track.audioDescription);
 
 // List of video tracks for which a profile with a 1080p resolution is available
-const highResVideoTracks = rxPlayer
-  .getAvailableVideoTracks()
-  .filter((track) => {
-    return track.representations.some(
-      (representation) =>
-        representation.height !== undefined && representation.height >= 1080
-    );
-  });
+const highResVideoTracks = rxPlayer.getAvailableVideoTracks().filter((track) => {
+  return track.representations.some(
+    (representation) =>
+      representation.height !== undefined && representation.height >= 1080,
+  );
+});
 
 // List of text tracks available in french
 const frenchTextTracks = rxPlayer
@@ -139,7 +135,6 @@ Note that no `available...TracksChange` event will be sent when the RxPlayer
 stops the content or temporarly goes through the `RELOADING` player state
 with an empty array as a payload - as there is no current content in those
 cases.
-
 
 ##### Examples
 
@@ -186,40 +181,42 @@ rxPlayer.getAvailableAudioTracks("foo");
 ```
 
 That `id` can be known in several ways:
-  - the [`getAvailablePeriods` method](../../api/Basic_Methods/getAvailablePeriods.md)
-    can list the different Periods and their respective `id` property:
 
-    ```js
-    const periods = rxPlayer.getAvailablePeriods();
+- the [`getAvailablePeriods` method](../../api/Basic_Methods/getAvailablePeriods.md)
+  can list the different Periods and their respective `id` property:
+
+  ```js
+  const periods = rxPlayer.getAvailablePeriods();
+  for (const period of periods) {
+    console.log(
+      `Tracks for Period ${period.id}:`,
+      rxPlayer.getAvailableAudioTracks(period.id),
+    );
+  }
+  ```
+
+- the [`newAvailablePeriods` event](../../api/Player_Events.md#newavailableperiods)
+  triggered each time new Periods are known (either when the content is
+  first loaded, or when the it is updated) with their respective `id` property:
+
+  ```js
+  rxPlayer.addEventListener("newAvailablePeriods, (periods) => {
     for (const period of periods) {
       console.log(`Tracks for Period ${period.id}:`,
                   rxPlayer.getAvailableAudioTracks(period.id));
     }
-    ```
+  });
+  ```
 
-  - the [`newAvailablePeriods` event](../../api/Player_Events.md#newavailableperiods)
-    triggered each time new Periods are known (either when the content is
-    first loaded, or when the it is updated) with their respective `id` property:
-
-    ```js
-    rxPlayer.addEventListener("newAvailablePeriods, (periods) => {
-      for (const period of periods) {
-        console.log(`Tracks for Period ${period.id}:`,
-                    rxPlayer.getAvailableAudioTracks(period.id));
-      }
-    });
-    ```
-
-  - the [`periodChange` event](../../api/Player_Events.md#periodchange)
-    triggered when the current Period being played changes, with the
-    corresponding `id` property:
-    ```js
-    rxPlayer.addEventListener("periodChange, (period) => {
-      console.log(`Tracks for the current Period ${period.id}:`,
-                  rxPlayer.getAvailableAudioTracks(period.id));
-    });
-    ```
-
+- the [`periodChange` event](../../api/Player_Events.md#periodchange)
+  triggered when the current Period being played changes, with the
+  corresponding `id` property:
+  ```js
+  rxPlayer.addEventListener("periodChange, (period) => {
+    console.log(`Tracks for the current Period ${period.id}:`,
+                rxPlayer.getAvailableAudioTracks(period.id));
+  });
+  ```
 
 ### Obtaining those lists as soon as possible
 
@@ -258,6 +255,7 @@ This `newAvailablePeriods` event is also the right one for setting the initial
 track (we will see how to below), as it's guaranteed that at the point this
 event is sent, no media data has been loaded yet for the corresponding
 Period(s):
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
@@ -270,8 +268,7 @@ rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
 });
 ```
 
-
-## Knowing the current track ###################################################
+## Knowing the current track
 
 ### Nominal case: currently played content
 
@@ -319,8 +316,7 @@ if (currentTextTrack === null) {
   console.log("No text track is enabled");
 } else if (currentTextTrack === undefined) {
   console.log(
-    "We don't know the current text track. " +
-      "Are you sure a content is loaded?"
+    "We don't know the current text track. " + "Are you sure a content is loaded?",
   );
 } else {
   const language = currentTextTrack.language;
@@ -365,9 +361,7 @@ rxPlayer.addEventListener("textTrackChange", (track) => {
   if (track === null) {
     console.log("No text track is active");
   } else {
-    console.log(
-      "new active text track in the following language: " + track.language
-    );
+    console.log("new active text track in the following language: " + track.language);
   }
 });
 ```
@@ -407,8 +401,7 @@ Accessing with the `get...Track` method is simple to use, the events allow to
 know at the earliest possible time and relying on the list of available tracks
 can simplify your code if you want both of them.
 
-
-## Selecting a track ###########################################################
+## Selecting a track
 
 Now that we have the list of available tracks and the current one, we might want
 to choose another one, or let the final user choose another one.
@@ -454,8 +447,7 @@ combination.
 To detect those cases, you can either listen to every `...TrackChange` events
 or call the corresponding `get...Track` method everytime you want to use them.
 
-
-## Disabling a track ###########################################################
+## Disabling a track
 
 Now what if you want no track at all?
 
@@ -476,8 +468,7 @@ being played. When playing a new content or even when just switching to another
 part of the content with a different track list, you might need to re-do the
 same method call.
 
-
-## Tracks now missing from the Manifest ########################################
+## Tracks now missing from the Manifest
 
 There is a very unlikely event that could theoretically arise on some contents:
 the select track disappearing after a Manifest update.
@@ -489,19 +480,19 @@ for the same Period.
 Here, the RxPlayer will by itself select another track instead and immediately
 emit a [`"trackUpdate"` event](../../api/Player_Events.md#trackupdate)
 a `reason` property set to `"missing"`:
+
 ```js
 rxPlayer.addEventListener("trackUpdate", (data) => {
   if (data.reason === "missing") {
     console.warn(
       `The previously-chosen ${data.trackType} track for the Period ` +
-      `"${data.period.id}" disappeared. A new track has been selected instead.`
+        `"${data.period.id}" disappeared. A new track has been selected instead.`,
     );
   }
 });
 ```
 
-
-## Notes about the "textTrackMode" option ######################################
+## Notes about the "textTrackMode" option
 
 This tutorial was focused on track selection but there's still a last point I
 want to approach, which is how subtitles will be displayed to the user.

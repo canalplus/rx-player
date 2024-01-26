@@ -16,24 +16,27 @@
 
 import parseBif from "../../parsers/images/bif";
 
-export interface IBifThumbnail { startTime : number;
-                                 image : ArrayBuffer; }
+export interface IBifThumbnail {
+  startTime: number;
+  image: ArrayBuffer;
+}
 
-export interface IBifObject { version : string;
-                              images : IBifThumbnail[]; }
+export interface IBifObject {
+  version: string;
+  images: IBifThumbnail[];
+}
 
 /**
  * Parse thumbnails in the "BIF" format into a more exploitable form.
  * @param {ArrayBuffer} buf - The BIF file
  * @returns {Object}
  */
-export default function parseBifThumbnails(
-  buf : ArrayBuffer
-) : IBifObject {
+export default function parseBifThumbnails(buf: ArrayBuffer): IBifObject {
   const parsed = parseBif(new Uint8Array(buf));
-  return { version: parsed.version,
-           images: parsed.thumbs.map(t => {
-             return { startTime: t.ts,
-                      image: t.data.buffer };
-           }) };
+  return {
+    version: parsed.version,
+    images: parsed.thumbs.map((t) => {
+      return { startTime: t.ts, image: t.data.buffer };
+    }),
+  };
 }

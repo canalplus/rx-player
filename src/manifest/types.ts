@@ -57,21 +57,21 @@ export interface IManifestMetadata {
    * This ID is automatically calculated each time a `Manifest` instance is
    * created.
    */
-  id : string;
+  id: string;
 
   /**
    * List every Period in that Manifest chronologically (from start to end).
    * A Period contains information about the content available for a specific
    * period of time.
    */
-  periods : IPeriodMetadata[];
+  periods: IPeriodMetadata[];
 
   /**
    * If true, the Manifest can evolve over time:
    * New segments can become available in the future, properties of the manifest
    * can change...
    */
-  isDynamic : boolean;
+  isDynamic: boolean;
 
   /**
    * If true, this Manifest describes a live content.
@@ -79,21 +79,21 @@ export interface IManifestMetadata {
    * close to the maximum position (here called the "live edge").
    * E.g., a TV channel is a live content.
    */
-  isLive : boolean;
+  isLive: boolean;
 
   /**
    * If `true`, no more periods will be added after the current last manifest's
    * Period.
    * `false` if we know that more Period is coming or if we don't know.
    */
-  isLastPeriodKnown : boolean;
+  isLastPeriodKnown: boolean;
 
   /*
    * Every URI linking to that Manifest.
    * They can be used for refreshing the Manifest.
    * Listed from the most important to the least important.
    */
-  uris : string[];
+  uris: string[];
 
   /**
    * Minimum time, in seconds, at which a segment defined in the Manifest
@@ -101,7 +101,7 @@ export interface IManifestMetadata {
    * This is also used as an offset for live content to apply to a segment's
    * time.
    */
-  availabilityStartTime : number | undefined;
+  availabilityStartTime: number | undefined;
 
   /**
    * Suggested delay from the "live edge" (i.e. the position corresponding to
@@ -109,7 +109,7 @@ export interface IManifestMetadata {
    * from.
    * This only applies to live contents.
    */
-  suggestedPresentationDelay? : number | undefined;
+  suggestedPresentationDelay?: number | undefined;
 
   /*
    * Difference between the server's clock in milliseconds and the
@@ -117,13 +117,13 @@ export interface IManifestMetadata {
    * This property allows to calculate the server time at any moment.
    * `undefined` if we did not obtain the server's time
    */
-  clockOffset? : number | undefined;
+  clockOffset?: number | undefined;
 
   /**
    * Data allowing to calculate the minimum and maximum seekable positions at
    * any given time.
    */
-  timeBounds : {
+  timeBounds: {
     /**
      * This is the theoretical minimum playable position on the content
      * regardless of the current Adaptation chosen, as estimated at parsing
@@ -149,7 +149,7 @@ export interface IManifestMetadata {
      *      segment, and `timeshiftDepth` would be the whole depth that will
      *      become available once enough segments have been generated.
      */
-    minimumSafePosition? : number | undefined;
+    minimumSafePosition?: number | undefined;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable
@@ -166,16 +166,16 @@ export interface IManifestMetadata {
      *
      * If set to `null`, this content has no concept of a "window depth".
      */
-    timeshiftDepth : number | null;
+    timeshiftDepth: number | null;
     /** Data allowing to calculate the maximum playable position at any given time. */
-    maximumTimeData : {
+    maximumTimeData: {
       /**
        * Current position representing live content.
        * Only makes sense for un-ended live contents.
        *
        * `undefined` if unknown or if it doesn't make sense in the current context.
        */
-      livePosition : number | undefined;
+      livePosition: number | undefined;
       /**
        * Whether the maximum positions should evolve linearly over time.
        *
@@ -199,7 +199,7 @@ export interface IManifestMetadata {
        * This can for example be understood as the safe maximum playable
        * position through all possible tacks.
        */
-      maximumSafePosition : number;
+      maximumSafePosition: number;
       /**
        * Monotonically-raising timestamp (the one commonly used by the RxPlayer)
        * at the time both `maximumSafePosition` and `livePosition` were
@@ -207,7 +207,7 @@ export interface IManifestMetadata {
        * This can be used to retrieve a new maximum position from them when they
        * linearly evolves over time (see `isLinear` property).
        */
-      time : number;
+      time: number;
     };
   };
 }
@@ -237,70 +237,70 @@ export interface IManifestMetadata {
  */
 export interface IPeriodMetadata {
   /** ID uniquely identifying the IPeriodMetadata in the IManifestMetadata. */
-  id : string;
+  id: string;
   /** Absolute start time of the Period, in seconds. */
-  start : number;
+  start: number;
   /**
    * Absolute end time of the Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  end? : number | undefined;
+  end?: number | undefined;
   /**
    * Duration of this Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  duration? : number | undefined;
+  duration?: number | undefined;
   /** Every 'Adaptation' in that Period, per type of Adaptation. */
-  adaptations : Partial<Record<ITrackType, IAdaptationMetadata[]>>;
+  adaptations: Partial<Record<ITrackType, IAdaptationMetadata[]>>;
   /** Array containing every stream event happening on the period */
   streamEvents: IManifestStreamEvent[];
 }
 
 export interface IAdaptationMetadata {
   /** ID uniquely identifying the Adaptation in the Period. */
-  id : string;
+  id: string;
   /** Type of this Adaptation. */
-  type : ITrackType;
+  type: ITrackType;
   /** Language this Adaptation is in, as announced in the original Manifest. */
-  language? : string | undefined;
+  language?: string | undefined;
   /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
-  isClosedCaption? : boolean | undefined;
+  isClosedCaption?: boolean | undefined;
   /** Whether this track contains an audio description for the visually impaired. */
-  isAudioDescription? : boolean | undefined;
+  isAudioDescription?: boolean | undefined;
   /** If true this Adaptation contains sign interpretation. */
-  isSignInterpreted? : boolean | undefined;
+  isSignInterpreted?: boolean | undefined;
   /**
    * If `true` this Adaptation are subtitles Meant for display when no other text
    * Adaptation is selected. It is used to clarify dialogue, alternate
    * languages, texted graphics or location/person IDs that are not otherwise
    * covered in the dubbed/localized audio Adaptation.
    */
-  isForcedSubtitles? : boolean | undefined;
+  isForcedSubtitles?: boolean | undefined;
   /**
    * `true` if at least one Representation is in a supported codec. `false` otherwise.
    *
    * `undefined` for when this is not yet known (we're still in the process of
    * probing for support).
    */
-  isSupported? : boolean | undefined;
+  isSupported?: boolean | undefined;
   /** Language this Adaptation is in, when translated into an ISO639-3 code. */
-  normalizedLanguage? : string | undefined;
+  normalizedLanguage?: string | undefined;
   /**
    * Different `Representations` (e.g. qualities) this Adaptation is available
    * in.
    */
-  representations : IRepresentationMetadata[];
+  representations: IRepresentationMetadata[];
   /** Label of the adaptionSet */
-  label? : string | undefined;
+  label?: string | undefined;
   /**
    * If `true`, this Adaptation is a "dub", meaning it was recorded in another
    * language than the original one.
    */
-  isDub? : boolean | undefined;
+  isDub?: boolean | undefined;
   /** Tells if the track is a trick mode track. */
-  trickModeTracks? : IAdaptationMetadata[] | undefined;
+  trickModeTracks?: IAdaptationMetadata[] | undefined;
   /** Tells if the track is a trick mode track. */
-  isTrickModeTrack? : boolean | undefined;
+  isTrickModeTrack?: boolean | undefined;
 }
 
 export interface IRepresentationMetadata {
@@ -316,7 +316,7 @@ export interface IRepresentationMetadata {
    * For a globally unique identifier regardless of the `Adaptation`, `Period`
    * or even `Manifest`, you can rely on `uniqueId` instead.
    */
-  id : string;
+  id: string;
   /**
    * Globally unique identifier for this `Representation` object.
    *
@@ -326,9 +326,9 @@ export interface IRepresentationMetadata {
    * `id` is the identifier for the original Manifest's Representation in the
    * scope of its parent `Adaptation`.
    */
-  uniqueId : string;
+  uniqueId: string;
   /** Bitrate this Representation is in, in bits per seconds. */
-  bitrate : number;
+  bitrate: number;
   /**
    * `true` if the Representation is in a supported codec, false otherwise.
    * `undefined` for when this is not yet known (we're still in the process of
@@ -354,28 +354,28 @@ export interface IRepresentationMetadata {
    * support on the current device, only to then remove all non-used codecs to
    * keep the one actually relied on.
    */
-  codecs? : string[];
+  codecs?: string[];
   /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain
    * undefined if we do not know.
    */
-  mimeType? : string | undefined;
+  mimeType?: string | undefined;
   /**
    * If this Representation is linked to video content, this value is the width
    * in pixel of the corresponding video data.
    */
-  width? : number | undefined;
+  width?: number | undefined;
   /**
    * If this Representation is linked to video content, this value is the height
    * in pixel of the corresponding video data.
    */
-  height? : number | undefined;
+  height?: number | undefined;
   /**
    * Frame-rate, when it can be applied, of this Representation, in any textual
    * indication possible (often under a ratio form).
    */
-  frameRate? : number | undefined;
+  frameRate?: number | undefined;
   /**
    * `true` if this `Representation` is linked to a spatial audio technology.
    * For example, it may be set to `true` if the Representation relies on the
@@ -387,11 +387,11 @@ export interface IRepresentationMetadata {
    * `undefined` if we do not know whether this `Representation` contains
    * spatial audio or not.
    */
-  isSpatialAudio? : boolean | undefined;
+  isSpatialAudio?: boolean | undefined;
   /**
    * If the track is HDR, give the characteristics of the content
    */
-  hdrInfo? : IHDRInformation | undefined;
+  hdrInfo?: IHDRInformation | undefined;
   /**
    * Whether we are able to decrypt this Representation / unable to decrypt it or
    * if we don't know yet:
@@ -401,7 +401,7 @@ export interface IRepresentationMetadata {
    *     Representation
    *   - if `undefined` there is no certainty on this matter
    */
-  decipherable? : boolean | undefined;
+  decipherable?: boolean | undefined;
   /** Encryption information for this Representation. */
-  contentProtections? : IContentProtections | undefined;
+  contentProtections?: IContentProtections | undefined;
 }

@@ -21,7 +21,7 @@ const FUZZ_FACTOR = 0.3;
  * @param {Number} retryDelay
  * @returns {Number}
  */
-export default function getFuzzedDelay(retryDelay : number) : number {
-  const fuzzingFactor = ((Math.random() * 2) - 1) * FUZZ_FACTOR;
+export default function getFuzzedDelay(retryDelay: number): number {
+  const fuzzingFactor = (Math.random() * 2 - 1) * FUZZ_FACTOR;
   return retryDelay * (fuzzingFactor + 1); // Max 1.3 Min 0.7
 }

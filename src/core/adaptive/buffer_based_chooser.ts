@@ -19,9 +19,7 @@ import arrayFindIndex from "../../utils/array_find_index";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import getBufferLevels from "./utils/get_buffer_levels";
-import type {
-  IRepresentationMaintainabilityScore,
-} from "./utils/representation_score_calculator";
+import type { IRepresentationMaintainabilityScore } from "./utils/representation_score_calculator";
 import { ScoreConfidenceLevel } from "./utils/representation_score_calculator";
 
 /**
@@ -84,8 +82,8 @@ const STABILITY_CHECK_DELAY = 9000;
  * @class BufferBasedChooser
  */
 export default class BufferBasedChooser {
-  private _levelsMap : number[];
-  private _bitrates : number[];
+  private _levelsMap: number[];
+  private _bitrates: number[];
 
   /**
    * Current last best Representation's bitrate estimate made by the
@@ -114,17 +112,20 @@ export default class BufferBasedChooser {
   /**
    * @param {Array.<number>} bitrates
    */
-  constructor(bitrates : number[]) {
-    this._levelsMap = getBufferLevels(bitrates).map(bl => {
+  constructor(bitrates: number[]) {
+    this._levelsMap = getBufferLevels(bitrates).map((bl) => {
       return bl + 4; // Add some buffer security as it will be used conjointly with
-                     // other algorithms anyway
+      // other algorithms anyway
     });
     this._bitrates = bitrates;
     this._lastUnsuitableQualityTimestamp = undefined;
     this._blockRaiseDelay = MINIMUM_BLOCK_RAISE_DELAY;
-    log.debug("ABR: Steps for buffer based chooser.",
-              this._levelsMap.map((l, i) => `bufferLevel: ${l}, bitrate: ${bitrates[i]}`)
-                .join(" ,"));
+    log.debug(
+      "ABR: Steps for buffer based chooser.",
+      this._levelsMap
+        .map((l, i) => `bufferLevel: ${l}, bitrate: ${bitrates[i]}`)
+        .join(" ,"),
+    );
   }
 
   /**
@@ -132,14 +133,14 @@ export default class BufferBasedChooser {
    * @returns {number|undefined}
    */
   public onAddedSegment(
-    playbackObservation : IBufferBasedChooserPlaybackObservation
-  ) : void {
+    playbackObservation: IBufferBasedChooserPlaybackObservation,
+  ): void {
     const bufferLevels = this._levelsMap;
     const bitrates = this._bitrates;
     const { bufferGap, currentBitrate, currentScore, speed } = playbackObservation;
     if (isNullOrUndefined(currentBitrate)) {
       this._currentEstimate = bitrates[0];
-      return ;
+      return;
     }
 
     let currentBitrateIndex = -1;
@@ -156,36 +157,36 @@ export default class BufferBasedChooser {
     if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
       log.info("ABR: Current Bitrate not found in the calculated levels");
       this._currentEstimate = bitrates[0];
-      return ;
+      return;
     }
 
-    let scaledScore : number|undefined;
+    let scaledScore: number | undefined;
     if (currentScore !== undefined) {
-      scaledScore = speed === 0 ? currentScore.score : (currentScore.score / speed);
+      scaledScore = speed === 0 ? currentScore.score : currentScore.score / speed;
     }
 
-    const actualBufferGap = isFinite(bufferGap) ?
-      bufferGap :
-      0;
+    const actualBufferGap = isFinite(bufferGap) ? bufferGap : 0;
 
     const now = getMonotonicTimeStamp();
 
     if (
       actualBufferGap < bufferLevels[currentBitrateIndex] ||
-      (
-        scaledScore !== undefined && scaledScore < 1 &&
-        currentScore?.confidenceLevel === ScoreConfidenceLevel.HIGH
-      )
+      (scaledScore !== undefined &&
+        scaledScore < 1 &&
+        currentScore?.confidenceLevel === ScoreConfidenceLevel.HIGH)
     ) {
-      const timeSincePrev = this._lastUnsuitableQualityTimestamp === undefined ?
-        -1 :
-        now - this._lastUnsuitableQualityTimestamp;
+      const timeSincePrev =
+        this._lastUnsuitableQualityTimestamp === undefined
+          ? -1
+          : now - this._lastUnsuitableQualityTimestamp;
       if (timeSincePrev < this._blockRaiseDelay + STABILITY_CHECK_DELAY) {
         const newDelay = this._blockRaiseDelay + RAISE_BLOCKING_DELAY_INCREMENT;
         this._blockRaiseDelay = Math.min(newDelay, MAXIMUM_BLOCK_RAISE_DELAY);
-        log.debug("ABR: Incrementing blocking raise in BufferBasedChooser due " +
-                    "to unstable quality",
-                  this._blockRaiseDelay);
+        log.debug(
+          "ABR: Incrementing blocking raise in BufferBasedChooser due " +
+            "to unstable quality",
+          this._blockRaiseDelay,
+        );
       } else {
         const newDelay = this._blockRaiseDelay - RAISE_BLOCKING_DELAY_DECREMENT;
         this._blockRaiseDelay = Math.max(MINIMUM_BLOCK_RAISE_DELAY, newDelay);
@@ -196,24 +197,23 @@ export default class BufferBasedChooser {
       const baseIndex = arrayFindIndex(bitrates, (b) => b === currentBitrate);
       for (let i = baseIndex - 1; i >= 0; i--) {
         if (actualBufferGap >= bufferLevels[i]) {
-          this._currentEstimate =  bitrates[i];
+          this._currentEstimate = bitrates[i];
           return;
         }
       }
       this._currentEstimate = bitrates[0];
-      return ;
+      return;
     }
 
     if (
-      (
-        this._lastUnsuitableQualityTimestamp !== undefined &&
-        now - this._lastUnsuitableQualityTimestamp < this._blockRaiseDelay
-      ) ||
-      scaledScore === undefined || scaledScore < 1.15 ||
+      (this._lastUnsuitableQualityTimestamp !== undefined &&
+        now - this._lastUnsuitableQualityTimestamp < this._blockRaiseDelay) ||
+      scaledScore === undefined ||
+      scaledScore < 1.15 ||
       currentScore?.confidenceLevel !== ScoreConfidenceLevel.HIGH
     ) {
       this._currentEstimate = currentBitrate;
-      return ;
+      return;
     }
 
     const currentBufferLevel = bufferLevels[currentBitrateIndex];
@@ -229,11 +229,11 @@ export default class BufferBasedChooser {
       if (bufferGap >= nextBufferLevel) {
         log.debug("ABR: Raising quality in BufferBasedChooser", bitrates[nextIndex]);
         this._currentEstimate = bitrates[nextIndex];
-        return ;
+        return;
       }
     }
     this._currentEstimate = currentBitrate;
-    return ;
+    return;
   }
 
   /**
@@ -256,11 +256,11 @@ export interface IBufferBasedChooserPlaybackObservation {
    * non-buffered position in the buffer for the currently-considered
    * media type.
    */
-  bufferGap : number;
+  bufferGap: number;
   /** The bitrate of the currently downloaded segments, in bps. */
-  currentBitrate? : number | undefined;
+  currentBitrate?: number | undefined;
   /** The "maintainability score" of the currently downloaded segments. */
-  currentScore? : IRepresentationMaintainabilityScore | undefined;
+  currentScore?: IRepresentationMaintainabilityScore | undefined;
   /** Playback rate wanted (e.g. `1` is regular playback, `2` is double speed etc.). */
-  speed : number;
+  speed: number;
 }

@@ -33,21 +33,21 @@ import type { IContentProtection, IProcessedProtectionData } from "../../decrypt
  * initialization.
  */
 export default function initializeContentDecryption(
-  mediaElement : HTMLMediaElement,
-  keySystems : IKeySystemOption[],
-  protectionRef : IReadOnlySharedReference<null | IContentProtection>,
-  callbacks : {
-    onWarning : (err : IPlayerError) => void;
-    onError : (err : Error) => void;
-    onBlackListProtectionData : (val: IProcessedProtectionData) => void;
-    onKeyIdsCompatibilityUpdate : (updates: {
-      whitelistedKeyIds : Uint8Array[];
-      blacklistedKeyIds : Uint8Array[];
-      delistedKeyIds : Uint8Array[];
+  mediaElement: HTMLMediaElement,
+  keySystems: IKeySystemOption[],
+  protectionRef: IReadOnlySharedReference<null | IContentProtection>,
+  callbacks: {
+    onWarning: (err: IPlayerError) => void;
+    onError: (err: Error) => void;
+    onBlackListProtectionData: (val: IProcessedProtectionData) => void;
+    onKeyIdsCompatibilityUpdate: (updates: {
+      whitelistedKeyIds: Uint8Array[];
+      blacklistedKeyIds: Uint8Array[];
+      delistedKeyIds: Uint8Array[];
     }) => void;
   },
-  cancelSignal : CancellationSignal
-) : IReadOnlySharedReference<IDrmInitializationStatus> {
+  cancelSignal: CancellationSignal,
+): IReadOnlySharedReference<IDrmInitializationStatus> {
   if (keySystems.length === 0) {
     return createEmeDisabledReference("No `keySystems` option given.");
   } else if (features.decrypt === null) {
@@ -56,10 +56,13 @@ export default function initializeContentDecryption(
 
   const decryptorCanceller = new TaskCanceller();
   decryptorCanceller.linkToSignal(cancelSignal);
-  const drmStatusRef = new SharedReference<IDrmInitializationStatus>({
-    initializationState: { type: "uninitialized", value: null },
-    drmSystemId: undefined,
-  }, cancelSignal);
+  const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
+    {
+      initializationState: { type: "uninitialized", value: null },
+      drmSystemId: undefined,
+    },
+    cancelSignal,
+  );
 
   const ContentDecryptor = features.decrypt;
 
@@ -72,23 +75,30 @@ export default function initializeContentDecryption(
 
   contentDecryptor.addEventListener("stateChange", (state) => {
     if (state === ContentDecryptorState.WaitingForAttachment) {
-
       const isMediaLinked = new SharedReference(false);
-      isMediaLinked.onUpdate((isAttached, stopListening) => {
-        if (isAttached) {
-          stopListening();
-          if (state === ContentDecryptorState.WaitingForAttachment) {
-            contentDecryptor.attach();
+      isMediaLinked.onUpdate(
+        (isAttached, stopListening) => {
+          if (isAttached) {
+            stopListening();
+            if (state === ContentDecryptorState.WaitingForAttachment) {
+              contentDecryptor.attach();
+            }
           }
-        }
-      }, { clearSignal: decryptorCanceller.signal });
-      drmStatusRef.setValue({ initializationState: { type: "awaiting-media-link",
-                                                     value: { isMediaLinked } },
-                              drmSystemId: contentDecryptor.systemId });
+        },
+        { clearSignal: decryptorCanceller.signal },
+      );
+      drmStatusRef.setValue({
+        initializationState: {
+          type: "awaiting-media-link",
+          value: { isMediaLinked },
+        },
+        drmSystemId: contentDecryptor.systemId,
+      });
     } else if (state === ContentDecryptorState.ReadyForContent) {
-      drmStatusRef.setValue({ initializationState: { type: "initialized",
-                                                     value: null },
-                              drmSystemId: contentDecryptor.systemId });
+      drmStatusRef.setValue({
+        initializationState: { type: "initialized", value: null },
+        drmSystemId: contentDecryptor.systemId,
+      });
       contentDecryptor.removeEventListener("stateChange");
     }
   });
@@ -110,12 +120,15 @@ export default function initializeContentDecryption(
     callbacks.onKeyIdsCompatibilityUpdate(x);
   });
 
-  protectionRef.onUpdate((data) => {
-    if (data === null) {
-      return;
-    }
-    contentDecryptor.onInitializationData(data);
-  }, { clearSignal: decryptorCanceller.signal });
+  protectionRef.onUpdate(
+    (data) => {
+      if (data === null) {
+        return;
+      }
+      contentDecryptor.onInitializationData(data);
+    },
+    { clearSignal: decryptorCanceller.signal },
+  );
 
   decryptorCanceller.signal.register(() => {
     contentDecryptor.dispose();
@@ -123,18 +136,23 @@ export default function initializeContentDecryption(
 
   return drmStatusRef;
 
-  function createEmeDisabledReference(errMsg : string) {
-    protectionRef.onUpdate((data, stopListening) => {
-      if (data === null) { // initial value
-        return;
-      }
-      stopListening();
-      const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
-      callbacks.onError(err);
-    }, { clearSignal: cancelSignal });
+  function createEmeDisabledReference(errMsg: string) {
+    protectionRef.onUpdate(
+      (data, stopListening) => {
+        if (data === null) {
+          // initial value
+          return;
+        }
+        stopListening();
+        const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
+        callbacks.onError(err);
+      },
+      { clearSignal: cancelSignal },
+    );
     const ref = new SharedReference({
       initializationState: { type: "initialized" as const, value: null },
-      drmSystemId: undefined });
+      drmSystemId: undefined,
+    });
     ref.finish(); // We know that no new value will be triggered
     return ref;
   }
@@ -143,13 +161,13 @@ export default function initializeContentDecryption(
 /** Status of content decryption initialization. */
 interface IDrmInitializationStatus {
   /** Current initialization state the decryption logic is in. */
-  initializationState : IDecryptionInitializationState;
+  initializationState: IDecryptionInitializationState;
   /**
    * If set, corresponds to the hex string describing the current key system
    * used.
    * `undefined` if unknown or if it does not apply.
    */
-  drmSystemId : string | undefined;
+  drmSystemId: string | undefined;
 }
 
 /** Initialization steps to add decryption capabilities to an `HTMLMediaElement`. */
@@ -159,7 +177,7 @@ type IDecryptionInitializationState =
    * You should wait before performing any action on the concerned
    * `HTMLMediaElement` (such as linking a content / `MediaSource` to it).
    */
-  { type: "uninitialized"; value: null } |
+  | { type: "uninitialized"; value: null }
   /**
    * The `MediaSource` or media url has to be linked to the `HTMLMediaElement`
    * before continuing.
@@ -172,10 +190,12 @@ type IDecryptionInitializationState =
    * Note that the `"awaiting-media-link"` is an optional state. It can be
    * skipped to directly `"initialized"` instead.
    */
-  { type: "awaiting-media-link";
-    value: { isMediaLinked : SharedReference<boolean> }; } |
+  | {
+      type: "awaiting-media-link";
+      value: { isMediaLinked: SharedReference<boolean> };
+    }
   /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
    */
-  { type: "initialized"; value: null };
+  | { type: "initialized"; value: null };

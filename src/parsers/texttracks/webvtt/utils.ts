@@ -22,7 +22,7 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
  * @param {Array.<string>} linified
  * @returns {Number}
  */
-function getFirstLineAfterHeader(linified : string[]) : number {
+function getFirstLineAfterHeader(linified: string[]): number {
   let i = 0;
   while (i < linified.length) {
     if (linified[i] === "") {
@@ -38,12 +38,14 @@ function getFirstLineAfterHeader(linified : string[]) : number {
  * @param {string} text
  * @returns {Boolean}
  */
-function isStartOfStyleBlock(lines : string[], index : number) : boolean {
-  return typeof lines[index] === "string" &&
-         /^STYLE( .*)?$/g.test(lines[index]) &&
-        // A cue identifer can also contain "STYLE". Check that we have no timings
-        // on the second line
-        (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0);
+function isStartOfStyleBlock(lines: string[], index: number): boolean {
+  return (
+    typeof lines[index] === "string" &&
+    /^STYLE( .*)?$/g.test(lines[index]) &&
+    // A cue identifer can also contain "STYLE". Check that we have no timings
+    // on the second line
+    (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0)
+  );
 }
 
 /**
@@ -51,12 +53,14 @@ function isStartOfStyleBlock(lines : string[], index : number) : boolean {
  * @param {string} text
  * @returns {Boolean}
  */
-function isStartOfNoteBlock(lines : string[], index : number) : boolean {
-  return typeof lines[index] === "string" &&
-         /^NOTE( .*)?$/g.test(lines[index]) &&
-        // A cue identifer can also contain "NOTE". Check that we have no timings
-        // on the second line
-        (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0);
+function isStartOfNoteBlock(lines: string[], index: number): boolean {
+  return (
+    typeof lines[index] === "string" &&
+    /^NOTE( .*)?$/g.test(lines[index]) &&
+    // A cue identifer can also contain "NOTE". Check that we have no timings
+    // on the second line
+    (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0)
+  );
 }
 
 /**
@@ -64,12 +68,14 @@ function isStartOfNoteBlock(lines : string[], index : number) : boolean {
  * @param {string} text
  * @returns {Boolean}
  */
-function isStartOfRegionBlock(lines : string[], index : number) : boolean {
-  return typeof lines[index] === "string" &&
-         /^REGION( .*)?$/g.test(lines[index]) &&
-        // A cue identifer can also contain "REGION". Check that we have no timings
-        // on the second line
-        (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0);
+function isStartOfRegionBlock(lines: string[], index: number): boolean {
+  return (
+    typeof lines[index] === "string" &&
+    /^REGION( .*)?$/g.test(lines[index]) &&
+    // A cue identifer can also contain "REGION". Check that we have no timings
+    // on the second line
+    (lines[index + 1] === undefined || lines[index + 1].indexOf("-->") < 0)
+  );
 }
 
 /**
@@ -79,7 +85,7 @@ function isStartOfRegionBlock(lines : string[], index : number) : boolean {
  * @param {number} index
  * @returns {Boolean}
  */
-function isStartOfCueBlock(lines : string[], index : number) : boolean {
+function isStartOfCueBlock(lines: string[], index: number): boolean {
   // checked cases:
   //   - empty lines
   //   - start of a comment
@@ -87,12 +93,13 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
   //   - start of a style
   // Anything else whose first or second line is a timestamp line is a cue.
   const firstLine = lines[index];
-  if (firstLine === undefined ||
-      firstLine === "" ||
-      isStartOfStyleBlock(lines, index) ||
-      isStartOfRegionBlock(lines, index) ||
-      isStartOfNoteBlock(lines, index))
-  {
+  if (
+    firstLine === undefined ||
+    firstLine === "" ||
+    isStartOfStyleBlock(lines, index) ||
+    isStartOfRegionBlock(lines, index) ||
+    isStartOfNoteBlock(lines, index)
+  ) {
     return false;
   }
 
@@ -110,10 +117,7 @@ function isStartOfCueBlock(lines : string[], index : number) : boolean {
  * @param {number} startOfCueBlock
  * @returns {number}
  */
-function findEndOfCueBlock(
-  linified : string[],
-  startOfCueBlock : number
-) : number {
+function findEndOfCueBlock(linified: string[], startOfCueBlock: number): number {
   let firstEmptyLineIndex = startOfCueBlock + 1;
 
   // continue incrementing i until either:

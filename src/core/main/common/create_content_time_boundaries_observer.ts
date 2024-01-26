@@ -3,10 +3,7 @@ import type {
   IStreamOrchestratorPlaybackObservation,
 } from "../../../core/types";
 import log from "../../../log";
-import type {
-  IManifest,
-  IPeriod,
-} from "../../../manifest";
+import type { IManifest, IPeriod } from "../../../manifest";
 import type { IMediaSourceInterface } from "../../../mse";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
@@ -34,28 +31,30 @@ export interface IContentTimeBoundariesObserverCallbacks {
  * @returns {Object}
  */
 export default function createContentTimeBoundariesObserver(
-  manifest : IManifest,
-  mediaSource : IMediaSourceInterface,
-  streamObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
-  segmentSinksStore : ISegmentSinksStore,
+  manifest: IManifest,
+  mediaSource: IMediaSourceInterface,
+  streamObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+  segmentSinksStore: ISegmentSinksStore,
   callbacks: IContentTimeBoundariesObserverCallbacks,
-  cancelSignal : CancellationSignal
-) : ContentTimeBoundariesObserver {
+  cancelSignal: CancellationSignal,
+): ContentTimeBoundariesObserver {
   cancelSignal.register(() => {
     mediaSource.interruptDurationSetting();
   });
   const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
     manifest,
     streamObserver,
-    segmentSinksStore.getBufferTypes()
+    segmentSinksStore.getBufferTypes(),
   );
   cancelSignal.register(() => {
     contentTimeBoundariesObserver.dispose();
   });
   contentTimeBoundariesObserver.addEventListener("warning", (err) =>
-    callbacks.onWarning(err));
+    callbacks.onWarning(err),
+  );
   contentTimeBoundariesObserver.addEventListener("periodChange", (period) =>
-    callbacks.onPeriodChanged(period));
+    callbacks.onPeriodChanged(period),
+  );
   contentTimeBoundariesObserver.addEventListener("endingPositionChange", (evt) => {
     mediaSource.setDuration(evt.endingPosition, evt.isEnd);
   });

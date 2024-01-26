@@ -33,21 +33,21 @@ function Settings({
 }: {
   playerOptions: IConstructorSettings;
   updatePlayerOptions: (
-    cb: (previousOpts: IConstructorSettings) => IConstructorSettings
+    cb: (previousOpts: IConstructorSettings) => IConstructorSettings,
   ) => void;
   loadVideoOptions: ILoadVideoSettings;
   updateLoadVideoOptions: (
-    cb: (previousOpts: ILoadVideoSettings) => ILoadVideoSettings
+    cb: (previousOpts: ILoadVideoSettings) => ILoadVideoSettings,
   ) => void;
   defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
   defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
   updateDefaultAudioRepresentationsSwitchingMode: (
-    mode: IAudioRepresentationsSwitchingMode
+    mode: IAudioRepresentationsSwitchingMode,
   ) => void;
   updateDefaultVideoRepresentationsSwitchingMode: (
-    mode: IVideoRepresentationsSwitchingMode
+    mode: IVideoRepresentationsSwitchingMode,
   ) => void;
-  tryRelyOnWorker : boolean;
+  tryRelyOnWorker: boolean;
   updateTryRelyOnWorker: (tryRelyOnWorker: boolean) => void;
   showOptions: boolean;
 }): JSX.Element | null {
@@ -66,115 +66,117 @@ function Settings({
     requestConfig,
     onCodecSwitch,
   } = loadVideoOptions;
-  const {
-    manifest: manifestRequestConfig,
-    segment: segmentRequestConfig,
-  } = requestConfig;
-  const {
-    maxRetry: segmentRetry,
-    timeout: segmentRequestTimeout,
-  } = segmentRequestConfig;
-  const {
-    maxRetry: manifestRetry,
-    timeout: manifestRequestTimeout,
-  } = manifestRequestConfig;
+  const { manifest: manifestRequestConfig, segment: segmentRequestConfig } =
+    requestConfig;
+  const { maxRetry: segmentRetry, timeout: segmentRequestTimeout } = segmentRequestConfig;
+  const { maxRetry: manifestRetry, timeout: manifestRequestTimeout } =
+    manifestRequestConfig;
 
-  const onAutoPlayChange = useCallback((autoPlay: boolean) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (autoPlay === prevOptions.autoPlay) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { autoPlay });
-    });
-  }, [updateLoadVideoOptions]);
-
-  const onTryRelyOnWorkerChange = useCallback((tryRelyOnWorker: boolean) => {
-    updateTryRelyOnWorker(tryRelyOnWorker);
-  }, [updateTryRelyOnWorker]);
-
-  const onVideoResolutionLimitChange = useCallback(
-    (videoResolutionLimitArg: { value: string}) => {
-      updatePlayerOptions((prevOptions) => {
-        if (videoResolutionLimitArg.value ===
-          prevOptions.videoResolutionLimit) {
+  const onAutoPlayChange = useCallback(
+    (autoPlay: boolean) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (autoPlay === prevOptions.autoPlay) {
           return prevOptions;
         }
-        return Object.assign(
-          {},
-          prevOptions,
-          { videoResolutionLimit: videoResolutionLimitArg.value }
-        );
+        return Object.assign({}, prevOptions, { autoPlay });
       });
-    }, [updatePlayerOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
-  const onThrottleVideoBitrateWhenHiddenChange = useCallback((
-    value: boolean
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (value === prevOptions.throttleVideoBitrateWhenHidden) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        throttleVideoBitrateWhenHidden: value,
+  const onTryRelyOnWorkerChange = useCallback(
+    (tryRelyOnWorker: boolean) => {
+      updateTryRelyOnWorker(tryRelyOnWorker);
+    },
+    [updateTryRelyOnWorker],
+  );
+
+  const onVideoResolutionLimitChange = useCallback(
+    (videoResolutionLimitArg: { value: string }) => {
+      updatePlayerOptions((prevOptions) => {
+        if (videoResolutionLimitArg.value === prevOptions.videoResolutionLimit) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          videoResolutionLimit: videoResolutionLimitArg.value,
+        });
       });
-    });
-  }, [updatePlayerOptions]);
+    },
+    [updatePlayerOptions],
+  );
 
-  const onSegmentRetryChange = useCallback((segmentRetry: number) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (segmentRetry === prevOptions.requestConfig.segment.maxRetry) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        requestConfig: Object.assign({}, prevOptions.requestConfig, {
-          segment: Object.assign({}, prevOptions.requestConfig.segment, {
-            maxRetry: segmentRetry,
+  const onThrottleVideoBitrateWhenHiddenChange = useCallback(
+    (value: boolean) => {
+      updatePlayerOptions((prevOptions) => {
+        if (value === prevOptions.throttleVideoBitrateWhenHidden) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          throttleVideoBitrateWhenHidden: value,
+        });
+      });
+    },
+    [updatePlayerOptions],
+  );
+
+  const onSegmentRetryChange = useCallback(
+    (segmentRetry: number) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (segmentRetry === prevOptions.requestConfig.segment.maxRetry) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          requestConfig: Object.assign({}, prevOptions.requestConfig, {
+            segment: Object.assign({}, prevOptions.requestConfig.segment, {
+              maxRetry: segmentRetry,
+            }),
           }),
-        }),
+        });
       });
-    });
-  }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
-  const onSegmentRequestTimeoutChange = useCallback((
-    segmentRequestTimeout: number
-  ) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (
-        segmentRequestTimeout === prevOptions.requestConfig.segment.timeout
-      ) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        requestConfig: Object.assign({}, prevOptions.requestConfig, {
-          segment: Object.assign({}, prevOptions.requestConfig.segment, {
-            timeout: segmentRequestTimeout,
+  const onSegmentRequestTimeoutChange = useCallback(
+    (segmentRequestTimeout: number) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (segmentRequestTimeout === prevOptions.requestConfig.segment.timeout) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          requestConfig: Object.assign({}, prevOptions.requestConfig, {
+            segment: Object.assign({}, prevOptions.requestConfig.segment, {
+              timeout: segmentRequestTimeout,
+            }),
           }),
-        }),
+        });
       });
-    });
-  }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
-  const onManifestRetryChange = useCallback((manifestRetry: number) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (manifestRetry === prevOptions.requestConfig.manifest.maxRetry) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        requestConfig: Object.assign({}, prevOptions.requestConfig, {
-          manifest: Object.assign({}, prevOptions.requestConfig.manifest, {
-            maxRetry: manifestRetry,
+  const onManifestRetryChange = useCallback(
+    (manifestRetry: number) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (manifestRetry === prevOptions.requestConfig.manifest.maxRetry) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          requestConfig: Object.assign({}, prevOptions.requestConfig, {
+            manifest: Object.assign({}, prevOptions.requestConfig.manifest, {
+              maxRetry: manifestRetry,
+            }),
           }),
-        }),
+        });
       });
-    });
-  }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
   const onManifestRequestTimeoutChange = useCallback(
     (manifestRequestTimeout: number) => {
       updateLoadVideoOptions((prevOptions) => {
-        if (
-          manifestRequestTimeout === prevOptions.requestConfig.manifest.timeout
-        ) {
+        if (manifestRequestTimeout === prevOptions.requestConfig.manifest.timeout) {
           return prevOptions;
         }
         return Object.assign({}, prevOptions, {
@@ -186,19 +188,20 @@ function Settings({
         });
       });
     },
-    [updateLoadVideoOptions]
+    [updateLoadVideoOptions],
   );
 
-  const onEnableFastSwitchingChange = useCallback((
-    enableFastSwitching: boolean
-  ) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (enableFastSwitching === prevOptions.enableFastSwitching) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { enableFastSwitching });
-    });
-  }, [updateLoadVideoOptions]);
+  const onEnableFastSwitchingChange = useCallback(
+    (enableFastSwitching: boolean) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (enableFastSwitching === prevOptions.enableFastSwitching) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { enableFastSwitching });
+      });
+    },
+    [updateLoadVideoOptions],
+  );
 
   const onDefaultAudioTrackSwitchingModeChange = useCallback(
     (value: string) => {
@@ -211,68 +214,84 @@ function Settings({
         });
       });
     },
-    [updateLoadVideoOptions]
+    [updateLoadVideoOptions],
   );
 
-  const onDefaultVideoRepresentationsSwitchingModeChange =
-    useCallback((value: IVideoRepresentationsSwitchingMode) => {
+  const onDefaultVideoRepresentationsSwitchingModeChange = useCallback(
+    (value: IVideoRepresentationsSwitchingMode) => {
       updateDefaultVideoRepresentationsSwitchingMode(value);
-    }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
-  const onDefaultAudioRepresentationsSwitchingModeChange =
-    useCallback((value: IAudioRepresentationsSwitchingMode) => {
+  const onDefaultAudioRepresentationsSwitchingModeChange = useCallback(
+    (value: IAudioRepresentationsSwitchingMode) => {
       updateDefaultAudioRepresentationsSwitchingMode(value);
-    }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
-
-  const onCodecSwitchChange = useCallback((value: string) => {
-    updateLoadVideoOptions((prevOptions) => {
-      if (value === prevOptions.onCodecSwitch) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, {
-        onCodecSwitch: value,
+  const onCodecSwitchChange = useCallback(
+    (value: string) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (value === prevOptions.onCodecSwitch) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          onCodecSwitch: value,
+        });
       });
-    });
-  }, [updateLoadVideoOptions]);
+    },
+    [updateLoadVideoOptions],
+  );
 
-  const onWantedBufferAheadChange = useCallback((wantedBufferAhead: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (wantedBufferAhead === prevOptions.wantedBufferAhead) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { wantedBufferAhead });
-    });
-  }, [playerOptions]);
+  const onWantedBufferAheadChange = useCallback(
+    (wantedBufferAhead: number) => {
+      updatePlayerOptions((prevOptions) => {
+        if (wantedBufferAhead === prevOptions.wantedBufferAhead) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { wantedBufferAhead });
+      });
+    },
+    [playerOptions],
+  );
 
-  const onMaxVideoBufferSizeChange = useCallback((
-    maxVideoBufferSize: number
-  ) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxVideoBufferSize === prevOptions.maxVideoBufferSize) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxVideoBufferSize });
-    });
-  }, [playerOptions]);
+  const onMaxVideoBufferSizeChange = useCallback(
+    (maxVideoBufferSize: number) => {
+      updatePlayerOptions((prevOptions) => {
+        if (maxVideoBufferSize === prevOptions.maxVideoBufferSize) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { maxVideoBufferSize });
+      });
+    },
+    [playerOptions],
+  );
 
-  const onMaxBufferBehindChange = useCallback((maxBufferBehind: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxBufferBehind === prevOptions.maxBufferBehind) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxBufferBehind });
-    });
-  }, [playerOptions]);
+  const onMaxBufferBehindChange = useCallback(
+    (maxBufferBehind: number) => {
+      updatePlayerOptions((prevOptions) => {
+        if (maxBufferBehind === prevOptions.maxBufferBehind) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { maxBufferBehind });
+      });
+    },
+    [playerOptions],
+  );
 
-  const onMaxBufferAheadChange = useCallback((maxBufferAhead: number) => {
-    updatePlayerOptions((prevOptions) => {
-      if (maxBufferAhead === prevOptions.maxBufferAhead) {
-        return prevOptions;
-      }
-      return Object.assign({}, prevOptions, { maxBufferAhead });
-    });
-  }, [playerOptions]);
+  const onMaxBufferAheadChange = useCallback(
+    (maxBufferAhead: number) => {
+      updatePlayerOptions((prevOptions) => {
+        if (maxBufferAhead === prevOptions.maxBufferAhead) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { maxBufferAhead });
+      });
+    },
+    [playerOptions],
+  );
 
   if (!showOptions) {
     return null;
@@ -280,12 +299,9 @@ function Settings({
 
   return (
     <div className="settingsWrapper">
-      <div className="settings-title">
-        Content options
-      </div>
+      <div className="settings-title">Content options</div>
       <div className="settings-note">
-        Note: Those options won't be retroactively applied to
-        already-loaded contents
+        Note: Those options won't be retroactively applied to already-loaded contents
       </div>
       <div style={{ display: "flex" }}>
         <Option title="Playback">
@@ -354,14 +370,10 @@ function Settings({
             maxVideoBufferSize={maxVideoBufferSize}
             maxBufferAhead={maxBufferAhead}
             maxBufferBehind={maxBufferBehind}
-            onWantedBufferAheadChange={
-              onWantedBufferAheadChange
-            }
+            onWantedBufferAheadChange={onWantedBufferAheadChange}
             onMaxBufferAheadChange={onMaxBufferAheadChange}
             onMaxBufferBehindChange={onMaxBufferBehindChange}
-            onMaxVideoBufferSizeChange={
-              onMaxVideoBufferSizeChange
-            }
+            onMaxVideoBufferSizeChange={onMaxVideoBufferSizeChange}
           />
         </Option>
       </div>

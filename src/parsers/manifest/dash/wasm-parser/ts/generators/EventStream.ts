@@ -20,15 +20,9 @@ import type {
   IEventStreamChildren,
   IEventStreamEventIntermediateRepresentation,
 } from "../../../node_parser_types";
-import type {
-  IAttributeParser,
-  IChildrenParser,
-} from "../parsers_stack";
+import type { IAttributeParser, IChildrenParser } from "../parsers_stack";
 import type ParsersStack from "../parsers_stack";
-import {
-  AttributeName,
-  TagName,
-} from "../types";
+import { AttributeName, TagName } from "../types";
 import { parseString } from "../utils";
 
 /**
@@ -40,12 +34,12 @@ import { parseString } from "../utils";
  * @returns {Function}
  */
 export function generateEventStreamChildrenParser(
-  childrenObj : IEventStreamChildren,
-  linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
-)  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  childrenObj: IEventStreamChildren,
+  linearMemory: WebAssembly.Memory,
+  parsersStack: ParsersStack,
+  fullMpd: ArrayBuffer,
+): IChildrenParser {
+  return function onRootChildren(nodeId: number) {
     switch (nodeId) {
       case TagName.EventStreamElt: {
         const event = {};
@@ -70,20 +64,18 @@ export function generateEventStreamChildrenParser(
  * @returns {Function}
  */
 export function generateEventStreamAttrParser(
-  esAttrs : IEventStreamAttributes,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  esAttrs: IEventStreamAttributes,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onEventStreamAttribute(attr : number, ptr : number, len : number) {
+  return function onEventStreamAttribute(attr: number, ptr: number, len: number) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.SchemeIdUri:
-        esAttrs.schemeIdUri =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        esAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
       case AttributeName.SchemeValue:
-        esAttrs.value =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        esAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
       case AttributeName.TimeScale:
         esAttrs.timescale = dataView.getFloat64(ptr, true);
@@ -118,12 +110,12 @@ export function generateEventStreamAttrParser(
  * @returns {Function}
  */
 function generateEventAttrParser(
-  eventAttr : IEventStreamEventIntermediateRepresentation,
-  linearMemory : WebAssembly.Memory,
-  fullMpd : ArrayBuffer
-) : IAttributeParser {
+  eventAttr: IEventStreamEventIntermediateRepresentation,
+  linearMemory: WebAssembly.Memory,
+  fullMpd: ArrayBuffer,
+): IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onEventStreamAttribute(attr : number, ptr : number, len : number) {
+  return function onEventStreamAttribute(attr: number, ptr: number, len: number) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.EventPresentationTime:

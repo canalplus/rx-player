@@ -20,8 +20,11 @@ const toMinutes = (timeInSeconds: number): string => {
 
   const numberOfMinutes = Math.floor(toInt / 60);
   const numberOfSecondsRemaining = toInt % 60;
-  return String(numberOfMinutes).padStart(2, "0") +
-    ":" + String(numberOfSecondsRemaining).padStart(2, "0");
+  return (
+    String(numberOfMinutes).padStart(2, "0") +
+    ":" +
+    String(numberOfSecondsRemaining).padStart(2, "0")
+  );
 };
 
 const toHours = (timeInSeconds: number): string => {
@@ -38,19 +41,22 @@ const toHours = (timeInSeconds: number): string => {
   const numberOfMinutes = Math.floor(toInt / 60);
   const numberOfSecondsRemaining = toInt % 60;
   if (numberOfMinutes < 60) {
-    return (String(numberOfMinutes)).padStart(2, "0") +
-      ":" + (String(numberOfSecondsRemaining)).padStart(2, "0");
+    return (
+      String(numberOfMinutes).padStart(2, "0") +
+      ":" +
+      String(numberOfSecondsRemaining).padStart(2, "0")
+    );
   }
 
   const numberOfHours = Math.floor(numberOfMinutes / 60);
   const numberOfMinutesRemaining = numberOfMinutes % 60;
-  return (String(numberOfHours)).padStart(2, "0") +
-    ":" + (String(numberOfMinutesRemaining)).padStart(2, "0") +
-    ":" + (String(numberOfSecondsRemaining)).padStart(2, "0");
+  return (
+    String(numberOfHours).padStart(2, "0") +
+    ":" +
+    String(numberOfMinutesRemaining).padStart(2, "0") +
+    ":" +
+    String(numberOfSecondsRemaining).padStart(2, "0")
+  );
 };
 
-export {
-  toSeconds,
-  toMinutes,
-  toHours,
-};
+export { toSeconds, toMinutes, toHours };

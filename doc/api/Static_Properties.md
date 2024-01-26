@@ -3,7 +3,6 @@
 The RxPlayer has multiple static properties allowing to read or modify global
 RxPlayer attributes.
 
-
 ## version
 
 The `version` static property returns a string corresponding to the current
@@ -16,7 +15,6 @@ import RxPlayer from "rx-player";
 
 console.log("Current RxPlayer version:", RxPlayer.version);
 ```
-
 
 ## LogLevel
 
@@ -47,13 +45,11 @@ import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
 
-
 ## ErrorTypes
 
 The different "types" of Error you can get on playback error,
 
 See [the Player Error documentation](./Player_Errors.md) for more information.
-
 
 ## ErrorCodes
 
