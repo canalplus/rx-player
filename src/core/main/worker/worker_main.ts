@@ -7,10 +7,6 @@ import features from "../../../features";
 import log from "../../../log";
 // XXX TODO
 import { ObservationPosition } from "../../../main_thread/api/playback_observer";
-// XXX TODO
-import {
-  getBufferedDataPerMediaBuffer,
-} from "../../../main_thread/init/utils/create_core_playback_observer";
 import Manifest, {
   Adaptation,
   Period,
@@ -51,6 +47,7 @@ import type {
 import StreamOrchestrator from "../../stream";
 /* eslint-disable-next-line max-len */
 import createContentTimeBoundariesObserver from "../utils/create_content_time_boundaries_observer";
+import getBufferedDataPerMediaBuffer from "../utils/get_buffered_data_per_media_buffer";
 import ContentPreparer from "./content_preparer";
 import {
   limitVideoResolution,
