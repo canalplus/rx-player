@@ -7,7 +7,7 @@
 
 [1] In a Multithreading mode, only the `types` file should probably be imported
 by external code (to ensure a small bundle size). In a monothreading mode,
-files from the `core_portal` subdirectory may be directly imported.
+no import strategy is enforced.
 
 ## Overview ####################################################################
 
@@ -16,7 +16,7 @@ RxPlayer which can optionally run in a WebWorker environment.
 
 Those modules are:
 
-  - __the `CorePortal` (_./core_portal)__
+  - __the `Core Main` (_./main)__
 
     Make the link between the "main thread" part of the code and the core.
 

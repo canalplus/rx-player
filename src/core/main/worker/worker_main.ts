@@ -63,7 +63,7 @@ import WorkerPlaybackObserver, {
   ICorePlaybackObservation,
 } from "./worker_playback_observer";
 
-export default function initializeWorkerPortal() {
+export default function initializeWorkerMain() {
   /**
    * `true` once the worker has been initialized.
    * Allow to enforce the fact that it is only initialized once.

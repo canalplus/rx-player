@@ -3,11 +3,11 @@ import type {
   IABRThrottlers,
   IResolutionInfo,
 } from "./adaptive";
-import type { ICorePlaybackObservation } from "./core_portal";
 import type {
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
 } from "./fetchers";
+import type { ICorePlaybackObservation } from "./main";
 import SegmentBuffersStore, {
   IBufferedChunk,
   IBufferType,
@@ -33,7 +33,7 @@ export type {
   IABRThrottlers,
   IResolutionInfo,
 
-  // Core-portal
+  // Main
   ICorePlaybackObservation,
 
   // Fetchers Metadata
