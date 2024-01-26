@@ -91,9 +91,10 @@ TThe player cannot play the content despite having enough data, due to an
 unknown reason.
 
 This state might be due to either:
-  - poor performance
-  - an issue with the current device
-  - the key of an encrypted content not being loaded soon enough
+
+- poor performance
+- an issue with the current device
+- the key of an encrypted content not being loaded soon enough
 
 The player will not play until it gets out of this state.
 

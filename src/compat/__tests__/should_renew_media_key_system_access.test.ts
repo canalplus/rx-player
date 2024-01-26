@@ -33,8 +33,9 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
         isIE11: false,
       };
     });
-    const shouldRenewMediaKeySystemAccess =
-      jest.requireActual("../should_renew_media_key_system_access");
+    const shouldRenewMediaKeySystemAccess = jest.requireActual(
+      "../should_renew_media_key_system_access",
+    );
     expect(shouldRenewMediaKeySystemAccess.default()).toBe(false);
   });
 
@@ -45,8 +46,9 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
         isIE11: true,
       };
     });
-    const shouldRenewMediaKeySystemAccess =
-      jest.requireActual("../should_renew_media_key_system_access");
+    const shouldRenewMediaKeySystemAccess = jest.requireActual(
+      "../should_renew_media_key_system_access",
+    );
     expect(shouldRenewMediaKeySystemAccess.default()).toBe(true);
   });
   beforeEach(() => {

@@ -1,4 +1,3 @@
-
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -24,9 +23,7 @@ import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
 } from "../../../playback_observer";
-import type {
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
@@ -41,44 +38,50 @@ import TaskCanceller from "../../../utils/task_canceller";
  * @returns {Object}
  */
 export default function getLoadedReference(
-  playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
-  mediaElement : HTMLMediaElement,
-  isDirectfile : boolean,
-  cancelSignal : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
+  playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  mediaElement: HTMLMediaElement,
+  isDirectfile: boolean,
+  cancelSignal: CancellationSignal,
+): IReadOnlySharedReference<boolean> {
   const listenCanceller = new TaskCanceller();
   listenCanceller.linkToSignal(cancelSignal);
   const isLoaded = new SharedReference(false, listenCanceller.signal);
-  playbackObserver.listen((observation) => {
-    if (observation.rebuffering !== null ||
+  playbackObserver.listen(
+    (observation) => {
+      if (
+        observation.rebuffering !== null ||
         observation.freezing !== null ||
-        observation.readyState === 0)
-    {
-      return ;
-    }
-
-    if (!shouldWaitForDataBeforeLoaded(isDirectfile,
-                                       mediaElement.hasAttribute("playsinline")))
-    {
-      if (mediaElement.duration > 0) {
-        isLoaded.setValue(true);
-        listenCanceller.cancel();
+        observation.readyState === 0
+      ) {
         return;
       }
-    }
 
-    const minReadyState = shouldWaitForHaveEnoughData() ? 4 :
-                                                          3;
-    if (observation.readyState >= minReadyState) {
-      if (observation.currentRange !== null || observation.ended) {
-        if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+      if (
+        !shouldWaitForDataBeforeLoaded(
+          isDirectfile,
+          mediaElement.hasAttribute("playsinline"),
+        )
+      ) {
+        if (mediaElement.duration > 0) {
           isLoaded.setValue(true);
           listenCanceller.cancel();
           return;
         }
       }
-    }
-  }, { includeLastObservation: true, clearSignal: listenCanceller.signal });
+
+      const minReadyState = shouldWaitForHaveEnoughData() ? 4 : 3;
+      if (observation.readyState >= minReadyState) {
+        if (observation.currentRange !== null || observation.ended) {
+          if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+            isLoaded.setValue(true);
+            listenCanceller.cancel();
+            return;
+          }
+        }
+      }
+    },
+    { includeLastObservation: true, clearSignal: listenCanceller.signal },
+  );
 
   return isLoaded;
 }

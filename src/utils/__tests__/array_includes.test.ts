@@ -62,39 +62,28 @@ describe("utils - array-includes", () => {
   });
 
   it("should be true if a string is included", () => {
-    expect(arrayIncludes(["abc", "", "toto", "bar", "baz"], ""))
-      .toBe(true);
-    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "abc"))
-      .toBe(true);
-    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "foo"))
-      .toBe(true);
-    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "toto"))
-      .toBe(true);
-    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "bar"))
-      .toBe(true);
-    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "baz"))
-      .toBe(true);
+    expect(arrayIncludes(["abc", "", "toto", "bar", "baz"], "")).toBe(true);
+    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "abc")).toBe(true);
+    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "foo")).toBe(true);
+    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "toto")).toBe(true);
+    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "bar")).toBe(true);
+    expect(arrayIncludes(["abc", "foo", "toto", "bar", "baz"], "baz")).toBe(true);
 
     expect(arrayIncludes(["abc", "toto", /aa/, 4, []], "toto")).toBe(true);
   });
 
   it("should be true if a boolean is included", () => {
-    expect(arrayIncludes([true, false, true, "bar", "baz"], true))
-      .toBe(true);
-    expect(arrayIncludes([true, false, true, "bar", "baz"], false))
-      .toBe(true);
-    expect(arrayIncludes([true, false], true))
-      .toBe(true);
+    expect(arrayIncludes([true, false, true, "bar", "baz"], true)).toBe(true);
+    expect(arrayIncludes([true, false, true, "bar", "baz"], false)).toBe(true);
+    expect(arrayIncludes([true, false], true)).toBe(true);
     expect(arrayIncludes([false, "toto", /aa/, 4, []], false)).toBe(true);
   });
 
   it("should be true if an object is included", () => {
     const obj1 = { a: 4, b: 3 };
     const obj2 = { a: obj1, b: { a: 4 } };
-    expect(arrayIncludes([obj1, obj2], obj1))
-      .toBe(true);
-    expect(arrayIncludes([obj1, obj2], obj2))
-      .toBe(true);
+    expect(arrayIncludes([obj1, obj2], obj1)).toBe(true);
+    expect(arrayIncludes([obj1, obj2], obj2)).toBe(true);
     expect(arrayIncludes([1, obj1, 3, obj2, 5], obj2)).toBe(true);
   });
 
@@ -103,8 +92,7 @@ describe("utils - array-includes", () => {
     const obj2 = { a: obj1, b: { a: 4 } };
     const obj3 = { o: 4 };
     const obj4 = { z: obj1, t: { a: 4 } };
-    expect(arrayIncludes<unknown>([obj1, obj2, obj3], obj4))
-      .toBe(false);
+    expect(arrayIncludes<unknown>([obj1, obj2, obj3], obj4)).toBe(false);
     expect(arrayIncludes<unknown>([1, obj4, 3, obj3, 5], obj2)).toBe(false);
   });
 
@@ -112,22 +100,17 @@ describe("utils - array-includes", () => {
     const obj1 = { a: 4, b: 3 };
     const obj2 = { a: obj1, b: { a: 4 } };
     const obj2bis = { a: obj1, b: { a: 4 } };
-    expect(arrayIncludes([obj1, obj2], obj2bis))
-      .toBe(false);
+    expect(arrayIncludes([obj1, obj2], obj2bis)).toBe(false);
   });
 
   it("should take a starting index as first argument", () => {
     const obj1 = { a: 4, b: 3 };
     const obj2 = { a: obj1, b: { a: 4 } };
     const obj3 = { a: obj1, b: { a: 4 } };
-    expect(arrayIncludes([obj1, obj2, obj3], obj2))
-      .toBe(true);
-    expect(arrayIncludes([obj1, obj2, obj3], obj2, 0))
-      .toBe(true);
-    expect(arrayIncludes([obj1, obj2, obj3], obj2, 1))
-      .toBe(true);
-    expect(arrayIncludes([obj1, obj2, obj3], obj2, 2))
-      .toBe(false);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2)).toBe(true);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 0)).toBe(true);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 1)).toBe(true);
+    expect(arrayIncludes([obj1, obj2, obj3], obj2, 2)).toBe(false);
     expect(arrayIncludes([obj1, obj2, obj3], obj2, 3)) // out of bounds
       .toBe(false);
   });
@@ -137,14 +120,10 @@ describe("utils - array-includes", () => {
     const obj2 = { a: obj1, b: { a: 4 } };
     const obj3 = { a: obj1, b: { a: 4 } };
     const obj4 = {};
-    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3))
-      .toBe(true);
-    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -1))
-      .toBe(false);
-    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -2))
-      .toBe(true);
-    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -3))
-      .toBe(true);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3)).toBe(true);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -1)).toBe(false);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -2)).toBe(true);
+    expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -3)).toBe(true);
     expect(arrayIncludes([obj1, obj2, obj3, obj4], obj3, -12)) // out of bounds
       .toBe(true);
   });

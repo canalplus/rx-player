@@ -16,9 +16,9 @@ It can also be used to retrieve the position where the player was at when the er
 const lastStoredContentPosition = player.getLastStoredContentPosition();
 ```
 
- - **return value** `number|undefined`
+- **return value** `number|undefined`
 
- #### Example
+#### Example
 
 ```js
 const lastStoredContentPosition = player.getLastStoredContentPosition();
@@ -32,5 +32,3 @@ if (lastStoredContentPosition !== undefined) {
   });
 }
 ```
-
-

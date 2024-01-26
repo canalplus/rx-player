@@ -26,8 +26,8 @@ import arrayIncludes from "../../../utils/array_includes";
  * @returns {MediaKeySession}
  */
 export default function isSessionUsable(
-  loadedSession : MediaKeySession | ICustomMediaKeySession
-) : boolean {
+  loadedSession: MediaKeySession | ICustomMediaKeySession,
+): boolean {
   if (loadedSession.sessionId === "") {
     return false;
   }
@@ -39,21 +39,26 @@ export default function isSessionUsable(
   });
 
   if (keyStatuses.length <= 0) {
-    log.debug("DRM: isSessionUsable: MediaKeySession given has an empty keyStatuses",
-              loadedSession.sessionId);
+    log.debug(
+      "DRM: isSessionUsable: MediaKeySession given has an empty keyStatuses",
+      loadedSession.sessionId,
+    );
     return false;
   }
 
   if (arrayIncludes(keyStatuses, "expired")) {
-    log.debug("DRM: isSessionUsable: MediaKeySession given has an expired key",
-              loadedSession.sessionId);
+    log.debug(
+      "DRM: isSessionUsable: MediaKeySession given has an expired key",
+      loadedSession.sessionId,
+    );
     return false;
   }
 
   if (arrayIncludes(keyStatuses, "internal-error")) {
-    log.debug("DRM: isSessionUsable: MediaKeySession given has a key with an " +
-              "internal-error",
-              loadedSession.sessionId);
+    log.debug(
+      "DRM: isSessionUsable: MediaKeySession given has a key with an " + "internal-error",
+      loadedSession.sessionId,
+    );
     return false;
   }
 

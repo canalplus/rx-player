@@ -15,10 +15,7 @@
  */
 
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import {
-  findEndOfCueBlock,
-  isStartOfCueBlock,
-} from "./utils";
+import { findEndOfCueBlock, isStartOfCueBlock } from "./utils";
 
 /**
  * Get cue blocks from a WebVTT file.
@@ -29,10 +26,10 @@ import {
  * @returns {Array.<Array.<string>>}
  */
 export default function getCueBlocks(
-  linified : string[],
-  headerOffset : number
-) : string[][] {
-  const cueBlocks : string[][] = [];
+  linified: string[],
+  headerOffset: number,
+): string[][] {
+  const cueBlocks: string[][] = [];
   for (let i = headerOffset; i < linified.length; i++) {
     if (isStartOfCueBlock(linified, i)) {
       const endOfCue = findEndOfCueBlock(linified, i);

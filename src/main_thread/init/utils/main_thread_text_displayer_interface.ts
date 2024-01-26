@@ -12,12 +12,12 @@ import type { ITextDisplayer, ITextDisplayerData } from "../../text_displayer";
  */
 export default class MainThreadTextDisplayerInterface implements ITextDisplayerInterface {
   /** `ITextDisplayer` to which we will be following API calls. */
-  private _displayer : ITextDisplayer;
+  private _displayer: ITextDisplayer;
 
   /**
    * @param {Object} displayer
    */
-  constructor(displayer : ITextDisplayer) {
+  constructor(displayer: ITextDisplayer) {
     this._displayer = displayer;
   }
 

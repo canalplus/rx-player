@@ -16,8 +16,9 @@ See [the Player Error documentation](../Player_Errors.md) for more information.
 ```js
 const currentError = player.getError();
 ```
-  - **return value** `Error|null`: The current fatal Error or `null` if no fatal
-    error happened yet.
+
+- **return value** `Error|null`: The current fatal Error or `null` if no fatal
+  error happened yet.
 
 ## Example
 

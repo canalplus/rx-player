@@ -17,17 +17,13 @@
 import EventEmitter from "./event_emitter";
 import noop from "./noop";
 
-export type ILoggerLevel = "NONE" |
-                           "ERROR" |
-                           "WARNING" |
-                           "INFO" |
-                           "DEBUG";
+export type ILoggerLevel = "NONE" | "ERROR" | "WARNING" | "INFO" | "DEBUG";
 
 type IAcceptedLogValue = boolean | string | number | Error | null | undefined;
 
-type IConsoleFn = (...args : IAcceptedLogValue[]) => void;
+type IConsoleFn = (...args: IAcceptedLogValue[]) => void;
 
-const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
+const DEFAULT_LOG_LEVEL: ILoggerLevel = "NONE";
 
 /**
  * Events sent by `Logger` where the keys are the events' name and the values
@@ -42,12 +38,12 @@ interface ILoggerEvents {
  * @class Logger
  */
 export default class Logger extends EventEmitter<ILoggerEvents> {
-  public error : IConsoleFn;
-  public warn : IConsoleFn;
-  public info : IConsoleFn;
-  public debug : IConsoleFn;
-  private _currentLevel : ILoggerLevel;
-  private readonly _levels : Record<ILoggerLevel, number>;
+  public error: IConsoleFn;
+  public warn: IConsoleFn;
+  public info: IConsoleFn;
+  public debug: IConsoleFn;
+  private _currentLevel: ILoggerLevel;
+  private readonly _levels: Record<ILoggerLevel, number>;
 
   constructor() {
     super();
@@ -55,11 +51,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     this.warn = noop;
     this.info = noop;
     this.debug = noop;
-    this._levels = { NONE: 0,
-                     ERROR: 1,
-                     WARNING: 2,
-                     INFO: 3,
-                     DEBUG: 4 };
+    this._levels = { NONE: 0, ERROR: 1, WARNING: 2, INFO: 3, DEBUG: 4 };
     this._currentLevel = DEFAULT_LOG_LEVEL;
   }
 
@@ -68,18 +60,19 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
    * @param {function} [logFn]
    */
   public setLevel(
-    levelStr : string,
-    logFn? : (
+    levelStr: string,
+    logFn?: (
       levelStr: ILoggerLevel,
-      logs: Array<boolean | string | number | Error | null | undefined>
-    ) => void
-  ) : void {
-    let level : number;
+      logs: Array<boolean | string | number | Error | null | undefined>,
+    ) => void,
+  ): void {
+    let level: number;
     const foundLevel = this._levels[levelStr as ILoggerLevel];
     if (typeof foundLevel === "number") {
       level = foundLevel;
       this._currentLevel = levelStr as ILoggerLevel;
-    } else { // not found
+    } else {
+      // not found
       level = 0;
       this._currentLevel = "NONE";
     }
@@ -87,25 +80,18 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     if (logFn === undefined) {
       /* eslint-disable no-invalid-this */
       /* eslint-disable no-console */
-      this.error = (level >= this._levels.ERROR) ? console.error.bind(console) :
-                                                   noop;
-      this.warn = (level >= this._levels.WARNING) ? console.warn.bind(console) :
-                                                    noop;
-      this.info = (level >= this._levels.INFO) ? console.info.bind(console) :
-                                                 noop;
-      this.debug = (level >= this._levels.DEBUG) ? console.log.bind(console) :
-                                                   noop;
+      this.error = level >= this._levels.ERROR ? console.error.bind(console) : noop;
+      this.warn = level >= this._levels.WARNING ? console.warn.bind(console) : noop;
+      this.info = level >= this._levels.INFO ? console.info.bind(console) : noop;
+      this.debug = level >= this._levels.DEBUG ? console.log.bind(console) : noop;
       /* eslint-enable no-console */
       /* eslint-enable no-invalid-this */
     } else {
-      this.error = (level >= this._levels.ERROR) ? (...args) => logFn("ERROR", args) :
-                                                   noop;
-      this.warn = (level >= this._levels.WARNING) ? (...args) => logFn("WARNING", args) :
-                                                    noop;
-      this.info = (level >= this._levels.INFO) ? (...args) => logFn("INFO", args) :
-                                                 noop;
-      this.debug = (level >= this._levels.DEBUG) ? (...args) => logFn("DEBUG", args) :
-                                                   noop;
+      this.error = level >= this._levels.ERROR ? (...args) => logFn("ERROR", args) : noop;
+      this.warn =
+        level >= this._levels.WARNING ? (...args) => logFn("WARNING", args) : noop;
+      this.info = level >= this._levels.INFO ? (...args) => logFn("INFO", args) : noop;
+      this.debug = level >= this._levels.DEBUG ? (...args) => logFn("DEBUG", args) : noop;
     }
 
     this.trigger("onLogLevelChange", this._currentLevel);
@@ -114,7 +100,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
   /**
    * @returns {string}
    */
-  public getLevel() : ILoggerLevel {
+  public getLevel(): ILoggerLevel {
     return this._currentLevel;
   }
 
@@ -124,7 +110,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
    * @param {string} logLevel
    * @returns {boolean}
    */
-  public hasLevel(logLevel : ILoggerLevel) : boolean {
+  public hasLevel(logLevel: ILoggerLevel): boolean {
     return this._levels[logLevel] >= this._levels[this._currentLevel];
   }
 }

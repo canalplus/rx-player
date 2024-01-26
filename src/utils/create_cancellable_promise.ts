@@ -1,7 +1,4 @@
-import type {
-  CancellationError,
-  CancellationSignal,
-} from "./task_canceller";
+import type { CancellationError, CancellationSignal } from "./task_canceller";
 
 /**
  * Returns a Promise linked to a `CancellationSignal`, which will reject the
@@ -28,13 +25,10 @@ import type {
  * before either of the two previous conditions.
  */
 export default function createCancellablePromise<T>(
-  cancellationSignal : CancellationSignal,
-  cb : (
-    resolve : (val : T) => void,
-    reject : (err : unknown) => void,
-  ) => (() => void) | void
-) : Promise<T> {
-  let abortingLogic : (() => void) | void;
+  cancellationSignal: CancellationSignal,
+  cb: (resolve: (val: T) => void, reject: (err: unknown) => void) => (() => void) | void,
+): Promise<T> {
+  let abortingLogic: (() => void) | void;
   return new Promise((res, rej) => {
     if (cancellationSignal.cancellationError !== null) {
       // If the signal was already triggered before, do not even call `cb`
@@ -43,23 +37,23 @@ export default function createCancellablePromise<T>(
 
     let hasUnregistered = false;
     abortingLogic = cb(
-      function onCancellablePromiseSuccess(val : T) {
+      function onCancellablePromiseSuccess(val: T) {
         cancellationSignal.deregister(onCancellablePromiseCancellation);
         hasUnregistered = true;
         res(val);
       },
-      function onCancellablePromiseFailure(err : unknown) {
+      function onCancellablePromiseFailure(err: unknown) {
         cancellationSignal.deregister(onCancellablePromiseCancellation);
         hasUnregistered = true;
         rej(err);
-      }
+      },
     );
 
     if (!hasUnregistered) {
       cancellationSignal.register(onCancellablePromiseCancellation);
     }
 
-    function onCancellablePromiseCancellation(error : CancellationError) {
+    function onCancellablePromiseCancellation(error: CancellationError) {
       if (abortingLogic !== undefined) {
         abortingLogic();
       }

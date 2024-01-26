@@ -24,7 +24,7 @@
 import arrayFindIndex from "../../utils/array_find_index";
 
 describe("compat - removeCue", () => {
-  beforeEach(() => {
+  beforeEach(() => {
     jest.resetModules();
   });
 
@@ -43,8 +43,12 @@ describe("compat - removeCue", () => {
     const mockSetMode = jest.fn(() => null);
 
     const fakeTrack = {
-      get mode() { return mockGetMode(); },
-      set mode(_) { mockSetMode(); },
+      get mode() {
+        return mockGetMode();
+      },
+      set mode(_) {
+        mockSetMode();
+      },
       cues: fakeTrackCues,
       activeCues: [],
       removeCue: mockRemoveCue,
@@ -87,8 +91,12 @@ describe("compat - removeCue", () => {
     });
 
     const fakeTrack = {
-      get mode() { return mockGetMode(); },
-      set mode(newMode: string) { mockSetMode(newMode); },
+      get mode() {
+        return mockGetMode();
+      },
+      set mode(newMode: string) {
+        mockSetMode(newMode);
+      },
       cues: fakeTrackCues,
       activeCues: fakeTrackCues,
       removeCue: mockRemoveCue,
@@ -131,8 +139,12 @@ describe("compat - removeCue", () => {
     });
 
     const fakeTrack = {
-      get mode() { return mockGetMode(); },
-      set mode(newMode: string) { mockSetMode(newMode); },
+      get mode() {
+        return mockGetMode();
+      },
+      set mode(newMode: string) {
+        mockSetMode(newMode);
+      },
       cues: fakeTrackCue,
       activeCues: [],
       removeCue: mockRemoveCue,
@@ -210,9 +222,7 @@ describe("compat - removeCue", () => {
 
     const fakeTrack = {
       mode: "showing",
-      cues: [
-        { id: "1" },
-      ],
+      cues: [{ id: "1" }],
       removeCue: mockRemoveCue,
     };
 

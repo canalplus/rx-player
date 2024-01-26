@@ -19,14 +19,11 @@ import {
   HTML_VTT_PARSER,
   SMOOTH,
 } from "../../../../../src/features/list";
-import {
-  METAPLAYLIST,
-  MULTI_THREAD,
-} from "../../../../../src/experimental/features";
+import { METAPLAYLIST, MULTI_THREAD } from "../../../../../src/experimental/features";
 import RxPlayer from "../../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
-  DASH_LOADER
+  DASH_LOADER,
 } from "../../../../../src/experimental/tools/VideoThumbnailLoader";
 import CatchUpModeController from "./catchUp";
 import { declareModule } from "../../lib/declareModule";
@@ -42,7 +39,7 @@ import type {
   IVideoRepresentationsSwitchingMode,
   ITextTrack,
   IVideoRepresentation,
-  IVideoTrack
+  IVideoTrack,
 } from "../../../../../src/public_types";
 
 RxPlayer.addFeatures([
@@ -68,29 +65,28 @@ declare const __INCLUDE_WASM_PARSER__: boolean;
 
 /* eslint-disable no-undef */
 if (__INCLUDE_WASM_PARSER__) {
-/* eslint-enable no-undef */
+  /* eslint-enable no-undef */
   RxPlayer.addFeatures([DASH_WASM]);
-  DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" })
-    .catch((err) => {
-      /* eslint-disable-next-line no-console */
-      console.error("Error when initializing WASM DASH MPD parser:", err);
-    });
+  DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" }).catch((err) => {
+    /* eslint-disable-next-line no-console */
+    console.error("Error when initializing WASM DASH MPD parser:", err);
+  });
 }
 
 VideoThumbnailLoader.addLoader(DASH_LOADER);
 
 export interface IBifThumbnail {
-  index : number;
-  duration : number;
-  ts : number;
-  data : Uint8Array;
+  index: number;
+  duration: number;
+  ts: number;
+  data: Uint8Array;
 }
 
 export interface IBufferedData {
   start: number;
   end: number;
-  bufferedStart: number|undefined;
-  bufferedEnd: number|undefined;
+  bufferedStart: number | undefined;
+  bufferedEnd: number | undefined;
   infos: {
     adaptation: {
       id: string;
@@ -112,7 +108,6 @@ export interface IPlayerModuleState {
   availableVideoTracks: IAvailableVideoTrack[];
   bufferGap: number;
   bufferedData: null | {
-
     audio: IBufferedData[] | null;
     video: IBufferedData[] | null;
     text: IBufferedData[] | null;
@@ -218,16 +213,16 @@ const PlayerModule = declareModule(
   }),
   (
     initOpts: IConstructorOptions & {
-      textTrackElement? : HTMLElement,
-      debugElement : HTMLElement,
+      textTrackElement?: HTMLElement;
+      debugElement: HTMLElement;
     },
     state,
-    abortSignal
+    abortSignal,
   ) => {
     let hasAttachedMultithread = false;
     const { debugElement, textTrackElement, ...constructorOpts } = initOpts;
     const player = new RxPlayer(constructorOpts);
-    let debugEltInstance : { dispose(): void } | undefined;
+    let debugEltInstance: { dispose(): void } | undefined;
 
     // facilitate DEV mode
     /* eslint-disable */
@@ -256,7 +251,7 @@ const PlayerModule = declareModule(
         const thumbnailVideoElement = document.createElement("video");
         const videoThumbnailLoader = new VideoThumbnailLoader(
           thumbnailVideoElement,
-          player
+          player,
         );
         state.updateBulk({
           videoThumbnailLoader,
@@ -281,11 +276,16 @@ const PlayerModule = declareModule(
 
       load(arg: ILoadVideoOptions) {
         dettachVideoThumbnailLoader();
-        player.loadVideo(Object.assign({
-          mode: state.get("relyOnWorker") ? "auto" : "main",
-          textTrackElement,
-          transportOptions: { checkMediaSegmentIntegrity: true },
-        }, arg) as ILoadVideoOptions);
+        player.loadVideo(
+          Object.assign(
+            {
+              mode: state.get("relyOnWorker") ? "auto" : "main",
+              textTrackElement,
+              transportOptions: { checkMediaSegmentIntegrity: true },
+            },
+            arg,
+          ) as ILoadVideoOptions,
+        );
         const newState: Partial<IPlayerModuleState> = {
           loadedVideo: arg,
           lowLatencyMode: arg.lowLatencyMode === true,
@@ -333,27 +333,25 @@ const PlayerModule = declareModule(
       },
 
       setDefaultVideoRepresentationSwitchingMode(
-        mode: IVideoRepresentationsSwitchingMode
+        mode: IVideoRepresentationsSwitchingMode,
       ): void {
         state.update("defaultVideoRepresentationsSwitchingMode", mode);
       },
 
       setDefaultAudioRepresentationSwitchingMode(
-        mode: IAudioRepresentationsSwitchingMode
+        mode: IAudioRepresentationsSwitchingMode,
       ): void {
         state.update("defaultAudioRepresentationsSwitchingMode", mode);
       },
 
       lockVideoRepresentations(reps: IVideoRepresentation[]) {
         player.lockVideoRepresentations({
-          representations: reps.map(r => r.id),
-          switchingMode: state.get(
-            "defaultVideoRepresentationsSwitchingMode"
-          ),
+          representations: reps.map((r) => r.id),
+          switchingMode: state.get("defaultVideoRepresentationsSwitchingMode"),
         });
         state.update(
           "videoRepresentationsLocked",
-          player.getLockedVideoRepresentations() !== null
+          player.getLockedVideoRepresentations() !== null,
         );
       },
 
@@ -361,20 +359,18 @@ const PlayerModule = declareModule(
         player.unlockVideoRepresentations();
         state.update(
           "videoRepresentationsLocked",
-          player.getLockedVideoRepresentations() !== null
+          player.getLockedVideoRepresentations() !== null,
         );
       },
 
       lockAudioRepresentations(reps: IAudioRepresentation[]) {
         player.lockAudioRepresentations({
-          representations: reps.map(r => String(r.id)),
-          switchingMode: state.get(
-            "defaultAudioRepresentationsSwitchingMode"
-          ),
+          representations: reps.map((r) => String(r.id)),
+          switchingMode: state.get("defaultAudioRepresentationsSwitchingMode"),
         });
         state.update(
           "audioRepresentationsLocked",
-          player.getLockedAudioRepresentations() !== null
+          player.getLockedAudioRepresentations() !== null,
         );
       },
 
@@ -382,7 +378,7 @@ const PlayerModule = declareModule(
         player.unlockAudioRepresentations();
         state.update(
           "audioRepresentationsLocked",
-          player.getLockedAudioRepresentations() !== null
+          player.getLockedAudioRepresentations() !== null,
         );
       },
 
@@ -433,7 +429,7 @@ const PlayerModule = declareModule(
       },
       isDebugElementShown() {
         return debugEltInstance !== undefined;
-      }
+      },
     };
 
     function dettachVideoThumbnailLoader() {
@@ -451,10 +447,10 @@ const PlayerModule = declareModule(
       hasAttachedMultithread = true;
       player.attachWorker({
         workerUrl: "./worker.js",
-        dashWasmUrl : "./mpd-parser.wasm",
+        dashWasmUrl: "./mpd-parser.wasm",
       });
     }
-  }
+  },
 );
 
 export type IPlayerModule = InstanceType<typeof PlayerModule>;

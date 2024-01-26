@@ -15,9 +15,7 @@
  */
 
 import type { ICdnMetadata } from "../../parsers/manifest";
-import request, {
-  fetchIsSupported,
-} from "../../utils/request";
+import request, { fetchIsSupported } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import warnOnce from "../../utils/warn_once";
 import type {
@@ -42,13 +40,16 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  * @param {boolean} lowLatencyMode
  * @returns {Function}
  */
-export default function generateTextTrackLoader(
-  { lowLatencyMode,
-    checkMediaSegmentIntegrity } : { lowLatencyMode: boolean;
-                                     checkMediaSegmentIntegrity? : boolean | undefined; }
-) : ISegmentLoader<Uint8Array | ArrayBuffer | string | null> {
-  return checkMediaSegmentIntegrity !== true ? textTrackLoader :
-                                               addSegmentIntegrityChecks(textTrackLoader);
+export default function generateTextTrackLoader({
+  lowLatencyMode,
+  checkMediaSegmentIntegrity,
+}: {
+  lowLatencyMode: boolean;
+  checkMediaSegmentIntegrity?: boolean | undefined;
+}): ISegmentLoader<Uint8Array | ArrayBuffer | string | null> {
+  return checkMediaSegmentIntegrity !== true
+    ? textTrackLoader
+    : addSegmentIntegrityChecks(textTrackLoader);
 
   /**
    * @param {Object|null} wantedCdn
@@ -59,22 +60,25 @@ export default function generateTextTrackLoader(
    * @returns {Promise}
    */
   function textTrackLoader(
-    wantedCdn : ICdnMetadata | null,
-    context : ISegmentContext,
-    options : ISegmentLoaderOptions,
-    cancelSignal : CancellationSignal,
-    callbacks : ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>
-  ) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat> |
-              ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat> |
-              ISegmentLoaderResultChunkedComplete>
-  {
+    wantedCdn: ICdnMetadata | null,
+    context: ISegmentContext,
+    options: ISegmentLoaderOptions,
+    cancelSignal: CancellationSignal,
+    callbacks: ISegmentLoaderCallbacks<ILoadedTextSegmentFormat>,
+  ): Promise<
+    | ISegmentLoaderResultSegmentLoaded<ILoadedTextSegmentFormat>
+    | ISegmentLoaderResultSegmentCreated<ILoadedTextSegmentFormat>
+    | ISegmentLoaderResultChunkedComplete
+  > {
     const { segment } = context;
     const { range } = segment;
 
     const url = constructSegmentUrl(wantedCdn, segment);
     if (url === null) {
-      return Promise.resolve({ resultType: "segment-created",
-                               resultData: null });
+      return Promise.resolve({
+        resultType: "segment-created",
+        resultData: null,
+      });
     }
 
     if (segment.isInit) {
@@ -87,36 +91,33 @@ export default function generateTextTrackLoader(
       if (fetchIsSupported()) {
         return lowLatencySegmentLoader(url, context, options, callbacks, cancelSignal);
       } else {
-        warnOnce("DASH: Your browser does not have the fetch API. You will have " +
-                 "a higher chance of rebuffering when playing close to the live edge");
+        warnOnce(
+          "DASH: Your browser does not have the fetch API. You will have " +
+            "a higher chance of rebuffering when playing close to the live edge",
+        );
       }
     }
 
     if (seemsToBeMP4) {
-      return request({ url,
-                       responseType: "arraybuffer",
-                       headers: Array.isArray(range) ?
-                         { Range: byteRange(range) } :
-                         null,
-                       timeout: options.timeout,
-                       connectionTimeout: options.connectionTimeout,
-                       onProgress: callbacks.onProgress,
-                       cancelSignal })
-        .then((data) => ({ resultType: "segment-loaded",
-                           resultData: data }));
+      return request({
+        url,
+        responseType: "arraybuffer",
+        headers: Array.isArray(range) ? { Range: byteRange(range) } : null,
+        timeout: options.timeout,
+        connectionTimeout: options.connectionTimeout,
+        onProgress: callbacks.onProgress,
+        cancelSignal,
+      }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
     }
 
-    return request({ url,
-                     responseType: "text",
-                     headers: Array.isArray(range) ?
-                       { Range: byteRange(range) } :
-                       null,
-                     timeout: options.timeout,
-                     connectionTimeout: options.connectionTimeout,
-                     onProgress: callbacks.onProgress,
-                     cancelSignal })
-      .then((data) => ({ resultType: "segment-loaded",
-                         resultData: data }));
-
+    return request({
+      url,
+      responseType: "text",
+      headers: Array.isArray(range) ? { Range: byteRange(range) } : null,
+      timeout: options.timeout,
+      connectionTimeout: options.connectionTimeout,
+      onProgress: callbacks.onProgress,
+      cancelSignal,
+    }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
   }
 }

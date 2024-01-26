@@ -16,10 +16,7 @@
 
 import log from "../../../log";
 import assert from "../../../utils/assert";
-import {
-  be4toi,
-  be8toi,
-} from "../../../utils/byte_parsing";
+import { be4toi, be8toi } from "../../../utils/byte_parsing";
 
 /**
  * From a given buffer representing ISOBMFF data, browses inner boxes in
@@ -29,10 +26,7 @@ import {
  * @param {number[]} childNames
  * @returns {Uint8Array|null}
  */
-function getChildBox(
-  buf : Uint8Array,
-  childNames : number[]
-) : Uint8Array | null {
+function getChildBox(buf: Uint8Array, childNames: number[]): Uint8Array | null {
   let currBox = buf;
   for (const childName of childNames) {
     const box = getBoxContent(currBox, childName);
@@ -52,10 +46,9 @@ function getChildBox(
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
-function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
+function getBoxContent(buf: Uint8Array, boxName: number): Uint8Array | null {
   const offsets = getBoxOffsets(buf, boxName);
-  return offsets !== null ? buf.subarray(offsets[1], offsets[2]) :
-                            null;
+  return offsets !== null ? buf.subarray(offsets[1], offsets[2]) : null;
 }
 
 /**
@@ -66,7 +59,7 @@ function getBoxContent(buf : Uint8Array, boxName : number) : Uint8Array|null {
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {Array.<Uint8Array>}
  */
-function getBoxesContent(buf : Uint8Array, boxName : number) : Uint8Array[] {
+function getBoxesContent(buf: Uint8Array, boxName: number): Uint8Array[] {
   const ret = [];
   let currentBuf = buf;
   while (true) {
@@ -91,10 +84,9 @@ function getBoxesContent(buf : Uint8Array, boxName : number) : Uint8Array[] {
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
-function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
+function getBox(buf: Uint8Array, boxName: number): Uint8Array | null {
   const offsets = getBoxOffsets(buf, boxName);
-  return offsets !== null ? buf.subarray(offsets[0], offsets[2]) :
-                            null;
+  return offsets !== null ? buf.subarray(offsets[0], offsets[2]) : null;
 }
 
 /**
@@ -115,17 +107,20 @@ function getBox(buf : Uint8Array, boxName : number) : Uint8Array|null {
  * @returns {Array.<number>|null}
  */
 function getBoxOffsets(
-  buf : Uint8Array,
-  boxName : number
-) : [ number /* start byte */,
+  buf: Uint8Array,
+  boxName: number,
+):
+  | [
+      number /* start byte */,
       number /* First byte after the size and name (where the content begins)*/,
-      number /* end byte, not included. */] |
-    null {
+      number /* end byte, not included. */,
+    ]
+  | null {
   const len = buf.length;
 
   let boxBaseOffset = 0;
-  let name : number;
-  let lastBoxSize : number = 0;
+  let name: number;
+  let lastBoxSize: number = 0;
   let lastOffset;
   while (boxBaseOffset + 8 <= len) {
     lastOffset = boxBaseOffset;
@@ -149,7 +144,7 @@ function getBoxOffsets(
       throw new Error("ISOBMFF: Size out of range");
     }
     if (name === boxName) {
-      if (boxName  === 0x75756964 /* === "uuid" */) {
+      if (boxName === 0x75756964 /* === "uuid" */) {
         lastOffset += 16; // Skip uuid name
       }
       return [boxBaseOffset, lastOffset, boxBaseOffset + lastBoxSize];
@@ -174,15 +169,15 @@ function getBoxOffsets(
  * @returns {Uint8Array|undefined}
  */
 function getUuidContent(
-  buf : Uint8Array,
-  id1 : number,
-  id2 : number,
-  id3 : number,
-  id4 : number
-) : Uint8Array | undefined {
+  buf: Uint8Array,
+  id1: number,
+  id2: number,
+  id3: number,
+  id4: number,
+): Uint8Array | undefined {
   const len = buf.length;
 
-  let boxSize : number;
+  let boxSize: number;
   for (let boxBaseOffset = 0; boxBaseOffset < len; boxBaseOffset += boxSize) {
     let currentOffset = boxBaseOffset;
     boxSize = be4toi(buf, currentOffset);
@@ -202,7 +197,7 @@ function getUuidContent(
     }
 
     if (
-      boxName  === 0x75756964 /* === "uuid" */ &&
+      boxName === 0x75756964 /* === "uuid" */ &&
       currentOffset + 16 <= len &&
       be4toi(buf, currentOffset) === id1 &&
       be4toi(buf, currentOffset + 4) === id2 &&
@@ -229,12 +224,15 @@ function getUuidContent(
  * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
  * generated from encoding the corresponding ASCII in big endian.
  */
-function getNextBoxOffsets(buf : Uint8Array
-
-) : [ 0 /* start byte */,
+function getNextBoxOffsets(
+  buf: Uint8Array,
+):
+  | [
+      0 /* start byte */,
       number /* First byte after the size and name (where the content begins)*/,
-      number /* end byte, not included. */] |
-    null {
+      number /* end byte, not included. */,
+    ]
+  | null {
   const len = buf.length;
   if (len < 8) {
     log.warn("ISOBMFF: box inferior to 8 bytes, cannot find offsets");
@@ -261,7 +259,7 @@ function getNextBoxOffsets(buf : Uint8Array
   if (boxSize < 0) {
     throw new Error("ISOBMFF: Size out of range");
   }
-  if (name  === 0x75756964 /* === "uuid" */) {
+  if (name === 0x75756964 /* === "uuid" */) {
     lastOffset += 16; // Skip uuid name
   }
   return [0, lastOffset, boxSize];

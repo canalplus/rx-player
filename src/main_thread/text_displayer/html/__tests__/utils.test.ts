@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  IHTMLCue } from "../utils";
+import type { IHTMLCue } from "../utils";
 import {
   areNearlyEqual,
   getCuesAfter,
@@ -32,9 +31,7 @@ describe("HTML Text buffer utils - getCuesBefore", () => {
       { start: 2, end: 3, element },
     ];
 
-    expect(getCuesBefore(cues, 1)).toEqual([
-      { start: 0, end: 1, element },
-    ]);
+    expect(getCuesBefore(cues, 1)).toEqual([{ start: 0, end: 1, element }]);
   });
 
   it("should get the right cues when time is between start and end of a cue", () => {
@@ -174,9 +171,7 @@ describe("HTML Text buffer utils - getCuesAfter", () => {
       { start: 3, end: 4, element },
     ];
 
-    expect(getCuesAfter(cues, 3)).toEqual([
-      { start: 3, end: 4, element },
-    ]);
+    expect(getCuesAfter(cues, 3)).toEqual([{ start: 3, end: 4, element }]);
   });
 
   it("should get the right cues when time is before the start of all cues", () => {
@@ -239,9 +234,7 @@ describe("HTML Text buffer utils - getCuesAfter", () => {
       { start: 4, end: 5, element },
     ];
 
-    expect(getCuesAfter(cues, 3.5)).toEqual([
-      { start: 4, end: 5, element },
-    ]);
+    expect(getCuesAfter(cues, 3.5)).toEqual([{ start: 4, end: 5, element }]);
   });
 
   it("should return an empty array when no cues are given", () => {
@@ -262,35 +255,29 @@ describe("HTML Text buffer utils - areNearlyEqual", () => {
   it("should return true if input number are equals", () => {
     expect(areNearlyEqual(5, 5)).toBe(true);
   });
-  it(
-    "should return false if input number are not nearly equals with delta parameter",
-    () => {
-      expect(areNearlyEqual(5, 5.1, 0.02)).toBe(false);
-    });
-  it(
-    "should return true if input number are nearly equals with delta parameter",
-    () => {
-      expect(areNearlyEqual(5, 5.01, 0.02)).toBe(true);
-    });
-  it(
-    "should return true if input number are equals with delta parameter",
-    () => {
-      expect(areNearlyEqual(5, 5, 0.02)).toBe(true);
-    });
+  it("should return false if input number are not nearly equals with delta parameter", () => {
+    expect(areNearlyEqual(5, 5.1, 0.02)).toBe(false);
+  });
+  it("should return true if input number are nearly equals with delta parameter", () => {
+    expect(areNearlyEqual(5, 5.01, 0.02)).toBe(true);
+  });
+  it("should return true if input number are equals with delta parameter", () => {
+    expect(areNearlyEqual(5, 5, 0.02)).toBe(true);
+  });
 });
 
 describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
   it("should remove cues infos between end of a cue and start of another cue", () => {
     const element = document.createElement("div");
-    const cues = [ { start: 1, end: 2, element },
-                   { start: 2, end: 3, element },
-                   { start: 3, end: 4, element },
-                   { start: 4, end: 5, element },
-                   { start: 5, end: 6, element } ];
+    const cues = [
+      { start: 1, end: 2, element },
+      { start: 2, end: 3, element },
+      { start: 3, end: 4, element },
+      { start: 4, end: 5, element },
+      { start: 5, end: 6, element },
+    ];
 
-    const cueInfo = { start: 1,
-                      end: 6,
-                      cues };
+    const cueInfo = { start: 1, end: 6, cues };
 
     expect(removeCuesInfosBetween(cueInfo, 2, 5)).toEqual([
       { cues: [{ start: 1, end: 2, element }], start: 1, end: 2 },
@@ -308,19 +295,25 @@ describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
       { start: 5, end: 6, element },
     ];
 
-    const cueInfo = { start: 1,
-                      end: 6,
-                      cues };
+    const cueInfo = { start: 1, end: 6, cues };
 
     expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
-      { cues: [ { start: 1, end: 2, element },
-                { start: 2, end: 3, element } ],
+      {
+        cues: [
+          { start: 1, end: 2, element },
+          { start: 2, end: 3, element },
+        ],
         start: 1,
-        end: 2.5 },
-      { cues: [ { start: 4, end: 5, element },
-                { start: 5, end: 6, element } ],
+        end: 2.5,
+      },
+      {
+        cues: [
+          { start: 4, end: 5, element },
+          { start: 5, end: 6, element },
+        ],
         start: 4.5,
-        end: 6 },
+        end: 6,
+      },
     ]);
   });
 
@@ -332,9 +325,7 @@ describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
       { start: 5, end: 6, element },
     ];
 
-    const cueInfo = { start: 1,
-                      end: 6,
-                      cues };
+    const cueInfo = { start: 1, end: 6, cues };
 
     expect(removeCuesInfosBetween(cueInfo, 2.5, 4.5)).toEqual([
       { cues: [{ start: 1, end: 2, element }], start: 1, end: 2.5 },

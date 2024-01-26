@@ -6,18 +6,19 @@ All track preferences API have been removed in profit of a now more flexible
 track switching API which should allow to perform the same logic and more.
 
 This means that the following methods are all removed:
-  - `setPreferredAudioTracks`
-  - `setPreferredTextTracks`
-  - `setPreferredVideoTracks`
-  - `getPreferredAudioTracks`
-  - `getPreferredTextTracks`
-  - `getPreferredVideoTracks`
+
+- `setPreferredAudioTracks`
+- `setPreferredTextTracks`
+- `setPreferredVideoTracks`
+- `getPreferredAudioTracks`
+- `getPreferredTextTracks`
+- `getPreferredVideoTracks`
 
 As well as the following constructor options:
-  - `preferredAudioTracks`
-  - `preferredTextTracks`
-  - `preferredVideoTracks`
 
+- `preferredAudioTracks`
+- `preferredTextTracks`
+- `preferredVideoTracks`
 
 ## Why was those removed?
 
@@ -28,7 +29,6 @@ even more customizability.
 Keeping both the preferences API and the new enhanced track switching API could
 have brought confusion in how they would interact, we have thus taken the choice
 of removing the preferences API altogether.
-
 
 ## How to replace them
 
@@ -48,6 +48,7 @@ two periods, each with its own selected track.
 To know the list of periods currently considered by the RxPlayer, you can now call
 the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
 RxPlayer method:
+
 ```js
 const periods = rxPlayer.getAvailablePeriods();
 ```
@@ -56,6 +57,7 @@ To be notified when new Periods are being considered by the RxPlayer, you can
 react to the new
 [`newAvailablePeriods`](../../api/Player_Events.md#newavailableperiods) RxPlayer
 event:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   // Do things with those periods
@@ -69,68 +71,76 @@ elements linked to the current content, whether that Period already have been
 played, are playing or will be played, the following track setting methods can
 now receive the concerned period's `id` property as argument.
 
-  - [`getAudioTrack`](../../api/Track_Selection/getAudioTrack.md):
+- [`getAudioTrack`](../../api/Track_Selection/getAudioTrack.md):
 
-    For example, to get the audio track currently set for some `period` Period,
-    object returned by either `getAvailablePeriods` or the `newAvailablePeriods`
-    event, you can do:
-    ```js
-    const audioTrackForPeriod = rxPlayer.getAudioTrack(period.id);
-    ```
+  For example, to get the audio track currently set for some `period` Period,
+  object returned by either `getAvailablePeriods` or the `newAvailablePeriods`
+  event, you can do:
 
-  - [`getTextTrack`](../../api/Track_Selection/getTextTrack.md):
-    ```js
-    const textTrackForPeriod = rxPlayer.getTextTrack(period.id);
-    ```
+  ```js
+  const audioTrackForPeriod = rxPlayer.getAudioTrack(period.id);
+  ```
 
-  - [`getVideoTrack`](../../api/Track_Selection/getVideoTrack.md):
-    ```js
-    const videoTrackForPeriod = rxPlayer.getVideoTrack(period.id);
-    ```
+- [`getTextTrack`](../../api/Track_Selection/getTextTrack.md):
 
-  - [`getAvailableAudioTracks`](../../api/Track_Selection/getAvailableAudioTracks.md):
+  ```js
+  const textTrackForPeriod = rxPlayer.getTextTrack(period.id);
+  ```
 
-    For example, to get the list of available audio tracks for a Period `period`:
-    ```js
-    const allAudioTracksForPeriod = rxPlayer.getAvailableAudioTracks(period.id);
-    ```
+- [`getVideoTrack`](../../api/Track_Selection/getVideoTrack.md):
 
-  - [`getAvailableTextTracks`](../../api/Track_Selection/getAvailableTextTracks.md):
-    ```js
-    const allTextTracksForPeriod = rxPlayer.getAvailableTextTracks(period.id);
-    ```
+  ```js
+  const videoTrackForPeriod = rxPlayer.getVideoTrack(period.id);
+  ```
 
-  - [`getAvailableVideoTracks`](../../api/Track_Selection/getAvailableVideoTracks.md):
-    ```js
-    const allVideoTracksForPeriod = rxPlayer.getAvailableVideoTracks(period.id);
-    ```
+- [`getAvailableAudioTracks`](../../api/Track_Selection/getAvailableAudioTracks.md):
 
-  - [`setAudioTrack`](../../api/Track_Selection/setAudioTrack.md):
+  For example, to get the list of available audio tracks for a Period `period`:
 
-    For example, to set the audio track of some `period` element returned by
-    either `getAvailablePeriods` or the `newAvailablePeriods` event, you can do:
-    ```js
-    rxPlayer.setAudioTrack({
-      trackId: wantedAudioTrack.id,
-      periodId: period.id,
-    });
-    ```
+  ```js
+  const allAudioTracksForPeriod = rxPlayer.getAvailableAudioTracks(period.id);
+  ```
 
-  - [`setTextTrack`](../../api/Track_Selection/setTextTrack.md):
-    ```js
-    rxPlayer.setTextTrack({
-      trackId: wantedTextTrack.id,
-      periodId: period.id,
-    });
-    ```
+- [`getAvailableTextTracks`](../../api/Track_Selection/getAvailableTextTracks.md):
 
-  - [`setVideoTrack`](../../api/Track_Selection/setVideoTrack.md):
-    ```js
-    rxPlayer.setVideoTrack({
-      trackId: wantedVideoTrack.id,
-      periodId: period.id,
-    });
-    ```
+  ```js
+  const allTextTracksForPeriod = rxPlayer.getAvailableTextTracks(period.id);
+  ```
+
+- [`getAvailableVideoTracks`](../../api/Track_Selection/getAvailableVideoTracks.md):
+
+  ```js
+  const allVideoTracksForPeriod = rxPlayer.getAvailableVideoTracks(period.id);
+  ```
+
+- [`setAudioTrack`](../../api/Track_Selection/setAudioTrack.md):
+
+  For example, to set the audio track of some `period` element returned by
+  either `getAvailablePeriods` or the `newAvailablePeriods` event, you can do:
+
+  ```js
+  rxPlayer.setAudioTrack({
+    trackId: wantedAudioTrack.id,
+    periodId: period.id,
+  });
+  ```
+
+- [`setTextTrack`](../../api/Track_Selection/setTextTrack.md):
+
+  ```js
+  rxPlayer.setTextTrack({
+    trackId: wantedTextTrack.id,
+    periodId: period.id,
+  });
+  ```
+
+- [`setVideoTrack`](../../api/Track_Selection/setVideoTrack.md):
+  ```js
+  rxPlayer.setVideoTrack({
+    trackId: wantedVideoTrack.id,
+    periodId: period.id,
+  });
+  ```
 
 ### Simple example
 
@@ -139,6 +149,7 @@ the current tracks on new Periods as they start being considered by the
 RxPlayer, setting the more adapted one each time.
 
 This can be done by reacting to the `newAvailablePeriods` event, like this:
+
 ```js
 // Example: selecting the english audio track by default for all future contents
 
@@ -157,10 +168,7 @@ function applyAudioTrackPreferences(period) {
   // Getting the tracks available in that Period, through its id
   const audioTracks = rxPlayer.getAvailableAudioTracks(period.id);
   for (const audioTrack of audioTracks) {
-    if (
-      audioTrack.normalized === "eng" &&
-      audioTrack.audioDescription !== true
-    ) {
+    if (audioTrack.normalized === "eng" && audioTrack.audioDescription !== true) {
       // Setting the audio track for that Period
       rxPlayer.setAudioTrack({
         trackId: audioTrack.id,
@@ -177,11 +185,12 @@ also want to apply the preference retroactively to the currently loaded Periods.
 If that is the case, you can also get the list of currently-considered Periods
 through the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
 method and also select a track for those:
+
 ```js
-  const currentPeriods = rxPlayer.getAvailablePeriods();
-  for (const period of currentPeriods) {
-    applyAudioTrackPreferences(period);
-  }
+const currentPeriods = rxPlayer.getAvailablePeriods();
+for (const period of currentPeriods) {
+  applyAudioTrackPreferences(period);
+}
 ```
 
 If you want to be thorough, you may also want to re-apply preferences in the
@@ -192,6 +201,7 @@ a [`trackUpdate`](../../api/Player_Events.md#trackupdate) event in that case
 with a `reason` property set to `"missing"`.
 
 Here is how you could handle this:
+
 ```js
 rxPlayer.addEventListener("trackUpdate", (evt) => {
   if (evt.reason === "missing" && evt.trackType === "audio") {
@@ -215,6 +225,7 @@ the more powerful API.
 
 Here's how a complete `applyAudioTrackPreferences` function, applying the audio
 preferences array from the v3.x.x on a specific Period, would be implemented:
+
 ```js
 /**
  * For the given Period (or the current one if `period` is not indicated),
@@ -227,18 +238,13 @@ preferences array from the v3.x.x on a specific Period, would be implemented:
  * format of the RxPlayer v3 API
  */
 function applyAudioTrackPreferences(period, preferencesArray) {
-  const availableAudioTracks = rxPlayer.getAvailableAudioTracks(
-    period?.id,
-  );
-  const optimalTrack = findFirstOptimalAudioTrack(
-    availableAudioTracks,
-    preferencesArray
-  );
+  const availableAudioTracks = rxPlayer.getAvailableAudioTracks(period?.id);
+  const optimalTrack = findFirstOptimalAudioTrack(availableAudioTracks, preferencesArray);
   if (optimalTrack === null) {
     console.warn(
       "It's not possible for now to disable the audio track. " +
-      "Keeping the default one instead."
-      );
+        "Keeping the default one instead.",
+    );
   } else {
     rxPlayer.setAudioTrack({
       trackId: optimalTrack.id,
@@ -257,10 +263,7 @@ function applyAudioTrackPreferences(period, preferencesArray) {
  * format of the RxPlayer v3 API
  * @returns {Object|null}
  */
-function findFirstOptimalAudioTrack(
-  audioTracks,
-  preferredAudioTracks
-) {
+function findFirstOptimalAudioTrack(audioTracks, preferredAudioTracks) {
   if (audioTracks.length === 0) {
     return null;
   }
@@ -271,8 +274,7 @@ function findFirstOptimalAudioTrack(
       return null;
     }
 
-    const matchPreferredAudio =
-      createAudioPreferenceMatcher(preferredAudioTrack);
+    const matchPreferredAudio = createAudioPreferenceMatcher(preferredAudioTrack);
     const foundTrack = audioTracks.find(matchPreferredAudio);
 
     if (foundTrack !== undefined) {
@@ -305,7 +307,7 @@ function createAudioPreferenceMatcher(preferredAudioTrack) {
    */
   return function matchAudioPreference(audioTrack) {
     if (preferredAudioTrack.language !== undefined) {
-      const language = audioTrack.language ?? '';
+      const language = audioTrack.language ?? "";
       if (language !== preferredAudioTrack.language) {
         return false;
       }
@@ -323,8 +325,7 @@ function createAudioPreferenceMatcher(preferredAudioTrack) {
       return true;
     }
     const regxp = preferredAudioTrack.codec.test;
-    const codecTestingFn = (rep) =>
-      rep.codec !== undefined && regxp.test(rep.codec);
+    const codecTestingFn = (rep) => rep.codec !== undefined && regxp.test(rep.codec);
 
     if (preferredAudioTrack.codec.all) {
       return audioTrack.representations.every(codecTestingFn);
@@ -337,6 +338,7 @@ function createAudioPreferenceMatcher(preferredAudioTrack) {
 Like seen in the `How to replace then` chapter, you can trigger that logic for
 all futures track choices by listening to `newAvailablePeriods` and to
 `trackUpdate` events:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   // Apply preferences each time a new Period is available
@@ -356,11 +358,12 @@ rxPlayer.addEventListener("trackUpdate", (evt) => {
 
 And if you also want to apply it to the Periods currently considered by the
 RxPlayer:
+
 ```js
-  const currentPeriods = rxPlayer.getAvailablePeriods();
-  for (const period of currentPeriods) {
-    applyAudioTrackPreferences(period);
-  }
+const currentPeriods = rxPlayer.getAvailablePeriods();
+for (const period of currentPeriods) {
+  applyAudioTrackPreferences(period);
+}
 ```
 
 ## Full example for text preferences replacement
@@ -381,13 +384,8 @@ implemented:
  * format of the RxPlayer v3 API
  */
 function applyTextTrackPreferences(period, preferencesArray) {
-  const availableTextTracks = rxPlayer.getAvailableTextTracks(
-    period?.id,
-  );
-  const optimalTrack = findFirstOptimalTextTrack(
-    availableTextTracks,
-    preferencesArray
-  );
+  const availableTextTracks = rxPlayer.getAvailableTextTracks(period?.id);
+  const optimalTrack = findFirstOptimalTextTrack(availableTextTracks, preferencesArray);
   if (optimalTrack === null) {
     rxPlayer.disableTextTrack(period?.id);
   } else {
@@ -407,10 +405,7 @@ function applyTextTrackPreferences(period, preferencesArray) {
  * @param {Array.<Object|null>} preferredTextTracks
  * @returns {Object|null}
  */
-function findFirstOptimalTextTrack(
-  textTracks,
-  preferredTextTracks
-) {
+function findFirstOptimalTextTrack(textTracks, preferredTextTracks) {
   if (textTracks.length === 0) {
     return null;
   }
@@ -459,9 +454,7 @@ function createTextPreferenceMatcher(preferredTextTrack) {
       (preferredTextTrack.closedCaption
         ? textTrack.closedCaption === true
         : textTrack.closedCaption !== true) &&
-      (preferredTextTrack.forced
-        ? textTrack.forced === true
-        : textTrack.forced !== true)
+      (preferredTextTrack.forced ? textTrack.forced === true : textTrack.forced !== true)
     );
   };
 }
@@ -470,6 +463,7 @@ function createTextPreferenceMatcher(preferredTextTrack) {
 Like seen in the `How to replace then` chapter, you can trigger that logic for
 all futures track choices by listening to `newAvailablePeriods` and to
 `trackUpdate` events:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   // Apply preferences each time a new Period is available
@@ -488,11 +482,12 @@ rxPlayer.addEventListener("trackUpdate", (evt) => {
 ```
 
 And if you also want to apply it to the Periods currently considered by the RxPlayer:
+
 ```js
-  const currentPeriods = rxPlayer.getAvailablePeriods();
-  for (const period of currentPeriods) {
-    applyTextTrackPreferences(period);
-  }
+const currentPeriods = rxPlayer.getAvailablePeriods();
+for (const period of currentPeriods) {
+  applyTextTrackPreferences(period);
+}
 ```
 
 ## Full example for video preferences replacement
@@ -500,6 +495,7 @@ And if you also want to apply it to the Periods currently considered by the RxPl
 As for video tracks, an `applyVideoTrackPreferences` function, applying the
 video preferences array from the v3.x.x on a specific Period, could be
 implemented this way:
+
 ```js
 /**
  * For the given Period (or the current one if `period` is not indicated),
@@ -512,13 +508,8 @@ implemented this way:
  * format of the RxPlayer v3 API
  */
 function applyVideoTrackPreferences(period, preferencesArray) {
-  const availableVideoTracks = rxPlayer.getAvailableVideoTracks(
-    period?.id,
-  );
-  const optimalTrack = findFirstOptimalVideoTrack(
-    availableVideoTracks,
-    preferencesArray
-  );
+  const availableVideoTracks = rxPlayer.getAvailableVideoTracks(period?.id);
+  const optimalTrack = findFirstOptimalVideoTrack(availableVideoTracks, preferencesArray);
   if (optimalTrack === null) {
     rxPlayer.disableVideoTrack(period?.id);
   } else {
@@ -539,10 +530,7 @@ function applyVideoTrackPreferences(period, preferencesArray) {
  * format of the RxPlayer v3 API
  * @returns {Object|null}
  */
-function findFirstOptimalVideoTrack(
-  videoTracks,
-  preferredVideoTracks
-) {
+function findFirstOptimalVideoTrack(videoTracks, preferredVideoTracks) {
   if (videoTracks.length === 0) {
     return null;
   }
@@ -553,8 +541,7 @@ function findFirstOptimalVideoTrack(
       return null;
     }
 
-    const matchPreferredVideo =
-      createVideoPreferenceMatcher(preferredVideoTrack);
+    const matchPreferredVideo = createVideoPreferenceMatcher(preferredVideoTrack);
     const foundTrack = videoTracks.find(matchPreferredVideo);
 
     if (foundTrack !== undefined) {
@@ -586,17 +573,17 @@ function createVideoPreferenceMatcher(preferredVideoTrack) {
    * @returns {boolean}
    */
   return function matchVideoPreference(videoTrack) {
-    if (preferredVideoTrack.signInterpreted !== undefined &&
-        preferredVideoTrack.signInterpreted !== videoTrack.isSignInterpreted)
-    {
+    if (
+      preferredVideoTrack.signInterpreted !== undefined &&
+      preferredVideoTrack.signInterpreted !== videoTrack.isSignInterpreted
+    ) {
       return false;
     }
     if (preferredVideoTrack.codec === undefined) {
       return true;
     }
     const regxp = preferredVideoTrack.codec.test;
-    const codecTestingFn = (rep) =>
-      rep.codec !== undefined && regxp.test(rep.codec);
+    const codecTestingFn = (rep) => rep.codec !== undefined && regxp.test(rep.codec);
 
     if (preferredVideoTrack.codec.all) {
       return videoTrack.representations.every(codecTestingFn);
@@ -609,6 +596,7 @@ function createVideoPreferenceMatcher(preferredVideoTrack) {
 Like seen in the `How to replace then` chapter, you can trigger that logic for
 all futures track choices by listening to `newAvailablePeriods` and to
 `trackUpdate` events:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   // Apply preferences each time a new Period is available
@@ -627,9 +615,10 @@ rxPlayer.addEventListener("trackUpdate", (evt) => {
 ```
 
 And if you also want to apply it to the Periods currently considered by the RxPlayer:
+
 ```js
-  const currentPeriods = rxPlayer.getAvailablePeriods();
-  for (const period of currentPeriods) {
-    applyVideoTrackPreferences(period);
-  }
+const currentPeriods = rxPlayer.getAvailablePeriods();
+for (const period of currentPeriods) {
+  applyVideoTrackPreferences(period);
+}
 ```

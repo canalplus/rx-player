@@ -24,9 +24,10 @@ generateStandaloneDemo({
   minify: false,
   reportSize: false,
 });
-launchStaticServer(join(projectRootDirectory, "demo/standalone/"),
-                   { certificatePath: join(projectRootDirectory, "localhost.crt"),
-                     keyPath: join(projectRootDirectory, "localhost.key"),
-                     verbose: true,
-                     httpPort: 8001,
-                     httpsPort: 8444 });
+launchStaticServer(join(projectRootDirectory, "demo/standalone/"), {
+  certificatePath: join(projectRootDirectory, "localhost.crt"),
+  keyPath: join(projectRootDirectory, "localhost.key"),
+  verbose: true,
+  httpPort: 8001,
+  httpsPort: 8444,
+});

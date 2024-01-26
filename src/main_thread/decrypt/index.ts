@@ -26,8 +26,4 @@ import getKeySystemConfiguration from "./get_key_system_configuration";
 export * from "./types";
 
 export default ContentDecryptor;
-export {
-  clearOnStop,
-  disposeDecryptionResources,
-  getKeySystemConfiguration,
-};
+export { clearOnStop, disposeDecryptionResources, getKeySystemConfiguration };

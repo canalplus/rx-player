@@ -14,7 +14,7 @@ method can also be called when no content is playing.
 const volume = player.getVolume();
 ```
 
- - **return value** `number`
+- **return value** `number`
 
 ## Example
 

@@ -29,11 +29,13 @@ export function removeFullscreenListener(listener: () => void): void {
  */
 export function isFullscreen(): boolean {
   return !!(
-    document.fullscreenElement ||
-    /* eslint-disable */
-    (document as any).mozFullScreenElement ||
-    (document as any).webkitFullscreenElement ||
-    (document as any).msFullscreenElement
+    (
+      document.fullscreenElement ||
+      /* eslint-disable */
+      (document as any).mozFullScreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).msFullscreenElement
+    )
     /* eslint-enable */
   );
 }
@@ -79,4 +81,3 @@ export function exitFullscreen() {
     /* eslint-enable */
   }
 }
-

@@ -20,4 +20,4 @@ To switch on or off this mode, you can use the `setPlaybackRate` method.
 const areEnabled = player.areTrickModeTracksEnabled();
 ```
 
- - **return value** `boolean`
+- **return value** `boolean`

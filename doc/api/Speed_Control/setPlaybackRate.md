@@ -105,8 +105,8 @@ player.setPlaybackRate(speed);
 player.setPlaybackRate(speed, { preferTrickModeTracks });
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _speed_ `number`: The speed / playback rate you want to set.
-   2. _options_ (optional) `Object|undefined`: Options related to the speed
+  1.  _speed_ `number`: The speed / playback rate you want to set.
+  2.  _options_ (optional) `Object|undefined`: Options related to the speed
       update.
