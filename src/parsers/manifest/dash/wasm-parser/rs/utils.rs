@@ -148,7 +148,7 @@ pub fn parse_iso_8601_duration(value: &[u8]) -> Result<f64> {
 /// Some values in the MPD can be expressed as divisions of integers (e.g. frame
 /// rates).
 /// This function tries to convert it to a floating point value.
-pub fn parse_maybe_division(value : &[u8]) -> Result<f64> {
+pub fn parse_maybe_division(value: &[u8]) -> Result<f64> {
     let mut i = 0;
     while value.len() > i && value[i] == b' ' {
         i += 1;
