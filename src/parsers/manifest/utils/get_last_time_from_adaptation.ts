@@ -39,8 +39,8 @@ export default function getLastPositionFromAdaptation(
       return undefined;
     }
     if (lastPosition !== null) {
-      min = min == null ? lastPosition :
-                          Math.min(min, lastPosition);
+      min = min === null ? lastPosition :
+                           Math.min(min, lastPosition);
     }
   }
   if (min === null) { // It means that all positions were null === no segments (yet?)

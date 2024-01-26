@@ -24,6 +24,7 @@ import type {
 } from "../../../../../../manifest";
 import type { IPlayerError } from "../../../../../../public_types";
 import assert from "../../../../../../utils/assert";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp";
 import type { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
@@ -288,10 +289,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
             isEMSGWhitelisted } = context;
     const timescale = index.timescale ?? 1;
 
-    const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset :
-      0;
-
+    const presentationTimeOffset = index.presentationTimeOffset ?? 0;
     const scaledStart = periodStart * timescale;
     const indexTimeOffset = presentationTimeOffset - scaledStart;
 
@@ -299,9 +297,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._isLastPeriod = isLastPeriod;
-    this._lastUpdate = context.receivedTime == null ?
-                                 getMonotonicTimeStamp() :
-                                 context.receivedTime;
+    this._lastUpdate = context.receivedTime ?? getMonotonicTimeStamp();
 
     this._unsafelyBaseOnPreviousIndex = null;
     if (context.unsafelyBaseOnPreviousRepresentation !== null &&
@@ -351,7 +347,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
                     availabilityTimeOffset: actualAvailabilityTimeOffset,
                     indexRange: index.indexRange,
                     indexTimeOffset,
-                    initialization: index.initialization == null ?
+                    initialization: isNullOrUndefined(index.initialization) ?
                       undefined :
                       {
                         url: initializationUrl,
@@ -785,7 +781,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
     const firstPosition = this._manifestBoundsCalculator
       .getEstimatedMinimumSegmentTime();
-    if (firstPosition == null) {
+    if (isNullOrUndefined(firstPosition)) {
       return; // we don't know yet
     }
     const scaledFirstPosition = toIndexTime(firstPosition, this._index);
@@ -940,7 +936,7 @@ export function isSegmentStillAvailable(
       if (tSegment.range === undefined) {
         return segment.range === undefined;
       }
-      return segment.range != null &&
+      return !isNullOrUndefined(segment.range) &&
              tSegment.range[0] === segment.range[0] &&
              tSegment.range[1] === segment.range[1];
     } else { // tSegment.start < segment.time

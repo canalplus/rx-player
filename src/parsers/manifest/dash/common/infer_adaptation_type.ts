@@ -70,12 +70,12 @@ export default function inferAdaptationType(
     }
     // manage DASH-IF mp4-embedded subtitles and metadata
     if (mimeType === "application/mp4") {
-      if (roles != null) {
+      if (roles !== null) {
         if (
           arrayFind(roles, (role) =>
             role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
             arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
-          ) != null
+          ) !== undefined
         ) {
           return "text";
         }

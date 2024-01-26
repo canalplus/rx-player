@@ -101,9 +101,9 @@ export default class ManifestBoundsCalculator {
    */
   lastPositionIsKnown() : boolean {
     if (this._isDynamic) {
-      return this._positionTime != null && this._lastPosition != null;
+      return this._positionTime !== undefined && this._lastPosition !== undefined;
     }
-    return this._lastPosition != null;
+    return this._lastPosition !== undefined;
   }
 
   /**
