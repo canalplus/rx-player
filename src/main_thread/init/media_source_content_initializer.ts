@@ -27,8 +27,6 @@ import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/utils/create_content_time_boundaries_observer";
 // eslint-disable-next-line max-len
 import DecipherabilityFreezeDetector from "../../core/main/utils/DecipherabilityFreezeDetector";
-// eslint-disable-next-line max-len
-import MainThreadTextInterface from "../../core/main/utils/main_thread_text_displayer_interface";
 import type { ITextDisplayerInterface } from "../../core/segment_sinks";
 import SegmentSinksStore from "../../core/segment_sinks";
 import type {
@@ -79,6 +77,8 @@ import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
+/* eslint-disable-next-line max-len */
+import MainThreadTextDisplayerInterface from "./utils/main_thread_text_displayer_interface";
 import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
@@ -465,7 +465,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       textDisplayer = new features.nativeTextDisplayer(mediaElement);
     }
     if (textDisplayer !== null) {
-      const sender = new MainThreadTextInterface(textDisplayer);
+      const sender = new MainThreadTextDisplayerInterface(textDisplayer);
       textDisplayerInterface = sender;
       cancelSignal.register(() => {
         sender.stop();
