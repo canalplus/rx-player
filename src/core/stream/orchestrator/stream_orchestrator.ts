@@ -17,12 +17,12 @@
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
-import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
 import type {
   IManifest,
   IDecipherabilityUpdateElement,
   IPeriod,
 } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import queueMicrotask from "../../../utils/queue_microtask";
 import type {

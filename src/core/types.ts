@@ -7,7 +7,6 @@ import type {
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
 } from "./fetchers";
-import type { ICorePlaybackObservation } from "./main";
 import type {
   IBufferedChunk,
   IBufferType,
@@ -34,9 +33,6 @@ export type {
   IAdaptiveRepresentationSelectorArguments,
   IABRThrottlers,
   IResolutionInfo,
-
-  // Main
-  ICorePlaybackObservation,
 
   // Fetchers Metadata
   IManifestFetcherSettings,

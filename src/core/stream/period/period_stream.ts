@@ -20,13 +20,9 @@ import {
   MediaError,
 } from "../../../errors";
 import log from "../../../log";
-import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
-import type {
-  IAdaptation,
-  IPeriod } from "../../../manifest";
-import {
-  toTaggedTrack,
-} from "../../../manifest";
+import type { IAdaptation, IPeriod } from "../../../manifest";
+import { toTaggedTrack } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { ITrackType } from "../../../public_types";
 import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";

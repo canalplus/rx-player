@@ -22,6 +22,7 @@
 import { clearElementSrc } from "../../compat";
 import type { MediaError } from "../../errors";
 import log from "../../log";
+import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type {
   IKeySystemOption,
   IPlayerError,
@@ -34,7 +35,6 @@ import type {
 } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
-import type { PlaybackObserver } from "../api";
 import { ContentInitializer } from "./types";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
@@ -91,7 +91,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   public start(
     mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver
+    playbackObserver : IMediaElementPlaybackObserver
   ) : void {
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
@@ -198,7 +198,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   private _seekAndPlay(
     mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver
+    playbackObserver : IMediaElementPlaybackObserver
   ) : void {
     const cancelSignal = this._initCanceller.signal;
     const { autoPlay, startAt } = this._settings;

@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import type { IFreezingStatus, IRebufferingStatus } from "../../../main_thread/types";
+import type { IFreezingStatus, IRebufferingStatus } from "../../../playback_observer";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import type SegmentSinksStore from "../../segment_sinks";
 

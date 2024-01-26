@@ -20,17 +20,13 @@ import type {
   ISerializedOtherError,
 } from "./errors";
 import type { ISerializedSourceBufferError } from "./errors/source_buffer_error";
-import type {
-  IContentProtection,
-  IFreezingStatus,
-  IRebufferingStatus,
-  ITextDisplayerData,
-} from "./main_thread/types";
+import type { IContentProtection, ITextDisplayerData } from "./main_thread/types";
 import type { IManifestMetadata, IPeriodsUpdateResult } from "./manifest";
 import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
 } from "./mse";
+import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
 import type { ITrackType } from "./public_types";
 import type { ITransportOptions } from "./transports";
 import type { ILoggerLevel } from "./utils/logger";
@@ -198,7 +194,7 @@ export interface IStartPreparedContentMessageValue {
   /** The start time at which we should play, in seconds. */
   initialTime : number;
   /** The current playback observation. */
-  initialObservation : IWorkerPlaybackObservation;
+  initialObservation : ISerializedPlaybackObservation;
   /**
    * Hex-encoded string identifying the key system used.
    * May be cross-referenced with the content's metadata when performing
@@ -254,7 +250,7 @@ export interface IPlaybackObservationMessage {
    */
   contentId: string;
   /** The media-related metadata that has just been observed now. */
-  value : IWorkerPlaybackObservation;
+  value : ISerializedPlaybackObservation;
 }
 
 /**
@@ -357,7 +353,7 @@ export interface IRepresentationUpdateMessage {
 }
 
 /** Media-related metadata. */
-export interface IWorkerPlaybackObservation {
+export interface ISerializedPlaybackObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.

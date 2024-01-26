@@ -17,16 +17,16 @@
 import config from "../../config";
 import log from "../../log";
 import type {
-  IObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../main_thread/types";
-import type {
   IAdaptation,
   IManifest,
   IPeriod,
   IRepresentation,
   ISegment,
 } from "../../manifest";
+import type {
+  ObservationPosition,
+  IReadOnlyPlaybackObserver,
+} from "../../playback_observer";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IRange } from "../../utils/ranges";
@@ -604,7 +604,7 @@ export interface IRepresentationEstimatorPlaybackObservation {
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
    * which the media should play.

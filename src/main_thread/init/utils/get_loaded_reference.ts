@@ -21,15 +21,15 @@ import {
   shouldWaitForHaveEnoughData,
 } from "../../../compat";
 import type {
+  IPlaybackObservation,
+  IReadOnlyPlaybackObserver,
+} from "../../../playback_observer";
+import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
-import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-} from "../../api";
 
 /**
  * Returns an `IReadOnlySharedReference` that switches to `true` once the
