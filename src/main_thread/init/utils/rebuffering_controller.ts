@@ -18,23 +18,19 @@ import config from "../../../config";
 import type { IBufferType } from "../../../core/types";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
+import type { IManifestMetadata, IPeriodMetadata } from "../../../manifest";
+import { getPeriodAfter } from "../../../manifest";
+import { SeekingState } from "../../../playback_observer";
 import type {
-  IManifestMetadata,
-  IPeriodMetadata } from "../../../manifest";
-import {
-  getPeriodAfter,
-} from "../../../manifest";
+  IMediaElementPlaybackObserver,
+  IPlaybackObservation,
+} from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getNextBufferedTimeRangeGap } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
-import type {
-  IPlaybackObservation,
-  PlaybackObserver,
-} from "../../api";
-import { SeekingState } from "../../api/playback_observer";
 import type { IStallingSituation } from "../types";
 
 
@@ -56,7 +52,7 @@ export default class RebufferingController
   extends EventEmitter<IRebufferingControllerEvent> {
 
   /** Emit the current playback conditions */
-  private _playbackObserver : PlaybackObserver;
+  private _playbackObserver : IMediaElementPlaybackObserver;
   private _manifest : IManifestMetadata | null;
   private _speed : IReadOnlySharedReference<number>;
   private _isStarted : boolean;
@@ -75,7 +71,7 @@ export default class RebufferingController
    * @param {Object} speed - The last speed set by the user
    */
   constructor(
-    playbackObserver : PlaybackObserver,
+    playbackObserver : IMediaElementPlaybackObserver,
     manifest : IManifestMetadata | null,
     speed : IReadOnlySharedReference<number>
   ) {
@@ -466,7 +462,7 @@ function generateDiscontinuityError(
  * @class PlaybackRateUpdater
  */
 class PlaybackRateUpdater {
-  private _playbackObserver : PlaybackObserver;
+  private _playbackObserver : IMediaElementPlaybackObserver;
   private _speed : IReadOnlySharedReference<number>;
   private _speedUpdateCanceller : TaskCanceller;
   private _isRebuffering : boolean;
@@ -478,7 +474,7 @@ class PlaybackRateUpdater {
    * @param {Object} speed
    */
   constructor(
-    playbackObserver : PlaybackObserver,
+    playbackObserver : IMediaElementPlaybackObserver,
     speed : IReadOnlySharedReference<number>
   ) {
     this._speedUpdateCanceller = new TaskCanceller();
