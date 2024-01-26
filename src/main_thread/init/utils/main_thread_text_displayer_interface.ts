@@ -1,4 +1,4 @@
-import type { ITextDisplayerInterface } from "../../../core/segment_sinks";
+import type { ITextDisplayerInterface } from "../../../core/types";
 import type { IRange } from "../../../utils/ranges";
 import type { ITextDisplayer, ITextDisplayerData } from "../../text_displayer";
 

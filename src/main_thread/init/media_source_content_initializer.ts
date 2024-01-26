@@ -27,7 +27,6 @@ import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/utils/create_content_time_boundaries_observer";
 // eslint-disable-next-line max-len
 import DecipherabilityFreezeDetector from "../../core/main/utils/DecipherabilityFreezeDetector";
-import type { ITextDisplayerInterface } from "../../core/segment_sinks";
 import SegmentSinksStore from "../../core/segment_sinks";
 import type {
   IStreamOrchestratorOptions,
@@ -35,6 +34,7 @@ import type {
   INeedsBufferFlushPayload,
 } from "../../core/stream";
 import StreamOrchestrator from "../../core/stream";
+import type { ITextDisplayerInterface } from "../../core/types";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
