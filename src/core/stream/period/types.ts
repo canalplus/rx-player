@@ -1,5 +1,5 @@
 import type {
-  IObservationPosition,
+  ObservationPosition,
   IReadOnlyPlaybackObserver,
 } from "../../../main_thread/types";
 import type {
@@ -94,7 +94,7 @@ export interface IPeriodStreamPlaybackObservation {
    * Information on the current media position in seconds at the time of the
    * Observation.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /** `duration` property of the HTMLMediaElement. */
   duration : number;
   /** `readyState` property of the HTMLMediaElement. */

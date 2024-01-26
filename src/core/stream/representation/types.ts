@@ -1,6 +1,6 @@
 import type {
   IContentProtection,
-  IObservationPosition,
+  ObservationPosition,
   IReadOnlyPlaybackObserver,
 } from "../../../main_thread/types";
 import type {
@@ -185,7 +185,7 @@ export interface IRepresentationStreamPlaybackObservation {
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.

@@ -16,6 +16,11 @@
 
 import isSeekingApproximate from "../../compat/is_seeking_approximate";
 import config from "../../config";
+import generateReadOnlyObserver from "../../core/main/common/generate_read_only_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+} from "../../core/main/common/generate_read_only_observer";
+import ObservationPosition from "../../core/main/common/observation_position";
 import log from "../../log";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import noop from "../../utils/noop";
@@ -609,6 +614,8 @@ export interface IFreezingStatus {
   timestamp : number;
 }
 
+export { IReadOnlyPlaybackObserver, ObservationPosition };
+
 /** Information emitted on each playback observation. */
 export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "seeking"> {
    /** Event that triggered this playback observation. */
@@ -619,7 +626,7 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
    * Information on the current position being played, the position for which
    * media is wanted etc.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /**
    * Set if the player is short on audio and/or video media data and is a such,
    * rebuffering.
@@ -649,204 +656,6 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
                    end : number; } |
                  null |
                  undefined;
-}
-
-export type IObservationPosition = ObservationPosition;
-
-export class ObservationPosition {
-  /**
-   * Known position at the time the Observation was emitted, in seconds.
-   *
-   * Note that it might have changed since. If you want truly precize
-   * information, you should recuperate it from the HTMLMediaElement directly
-   * through another mean.
-   */
-  private _last: number;
-  /**
-   * Actually wanted position in seconds that is not yet reached.
-   *
-   * This might for example be set to the initial position when the content is
-   * loading (and thus potentially at a `0` position) but which will be seeked
-   * to a given position once possible. It may also be the position of a seek
-   * that has not been properly accounted for by the current device.
-   */
-  private _wanted: number | null;
-  constructor(last: number, wanted: number | null) {
-    this._last = last;
-    this._wanted = wanted;
-  }
-
-  /**
-   * Obtain arguments allowing to instanciate the same ObservationPosition.
-   *
-   * This can be used to create a new `ObservationPosition` across JS realms,
-   * generally to communicate its data between the main thread and a WebWorker.
-   * @returns {Array.<number>}
-   */
-  public serialize(): [number, number | null] {
-    return [this._last, this._wanted];
-  }
-
-  /**
-   * Returns the playback position actually observed on the media element at
-   * the time the playback observation was made.
-   *
-   * Note that it may be different than the position for which media data is
-   * wanted in rare scenarios where the goal position is not yet set on the
-   * media element.
-   *
-   * You should use this value when you want to obtain the actual position set
-   * on the media element for browser compatibility purposes. Note that this
-   * position was calculated at observation time, it might thus not be
-   * up-to-date if what you want is milliseconds-accuracy.
-   *
-   * If what you want is the actual position which the player is intended to
-   * play, you should rely on `getWanted` instead`.
-   * @returns {number}
-   */
-  public getPolled(): number {
-    return this._last;
-  }
-
-  /**
-   * Returns the position which the player should consider to load media data
-   * at the time the observation was made.
-   *
-   * It can be different than the value returned by `getPolled` in rare
-   * scenarios:
-   *
-   *   - When the initial position has not been set yet.
-   *
-   *   - When the current device do not let the RxPlayer peform precize seeks,
-   *     usually for perfomance reasons by seeking to a previous IDR frame
-   *     instead (for now only Tizen may be like this), in which case we
-   *     prefer to generally rely on the position wanted by the player (this
-   *     e.g. prevents issues where the RxPlayer logic and the device are
-   *     seeking back and forth in a loop).
-   *
-   *   - When a wanted position has been "forced" (@see forceWantedPosition).
-   * @returns {number}
-   */
-  public getWanted(): number {
-    return this._wanted ?? this._last;
-  }
-
-  /**
-   * Method to call if you want to overwrite the currently wanted position.
-   * @param {number} pos
-   */
-  public forceWantedPosition(pos: number): void {
-    this._wanted = pos;
-  }
-
-  /**
-   * Returns `true` when the position wanted returned by `getWanted` and the
-   * actual position returned by `getPolled` may be different, meaning that
-   * we're currently not at the position we want to reach.
-   *
-   * This is a relatively rare situation which only happens when either the
-   * initial seek has not yet been performed. on specific targets where the
-   * seeking behavior is a little broken (@see getWanted) or when the wanted
-   * position has been forced (@see forceWantedPosition).
-   *
-   * In those situations, you might temporarily refrain from acting upon the
-   * actual current media position, as it may change soon.
-   *
-   * @returns {boolean}
-   */
-  public isAwaitingFuturePosition(): boolean {
-    return this._wanted !== null;
-  }
-}
-
-/**
- * Interface providing a generic and read-only version of a `PlaybackObserver`.
- *
- * This interface allows to provide regular and specific playback information
- * without allowing any effect on playback like seeking.
- *
- * This can be very useful to give specific playback information to modules you
- * don't want to be able to update playback.
- *
- * Note that a `PlaybackObserver` is compatible and can thus be upcasted to a
- * `IReadOnlyPlaybackObserver` to "remove" its right to update playback.
- */
-export interface IReadOnlyPlaybackObserver<TObservationType> {
-  /**
-   * Get the current playing position, in seconds.
-   * Returns `undefined` when this cannot be known, such as when the playback
-   * observer is running in a WebWorker.
-   * @returns {number|undefined}
-   */
-  getCurrentTime() : number | undefined;
-  /**
-   * Returns the current playback rate advertised by the `HTMLMediaElement`.
-   * Returns `undefined` when this cannot be known, such as when the playback
-   * observer is running in a WebWorker.
-   * @returns {number|undefined}
-   */
-  getPlaybackRate() : number | undefined;
-  /**
-   * Get the HTMLMediaElement's current `readyState`.
-   * Returns `undefined` when this cannot be known, such as when the playback
-   * observer is running in a WebWorker.
-   * @returns {number|undefined}
-   */
-  getReadyState() : number | undefined;
-  /**
-   * Returns the current `paused` status advertised by the `HTMLMediaElement`.
-   *
-   * Use this instead of the same status emitted on an observation when you want
-   * to be sure you're using the current value.
-   *
-   * Returns `undefined` when this cannot be known, such as when the playback
-   * observer is running in a WebWorker.
-   * @returns {boolean|undefined}
-   */
-  getIsPaused() : boolean | undefined;
-  /**
-   * Returns an `IReadOnlySharedReference` storing the last playback observation
-   * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
-   * is produced.
-   *
-   * This value can then be for example listened to to be notified of future
-   * playback observations.
-   *
-   * @returns {Object}
-   */
-  getReference() : IReadOnlySharedReference<TObservationType>;
-  /**
-   * Register a callback so it regularly receives playback observations.
-   * @param {Function} cb
-   * @param {Object} options - Configuration options:
-   *   - `includeLastObservation`: If set to `true` the last observation will
-   *     be first emitted synchronously.
-   *   - `clearSignal`: If set, the callback will be unregistered when this
-   *     CancellationSignal emits.
-   * @returns {Function} - Allows to easily unregister the callback
-   */
-  listen(
-    cb : (
-      observation : TObservationType,
-      stopListening : () => void
-    ) => void,
-    options? : { includeLastObservation? : boolean | undefined;
-                 clearSignal? : CancellationSignal | undefined; }
-  ) : void;
-  /**
-   * Generate a new `IReadOnlyPlaybackObserver` from this one.
-   *
-   * As argument, this method takes a function which will allow to produce
-   * the new set of properties to be present on each observation.
-   * @param {Function} transform
-   * @returns {Object}
-   */
-  deriveReadOnlyObserver<TDest>(
-    transform : (
-      observationRef : IReadOnlySharedReference<TObservationType>,
-      cancellationSignal : CancellationSignal
-    ) => IReadOnlySharedReference<TDest>
-  ) : IReadOnlyPlaybackObserver<TDest>;
 }
 
 /**
@@ -1217,67 +1026,6 @@ function prettyPrintBuffered(
     currentTimeStr = " ".repeat(str.length) + `^${currentTime}`;
   }
   return str + "\n" + currentTimeStr;
-}
-
-/**
- * Create `IReadOnlyPlaybackObserver` from a source `IReadOnlyPlaybackObserver`
- * and a mapping function.
- * @param {Object} src
- * @param {Function} transform
- * @returns {Object}
- */
-export function generateReadOnlyObserver<TSource, TDest>(
-  src : IReadOnlyPlaybackObserver<TSource>,
-  transform : (
-    observationRef : IReadOnlySharedReference<TSource>,
-    cancellationSignal : CancellationSignal
-  ) => IReadOnlySharedReference<TDest>,
-  cancellationSignal : CancellationSignal
-) : IReadOnlyPlaybackObserver<TDest> {
-  const mappedRef = transform(src.getReference(), cancellationSignal);
-  return {
-    getCurrentTime() {
-      return src.getCurrentTime();
-    },
-    getReadyState() {
-      return src.getReadyState();
-    },
-    getPlaybackRate() {
-      return src.getPlaybackRate();
-    },
-    getIsPaused() {
-      return src.getIsPaused();
-    },
-    getReference() : IReadOnlySharedReference<TDest> {
-      return mappedRef;
-    },
-    listen(
-      cb : (
-        observation : TDest,
-        stopListening : () => void
-      ) => void,
-      options? : { includeLastObservation? : boolean | undefined;
-                   clearSignal? : CancellationSignal | undefined; }
-    ) : void {
-      if (cancellationSignal.isCancelled() ||
-          options?.clearSignal?.isCancelled() === true)
-      {
-        return ;
-      }
-      mappedRef.onUpdate(cb, {
-        clearSignal: options?.clearSignal,
-        emitCurrentValue: options?.includeLastObservation,
-      });
-    },
-    deriveReadOnlyObserver<TNext>(
-      newTransformFn : (
-        observationRef : IReadOnlySharedReference<TDest>,
-        signal : CancellationSignal
-      ) => IReadOnlySharedReference<TNext>
-    ) : IReadOnlyPlaybackObserver<TNext> {
-      return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
-    },
-  };
 }
 
 /**

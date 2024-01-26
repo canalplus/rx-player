@@ -1,5 +1,3 @@
-// XXX TODO
-import { generateReadOnlyObserver } from "../../../main_thread/api/playback_observer";
 import type {
   IFreezingStatus,
   IReadOnlyPlaybackObserver,
@@ -9,6 +7,7 @@ import { WorkerMessageType } from "../../../multithread_types";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type { IStreamOrchestratorPlaybackObservation } from "../../stream";
+import generateReadOnlyObserver from "../common/generate_read_only_observer";
 import sendMessage from "./send_message";
 
 export type ICorePlaybackObservation = IStreamOrchestratorPlaybackObservation & {

@@ -17,7 +17,7 @@
 import config from "../../config";
 import log from "../../log";
 import type {
-  IObservationPosition,
+  ObservationPosition,
   IReadOnlyPlaybackObserver,
 } from "../../main_thread/types";
 import type {
@@ -604,7 +604,7 @@ export interface IRepresentationEstimatorPlaybackObservation {
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /**
    * Last "playback rate" set by the user. This is the ideal "playback rate" at
    * which the media should play.

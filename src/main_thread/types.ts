@@ -2,7 +2,7 @@ import type RxPlayer from "./api";
 import type {
   IFreezingStatus,
   IRebufferingStatus,
-  IObservationPosition,
+  ObservationPosition,
   IReadOnlyPlaybackObserver,
 } from "./api";
 import type {
@@ -18,8 +18,8 @@ export type IRxPlayer = RxPlayer;
 
 export type {
   // Playback Observation Metadata
-  IObservationPosition,
   IReadOnlyPlaybackObserver,
+  ObservationPosition,
   IFreezingStatus,
   IRebufferingStatus,
 
