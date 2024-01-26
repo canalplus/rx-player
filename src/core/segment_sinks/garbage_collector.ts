@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import type { IReadOnlyPlaybackObserver } from "../../main_thread/types";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IRange } from "../../utils/ranges";
 import { getInnerAndOuterRanges } from "../../utils/ranges";

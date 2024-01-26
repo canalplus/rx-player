@@ -67,6 +67,9 @@ import {
   createRepresentationFilterFromFnString,
 } from "../../manifest";
 import { MainThreadMessageType } from "../../multithread_types";
+import type { IPlaybackObservation } from "../../playback_observer";
+/* eslint-disable-next-line max-len */
+import MediaElementPlaybackObserver from "../../playback_observer/media_element_playback_observer";
 import type {
   IAudioRepresentation,
   IAudioRepresentationsSwitchingMode,
@@ -146,10 +149,6 @@ import {
   parseConstructorOptions,
   parseLoadVideoOptions,
 } from "./option_utils";
-import type {
-  IPlaybackObservation,
-} from "./playback_observer";
-import PlaybackObserver from "./playback_observer";
 import {
   constructPlayerStateReference,
   emitPlayPauseEvents,
@@ -951,7 +950,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new PlaybackObserver(videoElement, {
+    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
       withMediaSource: !isDirectFile,
       lowLatencyMode,
     });
