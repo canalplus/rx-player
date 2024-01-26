@@ -1,16 +1,10 @@
-import type {
-  ICompatTextTrack } from "../../../compat";
-import {
-  addTextTrack,
-} from "../../../compat";
+import type { ICompatTextTrack } from "../../../compat";
+import { addTextTrack } from "../../../compat";
 import removeCue from "../../../compat/remove_cue";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";
-import type {
-  IRange } from "../../../utils/ranges";
-import {
-  convertToRanges,
-} from "../../../utils/ranges";
+import type { IRange } from "../../../utils/ranges";
+import { convertToRanges } from "../../../utils/ranges";
 import ManualTimeRanges from "../manual_time_ranges";
 import type { ITextDisplayer, ITextDisplayerData } from "../types";
 import parseTextTrackToCues from "./native_parsers";
@@ -22,16 +16,16 @@ import parseTextTrackToCues from "./native_parsers";
  * @class NativeTextDisplayer
  */
 export default class NativeTextDisplayer implements ITextDisplayer {
-  private readonly _videoElement : HTMLMediaElement;
-  private readonly _track : ICompatTextTrack;
-  private readonly _trackElement : HTMLTrackElement | undefined;
+  private readonly _videoElement: HTMLMediaElement;
+  private readonly _track: ICompatTextTrack;
+  private readonly _trackElement: HTMLTrackElement | undefined;
 
-  private _buffered : ManualTimeRanges;
+  private _buffered: ManualTimeRanges;
 
   /**
    * @param {HTMLMediaElement} videoElement
    */
-  constructor(videoElement : HTMLMediaElement) {
+  constructor(videoElement: HTMLMediaElement) {
     log.debug("NTD: Creating NativeTextDisplayer");
     const { track, trackElement } = addTextTrack(videoElement);
     this._buffered = new ManualTimeRanges();
@@ -45,19 +39,13 @@ export default class NativeTextDisplayer implements ITextDisplayer {
    * @param {Object} infos
    * @returns {Object}
    */
-  public pushTextData(infos : ITextDisplayerData) : IRange[] {
+  public pushTextData(infos: ITextDisplayerData): IRange[] {
     log.debug("NTD: Appending new native text tracks");
     if (infos.chunk === null) {
       return convertToRanges(this._buffered);
     }
-    const { timestampOffset,
-            appendWindow,
-            chunk } = infos;
-    const { start: startTime,
-            end: endTime,
-            data: dataString,
-            type,
-            language } = chunk;
+    const { timestampOffset, appendWindow, chunk } = infos;
+    const { start: startTime, end: endTime, data: dataString, type, language } = chunk;
     const appendWindowStart = appendWindow[0] ?? 0;
     const appendWindowEnd = appendWindow[1] ?? Infinity;
     const cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
@@ -91,7 +79,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       }
     }
 
-    let start : number;
+    let start: number;
     if (startTime !== undefined) {
       start = Math.max(appendWindowStart, startTime);
     } else {
@@ -103,7 +91,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       start = cues[0].startTime;
     }
 
-    let end : number;
+    let end: number;
     if (endTime !== undefined) {
       end = Math.min(appendWindowEnd, endTime);
     } else {
@@ -116,8 +104,10 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     }
 
     if (end <= start) {
-      log.warn("NTD: Invalid text track appended: ",
-               "the start time is inferior or equal to the end time.");
+      log.warn(
+        "NTD: Invalid text track appended: ",
+        "the start time is inferior or equal to the end time.",
+      );
       return convertToRanges(this._buffered);
     }
 
@@ -130,9 +120,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       // TODO Move to compat
       const currentCues = this._track.cues;
       if (currentCues !== null && currentCues.length > 0) {
-        if (
-          firstCue.startTime < currentCues[currentCues.length - 1].startTime
-        ) {
+        if (firstCue.startTime < currentCues[currentCues.length - 1].startTime) {
           this._removeData(firstCue.startTime, +Infinity);
         }
       }
@@ -151,7 +139,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
    * @param {number} end - end position, in seconds
    * @returns {Object}
    */
-  public removeBuffer(start : number, end : number) : IRange[] {
+  public removeBuffer(start: number, end: number): IRange[] {
     this._removeData(start, end);
     return convertToRanges(this._buffered);
   }
@@ -160,15 +148,14 @@ export default class NativeTextDisplayer implements ITextDisplayer {
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {Array.<Object>}
    */
-  public getBufferedRanges() : IRange[] {
+  public getBufferedRanges(): IRange[] {
     return convertToRanges(this._buffered);
   }
 
-  public reset() : void {
+  public reset(): void {
     log.debug("NTD: Aborting NativeTextDisplayer");
     this._removeData(0, Infinity);
-    const { _trackElement,
-            _videoElement } = this;
+    const { _trackElement, _videoElement } = this;
 
     if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
       try {
@@ -188,11 +175,10 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     }
   }
 
-  public stop() : void {
+  public stop(): void {
     log.debug("NTD: Aborting NativeTextDisplayer");
     this._removeData(0, Infinity);
-    const { _trackElement,
-            _videoElement } = this;
+    const { _trackElement, _videoElement } = this;
 
     if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
       try {
@@ -209,7 +195,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     }
   }
 
-  private _removeData(start : number, end : number) : void {
+  private _removeData(start: number, end: number): void {
     log.debug("NTD: Removing native text track data", start, end);
     const track = this._track;
     const cues = track.cues;
@@ -229,19 +215,19 @@ export default class NativeTextDisplayer implements ITextDisplayer {
 /** Data of chunks that should be pushed to the NativeTextDisplayer. */
 export interface INativeTextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
-  data : string;
+  data: string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type : string;
+  type: string;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string | undefined;
+  language?: string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number | undefined;
+  start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number | undefined;
+  end?: number | undefined;
 }
 
 /*
@@ -253,14 +239,12 @@ export interface INativeTextTracksBufferSegmentData {
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore
-  function _checkType(
-    input : ITextTrackSegmentData
-  ) : void {
-    function checkEqual(_arg : INativeTextTracksBufferSegmentData) : void {
+  function _checkType(input: ITextTrackSegmentData): void {
+    function checkEqual(_arg: INativeTextTracksBufferSegmentData): void {
       /* nothing */
     }
     checkEqual(input);

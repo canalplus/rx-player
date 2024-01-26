@@ -29,9 +29,9 @@ import config from "../../../../config";
  * @returns {number}
  */
 export default function getSegmentPriority(
-  segmentTime : number,
-  wantedStartTimestamp : number
-) : number {
+  segmentTime: number,
+  wantedStartTimestamp: number,
+): number {
   const distance = segmentTime - wantedStartTimestamp;
   const { SEGMENT_PRIORITIES_STEPS } = config.getCurrent();
   for (let priority = 0; priority < SEGMENT_PRIORITIES_STEPS.length; priority++) {

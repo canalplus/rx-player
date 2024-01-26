@@ -18,8 +18,4 @@ import createMetaplaylist from "./createMetaplaylist";
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
 import VideoThumbnailLoader from "./VideoThumbnailLoader";
 
-export {
-  createMetaplaylist,
-  mediaCapabilitiesProber,
-  VideoThumbnailLoader,
-};
+export { createMetaplaylist, mediaCapabilitiesProber, VideoThumbnailLoader };

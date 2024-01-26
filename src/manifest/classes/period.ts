@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 import { MediaError } from "../../errors";
-import type {
-  IAdaptationMetadata,
-  IPeriodMetadata } from "../../manifest";
+import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
 import {
   getAdaptations,
   getSupportedAdaptations,
   periodContainsTime,
 } from "../../manifest";
-import type {
-  IManifestStreamEvent,
-  IParsedPeriod,
-} from "../../parsers/manifest";
-import type {
-  ITrackType,
-  IRepresentationFilter,
-} from "../../public_types";
+import type { IManifestStreamEvent, IParsedPeriod } from "../../parsers/manifest";
+import type { ITrackType, IRepresentationFilter } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import Adaptation from "./adaptation";
@@ -45,28 +37,28 @@ export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
  */
 export default class Period implements IPeriodMetadata {
   /** ID uniquely identifying the Period in the Manifest. */
-  public readonly id : string;
+  public readonly id: string;
 
   /** Every 'Adaptation' in that Period, per type of Adaptation. */
-  public adaptations : IManifestAdaptations;
+  public adaptations: IManifestAdaptations;
 
   /** Absolute start time of the Period, in seconds. */
-  public start : number;
+  public start: number;
 
   /**
    * Duration of this Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  public duration : number | undefined;
+  public duration: number | undefined;
 
   /**
    * Absolute end time of the Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  public end : number | undefined;
+  public end: number | undefined;
 
   /** Array containing every stream event happening on the period */
-  public streamEvents : IManifestStreamEvent[];
+  public streamEvents: IManifestStreamEvent[];
 
   /**
    * @constructor
@@ -78,52 +70,60 @@ export default class Period implements IPeriodMetadata {
    * @param {function|undefined} [representationFilter]
    */
   constructor(
-    args : IParsedPeriod,
+    args: IParsedPeriod,
     unsupportedAdaptations: Adaptation[],
-    representationFilter? : IRepresentationFilter | undefined
+    representationFilter?: IRepresentationFilter | undefined,
   ) {
     this.id = args.id;
-    this.adaptations = (Object.keys(args.adaptations) as ITrackType[])
-      .reduce<IManifestAdaptations>((acc, type) => {
-        const adaptationsForType = args.adaptations[type];
-        if (isNullOrUndefined(adaptationsForType)) {
-          return acc;
-        }
-        const filteredAdaptations = adaptationsForType
-          .map((adaptation) : Adaptation => {
-            const newAdaptation = new Adaptation(adaptation,
-                                                 { representationFilter });
-            if (
-              newAdaptation.representations.length > 0
-              && newAdaptation.isSupported === false
-            ) {
-              unsupportedAdaptations.push(newAdaptation);
-            }
-            return newAdaptation;
-          })
-          .filter((adaptation) : adaptation is Adaptation =>
-            adaptation.representations.length > 0
-          );
-        if (filteredAdaptations.every(adaptation => adaptation.isSupported === false) &&
-            adaptationsForType.length > 0 &&
-            (type === "video" || type === "audio")
-        ) {
-          throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "No supported " + type + " adaptations",
-                               { tracks: undefined });
-        }
-
-        if (filteredAdaptations.length > 0) {
-          acc[type] = filteredAdaptations;
-        }
+    this.adaptations = (
+      Object.keys(args.adaptations) as ITrackType[]
+    ).reduce<IManifestAdaptations>((acc, type) => {
+      const adaptationsForType = args.adaptations[type];
+      if (isNullOrUndefined(adaptationsForType)) {
         return acc;
-      }, {});
+      }
+      const filteredAdaptations = adaptationsForType
+        .map((adaptation): Adaptation => {
+          const newAdaptation = new Adaptation(adaptation, {
+            representationFilter,
+          });
+          if (
+            newAdaptation.representations.length > 0 &&
+            newAdaptation.isSupported === false
+          ) {
+            unsupportedAdaptations.push(newAdaptation);
+          }
+          return newAdaptation;
+        })
+        .filter(
+          (adaptation): adaptation is Adaptation => adaptation.representations.length > 0,
+        );
+      if (
+        filteredAdaptations.every((adaptation) => adaptation.isSupported === false) &&
+        adaptationsForType.length > 0 &&
+        (type === "video" || type === "audio")
+      ) {
+        throw new MediaError(
+          "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+          "No supported " + type + " adaptations",
+          { tracks: undefined },
+        );
+      }
 
-    if (!Array.isArray(this.adaptations.video) &&
-        !Array.isArray(this.adaptations.audio))
-    {
-      throw new MediaError("MANIFEST_PARSE_ERROR",
-                           "No supported audio and video tracks.");
+      if (filteredAdaptations.length > 0) {
+        acc[type] = filteredAdaptations;
+      }
+      return acc;
+    }, {});
+
+    if (
+      !Array.isArray(this.adaptations.video) &&
+      !Array.isArray(this.adaptations.audio)
+    ) {
+      throw new MediaError(
+        "MANIFEST_PARSE_ERROR",
+        "No supported audio and video tracks.",
+      );
     }
 
     this.duration = args.duration;
@@ -132,9 +132,7 @@ export default class Period implements IPeriodMetadata {
     if (!isNullOrUndefined(this.duration) && !isNullOrUndefined(this.start)) {
       this.end = this.start + this.duration;
     }
-    this.streamEvents = args.streamEvents === undefined ?
-      [] :
-      args.streamEvents;
+    this.streamEvents = args.streamEvents === undefined ? [] : args.streamEvents;
   }
 
   /**
@@ -153,7 +151,7 @@ export default class Period implements IPeriodMetadata {
    */
   refreshCodecSupport(
     supportList: ICodecSupportList,
-    unsupportedAdaptations: Adaptation[]
+    unsupportedAdaptations: Adaptation[],
   ) {
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
@@ -177,13 +175,12 @@ export default class Period implements IPeriodMetadata {
           hasSupportedAdaptations = true;
         }
       }
-      if (
-        (ttype === "video" || ttype === "audio") &&
-        hasSupportedAdaptations === false
-      ) {
-        throw new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                             "No supported " + ttype + " adaptations",
-                             { tracks: undefined });
+      if ((ttype === "video" || ttype === "audio") && hasSupportedAdaptations === false) {
+        throw new MediaError(
+          "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+          "No supported " + ttype + " adaptations",
+          { tracks: undefined },
+        );
       }
     }, {});
   }
@@ -193,7 +190,7 @@ export default class Period implements IPeriodMetadata {
    * Array.
    * @returns {Array.<Object>}
    */
-  getAdaptations() : Adaptation[] {
+  getAdaptations(): Adaptation[] {
     return getAdaptations(this);
   }
 
@@ -203,7 +200,7 @@ export default class Period implements IPeriodMetadata {
    * @param {string} adaptationType
    * @returns {Array.<Object>}
    */
-  getAdaptationsForType(adaptationType : ITrackType) : Adaptation[] {
+  getAdaptationsForType(adaptationType: ITrackType): Adaptation[] {
     const adaptationsForType = this.adaptations[adaptationType];
     return adaptationsForType ?? [];
   }
@@ -213,7 +210,7 @@ export default class Period implements IPeriodMetadata {
    * @param {number|string} wantedId
    * @returns {Object|undefined}
    */
-  getAdaptation(wantedId : string) : Adaptation|undefined {
+  getAdaptation(wantedId: string): Adaptation | undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 
@@ -223,7 +220,7 @@ export default class Period implements IPeriodMetadata {
    * type. Will return for all types if `undefined`.
    * @returns {Array.<Adaptation>}
    */
-  getSupportedAdaptations(type? : ITrackType | undefined) : Adaptation[] {
+  getSupportedAdaptations(type?: ITrackType | undefined): Adaptation[] {
     return getSupportedAdaptations(this, type);
   }
 
@@ -234,7 +231,7 @@ export default class Period implements IPeriodMetadata {
    * after in the same Manifest. `null` if this instance is the last `Period`.
    * @returns {boolean}
    */
-  containsTime(time : number, nextPeriod : Period | null) : boolean {
+  containsTime(time: number, nextPeriod: Period | null): boolean {
     return periodContainsTime(this, time, nextPeriod);
   }
 
@@ -252,21 +249,23 @@ export default class Period implements IPeriodMetadata {
    *
    * @returns {Object}
    */
-  public getMetadataSnapshot() : IPeriodMetadata {
-    const adaptations : Partial<Record<ITrackType, IAdaptationMetadata[]>> = {};
+  public getMetadataSnapshot(): IPeriodMetadata {
+    const adaptations: Partial<Record<ITrackType, IAdaptationMetadata[]>> = {};
     const baseAdaptations = this.getAdaptations();
     for (const adaptation of baseAdaptations) {
-      let currentAdaps : IAdaptationMetadata[] | undefined = adaptations[adaptation.type];
+      let currentAdaps: IAdaptationMetadata[] | undefined = adaptations[adaptation.type];
       if (currentAdaps === undefined) {
         currentAdaps = [];
         adaptations[adaptation.type] = currentAdaps;
       }
       currentAdaps.push(adaptation.getMetadataSnapshot());
     }
-    return { start: this.start,
-             end: this.end,
-             id: this.id,
-             streamEvents: this.streamEvents,
-             adaptations };
+    return {
+      start: this.start,
+      end: this.end,
+      id: this.id,
+      streamEvents: this.streamEvents,
+      adaptations,
+    };
   }
 }

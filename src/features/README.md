@@ -1,4 +1,4 @@
-# Features code ################################################################
+# Features code
 
 This directory regroups the code importing all the "features" of the RxPlayer
 piece by piece.

@@ -61,7 +61,7 @@ createMetaplaylist(
       transport: "metaplaylist",
     },
   ],
-  1000
+  1000,
 );
 ```
 

@@ -20,9 +20,7 @@ import Manifest, {
   IManifestParsingOptions,
 } from "./manifest";
 import Period from "./period";
-import Representation, {
-  ICodecSupportList,
-} from "./representation";
+import Representation, { ICodecSupportList } from "./representation";
 import {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
@@ -30,11 +28,7 @@ import {
   ISegment,
   StaticRepresentationIndex,
 } from "./representation_index";
-import {
-  areSameContent,
-  getLoggableSegmentId,
-  IBufferedChunkInfos,
-} from "./utils";
+import { areSameContent, getLoggableSegmentId, IBufferedChunkInfos } from "./utils";
 
 export default Manifest;
 export * from "./types";

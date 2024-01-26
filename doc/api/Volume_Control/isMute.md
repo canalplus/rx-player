@@ -10,7 +10,7 @@ Returns true if the volume is set to `0`.
 const isMute = player.isMute();
 ```
 
- - **return value** `boolean`
+- **return value** `boolean`
 
 ## Example
 

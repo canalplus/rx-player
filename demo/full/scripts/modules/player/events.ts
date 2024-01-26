@@ -21,9 +21,8 @@ const BUFFERED_DATA_UPDATES_INTERVAL = 100;
 function linkPlayerEventsToState(
   player: RxPlayer,
   state: IStateUpdater<IPlayerModuleState>,
-  abortSignal: AbortSignal
+  abortSignal: AbortSignal,
 ): void {
-
   linkPlayerEventToState("textTrackChange", "subtitle");
   linkPlayerEventToState("videoRepresentationChange", "videoRepresentation");
   linkPlayerEventToState("audioRepresentationChange", "audioRepresentation");
@@ -43,7 +42,8 @@ function linkPlayerEventsToState(
     // use an interval for current position
     positionUpdatesInterval = window.setInterval(
       updatePositionInfo,
-      POSITION_UPDATES_INTERVAL);
+      POSITION_UPDATES_INTERVAL,
+    );
 
     updatePositionInfo();
 
@@ -54,9 +54,7 @@ function linkPlayerEventsToState(
       const livePosition = player.getLivePosition();
       const maximumPosition = player.getMaximumPosition();
       let bufferGap = player.getCurrentBufferGap();
-      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ?
-        0 :
-        bufferGap;
+      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ? 0 : bufferGap;
 
       const livePos = livePosition ?? maximumPosition;
       state.updateBulk({
@@ -67,11 +65,10 @@ function linkPlayerEventsToState(
         livePosition,
         minimumPosition: player.getMinimumPosition(),
         maximumPosition,
-        liveGap: typeof livePos === "number" ?
-          livePos - player.getPosition() :
-          undefined,
+        liveGap: typeof livePos === "number" ? livePos - player.getPosition() : undefined,
         playbackRate: player.getPlaybackRate(),
-        videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrackHasTrickMode:
+          videoTrack !== null &&
           videoTrack !== undefined &&
           videoTrack.trickModeTracks !== undefined &&
           videoTrack.trickModeTracks.length > 0,
@@ -116,10 +113,7 @@ function linkPlayerEventsToState(
     });
   }
 
-  const bufferedDataItv = setInterval(
-    updateBufferedData,
-    BUFFERED_DATA_UPDATES_INTERVAL
-  );
+  const bufferedDataItv = setInterval(updateBufferedData, BUFFERED_DATA_UPDATES_INTERVAL);
   updateBufferedData();
   abortSignal.addEventListener("abort", () => {
     clearInterval(bufferedDataItv);
@@ -130,15 +124,9 @@ function linkPlayerEventsToState(
     player.removeEventListener("warning", onWarning);
   });
 
-  player.addEventListener(
-    "brokenRepresentationsLock",
-    onBrokenRepresentationsLock
-  );
+  player.addEventListener("brokenRepresentationsLock", onBrokenRepresentationsLock);
   abortSignal.addEventListener("abort", () => {
-    player.removeEventListener(
-      "brokenRepresentationsLock",
-      onBrokenRepresentationsLock
-    );
+    player.removeEventListener("brokenRepresentationsLock", onBrokenRepresentationsLock);
   });
 
   player.addEventListener("videoTrackChange", onVideoTrackChange);
@@ -151,9 +139,7 @@ function linkPlayerEventsToState(
     player.removeEventListener("audioTrackChange", onAudioTrackChange);
   });
 
-  function onBrokenRepresentationsLock(
-    evt: IBrokenRepresentationsLockContext
-  ): void {
+  function onBrokenRepresentationsLock(evt: IBrokenRepresentationsLockContext): void {
     const currentPeriod = player.getCurrentPeriod();
     if (evt.period.id !== currentPeriod?.id) {
       return;
@@ -166,11 +152,11 @@ function linkPlayerEventsToState(
   }
 
   function onVideoTrackChange(videoTrack: IVideoTrack | null): void {
-    const videoRepresentationsLocked =
-      player.getLockedVideoRepresentations() !== null;
+    const videoRepresentationsLocked = player.getLockedVideoRepresentations() !== null;
     state.updateBulk({
       videoRepresentationsLocked,
-      videoTrackHasTrickMode: videoTrack !== null &&
+      videoTrackHasTrickMode:
+        videoTrack !== null &&
         videoTrack !== undefined &&
         videoTrack.trickModeTracks !== undefined &&
         videoTrack.trickModeTracks.length > 0,
@@ -178,8 +164,7 @@ function linkPlayerEventsToState(
   }
 
   function onAudioTrackChange(): void {
-    const audioRepresentationsLocked =
-      player.getLockedAudioRepresentations() !== null;
+    const audioRepresentationsLocked = player.getLockedAudioRepresentations() !== null;
     state.update("audioRepresentationsLocked", audioRepresentationsLocked);
   }
 
@@ -198,7 +183,7 @@ function linkPlayerEventsToState(
 
   function linkPlayerEventToState<K extends keyof IPlayerModuleState>(
     event: Parameters<typeof player.addEventListener>[0],
-    stateItem: K
+    stateItem: K,
   ): void {
     player.addEventListener(event, onEvent);
     function onEvent(payload: unknown): void {
@@ -224,8 +209,7 @@ function linkPlayerEventsToState(
 
     switch (playerState) {
       case "LOADING":
-        stateUpdates.useWorker =
-          player.getCurrentModeInformation()?.useWorker === true;
+        stateUpdates.useWorker = player.getCurrentModeInformation()?.useWorker === true;
         break;
       case "ENDED":
         stateUpdates.autoPlayBlocked = false;
@@ -276,6 +260,4 @@ function linkPlayerEventsToState(
   }
 }
 
-export {
-  linkPlayerEventsToState,
-};
+export { linkPlayerEventsToState };

@@ -24,34 +24,17 @@ const cueBlock1 = [
   "Je ne peux pas me effroyer",
 ];
 
-const cueBlock2 = [
-  "00:17:55.520-->00:17:57.640",
-  "Je suis le petit chevalier",
-];
+const cueBlock2 = ["00:17:55.520-->00:17:57.640", "Je suis le petit chevalier"];
 
-const cueBlock3 = [
-  "00:18:01--> 00:18:09",
-];
+const cueBlock3 = ["00:18:01--> 00:18:09"];
 
-const cueBlock4 = [
-  "112",
-  "00:18:31.080 -->00:18:32.200",
-];
+const cueBlock4 = ["112", "00:18:31.080 -->00:18:32.200"];
 
-const notCueBlock1 = [
-  "TOTO",
-];
+const notCueBlock1 = ["TOTO"];
 
-const notCueBlock2 = [
-  "TOTO",
-  "TATA",
-];
+const notCueBlock2 = ["TOTO", "TATA"];
 
-const notCueBlock3 = [
-  "TOTO",
-  "TATA",
-  "00:18:31.080 --> 00:18:32.200",
-];
+const notCueBlock3 = ["TOTO", "TATA", "00:18:31.080 --> 00:18:32.200"];
 
 describe("parsers - srt - parseCueBlocks", () => {
   it("should correctly parse regular cue blocks", () => {
@@ -67,9 +50,7 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(cueBlock2, 0)).toEqual({
       start: 1075.52,
       end: 1077.64,
-      payload: [
-        "Je suis le petit chevalier",
-      ],
+      payload: ["Je suis le petit chevalier"],
     });
     expect(parseCueBlock(cueBlock3, 0)).toEqual({
       start: 1081,
@@ -96,9 +77,7 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(cueBlock2, 6)).toEqual({
       start: 1081.52,
       end: 1083.64,
-      payload: [
-        "Je suis le petit chevalier",
-      ],
+      payload: ["Je suis le petit chevalier"],
     });
     expect(parseCueBlock(cueBlock3, -1.5)).toEqual({
       start: 1079.5,

@@ -21,9 +21,9 @@ import objectValues from "../../../../utils/object_values";
  * @param {Partial<Record<string, string>>} settings
  * @returns {Attr}
  */
-export default function createStyleAttribute (
-  settings : Partial<Record<string, string>>
-) : Attr {
+export default function createStyleAttribute(
+  settings: Partial<Record<string, string>>,
+): Attr {
   const pAttr = document.createAttribute("style");
   pAttr.value = getAttrValue(settings);
   return pAttr;
@@ -113,9 +113,8 @@ const getXOffsetPercentage = (settings: Partial<Record<string, string>>): number
     [PositionAlignment.LINE_RIGHT]: -100,
   };
 
-  const positionAlignment = settings.position !== undefined ?
-    getPositionAlignment(settings.position) :
-    null;
+  const positionAlignment =
+    settings.position !== undefined ? getPositionAlignment(settings.position) : null;
 
   if (positionAlignment !== null) {
     return positionAlignmentMap[positionAlignment];
@@ -127,9 +126,8 @@ const getXOffsetPercentage = (settings: Partial<Record<string, string>>): number
     [Align.RIGHT]: -100,
   };
 
-  const align = settings.align !== undefined ?
-    getAlignValue(settings.align)
-    : Align.CENTER;
+  const align =
+    settings.align !== undefined ? getAlignValue(settings.align) : Align.CENTER;
 
   return alignMap[align];
 };
@@ -174,9 +172,9 @@ const getYOffsetPercentage = (lineSetting: string | undefined) => {
 
   const lineAlignment = getLineAlignment(lineSetting);
 
-  return lineAlignment !== null ?
-    lineAlignmentMap[lineAlignment] :
-    lineAlignmentMap[LineAlignment.START];
+  return lineAlignment !== null
+    ? lineAlignmentMap[lineAlignment]
+    : lineAlignmentMap[LineAlignment.START];
 };
 
 const getAlignValue = (alignSetting: string | undefined): Align => {
@@ -198,13 +196,12 @@ const getSizePercentage = (sizeSetting: string | undefined) => {
 };
 
 const getPercentageValueOrDefault = (
-  percentageString: string | undefined, defaultValue: number
+  percentageString: string | undefined,
+  defaultValue: number,
 ): number => {
   const value = getPercentageValue(percentageString);
 
-  return value !== null ?
-    value :
-    defaultValue;
+  return value !== null ? value : defaultValue;
 };
 
 const getPercentageValue = (percentageString: string | undefined): number | null => {

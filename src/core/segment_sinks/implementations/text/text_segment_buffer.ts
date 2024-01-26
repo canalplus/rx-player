@@ -3,25 +3,19 @@ import type { ITextDisplayer } from "../../../../main_thread/types";
 import type { ITextTrackSegmentData } from "../../../../transports";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
-import type {
-  ICompleteSegmentInfo,
-  IPushChunkInfos,
-  ISBOperation } from "../types";
-import {
-  SegmentSink,
-  SegmentSinkOperation,
-} from "../types";
+import type { ICompleteSegmentInfo, IPushChunkInfos, ISBOperation } from "../types";
+import { SegmentSink, SegmentSinkOperation } from "../types";
 
 /**
  * SegmentSink implementation to add text data, most likely subtitles.
  * @class TextSegmentSink
  */
 export default class TextSegmentSink extends SegmentSink {
-  readonly bufferType : "text";
+  readonly bufferType: "text";
 
-  private _sender : ITextDisplayerInterface;
+  private _sender: ITextDisplayerInterface;
 
-  private _pendingOperations : Array<{
+  private _pendingOperations: Array<{
     operation: ISBOperation<unknown>;
     promise: Promise<unknown>;
   }>;
@@ -29,7 +23,7 @@ export default class TextSegmentSink extends SegmentSink {
   /**
    * @param {Object} textDisplayerSender
    */
-  constructor(textDisplayerSender : ITextDisplayerInterface) {
+  constructor(textDisplayerSender: ITextDisplayerInterface) {
     log.debug("HTSB: Creating TextSegmentSink");
     super();
     this.bufferType = "text";
@@ -41,17 +35,15 @@ export default class TextSegmentSink extends SegmentSink {
   /**
    * @param {string} uniqueId
    */
-  public declareInitSegment(uniqueId : string): void {
-    log.warn("HTSB: Declaring initialization segment for  Text SegmentSink",
-             uniqueId);
+  public declareInitSegment(uniqueId: string): void {
+    log.warn("HTSB: Declaring initialization segment for  Text SegmentSink", uniqueId);
   }
 
   /**
    * @param {string} uniqueId
    */
-  public freeInitSegment(uniqueId : string): void {
-    log.warn("HTSB: Freeing initialization segment for  Text SegmentSink",
-             uniqueId);
+  public freeInitSegment(uniqueId: string): void {
+    log.warn("HTSB: Freeing initialization segment for  Text SegmentSink", uniqueId);
   }
 
   /**
@@ -59,7 +51,7 @@ export default class TextSegmentSink extends SegmentSink {
    * @param {Object} infos
    * @returns {Promise}
    */
-  public async pushChunk(infos : IPushChunkInfos<unknown>) : Promise<IRange[]> {
+  public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[]> {
     const { data } = infos;
     assertChunkIsTextTrackSegmentData(data.chunk);
     // Needed for TypeScript :(
@@ -67,13 +59,17 @@ export default class TextSegmentSink extends SegmentSink {
       ...data,
       chunk: data.chunk,
     });
-    this._addToOperationQueue(promise, { type: SegmentSinkOperation.Push,
-                                         value: infos });
+    this._addToOperationQueue(promise, {
+      type: SegmentSinkOperation.Push,
+      value: infos,
+    });
     const ranges = await promise;
     if (infos.inventoryInfos !== null) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos,
-                                         true,
-                                         getMonotonicTimeStamp());
+      this._segmentInventory.insertChunk(
+        infos.inventoryInfos,
+        true,
+        getMonotonicTimeStamp(),
+      );
     }
     this._segmentInventory.synchronizeBuffered(ranges);
     return ranges;
@@ -85,10 +81,12 @@ export default class TextSegmentSink extends SegmentSink {
    * @param {number} end - end position, in seconds
    * @returns {Promise}
    */
-  public async removeBuffer(start : number, end : number) : Promise<IRange[]> {
+  public async removeBuffer(start: number, end: number): Promise<IRange[]> {
     const promise = this._sender.remove(start, end);
-    this._addToOperationQueue(promise, { type: SegmentSinkOperation.Remove,
-                                         value: { start, end } });
+    this._addToOperationQueue(promise, {
+      type: SegmentSinkOperation.Remove,
+      value: { start, end },
+    });
     const ranges = await promise;
     this._segmentInventory.synchronizeBuffered(ranges);
     return ranges;
@@ -98,7 +96,7 @@ export default class TextSegmentSink extends SegmentSink {
    * @param {Object} infos
    * @returns {Promise}
    */
-  public async signalSegmentComplete(infos : ICompleteSegmentInfo) : Promise<void> {
+  public async signalSegmentComplete(infos: ICompleteSegmentInfo): Promise<void> {
     if (this._pendingOperations.length > 0) {
       // Only validate after preceding operation
       const { promise } = this._pendingOperations[this._pendingOperations.length - 1];
@@ -118,18 +116,18 @@ export default class TextSegmentSink extends SegmentSink {
   /**
    * @returns {Array.<Object>}
    */
-  public getPendingOperations() : Array<ISBOperation<unknown>> {
-    return this._pendingOperations.map(p => p.operation);
+  public getPendingOperations(): Array<ISBOperation<unknown>> {
+    return this._pendingOperations.map((p) => p.operation);
   }
 
-  public dispose() : void {
+  public dispose(): void {
     log.debug("HTSB: Disposing TextSegmentSink");
     this._sender.reset();
   }
 
   private _addToOperationQueue(
     promise: Promise<unknown>,
-    operation: ISBOperation<unknown>
+    operation: ISBOperation<unknown>,
   ): void {
     const queueObject = { operation, promise };
     this._pendingOperations.push(queueObject);
@@ -146,19 +144,19 @@ export default class TextSegmentSink extends SegmentSink {
 /** Data of chunks that should be pushed to the HTMLTextSegmentSink. */
 export interface ITextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
-  data : string;
+  data: string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type : string;
+  type: string;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string | undefined;
+  language?: string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number | undefined;
+  start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number | undefined;
+  end?: number | undefined;
 }
 
 /**
@@ -168,9 +166,11 @@ export interface ITextTracksBufferSegmentData {
  * @param {Object} chunk
  */
 function assertChunkIsTextTrackSegmentData(
-  chunk : unknown
-) : asserts chunk is ITextTracksBufferSegmentData {
-  if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.PRODUCTION as number) {
+  chunk: unknown,
+): asserts chunk is ITextTracksBufferSegmentData {
+  if (
+    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
+  ) {
     return;
   }
   if (
@@ -178,18 +178,12 @@ function assertChunkIsTextTrackSegmentData(
     chunk === null ||
     typeof (chunk as ITextTracksBufferSegmentData).data !== "string" ||
     typeof (chunk as ITextTracksBufferSegmentData).type !== "string" ||
-    (
-      (chunk as ITextTracksBufferSegmentData).language !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).language !== "string"
-    ) ||
-    (
-      (chunk as ITextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).start !== "number"
-    ) ||
-    (
-      (chunk as ITextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).end !== "number"
-    )
+    ((chunk as ITextTracksBufferSegmentData).language !== undefined &&
+      typeof (chunk as ITextTracksBufferSegmentData).language !== "string") ||
+    ((chunk as ITextTracksBufferSegmentData).start !== undefined &&
+      typeof (chunk as ITextTracksBufferSegmentData).start !== "number") ||
+    ((chunk as ITextTracksBufferSegmentData).end !== undefined &&
+      typeof (chunk as ITextTracksBufferSegmentData).end !== "number")
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }
@@ -206,13 +200,13 @@ export interface ITextDisplayerInterface {
    * @see ITextDisplayer
    */
   pushTextData(
-    ...args : Parameters<ITextDisplayer["pushTextData"]>
+    ...args: Parameters<ITextDisplayer["pushTextData"]>
   ): Promise<ReturnType<ITextDisplayer["pushTextData"]>>;
   /**
    * @see ITextDisplayer
    */
   remove(
-    ...args : Parameters<ITextDisplayer["removeBuffer"]>
+    ...args: Parameters<ITextDisplayer["removeBuffer"]>
   ): Promise<ReturnType<ITextDisplayer["removeBuffer"]>>;
   /**
    * @see ITextDisplayer
@@ -233,14 +227,12 @@ export interface ITextDisplayerInterface {
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   /* eslint-disable @typescript-eslint/ban-ts-comment */
   // @ts-ignore
-  function _checkType(
-    input : ITextTrackSegmentData
-  ) : void {
-    function checkEqual(_arg : ITextTracksBufferSegmentData) : void {
+  function _checkType(input: ITextTrackSegmentData): void {
+    function checkEqual(_arg: ITextTracksBufferSegmentData): void {
       /* nothing */
     }
     checkEqual(input);

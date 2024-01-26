@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-import createSmoothStreamingParser, {
-  IHSSParserConfiguration,
-} from "./create_parser";
+import createSmoothStreamingParser, { IHSSParserConfiguration } from "./create_parser";
 import SmoothRepresentationIndex from "./representation_index";
 
 export default createSmoothStreamingParser;
-export {
-  IHSSParserConfiguration,
-  SmoothRepresentationIndex,
-};
+export { IHSSParserConfiguration, SmoothRepresentationIndex };

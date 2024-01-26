@@ -30,7 +30,9 @@ describe("Compat - clearElementSrc", () => {
   it("should empty the src and remove the Attribute for a given Element", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
+      removeAttribute() {
+        return null;
+      },
     };
     const clearElementSrc = jest.requireActual("../clear_element_src").default;
 
@@ -44,13 +46,16 @@ describe("Compat - clearElementSrc", () => {
   it("should throw if failed to remove the Attribute for a given Element", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { throw new Error("Oups, can't remove attribute."); },
+      removeAttribute() {
+        throw new Error("Oups, can't remove attribute.");
+      },
     };
     const clearElementSrc = jest.requireActual("../clear_element_src").default;
     const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
 
-    expect(() => clearElementSrc(fakeElement))
-      .toThrowError("Oups, can't remove attribute.");
+    expect(() => clearElementSrc(fakeElement)).toThrowError(
+      "Oups, can't remove attribute.",
+    );
     expect(fakeElement.src).toBe("");
     expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
   });
@@ -58,16 +63,11 @@ describe("Compat - clearElementSrc", () => {
   it("should disable text tracks and remove childs", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
-      textTracks: [
-        { mode: "showing" },
-        { mode: "showing" },
-      ],
-      childNodes: [
-        { nodeName: "audio" },
-        { nodeName: "track" },
-        { nodeName: "track" },
-      ],
+      removeAttribute() {
+        return null;
+      },
+      textTracks: [{ mode: "showing" }, { mode: "showing" }],
+      childNodes: [{ nodeName: "audio" }, { nodeName: "track" }, { nodeName: "track" }],
       hasChildNodes: () => true,
       removeChild: (node: { nodeName: string }) => {
         const { childNodes } = fakeElement;
@@ -98,16 +98,11 @@ describe("Compat - clearElementSrc", () => {
   it("should log when failed to remove text track child node", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
-      textTracks: [
-        { mode: "showing" },
-        { mode: "showing" },
-      ],
-      childNodes: [
-        { nodeName: "audio" },
-        { nodeName: "track" },
-        { nodeName: "track" },
-      ],
+      removeAttribute() {
+        return null;
+      },
+      textTracks: [{ mode: "showing" }, { mode: "showing" }],
+      childNodes: [{ nodeName: "audio" }, { nodeName: "track" }, { nodeName: "track" }],
       hasChildNodes: () => true,
       removeChild: () => {
         throw new Error();
@@ -140,18 +135,19 @@ describe("Compat - clearElementSrc", () => {
     expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
     expect(spyRemoveChild).toHaveBeenCalledTimes(2);
     expect(mockLogWarn).toHaveBeenCalledTimes(2);
-    expect(mockLogWarn)
-      .toHaveBeenCalledWith("Compat: Could not remove text track child from element.");
+    expect(mockLogWarn).toHaveBeenCalledWith(
+      "Compat: Could not remove text track child from element.",
+    );
   });
 
   it("should not remove audio child node if on firefox and no text tracks", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
+      removeAttribute() {
+        return null;
+      },
       textTracks: [],
-      childNodes: [
-        { nodeName: "audio" },
-      ],
+      childNodes: [{ nodeName: "audio" }],
       hasChildNodes: () => true,
       removeChild: () => null,
     };
@@ -175,7 +171,9 @@ describe("Compat - clearElementSrc", () => {
   it("should not handle text tracks nodes is has no child nodes", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
+      removeAttribute() {
+        return null;
+      },
       textTracks: [],
       childNodes: [],
       hasChildNodes: () => false,
@@ -201,7 +199,9 @@ describe("Compat - clearElementSrc", () => {
   it("should not throw if the textTracks attribute is `null`", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
+      removeAttribute() {
+        return null;
+      },
       textTracks: null,
       childNodes: [],
       hasChildNodes: () => false,
@@ -227,7 +227,9 @@ describe("Compat - clearElementSrc", () => {
   it("should not throw if the textTracks attribute is `undefined`", () => {
     const fakeElement = {
       src: "foo",
-      removeAttribute() { return null; },
+      removeAttribute() {
+        return null;
+      },
       textTracks: undefined,
       childNodes: [],
       hasChildNodes: () => false,

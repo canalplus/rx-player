@@ -21,7 +21,9 @@ import addHTMLVTTFeature from "../html_vtt_parser";
 
 describe("Features list - HTML VTT Parser", () => {
   it("should add an HTML VTT Parser in the current features", () => {
-    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
+    const featureObject = {
+      htmlTextTracksParsers: {},
+    } as unknown as IFeaturesObject;
     addHTMLVTTFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { vtt: vttParser },

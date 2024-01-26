@@ -19,11 +19,8 @@
  * It always should be imported through the `features` object.
  */
 
-import type {
-  ICompatVTTCue } from "../../../compat";
-import {
-  makeVTTCue,
-} from "../../../compat";
+import type { ICompatVTTCue } from "../../../compat";
+import { makeVTTCue } from "../../../compat";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 
@@ -33,9 +30,11 @@ const STYLE = /<style[^>]*>([\s\S]*?)<\/style[^>]*>/i;
 const PARAG = /\s*<p (?:class=([^>]+))?>(.*)/i;
 const START = /<sync[^>]+?start="?([0-9]*)"?[^0-9]/i;
 
-interface ISubs { start : number;
-                  end? : number;
-                  text : string; }
+interface ISubs {
+  start: number;
+  end?: number;
+  text: string;
+}
 
 /**
  * Creates an array of VTTCue/TextTrackCue from a given array of cue objects.
@@ -43,8 +42,8 @@ interface ISubs { start : number;
  * text.
  * @returns {Array.<VTTCue>}
  */
-function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVTTCue> {
-  const nativeCues : Array<TextTrackCue|ICompatVTTCue> = [];
+function createCuesFromArray(cuesArray: ISubs[]): Array<TextTrackCue | ICompatVTTCue> {
+  const nativeCues: Array<TextTrackCue | ICompatVTTCue> = [];
   for (let i = 0; i < cuesArray.length; i++) {
     const { start, end, text } = cuesArray[i];
     if (isNonEmptyString(text) && !isNullOrUndefined(end)) {
@@ -62,9 +61,9 @@ function createCuesFromArray(cuesArray : ISubs[]) : Array<TextTrackCue|ICompatVT
  * @param {string} str
  * @returns {Object}
  */
-function getClassNameByLang(str : string) : Partial<Record<string, string>> {
+function getClassNameByLang(str: string): Partial<Record<string, string>> {
   const ruleRe = /\.(\S+)\s*{([^}]*)}/gi;
-  const langs : { [lang : string] : string } = {};
+  const langs: { [lang: string]: string } = {};
   let m = ruleRe.exec(str);
   while (Array.isArray(m)) {
     const name = m[1];
@@ -82,10 +81,9 @@ function getClassNameByLang(str : string) : Partial<Record<string, string>> {
  * @param {string} name - name of the property
  * @returns {string|null} - value of the property. Null if not found.
  */
-function getCSSProperty(str : string, name : string) : string|null {
-  const matches = (new RegExp("\\s*" + name + ":\\s*(\\S+);", "i")).exec(str);
-  return Array.isArray(matches) ? matches[1] :
-                                  null;
+function getCSSProperty(str: string, name: string): string | null {
+  const matches = new RegExp("\\s*" + name + ":\\s*(\\S+);", "i").exec(str);
+  return Array.isArray(matches) ? matches[1] : null;
 }
 
 /**
@@ -93,7 +91,7 @@ function getCSSProperty(str : string, name : string) : string|null {
  * @param {string} text
  * @returns {string}
  */
-function decodeEntities(text : string) : string {
+function decodeEntities(text: string): string {
   return text
     .replace(BR, "\n")
     .replace(HTML_ENTITIES, (_, $1) => String.fromCharCode(Number($1)));
@@ -112,18 +110,17 @@ function decodeEntities(text : string) : string {
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 function parseSami(
-  smi : string,
-  timeOffset : number,
-  lang? : string
-) : Array<TextTrackCue|ICompatVTTCue> {
-  const syncOpen = /<sync[ >]/ig;
-  const syncClose = /<sync[ >]|<\/body>/ig;
+  smi: string,
+  timeOffset: number,
+  lang?: string,
+): Array<TextTrackCue | ICompatVTTCue> {
+  const syncOpen = /<sync[ >]/gi;
+  const syncClose = /<sync[ >]|<\/body>/gi;
 
-  const subs : ISubs[] = [];
+  const subs: ISubs[] = [];
 
   const styleMatches = STYLE.exec(smi);
-  const css = styleMatches !== null ? styleMatches[1] :
-                                      "";
+  const css = styleMatches !== null ? styleMatches[1] : "";
   let up;
   let to;
 
@@ -132,7 +129,7 @@ function parseSami(
   syncClose.exec(smi);
 
   const langs = getClassNameByLang(css);
-  let klass : string | undefined;
+  let klass: string | undefined;
   if (isNonEmptyString(lang)) {
     klass = langs[lang];
     if (klass === undefined) {
@@ -166,7 +163,7 @@ function parseSami(
 
   return createCuesFromArray(subs);
 
-  function appendToSubs(lines : string[], start : number) {
+  function appendToSubs(lines: string[], start: number) {
     let i = lines.length;
     let m;
     while (--i >= 0) {
@@ -184,8 +181,7 @@ function parseSami(
       if (txt === "&nbsp;") {
         subs[subs.length - 1].end = start;
       } else {
-        subs.push({ text: decodeEntities(txt),
-                    start: start + timeOffset });
+        subs.push({ text: decodeEntities(txt), start: start + timeOffset });
       }
     }
   }

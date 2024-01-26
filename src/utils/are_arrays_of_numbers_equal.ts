@@ -21,9 +21,9 @@
  * @returns {Boolean}
  */
 export default function areArraysOfNumbersEqual(
-  arr1 : Uint8Array|number[],
-  arr2 : Uint8Array|number[]
-) : boolean {
+  arr1: Uint8Array | number[],
+  arr2: Uint8Array | number[],
+): boolean {
   if (arr1.length !== arr2.length) {
     return false;
   }

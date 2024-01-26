@@ -132,39 +132,38 @@ describe("Global TTML HTML parsing tests", () => {
   });
 
   it("They all have an outputed HTMLElement", () => {
-    expect(res.every(cue => cue.element instanceof HTMLElement));
+    expect(res.every((cue) => cue.element instanceof HTMLElement));
   });
 
   it("They all have the right text in them", () => {
     expect(res[0].element.textContent).toEqual("It seems a paradox, does it not,");
-    expect(res[1].element.textContent)
-      .toEqual("that the image formed onthe Retina should be inverted?");
-    expect(res[2].element.textContent)
-      .toEqual("It is puzzling, why is itwe do not see things upside-down?");
-    expect(res[3].element.textContent)
-      .toEqual("You have never heard the Theory,then, that the Brain also is inverted?");
-    expect(res[4].element.textContent)
-      .toEqual("No indeed! What a beautiful fact!");
-    expect(res[5].element.textContent)
-      .toEqual("But how is it proved?");
-    expect(res[6].element.textContent)
-      .toEqual("Thus: what we call");
-    expect(res[7].element.textContent)
-      .toEqual("the vertex of the Brainis really its base");
-    expect(res[8].element.textContent)
-      .toEqual("and what we call its baseis really its vertex,");
-    expect(res[9].element.textContent)
-      .toEqual("it is simply a question of nomenclature.");
-    expect(res[10].element.textContent)
-      .toEqual("How truly delightful!");
+    expect(res[1].element.textContent).toEqual(
+      "that the image formed onthe Retina should be inverted?",
+    );
+    expect(res[2].element.textContent).toEqual(
+      "It is puzzling, why is itwe do not see things upside-down?",
+    );
+    expect(res[3].element.textContent).toEqual(
+      "You have never heard the Theory,then, that the Brain also is inverted?",
+    );
+    expect(res[4].element.textContent).toEqual("No indeed! What a beautiful fact!");
+    expect(res[5].element.textContent).toEqual("But how is it proved?");
+    expect(res[6].element.textContent).toEqual("Thus: what we call");
+    expect(res[7].element.textContent).toEqual(
+      "the vertex of the Brainis really its base",
+    );
+    expect(res[8].element.textContent).toEqual(
+      "and what we call its baseis really its vertex,",
+    );
+    expect(res[9].element.textContent).toEqual(
+      "it is simply a question of nomenclature.",
+    );
+    expect(res[10].element.textContent).toEqual("How truly delightful!");
   });
 
   // TODO Is jsdom implementation in the wrong there?
   xit("corresponding text should have the right color", () => {
-    function findTextNodes(
-      elt : HTMLElement,
-      currTextNodes : Text[]  = []
-    ) : Text[] {
+    function findTextNodes(elt: HTMLElement, currTextNodes: Text[] = []): Text[] {
       const children = elt.childNodes;
       for (let i = 0; i < children.length; i++) {
         switch (children[i].nodeType) {

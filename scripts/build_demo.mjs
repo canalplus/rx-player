@@ -63,12 +63,12 @@ export default function buildDemo(options) {
     if (err != null && err.code === "ENOENT") {
       console.warn(
         "\x1b[31m[NOTE]\x1b[0m No built WebAssembly file detected. " +
-        "If needed, please build it separately."
+          "If needed, please build it separately.",
       );
     } else {
       console.warn(
         "\x1b[33m[NOTE]\x1b[0m The WebAssembly file won't be re-built by " +
-        "this script. If needed, ensure its build is up-to-date."
+          "this script. If needed, ensure its build is up-to-date.",
       );
     }
   });
@@ -86,19 +86,23 @@ export default function buildDemo(options) {
     name: "onEnd",
     setup(build) {
       build.onStart(() => {
-        console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-          "New demo build started");
-      })
-      build.onEnd(result => {
+        console.log(
+          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` + "New demo build started",
+        );
+      });
+      build.onEnd((result) => {
         if (result.errors.length > 0 || result.warnings.length > 0) {
           const { errors, warnings } = result;
-          console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            `Demo re-built with ${errors.length} error(s) and ` +
-            ` ${warnings.length} warning(s) `);
+          console.log(
+            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+              `Demo re-built with ${errors.length} error(s) and ` +
+              ` ${warnings.length} warning(s) `,
+          );
           return;
         }
-        console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-          `Demo updated at ${outfile}!`);
+        console.log(
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + `Demo updated at ${outfile}!`,
+        );
       });
     },
   };
@@ -124,7 +128,7 @@ export default function buildDemo(options) {
       __LOGGER_LEVEL__: JSON.stringify({
         CURRENT_LEVEL: "INFO",
       }),
-    }
+    },
   })
     .then((context) => {
       if (watch) {
@@ -134,7 +138,8 @@ export default function buildDemo(options) {
     .catch((err) => {
       console.error(
         `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
-        err);
+        err,
+      );
       process.exit(1);
     });
 }
@@ -146,14 +151,14 @@ export default function buildDemo(options) {
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node build_demo.mjs [options]
+    /* eslint-disable indent */
+    `Usage: node build_demo.mjs [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
   -w, --watch            Re-build each time either the demo or library files change`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

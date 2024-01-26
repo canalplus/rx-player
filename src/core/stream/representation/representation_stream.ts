@@ -29,9 +29,7 @@ import type { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller, {
-  CancellationError,
-} from "../../../utils/task_canceller";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
 import type {
   IQueuedSegment,
   IRepresentationStreamArguments,
@@ -84,15 +82,17 @@ import pushMediaSegment from "./utils/push_media_segment";
  * doing.
  */
 export default function RepresentationStream<TSegmentDataType>(
-  { content,
+  {
+    content,
     options,
     playbackObserver,
     segmentSink,
     segmentFetcher,
-    terminate } : IRepresentationStreamArguments<TSegmentDataType>,
-  callbacks : IRepresentationStreamCallbacks,
-  parentCancelSignal : CancellationSignal
-) : void {
+    terminate,
+  }: IRepresentationStreamArguments<TSegmentDataType>,
+  callbacks: IRepresentationStreamCallbacks,
+  parentCancelSignal: CancellationSignal,
+): void {
   const { period, adaptation, representation } = content;
   const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
   const bufferType = adaptation.type;
@@ -110,7 +110,7 @@ export default function RepresentationStream<TSegmentDataType>(
   segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
 
   /** Saved initialization segment state for this representation. */
-  const initSegmentState : IInitSegmentState = {
+  const initSegmentState: IInitSegmentState = {
     segment: representation.index.getInitSegment(),
     uniqueId: null,
     isLoaded: false,
@@ -123,10 +123,13 @@ export default function RepresentationStream<TSegmentDataType>(
   });
 
   /** Emit the last scheduled downloading queue for segments. */
-  const lastSegmentQueue = new SharedReference<IDownloadQueueItem>({
-    initSegment: null,
-    segmentQueue: [],
-  }, segmentsLoadingCanceller.signal);
+  const lastSegmentQueue = new SharedReference<IDownloadQueueItem>(
+    {
+      initSegment: null,
+      segmentQueue: [],
+    },
+    segmentsLoadingCanceller.signal,
+  );
 
   /** If `true`, the current Representation has a linked initialization segment. */
   const hasInitSegment = initSegmentState.segment !== null;
@@ -150,22 +153,27 @@ export default function RepresentationStream<TSegmentDataType>(
 
     // If some key ids are not known yet, it may be safer to wait for this initialization
     // segment to be loaded first
-    if (encryptionData.length > 0 && encryptionData.every(e => e.keyIds !== undefined)) {
+    if (
+      encryptionData.length > 0 &&
+      encryptionData.every((e) => e.keyIds !== undefined)
+    ) {
       hasSentEncryptionData = true;
       callbacks.encryptionDataEncountered(
-        encryptionData.map(d => objectAssign({ content }, d))
+        encryptionData.map((d) => objectAssign({ content }, d)),
       );
       if (globalCanceller.isUsed()) {
-        return ; // previous callback has stopped everything by side-effect
+        return; // previous callback has stopped everything by side-effect
       }
     }
   }
 
   /** Will load every segments in `lastSegmentQueue` */
-  const downloadingQueue = new DownloadingQueue(content,
-                                                lastSegmentQueue,
-                                                segmentFetcher,
-                                                hasInitSegment);
+  const downloadingQueue = new DownloadingQueue(
+    content,
+    lastSegmentQueue,
+    segmentFetcher,
+    hasInitSegment,
+  );
   downloadingQueue.addEventListener("error", (err) => {
     if (segmentsLoadingCanceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
@@ -190,7 +198,8 @@ export default function RepresentationStream<TSegmentDataType>(
     }
   });
   downloadingQueue.addEventListener("fullyLoadedSegment", (segment) => {
-    segmentSink.signalSegmentComplete(objectAssign({ segment }, content))
+    segmentSink
+      .signalSegmentComplete(objectAssign({ segment }, content))
       .catch(onFatalBufferError);
   });
   downloadingQueue.start();
@@ -203,12 +212,14 @@ export default function RepresentationStream<TSegmentDataType>(
     includeLastObservation: false,
     clearSignal: segmentsLoadingCanceller.signal,
   });
-  content.manifest.addEventListener("manifestUpdate",
-                                    checkStatus,
-                                    segmentsLoadingCanceller.signal);
+  content.manifest.addEventListener(
+    "manifestUpdate",
+    checkStatus,
+    segmentsLoadingCanceller.signal,
+  );
   bufferGoal.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal ,
+    clearSignal: segmentsLoadingCanceller.signal,
   });
   maxBufferSize.onUpdate(checkStatus, {
     emitCurrentValue: false,
@@ -219,56 +230,66 @@ export default function RepresentationStream<TSegmentDataType>(
     clearSignal: segmentsLoadingCanceller.signal,
   });
   checkStatus();
-  return ;
+  return;
 
   /**
    * Produce a buffer status update synchronously on call, update the list
    * of current segments to update and check various buffer and manifest related
    * issues at the current time, calling the right callbacks if necessary.
    */
-  function checkStatus() : void {
+  function checkStatus(): void {
     if (segmentsLoadingCanceller.isUsed()) {
-      return ; // Stop all buffer status checking if load operations are stopped
+      return; // Stop all buffer status checking if load operations are stopped
     }
     const observation = playbackObserver.getReference().getValue();
     const initialWantedTime = observation.position.getWanted();
-    const status = getBufferStatus(content,
-                                   initialWantedTime,
-                                   playbackObserver,
-                                   fastSwitchThreshold.getValue(),
-                                   bufferGoal.getValue(),
-                                   maxBufferSize.getValue(),
-                                   segmentSink);
+    const status = getBufferStatus(
+      content,
+      initialWantedTime,
+      playbackObserver,
+      fastSwitchThreshold.getValue(),
+      bufferGoal.getValue(),
+      maxBufferSize.getValue(),
+      segmentSink,
+    );
     const { neededSegments } = status;
 
-    let neededInitSegment : IQueuedSegment | null = null;
+    let neededInitSegment: IQueuedSegment | null = null;
 
     // Add initialization segment if required
     if (!representation.index.isInitialized()) {
       if (initSegmentState.segment === null) {
         log.warn("Stream: Uninitialized index without an initialization segment");
       } else if (initSegmentState.isLoaded) {
-        log.warn("Stream: Uninitialized index with an already loaded " +
-                 "initialization segment");
+        log.warn(
+          "Stream: Uninitialized index with an already loaded " +
+            "initialization segment",
+        );
       } else {
         const wantedStart = observation.position.getWanted();
-        neededInitSegment = { segment: initSegmentState.segment,
-                              priority: getSegmentPriority(period.start,
-                                                           wantedStart) };
+        neededInitSegment = {
+          segment: initSegmentState.segment,
+          priority: getSegmentPriority(period.start, wantedStart),
+        };
       }
-    } else if (neededSegments.length > 0 &&
-               !initSegmentState.isLoaded &&
-               initSegmentState.segment !== null)
-    {
+    } else if (
+      neededSegments.length > 0 &&
+      !initSegmentState.isLoaded &&
+      initSegmentState.segment !== null
+    ) {
       const initSegmentPriority = neededSegments[0].priority;
-      neededInitSegment = { segment: initSegmentState.segment,
-                            priority: initSegmentPriority };
+      neededInitSegment = {
+        segment: initSegmentState.segment,
+        priority: initSegmentPriority,
+      };
     }
 
     const terminateVal = terminate.getValue();
     if (terminateVal === null) {
-      lastSegmentQueue.setValue({ initSegment: neededInitSegment,
-                                  segmentQueue: neededSegments });
+      lastSegmentQueue.setValue({
+        initSegment: neededInitSegment,
+        segmentQueue: neededSegments,
+      });
     } else if (terminateVal.urgent) {
       log.debug("Stream: Urgent switch, terminate now.", bufferType);
       lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
@@ -286,16 +307,18 @@ export default function RepresentationStream<TSegmentDataType>(
       const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
       const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
 
-      const nextQueue = currentSegmentRequest === null ||
-                        mostNeededSegment === undefined ||
-                        currentSegmentRequest.id !== mostNeededSegment.segment.id ?
-        [] :
-        [mostNeededSegment];
+      const nextQueue =
+        currentSegmentRequest === null ||
+        mostNeededSegment === undefined ||
+        currentSegmentRequest.id !== mostNeededSegment.segment.id
+          ? []
+          : [mostNeededSegment];
 
-      const nextInit = initSegmentRequest === null ? null :
-                                                     neededInitSegment;
-      lastSegmentQueue.setValue({ initSegment: nextInit,
-                                  segmentQueue: nextQueue });
+      const nextInit = initSegmentRequest === null ? null : neededInitSegment;
+      lastSegmentQueue.setValue({
+        initSegment: nextInit,
+        segmentQueue: nextQueue,
+      });
       if (nextQueue.length === 0 && nextInit === null) {
         log.debug("Stream: No request left, terminate", bufferType);
         lastSegmentQueue.finish();
@@ -305,24 +328,23 @@ export default function RepresentationStream<TSegmentDataType>(
       }
     }
 
-    callbacks.streamStatusUpdate({ period,
-                                   position: observation.position.getWanted(),
-                                   bufferType,
-                                   imminentDiscontinuity: status.imminentDiscontinuity,
-                                   isEmptyStream: false,
-                                   hasFinishedLoading: status.hasFinishedLoading,
-                                   neededSegments: status.neededSegments });
+    callbacks.streamStatusUpdate({
+      period,
+      position: observation.position.getWanted(),
+      bufferType,
+      imminentDiscontinuity: status.imminentDiscontinuity,
+      isEmptyStream: false,
+      hasFinishedLoading: status.hasFinishedLoading,
+      neededSegments: status.neededSegments,
+    });
     if (segmentsLoadingCanceller.signal.isCancelled()) {
-      return ; // previous callback has stopped loading operations by side-effect
+      return; // previous callback has stopped loading operations by side-effect
     }
     const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
     if (status.isBufferFull) {
-      const gcedPosition = Math.max(
-        0,
-        initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
+      const gcedPosition = Math.max(0, initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
       if (gcedPosition > 0) {
-        segmentSink.removeBuffer(0, gcedPosition)
-          .catch(onFatalBufferError);
+        segmentSink.removeBuffer(0, gcedPosition).catch(onFatalBufferError);
       }
     }
     if (status.shouldRefreshManifest) {
@@ -336,22 +358,25 @@ export default function RepresentationStream<TSegmentDataType>(
    * @param {Object} evt
    */
   function onParsedChunk(
-    evt : IParsedInitSegmentPayload<TSegmentDataType> |
-          IParsedSegmentPayload<TSegmentDataType>
-  ) : void {
+    evt:
+      | IParsedInitSegmentPayload<TSegmentDataType>
+      | IParsedSegmentPayload<TSegmentDataType>,
+  ): void {
     if (globalCanceller.isUsed()) {
       // We should not do anything with segments if the `RepresentationStream`
       // is not running anymore.
-      return ;
+      return;
     }
 
     // Supplementary encryption information might have been parsed.
     for (const protInfo of evt.protectionData) {
       // TODO better handle use cases like key rotation by not always grouping
       // every protection data together? To check.
-      representation.addProtectionData(protInfo.initDataType,
-                                       protInfo.keyId,
-                                       protInfo.initData);
+      representation.addProtectionData(
+        protInfo.initDataType,
+        protInfo.keyId,
+        protInfo.initData,
+      );
     }
 
     // Now that the initialization segment has been parsed - which may have
@@ -361,21 +386,19 @@ export default function RepresentationStream<TSegmentDataType>(
       const allEncryptionData = representation.getAllEncryptionData();
       if (allEncryptionData.length > 0) {
         callbacks.encryptionDataEncountered(
-          allEncryptionData.map(p => objectAssign({ content }, p))
+          allEncryptionData.map((p) => objectAssign({ content }, p)),
         );
         hasSentEncryptionData = true;
 
         // previous callback could have lead to cancellation
         if (globalCanceller.isUsed()) {
-          return ;
+          return;
         }
       }
     }
 
     if (evt.segmentType === "init") {
-      if (!representation.index.isInitialized() &&
-          evt.segmentList !== undefined)
-      {
+      if (!representation.index.isInitialized() && evt.segmentList !== undefined) {
         representation.index.initialize(evt.segmentList);
       }
       initSegmentState.isLoaded = true;
@@ -383,16 +406,19 @@ export default function RepresentationStream<TSegmentDataType>(
       if (evt.initializationData !== null) {
         const initSegmentUniqueId = representation.uniqueId;
         initSegmentState.uniqueId = initSegmentUniqueId;
-        segmentSink.declareInitSegment(initSegmentUniqueId,
-                                       evt.initializationData);
-        pushInitSegment({ playbackObserver,
-                          bufferGoal,
-                          content,
-                          initSegmentUniqueId,
-                          segment: evt.segment,
-                          segmentData: evt.initializationData,
-                          segmentSink },
-                        globalCanceller.signal)
+        segmentSink.declareInitSegment(initSegmentUniqueId, evt.initializationData);
+        pushInitSegment(
+          {
+            playbackObserver,
+            bufferGoal,
+            content,
+            initSegmentUniqueId,
+            segment: evt.segment,
+            segmentData: evt.initializationData,
+            segmentSink,
+          },
+          globalCanceller.signal,
+        )
           .then((result) => {
             if (result !== null) {
               callbacks.addedSegment(result);
@@ -406,9 +432,7 @@ export default function RepresentationStream<TSegmentDataType>(
       checkStatus();
       return;
     } else {
-      const { inbandEvents,
-              predictedSegments,
-              needsManifestRefresh } = evt;
+      const { inbandEvents, predictedSegments, needsManifestRefresh } = evt;
       if (predictedSegments !== undefined) {
         representation.index.addPredictedSegments(predictedSegments, evt.segment);
       }
@@ -416,25 +440,29 @@ export default function RepresentationStream<TSegmentDataType>(
       if (needsManifestRefresh === true) {
         callbacks.needsManifestRefresh();
         if (globalCanceller.isUsed()) {
-          return ; // previous callback has stopped everything by side-effect
+          return; // previous callback has stopped everything by side-effect
         }
       }
       if (inbandEvents !== undefined && inbandEvents.length > 0) {
         callbacks.inbandEvent(inbandEvents);
         if (globalCanceller.isUsed()) {
-          return ; // previous callback has stopped everything by side-effect
+          return; // previous callback has stopped everything by side-effect
         }
       }
 
       const initSegmentUniqueId = initSegmentState.uniqueId;
-      pushMediaSegment({ playbackObserver,
-                         bufferGoal,
-                         content,
-                         initSegmentUniqueId,
-                         parsedSegment: evt,
-                         segment: evt.segment,
-                         segmentSink },
-                       globalCanceller.signal)
+      pushMediaSegment(
+        {
+          playbackObserver,
+          bufferGoal,
+          content,
+          initSegmentUniqueId,
+          parsedSegment: evt,
+          segment: evt.segment,
+          segmentSink,
+        },
+        globalCanceller.signal,
+      )
         .then((result) => {
           if (result !== null) {
             callbacks.addedSegment(result);
@@ -450,7 +478,7 @@ export default function RepresentationStream<TSegmentDataType>(
    * corresponding error.
    * @param {*} err
    */
-  function onFatalBufferError(err : unknown) : void {
+  function onFatalBufferError(err: unknown): void {
     if (globalCanceller.isUsed() && err instanceof CancellationError) {
       // The error is linked to cancellation AND we explicitely cancelled buffer
       // operations.
@@ -471,13 +499,13 @@ interface IInitSegmentState {
    * Segment Object describing that initialization segment.
    * `null` if there's no initialization segment for that Representation.
    */
-  segment : ISegment | null;
+  segment: ISegment | null;
   /**
    * Unique identifier used to identify the initialization segment data, used by
    * the `SegmentSink`.
    * `null` either when it doesn't exist or when it has not been declared yet.
    */
-  uniqueId : string | null;
+  uniqueId: string | null;
   /** `true` if the initialization segment has been loaded and parsed. */
-  isLoaded : boolean;
+  isLoaded: boolean;
 }

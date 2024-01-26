@@ -20,11 +20,9 @@ import type { ITimelineParser } from "../../node_parser_types";
  * @param {Element} root
  * @returns {Function}
  */
-export default function createSegmentTimelineParser(
-  root: Element
-) : ITimelineParser {
-  let result : HTMLCollection | null = null;
-  return function() : HTMLCollection {
+export default function createSegmentTimelineParser(root: Element): ITimelineParser {
+  let result: HTMLCollection | null = null;
+  return function (): HTMLCollection {
     if (result === null) {
       const elements = root.getElementsByTagName("S");
       result = elements;

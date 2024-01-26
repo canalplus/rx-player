@@ -19,13 +19,9 @@ import getMozMediaKeysCallbacks, {
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
-import type {
-  ICustomMediaKeys,
-} from "./custom_media_keys/types";
+import type { ICustomMediaKeys } from "./custom_media_keys/types";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
-import {
-  WebKitMediaKeysConstructor,
-} from "./custom_media_keys/webkit_media_keys_constructor";
+import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
 
 /**
  * Automatically detect and set which EME implementation should be used in the
@@ -50,9 +46,9 @@ export interface IEmeApiImplementation {
    * the most wanted to the least.
    * @returns {Promise}
    */
-  requestMediaKeySystemAccess : (
-    keyType : string,
-    config : MediaKeySystemConfiguration[]
+  requestMediaKeySystemAccess: (
+    keyType: string,
+    config: MediaKeySystemConfiguration[],
   ) => Promise<MediaKeySystemAccess | CustomMediaKeySystemAccess>;
 
   /**
@@ -65,10 +61,10 @@ export interface IEmeApiImplementation {
    * @param {Object} cancelSignal - The event listener will be removed once that
    * `CancellationSignal` emits.
    */
-  onEncrypted : (
-    target : IEventTargetLike,
-    listener : (evt : unknown) => void,
-    cancelSignal : CancellationSignal,
+  onEncrypted: (
+    target: IEventTargetLike,
+    listener: (evt: unknown) => void,
+    cancelSignal: CancellationSignal,
   ) => void;
 
   /**
@@ -80,9 +76,9 @@ export interface IEmeApiImplementation {
    * attached to the `HTMLMediaElement` with success, or rejects on the opposite
    * scenario.
    */
-  setMediaKeys : (
+  setMediaKeys: (
     mediaElement: HTMLMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 
   /**
@@ -100,7 +96,7 @@ export interface IEmeApiImplementation {
    *
    *   - "unknown": An unidentified variant of the EME API
    */
-  implementation : "standard" | "webkit" | "older-webkit" | "ms" | "moz" | "unknown";
+  implementation: "standard" | "webkit" | "older-webkit" | "ms" | "moz" | "unknown";
 }
 
 /**
@@ -126,21 +122,17 @@ export type IPreferredEmeApiType = "auto" | "standard" | "webkit";
  * @returns {Object}
  */
 function getEmeApiImplementation(
-  preferredApiType : IPreferredEmeApiType
-) : IEmeApiImplementation {
-  let requestMediaKeySystemAccess : IEmeApiImplementation["requestMediaKeySystemAccess"];
-  let onEncrypted : IEmeApiImplementation["onEncrypted"];
-  let setMediaKeys : IEmeApiImplementation["setMediaKeys"] = defaultSetMediaKeys;
-  let implementation : IEmeApiImplementation["implementation"];
+  preferredApiType: IPreferredEmeApiType,
+): IEmeApiImplementation {
+  let requestMediaKeySystemAccess: IEmeApiImplementation["requestMediaKeySystemAccess"];
+  let onEncrypted: IEmeApiImplementation["onEncrypted"];
+  let setMediaKeys: IEmeApiImplementation["setMediaKeys"] = defaultSetMediaKeys;
+  let implementation: IEmeApiImplementation["implementation"];
   if (
-    (
-      preferredApiType === "standard" ||
-      (preferredApiType === "auto" && !shouldFavourCustomSafariEME())
-    ) &&
-    (
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      isNode || !isNullOrUndefined(navigator.requestMediaKeySystemAccess)
-    )
+    (preferredApiType === "standard" ||
+      (preferredApiType === "auto" && !shouldFavourCustomSafariEME())) &&
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    (isNode || !isNullOrUndefined(navigator.requestMediaKeySystemAccess))
   ) {
     requestMediaKeySystemAccess = (...args) =>
       navigator.requestMediaKeySystemAccess(...args);
@@ -166,7 +158,7 @@ function getEmeApiImplementation(
         createCustomMediaKeys = callbacks.createCustomMediaKeys;
         setMediaKeys = callbacks.setMediaKeys;
         implementation = "older-webkit";
-      // This is for WebKit with prefixed EME api
+        // This is for WebKit with prefixed EME api
       } else if (WebKitMediaKeysConstructor !== undefined) {
         onEncrypted = createCompatibleEventListener(["needkey"]);
         const callbacks = getWebKitMediaKeysCallbacks();
@@ -191,20 +183,22 @@ function getEmeApiImplementation(
       } else {
         onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
         const MK = globalScope.MediaKeys as unknown as typeof MediaKeys & {
-          isTypeSupported? : (keyType : string) => boolean;
-          new(keyType? : string) : ICustomMediaKeys;
+          isTypeSupported?: (keyType: string) => boolean;
+          new (keyType?: string): ICustomMediaKeys;
         };
         const checkForStandardMediaKeys = () => {
           if (MK === undefined) {
-            throw new MediaError("MEDIA_KEYS_NOT_SUPPORTED",
-                                 "No `MediaKeys` implementation found " +
-                                 "in the current browser.");
+            throw new MediaError(
+              "MEDIA_KEYS_NOT_SUPPORTED",
+              "No `MediaKeys` implementation found " + "in the current browser.",
+            );
           }
           if (typeof MK.isTypeSupported === "undefined") {
-            const message = "This browser seems to be unable to play encrypted " +
-                            "contents currently." +
-                            "Note: Some browsers do not allow decryption " +
-                            "in some situations, like when not using HTTPS.";
+            const message =
+              "This browser seems to be unable to play encrypted " +
+              "contents currently." +
+              "Note: Some browsers do not allow decryption " +
+              "in some situations, like when not using HTTPS.";
             throw new Error(message);
           }
         };
@@ -221,28 +215,31 @@ function getEmeApiImplementation(
       }
     }
 
-    requestMediaKeySystemAccess = function(
-      keyType : string,
-      keySystemConfigurations : MediaKeySystemConfiguration[]
-    ) : Promise<MediaKeySystemAccess|CustomMediaKeySystemAccess> {
+    requestMediaKeySystemAccess = function (
+      keyType: string,
+      keySystemConfigurations: MediaKeySystemConfiguration[],
+    ): Promise<MediaKeySystemAccess | CustomMediaKeySystemAccess> {
       if (!isTypeSupported(keyType)) {
         return Promise.reject(new Error("Unsupported key type"));
       }
 
       for (let i = 0; i < keySystemConfigurations.length; i++) {
         const keySystemConfiguration = keySystemConfigurations[i];
-        const { videoCapabilities,
-                audioCapabilities,
-                initDataTypes,
-                distinctiveIdentifier } = keySystemConfiguration;
+        const {
+          videoCapabilities,
+          audioCapabilities,
+          initDataTypes,
+          distinctiveIdentifier,
+        } = keySystemConfiguration;
         let supported = true;
-        supported = supported &&
-                    (isNullOrUndefined(initDataTypes) ||
-                     initDataTypes.some((idt) => idt === "cenc"));
-        supported = supported && (distinctiveIdentifier !== "required");
+        supported =
+          supported &&
+          (isNullOrUndefined(initDataTypes) ||
+            initDataTypes.some((idt) => idt === "cenc"));
+        supported = supported && distinctiveIdentifier !== "required";
 
         if (supported) {
-          const keySystemConfigurationResponse : MediaKeySystemConfiguration = {
+          const keySystemConfigurationResponse: MediaKeySystemConfiguration = {
             initDataTypes: ["cenc"],
             distinctiveIdentifier: "not-allowed" as const,
             persistentState: "required" as const,
@@ -258,9 +255,11 @@ function getEmeApiImplementation(
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const customMediaKeys = createCustomMediaKeys(keyType);
           return Promise.resolve(
-            new CustomMediaKeySystemAccess(keyType,
-                                           customMediaKeys,
-                                           keySystemConfigurationResponse)
+            new CustomMediaKeySystemAccess(
+              keyType,
+              customMediaKeys,
+              keySystemConfigurationResponse,
+            ),
           );
         }
       }
@@ -268,10 +267,12 @@ function getEmeApiImplementation(
       return Promise.reject(new Error("Unsupported configuration"));
     };
   }
-  return { requestMediaKeySystemAccess,
-           onEncrypted,
-           setMediaKeys,
-           implementation };
+  return {
+    requestMediaKeySystemAccess,
+    onEncrypted,
+    setMediaKeys,
+    implementation,
+  };
 }
 
 /**
@@ -283,11 +284,11 @@ function getEmeApiImplementation(
  */
 function defaultSetMediaKeys(
   mediaElement: HTMLMediaElement,
-  mediaKeys: MediaKeys | ICustomMediaKeys | null
+  mediaKeys: MediaKeys | ICustomMediaKeys | null,
 ): Promise<unknown> {
   try {
-    let ret : unknown;
-    const elt : ICompatHTMLMediaElement = mediaElement;
+    let ret: unknown;
+    const elt: ICompatHTMLMediaElement = mediaElement;
     /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       ret = elt.setMediaKeys(mediaKeys as MediaKeys);

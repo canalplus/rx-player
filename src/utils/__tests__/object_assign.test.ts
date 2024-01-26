@@ -41,23 +41,26 @@ describe("utils - objectAssign", () => {
     expect(obj).toEqual({ a: 4, c: { d: "toto" }, f: /a/, g: 18, h: 32, i: 4 });
   });
 
-  // eslint-disable-next-line max-len
   it("should overwrite properties existing in both sources and targets by the latest source", () => {
     const obj = { a: 4, c: { d: "toto" } };
 
     expect(objectAssign(obj, { a: 78 })).toBe(obj);
     expect(obj).toEqual({ a: 78, c: { d: "toto" } });
 
-    expect(objectAssign(obj,
-                        { c: { d: 55 } },
-                        { c: { d: 85 } })).toBe(obj);
+    expect(objectAssign(obj, { c: { d: 55 } }, { c: { d: 85 } })).toBe(obj);
     expect(obj).toEqual({ a: 78, c: { d: 85 } });
   });
 
   it("types definition should be correct", () => {
     const obj = { a: 4, b: 5 };
-    interface Shape1 { a: number; b: number };
-    interface Shape2 { a: string; b: number };
+    interface Shape1 {
+      a: number;
+      b: number;
+    }
+    interface Shape2 {
+      a: string;
+      b: number;
+    }
 
     const mergedObj = objectAssign(obj, { a: "foo" });
     // the intention in this test is to check typescript definitions
