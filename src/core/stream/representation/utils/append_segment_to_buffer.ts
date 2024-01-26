@@ -23,8 +23,8 @@ import {
   SourceBufferError,
 } from "../../../../errors";
 import log from "../../../../log";
-import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
 import { toTaggedTrack } from "../../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import type { IRange } from "../../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import sleep from "../../../../utils/sleep";

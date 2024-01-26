@@ -15,6 +15,11 @@
  */
 
 import config from "../../config";
+import type {
+  IPlaybackObservation,
+  IReadOnlyPlaybackObserver,
+} from "../../playback_observer";
+import { SeekingState } from "../../playback_observer";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -27,12 +32,6 @@ import type {
   ContentInitializer,
   IStallingSituation,
 } from "../init";
-import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver } from "./playback_observer";
-import {
-  SeekingState,
-} from "./playback_observer";
 
 /**
  * @param {HTMLMediaElement} mediaElement

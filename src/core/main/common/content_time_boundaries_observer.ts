@@ -19,13 +19,13 @@ import type {
   IBufferType,
 } from "../../../core/types";
 import { MediaError } from "../../../errors";
-import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
 import type {
   IManifest,
   IAdaptation,
   IRepresentationIndex,
   IPeriod,
 } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";

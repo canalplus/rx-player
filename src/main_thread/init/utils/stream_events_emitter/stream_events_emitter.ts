@@ -16,12 +16,15 @@
 
 import config from "../../../../config";
 import type { IManifestMetadata } from "../../../../manifest";
+import { SeekingState } from "../../../../playback_observer";
+import type {
+  IPlaybackObservation,
+  IReadOnlyPlaybackObserver,
+} from "../../../../playback_observer";
 import EventEmitter from "../../../../utils/event_emitter";
 import SharedReference from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import TaskCanceller from "../../../../utils/task_canceller";
-import type { IPlaybackObservation, IReadOnlyPlaybackObserver } from "../../../api";
-import { SeekingState } from "../../../api/playback_observer";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
 import type {
   INonFiniteStreamEventPayload,

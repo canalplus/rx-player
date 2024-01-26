@@ -7,7 +7,6 @@ import type {
   IAdaptationChoice,
   IManifestFetcherSettings,
   IResolutionInfo,
-  ICorePlaybackObservation,
 } from "../../core/types";
 import {
   EncryptedMediaError,
@@ -18,9 +17,7 @@ import {
 } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type {
-  ICodecSupportList,
-  IManifestMetadata } from "../../manifest";
+import type { ICodecSupportList, IManifestMetadata } from "../../manifest";
 import {
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
@@ -30,11 +27,19 @@ import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   ICreateMediaSourceWorkerMessage,
   ISentError,
-  IWorkerMessage } from "../../multithread_types";
+  IWorkerMessage,
+} from "../../multithread_types";
 import {
   MainThreadMessageType,
   WorkerMessageType,
 } from "../../multithread_types";
+import type {
+  IReadOnlyPlaybackObserver,
+  IMediaElementPlaybackObserver,
+} from "../../playback_observer";
+import type {
+  IWorkerPlaybackObservation,
+} from "../../playback_observer/worker_playback_observer";
 import type {
   IKeySystemOption,
   IPlayerError,
@@ -58,7 +63,6 @@ import type {
 import TaskCanceller, {
   CancellationError,
 } from "../../utils/task_canceller";
-import type { IReadOnlyPlaybackObserver, PlaybackObserver } from "../api";
 import type {
   IContentProtection } from "../decrypt";
 import {
@@ -272,7 +276,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   public start(
     mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver
+    playbackObserver : IMediaElementPlaybackObserver
   ): void {
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
@@ -1209,7 +1213,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _reload(
     mediaElement : HTMLMediaElement,
     textDisplayer : ITextDisplayer | null,
-    playbackObserver : PlaybackObserver,
+    playbackObserver : IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     position : number,
     autoPlay : boolean
@@ -1270,9 +1274,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                    autoPlay : boolean;
                    mediaElement : HTMLMediaElement;
                    textDisplayer : ITextDisplayer | null;
-                   playbackObserver : PlaybackObserver; },
+                   playbackObserver : IMediaElementPlaybackObserver; },
     cancelSignal : CancellationSignal
-  ): IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null {
+  ): IReadOnlyPlaybackObserver<IWorkerPlaybackObservation> | null {
     if (cancelSignal.isCancelled()) {
       return null;
     }
@@ -1407,7 +1411,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _startPlaybackIfReady(parameters: {
     mediaElement: HTMLMediaElement;
     textDisplayer: ITextDisplayer | null;
-    playbackObserver: PlaybackObserver;
+    playbackObserver: IMediaElementPlaybackObserver;
     drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
     mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
   }): boolean {

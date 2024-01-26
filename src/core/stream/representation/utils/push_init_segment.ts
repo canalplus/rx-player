@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IReadOnlyPlaybackObserver } from "../../../../main_thread/types";
 import type {
   IManifest,
   IAdaptation,
@@ -22,6 +21,7 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import objectAssign from "../../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";

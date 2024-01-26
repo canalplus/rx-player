@@ -28,10 +28,10 @@ import type {
   IRepresentationMetadata,
   IDecipherabilityStatusChangedElement,
 } from "../../manifest";
+import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
 import type SharedReference from "../../utils/reference";
-import type { PlaybackObserver } from "../api";
 import type {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
@@ -84,7 +84,7 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    */
   public abstract start(
     mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver
+    playbackObserver : IMediaElementPlaybackObserver
   ) : void;
 
   /**

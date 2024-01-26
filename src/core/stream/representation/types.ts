@@ -1,8 +1,4 @@
-import type {
-  IContentProtection,
-  IObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../../main_thread/types";
+import type { IContentProtection } from "../../../main_thread/types";
 import type {
   IManifest,
   IAdaptation,
@@ -11,6 +7,10 @@ import type {
   IRepresentation,
 } from "../../../manifest";
 import type { IEMSG } from "../../../parsers/containers/isobmff";
+import type {
+  ObservationPosition,
+  IReadOnlyPlaybackObserver,
+} from "../../../playback_observer";
 import type {
   IAudioRepresentationsSwitchingMode,
   IPlayerError,
@@ -185,7 +185,7 @@ export interface IRepresentationStreamPlaybackObservation {
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.

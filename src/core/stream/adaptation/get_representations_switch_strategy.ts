@@ -15,11 +15,8 @@
  */
 
 import config from "../../../config";
-import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
-import type {
-  IAdaptation,
-  IPeriod,
-} from "../../../manifest";
+import type { IAdaptation, IPeriod } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import arrayIncludes from "../../../utils/array_includes";
 import type {
   IRange } from "../../../utils/ranges";

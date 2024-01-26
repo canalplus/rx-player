@@ -16,10 +16,20 @@
 
 /* eslint-disable-next-line max-len */
 import getBufferedDataPerMediaBuffer from "../../../core/main/common/get_buffered_data_per_media_buffer";
-import type { ICorePlaybackObservation } from "../../../core/types";
+import type { IPausedPlaybackObservation } from "../../../core/types";
 import type { IManifestMetadata } from "../../../manifest";
 import { getMaximumSafePosition } from "../../../manifest";
 import type { IMediaSourceInterface } from "../../../mse";
+import type {
+  IPlaybackObservation,
+  IReadOnlyPlaybackObserver,
+  IMediaElementPlaybackObserver,
+  ObservationPosition,
+  IRebufferingStatus,
+  IFreezingStatus,
+} from "../../../playback_observer";
+import type { ITrackType } from "../../../public_types";
+import type { IRange } from "../../../utils/ranges";
 import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -28,11 +38,6 @@ import type {
   CancellationSignal,
 } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
-import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-  PlaybackObserver,
-} from "../../api";
 import type { ITextDisplayer } from "../../text_displayer";
 
 /** Arguments needed to create the core's version of the PlaybackObserver. */
@@ -55,6 +60,35 @@ export interface ICorePlaybackObserverArguments {
   mediaSource : IMediaSourceInterface | null;
 }
 
+export interface ICorePlaybackObservation {
+  /**
+   * Information on whether the media element was paused at the time of the
+   * Observation.
+   */
+  paused : IPausedPlaybackObservation;
+  /**
+   * Information on the current media position in seconds at the time of the
+   * Observation.
+   */
+  position : ObservationPosition;
+  /** `duration` property of the HTMLMediaElement. */
+  duration : number;
+  /** `readyState` property of the HTMLMediaElement. */
+  readyState : number;
+  /** Target playback rate at which we want to play the content. */
+  speed : number;
+  /** Theoretical maximum position on the content that can currently be played. */
+  maximumPosition : number;
+  /**
+   * Ranges of buffered data per type of media.
+   * `null` if no buffer exists for that type of media.
+   */
+  buffered : Record<ITrackType, IRange[] | null>;
+  rebuffering: IRebufferingStatus | null;
+  freezing: IFreezingStatus | null;
+  bufferGap: number | undefined;
+}
+
 /**
  * Create PlaybackObserver for the core part of the code.
  * @param {Object} srcPlaybackObserver - Base `PlaybackObserver` from which we
@@ -65,7 +99,7 @@ export interface ICorePlaybackObserverArguments {
  * @returns {Object}
  */
 export default function createCorePlaybackObserver(
-  srcPlaybackObserver : PlaybackObserver,
+  srcPlaybackObserver : IMediaElementPlaybackObserver,
   { autoPlay,
     initialPlayPerformed,
     manifest,

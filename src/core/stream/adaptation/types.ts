@@ -1,10 +1,10 @@
-import type { IReadOnlyPlaybackObserver } from "../../../main_thread/types";
 import type {
   IManifest,
   IAdaptation,
   IPeriod,
   IRepresentation,
 } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,

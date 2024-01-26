@@ -1,12 +1,12 @@
 import type {
-  IObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../../main_thread/types";
-import type {
   IManifest,
   IAdaptation,
   IPeriod,
 } from "../../../manifest";
+import type {
+  ObservationPosition,
+  IReadOnlyPlaybackObserver,
+} from "../../../playback_observer";
 import type { ITrackType } from "../../../public_types";
 import type { IRange } from "../../../utils/ranges";
 import type {
@@ -94,7 +94,7 @@ export interface IPeriodStreamPlaybackObservation {
    * Information on the current media position in seconds at the time of the
    * Observation.
    */
-  position : IObservationPosition;
+  position : ObservationPosition;
   /** `duration` property of the HTMLMediaElement. */
   duration : number;
   /** `readyState` property of the HTMLMediaElement. */
