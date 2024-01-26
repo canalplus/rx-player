@@ -12,20 +12,18 @@ function AudioRepresentationKnob({
   player,
   className,
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
   className?: string;
 }): JSX.Element {
   const isAudioRepresentationLocked = useModuleState(
     player,
-    "audioRepresentationsLocked"
+    "audioRepresentationsLocked",
   );
   const audioRepresentation = useModuleState(player, "audioRepresentation");
   const audioTrack = useModuleState(player, "audioTrack");
 
   const availableAudioRepresentations =
-    audioTrack === null || audioTrack === undefined ?
-      [] :
-      audioTrack.representations;
+    audioTrack === null || audioTrack === undefined ? [] : audioTrack.representations;
 
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {
     if (!availableAudioRepresentations.length || audioRepresentation == null) {
@@ -40,27 +38,24 @@ function AudioRepresentationKnob({
         }
       }
 
-      const correspondingInfo = availableAudioRepresentations
-        .map(r => getAudioRepresentationInfo(r).join(", "));
+      const correspondingInfo = availableAudioRepresentations.map((r) =>
+        getAudioRepresentationInfo(r).join(", "),
+      );
 
       return [
         [autoValue, ...correspondingInfo],
-        isAudioRepresentationLocked ?
-          (availableAudioRepresentations
-            .findIndex(r => r.id === audioRepresentation?.id) + 1 || 0) :
-          0
+        isAudioRepresentationLocked
+          ? availableAudioRepresentations.findIndex(
+              (r) => r.id === audioRepresentation?.id,
+            ) + 1 || 0
+          : 0,
       ];
     }
     return [
-      availableAudioRepresentations
-        .map(r => getAudioRepresentationInfo(r).join(", ")),
-      0
+      availableAudioRepresentations.map((r) => getAudioRepresentationInfo(r).join(", ")),
+      0,
     ];
-  }, [
-    availableAudioRepresentations,
-    isAudioRepresentationLocked,
-    audioRepresentation
-  ]);
+  }, [availableAudioRepresentations, isAudioRepresentationLocked, audioRepresentation]);
 
   const onAudioRepresentationChange = React.useCallback(
     ({ index }: { index: number }) => {
@@ -71,7 +66,7 @@ function AudioRepresentationKnob({
         player.actions.unlockAudioRepresentations();
       }
     },
-    [availableAudioRepresentations, player]
+    [availableAudioRepresentations, player],
   );
 
   return (
@@ -89,9 +84,7 @@ function AudioRepresentationKnob({
 
 export default AudioRepresentationKnob;
 
-function getAudioRepresentationInfo(
-  audioRepresentation: IAudioRepresentation
-): string[] {
+function getAudioRepresentationInfo(audioRepresentation: IAudioRepresentation): string[] {
   const info = [];
   if (audioRepresentation.bitrate !== undefined) {
     info.push(`${Math.round(audioRepresentation.bitrate / 1000)}kbps`);

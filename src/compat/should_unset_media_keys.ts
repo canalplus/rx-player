@@ -22,6 +22,6 @@ import { isIE11 } from "./browser_detection";
  * Depends on the target.
  * @returns {Boolean}
  */
-export default function shouldUnsetMediaKeys() : boolean {
+export default function shouldUnsetMediaKeys(): boolean {
   return isIE11;
 }

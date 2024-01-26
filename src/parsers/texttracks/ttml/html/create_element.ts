@@ -17,17 +17,9 @@
 import { addClassName } from "../../../../compat";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import objectAssign from "../../../../utils/object_assign";
-import type {
-  IStyleList,
-  IStyleObject } from "../get_styling";
-import {
-  getStylingAttributes,
-} from "../get_styling";
-import {
-  getParentDivElements,
-  isLineBreakElement,
-  isSpanElement,
-} from "../xml_utils";
+import type { IStyleList, IStyleObject } from "../get_styling";
+import { getStylingAttributes } from "../get_styling";
+import { getParentDivElements, isLineBreakElement, isSpanElement } from "../xml_utils";
 import applyExtent from "./apply_extent";
 import applyFontSize from "./apply_font_size";
 import applyLineHeight from "./apply_line_height";
@@ -38,18 +30,20 @@ import ttmlColorToCSSColor from "./ttml_color_to_css_color";
 
 // Styling which can be applied to <span> from any level upper.
 // Added here as an optimization
-const SPAN_LEVEL_ATTRIBUTES = [ "color",
-                                "direction",
-                                "display",
-                                "fontFamily",
-                                "fontSize",
-                                "fontStyle",
-                                "fontWeight",
-                                "textDecoration",
-                                "textOutline",
-                                "unicodeBidi",
-                                "visibility",
-                                "wrapOption" ];
+const SPAN_LEVEL_ATTRIBUTES = [
+  "color",
+  "direction",
+  "display",
+  "fontFamily",
+  "fontSize",
+  "fontStyle",
+  "fontWeight",
+  "textDecoration",
+  "textOutline",
+  "unicodeBidi",
+  "visibility",
+  "wrapOption",
+];
 
 // TODO
 // tts:showBackground (applies to region)
@@ -61,9 +55,9 @@ const SPAN_LEVEL_ATTRIBUTES = [ "color",
  * @param {Object} style - The style to apply
  */
 function applyTextStyle(
-  element : HTMLElement,
-  style : Partial<Record<string, string>>,
-  shouldTrimWhiteSpace : boolean
+  element: HTMLElement,
+  style: Partial<Record<string, string>>,
+  shouldTrimWhiteSpace: boolean,
 ) {
   // applies to span
   const color = style.color;
@@ -80,16 +74,12 @@ function applyTextStyle(
   // applies to span
   const textOutline = style.textOutline;
   if (isNonEmptyString(textOutline)) {
-    const outlineData = textOutline
-      .trim()
-      .replace(/\s+/g, " ")
-      .split(" ");
+    const outlineData = textOutline.trim().replace(/\s+/g, " ").split(" ");
     const len = outlineData.length;
     if (len === 3) {
       const outlineColor = ttmlColorToCSSColor(outlineData[0]);
       const thickness = outlineData[1];
-      element.style.textShadow =
-        generateCSSTextOutline(outlineColor, thickness);
+      element.style.textShadow = generateCSSTextOutline(outlineColor, thickness);
     } else if (isNonEmptyString(color) && len === 1) {
       const thickness = outlineData[0];
       element.style.textShadow = generateCSSTextOutline(color, thickness);
@@ -133,13 +123,11 @@ function applyTextStyle(
   const fontFamily = style.fontFamily;
   if (isNonEmptyString(fontFamily)) {
     switch (fontFamily) {
-
       case "proportionalSansSerif":
-        element.style.fontFamily =
-          "Arial, Helvetica, Liberation Sans, sans-serif";
+        element.style.fontFamily = "Arial, Helvetica, Liberation Sans, sans-serif";
         break;
 
-    // TODO monospace or sans-serif or font with both?
+      // TODO monospace or sans-serif or font with both?
       case "monospaceSansSerif":
       case "sansSerif":
         element.style.fontFamily = "sans-serif";
@@ -150,7 +138,7 @@ function applyTextStyle(
         element.style.fontFamily = "Courier New, Liberation Mono, monospace";
         break;
 
-    // TODO font with both?
+      // TODO font with both?
       case "proportionalSerif":
         element.style.fontFamily = "serif";
         break;
@@ -216,9 +204,14 @@ function applyTextStyle(
 
   // applies to body, div, p, region, span
   const wrapOption = style.wrapOption;
-  element.style.whiteSpace = wrapOption === "noWrap" ?
-    (shouldTrimWhiteSpace ? "nowrap" : "pre") :
-    (shouldTrimWhiteSpace ? "normal" : "pre-wrap");
+  element.style.whiteSpace =
+    wrapOption === "noWrap"
+      ? shouldTrimWhiteSpace
+        ? "nowrap"
+        : "pre"
+      : shouldTrimWhiteSpace
+        ? "normal"
+        : "pre-wrap";
 }
 
 /**
@@ -226,10 +219,7 @@ function applyTextStyle(
  * @param {HTMLElement} element - The <div> the style will be applied on.
  * @param {Object} style - The general style object of the paragraph.
  */
-function applyGeneralStyle(
-  element : HTMLElement,
-  style : Partial<Record<string, string>>
-) {
+function applyGeneralStyle(element: HTMLElement, style: Partial<Record<string, string>>) {
   // Set default text color. It can be overrided by text element color.
   element.style.color = "white";
 
@@ -249,8 +239,7 @@ function applyGeneralStyle(
 
   // applies to region
   const overflow = style.overflow;
-  element.style.overflow = isNonEmptyString(overflow) ? overflow :
-                                                        "hidden";
+  element.style.overflow = isNonEmptyString(overflow) ? overflow : "hidden";
 
   // applies to region
   const padding = style.padding;
@@ -306,10 +295,7 @@ function applyGeneralStyle(
  * @param {HTMLElement} element - The <p> element
  * @param {Object} style - The general style object of the paragraph.
  */
-function applyPStyle(
-  element : HTMLElement,
-  style : Partial<Record<string, string>>
-) {
+function applyPStyle(element: HTMLElement, style: Partial<Record<string, string>>) {
   element.style.margin = "0px";
 
   // Set on it the default font-size, more specific font sizes may then be set
@@ -365,13 +351,12 @@ function applyPStyle(
  * @returns {HTMLElement}
  */
 function createTextElement(
-  el : Node,
-  style : Partial<Record<string, string>>,
-  shouldTrimWhiteSpace : boolean
-) : HTMLElement {
+  el: Node,
+  style: Partial<Record<string, string>>,
+  shouldTrimWhiteSpace: boolean,
+): HTMLElement {
   const textElement = document.createElement("span");
-  let textContent = el.textContent === null ? "" :
-                                              el.textContent;
+  let textContent = el.textContent === null ? "" : el.textContent;
 
   if (shouldTrimWhiteSpace) {
     // 1. Trim leading and trailing whitespace.
@@ -399,12 +384,12 @@ function createTextElement(
  * @returns {Array.<HTMLElement>}
  */
 function generateTextContent(
-  paragraph : Element,
-  regions : IStyleObject[],
-  styles : IStyleObject[],
-  paragraphStyle : Partial<Record<string, string>>,
-  shouldTrimWhiteSpace : boolean
-) : HTMLElement[] {
+  paragraph: Element,
+  regions: IStyleObject[],
+  styles: IStyleObject[],
+  paragraphStyle: Partial<Record<string, string>>,
+  shouldTrimWhiteSpace: boolean,
+): HTMLElement[] {
   /**
    * Recursive function, taking a node in argument and returning the
    * corresponding array of HTMLElement in order.
@@ -417,20 +402,22 @@ function generateTextContent(
    * @returns {Array.<HTMLElement>}
    */
   function loop(
-    node : Node,
-    style : IStyleList,
-    spans : Node[],
-    shouldTrimWhiteSpaceFromParent : boolean
-  ) : HTMLElement[] {
+    node: Node,
+    style: IStyleList,
+    spans: Node[],
+    shouldTrimWhiteSpaceFromParent: boolean,
+  ): HTMLElement[] {
     const childNodes = node.childNodes;
-    const elements : HTMLElement[] = [];
+    const elements: HTMLElement[] = [];
     for (let i = 0; i < childNodes.length; i++) {
       const currentNode = childNodes[i];
       if (currentNode.nodeName === "#text") {
-        const { backgroundColor } = getStylingAttributes(["backgroundColor"],
-                                                         spans,
-                                                         styles,
-                                                         regions);
+        const { backgroundColor } = getStylingAttributes(
+          ["backgroundColor"],
+          spans,
+          styles,
+          regions,
+        );
         if (isNonEmptyString(backgroundColor)) {
           style.backgroundColor = backgroundColor;
         } else {
@@ -441,35 +428,36 @@ function generateTextContent(
       } else if (isLineBreakElement(currentNode)) {
         const br = document.createElement("BR");
         elements.push(br);
-      } else if (isSpanElement(currentNode) &&
-                 currentNode.nodeType === Node.ELEMENT_NODE &&
-                 currentNode.childNodes.length > 0)
-      {
+      } else if (
+        isSpanElement(currentNode) &&
+        currentNode.nodeType === Node.ELEMENT_NODE &&
+        currentNode.childNodes.length > 0
+      ) {
         const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
-        const shouldTrimWhiteSpaceOnSpan =
-          isNonEmptyString(spaceAttribute) ? spaceAttribute === "default" :
-                                             shouldTrimWhiteSpaceFromParent;
+        const shouldTrimWhiteSpaceOnSpan = isNonEmptyString(spaceAttribute)
+          ? spaceAttribute === "default"
+          : shouldTrimWhiteSpaceFromParent;
 
         // compute the new applyable style
-        const newStyle = objectAssign({},
-                                      style,
-                                      getStylingAttributes(SPAN_LEVEL_ATTRIBUTES,
-                                                           [currentNode],
-                                                           styles,
-                                                           regions));
+        const newStyle = objectAssign(
+          {},
+          style,
+          getStylingAttributes(SPAN_LEVEL_ATTRIBUTES, [currentNode], styles, regions),
+        );
 
-        elements.push(...loop(currentNode,
-                              newStyle,
-                              [currentNode, ...spans],
-                              shouldTrimWhiteSpaceOnSpan));
+        elements.push(
+          ...loop(
+            currentNode,
+            newStyle,
+            [currentNode, ...spans],
+            shouldTrimWhiteSpaceOnSpan,
+          ),
+        );
       }
     }
     return elements;
   }
-  return loop(paragraph,
-              objectAssign({}, paragraphStyle),
-              [],
-              shouldTrimWhiteSpace);
+  return loop(paragraph, objectAssign({}, paragraphStyle), [], shouldTrimWhiteSpace);
 }
 
 /**
@@ -482,29 +470,34 @@ function generateTextContent(
  * @returns {HTMLElement}
  */
 export default function createElement(
-  paragraph : Element,
-  body : Element|null,
-  regions : IStyleObject[],
-  styles : IStyleObject[],
-  paragraphStyle : IStyleList,
-  { cellResolution,
-    shouldTrimWhiteSpace } : { shouldTrimWhiteSpace : boolean;
-                               cellResolution : { columns : number;
-                                                  rows : number; }; }
-) : HTMLElement {
+  paragraph: Element,
+  body: Element | null,
+  regions: IStyleObject[],
+  styles: IStyleObject[],
+  paragraphStyle: IStyleList,
+  {
+    cellResolution,
+    shouldTrimWhiteSpace,
+  }: {
+    shouldTrimWhiteSpace: boolean;
+    cellResolution: { columns: number; rows: number };
+  },
+): HTMLElement {
   const divs = getParentDivElements(paragraph);
   const parentElement = document.createElement("DIV");
   parentElement.className = "rxp-texttrack-region";
-  parentElement.setAttribute("data-resolution-columns",
-                             String(cellResolution.columns));
-  parentElement.setAttribute("data-resolution-rows",
-                             String(cellResolution.rows));
+  parentElement.setAttribute("data-resolution-columns", String(cellResolution.columns));
+  parentElement.setAttribute("data-resolution-rows", String(cellResolution.rows));
 
   applyGeneralStyle(parentElement, paragraphStyle);
   if (body !== null) {
     // applies to body, div, p, region, span
     const { bodyBackgroundColor } = getStylingAttributes(
-      ["backgroundColor"], [...divs, body], styles, regions);
+      ["backgroundColor"],
+      [...divs, body],
+      styles,
+      regions,
+    );
     if (isNonEmptyString(bodyBackgroundColor)) {
       parentElement.style.backgroundColor = ttmlColorToCSSColor(bodyBackgroundColor);
     }
@@ -515,7 +508,12 @@ export default function createElement(
   applyPStyle(pElement, paragraphStyle);
 
   const textContent = generateTextContent(
-    paragraph, regions, styles, paragraphStyle, shouldTrimWhiteSpace);
+    paragraph,
+    regions,
+    styles,
+    paragraphStyle,
+    shouldTrimWhiteSpace,
+  );
 
   for (let i = 0; i < textContent.length; i++) {
     pElement.appendChild(textContent[i]);

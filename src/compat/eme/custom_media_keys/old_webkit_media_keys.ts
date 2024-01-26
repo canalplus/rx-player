@@ -28,12 +28,12 @@ import type {
 } from "./types";
 
 export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
-  webkitGenerateKeyRequest : (keyType: string, initData : ArrayBuffer) => void;
-  webkitAddKey : (
+  webkitGenerateKeyRequest: (keyType: string, initData: ArrayBuffer) => void;
+  webkitAddKey: (
     keyType: string,
-    key : BufferSource,
-    kid : BufferSource|null,
-    sessionId : string
+    key: BufferSource,
+    kid: BufferSource | null,
+    sessionId: string,
   ) => void;
 }
 
@@ -44,11 +44,12 @@ export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
  * @returns {Boolean}
  */
 export function isOldWebkitMediaElement(
-  element : unknown
-) : element is IOldWebkitHTMLMediaElement {
-  return typeof (
-    element as IOldWebkitHTMLMediaElement
-  )?.webkitGenerateKeyRequest === "function";
+  element: unknown,
+): element is IOldWebkitHTMLMediaElement {
+  return (
+    typeof (element as IOldWebkitHTMLMediaElement)?.webkitGenerateKeyRequest ===
+    "function"
+  );
 }
 
 /**
@@ -69,7 +70,7 @@ class OldWebkitMediaKeySession
   private readonly _vid: IOldWebkitHTMLMediaElement;
   private readonly _key: string;
 
-  private _closeSession : () => void;
+  private _closeSession: () => void;
 
   constructor(mediaElement: IOldWebkitHTMLMediaElement, keySystem: string) {
     super();
@@ -81,35 +82,33 @@ class OldWebkitMediaKeySession
     this.keyStatuses = new Map();
     this.expiration = NaN;
 
-    const onSessionRelatedEvent = (evt : Event) => {
+    const onSessionRelatedEvent = (evt: Event) => {
       this.trigger(evt.type, evt);
     };
     this.closed = new Promise((resolve) => {
       this._closeSession = () => {
-        ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-          .forEach(evt => {
+        ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(
+          (evt) => {
             mediaElement.removeEventListener(evt, onSessionRelatedEvent);
             mediaElement.removeEventListener(`webkit${evt}`, onSessionRelatedEvent);
-          });
+          },
+        );
         resolve();
       };
     });
 
-
-    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => {
-        mediaElement.addEventListener(evt, onSessionRelatedEvent);
-        mediaElement.addEventListener(`webkit${evt}`, onSessionRelatedEvent);
-      });
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach((evt) => {
+      mediaElement.addEventListener(evt, onSessionRelatedEvent);
+      mediaElement.addEventListener(`webkit${evt}`, onSessionRelatedEvent);
+    });
   }
 
-  public update(license: Uint8Array) : Promise<void> {
+  public update(license: Uint8Array): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         if (this._key.indexOf("clearkey") >= 0) {
           const licenseTypedArray =
-            license instanceof ArrayBuffer ? new Uint8Array(license) :
-            license;
+            license instanceof ArrayBuffer ? new Uint8Array(license) : license;
           /* eslint-disable @typescript-eslint/no-unsafe-member-access */
           /* eslint-disable @typescript-eslint/no-unsafe-argument */
           /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -129,10 +128,7 @@ class OldWebkitMediaKeySession
     });
   }
 
-  public generateRequest(
-    _initDataType: string,
-    initData: ArrayBuffer
-  ): Promise<void> {
+  public generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
     return new Promise((resolve) => {
       this._vid.webkitGenerateKeyRequest(this._key, initData);
       resolve();
@@ -169,7 +165,9 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
     this._keySystem = keySystem;
   }
 
-  _setVideo(videoElement: IOldWebkitHTMLMediaElement|HTMLMediaElement): Promise<unknown> {
+  _setVideo(
+    videoElement: IOldWebkitHTMLMediaElement | HTMLMediaElement,
+  ): Promise<unknown> {
     return wrapInPromise(() => {
       if (!isOldWebkitMediaElement(videoElement)) {
         throw new Error("Video not attached to the MediaKeys");
@@ -190,12 +188,12 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
   }
 }
 
-export default function getOldWebKitMediaKeysCallbacks() : {
+export default function getOldWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => OldWebKitCustomMediaKeys;
   setMediaKeys: (
     elt: HTMLMediaElement,
-    mediaKeys: MediaKeys|ICustomMediaKeys|null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
   const isTypeSupported = function (keyType: string): boolean {
@@ -209,26 +207,30 @@ export default function getOldWebKitMediaKeysCallbacks() : {
       !isNullOrUndefined(videoElement) &&
       typeof videoElement.canPlayType === "function"
     ) {
-      return !!(videoElement.canPlayType as unknown as (
-        mimeType : string,
-        keyType? : string
-      ) => boolean)("video/mp4", keyType);
+      return !!(
+        videoElement.canPlayType as unknown as (
+          mimeType: string,
+          keyType?: string,
+        ) => boolean
+      )("video/mp4", keyType);
     } else {
       return false;
     }
   };
-  const createCustomMediaKeys =
-    (keyType: string) => new OldWebKitCustomMediaKeys(keyType);
+  const createCustomMediaKeys = (keyType: string) =>
+    new OldWebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
     elt: HTMLMediaElement,
-    mediaKeys: MediaKeys|ICustomMediaKeys|null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {
       return Promise.resolve(undefined);
     }
     if (!(mediaKeys instanceof OldWebKitCustomMediaKeys)) {
-      throw new Error("Custom setMediaKeys is supposed to be called " +
-                      "with old webkit custom MediaKeys.");
+      throw new Error(
+        "Custom setMediaKeys is supposed to be called " +
+          "with old webkit custom MediaKeys.",
+      );
     }
     return mediaKeys._setVideo(elt);
   };

@@ -27,11 +27,7 @@ import parseMpdIr, {
 } from "./parse_mpd";
 
 export default parseMpdIr;
-export {
-  IIrParserResponse,
-  ILoadedXlinkData,
-  IMPDParserArguments,
-};
+export { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments };
 export {
   BaseRepresentationIndex,
   ListRepresentationIndex,

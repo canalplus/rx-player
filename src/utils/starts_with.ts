@@ -25,18 +25,19 @@
  * @returns {boolean}
  */
 export default function startsWith(
-  completeString : string,
-  searchString : string,
-  position? : number
-) : boolean {
+  completeString: string,
+  searchString: string,
+  position?: number,
+): boolean {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   // eslint-disable-next-line no-restricted-properties
   if (typeof String.prototype.startsWith === "function") {
     // eslint-disable-next-line no-restricted-properties
     return completeString.startsWith(searchString, position);
   }
-  const initialPosition = typeof position === "number" ? Math.max(position, 0) :
-                                                         0;
-  return completeString.substring(initialPosition,
-                                  initialPosition + searchString.length) === searchString;
+  const initialPosition = typeof position === "number" ? Math.max(position, 0) : 0;
+  return (
+    completeString.substring(initialPosition, initialPosition + searchString.length) ===
+    searchString
+  );
 }

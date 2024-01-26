@@ -31,12 +31,7 @@ import TextTrackRenderer, {
 } from "rx-player/tools/TextTrackRenderer";
 
 // Add the needed parsers to the TextTrackRenderer
-TextTrackRenderer.addParsers([
-  TTML_PARSER,
-  VTT_PARSER,
-  SRT_PARSER,
-  SAMI_PARSER,
-]);
+TextTrackRenderer.addParsers([TTML_PARSER, VTT_PARSER, SRT_PARSER, SAMI_PARSER]);
 
 // get video element the subtitles has to be synchronized to
 const videoElement = document.querySelector("video");

@@ -13,10 +13,9 @@ As such, this method can also be called when no content is currently playing.
 player.setVolume(volume);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _volume_ `number`: Volume from 0 to 1.
-
+  1.  _volume_ `number`: Volume from 0 to 1.
 
 ## Example
 

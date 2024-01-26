@@ -21,7 +21,9 @@ import addHTMLttmlFeature from "../html_ttml_parser";
 
 describe("Features list - HTML ttml Parser", () => {
   it("should add an HTML ttml Parser in the current features", () => {
-    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
+    const featureObject = {
+      htmlTextTracksParsers: {},
+    } as unknown as IFeaturesObject;
     addHTMLttmlFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { ttml: ttmlParser },

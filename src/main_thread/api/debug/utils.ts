@@ -10,32 +10,29 @@
  * @returns {HTMLElement}
  */
 export function createElement(
-  elementName : "input",
-  opts? : CreateElementOptions | undefined
-) : HTMLInputElement;
+  elementName: "input",
+  opts?: CreateElementOptions | undefined,
+): HTMLInputElement;
 export function createElement(
-  elementName : "button",
-  opts? : CreateElementOptions | undefined
-) : HTMLButtonElement;
+  elementName: "button",
+  opts?: CreateElementOptions | undefined,
+): HTMLButtonElement;
 export function createElement(
-  elementName : "a",
-  opts? : CreateElementOptions | undefined
-) : HTMLLinkElement;
+  elementName: "a",
+  opts?: CreateElementOptions | undefined,
+): HTMLLinkElement;
 export function createElement(
-  elementName : "canvas",
-  opts? : CreateElementOptions | undefined
-) : HTMLCanvasElement;
+  elementName: "canvas",
+  opts?: CreateElementOptions | undefined,
+): HTMLCanvasElement;
 export function createElement(
-  elementName : string,
-  opts? : CreateElementOptions | undefined
-) : HTMLElement;
+  elementName: string,
+  opts?: CreateElementOptions | undefined,
+): HTMLElement;
 export function createElement(
-  elementName : string,
-  {
-    textContent,
-    className,
-  } : CreateElementOptions | undefined = {}
-) : HTMLElement {
+  elementName: string,
+  { textContent, className }: CreateElementOptions | undefined = {},
+): HTMLElement {
   const elt = document.createElement(elementName);
   if (className !== undefined) {
     elt.className = className;
@@ -47,8 +44,8 @@ export function createElement(
 }
 
 interface CreateElementOptions {
-  textContent? : string | undefined;
-  className? : string | undefined;
+  textContent?: string | undefined;
+  className?: string | undefined;
 }
 
 /**
@@ -64,10 +61,10 @@ interface CreateElementOptions {
  * @returns {HTMLElement}
  */
 export function createCompositeElement(
-  rootElementName : string,
-  parts : Array<HTMLElement | string>,
-  { className } : { className? : string } | undefined = {}
-) : HTMLElement {
+  rootElementName: string,
+  parts: Array<HTMLElement | string>,
+  { className }: { className?: string } | undefined = {},
+): HTMLElement {
   const elt = document.createElement(rootElementName);
   if (className !== undefined) {
     elt.className = className;
@@ -82,11 +79,11 @@ export function createCompositeElement(
   return elt;
 }
 
-export function isExtendedMode(parentElt : HTMLElement) : boolean {
+export function isExtendedMode(parentElt: HTMLElement): boolean {
   return parentElt.clientHeight > 400;
 }
 
-export function createMetricTitle(title : string) : HTMLElement {
+export function createMetricTitle(title: string): HTMLElement {
   const elt = createElement("span", {
     textContent: title + "/",
   });
@@ -94,7 +91,7 @@ export function createMetricTitle(title : string) : HTMLElement {
   return elt;
 }
 
-export function createGraphCanvas() : HTMLCanvasElement {
+export function createGraphCanvas(): HTMLCanvasElement {
   const canvasElt = createElement("canvas");
   canvasElt.style.border = "1px solid white";
   canvasElt.style.height = "15px";

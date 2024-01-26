@@ -29,12 +29,11 @@ import type { ICompatVTTCue } from "./browser_compatibility_types";
  * were invalid.
  */
 export default function makeCue(
-  startTime : number,
-  endTime : number,
-  payload : string
-) : ICompatVTTCue|TextTrackCue|null {
+  startTime: number,
+  endTime: number,
+  payload: string,
+): ICompatVTTCue | TextTrackCue | null {
   if (startTime >= endTime) {
-
     // IE/Edge will throw in this case.
     // See issue #501
     log.warn(`Compat: Invalid cue times: ${startTime} - ${endTime}`);

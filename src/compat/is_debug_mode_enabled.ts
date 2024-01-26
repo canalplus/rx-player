@@ -1,5 +1,5 @@
 /* eslint-disable-next-line @typescript-eslint/naming-convention */
-declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
+declare const __RX_PLAYER_DEBUG_MODE__: boolean | undefined;
 
 /**
  * Some external tools set that boolean, in which case, we should enable DEBUG

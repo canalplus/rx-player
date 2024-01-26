@@ -1,7 +1,7 @@
 import LANGUAGE_CODES from "../../assets/languages";
 
 export default function translateLanguageCode(
-  langCode: string | undefined | null
+  langCode: string | undefined | null,
 ): string {
   if (!langCode) {
     return "unknown";

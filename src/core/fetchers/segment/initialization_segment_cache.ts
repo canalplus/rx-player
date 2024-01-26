@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  ISegment,
-  IRepresentation,
-} from "../../../manifest";
+import type { ISegment, IRepresentation } from "../../../manifest";
 
 /**
  * Caching object used to cache initialization segments.
@@ -25,7 +22,7 @@ import type {
  * @class InitializationSegmentCache
  */
 class InitializationSegmentCache<T> {
-  private _cache : WeakMap<IRepresentation, T>;
+  private _cache: WeakMap<IRepresentation, T>;
 
   constructor() {
     this._cache = new WeakMap();
@@ -36,11 +33,9 @@ class InitializationSegmentCache<T> {
    * @param {*} response
    */
   public add(
-    { representation,
-      segment } : { representation : IRepresentation;
-                    segment : ISegment; },
-    response : T
-  ) : void {
+    { representation, segment }: { representation: IRepresentation; segment: ISegment },
+    response: T,
+  ): void {
     if (segment.isInit) {
       this._cache.set(representation, response);
     }
@@ -50,11 +45,13 @@ class InitializationSegmentCache<T> {
    * @param {Object} obj
    * @returns {*} response
    */
-  public get(
-    { representation,
-      segment } : { representation : IRepresentation;
-                    segment : ISegment; }
-  ) : T|null {
+  public get({
+    representation,
+    segment,
+  }: {
+    representation: IRepresentation;
+    segment: ISegment;
+  }): T | null {
     if (segment.isInit) {
       const value = this._cache.get(representation);
       if (value !== undefined) {

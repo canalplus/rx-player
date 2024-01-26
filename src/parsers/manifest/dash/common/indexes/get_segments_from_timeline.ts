@@ -16,12 +16,8 @@
 
 import type { ISegment } from "../../../../../manifest";
 import type { IEMSG } from "../../../../containers/isobmff";
-import type {
-  IIndexSegment } from "../../../utils/index_helpers";
-import {
-  calculateRepeat,
-  toIndexTime,
-} from "../../../utils/index_helpers";
+import type { IIndexSegment } from "../../../utils/index_helpers";
+import { calculateRepeat, toIndexTime } from "../../../utils/index_helpers";
 import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import { createDashUrlDetokenizer } from "./tokens";
 
@@ -35,13 +31,12 @@ import { createDashUrlDetokenizer } from "./tokens";
  * @returns {Number}
  */
 function getWantedRepeatIndex(
-  segmentStartTime : number,
-  segmentDuration : number,
-  wantedTime : number
-) : number {
+  segmentStartTime: number,
+  segmentDuration: number,
+  wantedTime: number,
+): number {
   const diff = wantedTime - segmentStartTime;
-  return diff > 0 ? Math.floor(diff / segmentDuration) :
-                    0;
+  return diff > 0 ? Math.floor(diff / segmentDuration) : 0;
 }
 
 /**
@@ -55,22 +50,24 @@ function getWantedRepeatIndex(
  * @returns {Array.<Object>}
  */
 export default function getSegmentsFromTimeline(
-  index : { availabilityTimeComplete? : boolean | undefined;
-            availabilityTimeOffset? : number | undefined;
-            segmentUrlTemplate : string | null;
-            startNumber? : number | undefined;
-            endNumber? : number | undefined;
-            timeline : IIndexSegment[];
-            timescale : number;
-            indexTimeOffset : number; },
-  from : number,
-  durationWanted : number,
-  manifestBoundsCalculator : ManifestBoundsCalculator,
-  scaledPeriodEnd : number | undefined,
-  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean
-) : ISegment[] {
+  index: {
+    availabilityTimeComplete?: boolean | undefined;
+    availabilityTimeOffset?: number | undefined;
+    segmentUrlTemplate: string | null;
+    startNumber?: number | undefined;
+    endNumber?: number | undefined;
+    timeline: IIndexSegment[];
+    timescale: number;
+    indexTimeOffset: number;
+  },
+  from: number,
+  durationWanted: number,
+  manifestBoundsCalculator: ManifestBoundsCalculator,
+  scaledPeriodEnd: number | undefined,
+  isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean,
+): ISegment[] {
   const maximumTime = manifestBoundsCalculator.getEstimatedMaximumPosition(
-    index.availabilityTimeOffset ?? 0
+    index.availabilityTimeOffset ?? 0,
   );
   const wantedMaximum = Math.min(from + durationWanted, maximumTime ?? Infinity);
   const scaledUp = toIndexTime(from, index);
@@ -78,7 +75,7 @@ export default function getSegmentsFromTimeline(
   const { timeline, timescale, segmentUrlTemplate, startNumber, endNumber } = index;
 
   let currentNumber = startNumber ?? 1;
-  const segments : ISegment[] = [];
+  const segments: ISegment[] = [];
 
   const timelineLength = timeline.length;
 
@@ -93,9 +90,9 @@ export default function getSegmentsFromTimeline(
       maxRepeatTime = Math.min(maximumTime * timescale, scaledPeriodEnd ?? Infinity);
     }
     const repeat = calculateRepeat(timelineItem, timeline[i + 1], maxRepeatTime);
-    const complete = index.availabilityTimeComplete !== false ||
-                     i !== timelineLength - 1 &&
-                     repeat !== 0;
+    const complete =
+      index.availabilityTimeComplete !== false ||
+      (i !== timelineLength - 1 && repeat !== 0);
     let segmentNumberInCurrentRange = getWantedRepeatIndex(start, duration, scaledUp);
     let segmentTime = start + segmentNumberInCurrentRange * duration;
     while (segmentTime < scaledTo && segmentNumberInCurrentRange <= repeat) {
@@ -104,9 +101,10 @@ export default function getSegmentsFromTimeline(
         break;
       }
 
-      const detokenizedURL = segmentUrlTemplate === null ?
-        null :
-        createDashUrlDetokenizer(segmentTime, segmentNumber)(segmentUrlTemplate);
+      const detokenizedURL =
+        segmentUrlTemplate === null
+          ? null
+          : createDashUrlDetokenizer(segmentTime, segmentNumber)(segmentUrlTemplate);
 
       let time = segmentTime - index.indexTimeOffset;
       let realDuration = duration;
@@ -115,18 +113,20 @@ export default function getSegmentsFromTimeline(
         time = 0;
       }
 
-      const segment = { id: String(segmentTime),
-                        time: time / timescale,
-                        end: (time + realDuration) / timescale,
-                        duration: realDuration / timescale,
-                        isInit: false,
-                        range,
-                        timescale: 1 as const,
-                        url: detokenizedURL,
-                        number: segmentNumber,
-                        timestampOffset: -(index.indexTimeOffset / timescale),
-                        complete,
-                        privateInfos: { isEMSGWhitelisted } };
+      const segment = {
+        id: String(segmentTime),
+        time: time / timescale,
+        end: (time + realDuration) / timescale,
+        duration: realDuration / timescale,
+        isInit: false,
+        range,
+        timescale: 1 as const,
+        url: detokenizedURL,
+        number: segmentNumber,
+        timestampOffset: -(index.indexTimeOffset / timescale),
+        complete,
+        privateInfos: { isEMSGWhitelisted },
+      };
       segments.push(segment);
 
       // update segment number and segment time for the next segment

@@ -20,9 +20,5 @@ import ManifestFetcher, {
   IManifestRefreshSettings,
 } from "./manifest_fetcher";
 
-export {
-  IManifestFetcherSettings,
-  IManifestFetcherEvent,
-  IManifestRefreshSettings,
-};
+export { IManifestFetcherSettings, IManifestFetcherEvent, IManifestRefreshSettings };
 export default ManifestFetcher;

@@ -10,13 +10,13 @@ import type { IReadOnlyPlaybackObserver } from "../types";
  * @returns {Object}
  */
 export default function generateReadOnlyObserver<TSource, TDest>(
-  src : IReadOnlyPlaybackObserver<TSource>,
-  transform : (
-    observationRef : IReadOnlySharedReference<TSource>,
-    cancellationSignal : CancellationSignal
+  src: IReadOnlyPlaybackObserver<TSource>,
+  transform: (
+    observationRef: IReadOnlySharedReference<TSource>,
+    cancellationSignal: CancellationSignal,
   ) => IReadOnlySharedReference<TDest>,
-  cancellationSignal : CancellationSignal
-) : IReadOnlyPlaybackObserver<TDest> {
+  cancellationSignal: CancellationSignal,
+): IReadOnlyPlaybackObserver<TDest> {
   const mappedRef = transform(src.getReference(), cancellationSignal);
   return {
     getCurrentTime() {
@@ -31,21 +31,21 @@ export default function generateReadOnlyObserver<TSource, TDest>(
     getIsPaused() {
       return src.getIsPaused();
     },
-    getReference() : IReadOnlySharedReference<TDest> {
+    getReference(): IReadOnlySharedReference<TDest> {
       return mappedRef;
     },
     listen(
-      cb : (
-        observation : TDest,
-        stopListening : () => void
-      ) => void,
-      options? : { includeLastObservation? : boolean | undefined;
-                   clearSignal? : CancellationSignal | undefined; }
-    ) : void {
-      if (cancellationSignal.isCancelled() ||
-          options?.clearSignal?.isCancelled() === true)
-      {
-        return ;
+      cb: (observation: TDest, stopListening: () => void) => void,
+      options?: {
+        includeLastObservation?: boolean | undefined;
+        clearSignal?: CancellationSignal | undefined;
+      },
+    ): void {
+      if (
+        cancellationSignal.isCancelled() ||
+        options?.clearSignal?.isCancelled() === true
+      ) {
+        return;
       }
       mappedRef.onUpdate(cb, {
         clearSignal: options?.clearSignal,
@@ -53,11 +53,11 @@ export default function generateReadOnlyObserver<TSource, TDest>(
       });
     },
     deriveReadOnlyObserver<TNext>(
-      newTransformFn : (
-        observationRef : IReadOnlySharedReference<TDest>,
-        signal : CancellationSignal
-      ) => IReadOnlySharedReference<TNext>
-    ) : IReadOnlyPlaybackObserver<TNext> {
+      newTransformFn: (
+        observationRef: IReadOnlySharedReference<TDest>,
+        signal: CancellationSignal,
+      ) => IReadOnlySharedReference<TNext>,
+    ): IReadOnlyPlaybackObserver<TNext> {
       return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
     },
   };

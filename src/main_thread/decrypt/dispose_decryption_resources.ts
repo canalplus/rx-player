@@ -24,8 +24,8 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @returns {Promise}
  */
 export default async function disposeDecryptionResources(
-  mediaElement : HTMLMediaElement
-) : Promise<unknown> {
+  mediaElement: HTMLMediaElement,
+): Promise<unknown> {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   if (currentState === null) {
     return undefined;
@@ -36,19 +36,16 @@ export default async function disposeDecryptionResources(
   MediaKeysInfosStore.clearState(mediaElement);
   await loadedSessionsStore.closeAllSessions();
 
-  return Promise.race(
-    [
-      currentState.emeImplementation.setMediaKeys(mediaElement, null)
-        .catch(err => {
-          log.error(
-            "DRM: Could not reset MediaKeys",
-            err instanceof Error ? err : "Unknown Error"
-          );
-        }),
+  return Promise.race([
+    currentState.emeImplementation.setMediaKeys(mediaElement, null).catch((err) => {
+      log.error(
+        "DRM: Could not reset MediaKeys",
+        err instanceof Error ? err : "Unknown Error",
+      );
+    }),
 
-      // Because we know how much EME has implementation issues, let's not block
-      // everything because that API hangs
-      sleep(1000),
-    ]
-  );
+    // Because we know how much EME has implementation issues, let's not block
+    // everything because that API hangs
+    sleep(1000),
+  ]);
 }

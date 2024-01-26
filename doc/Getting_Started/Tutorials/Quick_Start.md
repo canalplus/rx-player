@@ -74,8 +74,7 @@ Here is a quick example which will load and play a DASH content:
 
 ```js
 player.loadVideo({
-  url:
-    "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   autoPlay: true,
 });
@@ -167,8 +166,7 @@ player.addEventListener("playerStateChange", (state) => {
 });
 
 player.loadVideo({
-  url:
-    "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   autoPlay: true,
 });

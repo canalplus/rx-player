@@ -15,10 +15,7 @@
  */
 
 import log from "../../log";
-import type {
-  IAdaptationMetadata,
-  IRepresentationMetadata,
-} from "../../manifest";
+import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
 import type { IParsedAdaptation } from "../../parsers/manifest";
 import type {
   ITrackType,
@@ -28,9 +25,7 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
-import type {
-  ICodecSupportList,
-} from "./representation";
+import type { ICodecSupportList } from "./representation";
 import Representation from "./representation";
 
 /**
@@ -43,56 +38,56 @@ import Representation from "./representation";
  */
 export default class Adaptation implements IAdaptationMetadata {
   /** ID uniquely identifying the Adaptation in the Period. */
-  public readonly id : string;
+  public readonly id: string;
   /**
    * `true` if this Adaptation was not present in the original Manifest, but was
    * manually added after through the corresponding APIs.
    */
-  public manuallyAdded? : boolean;
+  public manuallyAdded?: boolean;
   /**
    * @see IRepresentationMetadata
    */
-  public readonly representations : Representation[];
+  public readonly representations: Representation[];
   /**
    * @see IRepresentationMetadata
    */
-  public readonly type : ITrackType;
+  public readonly type: ITrackType;
   /**
    * @see IRepresentationMetadata
    */
-  public isAudioDescription? : boolean;
+  public isAudioDescription?: boolean;
   /**
    * @see IRepresentationMetadata
    */
-  public isClosedCaption? : boolean;
+  public isClosedCaption?: boolean;
   /**
    * @see IRepresentationMetadata
    */
-  public isForcedSubtitles? : boolean;
+  public isForcedSubtitles?: boolean;
   /**
    * @see IRepresentationMetadata
    */
-  public isSignInterpreted? : boolean;
+  public isSignInterpreted?: boolean;
   /**
    * @see IRepresentationMetadata
    */
-  public isDub? : boolean;
+  public isDub?: boolean;
   /**
    * @see IRepresentationMetadata
    */
-  public language? : string;
+  public language?: string;
   /**
    * @see IRepresentationMetadata
    */
-  public normalizedLanguage? : string;
+  public normalizedLanguage?: string;
   /**
    * @see IRepresentationMetadata
    */
-  public isSupported : boolean | undefined;
+  public isSupported: boolean | undefined;
   /**
    * @see IRepresentationMetadata
    */
-  public isTrickModeTrack? : boolean;
+  public isTrickModeTrack?: boolean;
   /**
    * @see IRepresentationMetadata
    */
@@ -100,7 +95,7 @@ export default class Adaptation implements IAdaptationMetadata {
   /**
    * @see IRepresentationMetadata
    */
-  public readonly trickModeTracks? : Adaptation[];
+  public readonly trickModeTracks?: Adaptation[];
 
   /**
    * @constructor
@@ -108,18 +103,18 @@ export default class Adaptation implements IAdaptationMetadata {
    * @param {Object|undefined} [options]
    */
   constructor(
-    parsedAdaptation : IParsedAdaptation,
-    options : {
-      representationFilter? : IRepresentationFilter | undefined;
-      isManuallyAdded? : boolean | undefined;
-    } = {}
+    parsedAdaptation: IParsedAdaptation,
+    options: {
+      representationFilter?: IRepresentationFilter | undefined;
+      isManuallyAdded?: boolean | undefined;
+    } = {},
   ) {
     const { trickModeTracks } = parsedAdaptation;
     const { representationFilter, isManuallyAdded } = options;
     this.id = parsedAdaptation.id;
     this.type = parsedAdaptation.type;
 
-    if  (parsedAdaptation.isTrickModeTrack !== undefined) {
+    if (parsedAdaptation.isTrickModeTrack !== undefined) {
       this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
     }
 
@@ -147,21 +142,18 @@ export default class Adaptation implements IAdaptationMetadata {
       this.label = parsedAdaptation.label;
     }
 
-    if (trickModeTracks !== undefined &&
-        trickModeTracks.length > 0) {
-      this.trickModeTracks = trickModeTracks.map((track) =>
-        new Adaptation(track)
-      );
+    if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
+      this.trickModeTracks = trickModeTracks.map((track) => new Adaptation(track));
     }
 
     const argsRepresentations = parsedAdaptation.representations;
-    const representations : Representation[] = [];
-    let isSupported : boolean | undefined;
+    const representations: Representation[] = [];
+    let isSupported: boolean | undefined;
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(argsRepresentations[i], this.type);
       let shouldAdd = true;
       if (!isNullOrUndefined(representationFilter)) {
-        const reprObject : IRepresentationFilterRepresentation = {
+        const reprObject: IRepresentationFilterRepresentation = {
           id: representation.id,
           bitrate: representation.bitrate,
           codecs: representation.codecs,
@@ -173,19 +165,21 @@ export default class Adaptation implements IAdaptationMetadata {
         if (representation.contentProtections !== undefined) {
           reprObject.contentProtections = {};
           if (representation.contentProtections.keyIds !== undefined) {
-            const keyIds = representation.contentProtections.keyIds
-              .map(({ keyId }) => keyId);
+            const keyIds = representation.contentProtections.keyIds.map(
+              ({ keyId }) => keyId,
+            );
             reprObject.contentProtections.keyIds = keyIds;
           }
         }
-        shouldAdd = representationFilter(reprObject,
-                                         { trackType: this.type,
-                                           language: this.language,
-                                           normalizedLanguage: this.normalizedLanguage,
-                                           isClosedCaption: this.isClosedCaption,
-                                           isDub: this.isDub,
-                                           isAudioDescription: this.isAudioDescription,
-                                           isSignInterpreted: this.isSignInterpreted });
+        shouldAdd = representationFilter(reprObject, {
+          trackType: this.type,
+          language: this.language,
+          normalizedLanguage: this.normalizedLanguage,
+          isClosedCaption: this.isClosedCaption,
+          isDub: this.isDub,
+          isAudioDescription: this.isAudioDescription,
+          isSignInterpreted: this.isSignInterpreted,
+        });
       }
       if (shouldAdd) {
         representations.push(representation);
@@ -197,11 +191,13 @@ export default class Adaptation implements IAdaptationMetadata {
           }
         }
       } else {
-        log.debug("Filtering Representation due to representationFilter",
-                  this.type,
-                  `Adaptation: ${this.id}`,
-                  `Representation: ${representation.id}`,
-                  `(${representation.bitrate})`);
+        log.debug(
+          "Filtering Representation due to representationFilter",
+          this.type,
+          `Adaptation: ${this.id}`,
+          `Representation: ${representation.id}`,
+          `(${representation.bitrate})`,
+        );
       }
     }
     representations.sort((a, b) => a.bitrate - b.bitrate);
@@ -248,7 +244,7 @@ export default class Adaptation implements IAdaptationMetadata {
    * @param {number|string} wantedId
    * @returns {Object|undefined}
    */
-  getRepresentation(wantedId : number|string) : Representation|undefined {
+  getRepresentation(wantedId: number | string): Representation | undefined {
     return arrayFind(this.representations, ({ id }) => wantedId === id);
   }
 
@@ -266,8 +262,8 @@ export default class Adaptation implements IAdaptationMetadata {
    *
    * @returns {Object}
    */
-  getMetadataSnapshot() : IAdaptationMetadata {
-    const representations : IRepresentationMetadata[] = [];
+  getMetadataSnapshot(): IAdaptationMetadata {
+    const representations: IRepresentationMetadata[] = [];
     const baseRepresentations = this.representations;
     for (const representation of baseRepresentations) {
       representations.push(representation.getMetadataSnapshot());

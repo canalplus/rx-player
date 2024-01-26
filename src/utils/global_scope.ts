@@ -10,9 +10,6 @@ declare const global: typeof self;
  * Though the RxPlayer should theoretically not be runnable in NodeJS, we still
  * had to support it for some applications implementing server-side rendering.
  */
-const globalScope : typeof globalThis =
-  isWorker ? self :
-  isNode   ? global :
-             window;
+const globalScope: typeof globalThis = isWorker ? self : isNode ? global : window;
 
 export default globalScope;

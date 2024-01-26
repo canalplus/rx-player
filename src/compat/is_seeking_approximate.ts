@@ -27,6 +27,6 @@ import { isTizen } from "./browser_detection";
  * This boolean is only `true` on the devices where this behavior has been
  * observed.
  */
-const isSeekingApproximate : boolean = isTizen;
+const isSeekingApproximate: boolean = isTizen;
 
 export default isSeekingApproximate;

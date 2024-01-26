@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable max-len */
 import type { SegmentSink } from "../core/segment_sinks";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
@@ -36,7 +35,6 @@ import type {
 } from "../parsers/texttracks";
 import type { ITransportFunction } from "../transports";
 import type { CancellationSignal } from "../utils/task_canceller";
-/* eslint-enable max-len */
 
 /**
  * Function allowing to implement a text track rendered by displaying them
@@ -47,9 +45,10 @@ import type { CancellationSignal } from "../utils/task_canceller";
  * text tracks-related `HTMLElement` should be put.
  * @returns {Object} - `SegmentSink` implementation.
  */
-export type IHTMLTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement,
-      textTrackElement : HTMLElement) => SegmentSink;
+export type IHTMLTextTracksBuffer = new (
+  mediaElement: HTMLMediaElement,
+  textTrackElement: HTMLElement,
+) => SegmentSink;
 
 /**
  * Function allowing to implement a text track rendered by displaying them
@@ -60,12 +59,11 @@ export type IHTMLTextTracksBuffer =
  * tracks will be displayed will also be linked to this `HTMLMediaElement`.
  * @returns {Object} - `SegmentSink` implementation.
  */
-export type INativeTextTracksBuffer =
-  new(mediaElement : HTMLMediaElement) => SegmentSink;
+export type INativeTextTracksBuffer = new (mediaElement: HTMLMediaElement) => SegmentSink;
 
 export type IDashJsParser = (
   document: Document,
-  args : IMPDParserArguments
+  args: IMPDParserArguments,
 ) => IDashParserResponse<string>;
 
 /**
@@ -77,9 +75,9 @@ export type IDashJsParser = (
  * up the resources taken to keep the debug UI element up-to-date.
  */
 export type IDebugElementFn = (
-  parentElt : HTMLElement,
-  instance : IRxPlayer,
-  cancelSignal : CancellationSignal
+  parentElt: HTMLElement,
+  instance: IRxPlayer,
+  cancelSignal: CancellationSignal,
 ) => void;
 
 /**
@@ -102,21 +100,22 @@ export interface IFeaturesObject {
    * Feature allowing to load so-called "directfile" contents, which are
    * contents natively decodable by the browser.
    */
-  directfile : { initDirectFile: typeof DirectFileContentInitializer;
-                 mediaElementTracksStore : typeof MediaElementTracksStore; } |
-               null;
+  directfile: {
+    initDirectFile: typeof DirectFileContentInitializer;
+    mediaElementTracksStore: typeof MediaElementTracksStore;
+  } | null;
   /** Handle content decryption. */
-  decrypt : typeof ContentDecryptor | null;
+  decrypt: typeof ContentDecryptor | null;
   /** Optional debug element function (@see `IDebugElementFn`) */
-  createDebugElement : IDebugElementFn | null;
+  createDebugElement: IDebugElementFn | null;
   /** Implement text track rendering in the DOM. */
-  htmlTextDisplayer : typeof HTMLTextDisplayer | null;
+  htmlTextDisplayer: typeof HTMLTextDisplayer | null;
   /**
    * Parsers for various text track formats, by their name as set by the
    * RxPlayer.
    * Those parsers are specifically destined to be displayed in DOM elements.
    */
-  htmlTextTracksParsers : Partial<Record<string, IHTMLTextTracksParserFn>>;
+  htmlTextTracksParsers: Partial<Record<string, IHTMLTextTracksParserFn>>;
   /**
    * Feature allowing to load contents through MediaSource API through the
    * main thread.
@@ -134,29 +133,29 @@ export interface IFeaturesObject {
    * Function for loading and parsing contents through various protocols, by
    * their name as set by the RxPlayer.
    */
-  transports : Partial<Record<string, ITransportFunction>>;
+  transports: Partial<Record<string, ITransportFunction>>;
   /**
    * Manifest parsers specific to the "DASH" transport.
    */
-  dashParsers : {
+  dashParsers: {
     /**
      * WebAssembly-based Manifest DASH parser.
      */
-    wasm : DashWasmParser | null;
+    wasm: DashWasmParser | null;
     /**
      * JavaScript-based Manifest DASH parser.
      */
-    js : IDashJsParser | null;
+    js: IDashJsParser | null;
   };
   /** Implement text track rendering through `<track>` HTML elements. */
-  nativeTextDisplayer : typeof NativeTextDisplayer | null;
+  nativeTextDisplayer: typeof NativeTextDisplayer | null;
   /**
    * Parsers for various text track formats, by their name as set by the
    * RxPlayer.
    * Those parsers are specifically destined to be displayed in `<track>` HTML
    * elements.
    */
-  nativeTextTracksParsers : Partial<Record<string, INativeTextTracksParserFn>>;
+  nativeTextTracksParsers: Partial<Record<string, INativeTextTracksParserFn>>;
 }
 
 /**
@@ -164,17 +163,16 @@ export interface IFeaturesObject {
  * Object format.
  */
 export interface IFeatureObject {
-  _addFeature(features : IFeaturesObject) : void;
+  _addFeature(features: IFeaturesObject): void;
 }
 
 /**
  * Variant of an add-able feature (as exported by the RxPlayer) when in an
  * Function format.
  */
-export type IFeatureFunction = (features : IFeaturesObject) => void;
+export type IFeatureFunction = (features: IFeaturesObject) => void;
 
 /**
  * How features are actually exported by the RxPlayer.
  */
-export type IFeature = IFeatureObject |
-                       IFeatureFunction;
+export type IFeature = IFeatureObject | IFeatureFunction;

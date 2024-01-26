@@ -28,18 +28,17 @@ import { parseBase64 } from "./utils";
  * @Returns {Object}
  */
 function parseContentProtectionChildren(
-  contentProtectionChildren : NodeList
-) : [IContentProtectionChildren, Error[]] {
-  const warnings : Error[] = [];
-  const cencPssh : Uint8Array[] = [];
+  contentProtectionChildren: NodeList,
+): [IContentProtectionChildren, Error[]] {
+  const warnings: Error[] = [];
+  const cencPssh: Uint8Array[] = [];
   for (let i = 0; i < contentProtectionChildren.length; i++) {
     if (contentProtectionChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = contentProtectionChildren[i] as Element;
       if (currentElement.nodeName === "cenc:pssh") {
         const content = currentElement.textContent;
         if (content !== null && content.length > 0) {
-          const [ toUint8Array,
-                  error ] = parseBase64(content, "cenc:pssh");
+          const [toUint8Array, error] = parseBase64(content, "cenc:pssh");
           if (error !== null) {
             log.warn(error.message);
             warnings.push(error);
@@ -58,10 +57,8 @@ function parseContentProtectionChildren(
  * @param {Element} root
  * @returns {Object}
  */
-function parseContentProtectionAttributes(
-  root: Element
-) : IContentProtectionAttributes {
-  const ret : IContentProtectionAttributes = {};
+function parseContentProtectionAttributes(root: Element): IContentProtectionAttributes {
+  const ret: IContentProtectionAttributes = {};
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -85,10 +82,11 @@ function parseContentProtectionAttributes(
  * @returns {Object}
  */
 export default function parseContentProtection(
-  contentProtectionElement : Element
-) : [IContentProtectionIntermediateRepresentation, Error[]] {
-  const [ children, childrenWarnings ] =
-    parseContentProtectionChildren(contentProtectionElement.childNodes);
+  contentProtectionElement: Element,
+): [IContentProtectionIntermediateRepresentation, Error[]] {
+  const [children, childrenWarnings] = parseContentProtectionChildren(
+    contentProtectionElement.childNodes,
+  );
   const attributes = parseContentProtectionAttributes(contentProtectionElement);
-  return [ { children, attributes }, childrenWarnings ];
+  return [{ children, attributes }, childrenWarnings];
 }

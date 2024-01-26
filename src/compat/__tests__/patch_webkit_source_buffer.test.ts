@@ -88,14 +88,12 @@ describe("compat - parseWebkitSourceBuffer", () => {
     gs.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    gs.WebKitSourceBuffer.prototype.appendBuffer.call(
-      {
-        updating: false,
-        trigger: mockTrigger,
-        _emitUpdate: _mockEmitUpdate,
-        append: mockAppend,
-      }
-    );
+    gs.WebKitSourceBuffer.prototype.appendBuffer.call({
+      updating: false,
+      trigger: mockTrigger,
+      _emitUpdate: _mockEmitUpdate,
+      append: mockAppend,
+    });
 
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
@@ -114,13 +112,11 @@ describe("compat - parseWebkitSourceBuffer", () => {
     gs.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    gs.WebKitSourceBuffer.prototype.appendBuffer.call(
-      {
-        updating: false,
-        trigger: mockTrigger,
-        _emitUpdate: _mockEmitUpdate,
-      }
-    );
+    gs.WebKitSourceBuffer.prototype.appendBuffer.call({
+      updating: false,
+      trigger: mockTrigger,
+      _emitUpdate: _mockEmitUpdate,
+    });
 
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
@@ -137,9 +133,9 @@ describe("compat - parseWebkitSourceBuffer", () => {
     gs.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    expect(() => gs.WebKitSourceBuffer.prototype.appendBuffer.call(
-      { updating: true }
-    )).toThrowError("updating");
+    expect(() =>
+      gs.WebKitSourceBuffer.prototype.appendBuffer.call({ updating: true }),
+    ).toThrowError("updating");
     gs.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 });

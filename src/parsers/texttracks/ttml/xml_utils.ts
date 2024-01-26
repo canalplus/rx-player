@@ -24,15 +24,15 @@ import isNullOrUndefined from "../../../utils/is_null_or_undefined";
  * @returns {Array.<Element>}
  */
 export function getParentElementsByTagName(
-  element : Element|Node,
-  tagName : string
-) : Element[] {
+  element: Element | Node,
+  tagName: string,
+): Element[] {
   if (!(element.parentNode instanceof Element)) {
     return [];
   }
 
-  function constructArray(_element : Element) : Element[] {
-    const elements : Element[] = [];
+  function constructArray(_element: Element): Element[] {
+    const elements: Element[] = [];
     if (_element.tagName.toLowerCase() === tagName.toLowerCase()) {
       elements.push(_element);
     }
@@ -53,7 +53,7 @@ export function getParentElementsByTagName(
  * @param {Element|Node} element
  * @returns {Array.<Element>}
  */
-export function getParentDivElements(element: Element | Node) : Element[] {
+export function getParentDivElements(element: Element | Node): Element[] {
   let divs = getParentElementsByTagName(element, "div");
   if (divs.length === 0) {
     const ttDivs = getParentElementsByTagName(element, "tt:div");
@@ -72,8 +72,9 @@ export function getParentDivElements(element: Element | Node) : Element[] {
  * @returns {string|undefined}
  */
 export function getAttributeInElements(
-  attribute : string, elements : Element[]
-) : string|undefined {
+  attribute: string,
+  elements: Element[],
+): string | undefined {
   for (let i = 0; i <= elements.length - 1; i++) {
     const element = elements[i];
     if (element !== undefined) {
@@ -89,7 +90,7 @@ export function getAttributeInElements(
  * @param {Element} tt
  * @returns {Element}
  */
-export function getBodyNode(tt : Element) : Element|null {
+export function getBodyNode(tt: Element): Element | null {
   const bodyNodes = tt.getElementsByTagName("body");
   if (bodyNodes.length > 0) {
     return bodyNodes[0];
@@ -105,7 +106,7 @@ export function getBodyNode(tt : Element) : Element|null {
  * @param {Element} tt - <tt> node
  * @returns {Array.<Element>}
  */
-export function getStyleNodes(tt : Element) : HTMLCollectionOf<Element> {
+export function getStyleNodes(tt: Element): HTMLCollectionOf<Element> {
   const styleNodes = tt.getElementsByTagName("style");
   if (styleNodes.length > 0) {
     return styleNodes;
@@ -121,7 +122,7 @@ export function getStyleNodes(tt : Element) : HTMLCollectionOf<Element> {
  * @param {Element} tt - <tt> node
  * @returns {Array.<Element>}
  */
-export function getRegionNodes(tt : Element) : HTMLCollectionOf<Element> {
+export function getRegionNodes(tt: Element): HTMLCollectionOf<Element> {
   const regionNodes = tt.getElementsByTagName("region");
   if (regionNodes.length > 0) {
     return regionNodes;
@@ -137,7 +138,7 @@ export function getRegionNodes(tt : Element) : HTMLCollectionOf<Element> {
  * @param {Element} tt - <tt> node
  * @returns {Array.<Element>}
  */
-export function getTextNodes(tt : Element) : HTMLCollectionOf<Element> {
+export function getTextNodes(tt: Element): HTMLCollectionOf<Element> {
   const pNodes = tt.getElementsByTagName("p");
   if (pNodes.length > 0) {
     return pNodes;
@@ -154,7 +155,7 @@ export function getTextNodes(tt : Element) : HTMLCollectionOf<Element> {
  * @param {Node} node
  * @returns {boolean}
  */
-export function isLineBreakElement(node : Node) : boolean {
+export function isLineBreakElement(node: Node): boolean {
   return node.nodeName === "br" || node.nodeName === "tt:br";
 }
 
@@ -163,6 +164,6 @@ export function isLineBreakElement(node : Node) : boolean {
  * @param {Node} node
  * @returns {boolean}
  */
-export function isSpanElement(node : Node) : boolean {
+export function isSpanElement(node: Node): boolean {
   return node.nodeName === "span" || node.nodeName === "tt:span";
 }

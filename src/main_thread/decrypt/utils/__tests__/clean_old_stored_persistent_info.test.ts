@@ -23,19 +23,25 @@
 
 function createPersistentSessionsStore() {
   return {
-    getLength() : number {
+    getLength(): number {
       return 3;
     },
-    deleteOldSessions() : void {
-      return ;
+    deleteOldSessions(): void {
+      return;
     },
   };
 }
 
 const emptyPersistentSessionsStore = {
-  getLength() { return 0; },
-  getAll() { return []; },
-  deleteOldSessions() : void { return ; },
+  getLength() {
+    return 0;
+  },
+  getAll() {
+    return [];
+  },
+  deleteOldSessions(): void {
+    return;
+  },
 };
 
 /**
@@ -45,13 +51,16 @@ const emptyPersistentSessionsStore = {
  * @param {number} limit
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function checkNothingHappen(persistentSessionsStore : any, limit : number) {
+function checkNothingHappen(persistentSessionsStore: any, limit: number) {
   const mockDeleteLast = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const mockLogInfo = jest.fn();
-  jest.mock("../../../../log", () => ({ __esModule: true as const,
-                                        default: { info: mockLogInfo } }));
-  const cleanOldStoredPersistentInfo =
-    jest.requireActual("../clean_old_stored_persistent_info").default;
+  jest.mock("../../../../log", () => ({
+    __esModule: true as const,
+    default: { info: mockLogInfo },
+  }));
+  const cleanOldStoredPersistentInfo = jest.requireActual(
+    "../clean_old_stored_persistent_info",
+  ).default;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
   expect(mockDeleteLast).not.toHaveBeenCalled();
   expect(mockLogInfo).not.toHaveBeenCalled();
@@ -67,24 +76,28 @@ function checkNothingHappen(persistentSessionsStore : any, limit : number) {
  */
 function checkRemoved(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  persistentSessionsStore : any,
-  limit : number,
-  numberToRemove : number
+  persistentSessionsStore: any,
+  limit: number,
+  numberToRemove: number,
 ) {
   const mockDeleteLast = jest.spyOn(persistentSessionsStore, "deleteOldSessions");
   const mockLogInfo = jest.fn();
-  jest.mock("../../../../log", () => ({ __esModule: true as const,
-                                        default: { info: mockLogInfo } }));
-  const cleanOldStoredPersistentInfo =
-    jest.requireActual("../clean_old_stored_persistent_info").default;
+  jest.mock("../../../../log", () => ({
+    __esModule: true as const,
+    default: { info: mockLogInfo },
+  }));
+  const cleanOldStoredPersistentInfo = jest.requireActual(
+    "../clean_old_stored_persistent_info",
+  ).default;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
   expect(mockDeleteLast).toHaveBeenCalledTimes(1);
   expect(mockDeleteLast).toHaveBeenCalledWith(numberToRemove);
   expect(mockLogInfo).toHaveBeenCalledTimes(1);
-  expect(mockLogInfo).toHaveBeenCalledWith("DRM: Too many stored persistent sessions," +
-                                            " removing some.",
-                                           persistentSessionsStore.getLength(),
-                                           numberToRemove);
+  expect(mockLogInfo).toHaveBeenCalledWith(
+    "DRM: Too many stored persistent sessions," + " removing some.",
+    persistentSessionsStore.getLength(),
+    numberToRemove,
+  );
   jest.resetModules();
 }
 
@@ -114,7 +127,6 @@ describe("decrypt - cleanOldStoredPersistentInfo", () => {
     checkNothingHappen(emptyPersistentSessionsStore, 2);
     checkNothingHappen(emptyPersistentSessionsStore, 1000);
     checkNothingHappen(emptyPersistentSessionsStore, +Infinity);
-
   });
 
   it("should do nothing if the limit is equal to the current length", () => {

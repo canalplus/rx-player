@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import type {
-  ICompatVTTCue } from "../../../../compat/index";
-import {
-  makeVTTCue,
-} from "../../../../compat/index";
+import type { ICompatVTTCue } from "../../../../compat/index";
+import { makeVTTCue } from "../../../../compat/index";
 
 /**
  * @param {number} start
@@ -26,11 +23,11 @@ import {
  * @param {Array.<string>} payload
  * @returns {TextTrackCue|ICompatVTTCue|null}
  */
-export default function toNativeCue(cueObj : {
-  start : number;
-  end : number;
-  payload : string[];
-}) : ICompatVTTCue|TextTrackCue|null {
+export default function toNativeCue(cueObj: {
+  start: number;
+  end: number;
+  payload: string[];
+}): ICompatVTTCue | TextTrackCue | null {
   const { start, end, payload } = cueObj;
   const text = payload.join("\n");
   return makeVTTCue(start, end, text);

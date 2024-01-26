@@ -45,55 +45,55 @@ profit from its many features.
 
 Its main goals are:
 
-  - __Stability__: The RxPlayer can play live and On Demand DASH and Smooth
-    contents for extended amounts of time, with or without DRM - without any
-    performance, memory or logic issue.
+- **Stability**: The RxPlayer can play live and On Demand DASH and Smooth
+  contents for extended amounts of time, with or without DRM - without any
+  performance, memory or logic issue.
 
-    If you encounter a new issue while using it, we'll be very happy to help
-    fixing it. Any encountered bug is put at high priority.
+  If you encounter a new issue while using it, we'll be very happy to help
+  fixing it. Any encountered bug is put at high priority.
 
-  - __Quality of experience__: It aims to play the best possible quality
-    without any rebuffering.
+- **Quality of experience**: It aims to play the best possible quality
+  without any rebuffering.
 
-    Unsupported codecs and undecipherable qualities (e.g. higher qualities with
-    more drastic DRM conditions on untrusted devices) are automatically
-    filtered out, even if this happens during playback.
+  Unsupported codecs and undecipherable qualities (e.g. higher qualities with
+  more drastic DRM conditions on untrusted devices) are automatically
+  filtered out, even if this happens during playback.
 
-    The player is also very resilient: any temporary network issue, fall in
-    bandwidth, poorly-packaged content or platform quirk should be properly
-    handled with the main goal of avoiding playback interruption.
+  The player is also very resilient: any temporary network issue, fall in
+  bandwidth, poorly-packaged content or platform quirk should be properly
+  handled with the main goal of avoiding playback interruption.
 
-  - __Portability__: The RxPlayer has been ported to a lot of devices, some on
-    the lower-end of performance and memory capabilities and others on the higher end.
+- **Portability**: The RxPlayer has been ported to a lot of devices, some on
+  the lower-end of performance and memory capabilities and others on the higher end.
 
-    As such, it can adapt to important memory and performance constraints while
-    still being able to retain its many features.
+  As such, it can adapt to important memory and performance constraints while
+  still being able to retain its many features.
 
-  - __Configurability__: The RxPlayer has a plethora of options to let you tweak
-    its behavior.
-    You should be able to play any content the way you want, on any device.
+- **Configurability**: The RxPlayer has a plethora of options to let you tweak
+  its behavior.
+  You should be able to play any content the way you want, on any device.
 
-    You should also be able to integrate complex supplementary logic like
-    Peer-to-Peer solutions.
+  You should also be able to integrate complex supplementary logic like
+  Peer-to-Peer solutions.
 
-  - __Easy to use__: We try hard to make this player easy to integrate and to
-    use in various codebases.
+- **Easy to use**: We try hard to make this player easy to integrate and to
+  use in various codebases.
 
-    Even for the more advanced options, we aim to make our documentation as
-    legible and as complete as possible.
+  Even for the more advanced options, we aim to make our documentation as
+  legible and as complete as possible.
 
 The RxPlayer has probably already all the features you want :)!
 
 Even if that's not the case, we will be very pleased to exchange with you on it
 and look forward for external contributions.
 
-
-## How to use it? ##############################################################
+## How to use it?
 
 The fastest way to use the player directly in your code is to add this
 repository as a dependency.
 
 You can do it via [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/):
+
 ```sh
 # when using npm:
 npm install --save rx-player
@@ -103,6 +103,7 @@ yarn add rx-player
 ```
 
 You can then directly import and use the RxPlayer in your code:
+
 ```js
 // import it ES6 style:
 import RxPlayer from "rx-player";
@@ -112,30 +113,32 @@ import RxPlayer from "rx-player";
 
 // instantiate it
 const player = new RxPlayer({
-  videoElement: document.querySelector("video")
+  videoElement: document.querySelector("video"),
 });
 
 // play a video
 player.loadVideo({
   url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
-  autoPlay: true
+  autoPlay: true,
 });
 ```
 
 We've also written short tutorials to help you familiarize with the RxPlayer API:
-  - [Quick start into the API](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Quick_Start.html).
-  - [Playing contents with DRMs](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Content_with_DRM.html).
-  - [Selecting a track](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Selecting_a_Track.html)
-  - [Listening to events contained in the content](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/EventStream_Handling.html)
+
+- [Quick start into the API](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Quick_Start.html).
+- [Playing contents with DRMs](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Content_with_DRM.html).
+- [Selecting a track](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Selecting_a_Track.html)
+- [Listening to events contained in the content](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/EventStream_Handling.html)
 
 To be able to play with the player without needing to perform any setup we also
 created multiple live-editable demos:
- - [Playing a clear DASH content](https://codesandbox.io/s/rx-player-classic-wc38j)
- - [Playing an encrypted DASH content](https://codesandbox.io/s/rx-player-drm-g51hb)
- - [Playing an RxPlayer-specific MetaPlaylist content](https://codesandbox.io/s/rx-player-metaplaylist-l0t0d)
 
-### Minimal Builds #############################################################
+- [Playing a clear DASH content](https://codesandbox.io/s/rx-player-classic-wc38j)
+- [Playing an encrypted DASH content](https://codesandbox.io/s/rx-player-drm-g51hb)
+- [Playing an RxPlayer-specific MetaPlaylist content](https://codesandbox.io/s/rx-player-metaplaylist-l0t0d)
+
+### Minimal Builds
 
 To reduce the size of the final code, you might also want to import a minimal
 version of the player and only import the features you need. This is documented
@@ -143,6 +146,7 @@ version of the player and only import the features you need. This is documented
 ](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Minimal_Player.html):
 
 For example, to play encrypted DASH contents, you could just write:
+
 ```js
 import RxPlayer from "rx-player/minimal";
 import { DASH, EME } from "rx-player/features";
@@ -151,8 +155,7 @@ import { DASH, EME } from "rx-player/features";
 RxPlayer.addFeatures([DASH, EME]);
 ```
 
-
-## API #########################################################################
+## API
 
 We documented the API in every little details in [the API
 documentation](https://developers.canal-plus.com/rx-player/doc/api/Overview.html).
@@ -163,9 +166,7 @@ You can also refer to the documentation of our previous versions
 These documentation pages are automatically generated from the content of the
 [doc/api](./doc/api/Overview.md) directory in this repository.
 
-
-
-## Demo ########################################################################
+## Demo
 
 You can view our online Demo, built from our last version,
 [here](https://developers.canal-plus.com/rx-player/).
@@ -177,27 +178,23 @@ player.
 Demo pages for our previous versions are also available
 [here](https://developers.canal-plus.com/rx-player/demo_page_by_version.html).
 
-
-
-## Contribute ##################################################################
+## Contribute
 
 Details on how to contribute is written in the [CONTRIBUTING.md
 file](./CONTRIBUTING.md) at the root of this repository.
 
-
-
-### Dependencies ###############################################################
+### Dependencies
 
 After cloning our repo, you should first install our dependencies via either
 [npm](https://www.npmjs.com/):
+
 ```sh
 npm install
 ```
 
+## Why a new player?
 
-## Why a new player? ###########################################################
-
-### A need for an advanced media player ########################################
+### A need for an advanced media player
 
 Canal+ Group is a media company with many advanced needs when it comes to media
 playback: it provides both live and VoD stream with multiple encryption
@@ -224,40 +221,39 @@ and our [demo page](https://developers.canal-plus.com/rx-player/)
 (an RxPlayer instance is available in the console through the global `player`
 variable there) to see if it matches your need.
 
-
-### A featureful player ########################################################
+### A featureful player
 
 With the help of a carefully-crafted and well-documented architecture, we were
 able to quickly support avanced features when we - or the community - needed
 them. Amongst those:
 
-  - support for live and VoD DASH / Smooth / HLS* / Downloaded contents /
-    MP4* / WebM* contents and more
+- support for live and VoD DASH / Smooth / HLS* / Downloaded contents /
+  MP4* / WebM\* contents and more
 
-  - support of advanced encryption configuration, such as multiple keys in a
-    single or separate licences for a given content (with automatic fallbacks
-    when we found an un-decipherable content), persistent licenses, and
-    other device-specific restrictions.
+- support of advanced encryption configuration, such as multiple keys in a
+  single or separate licences for a given content (with automatic fallbacks
+  when we found an un-decipherable content), persistent licenses, and
+  other device-specific restrictions.
 
-  - support for low-latency DASH streams
+- support for low-latency DASH streams
 
-  - support of TTML, WebVTT, SAMI and SRT subtitles
+- support of TTML, WebVTT, SAMI and SRT subtitles
 
-  - an available WebAssembly-based MPD parser for DASH contents, allowing to
-    drastically reduce the loading time and memory usage of larger contents.
+- an available WebAssembly-based MPD parser for DASH contents, allowing to
+  drastically reduce the loading time and memory usage of larger contents.
 
-  - advanced APIs for advanced use-cases (audio-only mode, video track
-    selection, manual garbage collection of segments, Peer-To-Peer
-    integration, quality filtering...)
+- advanced APIs for advanced use-cases (audio-only mode, video track
+  selection, manual garbage collection of segments, Peer-To-Peer
+  integration, quality filtering...)
 
-  - advanced adaptive streaming algorithms making use of both a network-based
-    approach (for quick start-up) and a buffer-based one (to provide the best
-    quality possible).
+- advanced adaptive streaming algorithms making use of both a network-based
+  approach (for quick start-up) and a buffer-based one (to provide the best
+  quality possible).
 
-  - advanced optimizations for devices with low memory constraints
+- advanced optimizations for devices with low memory constraints
 
-  - a complex segment scheduling logic, prioritizing closer media segments while
-    making sure that the bandwidth usage is always optimal and the rebuffering
-    risks always low.
+- a complex segment scheduling logic, prioritizing closer media segments while
+  making sure that the bandwidth usage is always optimal and the rebuffering
+  risks always low.
 
 \* In "directfile" mode, on compatible browsers

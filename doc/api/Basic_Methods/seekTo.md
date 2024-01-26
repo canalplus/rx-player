@@ -33,9 +33,9 @@ also switch to the `SEEKING` state.
 player.seekTo(position);
 ```
 
-  - **arguments**:
+- **arguments**:
 
-     1. _position_ `Object|number`: The position you want to seek to.
+  1.  _position_ `Object|number`: The position you want to seek to.
 
 ## Examples
 

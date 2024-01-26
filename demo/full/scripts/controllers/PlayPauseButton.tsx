@@ -24,9 +24,8 @@ function PlayPauseButton({
   const disabled = !isContentLoaded && !cannotLoadMetadata;
   const displayPause = !isPaused && isContentLoaded && !hasEnded;
 
-  const completeClassName = "play-pause-button " +
-    className +
-    (disabled  ? " disabled" : "");
+  const completeClassName =
+    "play-pause-button " + className + (disabled ? " disabled" : "");
 
   const play = React.useCallback(() => {
     player.actions.play();

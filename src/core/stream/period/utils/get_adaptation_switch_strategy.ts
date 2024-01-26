@@ -19,12 +19,8 @@ import type { IAdaptation, IPeriod } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
 import type { IRange } from "../../../../utils/ranges";
-import {
-  excludeFromRanges,
-  insertInto,
-} from "../../../../utils/ranges";
-import type {
-  SegmentSink } from "../../../segment_sinks";
+import { excludeFromRanges, insertInto } from "../../../../utils/ranges";
+import type { SegmentSink } from "../../../segment_sinks";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
@@ -35,23 +31,23 @@ import type { IPeriodStreamPlaybackObservation } from "../types";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */
-  { type: "continue"; value: undefined } |
+  | { type: "continue"; value: undefined }
   /**
    * Clean the given ranges of time from the buffer, preferably avoiding time
    * around the current position to continue playback smoothly.
    */
-  { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  | { type: "clean-buffer"; value: Array<{ start: number; end: number }> }
   /**
    * Clean the given ranges of time from the buffer and try to flush the buffer
    * so that it is taken in account directly.
    */
-  { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
+  | { type: "flush-buffer"; value: Array<{ start: number; end: number }> }
   /** Reload completely the media buffers. */
-  { type: "needs-reload"; value: undefined };
+  | { type: "needs-reload"; value: undefined };
 
 export interface IAdaptationSwitchOptions {
   /** Behavior when a new video and/or audio codec is encountered. */
-  onCodecSwitch : "continue" | "reload";
+  onCodecSwitch: "continue" | "reload";
 }
 
 /**
@@ -64,19 +60,18 @@ export interface IAdaptationSwitchOptions {
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  segmentSink : SegmentSink,
-  period : IPeriod,
-  adaptation : IAdaptation,
-  switchingMode : ITrackSwitchingMode,
-  playbackObserver : IReadOnlyPlaybackObserver<
-    IPeriodStreamPlaybackObservation
-  >,
-  options : IAdaptationSwitchOptions
-) : IAdaptationSwitchStrategy {
-  if (segmentSink.codec !== undefined &&
-      options.onCodecSwitch === "reload" &&
-      !hasCompatibleCodec(adaptation, segmentSink.codec))
-  {
+  segmentSink: SegmentSink,
+  period: IPeriod,
+  adaptation: IAdaptation,
+  switchingMode: ITrackSwitchingMode,
+  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+  options: IAdaptationSwitchOptions,
+): IAdaptationSwitchStrategy {
+  if (
+    segmentSink.codec !== undefined &&
+    options.onCodecSwitch === "reload" &&
+    !hasCompatibleCodec(adaptation, segmentSink.codec)
+  ) {
     return { type: "needs-reload", value: undefined };
   }
 
@@ -85,8 +80,10 @@ export default function getAdaptationSwitchStrategy(
   const unwantedRange: IRange[] = [];
   for (const elt of inventory) {
     if (elt.infos.period.id === period.id && elt.infos.adaptation.id !== adaptation.id) {
-      insertInto(unwantedRange, { start: elt.bufferedStart ?? elt.start,
-                                  end: elt.bufferedEnd ?? elt.end });
+      insertInto(unwantedRange, {
+        start: elt.bufferedStart ?? elt.start,
+        end: elt.bufferedEnd ?? elt.end,
+      });
     }
   }
 
@@ -125,14 +122,15 @@ export default function getAdaptationSwitchStrategy(
 
   /** Last segment before one for the current period. */
   const lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
-  if (lastSegmentBefore !== null &&
+  if (
+    lastSegmentBefore !== null &&
     (lastSegmentBefore.bufferedEnd === undefined ||
-      period.start - lastSegmentBefore.bufferedEnd < 1)) // Close to Period's start
-  {
+      period.start - lastSegmentBefore.bufferedEnd < 1)
+  ) {
+    // Close to Period's start
     // Exclude data close to the period's start to avoid cleaning
     // to much
-    rangesToExclude.push({ start: 0,
-                           end: period.start + 1 });
+    rangesToExclude.push({ start: 0, end: period.start + 1 });
   }
 
   if (!shouldCleanAll) {
@@ -150,8 +148,10 @@ export default function getAdaptationSwitchStrategy(
       currentTime = lastObservation.position.getPolled();
     }
 
-    rangesToExclude.push({ start: currentTime - paddingBefore,
-                           end: currentTime + paddingAfter });
+    rangesToExclude.push({
+      start: currentTime - paddingBefore,
+      end: currentTime + paddingAfter,
+    });
   }
 
   // Now remove possible small range from the end if there is a segment from the
@@ -159,12 +159,13 @@ export default function getAdaptationSwitchStrategy(
   if (period.end !== undefined) {
     /** first segment after for the current period. */
     const firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
-    if (firstSegmentAfter !== null &&
-        (firstSegmentAfter.bufferedStart === undefined ||
-         (firstSegmentAfter.bufferedStart - period.end) < 1)) // Close to Period's end
-    {
-      rangesToExclude.push({ start: period.end - 1,
-                             end: Number.MAX_VALUE });
+    if (
+      firstSegmentAfter !== null &&
+      (firstSegmentAfter.bufferedStart === undefined ||
+        firstSegmentAfter.bufferedStart - period.end < 1)
+    ) {
+      // Close to Period's end
+      rangesToExclude.push({ start: period.end - 1, end: Number.MAX_VALUE });
     }
   }
   const toRemove = excludeFromRanges(unwantedRange, rangesToExclude);
@@ -173,9 +174,9 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  return shouldCleanAll && adaptation.type !== "text" ?
-    { type: "flush-buffer", value: toRemove } :
-    { type: "clean-buffer", value: toRemove };
+  return shouldCleanAll && adaptation.type !== "text"
+    ? { type: "flush-buffer", value: toRemove }
+    : { type: "clean-buffer", value: toRemove };
 }
 
 /**
@@ -185,12 +186,11 @@ export default function getAdaptationSwitchStrategy(
  * @param {string} segmentSinkCodec
  * @returns {boolean}
  */
-function hasCompatibleCodec(
-  adaptation : IAdaptation,
-  segmentSinkCodec : string
-) : boolean {
-  return adaptation.representations.some(rep =>
-    rep.isSupported === true &&
-    rep.decipherable !== false &&
-    areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec));
+function hasCompatibleCodec(adaptation: IAdaptation, segmentSinkCodec: string): boolean {
+  return adaptation.representations.some(
+    (rep) =>
+      rep.isSupported === true &&
+      rep.decipherable !== false &&
+      areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec),
+  );
 }

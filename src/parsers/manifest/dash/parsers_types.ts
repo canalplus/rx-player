@@ -20,18 +20,18 @@ export { IMPDParserArguments } from "./common";
 
 /** Response returned by a DASH MPD parser. */
 export type IDashParserResponse<T extends string | ArrayBuffer> =
-  IDashParserNeedsResources<T> |
-  IDashParserResponseDone;
+  | IDashParserNeedsResources<T>
+  | IDashParserResponseDone;
 
 /** Response when the MPD parser has been able to parse the whole MPD. */
 export interface IDashParserResponseDone {
   /** Identify this type of response. */
-  type : "done";
-  value : {
+  type: "done";
+  value: {
     /** The parsed MPD under a IParsedManifest format. */
-    parsed : IParsedManifest;
+    parsed: IParsedManifest;
     /** Non-fatal errors encountered when parsing the MPD. */
-    warnings : Error[];
+    warnings: Error[];
   };
 }
 
@@ -41,13 +41,12 @@ export interface IDashParserResponseDone {
  */
 export interface IDashParserNeedsResources<T extends string | ArrayBuffer> {
   /** Identify this type of response. */
-  type : "needs-resources";
-  value : {
+  type: "needs-resources";
+  value: {
     /** The URLs of each needed resource. */
-    urls : string[];
+    urls: string[];
     /** The format under which all those resources should be loaded. */
-    format : T extends string ? "string" :
-                                "arraybuffer";
+    format: T extends string ? "string" : "arraybuffer";
     /**
      * Callback to call with the fetched resources data in argument to continue
      * parsing the MPD.
@@ -55,15 +54,15 @@ export interface IDashParserNeedsResources<T extends string | ArrayBuffer> {
      * The element of the `loadedResources` array should be in the same order
      * than the resources in the `urls` array.
      */
-    continue : (
-      loadedResources : Array<ILoadedResource<T>>
+    continue: (
+      loadedResources: Array<ILoadedResource<T>>,
     ) => IDashParserResponse<string> | IDashParserResponse<ArrayBuffer>;
   };
 }
 
 export type IResponseData<T> =
-  { success: true; data: T } |
-  { success: false; error: Error };
+  | { success: true; data: T }
+  | { success: false; error: Error };
 
 /** Format a loaded resource should take. */
 export interface ILoadedResource<T extends string | ArrayBuffer> {
@@ -71,21 +70,21 @@ export interface ILoadedResource<T extends string | ArrayBuffer> {
    * The URL of the loaded resource (post-redirection if one).
    * `undefined` if unknown or inexistant.
    */
-  url? : string | undefined;
+  url?: string | undefined;
   /**
    * The time at which the resource was starting to be fetched, in the unit of
    * the monotonically-raising timestamp used by the RxPlayer.
    * `undefined` if unknown or not applicable.
    */
-  sendingTime? : number | undefined;
+  sendingTime?: number | undefined;
   /**
    * The time at which the resource was completely fetched, in the unit of
    * the monotonically-raising timestamp used by the RxPlayer.
    * `undefined` if unknown or not applicable.
    */
-  receivedTime? : number | undefined;
+  receivedTime?: number | undefined;
   /** The loaded resource itself, under the right format.
    * Or an error, when fetching ressources.
    */
-  responseData : IResponseData<T>;
+  responseData: IResponseData<T>;
 }

@@ -20,6 +20,6 @@
  * @param {Error|string|Event|null} [reason]
  * @returns {string}
  */
-export default function errorMessage(code : string, reason : string) : string {
+export default function errorMessage(code: string, reason: string): string {
   return `${code}: ${reason}`;
 }

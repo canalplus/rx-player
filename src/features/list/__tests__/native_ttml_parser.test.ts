@@ -21,7 +21,9 @@ import addNativettmlFeature from "../native_ttml_parser";
 
 describe("Features list - native ttml Parser", () => {
   it("should add an native ttml Parser in the current features", () => {
-    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
+    const featureObject = {
+      nativeTextTracksParsers: {},
+    } as unknown as IFeaturesObject;
     addNativettmlFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { ttml: ttmlParser },

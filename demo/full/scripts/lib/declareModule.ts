@@ -119,17 +119,13 @@
  *   - `actions`: The module's actions, which basically are the functions it
  *     returns when initialized (created).
  */
-export function declareModule<
-  TStateObject extends object,
-  TModuleArg,
-  TActions
->(
+export function declareModule<TStateObject extends object, TModuleArg, TActions>(
   generateInitialState: () => TStateObject,
   initialize: (
     moduleArg: TModuleArg,
     state: IStateUpdater<TStateObject>,
-    abortSignal: AbortSignal
-  ) => TActions
+    abortSignal: AbortSignal,
+  ) => TActions,
 ): IDeclaredModule<TModuleArg, TStateObject, TActions> {
   return class {
     private _listeners: IListeners<TStateObject>;
@@ -143,9 +139,7 @@ export function declareModule<
       this._stateObject = stateObject;
       this._abortController = new AbortController();
 
-      const notifyUpdatedValue = (
-        stateName: keyof TStateObject
-      ): void => {
+      const notifyUpdatedValue = (stateName: keyof TStateObject): void => {
         const listeners = this._listeners[stateName];
         if (!Array.isArray(listeners)) {
           return;
@@ -166,10 +160,7 @@ export function declareModule<
           return stateObject[stateName];
         },
 
-        update<K extends keyof TStateObject>(
-          stateName: K,
-          value: TStateObject[K]
-        ): void {
+        update<K extends keyof TStateObject>(stateName: K, value: TStateObject[K]): void {
           stateObject[stateName] = value;
           notifyUpdatedValue(stateName);
         },
@@ -177,18 +168,12 @@ export function declareModule<
         updateBulk(bulk: Partial<TStateObject>): void {
           Object.assign(stateObject, bulk);
 
-          for (
-            const stateName of Object.keys(bulk) as Array<keyof TStateObject>
-          ) {
+          for (const stateName of Object.keys(bulk) as Array<keyof TStateObject>) {
             notifyUpdatedValue(stateName);
           }
         },
       };
-      this.actions = initialize(
-        moduleArg,
-        stateUpdater,
-        this._abortController.signal
-      );
+      this.actions = initialize(moduleArg, stateUpdater, this._abortController.signal);
     }
 
     getState<K extends keyof TStateObject>(stateName: K): TStateObject[K] {
@@ -197,7 +182,7 @@ export function declareModule<
 
     listenToState<K extends keyof TStateObject>(
       stateName: K,
-      callback: (currentValue: TStateObject[K]) => void
+      callback: (currentValue: TStateObject[K]) => void,
     ): () => void {
       const listeners = this._listeners[stateName];
       if (!Array.isArray(listeners)) {
@@ -228,47 +213,37 @@ export function declareModule<
   };
 }
 
-export abstract class Module<
-  TStateObject extends object,
-  TActions
-> {
+export abstract class Module<TStateObject extends object, TActions> {
   abstract actions: TActions;
-  abstract getState<K extends keyof TStateObject>(
-    stateName: K
-  ): TStateObject[K];
+  abstract getState<K extends keyof TStateObject>(stateName: K): TStateObject[K];
   abstract listenToState<K extends keyof TStateObject>(
     stateName: K,
-    callback: (currentValue: TStateObject[K]) => void
-  ): (() => void);
+    callback: (currentValue: TStateObject[K]) => void,
+  ): () => void;
   abstract destroy(): void;
 }
 
-export interface IDeclaredModule<
-  TModuleArg,
-  TStateObject extends object,
-  TActions
-> {
-  new(arg: TModuleArg): Module<TStateObject, TActions>;
+export interface IDeclaredModule<TModuleArg, TStateObject extends object, TActions> {
+  new (arg: TModuleArg): Module<TStateObject, TActions>;
 }
 
 export interface IStateUpdater<TStateObject> {
   get<K extends keyof TStateObject>(stateName: K): TStateObject[K];
-  update<K extends keyof TStateObject>(
-    stateName: K,
-    value: TStateObject[K]
-  ): void;
+  update<K extends keyof TStateObject>(stateName: K, value: TStateObject[K]): void;
   updateBulk(bulk: Partial<TStateObject>): void;
 }
 
 // Type of the argument in the listener's callback
-type IArgs<TEventRecord, TEventName
-     extends keyof TEventRecord> = TEventRecord[TEventName];
+type IArgs<
+  TEventRecord,
+  TEventName extends keyof TEventRecord,
+> = TEventRecord[TEventName];
 
 // Type of the listener function
 type IListener<TEventRecord, TEventName extends keyof TEventRecord> = (
-  args: IArgs<TEventRecord, TEventName>
+  args: IArgs<TEventRecord, TEventName>,
 ) => void;
 
 type IListeners<TEventRecord> = {
-  [P in keyof TEventRecord]? : Array<IListener<TEventRecord, P>>
+  [P in keyof TEventRecord]?: Array<IListener<TEventRecord, P>>;
 };

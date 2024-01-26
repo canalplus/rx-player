@@ -27,18 +27,18 @@ player.updateContentUrls(urls);
 player.updateContentUrls(urls, params);
 ```
 
-  - **arguments**:
+- **arguments**:
 
-     1. _urls_ `Array.<string>|under`: URLs to reach that content / Manifest
-     from the most prioritized URL to the least prioritized URL.
+  1.  _urls_ `Array.<string>|under`: URLs to reach that content / Manifest
+      from the most prioritized URL to the least prioritized URL.
 
-     2. _params_ `Object|undefined`: Optional parameters linked to this URL
-     change.
+  2.  _params_ `Object|undefined`: Optional parameters linked to this URL
+      change.
 
-     Can contain the following properties:
+  Can contain the following properties:
 
-       - _refresh_ `boolean`: If `true` the resource in question (e.g.
-         DASH's MPD) will be refreshed immediately.
+  - _refresh_ `boolean`: If `true` the resource in question (e.g.
+    DASH's MPD) will be refreshed immediately.
 
 ## Examples
 
@@ -47,10 +47,7 @@ player.updateContentUrls(urls, params);
 player.updateContentUrls(["http://my.new.url"]);
 
 // Update with multiple URLs
-player.updateContentUrls([
-  "http://more.prioritized.url",
-  "http://less.prioritized.url",
-]);
+player.updateContentUrls(["http://more.prioritized.url", "http://less.prioritized.url"]);
 
 // Set no URL (only is useful in some very specific situations, like for content
 // with no Manifest refresh or when a `manifestLoader` is set).

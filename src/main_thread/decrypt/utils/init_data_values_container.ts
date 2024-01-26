@@ -25,8 +25,8 @@ import areInitializationValuesCompatible from "./are_init_values_compatible";
  * @class InitDataValuesContainer
  */
 export default class InitDataValuesContainer {
-  private readonly _innerValues : IInitDataValue[];
-  private _lazyFormattedValues : IFormattedInitDataValue[] | null;
+  private readonly _innerValues: IInitDataValue[];
+  private _lazyFormattedValues: IFormattedInitDataValue[] | null;
 
   /**
    * Construct a new `InitDataValuesContainer`.
@@ -35,7 +35,7 @@ export default class InitDataValuesContainer {
    *
    * @param {Array.<Object>} initDataValues
    */
-  constructor(initDataValues : IInitDataValue[]) {
+  constructor(initDataValues: IInitDataValue[]) {
     this._innerValues = initDataValues;
     this._lazyFormattedValues = null;
   }
@@ -44,10 +44,10 @@ export default class InitDataValuesContainer {
    * Construct data that should be given to the `generateRequest` EME API.
    * @returns {Uint8Array}
    */
-  public constructRequestData() : Uint8Array {
+  public constructRequestData(): Uint8Array {
     // `generateKeyRequest` awaits a single Uint8Array containing all
     // initialization data.
-    return concat(...this._innerValues.map(i => i.data));
+    return concat(...this._innerValues.map((i) => i.data));
   }
 
   /**
@@ -60,11 +60,12 @@ export default class InitDataValuesContainer {
    * @returns {boolean}
    */
   public isCompatibleWith(
-    initDataValues : InitDataValuesContainer | IFormattedInitDataValue[]
-  ) : boolean {
-    const formatted = initDataValues instanceof InitDataValuesContainer ?
-      initDataValues.getFormattedValues() :
-      initDataValues;
+    initDataValues: InitDataValuesContainer | IFormattedInitDataValue[],
+  ): boolean {
+    const formatted =
+      initDataValues instanceof InitDataValuesContainer
+        ? initDataValues.getFormattedValues()
+        : initDataValues;
     return areInitializationValuesCompatible(this.getFormattedValues(), formatted);
   }
 
@@ -80,7 +81,7 @@ export default class InitDataValuesContainer {
    * other way.
    * @returns {Array.<Object>}
    */
-  public getFormattedValues() : IFormattedInitDataValue[] {
+  public getFormattedValues(): IFormattedInitDataValue[] {
     if (this._lazyFormattedValues === null) {
       this._lazyFormattedValues = formatInitDataValues(this._innerValues);
     }
@@ -96,24 +97,29 @@ export default class InitDataValuesContainer {
  * @returns {Array.<Object>}
  */
 function formatInitDataValues(
-  initialValues : IInitDataValue[]
-) : IFormattedInitDataValue[] {
-  return initialValues.slice()
-    .sort((a, b) => a.systemId === b.systemId ? 0 :
-                    a.systemId === undefined  ? 1 :
-                    b.systemId === undefined  ? -1 :
-                    a.systemId < b.systemId   ? -1 :
-                    1)
-    .map(({ systemId, data }) => ({ systemId,
-                                    data,
-                                    hash: hashBuffer(data) }));
+  initialValues: IInitDataValue[],
+): IFormattedInitDataValue[] {
+  return initialValues
+    .slice()
+    .sort((a, b) =>
+      a.systemId === b.systemId
+        ? 0
+        : a.systemId === undefined
+          ? 1
+          : b.systemId === undefined
+            ? -1
+            : a.systemId < b.systemId
+              ? -1
+              : 1,
+    )
+    .map(({ systemId, data }) => ({ systemId, data, hash: hashBuffer(data) }));
 }
 
 /**
  * Formatted initialization data value, so it is faster to compare to others.
  */
 export interface IFormattedInitDataValue {
-  systemId : string | undefined;
-  hash : number;
-  data : Uint8Array;
+  systemId: string | undefined;
+  hash: number;
+  data: Uint8Array;
 }

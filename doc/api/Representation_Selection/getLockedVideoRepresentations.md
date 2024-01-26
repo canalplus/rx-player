@@ -27,13 +27,13 @@ const lockedVideoRepresentations = player.getLockedVideoRepresentations();
 const lockedVideoRepresentations = player.getLockedVideoRepresentations(periodId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want
       to get its locked video Representation.
       If not defined, the information associated to the currently-playing Period
       will be returned.
 
-  - **return value**: `Array.<string>|null`: Last locked video
-    Representation for the corresponding Period
-    `null` if no video Representation is locked.
+- **return value**: `Array.<string>|null`: Last locked video
+  Representation for the corresponding Period
+  `null` if no video Representation is locked.

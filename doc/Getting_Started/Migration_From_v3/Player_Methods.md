@@ -14,13 +14,14 @@ have been removed, like most bitrate-oriented API.
 Its behavior is however easy to replace, just by using respectively the
 [`getAudioTrack`](../../api/Track_Selection/getAudioTrack.md) and
 [`getVideoTrack`](../../api/Track_Selection/getVideoTrack.md) methods:
+
 ```js
 // instead of getAvailableVideoBitrates you can do
 const videoTrack = rxPlayer.getVideoTrack();
 if (videoTrack !== null && videoTrack !== undefined) {
   const availableVideoBitrates = video.representation
-    .map(r => r.bitrate)
-    .filter(bitrate => bitrate !== undefined);
+    .map((r) => r.bitrate)
+    .filter((bitrate) => bitrate !== undefined);
 }
 ```
 
@@ -29,7 +30,6 @@ change the currently playing bitrate and that such way of controlling the
 quality has been removed in profit of the new representation lock API.
 You can read the [Bitrate Selection part of the migration
 guide](./Bitrate_Selection.md) for more information on this.
-
 
 ### `getVideoBitrate` / `getAudioBitrate`
 
@@ -41,6 +41,7 @@ Its behavior is however easy to replace, just by using respectively the
 and
 [`getVideoRepresentation`](../../api/Representation_Selection/getVideoRepresentation.md)
 methods:
+
 ```js
 // instead of getVideoBitrate you can do
 const videoRepresentation = rxPlayer.getVideoRepresentation();
@@ -55,20 +56,17 @@ The `setAudioBitrate`, `setVideoBitrate`, `getManualAudioBitrate` and
 `getManualAudioBitrate` methods have all been removed, as documented in the
 [Bitrate Selection part of the migration guide](./Bitrate_Selection.md).
 
-
 ### `setMinAudioBitrate` / `setMinVideoBitrate` / `getMinAudioBitrate` / `setMinAudioBitrate`
 
 The `setMinAudioBitrate`, `setMinVideoBitrate`, `getMinAudioBitrate` and
 `setMinAudioBitrate` methods have all been removed, as documented in the
 [Bitrate Selection part of the migration guide](./Bitrate_Selection.md).
 
-
 ### `setMaxAudioBitrate` / `setMaxVideoBitrate` / `getMaxAudioBitrate` / `setMaxAudioBitrate`
 
 The `setMaxAudioBitrate`, `setMaxVideoBitrate`, `getMaxAudioBitrate` and
 `setMaxAudioBitrate` methods have all been removed, as documented in the
 [Bitrate Selection part of the migration guide](./Bitrate_Selection.md).
-
 
 ### `getPreferredAudioTracks` / `getPreferredVideoTracks` / `getPreferredTextTracks`
 
@@ -78,7 +76,6 @@ The `getPreferredAudioTracks`, `getPreferredVideoTracks` and
 Track preferences API does not exist anymore as documented in the
 [Preferences part of the migration guide](./Preferences.md).
 
-
 ### `setPreferredAudioTracks` / `setPreferredVideoTracks` / `setPreferredTextTracks`
 
 The `setPreferredAudioTracks`, `setPreferredVideoTracks` and
@@ -87,13 +84,13 @@ The `setPreferredAudioTracks`, `setPreferredVideoTracks` and
 Track preferences API does not exist anymore as documented in the
 [Preferences part of the migration guide](./Preferences.md).
 
-
 ### `getVideoPlayedTime`
 
 The `getVideoPlayedTime` method has been removed because it was poorly
 named, poorly understood, and it is easy to replace.
 
 To replace it, you can write:
+
 ```js
 function getVideoPlayedTime() {
   const position = rxPlayer.getPosition();
@@ -125,13 +122,13 @@ function getRange(timeRanges, time) {
 }
 ```
 
-
 ### `getVideoLoadedTime`
 
 The `getVideoLoadedTime` method has been removed because it was poorly
 named, poorly understood, and it is easy to replace.
 
 To replace it, you can write:
+
 ```js
 function getVideoLoadedTime() {
   const position = rxPlayer.getPosition();
@@ -140,8 +137,7 @@ function getVideoLoadedTime() {
     console.error("The RxPlayer is disposed");
   } else {
     const range = getRange(mediaElement.buffered, currentTime);
-    return range !== null ? range.end - range.start :
-                            0;
+    return range !== null ? range.end - range.start : 0;
   }
 }
 
@@ -164,7 +160,6 @@ function getRange(timeRanges, time) {
 }
 ```
 
-
 ### `getManifest`
 
 The `getManifest` method has been removed with no replacement because it exposed
@@ -172,7 +167,6 @@ the RxPlayer's internals too much.
 
 If you needed it for something, please open an issue explaining which property
 you needed.
-
 
 ### `getCurrentAdaptations`
 
@@ -182,7 +176,6 @@ exposed the RxPlayer's internals too much.
 If you needed it for something, please open an issue explaining which property
 you needed.
 
-
 ### `getCurrentRepresentations`
 
 The `getCurrentRepresentations` method has been removed with no replacement
@@ -190,7 +183,6 @@ because it exposed the RxPlayer's internals too much.
 
 If you needed it for something, please open an issue explaining which property
 you needed.
-
 
 ### `isFullscreen` / `setFullscreen` / `exitFullscreen`
 
@@ -200,7 +192,6 @@ removed.
 Fullscreen functionalities now have to be completely handled by the
 applications, which most likely already did just that anyway.
 
-
 ### `getNativeTextTrack`
 
 The `getNativeTextTrack` methods has been removed.
@@ -208,14 +199,12 @@ The `getNativeTextTrack` methods has been removed.
 This method was initially added for legacy reasons and should not be relied on
 anymore.
 
-
 ### `getImageTrackData`
 
 All image-related API, like the `getImageTrackData` method, have been removed.
 
 If you need to parse BIF file, you can use the
 [`parseBifThumbnails`](../../api/Tools/parseBifThumbnails.md) tool instead.
-
 
 ## Renamed
 
@@ -230,18 +219,15 @@ the content can be reached) whereas `getUrl` only provided a single one.
 If you want to replicate `getUrl`'s behavior, you may want to only use the
 first string optionally returned by `getContentUrls`.
 
-
 ### `getVideoDuration`
 
 The `getVideoDuration` method has been renamed `getMediaDuration` to prevent
 confusion with the duration of the video track.
 
-
 ### `getVideoBufferGap`
 
 The `getVideoDuration` method has been renamed `getCurrentBufferGap` to prevent
 confusion with the buffer gap specific to the video buffer.
-
 
 ## Updated
 
@@ -249,20 +235,19 @@ confusion with the buffer gap specific to the video buffer.
 
 Two player states have been updated:
 
-  - The `"FREEZING"` state has been added to the possible states sent through
-    the `playerStateChange` event.
+- The `"FREEZING"` state has been added to the possible states sent through
+  the `playerStateChange` event.
 
-    This new state, which is sent when playback does not advance despite
-    the fact that the right conditions for it are there, is described in the
-    [overview](./Overview.md).
+  This new state, which is sent when playback does not advance despite
+  the fact that the right conditions for it are there, is described in the
+  [overview](./Overview.md).
 
-    In many case, you might want to handle it like a `"BUFFERING"` state.
+  In many case, you might want to handle it like a `"BUFFERING"` state.
 
-  - The `RELOADING` player state can now happen at any time if it allows to
-    unlock playback.
+- The `RELOADING` player state can now happen at any time if it allows to
+  unlock playback.
 
-    Previously, it could only be sent if specific options have been used.
-
+  Previously, it could only be sent if specific options have been used.
 
 ### `getAvailableVideoTracks` / `getVideoTrack`
 
@@ -271,11 +256,10 @@ Several properties that can be received in a `getAvailableVideoTracks` or
 `representations` property of tracks returned by both methods), have been
 updated:
 
-  - A Representation's `frameRate` property is now either a number - in terms
-    of frame per seconds - or `undefined`, instead of a string.
+- A Representation's `frameRate` property is now either a number - in terms
+  of frame per seconds - or `undefined`, instead of a string.
 
-  - A Representation's `bitrate` property can now be `undefined` if unknown.
-
+- A Representation's `bitrate` property can now be `undefined` if unknown.
 
 ### `getAvailableAudioTracks` / `getAudioTrack`
 
@@ -292,10 +276,10 @@ Previously, those two methods updated the `volume` property of an
 Now, it updates the `muted` property of that same `HTMLMediaElement` without
 actually updating the `volume`, meaning that:
 
-  - The volume returned by `getVolume` won't be affected anymore when muted
-    (it would previously be set to `0` in that case).
+- The volume returned by `getVolume` won't be affected anymore when muted
+  (it would previously be set to `0` in that case).
 
-  - Likewise the `volume` property of the `HTMLMediaElement` won't be affected
+- Likewise the `volume` property of the `HTMLMediaElement` won't be affected
 
 Note that consequently the `volumeChange` also has been updated to indicates
 both an audio volume change (through a `volume` property) and/or a
@@ -315,14 +299,14 @@ things and thus might be more compatible with some browser-provided features.
 This means that you may have to update your code to handle the fact that now
 `setVolume` and muting methods don't interact, like they did before:
 
-  1. If you before expected a `setVolume` call to automatically un-mute the
-     media, you now also may have to call `unMute` to do so.
+1. If you before expected a `setVolume` call to automatically un-mute the
+   media, you now also may have to call `unMute` to do so.
 
-  2. If you expected `isMute` to return `true` when the current volume is set
-     to `0` (e.g. to show an icon telling that there's no volume), you now will
-     also have to check through `getVolume` if the volume is currently set to
-     `0`.
+2. If you expected `isMute` to return `true` when the current volume is set
+   to `0` (e.g. to show an icon telling that there's no volume), you now will
+   also have to check through `getVolume` if the volume is currently set to
+   `0`.
 
-  3. Likewise `getVolume` will not return `0` when muted, but the last volume
-     set through `setVolume` instead. Beware of this when showing UI volume
-     indicators to not let users believe that there are sound when muted.
+3. Likewise `getVolume` will not return `0` when muted, but the last volume
+   set through `setVolume` instead. Beware of this when showing UI volume
+   indicators to not let users believe that there are sound when muted.

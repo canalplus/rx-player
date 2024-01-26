@@ -12,6 +12,6 @@ import { isPlayStation5 } from "./browser_detection";
  * `HAVE_ENOUGH_DATA` readyState before considering the content as loaded.
  * @returns {boolean}
  */
-export default function shouldWaitForHaveEnoughData() : boolean {
+export default function shouldWaitForHaveEnoughData(): boolean {
   return isPlayStation5;
 }

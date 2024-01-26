@@ -21,14 +21,14 @@ import isNullOrUndefined from "../utils/is_null_or_undefined";
  * Clear element's src attribute.
  * @param {HTMLMediaElement} element
  */
-export default function clearElementSrc(element : HTMLMediaElement) : void {
+export default function clearElementSrc(element: HTMLMediaElement): void {
   // On some browsers, we first have to make sure the textTracks elements are
   // both disabled and removed from the DOM.
   // If we do not do that, we may be left with displayed text tracks on the
   // screen, even if the track elements are properly removed, due to browser
   // issues.
   // Bug seen on Firefox (I forgot which version) and Chrome 96.
-  const { textTracks } = element;
+  const { textTracks } = element;
   if (!isNullOrUndefined(textTracks)) {
     for (let i = 0; i < textTracks.length; i++) {
       textTracks[i].mode = "disabled";

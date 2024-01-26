@@ -21,14 +21,20 @@
 
 describe("Compat - Browser version", () => {
   const origUserAgent = navigator.userAgent;
-  Object.defineProperty(navigator,
-                        "userAgent",
-                        ((value: string) => ({
-                          get() { return value; },
-                          /* eslint-disable no-param-reassign */
-                          set(v: string) { value = v; },
-                          /* eslint-enable no-param-reassign */
-                        }))(navigator.userAgent));
+  Object.defineProperty(
+    navigator,
+    "userAgent",
+    ((value: string) => ({
+      get() {
+        return value;
+      },
+      /* eslint-disable no-param-reassign */
+      set(v: string) {
+        value = v;
+      },
+      /* eslint-enable no-param-reassign */
+    }))(navigator.userAgent),
+  );
 
   const nav = navigator as {
     userAgent: string;
@@ -41,8 +47,7 @@ describe("Compat - Browser version", () => {
 
   it("Should return correct Firefox version (60)", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: true };
+      return { __esModule: true as const, isFirefox: true };
     });
     const { getFirefoxVersion } = jest.requireActual("../browser_version");
     nav.userAgent = "Firefox/60.0";
@@ -52,8 +57,7 @@ describe("Compat - Browser version", () => {
 
   it("Should return correct Firefox version (80)", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: true };
+      return { __esModule: true as const, isFirefox: true };
     });
     const { getFirefoxVersion } = jest.requireActual("../browser_version");
     nav.userAgent = "Firefox/80.0";
@@ -63,8 +67,7 @@ describe("Compat - Browser version", () => {
 
   it("Should return null when not on Firefox", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: false };
+      return { __esModule: true as const, isFirefox: false };
     });
     const { getFirefoxVersion } = jest.requireActual("../browser_version");
     const version = getFirefoxVersion();
@@ -73,8 +76,7 @@ describe("Compat - Browser version", () => {
 
   it("Should return null when obscure Firefox user agent", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isFirefox: true };
+      return { __esModule: true as const, isFirefox: true };
     });
     const { getFirefoxVersion } = jest.requireActual("../browser_version");
     nav.userAgent = "FireFennec/80.0";

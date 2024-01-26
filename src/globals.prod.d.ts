@@ -12,4 +12,4 @@ declare const enum __ENVIRONMENT__ {
   CURRENT_ENV = PRODUCTION,
 }
 
-declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
+declare const __RX_PLAYER_DEBUG_MODE__: boolean | undefined;

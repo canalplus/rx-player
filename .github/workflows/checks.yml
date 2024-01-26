@@ -5,13 +5,12 @@ name: RxPlayer Tests
 
 on:
   push:
-    branches: [ stable, dev, legacy-v3 ]
+    branches: [stable, dev, legacy-v3]
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
   typechecking_and_linting:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,17 +19,17 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm install
-    - run: npm run check
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm install
+      - run: npm run prettier:check
+      - run: npm run check
 
   unit_tests:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -39,17 +38,16 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm install
-    - run: npm run test:unit
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm install
+      - run: npm run test:unit
 
   integration_linux:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -58,17 +56,17 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    # needed for integration & memory tests codecs support
-    - run: sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y ubuntu-restricted-extras
-    - run: npm install
-    - run: npm run build
-    # Firefox seems to have issue with integration tests on GitHub actions only
-    # TODO to check
-    - run: node tests/integration/run.mjs --bchromehl
-    - run: npm run test:memory
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      # needed for integration & memory tests codecs support
+      - run: sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y ubuntu-restricted-extras
+      - run: npm install
+      - run: npm run build
+      # Firefox seems to have issue with integration tests on GitHub actions only
+      # TODO to check
+      - run: node tests/integration/run.mjs --bchromehl
+      - run: npm run test:memory

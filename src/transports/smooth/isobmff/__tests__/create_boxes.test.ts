@@ -108,13 +108,48 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       const createHDLRBox = jest.requireActual("../create_boxes").createHDLRBox;
       expect(createHDLRBox("audio")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("hdlr", new Uint8Array([
-        0, 0, 0, 0, 0, 0, 0, 0,
-        115, 111, 117, 110, // "soun"
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        83, 111, 117, 110, 100, 72, 97, 110, 100, 108, 101, 114, // "SoundHandler"
-        0,
-      ]));
+      expect(mockCreateBox).toHaveBeenCalledWith(
+        "hdlr",
+        new Uint8Array([
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          115,
+          111,
+          117,
+          110, // "soun"
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          83,
+          111,
+          117,
+          110,
+          100,
+          72,
+          97,
+          110,
+          100,
+          108,
+          101,
+          114, // "SoundHandler"
+          0,
+        ]),
+      );
     });
 
     it("should always create the same video box", () => {
@@ -126,13 +161,48 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       const createHDLRBox = jest.requireActual("../create_boxes").createHDLRBox;
       expect(createHDLRBox("video")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("hdlr", new Uint8Array([
-        0, 0, 0, 0, 0, 0, 0, 0,
-        118, 105, 100, 101, // "vide"
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        86, 105, 100, 101, 111, 72, 97, 110, 100, 108, 101, 114, // "VideoHandler"
-        0,
-      ]));
+      expect(mockCreateBox).toHaveBeenCalledWith(
+        "hdlr",
+        new Uint8Array([
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          118,
+          105,
+          100,
+          101, // "vide"
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          86,
+          105,
+          100,
+          101,
+          111,
+          72,
+          97,
+          110,
+          100,
+          108,
+          101,
+          114, // "VideoHandler"
+          0,
+        ]),
+      );
     });
 
     it("should always create the same hint box", () => {
@@ -144,12 +214,36 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       const createHDLRBox = jest.requireActual("../create_boxes").createHDLRBox;
       expect(createHDLRBox("hint")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("hdlr", new Uint8Array([
-        0, 0, 0, 0, 0, 0, 0, 0,
-        104, 105, 110, 116, // "soun"
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0,
-      ]));
+      expect(mockCreateBox).toHaveBeenCalledWith(
+        "hdlr",
+        new Uint8Array([
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          104,
+          105,
+          110,
+          116, // "soun"
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+        ]),
+      );
     });
   });
 

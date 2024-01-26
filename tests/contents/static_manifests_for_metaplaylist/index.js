@@ -15,9 +15,4 @@ const manifestURL3 = URL.createObjectURL(manifestBlob3);
 const manifestBlob4 = new Blob([manifest4], { type: "application/xml" });
 const manifestURL4 = URL.createObjectURL(manifestBlob4);
 
-export {
-  manifestURL1,
-  manifestURL2,
-  manifestURL3,
-  manifestURL4,
-};
+export { manifestURL1, manifestURL2, manifestURL3, manifestURL4 };

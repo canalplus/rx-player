@@ -29,8 +29,7 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   it("should return a function to parse lazily the timeline", () => {
     const parseSegmentTimeline = jest.requireActual("../SegmentTimeline").default;
 
-    const element = new DOMParser()
-      .parseFromString("<Root><S /></Root>", "text/xml")
+    const element = new DOMParser().parseFromString("<Root><S /></Root>", "text/xml")
       .childNodes[0] as Element;
     const mockGetElementsByTagName = jest.spyOn(element, "getElementsByTagName");
     const timeline = parseSegmentTimeline(element);
@@ -43,8 +42,7 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   it("should return an empty HTMLCollection if no S element is present", () => {
     const parseSegmentTimeline = jest.requireActual("../SegmentTimeline").default;
 
-    const element = new DOMParser()
-      .parseFromString("<Root />", "text/xml")
+    const element = new DOMParser().parseFromString("<Root />", "text/xml")
       .childNodes[0] as Element;
     const mockGetElementsByTagName = jest.spyOn(element, "getElementsByTagName");
 
@@ -60,9 +58,10 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   it("should return an empty HTMLCollection for an Invalid XML", () => {
     const parseSegmentTimeline = jest.requireActual("../SegmentTimeline").default;
 
-    const element = new DOMParser()
-      .parseFromString("<Root><S></S><S<S></Root>", "text/xml")
-      .childNodes[0] as Element;
+    const element = new DOMParser().parseFromString(
+      "<Root><S></S><S<S></Root>",
+      "text/xml",
+    ).childNodes[0] as Element;
     const mockGetElementsByTagName = jest.spyOn(element, "getElementsByTagName");
 
     const timeline = parseSegmentTimeline(element);
@@ -77,21 +76,18 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   it("should parse S elements only when called for the first time", () => {
     const parseSegmentTimeline = jest.requireActual("../SegmentTimeline").default;
 
-    const sElement1 = new DOMParser()
-      .parseFromString("<S>1</S>", "text/xml")
+    const sElement1 = new DOMParser().parseFromString("<S>1</S>", "text/xml")
       .childNodes[0] as Element;
-    const sElement2 = new DOMParser()
-      .parseFromString("<S>2</S>", "text/xml")
+    const sElement2 = new DOMParser().parseFromString("<S>2</S>", "text/xml")
       .childNodes[0] as Element;
-    const aElement = new DOMParser()
-      .parseFromString("<A/>", "text/xml")
+    const aElement = new DOMParser().parseFromString("<A/>", "text/xml")
       .childNodes[0] as Element;
-    const oElement = new DOMParser()
-      .parseFromString("<O/>", "text/xml")
+    const oElement = new DOMParser().parseFromString("<O/>", "text/xml")
       .childNodes[0] as Element;
-    const element = new DOMParser()
-      .parseFromString("<Root S=\"a\"><![CDATA[ < > & ]]></Root>", "text/xml")
-      .childNodes[0] as Element;
+    const element = new DOMParser().parseFromString(
+      '<Root S="a"><![CDATA[ < > & ]]></Root>',
+      "text/xml",
+    ).childNodes[0] as Element;
 
     element.appendChild(sElement1);
     element.appendChild(aElement);

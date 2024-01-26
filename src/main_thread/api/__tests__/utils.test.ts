@@ -28,11 +28,9 @@ describe("API - getLoadedContentState", () => {
     const mediaElement = fakeProps as HTMLMediaElement;
 
     // we can just do every possibility here
-    expect(getLoadedContentState(mediaElement, null))
-      .toBe("ENDED");
+    expect(getLoadedContentState(mediaElement, null)).toBe("ENDED");
     fakeProps.paused = true;
-    expect(getLoadedContentState(mediaElement, null))
-      .toBe("ENDED");
+    expect(getLoadedContentState(mediaElement, null)).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, "seeking")).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, "not-ready")).toBe("ENDED");
     expect(getLoadedContentState(mediaElement, "buffering")).toBe("ENDED");
@@ -52,8 +50,7 @@ describe("API - getLoadedContentState", () => {
       paused: false,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, null))
-      .toBe("PLAYING");
+    expect(getLoadedContentState(mediaElement, null)).toBe("PLAYING");
   });
 
   it("should be PAUSED if not stalled nor ended and if paused", () => {
@@ -64,8 +61,7 @@ describe("API - getLoadedContentState", () => {
       paused: true,
     };
     const mediaElement = fakeProps as HTMLMediaElement;
-    expect(getLoadedContentState(mediaElement, null))
-      .toBe("PAUSED");
+    expect(getLoadedContentState(mediaElement, null)).toBe("PAUSED");
   });
 
   it("should be BUFFERING if not ended and stalled because of buffering", () => {

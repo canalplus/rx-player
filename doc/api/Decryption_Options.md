@@ -11,7 +11,6 @@ This page will desribe most of them.
 In the case you find this documentation hard to grasp, we've written a [tutorial
 on DRM configuration here](../Getting_Started/Tutorials/Content_with_DRM.md).
 
-
 ## loadVideo `keySystems` options
 
 `keySystems` is a `loadVideo` option allowing to communicate your
@@ -34,37 +33,36 @@ Mostly, the `type` and `getLicense` properties are usually mandatory for
 encrypted contents. Depending on your situation you might also want to set other
 options.
 
-
 ### type
 
 _type_: `string`
 
 Name of the DRM system used. Can be either one of:
 
-  - `"widevine"`
-  - `"playready"`
-  - `"clearkey"`
+-   `"widevine"`
+-   `"playready"`
+-   `"clearkey"`
 
 For more specific (or just different ones), the full reverse domain name of
 the key system can be used instead, for example:
 
-  - `"com.widevine.alpha"`,
-  - `"com.microsoft.playready.hardware"`
-  - `"com.apple.fps.1_0"`
-  - etc.
+-   `"com.widevine.alpha"`,
+-   `"com.microsoft.playready.hardware"`
+-   `"com.apple.fps.1_0"`
+-   etc.
 
 #### Example
 
 ```js
 rxPlayer.loadVideo({
-  // ...
-  keySystems: [
-    {
-      type: "com.microsoft.playready.recommendation",
-      // ...
-    }
     // ...
-  ]
+    keySystems: [
+        {
+            type: "com.microsoft.playready.recommendation",
+            // ...
+        },
+        // ...
+    ],
 });
 ```
 
@@ -77,20 +75,20 @@ Decryption Module (CDM), usually to fetch/renew the license.
 
 Gets two arguments when called:
 
-  1. the message (`Uint8Array`): The message, formatted to an Array of
-     bytes.
-  2. the messageType (`string`): String describing the type of message
-     received.
-     There is only 4 possible message types, all defined in [the w3c
-     specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
+1. the message (`Uint8Array`): The message, formatted to an Array of
+   bytes.
+2. the messageType (`string`): String describing the type of message
+   received.
+   There is only 4 possible message types, all defined in [the w3c
+   specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype).
 
 This function should return either synchronously the license, `null` to not
 set a license for this `message` event or a Promise which should either:
 
-  - resolve if the license was fetched, with the licence in argument
-  - resolve with `null` if you do not want to set a license for this
-  `message` event
-  - reject if an error was encountered.
+-   resolve if the license was fetched, with the licence in argument
+-   resolve with `null` if you do not want to set a license for this
+    `message` event
+-   reject if an error was encountered.
 
 Note: We set a 10 seconds timeout by default on this request (configurable
 through the `keySystems[].getLicenseConfig` object).
@@ -102,7 +100,7 @@ In any case, if a license is provided by this function it should be under a
 
 If this callback throws or rejects, the RxPlayer will either:
 
-  - retry if new retry attempts can be done according to the parameters
+-   retry if new retry attempts can be done according to the parameters
     given as `getLicenseConfig` and if the `noRetry` property of the last
     rejected/throwed value was not set to `true`.
 
@@ -110,13 +108,13 @@ If this callback throws or rejects, the RxPlayer will either:
     emitted through a `warning` event to indicate that this attempt as
     failed.
 
-  - stop playback, emitting an `error` event with the `KEY_LOAD_ERROR` code,
+-   stop playback, emitting an `error` event with the `KEY_LOAD_ERROR` code,
     if no attempt is left to be done (or if the `noRetry` property of the
     last throwed/rejected error was set to `true`) AND if the
     `fallbackOnLastTry` property on the last throwed/rejected error was not
     set to `true`.
 
-  - try to fallback to a different `Representation` (a.k.a. media profile)
+-   try to fallback to a different `Representation` (a.k.a. media profile)
     if no attempt is left to be done (or if the `noRetry` property of the
     last throwed/rejected error was set to `true`) AND if the
     `fallbackOnLastTry` property on the last throwed/rejected error WAS
@@ -133,23 +131,45 @@ If this callback throws or rejects, the RxPlayer will either:
 If the `getLicense` call throws/rejects, you can add any of the following
 properties (none are mandatory) to configure the behavior of the RxPlayer
 relative to that failure:
-  - `noRetry` (`Boolean`): If set to `true`, we won't make another attempt
+
+-   `noRetry` (`Boolean`): If set to `true`, we won't make another attempt
     to call `getLicense` for this particular message.
 
     This will result in:
-      - if the `fallbackOnLastTry` boolean has been set to `true`, it will
+
+    -   if the `fallbackOnLastTry` boolean has been set to `true`, it will
         trigger a fallback to another Representations (and a `KEY_LOAD_ERROR`
         warning being sent) if possible (and throw a
         `NO_PLAYABLE_REPRESENTATION` error code if there's no Representation
         left to fallback to, as documented in the `fallbackOnLastTry`
         property documentation).
-      - If not, a `KEY_LOAD_ERROR` error code will be directly thrown and
+    -   If not, a `KEY_LOAD_ERROR` error code will be directly thrown and
         playback will be stopped.
 
+<<<<<<< HEAD
+
+-   `fallbackOnLastTry` (`boolean`): If this getLicense is the last retry
+    (if the `noRetry` property is set to `true`, this is always true), we
+    will not throw immediately but rather try to fallback on other
+    Representations (e.g. qualities) which might have a different decryption
+    key. If no Representation is left, we will throw a MediaError with a
+    `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
+    documentation](./Player_Errors.md#media_error).
+    ||||||| parent of 1cf52b215 (Add prettier and set it up)
+-   `fallbackOnLastTry` (`boolean`): If this getLicense is the last retry
+    (if the `noRetry` property is set to `true`, this is always true), we
+    will not throw immediately but rather try to fallback on other
+    Representations (e.g. qualities) which might have a different decryption
+    key. If no Representation is left, we will throw a MediaError with a
+    `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
+    documentation](./Player_Errors.md#types-media_error).
+    =======
     If set to `false` or not set, the current retry parameters will be applied
     (see `getLicenseConfig`)
 
-  - `message` (`string`): If the `message` property is set as a "string",
+    > > > > > > > 1cf52b215 (Add prettier and set it up)
+
+-   `message` (`string`): If the `message` property is set as a "string",
     this message will be set as the `message` property of the
     corresponding `EncryptedMediaError` (either communicated through an
     `"error"` event if we're not retrying or through a `"warning"` event
@@ -157,13 +177,13 @@ relative to that failure:
     As every other `getLicense`-related errors, this error will have the
     `KEY_LOAD_ERROR` `code` property.
 
-  - `fallbackOnLastTry` (`boolean`): If this getLicense is the last retry
+-   `fallbackOnLastTry` (`boolean`): If this getLicense is the last retry
     (if the `noRetry` property is set to `true`, this is always true), we
     will not throw immediately but rather try to fallback on other
     Representations (e.g. qualities) which might have a different decryption
     key. If no Representation is left, we will throw a MediaError with a
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
-    documentation](./Player_Errors.md#media_error).
+    documentation](./Player_Errors.md#types-media_error).
 
     This option is thus only useful for contents depending on multiple
     licenses.
@@ -184,7 +204,6 @@ relative to that failure:
     you're encouraged either to use Widevine (only on Chromium-based Edge)
     or to not make use of the `fallBackOnLastTry` option on that browser.
 
-
 ### getLicenseConfig
 
 _type_: `Object | undefined`
@@ -193,15 +212,14 @@ Optional configuration for the `keySystems[].getLicense` callback.
 
 Can contain the following properties:
 
-  - `retry` (`Number`|`undefined`) (default: `2`): number of time
+-   `retry` (`Number`|`undefined`) (default: `2`): number of time
     `getLicense` is retried on error or on timeout before we fail on a
     `KEY_LOAD_ERROR`
 
-  - `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in milliseconds
+-   `timeout` (`Number`|`undefined`) (default: `10000`): timeout, in milliseconds
     after which we consider the `getLicense` callback to have failed.
 
     Set it to `-1` to disable any timeout.
-
 
 ### serverCertificate
 
@@ -214,7 +232,6 @@ still continue to try deciphering the content (albeit a
 [warning](./Player_Errors.md) will be emitted in that case with the code
 `"LICENSE_SERVER_CERTIFICATE_ERROR"`).
 
-
 ### persistentLicenseConfig
 
 _type_: `Object | undefined`
@@ -225,22 +242,21 @@ loaded licenses and on the Content Decryption Module used in the browser.
 
 This is an object containing the following properties:
 
-  - `save` (`Function`): function which takes into argument an
+-   `save` (`Function`): function which takes into argument an
     `Array.<Object>` which will contain information on all the DRM
     sessions the RxPlayer currently needs to save.
     No return value is needed.
 
-  - `load` (`Function`): Function which takes no argument and returns the
-     last stored `Array.<Object>` (the last one given to `save`).
+-   `load` (`Function`): Function which takes no argument and returns the
+    last stored `Array.<Object>` (the last one given to `save`).
 
-  - `disableRetroCompatibility` (`boolean`): If set to `true` the RxPlayer
+-   `disableRetroCompatibility` (`boolean`): If set to `true` the RxPlayer
     might not be able to load licenses persisted through an older RxPlayer
     version. This will allow to unlock some optimizations, for example to
     allow a faster loading of the current content.
 
     We recommend setting that option to `true` if retrieving persisted
     licenses through older versions are not that warning to you.
-
 
 ### maxSessionCacheSize
 
@@ -263,7 +279,6 @@ The `maxSessionCacheSize` option allows to configure the maximum number of
 supplementary older `MediaKeySession` will be closed, at least when the time
 comes to create a new one.
 
-
 ### closeSessionsOnStop
 
 _type_: `Boolean | undefined`
@@ -281,7 +296,6 @@ If you want to set this property because the current device has a limited
 number of `MediaKeySession` that can be created at the same time, prefer
 using `maxSessionCacheSize` instead.
 
-
 ### singleLicensePer
 
 _type_: `string | undefined`
@@ -290,7 +304,7 @@ Allows to use optimally a single license for multiple decryption keys.
 
 Can be set to the following values:
 
-  - `"init-data"`: This is the default value.
+-   `"init-data"`: This is the default value.
     Under that behavior, the RxPlayer will try to fetch a new license any
     time it encounters an unknown encryption initialization data in the
     current content.
@@ -299,7 +313,7 @@ Can be set to the following values:
     decryption key is encountered, which is the most sensible thing to
     do in most cases.
 
-  - `"content"`: Only fetch a single license for the whole content, even
+-   `"content"`: Only fetch a single license for the whole content, even
     if the content has multiple keys.
 
     Under that behavior, only a single license will be fetched, with a
@@ -310,12 +324,12 @@ Can be set to the following values:
     in the license will be fallbacked from[1], meaning that they won't be
     played anymore.
 
-  - `"periods"`: Each license fetched will be assumed to be for a group
+-   `"periods"`: Each license fetched will be assumed to be for a group
     of [Periods](../Getting_Started/Glossary.md#period).
 
     That is, the RxPlayer will assume that any license fetched:
 
-      - will contain all the compatible keys for the Period of the
+    -   will contain all the compatible keys for the Period of the
         Representation for which the license request was done.
 
         That is, if the license request was done for a Representation in the
@@ -326,7 +340,7 @@ Can be set to the following values:
         not compatible - thus their corresponding Representation will be
         fallbacked from[1]).
 
-      - may contain all compatible keys for some other Periods (or all other
+    -   may contain all compatible keys for some other Periods (or all other
         Periods).
 
         The rule here is that as long as the license contain at least one
@@ -341,11 +355,11 @@ Can be set to the following values:
     also may be preferable to the "content" mode in any of the following
     situations:
 
-      - You don't know all upcoming keys in advance.
+    -   You don't know all upcoming keys in advance.
 
         Here you can just communicate them by groups of Periods
 
-      - The devices on which the RxPlayer will play are not able to store all
+    -   The devices on which the RxPlayer will play are not able to store all
         keys needed for a single content at once
 
         Here you can just provide a limited number of keys, linked to a limited
@@ -387,7 +401,6 @@ unencrypted/encrypted data might not be playable with that configuration.
 You can try that property if your encrypted contents seems to be loading
 indefinitely on some peculiar targets.
 
-
 ### distinctiveIdentifier
 
 _type_: `String | undefined`
@@ -401,7 +414,6 @@ will be required, optional or not-allowed.
 It can be set to any value of the `MediaKeysRequirement` enumeration, as
 declared [here in the EME specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
-
 
 ### persistentState
 
@@ -424,7 +436,6 @@ It can be set to any value of the `MediaKeysRequirement` enumeration, as
 declared [here in the EME specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
 
-
 ### onKeyOutputRestricted
 
 _type_: `string | undefined`
@@ -439,20 +450,33 @@ restrictions.
 `onKeyOutputRestricted` can be set to a string, each describing a different
 behavior, the default one if not is defined being `"error"`:
 
-  - `"error"`: The RxPlayer will stop on an error when any key has the
+-   `"error"`: The RxPlayer will stop on an error when any key has the
     `"output-restricted"` status.
     This is the default behavior.
 
-    The error emitted in that case should be an
-    [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
-    `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
-    property containing at least one string set to `"output-restricted"`.
+<<<<<<< HEAD
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"output-restricted"`.
+||||||| parent of 1cf52b215 (Add prettier and set it up)
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"output-restricted"`.
+=======
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"output-restricted"`.
 
-  - `"continue"`: The RxPlayer will not do anything when a key has the
+> > > > > > > 1cf52b215 (Add prettier and set it up)
+
+-   `"continue"`: The RxPlayer will not do anything when a key has the
     `"output-restricted"` status.
     This may lead in many cases to infinite rebuffering.
 
-  - `"fallback"`: The Representation(s) linked to the problematic key(s) will
+-   `"fallback"`: The Representation(s) linked to the problematic key(s) will
     be fallbacked from, meaning the RxPlayer will switch to other
     representation without keys with a problematic status.
 
@@ -462,7 +486,6 @@ behavior, the default one if not is defined being `"error"`:
     Note that when the "fallbacking" action is taken, the RxPlayer might
     temporarily switch to the `"RELOADING"` state - which should thus be
     properly handled.
-
 
 ### onKeyInternalError
 
@@ -477,20 +500,33 @@ Behavior the RxPlayer should have when a key has the
 `onKeyInternalError` can be set to a string, each describing a different
 behavior, the default one if not is defined being `"error"`:
 
-  - `"error"`: The RxPlayer will stop on an error when any key has the
+-   `"error"`: The RxPlayer will stop on an error when any key has the
     `"internal-error"` status.
     This is the default behavior.
 
-    The error emitted in that case should be an
-    [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
-    `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
-    property containing at least one string set to `"internal-error"`.
+<<<<<<< HEAD
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"internal-error"`.
+||||||| parent of 1cf52b215 (Add prettier and set it up)
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"internal-error"`.
+=======
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"internal-error"`.
 
-  - `"continue"`: The RxPlayer will not do anything when a key has the
+> > > > > > > 1cf52b215 (Add prettier and set it up)
+
+-   `"continue"`: The RxPlayer will not do anything when a key has the
     `"internal-error"` status.
     This may lead in many cases to infinite rebuffering.
 
-  - `"fallback"`: The Representation(s) linked to the problematic key(s) will
+-   `"fallback"`: The Representation(s) linked to the problematic key(s) will
     be fallbacked from, meaning the RxPlayer will switch to other
     representation without keys with a problematic status.
 
@@ -501,7 +537,7 @@ behavior, the default one if not is defined being `"error"`:
     temporarily switch to the `"RELOADING"` state - which should thus be
     properly handled.
 
-  - `"close-session"`: The RxPlayer will close and re-create a DRM session
+-   `"close-session"`: The RxPlayer will close and re-create a DRM session
     (and thus re-download the corresponding license) if any of the key
     associated to this session has the `"internal-error"` status.
 
@@ -511,7 +547,6 @@ behavior, the default one if not is defined being `"error"`:
     The RxPlayer might go through the `"RELOADING"` and/or light decoding
     glitches can arise while doing so, depending on the platform, for some
     seconds, under that mode.
-
 
 ### onKeyExpiration
 
@@ -524,18 +559,31 @@ Behavior the RxPlayer should have when one of the key is known to be expired.
 `onKeyExpiration` can be set to a string, each describing a different behavior,
 the default one if not is defined being `"error"`:
 
-  - `"error"`: The RxPlayer will stop on an error when any key is expired.
+-   `"error"`: The RxPlayer will stop on an error when any key is expired.
     This is the default behavior.
 
-    The error emitted in that case should be an
-    [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
-    `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
-    property containing at least one string set to `"expired"`.
+<<<<<<< HEAD
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"expired"`.
+||||||| parent of 1cf52b215 (Add prettier and set it up)
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"expired"`.
+=======
+The error emitted in that case should be an
+[EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+`KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
+property containing at least one string set to `"expired"`.
 
-  - `"continue"`: The RxPlayer will not do anything when a key expires.
+> > > > > > > 1cf52b215 (Add prettier and set it up)
+
+-   `"continue"`: The RxPlayer will not do anything when a key expires.
     This may lead in many cases to infinite rebuffering.
 
-  - `"fallback"`: The Representation(s) linked to the expired key(s) will
+-   `"fallback"`: The Representation(s) linked to the expired key(s) will
     be fallbacked from, meaning the RxPlayer will switch to other
     representation without expired keys.
 
@@ -546,7 +594,7 @@ the default one if not is defined being `"error"`:
     temporarily switch to the `"RELOADING"` state - which should thus be
     properly handled.
 
-  - `"close-session"`: The RxPlayer will close and re-create a DRM session
+-   `"close-session"`: The RxPlayer will close and re-create a DRM session
     (and thus re-download the corresponding license) if any of the key
     associated to this session expired.
 
@@ -556,7 +604,6 @@ the default one if not is defined being `"error"`:
     The RxPlayer might go through the `"RELOADING"` state after an expired
     key and/or light decoding glitches can arise, depending on the
     platform, for some seconds, under that mode.
-
 
 ### videoCapabilitiesConfig / audioCapabilitiesConfig
 
@@ -583,14 +630,16 @@ content of the `value` property totally depends on the set `type` property.
 
 The `type` property can be set to one of the three following values:
 
-  - `"robustness"`: When `type` is set to `"robustness"`, `value` should be set
+-   `"robustness"`: When `type` is set to `"robustness"`, `value` should be set
     to an array of strings, each defining a wanted key system robustness by
     order of preference.
 
     For example:
+
     ```js
     { type: "robustness", value: ["3000", "2000"] }
     ```
+
     Mean that you want first a `"3000"` robustness and - if not available - a
     `"2000"` one.
 
@@ -599,7 +648,7 @@ The `type` property can be set to one of the three following values:
     [MediaKeySystemMediaCapability](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability)
     objects. Those should be compatible with most usages.
 
-  - `"contentType"`: When `type` is set to `"contentType"`, `value` should be set
+-   `"contentType"`: When `type` is set to `"contentType"`, `value` should be set
     to an array of strings, each defining by order of preference mimeTypes of
     the video content to decrypt (if you're setting `videoCapabilitiesConfig`)
     or of the audio contents to decrypt (if you're setting
@@ -611,7 +660,7 @@ The `type` property can be set to one of the three following values:
     objects will have a default value chosen by the RxPlayer. Those should be
     compatible with most usages.
 
-  - `"full"`: When `type` is set to `"full"`, `value` should be set to an array
+-   `"full"`: When `type` is set to `"full"`, `value` should be set to an array
     of object, each being, a
     [MediaKeySystemMediaCapability](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability)
     object.

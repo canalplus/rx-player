@@ -62,8 +62,7 @@ export default function buildWorker(options) {
     setup(build) {
       build.onStart(() => {
         console.log(
-          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            "New worker build started"
+          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` + "New worker build started",
         );
       });
       build.onEnd((result) => {
@@ -72,13 +71,13 @@ export default function buildWorker(options) {
           console.log(
             `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
               `Worker re-built with ${errors.length} error(s) and ` +
-              ` ${warnings.length} warning(s) `
+              ` ${warnings.length} warning(s) `,
           );
           return;
         }
         console.log(
           `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-          `Worker updated at ${outfile}!`
+            `Worker updated at ${outfile}!`,
         );
       });
     },
@@ -95,9 +94,7 @@ export default function buildWorker(options) {
     outfile,
     plugins: isSilent ? [] : [consolePlugin],
     define: {
-      "process.env.NODE_ENV": JSON.stringify(
-        isDevMode ? "development" : "production"
-      ),
+      "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
       __ENVIRONMENT__: JSON.stringify({
         PRODUCTION: 0,
         DEV: 1,
@@ -115,7 +112,7 @@ export default function buildWorker(options) {
       if (!isSilent) {
         console.error(
           `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Worker build failed:`,
-          err
+          err,
         );
       }
       throw err;
@@ -136,7 +133,7 @@ Options:
   -m, --minify           Minify the built worker
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
   -s, --silent           Don't log to stdout/stderr when bundling
-  -w, --watch            Re-build each time either the worker or library files change`
+  -w, --watch            Re-build each time either the worker or library files change`,
     /* eslint-enable indent */
   );
   /* eslint-enable no-console */

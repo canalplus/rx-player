@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-import BaseRepresentationIndex, {
-  IBaseIndexContextArgument,
-} from "./base";
-import ListRepresentationIndex, {
-  IListIndexContextArgument,
-} from "./list";
-import TemplateRepresentationIndex, {
-  ITemplateIndexContextArgument,
-} from "./template";
-import TimelineRepresentationIndex, {
-  ITimelineIndexContextArgument,
-} from "./timeline";
+import BaseRepresentationIndex, { IBaseIndexContextArgument } from "./base";
+import ListRepresentationIndex, { IListIndexContextArgument } from "./list";
+import TemplateRepresentationIndex, { ITemplateIndexContextArgument } from "./template";
+import TimelineRepresentationIndex, { ITimelineIndexContextArgument } from "./timeline";
 
 export {
   BaseRepresentationIndex,

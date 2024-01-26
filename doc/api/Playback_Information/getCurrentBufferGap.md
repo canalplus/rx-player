@@ -19,4 +19,4 @@ return `9` (`60 - 51`).
 const bufferGap = player.getCurrentBufferGap();
 ```
 
- - **return value** `number`
+- **return value** `number`

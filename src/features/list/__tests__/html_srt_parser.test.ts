@@ -21,7 +21,9 @@ import addHTMLsrtFeature from "../html_srt_parser";
 
 describe("Features list - HTML srt Parser", () => {
   it("should add an HTML srt Parser in the current features", () => {
-    const featureObject = { htmlTextTracksParsers: {} } as unknown as IFeaturesObject;
+    const featureObject = {
+      htmlTextTracksParsers: {},
+    } as unknown as IFeaturesObject;
     addHTMLsrtFeature(featureObject);
     expect(featureObject).toEqual({
       htmlTextTracksParsers: { srt: srtParser },

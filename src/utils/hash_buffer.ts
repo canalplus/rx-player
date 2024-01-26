@@ -30,12 +30,12 @@
  * @param {Array.<number>|TypedArray} buffer
  * @returns {number}
  */
-export default function hashBuffer(buffer : Uint8Array|number[]) : number {
+export default function hashBuffer(buffer: Uint8Array | number[]): number {
   let hash = 0;
   let char;
   for (let i = 0; i < buffer.length; i++) {
     char = buffer[i];
-    hash = ((hash <<  5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   return hash;

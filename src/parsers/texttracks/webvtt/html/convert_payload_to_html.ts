@@ -23,24 +23,21 @@ import type { IStyleElements } from "./parse_style_block";
  * @returns {Array.<HTMLElement>}
  */
 export default function convertPayloadToHTML(
-  text : string,
-  styleElements : IStyleElements
-) : HTMLElement[] {
+  text: string,
+  styleElements: IStyleElements,
+): HTMLElement[] {
   const filteredText = text
     // Remove timestamp tags
     .replace(/<[0-9]{2}:[0-9]{2}.[0-9]{3}>/, "")
     // Remove tag content or attributes (e.g. <b dfgfdg> => <b>)
-    .replace(/<([u,i,b,c])(\..*?)?(?: .*?)?>(.*?)<\/\1>/g,
-             "<$1$2>$3</$1$2>");
+    .replace(/<([u,i,b,c])(\..*?)?(?: .*?)?>(.*?)<\/\1>/g, "<$1$2>$3</$1$2>");
 
   const parsedWebVTT = new DOMParser().parseFromString(filteredText, "text/html");
   const nodes = parsedWebVTT.body.childNodes;
 
-  const styledElements : HTMLElement[] = [];
+  const styledElements: HTMLElement[] = [];
   for (let i = 0; i < nodes.length; i++) {
-    styledElements.push(
-      createStyledElement(nodes[i], styleElements)
-    );
+    styledElements.push(createStyledElement(nodes[i], styleElements));
   }
   return styledElements;
 }

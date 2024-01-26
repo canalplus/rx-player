@@ -24,10 +24,10 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
  * @param {Object} cancelSignal
  */
 export default function listenToMediaError(
-  mediaElement : HTMLMediaElement,
-  onError : (error : MediaError) => void,
-  cancelSignal : CancellationSignal
-) : void {
+  mediaElement: HTMLMediaElement,
+  onError: (error: MediaError) => void,
+  cancelSignal: CancellationSignal,
+): void {
   if (cancelSignal.isCancelled()) {
     return;
   }
@@ -38,10 +38,10 @@ export default function listenToMediaError(
     mediaElement.removeEventListener("error", onMediaError);
   });
 
-  function onMediaError() : void {
+  function onMediaError(): void {
     const mediaError = mediaElement.error;
-    let errorCode : number | undefined;
-    let errorMessage : string | undefined;
+    let errorCode: number | undefined;
+    let errorMessage: string | undefined;
     if (!isNullOrUndefined(mediaError)) {
       errorCode = mediaError.code;
       errorMessage = mediaError.message;
@@ -49,25 +49,27 @@ export default function listenToMediaError(
 
     switch (errorCode) {
       case 1:
-        errorMessage = errorMessage ??
+        errorMessage =
+          errorMessage ??
           "The fetching of the associated resource was aborted by the user's request.";
         return onError(new MediaError("MEDIA_ERR_ABORTED", errorMessage));
       case 2:
-        errorMessage = errorMessage ??
+        errorMessage =
+          errorMessage ??
           "A network error occurred which prevented the media from being " +
-          "successfully fetched";
+            "successfully fetched";
         return onError(new MediaError("MEDIA_ERR_NETWORK", errorMessage));
       case 3:
-        errorMessage = errorMessage ??
-          "An error occurred while trying to decode the media resource";
+        errorMessage =
+          errorMessage ?? "An error occurred while trying to decode the media resource";
         return onError(new MediaError("MEDIA_ERR_DECODE", errorMessage));
       case 4:
-        errorMessage = errorMessage ??
-          "The media resource has been found to be unsuitable.";
+        errorMessage =
+          errorMessage ?? "The media resource has been found to be unsuitable.";
         return onError(new MediaError("MEDIA_ERR_SRC_NOT_SUPPORTED", errorMessage));
       default:
-        errorMessage = errorMessage ??
-          "The HTMLMediaElement errored due to an unknown reason.";
+        errorMessage =
+          errorMessage ?? "The HTMLMediaElement errored due to an unknown reason.";
         return onError(new MediaError("MEDIA_ERR_UNKNOWN", errorMessage));
     }
   }

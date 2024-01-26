@@ -24,21 +24,17 @@
  * @extends Error
  */
 export default class CustomLoaderError extends Error {
-  public readonly name : "CustomLoaderError";
-  public readonly message : string;
-  public readonly canRetry : boolean;
-  public readonly xhr : XMLHttpRequest | undefined;
+  public readonly name: "CustomLoaderError";
+  public readonly message: string;
+  public readonly canRetry: boolean;
+  public readonly xhr: XMLHttpRequest | undefined;
 
   /**
    * @param {string} message
    * @param {boolean} canRetry
    * @param {XMLHttpRequest} xhr
    */
-  constructor(
-    message : string,
-    canRetry : boolean,
-    xhr : XMLHttpRequest | undefined
-  ) {
+  constructor(message: string, canRetry: boolean, xhr: XMLHttpRequest | undefined) {
     super();
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, CustomLoaderError.prototype);

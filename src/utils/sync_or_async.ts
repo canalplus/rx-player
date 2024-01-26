@@ -48,13 +48,13 @@ export interface ISyncOrAsyncValue<T> {
    * Set to the underlying value in the case where it was set synchronously.
    * Set to `null` if the value is set asynchronously.
    */
-  syncValue : T | null;
+  syncValue: T | null;
   /**
    * Obtain the value asynchronously.
    * This works even when the value is actually set synchronously, by embedding it
    * value in a Promise.
    */
-  getValueAsAsync() : Promise<T>;
+  getValueAsAsync(): Promise<T>;
 }
 
 const SyncOrAsync = {
@@ -63,10 +63,12 @@ const SyncOrAsync = {
    * @param {*} val
    * @returns {Object}
    */
-  createSync<T>(val : T) : ISyncOrAsyncValue<T> {
+  createSync<T>(val: T): ISyncOrAsyncValue<T> {
     return {
       syncValue: val,
-      getValueAsAsync() { return Promise.resolve(val); },
+      getValueAsAsync() {
+        return Promise.resolve(val);
+      },
     };
   },
 
@@ -75,14 +77,16 @@ const SyncOrAsync = {
    * @param {Promise} val
    * @returns {Object}
    */
-  createAsync<T>(val : Promise<T>) : ISyncOrAsyncValue<T> {
+  createAsync<T>(val: Promise<T>): ISyncOrAsyncValue<T> {
     let ret = null;
     val.then((resolved) => {
       ret = resolved;
     }, noop);
     return {
       syncValue: ret,
-      getValueAsAsync() { return val; },
+      getValueAsAsync() {
+        return val;
+      },
     };
   },
 };

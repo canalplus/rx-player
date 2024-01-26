@@ -52,17 +52,14 @@ import type { IStyleObject } from "./get_styling";
  * Doing this here allows to simplify further treatment of those styles.
  * @param {Array.<Object>} styles
  */
-export default function resolveStylesInheritance(
-  styles : IStyleObject[]
-) : void {
+export default function resolveStylesInheritance(styles: IStyleObject[]): void {
   // keep track of all the indexes parsed to avoid infinite loops
-  const recursivelyBrowsedIndexes : number[] = [];
-  function resolveStyleInheritance(styleElt : IStyleObject, index : number) {
+  const recursivelyBrowsedIndexes: number[] = [];
+  function resolveStyleInheritance(styleElt: IStyleObject, index: number) {
     recursivelyBrowsedIndexes.push(index);
     for (let j = 0; j < styleElt.extendsStyles.length; j++) {
       const extendedStyleID = styleElt.extendsStyles[j];
-      const extendedStyleIndex = arrayFindIndex(styles,
-                                                (x) => x.id === extendedStyleID);
+      const extendedStyleIndex = arrayFindIndex(styles, (x) => x.id === extendedStyleID);
       if (extendedStyleIndex < 0) {
         log.warn("TTML Parser: unknown style inheritance: " + extendedStyleID);
       } else {

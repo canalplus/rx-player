@@ -17,7 +17,7 @@
 /**
  * Translate ISO 639-1 language codes into ISO 639-3 ones.
  */
-const ISO_MAP_1_TO_3 : { [ lang : string ] : string } = {
+const ISO_MAP_1_TO_3: { [lang: string]: string } = {
   aa: "aar", // Afar
   ab: "abk", // Abkhazian
   ae: "ave", // Avestan
@@ -46,7 +46,7 @@ const ISO_MAP_1_TO_3 : { [ lang : string ] : string } = {
   cr: "cre", // Cree
   cs: "ces", // Czech
   cu: "chu", // Church Slavic, Church Slavonic, Old Church Slavonic,
-             // Old Slavonic, Old Bulgarian
+  // Old Slavonic, Old Bulgarian
   cv: "chv", // Chuvash
   cy: "cym", // Welsh
   da: "dan", // Danish

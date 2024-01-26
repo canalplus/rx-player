@@ -22,10 +22,7 @@ import { REGXP_LENGTH } from "../regexps";
  * @param {HTMLElement} element
  * @param {string} lineHeight
  */
-export default function applyLineHeight(
-  element : HTMLElement,
-  lineHeight : string
-) : void {
+export default function applyLineHeight(element: HTMLElement, lineHeight: string): void {
   const trimmedLineHeight = lineHeight.trim();
   const splittedLineHeight = trimmedLineHeight.split(" ");
 
@@ -36,10 +33,11 @@ export default function applyLineHeight(
   if (firstLineHeight === null) {
     return;
   }
-  if (firstLineHeight[2] === "px" ||
-      firstLineHeight[2] === "%" ||
-      firstLineHeight[2] === "em")
-  {
+  if (
+    firstLineHeight[2] === "px" ||
+    firstLineHeight[2] === "%" ||
+    firstLineHeight[2] === "em"
+  ) {
     element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
   } else if (firstLineHeight[2] === "c") {
     addClassName(element, "proportional-style");

@@ -32,8 +32,8 @@ the minimum position should not cause any issue.
 const minimumPosition = player.getMinimumPosition();
 ```
 
-  - **return value** `number|null`: Minimum seekable position.
-    `null` if no content is currently loaded.
+- **return value** `number|null`: Minimum seekable position.
+  `null` if no content is currently loaded.
 
 ## Example
 

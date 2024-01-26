@@ -16,8 +16,8 @@ was instantiated with one.
 const elt = player.getVideoElement();
 ```
 
-  - **return value** `HTMLMediaElement`: The media element attached to the
-    RxPlayer.
+- **return value** `HTMLMediaElement`: The media element attached to the
+  RxPlayer.
 
 ## Example
 

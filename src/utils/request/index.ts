@@ -24,11 +24,7 @@ import RequestError, {
   ISerializedRequestError,
   IRequestErrorType,
 } from "./request_error";
-import xhr, {
-  IRequestOptions,
-  IProgressInfo,
-  IRequestResponse,
-} from "./xhr";
+import xhr, { IRequestOptions, IProgressInfo, IRequestResponse } from "./xhr";
 
 export default xhr;
 export {
@@ -40,7 +36,6 @@ export {
   IRequestOptions,
   IRequestResponse,
   xhr,
-
   RequestError,
   RequestErrorTypes,
   ISerializedRequestError,

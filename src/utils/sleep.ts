@@ -7,7 +7,7 @@
  * @param {number} timeInMs
  * @returns {Promise}
  */
-export default function sleep(timeInMs : number) : Promise<void> {
+export default function sleep(timeInMs: number): Promise<void> {
   return new Promise((res) => {
     setTimeout(res, timeInMs);
   });

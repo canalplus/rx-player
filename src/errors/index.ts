@@ -28,22 +28,15 @@ import {
 } from "./error_codes";
 import formatError from "./format_error";
 import isKnownError from "./is_known_error";
-import MediaError, {
-  ISerializedMediaError,
-} from "./media_error";
-import NetworkError, {
-  ISerializedNetworkError,
-} from "./network_error";
-import OtherError, {
-  ISerializedOtherError,
-} from "./other_error";
+import MediaError, { ISerializedMediaError } from "./media_error";
+import NetworkError, { ISerializedNetworkError } from "./network_error";
+import OtherError, { ISerializedOtherError } from "./other_error";
 import SourceBufferError from "./source_buffer_error";
 
 export {
   CustomLoaderError,
   EncryptedMediaError,
   SourceBufferError,
-
   ErrorCodes,
   ErrorTypes,
   IErrorCode,
@@ -55,7 +48,6 @@ export {
   INetworkErrorType,
   NetworkErrorTypes,
   isKnownError,
-
   ISerializedMediaError,
   ISerializedNetworkError,
   ISerializedEncryptedMediaError,

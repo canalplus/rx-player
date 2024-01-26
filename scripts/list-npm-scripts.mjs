@@ -65,8 +65,8 @@ async function run() {
           commandArray.push(name);
           console.log(
             `${indentation}${emphasize(currCommandNb + ".")} [${emphasize(
-              `npm run ${name}`
-            )}]:`
+              `npm run ${name}`,
+            )}]:`,
           );
           console.log(`${indentation}   ${val}\n`);
           currCommandNb++;
@@ -92,8 +92,7 @@ async function run() {
  * @returns {Promise.<number>}
  */
 async function getChoice(maxNb) {
-  const answer =
-    maxNb <= 9 ? await getSingleCharChoice() : await readAnyLengthChoice();
+  const answer = maxNb <= 9 ? await getSingleCharChoice() : await readAnyLengthChoice();
   if (
     answer == null ||
     answer == "" ||
@@ -164,7 +163,7 @@ function readAnyLengthChoice() {
     rl.question("Your choice (leave empty to exit): ", (ans) => {
       rl.close();
       resolve(ans);
-    })
+    }),
   );
 }
 
@@ -199,9 +198,7 @@ function getSingleCharChoice() {
 function getPackageJSONContent() {
   const filename = join(process.cwd(), "package.json");
   if (!existsSync(filename)) {
-    throw new Error(
-      "`package.json` was not found in the current working directory."
-    );
+    throw new Error("`package.json` was not found in the current working directory.");
   }
   return JSON.parse(readFileSync(filename, "utf8"));
 }

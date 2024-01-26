@@ -14,8 +14,4 @@
  * limitations under the License.
  */
 
-export {
-  ICuesSegment,
-  getSegmentsFromCues,
-  getTimeCodeScale,
-} from "./utils";
+export { ICuesSegment, getSegmentsFromCues, getTimeCodeScale } from "./utils";

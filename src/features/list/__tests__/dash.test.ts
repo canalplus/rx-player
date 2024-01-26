@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import dashJsParser from "../../../parsers/manifest/dash/js-parser";
@@ -37,9 +36,7 @@ describe("Features list - DASH", () => {
       codecSupportProber: mainCodecSupportProber,
     });
     expect(featureObject.transports.dash).toBe(DASHFeature);
-    expect(featureObject.mainThreadMediaSourceInit)
-      .toBe(MediaSourceContentInitializer);
-    expect(featureObject.codecSupportProber)
-      .toBe(mainCodecSupportProber);
+    expect(featureObject.mainThreadMediaSourceInit).toBe(MediaSourceContentInitializer);
+    expect(featureObject.codecSupportProber).toBe(mainCodecSupportProber);
   });
 });

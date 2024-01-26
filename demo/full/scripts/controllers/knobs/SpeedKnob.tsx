@@ -18,27 +18,27 @@ function SpeedKnob({
   player,
   className,
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
   className?: string;
 }): JSX.Element {
   const playbackRate = useModuleState(player, "playbackRate");
-  let selectedIndex = AVAILABLE_RATES
-    .findIndex((rate) => playbackRate === rate);
+  let selectedIndex = AVAILABLE_RATES.findIndex((rate) => playbackRate === rate);
 
-  const onPlaybackRateChange = React.useCallback((
-    { index }: { index: number }
-  ) => {
-    if (index > -1) {
-      selectedIndex = index;
-      const rate = AVAILABLE_RATES[index];
-      if (rate !== undefined) {
-        player.actions.setPlaybackRate(rate);
-      } else {
-        /* eslint-disable-next-line no-console */
-        console.error("Error: playback rate not found");
+  const onPlaybackRateChange = React.useCallback(
+    ({ index }: { index: number }) => {
+      if (index > -1) {
+        selectedIndex = index;
+        const rate = AVAILABLE_RATES[index];
+        if (rate !== undefined) {
+          player.actions.setPlaybackRate(rate);
+        } else {
+          /* eslint-disable-next-line no-console */
+          console.error("Error: playback rate not found");
+        }
       }
-    }
-  }, [player]);
+    },
+    [player],
+  );
 
   return (
     <Knob

@@ -1,33 +1,31 @@
 module.exports = {
-  "root": true,
-  "env": {
-    "es6": true,
-    "browser": true,
-    "commonjs": true,
-    "mocha": true
+  root: true,
+  env: {
+    es6: true,
+    browser: true,
+    commonjs: true,
+    mocha: true,
   },
 
-  "globals": {
-    "__DEV__": true,
-    "__LOGGER_LEVEL__": true,
-    "__FEATURES__": true
+  globals: {
+    __DEV__: true,
+    __LOGGER_LEVEL__: true,
+    __FEATURES__: true,
   },
 
-  "plugins": [
-    "react"
-  ],
+  plugins: ["react"],
 
-  "extends": "eslint:recommended",
+  extends: "eslint:recommended",
 
-  "parserOptions": {
-    "ecmaVersion": 2017,
-    "ecmaFeatures": {
-      "jsx": true
+  parserOptions: {
+    ecmaVersion: 2017,
+    ecmaFeatures: {
+      jsx: true,
     },
-    "sourceType": "module"
+    sourceType: "module",
   },
 
-  "rules": {
+  rules: {
     "comma-dangle": [1, "only-multiline"],
     "no-cond-assign": 0,
     "no-console": 1,
@@ -58,29 +56,38 @@ module.exports = {
     "no-unexpected-multiline": 0,
     "no-trailing-spaces": 2,
     "no-multiple-empty-lines": 1,
-    "accessor-pairs": [1, {setWithoutGet: true}],
+    "accessor-pairs": [1, { setWithoutGet: true }],
     "block-scoped-var": 1,
-    "complexity": 0,
-    "curly": [1, "all"],
+    complexity: 0,
+    curly: [1, "all"],
     "no-var": 1,
     "prefer-const": 1,
-    "max-len": [1, 80, 2, {
-      "ignoreUrls": true,
-      "ignoreStrings": true,
-      "ignoreTemplateLiterals": true,
-      "ignoreRegExpLiterals": true,
-    } ],
-    "indent": [1, 2, {
-      "ArrayExpression": "first",
-      "ObjectExpression": "first",
-      "CallExpression": { arguments: "first" },
-      "SwitchCase": 1,
-      "ignoreComments": true
-    }],
-    "quotes": [1, "double"],
+    "max-len": [
+      1,
+      80,
+      2,
+      {
+        ignoreUrls: true,
+        ignoreStrings: true,
+        ignoreTemplateLiterals: true,
+        ignoreRegExpLiterals: true,
+      },
+    ],
+    indent: [
+      1,
+      2,
+      {
+        ArrayExpression: "first",
+        ObjectExpression: "first",
+        CallExpression: { arguments: "first" },
+        SwitchCase: 1,
+        ignoreComments: true,
+      },
+    ],
+    quotes: [1, "double"],
     "linebreak-style": [1, "unix"],
-    "semi": [1, "always"],
+    semi: [1, "always"],
     "react/jsx-uses-vars": [2],
-    "react/jsx-uses-react": [2]
-  }
+    "react/jsx-uses-react": [2],
+  },
 };

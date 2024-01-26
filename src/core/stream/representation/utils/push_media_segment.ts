@@ -41,57 +41,58 @@ import appendSegmentToBuffer from "./append_segment_to_buffer";
  * @returns {Promise}
  */
 export default async function pushMediaSegment<T>(
-  { playbackObserver,
+  {
+    playbackObserver,
     bufferGoal,
     content,
     initSegmentUniqueId,
     parsedSegment,
     segment,
-    segmentSink } :
-  { playbackObserver : IReadOnlyPlaybackObserver<
-      IRepresentationStreamPlaybackObservation
-    >;
-    content: { adaptation : IAdaptation;
-               manifest : IManifest;
-               period : IPeriod;
-               representation : IRepresentation; };
-    bufferGoal : IReadOnlySharedReference<number>;
-    initSegmentUniqueId : string | null;
-    parsedSegment : ISegmentParserParsedMediaChunk<T>;
-    segment : ISegment;
-    segmentSink : SegmentSink; },
-  cancelSignal : CancellationSignal
-) : Promise< IStreamEventAddedSegmentPayload | null > {
+    segmentSink,
+  }: {
+    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    content: {
+      adaptation: IAdaptation;
+      manifest: IManifest;
+      period: IPeriod;
+      representation: IRepresentation;
+    };
+    bufferGoal: IReadOnlySharedReference<number>;
+    initSegmentUniqueId: string | null;
+    parsedSegment: ISegmentParserParsedMediaChunk<T>;
+    segment: ISegment;
+    segmentSink: SegmentSink;
+  },
+  cancelSignal: CancellationSignal,
+): Promise<IStreamEventAddedSegmentPayload | null> {
   if (parsedSegment.chunkData === null) {
     return null;
   }
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError;
   }
-  const { chunkData,
-          chunkInfos,
-          chunkOffset,
-          chunkSize,
-          appendWindow } = parsedSegment;
+  const { chunkData, chunkInfos, chunkOffset, chunkSize, appendWindow } = parsedSegment;
   const codec = content.representation.getMimeTypeString();
   const { APPEND_WINDOW_SECURITIES } = config.getCurrent();
   // Cutting exactly at the start or end of the appendWindow can lead to
   // cases of infinite rebuffering due to how browser handle such windows.
   // To work-around that, we add a small offset before and after those.
-  const safeAppendWindow : [ number | undefined, number | undefined ] = [
-    appendWindow[0] !== undefined ?
-      Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START) :
-      undefined,
-    appendWindow[1] !== undefined ?
-      appendWindow[1] + APPEND_WINDOW_SECURITIES.END :
-      undefined,
+  const safeAppendWindow: [number | undefined, number | undefined] = [
+    appendWindow[0] !== undefined
+      ? Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START)
+      : undefined,
+    appendWindow[1] !== undefined
+      ? appendWindow[1] + APPEND_WINDOW_SECURITIES.END
+      : undefined,
   ];
 
-  const data = { initSegmentUniqueId,
-                 chunk: chunkData,
-                 timestampOffset: chunkOffset,
-                 appendWindow: safeAppendWindow,
-                 codec };
+  const data = {
+    initSegmentUniqueId,
+    chunk: chunkData,
+    timestampOffset: chunkOffset,
+    appendWindow: safeAppendWindow,
+    codec,
+  };
 
   let estimatedStart = chunkInfos?.time ?? segment.time;
   const estimatedDuration = chunkInfos?.duration ?? segment.duration;
@@ -103,15 +104,16 @@ export default async function pushMediaSegment<T>(
     estimatedEnd = Math.min(estimatedEnd, safeAppendWindow[1]);
   }
 
-  const inventoryInfos = objectAssign({ segment,
-                                        chunkSize,
-                                        start: estimatedStart,
-                                        end: estimatedEnd },
-                                      content);
-  const buffered = await appendSegmentToBuffer(playbackObserver,
-                                               segmentSink,
-                                               { data, inventoryInfos },
-                                               bufferGoal,
-                                               cancelSignal);
+  const inventoryInfos = objectAssign(
+    { segment, chunkSize, start: estimatedStart, end: estimatedEnd },
+    content,
+  );
+  const buffered = await appendSegmentToBuffer(
+    playbackObserver,
+    segmentSink,
+    { data, inventoryInfos },
+    bufferGoal,
+    cancelSignal,
+  );
   return { content, segment, buffered };
 }

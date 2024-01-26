@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  IRepresentationIndex,
-  IRepresentation,
-} from "../../../../manifest";
+import type { IRepresentationIndex, IRepresentation } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
 import type { IEMSG } from "../../../containers/isobmff";
 import type {
@@ -30,7 +27,8 @@ import type {
   IBaseIndexContextArgument,
   IListIndexContextArgument,
   ITemplateIndexContextArgument,
-  ITimelineIndexContextArgument } from "./indexes";
+  ITimelineIndexContextArgument,
+} from "./indexes";
 import {
   BaseRepresentationIndex,
   ListRepresentationIndex,
@@ -48,64 +46,69 @@ import type { IResolvedBaseUrl } from "./resolve_base_urls";
  * @returns {Array.<Object>}
  */
 export default function parseRepresentationIndex(
-  representation : IRepresentationIntermediateRepresentation,
-  context : IRepresentationIndexContext
-) : IRepresentationIndex {
-  const { availabilityTimeOffset,
-          manifestBoundsCalculator,
-          isDynamic,
-          end: periodEnd,
-          start: periodStart,
-          receivedTime,
-          unsafelyBaseOnPreviousRepresentation,
-          inbandEventStreams,
-          isLastPeriod } = context;
+  representation: IRepresentationIntermediateRepresentation,
+  context: IRepresentationIndexContext,
+): IRepresentationIndex {
+  const {
+    availabilityTimeOffset,
+    manifestBoundsCalculator,
+    isDynamic,
+    end: periodEnd,
+    start: periodStart,
+    receivedTime,
+    unsafelyBaseOnPreviousRepresentation,
+    inbandEventStreams,
+    isLastPeriod,
+  } = context;
 
   const isEMSGWhitelisted = (inbandEvent: IEMSG): boolean => {
     if (inbandEventStreams === undefined) {
       return false;
     }
-    return inbandEventStreams
-      .some(({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri);
+    return inbandEventStreams.some(
+      ({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri,
+    );
   };
-  const reprIndexCtxt: ITimelineIndexContextArgument |
-                       ITemplateIndexContextArgument |
-                       IListIndexContextArgument |
-                       IBaseIndexContextArgument =
-    {
-      availabilityTimeComplete: undefined,
-      availabilityTimeOffset,
-      unsafelyBaseOnPreviousRepresentation,
-      isEMSGWhitelisted,
-      isLastPeriod,
-      manifestBoundsCalculator,
-      isDynamic,
-      periodEnd,
-      periodStart,
-      receivedTime,
-      representationBitrate: representation.attributes.bitrate,
-      representationId: representation.attributes.id,
-    };
-  let representationIndex : IRepresentationIndex;
+  const reprIndexCtxt:
+    | ITimelineIndexContextArgument
+    | ITemplateIndexContextArgument
+    | IListIndexContextArgument
+    | IBaseIndexContextArgument = {
+    availabilityTimeComplete: undefined,
+    availabilityTimeOffset,
+    unsafelyBaseOnPreviousRepresentation,
+    isEMSGWhitelisted,
+    isLastPeriod,
+    manifestBoundsCalculator,
+    isDynamic,
+    periodEnd,
+    periodStart,
+    receivedTime,
+    representationBitrate: representation.attributes.bitrate,
+    representationId: representation.attributes.id,
+  };
+  let representationIndex: IRepresentationIndex;
   if (representation.children.segmentBase !== undefined) {
     const { segmentBase } = representation.children;
     representationIndex = new BaseRepresentationIndex(segmentBase, reprIndexCtxt);
   } else if (representation.children.segmentList !== undefined) {
     const { segmentList } = representation.children;
     representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
-  } else if (representation.children.segmentTemplate !== undefined ||
-             context.parentSegmentTemplates.length > 0)
-  {
+  } else if (
+    representation.children.segmentTemplate !== undefined ||
+    context.parentSegmentTemplates.length > 0
+  ) {
     const segmentTemplates = context.parentSegmentTemplates.slice();
     const childSegmentTemplate = representation.children.segmentTemplate;
     if (childSegmentTemplate !== undefined) {
       segmentTemplates.push(childSegmentTemplate);
     }
-    const segmentTemplate =
-      objectAssign({},
-                   ...segmentTemplates as [
-                     ISegmentTemplateIntermediateRepresentation
-                   ] /* Ugly TS Hack */);
+    const segmentTemplate = objectAssign(
+      {},
+      ...(segmentTemplates as [
+        ISegmentTemplateIntermediateRepresentation,
+      ]) /* Ugly TS Hack */,
+    );
     if (
       segmentTemplate.availabilityTimeOffset !== undefined ||
       context.availabilityTimeOffset !== undefined
@@ -115,10 +118,11 @@ export default function parseRepresentationIndex(
         (context.availabilityTimeOffset ?? 0);
     }
 
-    representationIndex = TimelineRepresentationIndex
-      .isTimelineIndexArgument(segmentTemplate) ?
-        new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt) :
-        new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
+    representationIndex = TimelineRepresentationIndex.isTimelineIndexArgument(
+      segmentTemplate,
+    )
+      ? new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt)
+      : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
   } else {
     const adaptationChildren = context.adaptation.children;
     if (adaptationChildren.segmentBase !== undefined) {
@@ -128,12 +132,15 @@ export default function parseRepresentationIndex(
       const { segmentList } = adaptationChildren;
       representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
     } else {
-      representationIndex = new TemplateRepresentationIndex({
-        duration: Number.MAX_VALUE,
-        timescale: 1,
-        startNumber: 0,
-        media: "",
-      }, reprIndexCtxt);
+      representationIndex = new TemplateRepresentationIndex(
+        {
+          duration: Number.MAX_VALUE,
+          timescale: 1,
+          startNumber: 0,
+          media: "",
+        },
+        reprIndexCtxt,
+      );
     }
   }
   return representationIndex;
@@ -142,7 +149,7 @@ export default function parseRepresentationIndex(
 /** Supplementary context needed to parse a RepresentationIndex. */
 export interface IRepresentationIndexContext {
   /** Parsed AdaptationSet which contains the Representation. */
-  adaptation : IAdaptationSetIntermediateRepresentation;
+  adaptation: IAdaptationSetIntermediateRepresentation;
   /**
    * If `false`, declared segments in the MPD might still be not completely generated.
    * If `true`, they are completely generated.
@@ -152,7 +159,7 @@ export interface IRepresentationIndexContext {
    * It might however be semantically different than `true` in the RxPlayer as it
    * means that the packager didn't include that information in the MPD.
    */
-  availabilityTimeComplete : boolean | undefined;
+  availabilityTimeComplete: boolean | undefined;
   /**
    * availability time offset of the concerned Adaptation.
    *
@@ -161,40 +168,40 @@ export interface IRepresentationIndexContext {
    * It might however be semantically different than `0` in the RxPlayer as it
    * means that the packager didn't include that information in the MPD.
    */
-  availabilityTimeOffset : number | undefined;
+  availabilityTimeOffset: number | undefined;
   /** Eventual URLs from which every relative URL will be based on. */
-  baseURLs : IResolvedBaseUrl[];
+  baseURLs: IResolvedBaseUrl[];
   /** End time of the current Period, in seconds. */
-  end? : number | undefined;
+  end?: number | undefined;
   /** List of inband event streams that are present on the representation */
-  inbandEventStreams: IScheme[] | undefined;
+  inbandEventStreams: IScheme[] | undefined;
   /**
    * Set to `true` if the linked Period is the chronologically last one in the
    * Manifest.
    */
-  isLastPeriod : boolean;
+  isLastPeriod: boolean;
   /** Allows to obtain the first/last available position of a dynamic content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  manifestBoundsCalculator: ManifestBoundsCalculator;
   /** Whether the Manifest can evolve with time. */
-  isDynamic : boolean;
+  isDynamic: boolean;
   /**
    * Parent parsed SegmentTemplate elements.
    * Sorted by provenance from higher level (e.g. Period) to lower-lever (e.g.
    * AdaptationSet).
    */
-  parentSegmentTemplates : ISegmentTemplateIntermediateRepresentation[];
+  parentSegmentTemplates: ISegmentTemplateIntermediateRepresentation[];
   /**
    * Time (as the monotonically-raising timestamp used by the RxPlayer) at which
    * the XML file containing this Representation was received.
    */
-  receivedTime? : number | undefined;
+  receivedTime?: number | undefined;
   /** Start time of the current period, in seconds. */
-  start : number;
+  start: number;
   /**
    * The parser should take this Representation - which is the same as this one
    * parsed at an earlier time - as a base to speed-up the parsing process.
    * /!\ If unexpected differences exist between both, there is a risk of
    * de-synchronization with what is actually on the server.
    */
-  unsafelyBaseOnPreviousRepresentation : IRepresentation | null;
+  unsafelyBaseOnPreviousRepresentation: IRepresentation | null;
 }

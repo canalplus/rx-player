@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
-import {
-  manifestInfos,
-} from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
+import { manifestInfos } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
 import {
   multiPeriodDifferentChoicesInfos,
   multiPeriodSameChoicesInfos,
@@ -12,7 +10,7 @@ import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState.js";
 import sleep from "../../utils/sleep.js";
-import {lockHighestBitrates} from "../../utils/bitrates";
+import { lockHighestBitrates } from "../../utils/bitrates";
 
 describe("DASH non-linear multi-periods content (SegmentTemplate)", function () {
   launchTestsForContent(manifestInfos);
@@ -23,8 +21,10 @@ describe("DASH multi-Period with different choices", function () {
   let player;
 
   async function loadContent() {
-    player.loadVideo({ url: multiPeriodDifferentChoicesInfos.url,
-                       transport: multiPeriodDifferentChoicesInfos.transport });
+    player.loadVideo({
+      url: multiPeriodDifferentChoicesInfos.url,
+      transport: multiPeriodDifferentChoicesInfos.transport,
+    });
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
@@ -80,7 +80,6 @@ describe("DASH multi-Period with different choices", function () {
 
     lockHighestBitrates(player);
 
-
     await loadContent();
 
     expect(availableAudioTracksChange).to.have.length(1);
@@ -112,7 +111,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents[1].id).to.equal("video-si-video-video/mp4");
 
     expect(periodChangeEvents).to.have.length(2);
-
 
     await goToFirstPeriod();
 
@@ -158,7 +156,6 @@ describe("DASH multi-Period with different choices", function () {
     player.setPlaybackRate(3);
     lockHighestBitrates(player);
 
-
     await loadContent();
 
     expect(availableAudioTracksChange).to.have.length(1);
@@ -174,7 +171,6 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents[0].id).to.equal("video-video-video/mp4");
 
     expect(periodChangeEvents).to.have.length(1);
-
 
     // still first Period
     player.play();
@@ -214,8 +210,10 @@ describe("DASH multi-Period with same choices", function () {
   let player;
 
   async function loadContent() {
-    player.loadVideo({ url: multiPeriodSameChoicesInfos.url,
-                       transport: multiPeriodSameChoicesInfos.transport });
+    player.loadVideo({
+      url: multiPeriodSameChoicesInfos.url,
+      transport: multiPeriodSameChoicesInfos.transport,
+    });
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
@@ -287,7 +285,6 @@ describe("DASH multi-Period with same choices", function () {
 
     expect(periodChangeEvents).to.have.length(1);
 
-
     await goToSecondPeriod();
 
     expect(availableAudioTracksChange).to.have.length(2);
@@ -303,7 +300,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
 
     expect(periodChangeEvents).to.have.length(2);
-
 
     await goToFirstPeriod();
 
@@ -364,7 +360,6 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents[0].id).to.equal("video-video-video/mp4-dup");
 
     expect(periodChangeEvents).to.have.length(1);
-
 
     // still first Period
     player.play();

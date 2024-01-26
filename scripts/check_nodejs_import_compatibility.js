@@ -39,20 +39,22 @@ if (indexOfFirstLineBreak >= 0) {
 
 if (RxPlayer.version !== version) {
   throw new Error(
-    "Wrong RxPlayer version: " + "\n" +
-    `Got "${RxPlayer.version}" but expected "${version}"`);
+    "Wrong RxPlayer version: " +
+      "\n" +
+      `Got "${RxPlayer.version}" but expected "${version}"`,
+  );
 }
 if (typeof ExperimentalFeatures !== "object" || ExperimentalFeatures === null) {
-  throw new Error("Invalid \"ExperimentalFeatures\" object exported.");
+  throw new Error('Invalid "ExperimentalFeatures" object exported.');
 }
 if (typeof Features !== "object" || Features === null) {
-  throw new Error("Invalid \"Features\" object exported.");
+  throw new Error('Invalid "Features" object exported.');
 }
 if (typeof ExperimentalTools !== "object" || ExperimentalTools === null) {
-  throw new Error("Invalid \"ExperimentalTools\" object exported.");
+  throw new Error('Invalid "ExperimentalTools" object exported.');
 }
 if (typeof Tools !== "object" || Tools === null) {
-  throw new Error("Invalid \"Tools\" object exported.");
+  throw new Error('Invalid "Tools" object exported.');
 }
 
 /* eslint-disable no-console */

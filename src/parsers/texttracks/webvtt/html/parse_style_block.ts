@@ -17,19 +17,20 @@
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import createDefaultStyleElements from "./create_default_style_elements";
 
-export interface IStyleElements { [className : string]: string }
+export interface IStyleElements {
+  [className: string]: string;
+}
 
 /**
  * Parse style element from WebVTT.
  * @param {Array.<Array.<string>>} styleBlocks
  * @return {Object}
  */
-export default function parseStyleBlocks(
-  styleBlocks : string[][]
-) : { classes : IStyleElements;
-      global : string; }
-{
-  const classes : IStyleElements = createDefaultStyleElements();
+export default function parseStyleBlocks(styleBlocks: string[][]): {
+  classes: IStyleElements;
+  global: string;
+} {
+  const classes: IStyleElements = createDefaultStyleElements();
   let global = "";
 
   styleBlocks.forEach((styleBlock) => {
@@ -38,13 +39,15 @@ export default function parseStyleBlocks(
         let line = styleBlock[index];
         if (Array.isArray(/::cue {/.exec(line))) {
           line = styleBlock[++index];
-          while (isNonEmptyString(line) && (!(Array.isArray(/}/.exec(line)) ||
-                                              line.length === 0))) {
+          while (
+            isNonEmptyString(line) &&
+            !(Array.isArray(/}/.exec(line)) || line.length === 0)
+          ) {
             global += line;
             line = styleBlock[++index];
           }
         } else {
-          const classNames : string[] = [];
+          const classNames: string[] = [];
           let cueClassLine = /::cue\(\.?(.*?)\)(?:,| {)/.exec(line);
           while (isNonEmptyString(line) && Array.isArray(cueClassLine)) {
             classNames.push(cueClassLine[1]);
@@ -53,9 +56,10 @@ export default function parseStyleBlocks(
           }
 
           let styleContent = "";
-          while (isNonEmptyString(line) && (!(Array.isArray(/}/.exec(line)) ||
-                                              line.length === 0)))
-          {
+          while (
+            isNonEmptyString(line) &&
+            !(Array.isArray(/}/.exec(line)) || line.length === 0)
+          ) {
             styleContent += line;
             line = styleBlock[++index];
           }

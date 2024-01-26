@@ -23,23 +23,25 @@
 import cleanOldLoadedSessions from "../clean_old_loaded_sessions";
 import type LoadedSessionsStore from "../loaded_sessions_store";
 
+const entry1 = {
+  initializationData: { data: new Uint8Array([1, 6, 9]), type: "test" },
+  mediaKeySession: { sessionId: "toto" },
+  sessionType: "",
+};
 
-const entry1 = { initializationData: { data: new Uint8Array([1, 6, 9]),
-                                       type: "test" },
-                 mediaKeySession: { sessionId: "toto" },
-                 sessionType: "" };
+const entry2 = {
+  initializationData: { data: new Uint8Array([4, 8]), type: "foo" },
+  mediaKeySession: { sessionId: "titi" },
+  sessionType: "",
+};
 
-const entry2 = { initializationData: { data: new Uint8Array([4, 8]),
-                                       type: "foo" },
-                 mediaKeySession: { sessionId: "titi" },
-                 sessionType: "" };
+const entry3 = {
+  initializationData: { data: new Uint8Array([7, 3, 121, 87]), type: "bar" },
+  mediaKeySession: { sessionId: "tutu" },
+  sessionType: "",
+};
 
-const entry3 = { initializationData: { data: new Uint8Array([7, 3, 121, 87]),
-                                       type: "bar" },
-                 mediaKeySession: { sessionId: "tutu" },
-                 sessionType: "" };
-
-function createLoadedSessionsStore() : LoadedSessionsStore {
+function createLoadedSessionsStore(): LoadedSessionsStore {
   return {
     getLength() {
       return 3;
@@ -56,9 +58,15 @@ function createLoadedSessionsStore() : LoadedSessionsStore {
 }
 
 const emptyLoadedSessionsStore = {
-  getLength() { return 0; },
-  getAll() { return []; },
-  closeSession() { throw new Error("closeSession should not have been called"); },
+  getLength() {
+    return 0;
+  },
+  getAll() {
+    return [];
+  },
+  closeSession() {
+    throw new Error("closeSession should not have been called");
+  },
 } as unknown as LoadedSessionsStore;
 
 /**
@@ -73,9 +81,9 @@ const emptyLoadedSessionsStore = {
  * @param {Function} done
  */
 async function checkNothingHappen(
-  loadedSessionsStore : LoadedSessionsStore,
-  limit : number
-) : Promise<void> {
+  loadedSessionsStore: LoadedSessionsStore,
+  limit: number,
+): Promise<void> {
   const mockCloseSession = jest.spyOn(loadedSessionsStore, "closeSession");
   await cleanOldLoadedSessions(loadedSessionsStore, limit);
   expect(mockCloseSession).not.toHaveBeenCalled();
@@ -93,10 +101,10 @@ async function checkNothingHappen(
  * @param {Array.<Object>} entries
  */
 async function checkEntriesCleaned(
-  loadedSessionsStore : LoadedSessionsStore,
-  limit : number,
-  entries : Array<{ sessionId: string }>
-) : Promise<void> {
+  loadedSessionsStore: LoadedSessionsStore,
+  limit: number,
+  entries: Array<{ sessionId: string }>,
+): Promise<void> {
   const mockCloseSession = jest.spyOn(loadedSessionsStore, "closeSession");
   const prom = cleanOldLoadedSessions(loadedSessionsStore, limit).then(() => {
     expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
@@ -104,8 +112,7 @@ async function checkEntriesCleaned(
   });
   expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
   for (let i = 0; i < entries.length; i++) {
-    expect(mockCloseSession)
-      .toHaveBeenNthCalledWith(i + 1, entries[i]);
+    expect(mockCloseSession).toHaveBeenNthCalledWith(i + 1, entries[i]);
   }
   return prom;
 }
@@ -136,7 +143,6 @@ describe("decrypt - cleanOldLoadedSessions", () => {
     await checkNothingHappen(emptyLoadedSessionsStore, 2);
     await checkNothingHappen(emptyLoadedSessionsStore, 1000);
     await checkNothingHappen(emptyLoadedSessionsStore, +Infinity);
-
   });
 
   it("should do nothing if the limit is equal to the current length", async () => {
@@ -145,14 +151,18 @@ describe("decrypt - cleanOldLoadedSessions", () => {
   });
 
   it("should remove some if the limit is inferior to the current length", async () => {
-    await checkEntriesCleaned(createLoadedSessionsStore(), 1, [ entry1.mediaKeySession,
-                                                                entry2.mediaKeySession ]);
-    await checkEntriesCleaned(createLoadedSessionsStore(), 2, [ entry1.mediaKeySession ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 1, [
+      entry1.mediaKeySession,
+      entry2.mediaKeySession,
+    ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 2, [entry1.mediaKeySession]);
   });
 
   it("should remove all if the limit is equal to 0", async () => {
-    await checkEntriesCleaned(createLoadedSessionsStore(), 0, [ entry1.mediaKeySession,
-                                                                entry2.mediaKeySession,
-                                                                entry3.mediaKeySession ]);
+    await checkEntriesCleaned(createLoadedSessionsStore(), 0, [
+      entry1.mediaKeySession,
+      entry2.mediaKeySession,
+      entry3.mediaKeySession,
+    ]);
   });
 });

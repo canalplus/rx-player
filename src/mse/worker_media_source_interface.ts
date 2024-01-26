@@ -11,16 +11,13 @@ import type {
   IInterruptMediaSourceDurationWorkerMessage,
   IRemoveBufferWorkerMessage,
   IStopEndOfStreamWorkerMessage,
-  IUpdateMediaSourceDurationWorkerMessage } from "../multithread_types";
-import {
-  WorkerMessageType,
+  IUpdateMediaSourceDurationWorkerMessage,
 } from "../multithread_types";
+import { WorkerMessageType } from "../multithread_types";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import type { IRange } from "../utils/ranges";
-import TaskCanceller, {
-  CancellationError,
-} from "../utils/task_canceller";
+import TaskCanceller, { CancellationError } from "../utils/task_canceller";
 import type {
   IMediaSourceInterface,
   IMediaSourceInterfaceEvents,
@@ -51,9 +48,10 @@ const MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE = Infinity;
  * main thread.
  * @class {WorkerMediaSourceInterface}
  */
-export default class WorkerMediaSourceInterface extends EventEmitter<
-  IMediaSourceInterfaceEvents
-> implements IMediaSourceInterface {
+export default class WorkerMediaSourceInterface
+  extends EventEmitter<IMediaSourceInterfaceEvents>
+  implements IMediaSourceInterface
+{
   public id: string;
   public handle: undefined;
   public sourceBuffers: WorkerSourceBufferInterface[];
@@ -64,7 +62,7 @@ export default class WorkerMediaSourceInterface extends EventEmitter<
   constructor(
     id: string,
     contentId: string,
-    messageSender: IWorkerMediaSourceInterfaceMessageSender
+    messageSender: IWorkerMediaSourceInterfaceMessageSender,
   ) {
     super();
     this.id = id;
@@ -100,7 +98,7 @@ export default class WorkerMediaSourceInterface extends EventEmitter<
 
   public addSourceBuffer(
     sbType: SourceBufferType,
-    codec: string
+    codec: string,
   ): ISourceBufferInterface {
     this._messageSender({
       type: WorkerMessageType.AddSourceBuffer,
@@ -110,18 +108,17 @@ export default class WorkerMediaSourceInterface extends EventEmitter<
         codec,
       },
     });
-    const sb = new WorkerSourceBufferInterface(sbType,
-                                               codec,
-                                               this.id,
-                                               this._messageSender);
+    const sb = new WorkerSourceBufferInterface(
+      sbType,
+      codec,
+      this.id,
+      this._messageSender,
+    );
     this.sourceBuffers.push(sb);
     return sb;
   }
 
-  public setDuration(
-    newDuration: number,
-    isRealEndKnown: boolean
-  ) {
+  public setDuration(newDuration: number, isRealEndKnown: boolean) {
     this._messageSender({
       type: WorkerMessageType.UpdateMediaSourceDuration,
       mediaSourceId: this.id,
@@ -157,7 +154,7 @@ export default class WorkerMediaSourceInterface extends EventEmitter<
   }
 
   public dispose() {
-    this.sourceBuffers.forEach(s => s.dispose());
+    this.sourceBuffers.forEach((s) => s.dispose());
     this._canceller.cancel();
     this._messageSender({
       type: WorkerMessageType.DisposeMediaSource,
@@ -168,17 +165,18 @@ export default class WorkerMediaSourceInterface extends EventEmitter<
 }
 
 export type IWorkerMediaSourceInterfaceMessageSender = (
-  msg : IAppendBufferWorkerMessage |
-        IRemoveBufferWorkerMessage |
-        IAbortBufferWorkerMessage |
-        ICreateMediaSourceWorkerMessage |
-        IAddSourceBufferWorkerMessage |
-        IUpdateMediaSourceDurationWorkerMessage |
-        IInterruptMediaSourceDurationWorkerMessage |
-        IEndOfStreamWorkerMessage |
-        IStopEndOfStreamWorkerMessage |
-        IDisposeMediaSourceWorkerMessage,
-  transferables? : Transferable[]
+  msg:
+    | IAppendBufferWorkerMessage
+    | IRemoveBufferWorkerMessage
+    | IAbortBufferWorkerMessage
+    | ICreateMediaSourceWorkerMessage
+    | IAddSourceBufferWorkerMessage
+    | IUpdateMediaSourceDurationWorkerMessage
+    | IInterruptMediaSourceDurationWorkerMessage
+    | IEndOfStreamWorkerMessage
+    | IStopEndOfStreamWorkerMessage
+    | IDisposeMediaSourceWorkerMessage,
+  transferables?: Transferable[],
 ) => void;
 
 export class WorkerSourceBufferInterface implements ISourceBufferInterface {
@@ -195,15 +193,18 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
    * overwhelming the main thread.
    * @see `MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE`
    */
-  public _queuedOperations : ISbiQueuedOperation[];
+  public _queuedOperations: ISbiQueuedOperation[];
   /**
    * Operations currently running in the main thread for which we are awaiting
    * a response.
    */
-  public _pendingOperations : Map<string, {
-    resolve: (ranges: IRange[]) => void;
-    reject: (err: CancellationError | SourceBufferError) => void;
-  }>;
+  public _pendingOperations: Map<
+    string,
+    {
+      resolve: (ranges: IRange[]) => void;
+      reject: (err: CancellationError | SourceBufferError) => void;
+    }
+  >;
   /**
    * Identifier Identifying this `WorkerSourceBufferInterface` in-between
    * threads.
@@ -221,7 +222,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     sbType: SourceBufferType,
     codec: string,
     mediaSourceId: string,
-    messageSender: IWorkerMediaSourceInterfaceMessageSender
+    messageSender: IWorkerMediaSourceInterfaceMessageSender,
   ) {
     this.type = sbType;
     this.codec = codec;
@@ -232,10 +233,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     this._messageSender = messageSender;
   }
 
-  public onOperationSuccess(
-    operationId: string,
-    ranges: IRange[]
-  ) : void {
+  public onOperationSuccess(operationId: string, ranges: IRange[]): void {
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
       log.warn("SBI: unknown SourceBuffer operation succeeded");
@@ -248,14 +246,12 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
 
   public onOperationFailure(
     operationId: string,
-    error : ISerializedSourceBufferError |
-            { errorName: "CancellationError" }
-  ) : void {
-    const formattedErr = error.errorName === "CancellationError" ?
-      new CancellationError() :
-      new SourceBufferError(error.errorName,
-                            error.message,
-                            error.isBufferFull);
+    error: ISerializedSourceBufferError | { errorName: "CancellationError" },
+  ): void {
+    const formattedErr =
+      error.errorName === "CancellationError"
+        ? new CancellationError()
+        : new SourceBufferError(error.errorName, error.message, error.isBufferFull);
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
       log.info("SBI: unknown SourceBuffer operation failed", formattedErr);
@@ -273,12 +269,13 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
 
   public appendBuffer(
     data: BufferSource,
-    params: ISourceBufferInterfaceAppendBufferParameters
+    params: ISourceBufferInterfaceAppendBufferParameters,
   ): Promise<IRange[]> {
     return new Promise((resolve, reject) => {
-      if (this._queuedOperations.length > 0 ||
-          this._pendingOperations.size >= MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE)
-      {
+      if (
+        this._queuedOperations.length > 0 ||
+        this._pendingOperations.size >= MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE
+      ) {
         this._queuedOperations.push({
           operationName: SbiOperationName.Push,
           params: [data, params],
@@ -288,7 +285,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
         return;
       }
       try {
-        let segmentSinkPushed : ArrayBuffer;
+        let segmentSinkPushed: ArrayBuffer;
         if (data instanceof ArrayBuffer) {
           segmentSinkPushed = data;
         } else if (data.byteLength === data.buffer.byteLength) {
@@ -296,20 +293,23 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
         } else {
           segmentSinkPushed = data.buffer.slice(
             data.byteOffset,
-            data.byteLength + data.byteOffset
+            data.byteLength + data.byteOffset,
           );
         }
         const operationId = generateSourceBufferOperationId();
-        this._messageSender({
-          type: WorkerMessageType.SourceBufferAppend,
-          mediaSourceId: this._mediaSourceId,
-          sourceBufferType: this.type,
-          operationId,
-          value: {
-            data: segmentSinkPushed,
-            params,
+        this._messageSender(
+          {
+            type: WorkerMessageType.SourceBufferAppend,
+            mediaSourceId: this._mediaSourceId,
+            sourceBufferType: this.type,
+            operationId,
+            value: {
+              data: segmentSinkPushed,
+              params,
+            },
           },
-        }, [segmentSinkPushed]);
+          [segmentSinkPushed],
+        );
         this._addOperationToQueue(operationId, resolve, reject);
       } catch (err) {
         reject(err);
@@ -317,14 +317,12 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     });
   }
 
-  public remove(
-    start: number,
-    end: number
-  ): Promise<IRange[]> {
+  public remove(start: number, end: number): Promise<IRange[]> {
     return new Promise((resolve, reject) => {
-      if (this._queuedOperations.length > 0 ||
-          this._pendingOperations.size >= MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE)
-      {
+      if (
+        this._queuedOperations.length > 0 ||
+        this._pendingOperations.size >= MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE
+      ) {
         this._queuedOperations.push({
           operationName: SbiOperationName.Remove,
           params: [start, end],
@@ -367,16 +365,18 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   }
 
   public getBuffered(): undefined {
-    return ;
+    return;
   }
 
   private _addOperationToQueue(
     operationId: string,
     resolve: (ranges: IRange[]) => void,
-    reject: (err: unknown) => void
+    reject: (err: unknown) => void,
   ): void {
-    this._pendingOperations.set(operationId, { resolve: onResolve,
-                                               reject: onReject });
+    this._pendingOperations.set(operationId, {
+      resolve: onResolve,
+      reject: onReject,
+    });
     const unbindCanceller = this._canceller.signal.register((error) => {
       this._pendingOperations.delete(operationId);
       reject(error);
@@ -397,7 +397,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       try {
         if (nextOp.operationName === SbiOperationName.Push) {
           const [data, params] = nextOp.params;
-          let segmentSinkPushed : ArrayBuffer;
+          let segmentSinkPushed: ArrayBuffer;
           if (data instanceof ArrayBuffer) {
             segmentSinkPushed = data;
           } else if (data.byteLength === data.buffer.byteLength) {
@@ -405,20 +405,23 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
           } else {
             segmentSinkPushed = data.buffer.slice(
               data.byteOffset,
-              data.byteLength + data.byteOffset
+              data.byteLength + data.byteOffset,
             );
           }
           const nOpId = generateSourceBufferOperationId();
-          this._messageSender({
-            type: WorkerMessageType.SourceBufferAppend,
-            mediaSourceId: this._mediaSourceId,
-            sourceBufferType: this.type,
-            operationId: nOpId,
-            value: {
-              data: segmentSinkPushed,
-              params,
+          this._messageSender(
+            {
+              type: WorkerMessageType.SourceBufferAppend,
+              mediaSourceId: this._mediaSourceId,
+              sourceBufferType: this.type,
+              operationId: nOpId,
+              value: {
+                data: segmentSinkPushed,
+                params,
+              },
             },
-          }, [segmentSinkPushed]);
+            [segmentSinkPushed],
+          );
           this._addOperationToQueue(nOpId, nextOp.resolve, nextOp.reject);
         } else {
           const [start, end] = nextOp.params;
@@ -442,8 +445,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   }
 }
 
-type ISbiQueuedOperation = IQueuedSbiPush |
-                           IQueuedSbiRemove;
+type ISbiQueuedOperation = IQueuedSbiPush | IQueuedSbiRemove;
 
 /**
  * Enum used by a SourceBufferInterface as a discriminant in its queue of
@@ -458,12 +460,12 @@ interface IQueuedSbiPush {
   operationName: SbiOperationName.Push;
   params: Parameters<ISourceBufferInterface["appendBuffer"]>;
   resolve: (ranges: IRange[]) => void;
-  reject: (error : unknown) => void;
+  reject: (error: unknown) => void;
 }
 
 interface IQueuedSbiRemove {
   operationName: SbiOperationName.Remove;
   params: Parameters<ISourceBufferInterface["remove"]>;
   resolve: (ranges: IRange[]) => void;
-  reject: (error : unknown) => void;
+  reject: (error: unknown) => void;
 }

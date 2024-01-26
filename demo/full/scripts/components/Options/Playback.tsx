@@ -29,9 +29,9 @@ function PlaybackConfig({
           Auto Play
         </Checkbox>
         <span className="option-desc">
-          {autoPlay ?
-            "Playing directly when the content is loaded." :
-            "Staying in pause when the content is loaded."}
+          {autoPlay
+            ? "Playing directly when the content is loaded."
+            : "Staying in pause when the content is loaded."}
         </span>
       </li>
 
@@ -46,9 +46,9 @@ function PlaybackConfig({
           Multithread mode (when possible)
         </Checkbox>
         <span className="option-desc">
-          {tryRelyOnWorker ?
-            "Running the RxPlayer's main logic in a WebWorker when possible" :
-            "Currently running the RxPlayer's main logic only in main thread."}
+          {tryRelyOnWorker
+            ? "Running the RxPlayer's main logic in a WebWorker when possible"
+            : "Currently running the RxPlayer's main logic only in main thread."}
         </span>
       </li>
     </>

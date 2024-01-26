@@ -28,17 +28,15 @@ const includeWasmParser = process.argv.includes("--include-wasm");
 const production = process.argv.includes("--production-mode");
 const shouldMinify = process.argv.includes("--minify");
 
-buildDemo({ watch: true,
-            minify: shouldMinify,
-            production,
-           includeWasmParser });
+buildDemo({ watch: true, minify: shouldMinify, production, includeWasmParser });
 
-launchStaticServer(join(projectRootDirectory, "demo/full/"),
-                   { certificatePath: join(projectRootDirectory, "localhost.crt"),
-                     keyPath: join(projectRootDirectory, "localhost.key"),
-                     verbose: true,
-                     httpPort: 8000,
-                     httpsPort: 8443 });
+launchStaticServer(join(projectRootDirectory, "demo/full/"), {
+  certificatePath: join(projectRootDirectory, "localhost.crt"),
+  keyPath: join(projectRootDirectory, "localhost.key"),
+  verbose: true,
+  httpPort: 8000,
+  httpsPort: 8443,
+});
 
 /**
  * Display through `console.log` an helping message relative to how to run this
@@ -47,13 +45,13 @@ launchStaticServer(join(projectRootDirectory, "demo/full/"),
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node start_demo_web_server.mjs [options]
+    /* eslint-disable indent */
+    `Usage: node start_demo_web_server.mjs [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

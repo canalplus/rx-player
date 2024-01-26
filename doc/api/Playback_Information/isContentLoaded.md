@@ -14,4 +14,4 @@ The method relies solely on the state of the player, and is a shortcut for
 const isContentLoaded = player.isContentLoaded();
 ```
 
- - **return value** `boolean`
+- **return value** `boolean`

@@ -64,11 +64,11 @@ const textTracks = player.getAvailableTextTracks();
 const textTrack = player.getAvailableTextTracks(periodId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want
       to get the list of available text tracks.
       If not defined, this method will return the list of text tracks for the
       currently-playing Period.
 
- - **return value** `Array.<Object>`
+- **return value** `Array.<Object>`

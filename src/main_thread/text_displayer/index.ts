@@ -1,9 +1,3 @@
-import {
-  ITextDisplayer,
-  ITextDisplayerData,
-} from "./types";
+import { ITextDisplayer, ITextDisplayerData } from "./types";
 
-export {
-  ITextDisplayer,
-  ITextDisplayerData,
-};
+export { ITextDisplayer, ITextDisplayerData };

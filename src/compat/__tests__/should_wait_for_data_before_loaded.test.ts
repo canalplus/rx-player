@@ -33,8 +33,9 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: false,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
   });
 
@@ -45,26 +46,25 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: false,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
 
-  /* eslint-disable max-len */
   it("should return true if we are on the Safari browser but not in directfile mode", () => {
-  /* eslint-enable max-len */
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true as const,
         isSafariMobile: true,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(false, false)).toBe(true);
   });
 
-  // eslint-disable-next-line max-len
   it("should return false if we are on the Safari browser with no play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
@@ -72,12 +72,12 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: true,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(false);
   });
 
-  // eslint-disable-next-line max-len
   it("should return true if we are on the Safari browser, we should play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
@@ -85,12 +85,12 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: true,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(true, true)).toBe(true);
   });
 
-  // eslint-disable-next-line max-len
   it("should return true if we are on the Safari browser, play inline but no directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
@@ -98,12 +98,12 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: true,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(false, true)).toBe(true);
   });
 
-  // eslint-disable-next-line max-len
   it("should return true if we are not on the Safari browser, should not play inline and in directfile mode", () => {
     jest.mock("../browser_detection", () => {
       return {
@@ -111,8 +111,9 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: false,
       };
     });
-    const shouldWaitForDataBeforeLoaded =
-      jest.requireActual("../should_wait_for_data_before_loaded");
+    const shouldWaitForDataBeforeLoaded = jest.requireActual(
+      "../should_wait_for_data_before_loaded",
+    );
     expect(shouldWaitForDataBeforeLoaded.default(true, false)).toBe(true);
   });
   beforeEach(() => {

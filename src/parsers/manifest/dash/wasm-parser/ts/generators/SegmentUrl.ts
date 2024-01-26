@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-import type {
-  ISegmentUrlIntermediateRepresentation,
-} from "../../../node_parser_types";
+import type { ISegmentUrlIntermediateRepresentation } from "../../../node_parser_types";
 import type { IAttributeParser } from "../parsers_stack";
-import {
-  AttributeName,
-} from "../types";
+import { AttributeName } from "../types";
 import { parseString } from "../utils";
 
 /**
@@ -31,16 +27,14 @@ import { parseString } from "../utils";
  * @returns {Function}
  */
 export function generateSegmentUrlAttrParser(
-  segmentUrlAttrs : ISegmentUrlIntermediateRepresentation,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  segmentUrlAttrs: ISegmentUrlIntermediateRepresentation,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   const textDecoder = new TextDecoder();
   return function onSegmentUrlAttribute(attr, ptr, len) {
     switch (attr) {
-
       case AttributeName.Index:
-        segmentUrlAttrs.index =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        segmentUrlAttrs.index = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.IndexRange: {
@@ -53,8 +47,7 @@ export function generateSegmentUrlAttrParser(
       }
 
       case AttributeName.Media:
-        segmentUrlAttrs.media =
-          parseString(textDecoder, linearMemory.buffer, ptr, len);
+        segmentUrlAttrs.media = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.MediaRange: {

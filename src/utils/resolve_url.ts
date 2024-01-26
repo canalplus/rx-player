@@ -27,13 +27,13 @@ const selfDirRe = /\/\.{1,2}\//;
  * @param {string} url
  * @returns {string}
  */
-function _normalizeUrl(url : string) : string {
+function _normalizeUrl(url: string): string {
   // fast path if no ./ or ../ are present in the url
   if (!selfDirRe.test(url)) {
     return url;
   }
 
-  const newUrl : string[] = [];
+  const newUrl: string[] = [];
   const oldUrl = url.split("/");
   for (let i = 0, l = oldUrl.length; i < l; i++) {
     if (oldUrl[i] === "..") {
@@ -57,7 +57,7 @@ function _normalizeUrl(url : string) : string {
  * @param {...string|undefined} args
  * @returns {string}
  */
-export default function resolveURL(...args : Array<string|undefined>) : string {
+export default function resolveURL(...args: Array<string | undefined>): string {
   const len = args.length;
   if (len === 0) {
     return "";
@@ -71,8 +71,7 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
     }
     if (schemeRe.test(part)) {
       base = part;
-    }
-    else {
+    } else {
       // trim if begins with "/"
       if (part[0] === "/") {
         part = part.substring(1);
@@ -98,7 +97,7 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
  * @param {string} url
  * @returns {number}
  */
-function getFilenameIndexInUrl(url : string) : number {
+function getFilenameIndexInUrl(url: string): number {
   const indexOfLastSlash = url.lastIndexOf("/");
   if (indexOfLastSlash < 0) {
     return url.length;

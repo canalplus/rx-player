@@ -12,20 +12,18 @@ function VideoRepresentationKnob({
   player,
   className,
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
   className?: string;
 }): JSX.Element {
   const isVideoRepresentationLocked = useModuleState(
     player,
-    "videoRepresentationsLocked"
+    "videoRepresentationsLocked",
   );
   const videoRepresentation = useModuleState(player, "videoRepresentation");
   const videoTrack = useModuleState(player, "videoTrack");
 
   const availableVideoRepresentations =
-    videoTrack === null || videoTrack === undefined ?
-      [] :
-      videoTrack.representations;
+    videoTrack === null || videoTrack === undefined ? [] : videoTrack.representations;
 
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {
     if (!availableVideoRepresentations.length || videoRepresentation == null) {
@@ -40,27 +38,24 @@ function VideoRepresentationKnob({
         }
       }
 
-      const correspondingInfo = availableVideoRepresentations
-        .map(r => getVideoRepresentationInfo(r).join(", "));
+      const correspondingInfo = availableVideoRepresentations.map((r) =>
+        getVideoRepresentationInfo(r).join(", "),
+      );
 
       return [
         [autoValue, ...correspondingInfo],
-        isVideoRepresentationLocked ?
-          (availableVideoRepresentations
-            .findIndex(r => r.id === videoRepresentation?.id) + 1 || 0) :
-          0
+        isVideoRepresentationLocked
+          ? availableVideoRepresentations.findIndex(
+              (r) => r.id === videoRepresentation?.id,
+            ) + 1 || 0
+          : 0,
       ];
     }
     return [
-      availableVideoRepresentations
-        .map(r => getVideoRepresentationInfo(r).join(", ")),
-      0
+      availableVideoRepresentations.map((r) => getVideoRepresentationInfo(r).join(", ")),
+      0,
     ];
-  }, [
-    availableVideoRepresentations,
-    isVideoRepresentationLocked,
-    videoRepresentation
-  ]);
+  }, [availableVideoRepresentations, isVideoRepresentationLocked, videoRepresentation]);
 
   const onVideoRepresentationChange = React.useCallback(
     ({ index }: { index: number }) => {
@@ -71,7 +66,7 @@ function VideoRepresentationKnob({
         player.actions.unlockVideoRepresentations();
       }
     },
-    [availableVideoRepresentations, player]
+    [availableVideoRepresentations, player],
   );
 
   return (
@@ -89,9 +84,7 @@ function VideoRepresentationKnob({
 
 export default VideoRepresentationKnob;
 
-function getVideoRepresentationInfo(
-  videoRepresentation: IVideoRepresentation
-): string[] {
+function getVideoRepresentationInfo(videoRepresentation: IVideoRepresentation): string[] {
   const info = [];
   if (videoRepresentation.height !== undefined) {
     info.push(`${videoRepresentation.height}p`);

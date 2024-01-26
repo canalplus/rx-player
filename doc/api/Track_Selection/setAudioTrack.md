@@ -18,6 +18,7 @@ rxPlayer.setAudioTrack(audioTracks[0].id);
 settings, described below.
 In the case an object is given, the audio track's id should be set as in a
 `trackId` property.
+
 ```js
 // Setting the first audio track
 const audioTracks = rxPlayer.getAvailableAudioTracks();
@@ -69,7 +70,6 @@ rxPlayer.setAudioTrack({
   trackId: audioTracks[0].id,
   periodId: periods[1].id,
 });
-
 ```
 
 ### Changing the way the audio track transition is done
@@ -85,27 +85,27 @@ to `setAudioTrack`.
 
 The available "switching modes" are:
 
-  - `"seamless"`: Clean the previous audio track from the buffer, yet keep some
-    of its data around the current position to ensure the transition stay
-    seamless (i.e. playback still continue).
+- `"seamless"`: Clean the previous audio track from the buffer, yet keep some
+  of its data around the current position to ensure the transition stay
+  seamless (i.e. playback still continue).
 
-    This is the default mode.
-    The advantage is that the switch will not be abrupt (playback will not be
-    interrupted) but you might still have a few seconds playing in the
-    previous audio track.
+  This is the default mode.
+  The advantage is that the switch will not be abrupt (playback will not be
+  interrupted) but you might still have a few seconds playing in the
+  previous audio track.
 
-  - `"direct"`: Directly audibly switch to the new tracks.
-    Here you will ensure that the now unwanted tracks won't be
-    played in the future but you might be left with a playback interruption
-    and some rebuffering time while the new audio track is loaded.
+- `"direct"`: Directly audibly switch to the new tracks.
+  Here you will ensure that the now unwanted tracks won't be
+  played in the future but you might be left with a playback interruption
+  and some rebuffering time while the new audio track is loaded.
 
-  - `"reload"`: Directly audibly switch to the new tracks
-    through a "reloading" step if necessary.
+- `"reload"`: Directly audibly switch to the new tracks
+  through a "reloading" step if necessary.
 
-    This mode might have better results than `"direct"` on devices with poor
-    compatibility, but the RxPlayer might temporarily go through
-    a `"RELOADING"` state, during which a black screen is shown and multiple
-    APIs are unavailable.
+  This mode might have better results than `"direct"` on devices with poor
+  compatibility, but the RxPlayer might temporarily go through
+  a `"RELOADING"` state, during which a black screen is shown and multiple
+  APIs are unavailable.
 
 ```js
 // example: switching audio tracks in "direct" mode
@@ -166,12 +166,12 @@ Doing this is equivalent to locking the audio Representations through a
 [`lockAudioVideoRepresentations`](../Representation_Selection/lockAudioVideoRepresentations.md)
 call, you can read its documentation page for more information on its behavior.
 
-
 ### Setting the audio track as soon as possible
 
 If you want to set an audio track as soon as possible, for example to choose an
 initial audio track before any other one had time to be loaded, you can
 perform the `setAudioTrack` call on the `newAvailablePeriods` event:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
@@ -215,9 +215,9 @@ for (const period of periods) {
 player.setAudioTrack(audioTrackId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _audioTrackId_ `string`: The `id` of the track you want to set
+  1.  _audioTrackId_ `string`: The `id` of the track you want to set
 
 ```js
 // Setting the current audio track
@@ -236,26 +236,26 @@ player.setAudioTrack({
 });
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _arg_ `string|Object`: Either the audio track's `id` property of the
-     track you want to set for current Period, or an object with the following
-     properties (only `trackId` is required):
+  1.  _arg_ `string|Object`: Either the audio track's `id` property of the
+      track you want to set for current Period, or an object with the following
+      properties (only `trackId` is required):
 
-       - `trackId` (`string`): The `id` property of the track you want to lock.
+      - `trackId` (`string`): The `id` property of the track you want to lock.
 
-       - `periodId` (`string|undefined`): If defined, the id of the concerned
-         Period. If not defined, it will be applied for the current Period.
+      - `periodId` (`string|undefined`): If defined, the id of the concerned
+        Period. If not defined, it will be applied for the current Period.
 
-       - `switchingMode` (`string|undefined`): Behavior of the RxPlayer if there
-         is a need to perform a transition between a previous audio track and
-         the new one.
-         The list of modes available are described in this page.
+      - `switchingMode` (`string|undefined`): Behavior of the RxPlayer if there
+        is a need to perform a transition between a previous audio track and
+        the new one.
+        The list of modes available are described in this page.
 
-       - `lockedRepresentations` (`Array.<string>|undefined`): The list of
-         Representations' id you wish to "lock" when switching to the new track.
-         More information [in the corresponding documentation
-         page](../Representation_Selection/lockAudioVideoRepresentations.md).
+      - `lockedRepresentations` (`Array.<string>|undefined`): The list of
+        Representations' id you wish to "lock" when switching to the new track.
+        More information [in the corresponding documentation
+        page](../Representation_Selection/lockAudioVideoRepresentations.md).
 
-       - `relativeResumingPosition`  (`string|undefined`): The offset in seconds to apply to the
-         current position to get the new position after resuming playback.
+      - `relativeResumingPosition` (`string|undefined`): The offset in seconds to apply to the
+        current position to get the new position after resuming playback.

@@ -72,4 +72,4 @@ export enum ProberStatus {
   Supported,
 }
 
-export type ICapabilities = Array<(string|{ [key: string]: ICapabilities })>;
+export type ICapabilities = Array<string | { [key: string]: ICapabilities }>;

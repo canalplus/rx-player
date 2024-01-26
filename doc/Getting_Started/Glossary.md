@@ -118,8 +118,8 @@ It contains its own [Adaptations](#adaptation) and
 allows for example to define multiple programs on the same content, each with
 its own tracks and quality characteristics.
 
-
 Depending on the transport used, they correspond to different concepts:
+
 - for DASH contents, it is more or less the same thing than an MPD's
   `<Period>` element
 - for "local" contents, it corresponds to a single object from the `periods`

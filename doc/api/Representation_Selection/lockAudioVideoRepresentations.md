@@ -23,8 +23,8 @@ if (videoTrack === null) {
   throw new Error("No video track currently");
 }
 const repIds = videoTrack.representations
- .filter(rep => rep.height !== undefined && rep.height >= 1080)
- .map(rep => rep.id);
+  .filter((rep) => rep.height !== undefined && rep.height >= 1080)
+  .map((rep) => rep.id);
 rxPlayer.lockVideoRepresentations(repIds);
 ```
 
@@ -46,14 +46,14 @@ called "locking Representations".
 
 Calling this method allows to start locking Representations until either:
 
-  - they are unlocked (through respectively the `unlockVideoRepresentations`
+- they are unlocked (through respectively the `unlockVideoRepresentations`
   or `unlockAudioRepresentations` method)
 
-  - the corresponding track is changed: the lock is removed after switching
+- the corresponding track is changed: the lock is removed after switching
   the track for that Period. If you choose to come back to the
   original track in the future, it won't be locked anymore either.
 
-  - the RxPlayer "break" the lock. This is a very rare occurence happening when
+- the RxPlayer "break" the lock. This is a very rare occurence happening when
   locked Representations all become unavailable. More details on this below.
 
 You can know if video or audio Representations are locked for the current
@@ -116,42 +116,42 @@ rebuffering) or to `"reload"` (which might trigger a temporary black screen).
 
 Here is the description of all possible modes:
 
-  - `"seamless"`: Clean the buffer from buffered media content from now
-    unwanted Representations, yet keep some of that data around the current
-    position to ensure the transition stay seamless (i.e. playback still
-    continue).
+- `"seamless"`: Clean the buffer from buffered media content from now
+  unwanted Representations, yet keep some of that data around the current
+  position to ensure the transition stay seamless (i.e. playback still
+  continue).
 
-    This is the default mode when locking Representations.
-    The advantage is that the switch will not be abrupt (playback will not be
-    interrupted) but you might still have a few seconds playing in the
-    previous quality.
+  This is the default mode when locking Representations.
+  The advantage is that the switch will not be abrupt (playback will not be
+  interrupted) but you might still have a few seconds playing in the
+  previous quality.
 
-  - `"lazy"`: Keep all other Representations in the buffer.
+- `"lazy"`: Keep all other Representations in the buffer.
 
-    This is the default RxPlayer's behavior when changing the quality through
-    regular adaptive streaming.
+  This is the default RxPlayer's behavior when changing the quality through
+  regular adaptive streaming.
 
-    The advantage here is that this is the most efficient in terms of network
-    resources, though you might still play now unwanted Representations in the
-    future.
-    This option is particularly useful if the lock is for example used to
-    ensure a networking bandwidth cap: here you might want that new segments
-    only be from low quality Representations but you would not care about
-    already-loaded segments.
+  The advantage here is that this is the most efficient in terms of network
+  resources, though you might still play now unwanted Representations in the
+  future.
+  This option is particularly useful if the lock is for example used to
+  ensure a networking bandwidth cap: here you might want that new segments
+  only be from low quality Representations but you would not care about
+  already-loaded segments.
 
-  - `"direct"`: Directly visibly/audibly switch to the new Representations.
-    Here you will ensure that the now unwanted Representations won't be
-    played in the future but you might be left with a playback interruption
-    and some rebuffering time while the new quality is loaded.
+- `"direct"`: Directly visibly/audibly switch to the new Representations.
+  Here you will ensure that the now unwanted Representations won't be
+  played in the future but you might be left with a playback interruption
+  and some rebuffering time while the new quality is loaded.
 
-  - `"reload"`: Directly visibly/audibly switch to the new Representations
-    through a "reloading" step if necessary.
+- `"reload"`: Directly visibly/audibly switch to the new Representations
+  through a "reloading" step if necessary.
 
-    Under that mode, you will ensure that the previous frame won't be visible
-    anymore and you might also have better results than `"direct"` on devices
-    with poor compatibility, but the RxPlayer might temporarily go through
-    a `"RELOADING"` state, during which a black screen is shown and multiple
-    APIs are unavailable.
+  Under that mode, you will ensure that the previous frame won't be visible
+  anymore and you might also have better results than `"direct"` on devices
+  with poor compatibility, but the RxPlayer might temporarily go through
+  a `"RELOADING"` state, during which a black screen is shown and multiple
+  APIs are unavailable.
 
 ```js
 // example: switching video qualities in "direct" mode
@@ -220,7 +220,6 @@ for (const period of periods) {
 }
 ```
 
-
 ### Locking Representations when switching to a new track
 
 You can also choose to lock video and audio Representations as soon as you
@@ -243,6 +242,7 @@ track switches, whether it is done explicitly (for example through a
 `setVideoTrack` call) or implicitly (for example because the previously-chosen
 track is not available anymore), by reacting to the
 [`trackUpdate`](../Player_Events.md#trackupdate) event:
+
 ```js
 rxPlayer.addEventListener("trackUpdate", (evt) => {
     if (evt.trackType === "video") {
@@ -296,19 +296,19 @@ player.lockAudioRepresentations({
 });
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _arg_ `Array.<string>|Object`: Either a list of the Representations' id to
-     lock for the current Period, or an object with the following properties
-     (only `representations` is required):
+  1.  _arg_ `Array.<string>|Object`: Either a list of the Representations' id to
+      lock for the current Period, or an object with the following properties
+      (only `representations` is required):
 
-       - `representations` (`Array.<string>`): The list of Representations'id to
-         lock.
+      - `representations` (`Array.<string>`): The list of Representations'id to
+        lock.
 
-       - `periodId` (`string|undefined`): If defined, the id of the concerned
-         Period. If not defined, it will be applied for the current Period.
+      - `periodId` (`string|undefined`): If defined, the id of the concerned
+        Period. If not defined, it will be applied for the current Period.
 
-       - `switchingMode` (`string|undefined`): Behavior of the RxPlayer if there
-         is a need to perform a transition between previous Representation(s)
-         to the new locked ones. The list of modes available are described in
-         this page.
+      - `switchingMode` (`string|undefined`): Behavior of the RxPlayer if there
+        is a need to perform a transition between previous Representation(s)
+        to the new locked ones. The list of modes available are described in
+        this page.

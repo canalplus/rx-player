@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import normalizeLanguage, {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../normalize";
+import normalizeLanguage, { normalizeAudioTrack, normalizeTextTrack } from "../normalize";
 
 describe("utils - normalizeLanguage", () => {
   it("should translate an empty string to an empty string", () => {
@@ -58,21 +55,29 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should format a normalized audio track for an empty string", () => {
-    expect(normalizeAudioTrack("")).toEqual({ language: "",
-                                              audioDescription: false,
-                                              normalized: "" });
+    expect(normalizeAudioTrack("")).toEqual({
+      language: "",
+      audioDescription: false,
+      normalized: "",
+    });
   });
 
   it("should format a normalized audio track for a given language", () => {
-    expect(normalizeAudioTrack("fre")).toEqual({ language: "fre",
-                                                 audioDescription: false,
-                                                 normalized: "fra" });
-    expect(normalizeAudioTrack("en")).toEqual({ language: "en",
-                                                audioDescription: false,
-                                                normalized: "eng" });
-    expect(normalizeAudioTrack("pt-BR")).toEqual({ language: "pt-BR",
-                                                   audioDescription: false,
-                                                   normalized: "por" });
+    expect(normalizeAudioTrack("fre")).toEqual({
+      language: "fre",
+      audioDescription: false,
+      normalized: "fra",
+    });
+    expect(normalizeAudioTrack("en")).toEqual({
+      language: "en",
+      audioDescription: false,
+      normalized: "eng",
+    });
+    expect(normalizeAudioTrack("pt-BR")).toEqual({
+      language: "pt-BR",
+      audioDescription: false,
+      normalized: "por",
+    });
   });
 
   it("should accept an object indicating the language", () => {
@@ -94,26 +99,32 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should be able to specify that is is not an audio description", () => {
-    expect(normalizeAudioTrack({
-      language: "fre",
-      audioDescription: false,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "fre",
+        audioDescription: false,
+      }),
+    ).toEqual({
       language: "fre",
       audioDescription: false,
       normalized: "fra",
     });
-    expect(normalizeAudioTrack({
-      language: "en",
-      audioDescription: false,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "en",
+        audioDescription: false,
+      }),
+    ).toEqual({
       language: "en",
       audioDescription: false,
       normalized: "eng",
     });
-    expect(normalizeAudioTrack({
-      language: "pt-BR",
-      audioDescription: false,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "pt-BR",
+        audioDescription: false,
+      }),
+    ).toEqual({
       language: "pt-BR",
       audioDescription: false,
       normalized: "por",
@@ -121,26 +132,32 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should be able to specify that is is an audio description", () => {
-    expect(normalizeAudioTrack({
-      language: "fre",
-      audioDescription: true,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "fre",
+        audioDescription: true,
+      }),
+    ).toEqual({
       language: "fre",
       audioDescription: true,
       normalized: "fra",
     });
-    expect(normalizeAudioTrack({
-      language: "en",
-      audioDescription: true,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "en",
+        audioDescription: true,
+      }),
+    ).toEqual({
       language: "en",
       audioDescription: true,
       normalized: "eng",
     });
-    expect(normalizeAudioTrack({
-      language: "pt-BR",
-      audioDescription: true,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "pt-BR",
+        audioDescription: true,
+      }),
+    ).toEqual({
       language: "pt-BR",
       audioDescription: true,
       normalized: "por",
@@ -148,31 +165,37 @@ describe("utils - normalizeAudioTrack", () => {
   });
 
   it("should be able to specify that is is a dub", () => {
-    expect(normalizeAudioTrack({
-      language: "fre",
-      audioDescription: true,
-      isDub: true,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "fre",
+        audioDescription: true,
+        isDub: true,
+      }),
+    ).toEqual({
       language: "fre",
       isDub: true,
       audioDescription: true,
       normalized: "fra",
     });
-    expect(normalizeAudioTrack({
-      language: "en",
-      audioDescription: false,
-      isDub: true,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "en",
+        audioDescription: false,
+        isDub: true,
+      }),
+    ).toEqual({
       language: "en",
       audioDescription: false,
       normalized: "eng",
       isDub: true,
     });
-    expect(normalizeAudioTrack({
-      language: "pt-BR",
-      audioDescription: true,
-      isDub: true,
-    })).toEqual({
+    expect(
+      normalizeAudioTrack({
+        language: "pt-BR",
+        audioDescription: true,
+        isDub: true,
+      }),
+    ).toEqual({
       language: "pt-BR",
       audioDescription: true,
       normalized: "por",
@@ -235,26 +258,32 @@ describe("utils - normalizeTextTrack", () => {
   });
 
   it("should be able to specify that is is not a closed caption", () => {
-    expect(normalizeTextTrack({
-      language: "fre",
-      closedCaption: false,
-    })).toEqual({
+    expect(
+      normalizeTextTrack({
+        language: "fre",
+        closedCaption: false,
+      }),
+    ).toEqual({
       language: "fre",
       closedCaption: false,
       normalized: "fra",
     });
-    expect(normalizeTextTrack({
-      language: "en",
-      closedCaption: false,
-    })).toEqual({
+    expect(
+      normalizeTextTrack({
+        language: "en",
+        closedCaption: false,
+      }),
+    ).toEqual({
       language: "en",
       closedCaption: false,
       normalized: "eng",
     });
-    expect(normalizeTextTrack({
-      language: "pt-BR",
-      closedCaption: false,
-    })).toEqual({
+    expect(
+      normalizeTextTrack({
+        language: "pt-BR",
+        closedCaption: false,
+      }),
+    ).toEqual({
       language: "pt-BR",
       closedCaption: false,
       normalized: "por",
@@ -262,26 +291,32 @@ describe("utils - normalizeTextTrack", () => {
   });
 
   it("should be able to specify that is is a closed caption", () => {
-    expect(normalizeTextTrack({
-      language: "fre",
-      closedCaption: true,
-    })).toEqual({
+    expect(
+      normalizeTextTrack({
+        language: "fre",
+        closedCaption: true,
+      }),
+    ).toEqual({
       language: "fre",
       closedCaption: true,
       normalized: "fra",
     });
-    expect(normalizeTextTrack({
-      language: "en",
-      closedCaption: true,
-    })).toEqual({
+    expect(
+      normalizeTextTrack({
+        language: "en",
+        closedCaption: true,
+      }),
+    ).toEqual({
       language: "en",
       closedCaption: true,
       normalized: "eng",
     });
-    expect(normalizeTextTrack({
-      language: "pt-BR",
-      closedCaption: true,
-    })).toEqual({
+    expect(
+      normalizeTextTrack({
+        language: "pt-BR",
+        closedCaption: true,
+      }),
+    ).toEqual({
       language: "pt-BR",
       closedCaption: true,
       normalized: "por",

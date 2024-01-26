@@ -18,6 +18,7 @@ rxPlayer.setVideoTrack(video[0].id);
 settings, described below.
 In the case an object is given, the video track's id should be set as in a
 `trackId` property.
+
 ```js
 // Setting the first video track
 const videoTracks = rxPlayer.getAvailableVideoTracks();
@@ -25,7 +26,6 @@ rxPlayer.setVideoTrack({
   trackId: videoTracks[0].id,
 });
 ```
-
 
 If trickmode tracks are enabled (usually through the corresponding
 [`setPlaybackRate`](../Speed_Control/setPlaybackRate.md) method option) and if
@@ -75,7 +75,6 @@ rxPlayer.setVideoTrack({
   trackId: videoTracks[0].id,
   periodId: periods[1].id,
 });
-
 ```
 
 ### Changing the way the video track transition is done
@@ -91,32 +90,32 @@ to `setVideoTrack`.
 
 The available "switching modes" are:
 
-  - `"seamless"`: Clean the previous video track from the buffer, yet keep some
-    of its data around the current position to ensure the transition stay
-    seamless (i.e. playback still continue).
+- `"seamless"`: Clean the previous video track from the buffer, yet keep some
+  of its data around the current position to ensure the transition stay
+  seamless (i.e. playback still continue).
 
-    The advantage is that the switch will not be abrupt (playback will not be
-    interrupted) but you might still have a few seconds playing in the
-    previous video track.
+  The advantage is that the switch will not be abrupt (playback will not be
+  interrupted) but you might still have a few seconds playing in the
+  previous video track.
 
-  - `"direct"`: Directly and visibly switch to the new tracks.
-    Here you will ensure that the now unwanted tracks won't be
-    played in the future but you might be left with a playback interruption
-    and some rebuffering time while the new video track is loaded.
+- `"direct"`: Directly and visibly switch to the new tracks.
+  Here you will ensure that the now unwanted tracks won't be
+  played in the future but you might be left with a playback interruption
+  and some rebuffering time while the new video track is loaded.
 
-  - `"reload"`: Directly and visibly switch to the new tracks, maybe going
-    through the `"RELOADING"` state if necessary, during which a black screen is
-    shown and multiple APIs are unavailable.
+- `"reload"`: Directly and visibly switch to the new tracks, maybe going
+  through the `"RELOADING"` state if necessary, during which a black screen is
+  shown and multiple APIs are unavailable.
 
-    This mode might be preferable to the `"direct"` mode for several reasons:
+  This mode might be preferable to the `"direct"` mode for several reasons:
 
-      - the `"direct"` mode might trigger some rebuffering time during which the
-        last video frame from the previous video track is still shown.
+  - the `"direct"` mode might trigger some rebuffering time during which the
+    last video frame from the previous video track is still shown.
 
-        By comparison, `"reload"` whould show a black screen here instead.
+    By comparison, `"reload"` whould show a black screen here instead.
 
-      - This mode might have better results than `"direct"` on devices with poor
-        compatibility
+  - This mode might have better results than `"direct"` on devices with poor
+    compatibility
 
 ```js
 // example: switching video tracks in "direct" mode
@@ -126,7 +125,6 @@ rxPlayer.setVideoTrack({
   switchingMode: "direct",
 });
 ```
-
 
 ### Changing the resuming position after a video track change
 
@@ -152,7 +150,6 @@ rxPlayer.setVideoTrack({
 });
 ```
 
-
 ### Selecting only some Representations in the new video track
 
 You can also start "locking" only a given set of Representations in the new
@@ -176,12 +173,12 @@ Doing this is equivalent to locking the video Representations through a
 [`lockAudioVideoRepresentations`](../Representation_Selection/lockAudioVideoRepresentations.md)
 call, you can read its documentation page for more information on its behavior.
 
-
 ### Setting the video track as soon as possible
 
 If you want to set an video track as soon as possible, for example to choose an
 initial video track before any other one had time to be loaded, you can
 perform the `setVideoTrack` call on the `newAvailablePeriods` event:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
@@ -225,9 +222,9 @@ for (const period of periods) {
 player.setVideoTrack(videoTrackId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _videoTrackId_ `string`: The `id` of the track you want to set
+  1.  _videoTrackId_ `string`: The `id` of the track you want to set
 
 ```js
 // Setting the current video track
@@ -246,26 +243,26 @@ player.setVideoTrack({
 });
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _arg_ `string|Object`: Either the video track's `id` property of the
-     track you want to set for current Period, or an object with the following
-     properties (only `trackId` is required):
+  1.  _arg_ `string|Object`: Either the video track's `id` property of the
+      track you want to set for current Period, or an object with the following
+      properties (only `trackId` is required):
 
-       - `trackId` (`string`): The `id` property of the track you want to lock.
+      - `trackId` (`string`): The `id` property of the track you want to lock.
 
-       - `periodId` (`string|undefined`): If defined, the id of the concerned
-         Period. If not defined, it will be applied for the current Period.
+      - `periodId` (`string|undefined`): If defined, the id of the concerned
+        Period. If not defined, it will be applied for the current Period.
 
-       - `switchingMode` (`string|undefined`): Behavior of the RxPlayer if there
-         is a need to perform a transition between a previous video track and
-         the new one.
-         The list of modes available are described in this page.
+      - `switchingMode` (`string|undefined`): Behavior of the RxPlayer if there
+        is a need to perform a transition between a previous video track and
+        the new one.
+        The list of modes available are described in this page.
 
-       - `lockedRepresentations` (`Array.<string>|undefined`): The list of
-         Representations' id you wish to "lock" when switching to the new track.
-         More information [in the corresponding documentation
-         page](../Representation_Selection/lockAudioVideoRepresentations.md).
+      - `lockedRepresentations` (`Array.<string>|undefined`): The list of
+        Representations' id you wish to "lock" when switching to the new track.
+        More information [in the corresponding documentation
+        page](../Representation_Selection/lockAudioVideoRepresentations.md).
 
-      - `relativeResumingPosition`  (`string|undefined`): The offset in seconds to apply to the
-         current position to get the new position after resuming playback.
+      - `relativeResumingPosition` (`string|undefined`): The offset in seconds to apply to the
+        current position to get the new position after resuming playback.

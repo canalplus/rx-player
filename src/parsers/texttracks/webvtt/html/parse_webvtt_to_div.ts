@@ -19,9 +19,7 @@ import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
 import parseStyleBlocks from "./parse_style_block";
-import type {
-  IVTTHTMLCue,
-} from "./to_html";
+import type { IVTTHTMLCue } from "./to_html";
 import toHTML from "./to_html";
 
 /**
@@ -38,14 +36,11 @@ import toHTML from "./to_html";
  * @param {Number} timeOffset - Offset to add to start and end times, in seconds
  * @return {Array.<Object>}
  */
-export default function parseWebVTT(
-  text : string,
-  timeOffset : number
-) : IVTTHTMLCue[] {
+export default function parseWebVTT(text: string, timeOffset: number): IVTTHTMLCue[] {
   const newLineChar = /\r\n|\n|\r/g; // CRLF|LF|CR
   const linified = text.split(newLineChar);
 
-  const cuesArray : IVTTHTMLCue[] = [];
+  const cuesArray: IVTTHTMLCue[] = [];
   if (/^WEBVTT( |\t|\n|\r|$)/.exec(linified[0]) === null) {
     throw new Error("Can't parse WebVTT: Invalid File.");
   }

@@ -26,9 +26,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     jest.resetModules();
   });
 
-  /* eslint-disable max-len */
   it("should return undefined if the given intermediate representation has no UTCTimings element", () => {
-  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [],
@@ -39,9 +37,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
   it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", () => {
-  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -61,9 +57,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
   it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", () => {
-  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -85,9 +79,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
   it("should return the value of a single http-iso UTCTimings element", () => {
-  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -103,9 +95,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 
-  /* eslint-disable max-len */
   it("should return the first value of multiple http-iso UTCTimings elements", () => {
-  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [
@@ -129,9 +119,7 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar1000");
   });
 
-  /* eslint-disable max-len */
   it("should return the first value of a http-iso UTCTimings element when mixed with other elements", () => {
-  /* eslint-enable max-len */
     const mpdIR = {
       children: {
         utcTimings: [

@@ -23,9 +23,9 @@ import parseCue from "./parse_cue";
  * @param timeOffset
  */
 export default function parseTtmlToNative(
-  str : string,
-  timeOffset : number
-): Array<TextTrackCue | ICompatVTTCue> {
+  str: string,
+  timeOffset: number,
+): Array<TextTrackCue | ICompatVTTCue> {
   const parsedCues = parseTtml(str, timeOffset);
   const cues: Array<TextTrackCue | ICompatVTTCue> = [];
   for (let i = 0; i < parsedCues.length; i++) {

@@ -21,4 +21,4 @@ if (player.isLive()) {
 const isLive = player.isLive();
 ```
 
- - **return value** `boolean`
+- **return value** `boolean`

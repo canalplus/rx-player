@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-import type {
-  ISegmentUrlIntermediateRepresentation,
-} from "../../node_parser_types";
-import {
-  parseByteRange,
-  ValueParser,
-} from "./utils";
+import type { ISegmentUrlIntermediateRepresentation } from "../../node_parser_types";
+import { parseByteRange, ValueParser } from "./utils";
 
 /**
  * Parse a SegmentURL element into a SegmentURL intermediate
@@ -29,23 +24,24 @@ import {
  * @returns {Array}
  */
 export default function parseSegmentURL(
-  root : Element
-) : [ISegmentUrlIntermediateRepresentation, Error[]] {
-  const parsedSegmentURL : ISegmentUrlIntermediateRepresentation = {};
-  const warnings : Error[] = [];
+  root: Element,
+): [ISegmentUrlIntermediateRepresentation, Error[]] {
+  const parsedSegmentURL: ISegmentUrlIntermediateRepresentation = {};
+  const warnings: Error[] = [];
   const parseValue = ValueParser(parsedSegmentURL, warnings);
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
     switch (attribute.name) {
-
       case "media":
         parsedSegmentURL.media = attribute.value;
         break;
 
       case "indexRange":
-        parseValue(attribute.value, { asKey: "indexRange",
-                                      parser: parseByteRange,
-                                      dashName: "indexRange" });
+        parseValue(attribute.value, {
+          asKey: "indexRange",
+          parser: parseByteRange,
+          dashName: "indexRange",
+        });
         break;
 
       case "index":
@@ -53,9 +49,11 @@ export default function parseSegmentURL(
         break;
 
       case "mediaRange":
-        parseValue(attribute.value, { asKey: "mediaRange",
-                                      parser: parseByteRange,
-                                      dashName: "mediaRange" });
+        parseValue(attribute.value, {
+          asKey: "mediaRange",
+          parser: parseByteRange,
+          dashName: "mediaRange",
+        });
         break;
     }
   }

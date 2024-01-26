@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
-import {
-  multiAdaptationSetsInfos,
-} from "../../contents/DASH_static_SegmentTimeline";
+import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
@@ -21,8 +19,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   async function loadContent() {
-    player.loadVideo({ url: multiAdaptationSetsInfos.url,
-                       transport: multiAdaptationSetsInfos.transport });
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+    });
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
@@ -48,13 +48,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     const audioTracks = player.getAvailableAudioTracks();
     for (let i = 0; i < audioTracks.length; i++) {
       const audioTrack = audioTracks[i];
-      if (audioTrack.language === language &&
-          audioTrack.audioDescription === isAudioDescription)
-      {
-        const payload = Object.assign(
-          {trackId: audioTrack.id},
-          setTrackOptions
-        );
+      if (
+        audioTrack.language === language &&
+        audioTrack.audioDescription === isAudioDescription
+      ) {
+        const payload = Object.assign({ trackId: audioTrack.id }, setTrackOptions);
         player.setAudioTrack(payload);
         return;
       }
@@ -66,9 +64,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     const textTracks = player.getAvailableTextTracks();
     for (let i = 0; i < textTracks.length; i++) {
       const textTrack = textTracks[i];
-      if (textTrack.language === language &&
-          textTrack.closedCaption === isClosedCaption)
-      {
+      if (
+        textTrack.language === language &&
+        textTrack.closedCaption === isClosedCaption
+      ) {
         player.setTextTrack(textTrack.id);
         return;
       }
@@ -76,30 +75,28 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     throw new Error("Text track not found.");
   }
 
-  function setVideoTrack(codecRules,
-    isSignInterpreted,
-    setVideoTrackOptions = {}) {
+  function setVideoTrack(codecRules, isSignInterpreted, setVideoTrackOptions = {}) {
     const videoTracks = player.getAvailableVideoTracks();
     for (let i = 0; i < videoTracks.length; i++) {
       const videoTrack = videoTracks[i];
       if (videoTrack.signInterpreted === isSignInterpreted) {
         const { representations } = videoTrack;
         if (codecRules === null) {
-          player.setVideoTrack(Object.assign(
-            { trackId: videoTrack.id },
-            setVideoTrackOptions));
+          player.setVideoTrack(
+            Object.assign({ trackId: videoTrack.id }, setVideoTrackOptions),
+          );
           return;
         } else if (codecRules.all) {
-          if (representations.every(r => codecRules.test.test(r.codec))) {
-            player.setVideoTrack(Object.assign(
-              { trackId: videoTrack.id },
-              setVideoTrackOptions));
+          if (representations.every((r) => codecRules.test.test(r.codec))) {
+            player.setVideoTrack(
+              Object.assign({ trackId: videoTrack.id }, setVideoTrackOptions),
+            );
             return;
           }
-        } else if (representations.some(r => codecRules.test.test(r.codec))) {
-          player.setVideoTrack(Object.assign(
-            { trackId: videoTrack.id },
-            setVideoTrackOptions));
+        } else if (representations.some((r) => codecRules.test.test(r.codec))) {
+          player.setVideoTrack(
+            Object.assign({ trackId: videoTrack.id }, setVideoTrackOptions),
+          );
           return;
         }
       }
@@ -137,9 +134,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     const currentVideoTrack = player.getVideoTrack();
 
     if (isSignInterpreted === undefined) {
-      expect(Object.prototype.hasOwnProperty.call(currentVideoTrack,
-                                                  "signInterpreted"))
-        .to.equal(false);
+      expect(
+        Object.prototype.hasOwnProperty.call(currentVideoTrack, "signInterpreted"),
+      ).to.equal(false);
     } else {
       expect(currentVideoTrack.signInterpreted).to.equal(isSignInterpreted);
     }
@@ -149,9 +146,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       expect(representations.length).to.not.equal(0);
       const { all, test } = codecRules;
       if (all) {
-        expect(representations.every(r => test.test(r.codec))).to.equal(true);
+        expect(representations.every((r) => test.test(r.codec))).to.equal(true);
       } else {
-        expect(representations.some(r => test.test(r.codec))).to.equal(true);
+        expect(representations.some((r) => test.test(r.codec))).to.equal(true);
       }
     }
   }
@@ -159,9 +156,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   function chooseWantedAudioTrack(availableAudioTracks, preference) {
     const wantedAudioDescription = preference.audioDescription === true;
     for (const availableAudioTrack of availableAudioTracks) {
-      if (availableAudioTrack.language === preference.language &&
-          availableAudioTrack.audioDescription === wantedAudioDescription)
-      {
+      if (
+        availableAudioTrack.language === preference.language &&
+        availableAudioTrack.audioDescription === wantedAudioDescription
+      ) {
         return availableAudioTrack;
       }
     }
@@ -170,18 +168,17 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   function chooseWantedTextTrack(availableTextTracks, preference) {
     const wantedClosedCaption = preference.closedCaption === true;
     for (const availableTextTrack of availableTextTracks) {
-      if (availableTextTrack.language === preference.language &&
-          availableTextTrack.closedCaption === wantedClosedCaption)
-      {
+      if (
+        availableTextTrack.language === preference.language &&
+        availableTextTrack.closedCaption === wantedClosedCaption
+      ) {
         return availableTextTrack;
       }
     }
   }
 
   function chooseWantedVideoTrack(availableVideoTracks, preference) {
-    const codecRules = preference.codec === undefined ?
-      null :
-      preference.codec;
+    const codecRules = preference.codec === undefined ? null : preference.codec;
     const wantedSignInterpreted = preference.signInterpreted === true;
     for (const availableVideoTrack of availableVideoTracks) {
       if (codecRules !== null) {
@@ -189,11 +186,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
         expect(representations.length).to.not.equal(0);
         const { all, test } = codecRules;
         if (all) {
-          if (!representations.every(r => test.test(r.codec))) {
+          if (!representations.every((r) => test.test(r.codec))) {
             continue;
           }
         } else {
-          if (!representations.some(r => test.test(r.codec))) {
+          if (!representations.some((r) => test.test(r.codec))) {
             continue;
           }
         }
@@ -207,7 +204,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   function updateTracks(
     audioTrackPreferences,
     textTrackPreferences,
-    videoTrackPreferences
+    videoTrackPreferences,
   ) {
     const periods = player.getAvailablePeriods();
     for (let i = 0; i < periods.length; i++) {
@@ -218,16 +215,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       const videoTrackPreference = videoTrackPreferences[i];
 
       if (audioTrackPreference !== undefined) {
-        const availableAudioTracks = player
-          .getAvailableAudioTracks(period.id);
+        const availableAudioTracks = player.getAvailableAudioTracks(period.id);
         expect(availableAudioTracks).not.to.be.empty;
-        const wantedAudioTrack = chooseWantedAudioTrack(availableAudioTracks,
-                                                        audioTrackPreference);
+        const wantedAudioTrack = chooseWantedAudioTrack(
+          availableAudioTracks,
+          audioTrackPreference,
+        );
         if (wantedAudioTrack !== undefined) {
-          player.setAudioTrack({ trackId: wantedAudioTrack.id,
-                                 periodId: period.id });
-          expect(player.getAudioTrack(period.id).id)
-            .to.equal(wantedAudioTrack.id);
+          player.setAudioTrack({
+            trackId: wantedAudioTrack.id,
+            periodId: period.id,
+          });
+          expect(player.getAudioTrack(period.id).id).to.equal(wantedAudioTrack.id);
         }
       }
 
@@ -236,16 +235,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
           player.disableTextTrack(period.id);
           expect(player.getTextTrack(period.id)).to.equal(null);
         } else {
-          const availableTextTracks = player
-            .getAvailableTextTracks(period.id);
+          const availableTextTracks = player.getAvailableTextTracks(period.id);
           expect(availableTextTracks).not.to.be.empty;
-          const wantedTextTrack = chooseWantedTextTrack(availableTextTracks,
-                                                        textTrackPreference);
+          const wantedTextTrack = chooseWantedTextTrack(
+            availableTextTracks,
+            textTrackPreference,
+          );
           if (wantedTextTrack !== undefined) {
-            player.setTextTrack({ trackId: wantedTextTrack.id,
-                                  periodId: period.id });
-            expect(player.getTextTrack(period.id).id)
-              .to.equal(wantedTextTrack.id);
+            player.setTextTrack({
+              trackId: wantedTextTrack.id,
+              periodId: period.id,
+            });
+            expect(player.getTextTrack(period.id).id).to.equal(wantedTextTrack.id);
           }
         }
       }
@@ -255,16 +256,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
           player.disableVideoTrack(period.id);
           expect(player.getVideoTrack(period.id)).to.equal(null);
         } else {
-          const availableVideoTracks = player
-            .getAvailableVideoTracks(period.id);
+          const availableVideoTracks = player.getAvailableVideoTracks(period.id);
           expect(availableVideoTracks).not.to.be.empty;
-          const wantedVideoTrack = chooseWantedVideoTrack(availableVideoTracks,
-                                                          videoTrackPreference);
+          const wantedVideoTrack = chooseWantedVideoTrack(
+            availableVideoTracks,
+            videoTrackPreference,
+          );
           if (wantedVideoTrack !== undefined) {
-            player.setVideoTrack({ trackId: wantedVideoTrack.id,
-                                   periodId: period.id });
-            expect(player.getVideoTrack(period.id).id)
-              .to.equal(wantedVideoTrack.id);
+            player.setVideoTrack({
+              trackId: wantedVideoTrack.id,
+              periodId: period.id,
+            });
+            expect(player.getVideoTrack(period.id).id).to.equal(wantedVideoTrack.id);
           }
         }
       }
@@ -341,7 +344,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
         [
           { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: true },
           { codec: { all: false, test: /avc1\.640028/ } },
-        ]
+        ],
       );
     });
     player.loadVideo({
@@ -376,7 +379,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should allow the initial disabling of the video tracks", async () => {
     player.addEventListener("newAvailablePeriods", () => {
-      updateTracks([], [], [ null, null ]);
+      updateTracks([], [], [null, null]);
     });
     await loadContent();
     checkAudioTrack("de", "deu", false);
@@ -438,19 +441,24 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
   });
 
-
   it("setting a track with relativeResumingPosition should seek back or forward if switchingMode is 'direct'", async () => {
     await loadContent();
     expect(player.getPosition()).to.be.within(0, 1);
     checkAudioTrack("de", "deu", false);
 
-    setAudioTrack("fr", true, { relativeResumingPosition: 10, switchingMode: "direct"});
+    setAudioTrack("fr", true, {
+      relativeResumingPosition: 10,
+      switchingMode: "direct",
+    });
     await sleep(300);
     checkAudioTrack("fr", "fra", true);
     expect(player.getPosition()).to.be.within(10, 11);
 
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
-    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, { relativeResumingPosition: -5, switchingMode: "direct" });
+    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, {
+      relativeResumingPosition: -5,
+      switchingMode: "direct",
+    });
     await sleep(300);
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
     expect(player.getPosition()).to.be.within(5, 6);
@@ -461,13 +469,19 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     expect(player.getPosition()).to.be.within(0, 1);
     checkAudioTrack("de", "deu", false);
 
-    setAudioTrack("fr", true, { relativeResumingPosition: 10, switchingMode: "seamless"});
+    setAudioTrack("fr", true, {
+      relativeResumingPosition: 10,
+      switchingMode: "seamless",
+    });
     await sleep(300);
     checkAudioTrack("fr", "fra", true);
     expect(player.getPosition()).to.be.within(0, 1);
 
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
-    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, { relativeResumingPosition: 10, switchingMode: "seamless" });
+    setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, {
+      relativeResumingPosition: 10,
+      switchingMode: "seamless",
+    });
     await sleep(300);
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
     expect(player.getPosition()).to.be.within(0, 1);

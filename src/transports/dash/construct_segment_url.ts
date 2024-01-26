@@ -19,10 +19,12 @@ import type { ICdnMetadata } from "../../parsers/manifest";
 import resolveURL from "../../utils/resolve_url";
 
 export default function constructSegmentUrl(
-  wantedCdn : ICdnMetadata | null,
-  segment : ISegment
-) : string | null {
-  return wantedCdn === null   ? null :
-         segment.url === null ? wantedCdn.baseUrl :
-                                resolveURL(wantedCdn.baseUrl, segment.url);
+  wantedCdn: ICdnMetadata | null,
+  segment: ISegment,
+): string | null {
+  return wantedCdn === null
+    ? null
+    : segment.url === null
+      ? wantedCdn.baseUrl
+      : resolveURL(wantedCdn.baseUrl, segment.url);
 }

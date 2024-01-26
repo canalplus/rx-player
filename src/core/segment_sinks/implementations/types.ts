@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  IAdaptation,
-  ISegment,
-  IPeriod,
-  IRepresentation,
-} from "../../../manifest";
+import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
 import type { IRange } from "../../../utils/ranges";
 import type {
   IBufferedChunk,
@@ -68,10 +63,10 @@ import SegmentInventory from "../inventory";
  */
 export abstract class SegmentSink {
   /** "Type" of the buffer (e.g. "audio", "video", "text"). */
-  public readonly abstract bufferType : IBufferType;
+  public abstract readonly bufferType: IBufferType;
 
   /** Default implementation of an inventory of segment metadata. */
-  protected _segmentInventory : SegmentInventory;
+  protected _segmentInventory: SegmentInventory;
 
   /**
    * Mimetype+codec combination the SegmentSink is currently working with.
@@ -81,19 +76,16 @@ export abstract class SegmentSink {
    * `undefined` if unknown and if this property does not matter for this
    * SegmentSink implementation.
    */
-  public codec : string | undefined;
+  public codec: string | undefined;
 
   constructor() {
     // Use SegmentInventory by default for inventory purposes
     this._segmentInventory = new SegmentInventory();
   }
 
-  public abstract declareInitSegment(
-    uniqueId : string,
-    initSegmentData : unknown
-  ) : void;
+  public abstract declareInitSegment(uniqueId: string, initSegmentData: unknown): void;
 
-  public abstract freeInitSegment(uniqueId : string) : void;
+  public abstract freeInitSegment(uniqueId: string): void;
 
   /**
    * Push a chunk of the media segment given to the attached buffer.
@@ -122,9 +114,7 @@ export abstract class SegmentSink {
    * @param {Object} infos
    * @returns {Promise}
    */
-  public abstract pushChunk(
-    infos : IPushChunkInfos<unknown>
-  ) : Promise<IRange[]>;
+  public abstract pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[]>;
 
   /**
    * Remove buffered data.
@@ -132,10 +122,7 @@ export abstract class SegmentSink {
    * @param {number} end - end position, in seconds
    * @returns {Promise}
    */
-  public abstract removeBuffer(
-    start : number,
-    end : number
-  ) : Promise<IRange[] | undefined>;
+  public abstract removeBuffer(start: number, end: number): Promise<IRange[] | undefined>;
 
   /**
    * Indicate that every chunks from a segment has been given to pushChunk so
@@ -149,9 +136,7 @@ export abstract class SegmentSink {
    * TODO since switching to worker, this abstraction doesn't really work.
    * Find better.
    */
-  public abstract signalSegmentComplete(
-    infos : ICompleteSegmentInfo
-  ) : Promise<void>;
+  public abstract signalSegmentComplete(infos: ICompleteSegmentInfo): Promise<void>;
 
   /**
    * The maintained inventory can fall out of sync from garbage collection or
@@ -160,7 +145,7 @@ export abstract class SegmentSink {
    * This methods allow to manually trigger a synchronization by providing the
    * buffered time ranges of the real SourceBuffer implementation.
    */
-  public synchronizeInventory(ranges: IRange[]) : void {
+  public synchronizeInventory(ranges: IRange[]): void {
     // The default implementation just use the SegmentInventory
     this._segmentInventory.synchronizeBuffered(ranges);
   }
@@ -177,7 +162,7 @@ export abstract class SegmentSink {
    * not reflect the full reality of the underlying buffer.
    * @returns {Array.<Object>}
    */
-  public getLastKnownInventory() : IBufferedChunk[] {
+  public getLastKnownInventory(): IBufferedChunk[] {
     // The default implementation just use the SegmentInventory
     return this._segmentInventory.getInventory();
   }
@@ -187,7 +172,7 @@ export abstract class SegmentSink {
    * processing. From the one with the highest priority to the lowest priority.
    * @returns {Array.<Object>}
    */
-  public abstract getPendingOperations() : Array<ISBOperation<unknown>>;
+  public abstract getPendingOperations(): Array<ISBOperation<unknown>>;
 
   /**
    * Returns a recent history of registered operations performed and event
@@ -202,7 +187,7 @@ export abstract class SegmentSink {
    * @param {Object} context
    * @returns {Array.<Object>}
    */
-  public getSegmentHistory(context : IChunkContext) : IBufferedHistoryEntry[] {
+  public getSegmentHistory(context: IChunkContext): IBufferedHistoryEntry[] {
     return this._segmentInventory.getHistoryFor(context);
   }
 
@@ -211,13 +196,11 @@ export abstract class SegmentSink {
    * /!\ You won't be able to use the SegmentSink after calling this
    * function.
    */
-  public abstract dispose() : void;
+  public abstract dispose(): void;
 }
 
 /** Every SegmentSink types. */
-export type IBufferType = "audio" |
-                          "video" |
-                          "text";
+export type IBufferType = "audio" | "video" | "text";
 
 /**
  * Content of the `data` property when pushing a new chunk.
@@ -236,14 +219,14 @@ export interface IPushedChunkData<T> {
    * To set to `null` either if no initialization data is needed, or if you are
    * confident that the last pushed one is compatible.
    */
-  initSegmentUniqueId : string | null;
+  initSegmentUniqueId: string | null;
   /**
    * Chunk you want to push.
    * This can be the whole decodable segment's data or just a decodable sub-part
    * of it.
    * `null` if you just want to push the initialization segment.
    */
-  chunk : T | null;
+  chunk: T | null;
   /**
    * String corresponding to the mime-type + codec of the last segment pushed.
    * This might then be used by a SourceBuffer to infer the right codec to use.
@@ -251,14 +234,14 @@ export interface IPushedChunkData<T> {
    * If set to `undefined`, the SegmentSink implementation will just rely on
    * a default codec it is linked to, if one.
    */
-  codec : string | undefined;
+  codec: string | undefined;
   /**
    * Time offset in seconds to apply to this segment.
    * A `timestampOffset` set to `5` will mean that the segment will be decoded
    * 5 seconds after its decode time which was found from the segment data
    * itself.
    */
-  timestampOffset : number;
+  timestampOffset: number;
   /**
    * Append windows for the segment. This is a tuple of two elements.
    *
@@ -274,8 +257,7 @@ export interface IPushedChunkData<T> {
    * This can be set to `0` or `undefined` to not apply any end append window
    * to that chunk.
    */
-  appendWindow: [ number | undefined,
-                  number | undefined ];
+  appendWindow: [number | undefined, number | undefined];
 }
 
 /**
@@ -284,13 +266,13 @@ export interface IPushedChunkData<T> {
  */
 export interface ICompleteSegmentInfo {
   /** Adaptation object linked to the chunk. */
-  adaptation : IAdaptation;
+  adaptation: IAdaptation;
   /** Period object linked to the chunk. */
-  period : IPeriod;
+  period: IPeriod;
   /** Representation object linked to the chunk. */
-  representation : IRepresentation;
+  representation: IRepresentation;
   /** The segment object linked to the pushed chunk. */
-  segment : ISegment;
+  segment: ISegment;
 }
 
 /**
@@ -299,26 +281,29 @@ export interface ICompleteSegmentInfo {
  */
 export interface IPushChunkInfos<T> {
   /** Chunk that should be pushed with the associated metadata */
-  data : IPushedChunkData<T>;
+  data: IPushedChunkData<T>;
   /**
    * Context about the chunk that will be added to the inventory once it is
    * pushed.
    */
-   inventoryInfos : IInsertedChunkInfos;
+  inventoryInfos: IInsertedChunkInfos;
 }
 
 /** "Operations" scheduled by a SegmentSink. */
-export type ISBOperation<T> = IPushOperation<T> |
-                              IRemoveOperation |
-                              ISignalCompleteSegmentOperation;
+export type ISBOperation<T> =
+  | IPushOperation<T>
+  | IRemoveOperation
+  | ISignalCompleteSegmentOperation;
 
 /**
  * Enum used by a SegmentSink as a discriminant in its queue of
  * "operations".
  */
-export enum SegmentSinkOperation { Push,
-                                   Remove,
-                                   SignalSegmentComplete }
+export enum SegmentSinkOperation {
+  Push,
+  Remove,
+  SignalSegmentComplete,
+}
 
 /**
  * "Operation" created by a `SegmentSink` when asked to push a chunk.
@@ -328,9 +313,9 @@ export enum SegmentSinkOperation { Push,
  */
 export interface IPushOperation<T> {
   /** Discriminant (allows to tell its a "Push operation"). */
-  type : SegmentSinkOperation.Push;
+  type: SegmentSinkOperation.Push;
   /** Arguments for that push. */
-  value : IPushChunkInfos<T>;
+  value: IPushChunkInfos<T>;
 }
 
 /**
@@ -341,10 +326,10 @@ export interface IPushOperation<T> {
  */
 export interface IRemoveOperation {
   /** Discriminant (allows to tell its a "Remove operation"). */
-  type : SegmentSinkOperation.Remove;
+  type: SegmentSinkOperation.Remove;
   /** Arguments for that remove (absolute start and end time, in seconds). */
-  value : { start : number;
-            end : number; }; }
+  value: { start: number; end: number };
+}
 
 /**
  * "Operation" created by a `SegmentSink` when asked to validate that a full
@@ -356,7 +341,7 @@ export interface IRemoveOperation {
  */
 export interface ISignalCompleteSegmentOperation {
   /** Discriminant (allows to tell its an "SignalSegmentComplete operation"). */
-  type : SegmentSinkOperation.SignalSegmentComplete;
+  type: SegmentSinkOperation.SignalSegmentComplete;
   /** Arguments for that operation. */
-  value : ICompleteSegmentInfo;
+  value: ICompleteSegmentInfo;
 }

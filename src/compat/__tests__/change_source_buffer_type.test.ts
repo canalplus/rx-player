@@ -18,43 +18,37 @@ import log from "../../log";
 import tryToChangeSourceBufferType from "../change_source_buffer_type";
 
 describe("Compat - tryToChangeSourceBufferType", () => {
-  /* eslint-disable max-len */
   it("should just return false if the SourceBuffer provided does not have a changeType method", () => {
-  /* eslint-enable max-len */
-
     const spy = jest.spyOn(log, "warn");
-    const fakeSourceBuffer : SourceBuffer = {} as unknown as SourceBuffer;
-    expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto"))
-      .toBe(false);
+    const fakeSourceBuffer: SourceBuffer = {} as unknown as SourceBuffer;
+    expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(false);
     expect(spy).not.toHaveBeenCalled();
   });
 
-  /* eslint-disable max-len */
   it("should return true if the SourceBuffer provided does have a changeType method and the API returned normally", () => {
-  /* eslint-enable max-len */
-
     const spy = jest.spyOn(log, "warn");
     const changeTypeFn = jest.fn();
-    const fakeSourceBuffer = { changeType: changeTypeFn } as unknown as SourceBuffer;
-    expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto"))
-      .toBe(true);
+    const fakeSourceBuffer = {
+      changeType: changeTypeFn,
+    } as unknown as SourceBuffer;
+    expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(true);
     expect(spy).not.toHaveBeenCalled();
   });
 
-  /* eslint-disable max-len */
   it("should return false and warn if the SourceBuffer provided does have a changeType method and the API threw", () => {
-  /* eslint-enable max-len */
-
     const spy = jest.spyOn(log, "warn");
     const err = new Error("bar");
-    const changeTypeFn = jest.fn(() => { throw err; });
-    const fakeSourceBuffer = { changeType: changeTypeFn } as unknown as SourceBuffer;
-    expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto"))
-      .toBe(false);
+    const changeTypeFn = jest.fn(() => {
+      throw err;
+    });
+    const fakeSourceBuffer = {
+      changeType: changeTypeFn,
+    } as unknown as SourceBuffer;
+    expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(false);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
       "Could not call 'changeType' on the given SourceBuffer:",
-      err
+      err,
     );
   });
 });

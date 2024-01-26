@@ -45,9 +45,15 @@ describe("Features - addFeatures", () => {
     }));
     const addFeatures = jest.requireActual("../add_features").default;
 
-    expect(() => addFeatures([ 5 ])).toThrow(new Error("Unrecognized feature"));
-    expect(() => addFeatures([ () => {/* noop */}, {} ]))
-      .toThrow(new Error("Unrecognized feature"));
+    expect(() => addFeatures([5])).toThrow(new Error("Unrecognized feature"));
+    expect(() =>
+      addFeatures([
+        () => {
+          /* noop */
+        },
+        {},
+      ]),
+    ).toThrow(new Error("Unrecognized feature"));
   });
 
   it("should call the given functions with the features object in argument", () => {

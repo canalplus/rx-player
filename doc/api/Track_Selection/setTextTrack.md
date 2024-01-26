@@ -18,6 +18,7 @@ rxPlayer.setTextTrack(textTracks[0].id);
 settings, described below.
 In the case an object is given, the text track's id should be set as in a
 `trackId` property.
+
 ```js
 // Setting the first text track
 const textTracks = rxPlayer.getAvailableTextTracks();
@@ -69,7 +70,6 @@ rxPlayer.setTextTrack({
   trackId: textTracks[0].id,
   periodId: periods[1].id,
 });
-
 ```
 
 ### Setting the text track as soon as possible
@@ -77,6 +77,7 @@ rxPlayer.setTextTrack({
 If you want to set an text track as soon as possible, for example to choose an
 initial text track before any other one had time to be loaded, you can
 perform the `setTextTrack` call on the `newAvailablePeriods` event:
+
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
@@ -120,9 +121,9 @@ for (const period of periods) {
 player.setTextTrack(textTrackId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _textTrackId_ `string`: The `id` of the track you want to set
+  1.  _textTrackId_ `string`: The `id` of the track you want to set
 
 ```js
 // Setting the current text track
@@ -138,13 +139,13 @@ player.setTextTrack({
 });
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _arg_ `string|Object`: Either the text track's `id` property of the
-     track you want to set for current Period, or an object with the following
-     properties (only `trackId` is required):
+  1.  _arg_ `string|Object`: Either the text track's `id` property of the
+      track you want to set for current Period, or an object with the following
+      properties (only `trackId` is required):
 
-       - `trackId` (`string`): The `id` property of the track you want to lock.
+      - `trackId` (`string`): The `id` property of the track you want to lock.
 
-       - `periodId` (`string|undefined`): If defined, the id of the concerned
-         Period. If not defined, it will be applied for the current Period.
+      - `periodId` (`string|undefined`): If defined, the id of the concerned
+        Period. If not defined, it will be applied for the current Period.

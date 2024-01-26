@@ -15,18 +15,15 @@
  */
 
 import type { IFeaturesObject } from "../../features/types";
-// eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../mse/main_codec_support_prober";
-import type {
-  IDashWasmParserOptions,
-} from "../../parsers/manifest/dash/wasm-parser";
+import type { IDashWasmParserOptions } from "../../parsers/manifest/dash/wasm-parser";
 import DashWasmParser from "../../parsers/manifest/dash/wasm-parser";
 import dash from "../../transports/dash";
 
 const dashWasmParser = new DashWasmParser();
 const dashWasmFeature = {
-  _addFeature(features : IFeaturesObject) : void {
+  _addFeature(features: IFeaturesObject): void {
     if (features.transports.dash === undefined) {
       features.transports.dash = dash;
     }
@@ -35,7 +32,7 @@ const dashWasmFeature = {
     features.codecSupportProber = mainCodecSupportProber;
   },
 
-  initialize(opts : IDashWasmParserOptions) : Promise<void> {
+  initialize(opts: IDashWasmParserOptions): Promise<void> {
     return dashWasmParser.initialize(opts);
   },
 };

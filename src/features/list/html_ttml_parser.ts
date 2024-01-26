@@ -22,7 +22,7 @@ import type { IFeaturesObject } from "../types";
  * Add ability to parse TTML text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLTTMLFeature(features : IFeaturesObject) : void {
+function addHTMLTTMLFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.ttml = ttmlParser;
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }

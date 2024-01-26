@@ -67,11 +67,11 @@ const textTrack = player.getTextTrack();
 const textTrack = player.getTextTrack(periodId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want
       to get information about its current text track.
       If not defined, the information associated to the currently-playing Period
       will be returned.
 
- - **return value** `Object|null|undefined`
+- **return value** `Object|null|undefined`

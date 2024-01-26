@@ -50,23 +50,19 @@ export interface IParsedWEBMHDRInformation {
  * @returns {Object | undefined}
  */
 export function getWEBMHDRInformation(
-  codecString: string
+  codecString: string,
 ): undefined | IParsedWEBMHDRInformation {
   // cccc.PP.LL.DD.CC[.cp[.tc[.mc[.FF]]]]
   const [cccc, _PP, _LL, DD, _CC, cp, tc, mc] = codecString.split(".");
-  if (cccc !== "vp08" &&
-      cccc !== "vp09" &&
-      cccc !== "vp10") {
+  if (cccc !== "vp08" && cccc !== "vp09" && cccc !== "vp10") {
     return undefined;
   }
 
   let colorDepth: number | undefined;
-  let eotf: "pq" | "hlg" | undefined;
+  let eotf: "pq" | "hlg" | undefined;
   let colorSpace: "rec2020" | undefined;
 
-  if (DD !== undefined &&
-      DD === "10" ||
-      DD === "12") {
+  if ((DD !== undefined && DD === "10") || DD === "12") {
     colorDepth = parseInt(DD, 10);
   }
 
@@ -78,15 +74,11 @@ export function getWEBMHDRInformation(
     }
   }
 
-  if (cp !== undefined &&
-      mc !== undefined &&
-      cp === "09" &&
-      mc === "09") {
+  if (cp !== undefined && mc !== undefined && cp === "09" && mc === "09") {
     colorSpace = "rec2020";
   }
 
-  if (colorDepth === undefined ||
-      eotf === undefined) {
+  if (colorDepth === undefined || eotf === undefined) {
     return undefined;
   }
 

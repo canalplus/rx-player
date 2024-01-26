@@ -19,4 +19,4 @@ By default, this value is set to `30`.
 const bufferGoal = player.getWantedBufferAhead();
 ```
 
-  - **return value** `number`: current "buffering goal", in seconds.
+- **return value** `number`: current "buffering goal", in seconds.

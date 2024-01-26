@@ -24,9 +24,8 @@ describe("Video Thumbnail Loader", () => {
     videoThumbnailLoader.dispose();
   });
 
-  it("should not work when no fetcher was imported", async function() {
-    const wantedThumbnail = { time: 1,
-                              range: [0, 4] };
+  it("should not work when no fetcher was imported", async function () {
+    const wantedThumbnail = { time: 1, range: [0, 4] };
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
@@ -37,8 +36,9 @@ describe("Video Thumbnail Loader", () => {
       error = err;
     }
     expect(error).not.to.equal(undefined);
-    expect(error.message).to.equal("VideoThumbnailLoaderError: No imported "+
-                                   "loader for this transport type: dash");
+    expect(error.message).to.equal(
+      "VideoThumbnailLoaderError: No imported " + "loader for this transport type: dash",
+    );
   });
 
   it("should not work when no thumbnail track", async () => {
@@ -68,8 +68,7 @@ describe("Video Thumbnail Loader", () => {
     let time;
     let error;
     try {
-      time = await videoThumbnailLoader
-        .setTime(manifest.getMaximumSafePosition() + 10);
+      time = await videoThumbnailLoader.setTime(manifest.getMaximumSafePosition() + 10);
     } catch (err) {
       error = err;
     }
@@ -80,8 +79,7 @@ describe("Video Thumbnail Loader", () => {
 
   it("should load one thumbnail", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail = { time: 1,
-                              range: [0, 4] };
+    const wantedThumbnail = { time: 1, range: [0, 4] };
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
@@ -95,18 +93,14 @@ describe("Video Thumbnail Loader", () => {
     expect(error).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail.time);
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail.range[1], 0.01);
   });
 
   it("should load several thumbnails", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail1 = { time: 1,
-                               range: [0, 4] };
-    const wantedThumbnail2 = { time: 30,
-                               range: [28.028, 32.028] };
+    const wantedThumbnail1 = { time: 1, range: [0, 4] };
+    const wantedThumbnail2 = { time: 30, range: [28.028, 32.028] };
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
@@ -120,10 +114,8 @@ describe("Video Thumbnail Loader", () => {
     expect(error).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail1.time);
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
 
     time = undefined;
     error = undefined;
@@ -136,20 +128,15 @@ describe("Video Thumbnail Loader", () => {
     expect(error).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail2.time);
     expect(videoElement.buffered.length).to.equal(2);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail1.range[1], 0.01);
-    expect(videoElement.buffered.start(1))
-      .to.be.closeTo(wantedThumbnail2.range[0], 0.01);
-    expect(videoElement.buffered.end(1))
-      .to.be.closeTo(wantedThumbnail2.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    expect(videoElement.buffered.start(1)).to.be.closeTo(wantedThumbnail2.range[0], 0.01);
+    expect(videoElement.buffered.end(1)).to.be.closeTo(wantedThumbnail2.range[1], 0.01);
   });
 
   it("should set twice the same thumbnail (consecutively)", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail1 = { time: 1,
-                               range: [0, 4] };
+    const wantedThumbnail1 = { time: 1, range: [0, 4] };
     const manifestLoader = (man, callbacks) => {
       expect(trickModeInfos.url).to.equal(man.url);
       callbacks.fallback();
@@ -182,10 +169,8 @@ describe("Video Thumbnail Loader", () => {
     expect(error).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail1.time);
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
 
     time = undefined;
     error = undefined;
@@ -198,16 +183,13 @@ describe("Video Thumbnail Loader", () => {
     expect(error).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail1.time);
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
   });
 
   it("should set several times the same thumbnail (at the same time)", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail1 = { time: 1,
-                               range: [0, 4] };
+    const wantedThumbnail1 = { time: 1, range: [0, 4] };
     const manifestLoader = (man, callbacks) => {
       expect(trickModeInfos.url).to.equal(man.url);
       callbacks.fallback();
@@ -233,21 +215,20 @@ describe("Video Thumbnail Loader", () => {
 
     await sleep(75);
     expect(requestedSegments).to.have.length(4);
-    expect(requestedSegments)
-      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000.dash");
-    expect(requestedSegments)
-      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash");
+    expect(requestedSegments).to.include(
+      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000.dash",
+    );
+    expect(requestedSegments).to.include(
+      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash",
+    );
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
   });
 
   it("should not re-trigger common segments requests when loading contiguous thumbnails", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail1 = { time: 1,
-                               range: [0, 8] };
+    const wantedThumbnail1 = { time: 1, range: [0, 8] };
     const requestedVideoSegments = [];
     const segmentLoader = (info, callbacks) => {
       if (info.trackType === "video") {
@@ -266,27 +247,25 @@ describe("Video Thumbnail Loader", () => {
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
     await sleep(200);
     const before = requestedVideoSegments.length;
-    expect(requestedVideoSegments)
-      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash");
-    expect(requestedVideoSegments)
-      .to.include("http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-4004.dash");
+    expect(requestedVideoSegments).to.include(
+      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash",
+    );
+    expect(requestedVideoSegments).to.include(
+      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-4004.dash",
+    );
     videoThumbnailLoader.setTime(wantedThumbnail1.time + 2);
     await sleep(75);
     expect(requestedVideoSegments.length).to.equal(before);
 
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
   });
 
   it("should abort a job when starting another", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail1 = { time: 1,
-                               range: [0, 4] };
-    const wantedThumbnail2 = { time: 11,
-                               range: [8.008, 16.008] }; // load two segments
+    const wantedThumbnail1 = { time: 1, range: [0, 4] };
+    const wantedThumbnail2 = { time: 11, range: [8.008, 16.008] }; // load two segments
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
@@ -300,7 +279,7 @@ describe("Video Thumbnail Loader", () => {
 
     try {
       time = await videoThumbnailLoader.setTime(wantedThumbnail2.time);
-    } catch(err) {
+    } catch (err) {
       error2 = err;
     }
 
@@ -309,16 +288,13 @@ describe("Video Thumbnail Loader", () => {
     expect(error2).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail2.time);
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail2.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail2.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail2.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail2.range[1], 0.01);
   });
 
   it("should empty buffer after dispose", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
-    const wantedThumbnail = { time: 1,
-                              range: [0, 4] };
+    const wantedThumbnail = { time: 1, range: [0, 4] };
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
     await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
@@ -332,10 +308,8 @@ describe("Video Thumbnail Loader", () => {
     expect(error).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail.time);
     expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0))
-      .to.be.closeTo(wantedThumbnail.range[0], 0.01);
-    expect(videoElement.buffered.end(0))
-      .to.be.closeTo(wantedThumbnail.range[1], 0.01);
+    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail.range[0], 0.01);
+    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail.range[1], 0.01);
 
     videoThumbnailLoader.dispose();
 

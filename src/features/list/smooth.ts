@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-
-// eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import smooth from "../../transports/smooth";
@@ -25,7 +23,7 @@ import type { IFeaturesObject } from "../types";
  * Add ability to play smooth contents.
  * @param {Object} features
  */
-function addSmoothFeature(features : IFeaturesObject) : void {
+function addSmoothFeature(features: IFeaturesObject): void {
   if (features.transports.smooth === undefined) {
     features.transports.smooth = smooth;
   }

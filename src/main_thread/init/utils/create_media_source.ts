@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  clearElementSrc,
-} from "../../../compat";
+import { clearElementSrc } from "../../../compat";
 import log from "../../../log";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
@@ -35,9 +33,9 @@ const generateMediaSourceId = idGenerator();
  * @param {string|null} mediaSourceURL
  */
 export function resetMediaElement(
-  mediaElement : HTMLMediaElement,
-  mediaSourceURL : string | null
-) : void {
+  mediaElement: HTMLMediaElement,
+  mediaSourceURL: string | null,
+): void {
   if (mediaSourceURL !== null && mediaElement.src === mediaSourceURL) {
     log.info("Init: Clearing HTMLMediaElement's src");
     clearElementSrc(mediaElement);
@@ -48,8 +46,10 @@ export function resetMediaElement(
       log.debug("Init: Revoking previous URL");
       URL.revokeObjectURL(mediaSourceURL);
     } catch (e) {
-      log.warn("Init: Error while revoking the media source URL",
-               e instanceof Error ? e : "");
+      log.warn(
+        "Init: Error while revoking the media source URL",
+        e instanceof Error ? e : "",
+      );
     }
   }
 }
@@ -68,13 +68,11 @@ export function resetMediaElement(
  * @returns {MediaSource}
  */
 function createMediaSource(
-  mediaElement : HTMLMediaElement,
-  unlinkSignal : CancellationSignal
-) : MainMediaSourceInterface {
+  mediaElement: HTMLMediaElement,
+  unlinkSignal: CancellationSignal,
+): MainMediaSourceInterface {
   // make sure the media has been correctly reset
-  const oldSrc = isNonEmptyString(mediaElement.src) ?
-    mediaElement.src :
-    null;
+  const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
   resetMediaElement(mediaElement, oldSrc);
   const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
   unlinkSignal.register(() => {
@@ -94,15 +92,19 @@ function createMediaSource(
  * @returns {Promise}
  */
 export default function openMediaSource(
-  mediaElement : HTMLMediaElement,
-  unlinkSignal : CancellationSignal
-) : Promise<MainMediaSourceInterface> {
+  mediaElement: HTMLMediaElement,
+  unlinkSignal: CancellationSignal,
+): Promise<MainMediaSourceInterface> {
   return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
-    mediaSource.addEventListener("mediaSourceOpen", () => {
-      log.info("Init: MediaSource opened");
-      resolve(mediaSource);
-    }, unlinkSignal);
+    mediaSource.addEventListener(
+      "mediaSourceOpen",
+      () => {
+        log.info("Init: MediaSource opened");
+        resolve(mediaSource);
+      },
+      unlinkSignal,
+    );
 
     log.info("MTCI: Attaching MediaSource URL to the media element");
     if (mediaSource.handle.type === "handle") {

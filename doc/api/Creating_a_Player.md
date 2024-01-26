@@ -4,6 +4,7 @@
 
 Instantiating a new RxPlayer is necessary before being able to load a content.
 Doing so is straightforward:
+
 ```js
 import RxPlayer from "rx-player";
 const player = new RxPlayer(options);
@@ -60,6 +61,7 @@ initially.
 
 For example, to set an initial bandwidth of 700 kilobits per seconds, you can
 set:
+
 ```js
 const player = new Player({
   baseBandwidth: 700000,
@@ -70,7 +72,6 @@ const player = new Player({
 This option will have no effect for contents loaded in <i>Directfile</i>
 mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
 </div>
-
 
 ### wantedBufferAhead
 
@@ -191,30 +192,29 @@ properly displayed anyway.
 
 This option can have the following values:
 
-  - `"videoElement"`: The loaded video Representation will be throttled
-    according to the given `videoElement`'s dimensions. Meaning that the
-    RxPlayer won't be trying to play higher qualities whose resolutions should
-    not be discernible, with an exception when the picture-in-picture mode is
-    enabled in which case the resolution limit is compared to the
-    picture-in-picture window instead.
+- `"videoElement"`: The loaded video Representation will be throttled
+  according to the given `videoElement`'s dimensions. Meaning that the
+  RxPlayer won't be trying to play higher qualities whose resolutions should
+  not be discernible, with an exception when the picture-in-picture mode is
+  enabled in which case the resolution limit is compared to the
+  picture-in-picture window instead.
 
-  - `"screen"`: The loaded video Representation will be throttled according to
-    the screen's dimensions. Simply written, the RxPlayer won't try to play
-    Representation with a resolution higher than the screen resolution with the
-    exception of the immediately superior resolution if no Representation has
-    the same resolution than the screen.
+- `"screen"`: The loaded video Representation will be throttled according to
+  the screen's dimensions. Simply written, the RxPlayer won't try to play
+  Representation with a resolution higher than the screen resolution with the
+  exception of the immediately superior resolution if no Representation has
+  the same resolution than the screen.
 
-    You might prefer this value over `"videoElement"` to stay ready when and if
-    the user decides to enter a "fullscreen mode".
+  You might prefer this value over `"videoElement"` to stay ready when and if
+  the user decides to enter a "fullscreen mode".
 
-  - `"none"`: No such limit on the video Representation's resolution will be
-    automatically applied.
+- `"none"`: No such limit on the video Representation's resolution will be
+  automatically applied.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
 mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
 </div>
-
 
 ### throttleVideoBitrateWhenHidden
 

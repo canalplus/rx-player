@@ -21,7 +21,9 @@ import addNativesamiFeature from "../native_sami_parser";
 
 describe("Features list - native sami Parser", () => {
   it("should add an native sami Parser in the current features", () => {
-    const featureObject = { nativeTextTracksParsers: {} } as unknown as IFeaturesObject;
+    const featureObject = {
+      nativeTextTracksParsers: {},
+    } as unknown as IFeaturesObject;
     addNativesamiFeature(featureObject);
     expect(featureObject).toEqual({
       nativeTextTracksParsers: { sami: samiParser },

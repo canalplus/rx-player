@@ -7,11 +7,7 @@ module.exports = {
   preset: "ts-jest",
   testEnvironment: "jsdom",
   testMatch: ["**/?(*.)+(test).[jt]s"],
-  collectCoverageFrom: [
-    "src/**/*.ts",
-    "!src/**/index.ts",
-    "!**/__tests__/**",
-  ],
+  collectCoverageFrom: ["src/**/*.ts", "!src/**/index.ts", "!**/__tests__/**"],
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
@@ -27,7 +23,7 @@ module.exports = {
       CURRENT_ENV: 1,
     },
     __LOGGER_LEVEL__: {
-      CURRENT_LEVEL: "\"NONE\"",
+      CURRENT_LEVEL: '"NONE"',
     },
   },
 };

@@ -23,11 +23,7 @@
  * from the last Byte.
  * @returns {Uint8Array}
  */
-function arraySlice(
-  arr : Uint8Array,
-  start : number,
-  end? : number
-) : Uint8Array {
+function arraySlice(arr: Uint8Array, start: number, end?: number): Uint8Array {
   return new Uint8Array(Array.prototype.slice.call(arr, start, end));
 }
 
@@ -40,14 +36,10 @@ function arraySlice(
  * from the last Byte.
  * @returns {Uint8Array}
  */
-function uint8ArraySlice(
-  arr : Uint8Array,
-  start : number,
-  end? : number
-) : Uint8Array {
+function uint8ArraySlice(arr: Uint8Array, start: number, end?: number): Uint8Array {
   return arr.slice(start, end);
 }
 
-export default typeof Uint8Array.prototype.slice === "function" ?
-  uint8ArraySlice :
-  arraySlice;
+export default typeof Uint8Array.prototype.slice === "function"
+  ? uint8ArraySlice
+  : arraySlice;

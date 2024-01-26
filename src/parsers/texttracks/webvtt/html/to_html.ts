@@ -19,9 +19,11 @@ import convertPayloadToHTML from "./convert_payload_to_html";
 import createStyleAttribute from "./create_style_attribute";
 import type { IStyleElements } from "./parse_style_block";
 
-export interface IVTTHTMLCue { start : number;
-                               end: number;
-                               element : HTMLElement; }
+export interface IVTTHTMLCue {
+  start: number;
+  end: number;
+  element: HTMLElement;
+}
 
 /**
  * Parse cue block into an object with the following properties:
@@ -36,14 +38,15 @@ export interface IVTTHTMLCue { start : number;
  * @returns {Object|undefined}
  */
 export default function toHTML(
-  cueObj : { start : number;
-             end : number;
-             settings: Partial<Record<string, string>>;
-             header? : string | undefined;
-             payload : string[]; },
-  styling : { classes : IStyleElements;
-              global? : string | undefined; }
-) : IVTTHTMLCue {
+  cueObj: {
+    start: number;
+    end: number;
+    settings: Partial<Record<string, string>>;
+    header?: string | undefined;
+    payload: string[];
+  },
+  styling: { classes: IStyleElements; global?: string | undefined },
+): IVTTHTMLCue {
   const { start, end, settings, header, payload } = cueObj;
 
   const region = document.createElement("div");
@@ -67,30 +70,22 @@ export default function toHTML(
 
   // set color and background-color default values, as indicated in:
   // https://www.w3.org/TR/webvtt1/#applying-css-properties
-  attr.value =
-    "background-color:rgba(0,0,0,0.8);" +
-    "color:white;";
+  attr.value = "background-color:rgba(0,0,0,0.8);" + "color:white;";
   spanElement.setAttributeNode(attr);
 
   const { global, classes } = styling;
-  const localStyle = isNonEmptyString(header) ? classes[header] :
-                                                undefined;
-  const styles = [global, localStyle]
-    .filter((s) => s !== undefined)
-    .join("");
+  const localStyle = isNonEmptyString(header) ? classes[header] : undefined;
+  const styles = [global, localStyle].filter((s) => s !== undefined).join("");
 
   attr.value += styles;
   spanElement.setAttributeNode(attr);
 
-  convertPayloadToHTML(payload.join("\n"), classes)
-    .forEach(element => {
-      spanElement.appendChild(element);
-    });
+  convertPayloadToHTML(payload.join("\n"), classes).forEach((element) => {
+    spanElement.appendChild(element);
+  });
 
-  region.appendChild(pElement) ;
+  region.appendChild(pElement);
   pElement.appendChild(spanElement);
 
-  return { start,
-           end,
-           element: region };
+  return { start, end, element: region };
 }

@@ -5,55 +5,55 @@ import type ObservationPosition from "./utils/observation_position";
 /** "Event" that triggered the playback observation. */
 export type IPlaybackObserverEventType =
   /** First playback observation automatically emitted. */
-  "init" |
+  | "init"
   /** Observation manually forced by the PlaybackObserver. */
-  "manual" |
+  | "manual"
   /** Regularly emitted playback observation when no event happened in a long time. */
-  "timeupdate" |
+  | "timeupdate"
   /** On the HTML5 event with the same name */
-  "canplay" |
+  | "canplay"
   /** On the HTML5 event with the same name */
-  "ended" |
+  | "ended"
   /** On the HTML5 event with the same name */
-  "canplaythrough" | // HTML5 Event
+  | "canplaythrough" // HTML5 Event
   /** On the HTML5 event with the same name */
-  "play" |
+  | "play"
   /** On the HTML5 event with the same name */
-  "pause" |
+  | "pause"
   /** On the HTML5 event with the same name */
-  "seeking" |
+  | "seeking"
   /** On the HTML5 event with the same name */
-  "seeked" |
+  | "seeked"
   /** On the HTML5 event with the same name */
-  "stalled" |
+  | "stalled"
   /** On the HTML5 event with the same name */
-  "loadedmetadata" |
+  | "loadedmetadata"
   /** On the HTML5 event with the same name */
-  "ratechange" |
+  | "ratechange"
   /** An internal seek happens */
-  "internal-seeking";
+  | "internal-seeking";
 
 /** Information recuperated on the media element on each playback observation. */
 export interface IMediaInfos {
   /** Value of `buffered` (buffered ranges) for the media element. */
-  buffered : TimeRanges;
+  buffered: TimeRanges;
   /**
    * `currentTime` (position) set on the media element at the time of the
    * PlaybackObserver's measure.
    */
-  position : number;
+  position: number;
   /** Current `duration` set on the media element. */
-  duration : number;
+  duration: number;
   /** Current `ended` set on the media element. */
   ended: boolean;
   /** Current `paused` set on the media element. */
-  paused : boolean;
+  paused: boolean;
   /** Current `playbackRate` set on the media element. */
-  playbackRate : number;
+  playbackRate: number;
   /** Current `readyState` value on the media element. */
-  readyState : number;
+  readyState: number;
   /** Current `seeking` value on the mediaElement. */
-  seeking : boolean;
+  seeking: boolean;
 }
 
 /** Categorize a pending seek operation. */
@@ -79,20 +79,21 @@ export const enum SeekingState {
  */
 export interface IRebufferingStatus {
   /** What started the player to rebuffer. */
-  reason : "seeking" | // Building buffer after seeking
-           "not-ready" | // Building buffer after low readyState
-           "buffering"; // Other cases
+  reason:
+    | "seeking" // Building buffer after seeking
+    | "not-ready" // Building buffer after low readyState
+    | "buffering"; // Other cases
   /**
    * Monotonically-raising timestamp at the time the rebuffering happened on the
    * main thread.
    */
-  timestamp : number;
+  timestamp: number;
   /**
    * Position, in seconds, at which data is awaited.
    * If `null` the player is rebuffering but not because it is awaiting future data.
    * If `undefined`, that position is unknown.
    */
-  position : number | null | undefined;
+  position: number | null | undefined;
 }
 
 /**
@@ -105,26 +106,26 @@ export interface IFreezingStatus {
    * Monotonically-raising timestamp at the time the freezing started to be
    * detected.
    */
-  timestamp : number;
+  timestamp: number;
 }
 
 /** Information emitted on each playback observation. */
 export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "seeking"> {
-   /** Event that triggered this playback observation. */
-  event : IPlaybackObserverEventType;
+  /** Event that triggered this playback observation. */
+  event: IPlaybackObserverEventType;
   /** Current seeking state. */
-  seeking : SeekingState;
+  seeking: SeekingState;
   /**
    * Information on the current position being played, the position for which
    * media is wanted etc.
    */
-  position : ObservationPosition;
+  position: ObservationPosition;
   /**
    * Set if the player is short on audio and/or video media data and is a such,
    * rebuffering.
    * `null` if not.
    */
-  rebuffering : IRebufferingStatus | null;
+  rebuffering: IRebufferingStatus | null;
   /**
    * Set if the player is frozen, that is, stuck in place for unknown reason.
    * Note that this reason can be a valid one, such as a necessary license not
@@ -132,22 +133,19 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
    *
    * `null` if the player is not frozen.
    */
-  freezing : IFreezingStatus | null;
+  freezing: IFreezingStatus | null;
   /**
    * Gap between `currentTime` and the next position with un-buffered data.
    * `Infinity` if we don't have buffered data right now.
    * `undefined` if we cannot determine the buffer gap.
    */
-  bufferGap : number | undefined;
+  bufferGap: number | undefined;
   /**
    * The buffered range we are currently playing.
    * `null` if no range is currently available.
    * `undefined` if we cannot tell which range is currently available.
    */
-  currentRange : { start : number;
-                   end : number; } |
-                 null |
-                 undefined;
+  currentRange: { start: number; end: number } | null | undefined;
 }
 
 /**
@@ -169,21 +167,21 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * observer is running in a WebWorker.
    * @returns {number|undefined}
    */
-  getCurrentTime() : number | undefined;
+  getCurrentTime(): number | undefined;
   /**
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
    * Returns `undefined` when this cannot be known, such as when the playback
    * observer is running in a WebWorker.
    * @returns {number|undefined}
    */
-  getPlaybackRate() : number | undefined;
+  getPlaybackRate(): number | undefined;
   /**
    * Get the HTMLMediaElement's current `readyState`.
    * Returns `undefined` when this cannot be known, such as when the playback
    * observer is running in a WebWorker.
    * @returns {number|undefined}
    */
-  getReadyState() : number | undefined;
+  getReadyState(): number | undefined;
   /**
    * Returns the current `paused` status advertised by the `HTMLMediaElement`.
    *
@@ -194,7 +192,7 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * observer is running in a WebWorker.
    * @returns {boolean|undefined}
    */
-  getIsPaused() : boolean | undefined;
+  getIsPaused(): boolean | undefined;
   /**
    * Returns an `IReadOnlySharedReference` storing the last playback observation
    * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
@@ -205,7 +203,7 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    *
    * @returns {Object}
    */
-  getReference() : IReadOnlySharedReference<TObservationType>;
+  getReference(): IReadOnlySharedReference<TObservationType>;
   /**
    * Register a callback so it regularly receives playback observations.
    * @param {Function} cb
@@ -217,13 +215,12 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Function} - Allows to easily unregister the callback
    */
   listen(
-    cb : (
-      observation : TObservationType,
-      stopListening : () => void
-    ) => void,
-    options? : { includeLastObservation? : boolean | undefined;
-                 clearSignal? : CancellationSignal | undefined; }
-  ) : void;
+    cb: (observation: TObservationType, stopListening: () => void) => void,
+    options?: {
+      includeLastObservation?: boolean | undefined;
+      clearSignal?: CancellationSignal | undefined;
+    },
+  ): void;
   /**
    * Generate a new `IReadOnlyPlaybackObserver` from this one.
    *
@@ -233,10 +230,9 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Object}
    */
   deriveReadOnlyObserver<TDest>(
-    transform : (
-      observationRef : IReadOnlySharedReference<TObservationType>,
-      cancellationSignal : CancellationSignal
-    ) => IReadOnlySharedReference<TDest>
-  ) : IReadOnlyPlaybackObserver<TDest>;
+    transform: (
+      observationRef: IReadOnlySharedReference<TObservationType>,
+      cancellationSignal: CancellationSignal,
+    ) => IReadOnlySharedReference<TDest>,
+  ): IReadOnlyPlaybackObserver<TDest>;
 }
-

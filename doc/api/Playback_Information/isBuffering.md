@@ -13,4 +13,4 @@ The method relies solely on the state of the player, and is a shortcut for
 const isBuffering = player.isBuffering();
 ```
 
- - **return value** `boolean`
+- **return value** `boolean`

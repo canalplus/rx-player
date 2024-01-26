@@ -15,24 +15,15 @@
  */
 
 import config from "../../../config";
-import type {
-  ISegmentPipeline,
-  ITransportPipelines,
-} from "../../../transports";
+import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
-import type {
-  IPrioritizedSegmentFetcher,
-} from "./prioritized_segment_fetcher";
+import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
 import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
-import type {
-  ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
-import createSegmentFetcher, {
-  getSegmentFetcherOptions,
-} from "./segment_fetcher";
+import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
+import createSegmentFetcher, { getSegmentFetcherOptions } from "./segment_fetcher";
 import TaskPrioritizer from "./task_prioritizer";
-
 
 /**
  * Interact with the transport pipelines to download segments with the right
@@ -45,7 +36,7 @@ export default class SegmentFetcherCreator {
    * Transport pipelines of the currently choosen streaming protocol (e.g. DASH,
    * Smooth etc.).
    */
-  private readonly _transport : ITransportPipelines;
+  private readonly _transport: ITransportPipelines;
   /**
    * `TaskPrioritizer` linked to this SegmentFetcherCreator.
    *
@@ -54,31 +45,32 @@ export default class SegmentFetcherCreator {
    * about it, but typing as any just in select places, like here, looks like
    * a good compromise.
    */
-  private readonly _prioritizer : TaskPrioritizer<void>;
+  private readonly _prioritizer: TaskPrioritizer<void>;
   /**
    * Options used by the SegmentFetcherCreator, e.g. to allow configuration on
    * segment retries (number of retries maximum, default delay and so on).
    */
-  private readonly _backoffOptions : ISegmentFetcherCreatorBackoffOptions;
+  private readonly _backoffOptions: ISegmentFetcherCreatorBackoffOptions;
 
-  private readonly _cdnPrioritizer : CdnPrioritizer;
+  private readonly _cdnPrioritizer: CdnPrioritizer;
 
   /**
    * @param {Object} transport
    */
   constructor(
-    transport : ITransportPipelines,
-    options : ISegmentFetcherCreatorBackoffOptions,
-    cancelSignal : CancellationSignal
+    transport: ITransportPipelines,
+    options: ISegmentFetcherCreatorBackoffOptions,
+    cancelSignal: CancellationSignal,
   ) {
     const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
 
-    const { MIN_CANCELABLE_PRIORITY,
-            MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
+    const { MIN_CANCELABLE_PRIORITY, MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;
     this._prioritizer = new TaskPrioritizer({
-      prioritySteps: { high: MAX_HIGH_PRIORITY_LEVEL,
-                       low: MIN_CANCELABLE_PRIORITY },
+      prioritySteps: {
+        high: MAX_HIGH_PRIORITY_LEVEL,
+        low: MIN_CANCELABLE_PRIORITY,
+      },
     });
     this._cdnPrioritizer = cdnPrioritizer;
     this._backoffOptions = options;
@@ -92,9 +84,9 @@ export default class SegmentFetcherCreator {
    * @returns {Object}
    */
   createSegmentFetcher(
-    bufferType : IBufferType,
-    callbacks : ISegmentFetcherLifecycleCallbacks
-  ) : IPrioritizedSegmentFetcher<unknown> {
+    bufferType: IBufferType,
+    callbacks: ISegmentFetcherLifecycleCallbacks,
+  ): IPrioritizedSegmentFetcher<unknown> {
     const backoffOptions = getSegmentFetcherOptions(this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
@@ -104,7 +96,7 @@ export default class SegmentFetcherCreator {
       pipelines as ISegmentPipeline<unknown, unknown>,
       this._cdnPrioritizer,
       callbacks,
-      backoffOptions
+      backoffOptions,
     );
     return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   }
@@ -116,15 +108,15 @@ export interface ISegmentFetcherCreatorBackoffOptions {
    * Whether the content is played in a low-latency mode.
    * This has an impact on default backoff delays.
    */
-  lowLatencyMode : boolean;
+  lowLatencyMode: boolean;
   /** Maximum number of time a request on error will be retried. */
-  maxRetry : number | undefined;
+  maxRetry: number | undefined;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.
    * To set to `-1` for no timeout.
    * `undefined` will lead to a default, large, timeout being used.
    */
-  requestTimeout : number | undefined;
-  connectionTimeout : number | undefined;
+  requestTimeout: number | undefined;
+  connectionTimeout: number | undefined;
 }

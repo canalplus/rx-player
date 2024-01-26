@@ -19,16 +19,16 @@
  * @class EWMA
  */
 export default class EWMA {
-  private readonly _alpha : number;
+  private readonly _alpha: number;
   /** Last average available. `0` if none is available yet. */
-  private _lastEstimate : number;
+  private _lastEstimate: number;
   /** Sum of all "weights" given until now. */
-  private _totalWeight : number;
+  private _totalWeight: number;
 
   /**
    * @param {number} halfLife
    */
-  constructor(halfLife : number) {
+  constructor(halfLife: number) {
     // (half-life = log(1/2) / log(Decay Factor)
     this._alpha = Math.exp(Math.log(0.5) / halfLife);
     this._lastEstimate = 0;
@@ -39,10 +39,9 @@ export default class EWMA {
    * @param {number} weight
    * @param {number} value
    */
-  public addSample(weight : number, value : number) : void {
+  public addSample(weight: number, value: number): void {
     const adjAlpha = Math.pow(this._alpha, weight);
-    const newEstimate = value * (1 - adjAlpha) +
-                        adjAlpha * this._lastEstimate;
+    const newEstimate = value * (1 - adjAlpha) + adjAlpha * this._lastEstimate;
     if (!isNaN(newEstimate)) {
       this._lastEstimate = newEstimate;
       this._totalWeight += weight;
@@ -52,7 +51,7 @@ export default class EWMA {
   /**
    * @returns {number} value
    */
-  public getEstimate() : number {
+  public getEstimate(): number {
     const zeroFactor = 1 - Math.pow(this._alpha, this._totalWeight);
     return this._lastEstimate / zeroFactor;
   }
