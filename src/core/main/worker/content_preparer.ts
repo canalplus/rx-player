@@ -36,7 +36,7 @@ import {
 } from "../../fetchers";
 import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
-import DecipherabilityFreezeDetector from "../utils/DecipherabilityFreezeDetector";
+import DecipherabilityFreezeDetector from "../common/DecipherabilityFreezeDetector";
 import {
   limitVideoResolution,
   throttleVideoBitrate,

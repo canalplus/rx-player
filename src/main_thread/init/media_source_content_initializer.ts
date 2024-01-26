@@ -24,9 +24,9 @@ import AdaptiveRepresentationSelector from "../../core/adaptive";
 import type { IManifestFetcherSettings } from "../../core/fetchers";
 import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
 /* eslint-disable-next-line max-len */
-import createContentTimeBoundariesObserver from "../../core/main/utils/create_content_time_boundaries_observer";
+import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
 // eslint-disable-next-line max-len
-import DecipherabilityFreezeDetector from "../../core/main/utils/DecipherabilityFreezeDetector";
+import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
 import SegmentSinksStore from "../../core/segment_sinks";
 import type {
   IStreamOrchestratorOptions,

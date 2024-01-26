@@ -15,7 +15,7 @@
  */
 
 /* eslint-disable-next-line max-len */
-import getBufferedDataPerMediaBuffer from "../../../core/main/utils/get_buffered_data_per_media_buffer";
+import getBufferedDataPerMediaBuffer from "../../../core/main/common/get_buffered_data_per_media_buffer";
 import type { ICorePlaybackObservation } from "../../../core/types";
 import type { IManifestMetadata } from "../../../manifest";
 import { getMaximumSafePosition } from "../../../manifest";
