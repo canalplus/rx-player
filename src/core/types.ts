@@ -8,7 +8,11 @@ import type {
   ISegmentFetcherCreatorBackoffOptions,
 } from "./fetchers";
 import type { ICorePlaybackObservation } from "./main";
-import type { IBufferedChunk, IBufferType } from "./segment_sinks";
+import type {
+  IBufferedChunk,
+  IBufferType,
+  ITextDisplayerInterface,
+} from "./segment_sinks";
 import type SegmentSinksStore from "./segment_sinks";
 import type {
   IAdaptationChoice,
@@ -38,9 +42,10 @@ export type {
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
 
-  // Segment Sinks Metadata
+  // Media Sinks Metadata
   IBufferType,
   IBufferedChunk,
+  ITextDisplayerInterface,
 
   // Stream Metadata
   IAdaptationChoice,
