@@ -74,17 +74,12 @@ Every functions needed in the rest of the code are exported in
 
 ### `src/core/`: Core logic
 
-Defines the logic and behavior of the player, regardless of the browser and of
-the streaming technology used.
+Defines the core logic of the RxPlayer, regardless of the browser and of the
+streaming technology used, that may optionally run in a WebWorker environment
+when the RxPlayer is in `"multithread"` mode.
 
-That's where:
-  - the api is defined
-  - the MSE and EME APIs are called and managed
-  - the segments are downloaded and pushed to then be decoded by the browser
-  - adaptive bitrate strategies are set
-
-This directory contains other subdirectories which are listed in the next
-chapter.
+That's where the segments are downloaded and pushed to then be decoded by the
+browser, as well as where the Manifest file is loaded and pared.
 
 
 ### `src/errors/`: Error definitions
@@ -107,6 +102,14 @@ parsing).
 It exports an object defining the different activated features and provide utils
 to initialize and update them.
 
+### `src/main_thread`: Main thread core logic
+
+Defines the core logic of the RxPlayer that is always intended to only run in
+main thread, even when a content is loaded in `"multithread"` mode.
+
+It for example contains the public API, DRM-related logic,
+content-initialization logic and other type of code. It then calls into
+`src/core` for the core logic part which may optionally run in a WebWorker.
 
 ### `src/manifest/`: Manifest Object definition
 
@@ -123,6 +126,21 @@ This allows to provide a common API to the rest of the RxPlayer's code
 regardless of the environment (e.g. in a WebWorker without MSE API or in an
 environment with MSE API).
 
+### `src/parsers/`: The parsers
+
+Functions to parse various formats into the same interface.
+
+The parsed data being either:
+  - Manifest documents: DASH's MPD, HSS's Manifest...
+  - containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)
+  - text tracks: TTML, SAMI, SRT, WebVTT
+  - image containers: BIF
+
+### `src/tools/`: RxPlayer tools
+
+This directory exports RxPlayer tools, which are standalone utilitary classes
+and function which are not included in the `RxPlayer` media player API.
+
 ### `src/transports/`: Streaming protocols implementation
 
 Defines a common interface for multiple streaming technologies (DASH, HSS).
@@ -138,93 +156,10 @@ As in most of the code of the rx-player, everything used in the other parts of
 the code is exported in the index.js file at the root of this directory.
 
 
-### `src/parsers/`: The parsers
-
-Functions to parse various formats into the same interface.
-
-The parsed data being either:
-  - Manifest documents: DASH's MPD, HSS's Manifest...
-  - containers: ISOBMFF (CMAF, fMP4, MP4), Matroska (MKV, WEBM)
-  - text tracks: TTML, SAMI, SRT, WebVTT
-  - image containers: BIF
-
-
 ### `src/utils/`: Util functions
 
 This directory contains general helpers which are used in different parts of the
 rx-player code.
-
-
-## Inside `src/core/`
-
-As written in the previous chapter, this is the "core" of the player, where the
-logic is defined.
-
-As this directory is versatile and complicated, it also deserves its own chapter.
-
-
-### `src/core/adaptive/`: Adaptive BitRate logic
-
-Defines functions which manages the adaptive streaming part of the player.
-
-This manager takes various observables/options as inputs to record the current
-situation of the player, give an opinion about the best media tracks to choose,
-and provide methods allowing to get/set various adaptive-related options.
-
-Despite containing several files and using several classes, only the
-`AdaptiveRepresentationSelector` exported in `adaptive/index.js` should be
-needed by the rest of the core.
-This allows to isolate this complex part and facilitate future refactoring and
-improvements.
-
-
-### `src/core/api/`: API definition
-
-Defines the rx-player API. This is the part the library user will directly
-interact with.
-
-
-### `src/core/stream/`: Segment-picking logic
-
-The code there calculate which segments should be downloaded, ask for their
-download and push the segments into the `SegmentSinks`.
-
-
-### `src/core/decrypt/`: Decryption handling
-
-Defines functions allowing to handle encrypted contents through the EME browser
-APIs.
-
-
-### `src/core/fetchers/`: Load resources
-
-Handle the segments and Manifest downloading pipelines (load and parse) as
-defined in the ``src/transports/`` directory.
-
-This is the layer directly interacting with the transport part (HSS, DASH).
-It facilitates the role of loading the Manifest and new segments for the rest of
-the core.
-
-
-### `src/core/segment_sinks/`: Media segment sinks
-
-Code allowing to interact with `SegmentSinks`.
-
-Those are the Objects to which segments are pushed so they can be decoded at the
-right time.
-
-For Audio and Video, `SegmentSinks` rely on a native `SourceBuffer` object,
-already provided by the browser,
-for other type of contents (like subtitles), we rely on completely custom media
-buffers implementations.
-
-
-### `src/core/init/`: Content initialization and orchestration
-
-This is the central part which download manifests, initialize MSE and EME APIs,
-instanciate the central `StreamOrchestrator` (which will allow to download and
-push segments so the content can play) and link together many subparts of the
-player.
 
 
 ## `src/**/__tests__`: Unit tests
