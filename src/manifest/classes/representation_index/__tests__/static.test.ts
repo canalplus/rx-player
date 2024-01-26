@@ -25,16 +25,20 @@ describe("manifest - StaticRepresentationIndex", () => {
 
   it("should return a single segment with the maximum duration and the right url", () => {
     const staticRI = new StaticRepresentationIndex({ media: "foo" });
-    expect(staticRI.getSegments()).toEqual([{ id: "0",
-                                              complete: true,
-                                              isInit: false,
-                                              number: 0,
-                                              time: 0,
-                                              duration: Number.MAX_VALUE,
-                                              end: Number.MAX_VALUE,
-                                              timescale: 1,
-                                              privateInfos: {},
-                                              url: "foo" }]);
+    expect(staticRI.getSegments()).toEqual([
+      {
+        id: "0",
+        complete: true,
+        isInit: false,
+        number: 0,
+        time: 0,
+        duration: Number.MAX_VALUE,
+        end: Number.MAX_VALUE,
+        timescale: 1,
+        privateInfos: {},
+        url: "foo",
+      },
+    ]);
   });
 
   it("should return no first position", () => {

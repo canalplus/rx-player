@@ -48,6 +48,4 @@ export default function waitForState(player, wantedState, whitelist) {
   });
 }
 
-export {
-  waitForLoadedStateAfterLoadVideo,
-};
+export { waitForLoadedStateAfterLoadVideo };

@@ -26,11 +26,11 @@ import { parseString } from "../utils";
  * @returns {Function}
  */
 export function generateBaseUrlAttrParser(
-  baseUrlAttrs : IBaseUrlIntermediateRepresentation,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  baseUrlAttrs: IBaseUrlIntermediateRepresentation,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr : AttributeName, ptr : number, len : number) {
+  return function onMPDAttribute(attr: AttributeName, ptr: number, len: number) {
     if (attr === AttributeName.Text) {
       baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
     }

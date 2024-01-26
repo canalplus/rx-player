@@ -1,9 +1,11 @@
-const BASE_URL = "http://" +
-               /* eslint-disable no-undef */
-               __TEST_CONTENT_SERVER__.URL + ":" +
-               __TEST_CONTENT_SERVER__.PORT +
-               /* eslint-enable no-undef */
-               "/DASH_dynamic_SegmentTemplate/media/";
+const BASE_URL =
+  "http://" +
+  /* eslint-disable no-undef */
+  __TEST_CONTENT_SERVER__.URL +
+  ":" +
+  __TEST_CONTENT_SERVER__.PORT +
+  /* eslint-enable no-undef */
+  "/DASH_dynamic_SegmentTemplate/media/";
 
 // Provide infos on this content under JSON.
 // Useful for integration tests on DASH parsers.
@@ -28,8 +30,7 @@ export default {
                   init: {
                     url: "A48/init.mp4",
                   },
-                  segments: [
-                  ],
+                  segments: [],
                   // ...
                 },
               },
@@ -49,8 +50,7 @@ export default {
                   init: {
                     url: "V300/init.mp4",
                   },
-                  segments: [
-                  ],
+                  segments: [],
                   // ...
                 },
               },

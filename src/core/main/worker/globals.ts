@@ -2,10 +2,12 @@ import config from "../../../config";
 import SharedReference from "../../../utils/reference";
 import type { IResolutionInfo } from "../../adaptive";
 
-const { DEFAULT_WANTED_BUFFER_AHEAD,
-        DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-        DEFAULT_MAX_BUFFER_AHEAD,
-        DEFAULT_MAX_BUFFER_BEHIND } = config.getCurrent();
+const {
+  DEFAULT_WANTED_BUFFER_AHEAD,
+  DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+  DEFAULT_MAX_BUFFER_AHEAD,
+  DEFAULT_MAX_BUFFER_BEHIND,
+} = config.getCurrent();
 
 /** Buffer "goal" at which we stop downloading new segments. */
 const wantedBufferAhead = new SharedReference(DEFAULT_WANTED_BUFFER_AHEAD);

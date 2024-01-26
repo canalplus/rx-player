@@ -16,9 +16,7 @@
 
 import type { IIndexSegment } from "../../../../utils/index_helpers";
 import convertElementsToIndexSegment from "./convert_element_to_index_segment";
-import type {
-  IParsedS,
-} from "./parse_s_element";
+import type { IParsedS } from "./parse_s_element";
 import parseSElement from "./parse_s_element";
 
 /**
@@ -31,21 +29,18 @@ import parseSElement from "./parse_s_element";
  * @returns {Array.<Object>}
  */
 export default function constructTimelineFromElements(
-  elements : HTMLCollection
-) : IIndexSegment[] {
-  const initialTimeline : IParsedS[] = [];
+  elements: HTMLCollection,
+): IIndexSegment[] {
+  const initialTimeline: IParsedS[] = [];
   for (let i = 0; i < elements.length; i++) {
     initialTimeline.push(parseSElement(elements[i]));
   }
-  const timeline : IIndexSegment[] = [];
+  const timeline: IIndexSegment[] = [];
   for (let i = 0; i < initialTimeline.length; i++) {
     const item = initialTimeline[i];
-    const previousItem = timeline[timeline.length - 1] === undefined ?
-      null :
-      timeline[timeline.length - 1];
-    const nextItem = initialTimeline[i + 1] === undefined ?
-      null :
-      initialTimeline[i + 1];
+    const previousItem =
+      timeline[timeline.length - 1] === undefined ? null : timeline[timeline.length - 1];
+    const nextItem = initialTimeline[i + 1] === undefined ? null : initialTimeline[i + 1];
     const timelineElement = convertElementsToIndexSegment(item, previousItem, nextItem);
     if (timelineElement !== null) {
       timeline.push(timelineElement);

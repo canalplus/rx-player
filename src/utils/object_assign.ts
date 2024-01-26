@@ -14,44 +14,41 @@
  * limitations under the License.
  */
 
-
-type MergeRecursively<T extends object, S extends object[]> =
-    S extends [infer First, ...infer Rest] ?
-      MergeRecursively<MergeObjects<T, First extends object ? First : never>,
-       Rest extends object[] ? Rest: never>
-    : T;
-;
-
+type MergeRecursively<T extends object, S extends object[]> = S extends [
+  infer First,
+  ...infer Rest,
+]
+  ? MergeRecursively<
+      MergeObjects<T, First extends object ? First : never>,
+      Rest extends object[] ? Rest : never
+    >
+  : T;
 type MergeObjects<T extends object, S extends object> = {
-  [K in (OptionalPropertyOfTNotInS<T, S> | OptionalProperty<T>)]?:
-        K extends keyof S ? S[K]
-        : K extends keyof T ? T[K]
-        : never;
+  [K in OptionalPropertyOfTNotInS<T, S> | OptionalProperty<T>]?: K extends keyof S
+    ? S[K]
+    : K extends keyof T
+      ? T[K]
+      : never;
 } & {
   [K in Exclude<
-    (keyof T | keyof S),
+    keyof T | keyof S,
     OptionalPropertyOfTNotInS<T, S> | OptionalProperty<T>
-    >]:
-        K extends keyof S ? S[K]
-        : K extends keyof T ? T[K]
-        : never;
+  >]: K extends keyof S ? S[K] : K extends keyof T ? T[K] : never;
 };
 
-type OptionalProperty<T> = Exclude<{
-  [K in keyof T]: T extends Record<K, T[K]>
-  ? never
-  : K
-}[keyof T], undefined>;
+type OptionalProperty<T> = Exclude<
+  {
+    [K in keyof T]: T extends Record<K, T[K]> ? never : K;
+  }[keyof T],
+  undefined
+>;
 
-type OptionalPropertyOfTNotInS<T, S> = Exclude<{
-  [K in keyof T]: T extends Record<K, T[K]>
-      ? never
-      : K
-}[keyof T], undefined | {[K in keyof S]: S extends Record<K, S[K]>
-  ? K
-  : never
-}[keyof S]>;
-
+type OptionalPropertyOfTNotInS<T, S> = Exclude<
+  {
+    [K in keyof T]: T extends Record<K, T[K]> ? never : K;
+  }[keyof T],
+  undefined | { [K in keyof S]: S extends Record<K, S[K]> ? K : never }[keyof S]
+>;
 
 /**
  * Very simple implementation of Object.assign.
@@ -64,8 +61,10 @@ type OptionalPropertyOfTNotInS<T, S> = Exclude<{
  * @param {Array.<Object>} ...sources
  * @returns {Object}
  */
-function objectAssign<T extends object, U extends object[]>(target : T, ...sources : U) :
-MergeRecursively<T, U> {
+function objectAssign<T extends object, U extends object[]>(
+  target: T,
+  ...sources: U
+): MergeRecursively<T, U> {
   if (target === null || target === undefined) {
     throw new TypeError("Cannot convert undefined or null to object");
   }
@@ -75,9 +74,8 @@ MergeRecursively<T, U> {
     const source = sources[i];
     for (const key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
-        // eslint-disable-next-line max-len
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-        to[key] = source[key as (keyof typeof source)];
+        to[key] = source[key as keyof typeof source];
       }
     }
   }
@@ -85,8 +83,8 @@ MergeRecursively<T, U> {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method, no-restricted-properties
-export default typeof Object.assign === "function" ?
-  // eslint-disable-next-line no-restricted-properties
-  Object.assign :
-  // eslint-disable-next-line  @typescript-eslint/unbound-method
-  objectAssign;
+export default typeof Object.assign === "function"
+  ? // eslint-disable-next-line no-restricted-properties
+    Object.assign
+  : // eslint-disable-next-line  @typescript-eslint/unbound-method
+    objectAssign;

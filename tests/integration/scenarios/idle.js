@@ -78,7 +78,7 @@ function runIdleTests({ multithread } = {}) {
       });
 
       describe("getPlayerState", () => {
-        it("should return \"STOPPED\" in getPlayerState by default", () => {
+        it('should return "STOPPED" in getPlayerState by default', () => {
           expect(player.getPlayerState()).to.equal("STOPPED");
         });
       });
@@ -97,11 +97,8 @@ function runIdleTests({ multithread } = {}) {
 
       describe("getMediaDuration", () => {
         it("should return the video element initial duration in getMediaDuration by default", () => {
-
           // ! HAHA ! NaN is not === to NaN
-          expect(player.getMediaDuration()).to.eql(
-            player.getVideoElement().duration
-          );
+          expect(player.getMediaDuration()).to.eql(player.getVideoElement().duration);
         });
       });
 

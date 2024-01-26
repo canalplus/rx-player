@@ -20,15 +20,9 @@ import type {
   IPeriodAttributes,
   IPeriodChildren,
 } from "../../../node_parser_types";
-import type {
-  IAttributeParser,
-  IChildrenParser,
-} from "../parsers_stack";
+import type { IAttributeParser, IChildrenParser } from "../parsers_stack";
 import type ParsersStack from "../parsers_stack";
-import {
-  AttributeName,
-  TagName,
-} from "../types";
+import { AttributeName, TagName } from "../types";
 import { parseString } from "../utils";
 import {
   generateAdaptationSetAttrParser,
@@ -50,25 +44,28 @@ import { generateSegmentTemplateAttrParser } from "./SegmentTemplate";
  * @returns {Function}
  */
 export function generatePeriodChildrenParser(
-  periodChildren : IPeriodChildren,
-  linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
-)  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  periodChildren: IPeriodChildren,
+  linearMemory: WebAssembly.Memory,
+  parsersStack: ParsersStack,
+  fullMpd: ArrayBuffer,
+): IChildrenParser {
+  return function onRootChildren(nodeId: number) {
     switch (nodeId) {
-
       case TagName.AdaptationSet: {
-        const adaptationObj = { children: { baseURLs: [],
-                                            representations: [] },
-                                attributes: {} };
+        const adaptationObj = {
+          children: { baseURLs: [], representations: [] },
+          attributes: {},
+        };
         periodChildren.adaptations.push(adaptationObj);
-        const childrenParser =
-          generateAdaptationSetChildrenParser(adaptationObj.children,
-                                              linearMemory,
-                                              parsersStack);
-        const attributeParser = generateAdaptationSetAttrParser(adaptationObj.attributes,
-                                                                linearMemory);
+        const childrenParser = generateAdaptationSetChildrenParser(
+          adaptationObj.children,
+          linearMemory,
+          parsersStack,
+        );
+        const attributeParser = generateAdaptationSetAttrParser(
+          adaptationObj.attributes,
+          linearMemory,
+        );
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
       }
@@ -83,15 +80,21 @@ export function generatePeriodChildrenParser(
       }
 
       case TagName.EventStream: {
-        const eventStream : IEventStreamIntermediateRepresentation =
-          { children: { events: [] }, attributes: {} };
+        const eventStream: IEventStreamIntermediateRepresentation = {
+          children: { events: [] },
+          attributes: {},
+        };
         periodChildren.eventStreams.push(eventStream);
-        const childrenParser = generateEventStreamChildrenParser(eventStream.children,
-                                                                 linearMemory,
-                                                                 parsersStack,
-                                                                 fullMpd);
-        const attrParser = generateEventStreamAttrParser(eventStream.attributes,
-                                                         linearMemory);
+        const childrenParser = generateEventStreamChildrenParser(
+          eventStream.children,
+          linearMemory,
+          parsersStack,
+          fullMpd,
+        );
+        const attrParser = generateEventStreamAttrParser(
+          eventStream.attributes,
+          linearMemory,
+        );
         parsersStack.pushParsers(nodeId, childrenParser, attrParser);
         break;
       }
@@ -99,9 +102,11 @@ export function generatePeriodChildrenParser(
       case TagName.SegmentTemplate: {
         const stObj = {};
         periodChildren.segmentTemplate = stObj;
-        parsersStack.pushParsers(nodeId,
-                                 noop, // SegmentTimeline as treated like an attribute
-                                 generateSegmentTemplateAttrParser(stObj, linearMemory));
+        parsersStack.pushParsers(
+          nodeId,
+          noop, // SegmentTimeline as treated like an attribute
+          generateSegmentTemplateAttrParser(stObj, linearMemory),
+        );
         break;
       }
 
@@ -120,9 +125,9 @@ export function generatePeriodChildrenParser(
  * @returns {Function}
  */
 export function generatePeriodAttrParser(
-  periodAttrs : IPeriodAttributes,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  periodAttrs: IPeriodAttributes,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   const textDecoder = new TextDecoder();
   return function onPeriodAttribute(attr, ptr, len) {
     switch (attr) {
@@ -143,14 +148,18 @@ export function generatePeriodAttrParser(
         periodAttrs.xlinkHref = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
       case AttributeName.XLinkActuate:
-        periodAttrs.xlinkActuate = parseString(textDecoder,
-                                               linearMemory.buffer,
-                                               ptr,
-                                               len);
+        periodAttrs.xlinkActuate = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
         break;
       case AttributeName.AvailabilityTimeOffset:
-        periodAttrs.availabilityTimeOffset =
-          new DataView(linearMemory.buffer).getFloat64(ptr, true);
+        periodAttrs.availabilityTimeOffset = new DataView(linearMemory.buffer).getFloat64(
+          ptr,
+          true,
+        );
         break;
       case AttributeName.AvailabilityTimeComplete:
         periodAttrs.availabilityTimeComplete =

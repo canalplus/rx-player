@@ -18,20 +18,20 @@ const TIME_SAMPLES_MS = 30000;
 const MINIMUM_MAX_BUFFER_SIZE = 20;
 
 export default class BufferSizeGraph {
-  private _history : IHistoryItem[];
+  private _history: IHistoryItem[];
 
   /** Canvas that will contain the buffer size graph itself. */
-  private readonly _canvasElt : HTMLCanvasElement;
+  private readonly _canvasElt: HTMLCanvasElement;
 
-  private readonly _canvasCtxt : CanvasRenderingContext2D | null;
+  private readonly _canvasCtxt: CanvasRenderingContext2D | null;
 
-  constructor(canvasElt : HTMLCanvasElement) {
+  constructor(canvasElt: HTMLCanvasElement) {
     this._canvasElt = canvasElt;
     this._canvasCtxt = this._canvasElt.getContext("2d");
     this._history = [];
   }
 
-  public pushBufferSize(bufferSize : number) : void {
+  public pushBufferSize(bufferSize: number): void {
     const now = getMonotonicTimeStamp();
     this._history.push({ timestamp: now, bufferSize });
     if (this._history.length > 0) {
@@ -54,7 +54,7 @@ export default class BufferSizeGraph {
     }
   }
 
-  public reRender(width : number, height : number) : void {
+  public reRender(width: number, height: number): void {
     this._canvasElt.style.width = `${width}px`;
     this._canvasElt.style.height = `${height}px`;
     this._canvasElt.width = width;
@@ -80,7 +80,7 @@ export default class BufferSizeGraph {
      * according to current history.
      */
     function getNewMaxBufferSize() {
-      const maxPoint = Math.max(...history.map(d => d.bufferSize));
+      const maxPoint = Math.max(...history.map((d) => d.bufferSize));
       return Math.max(maxPoint + 5, MINIMUM_MAX_BUFFER_SIZE);
     }
 
@@ -94,14 +94,9 @@ export default class BufferSizeGraph {
       canvasCtx.beginPath();
       canvasCtx.fillStyle = "rgb(200, 100, 200)";
       for (let i = 1; i < history.length; i++) {
-        const diff = dateToX(history[i].timestamp) -
-          dateToX(history[i - 1].timestamp);
+        const diff = dateToX(history[i].timestamp) - dateToX(history[i - 1].timestamp);
         const y = height - bufferValueToHeight(history[i].bufferSize);
-        canvasCtx.fillRect(
-          dateToX(history[i - 1].timestamp),
-          y,
-          diff,
-          height);
+        canvasCtx.fillRect(dateToX(history[i - 1].timestamp), y, diff, height);
       }
       canvasCtx.stroke();
     }
@@ -111,7 +106,7 @@ export default class BufferSizeGraph {
      * @param {number} bufferVal - Value to convert
      * @returns {number} - y coordinate
      */
-    function bufferValueToHeight(bufferVal : number) : number {
+    function bufferValueToHeight(bufferVal: number): number {
       return height - (currentMaxSize - bufferVal) * gridHeight;
     }
 
@@ -120,13 +115,13 @@ export default class BufferSizeGraph {
      * @param {number} date - Date to convert, in milliseconds
      * @returns {number} - x coordinate
      */
-    function dateToX(date : number) : number {
+    function dateToX(date: number): number {
       return (date - minDate) * gridWidth;
     }
   }
 }
 
 interface IHistoryItem {
-  timestamp : number;
-  bufferSize : number;
+  timestamp: number;
+  bufferSize: number;
 }

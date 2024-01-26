@@ -22,5 +22,5 @@
  * Also, it allows to avoid telling eslint to ignore empty blocks everywhere.
  */
 /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
-export default function() : void {}
+export default function (): void {}
 /* eslint-enable no-empty, @typescript-eslint/no-empty-function */

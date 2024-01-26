@@ -22,7 +22,7 @@ function Checkbox({
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       onChange(getCheckBoxValue(evt.target));
     },
-    [onChange]
+    [onChange],
   );
   return (
     // TODO is "disabled properly handled here? To check

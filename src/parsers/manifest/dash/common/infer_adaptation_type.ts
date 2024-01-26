@@ -20,17 +20,15 @@ import arrayIncludes from "../../../../utils/array_includes";
 import type { IRepresentationIntermediateRepresentation } from "../node_parser_types";
 
 /** Different "type" a parsed Adaptation can be. */
-type IAdaptationType = "audio" |
-                       "video" |
-                       "text";
+type IAdaptationType = "audio" | "video" | "text";
 
 /** Different `role`s a text Adaptation can be. */
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
 
 /** Structure of a parsed "scheme-like" element in the MPD. */
 interface IScheme {
-  schemeIdUri? : string | undefined;
-  value? : string | undefined;
+  schemeIdUri?: string | undefined;
+  value?: string | undefined;
 }
 
 /**
@@ -52,17 +50,21 @@ interface IScheme {
  */
 export default function inferAdaptationType(
   representations: IRepresentationIntermediateRepresentation[],
-  adaptationMimeType : string | null,
-  adaptationCodecs : string | null,
-  adaptationRoles : IScheme[] | null
-) : IAdaptationType | undefined {
+  adaptationMimeType: string | null,
+  adaptationCodecs: string | null,
+  adaptationRoles: IScheme[] | null,
+): IAdaptationType | undefined {
   function fromMimeType(
-    mimeType : string,
-    roles : IScheme[]|null
-  ) : IAdaptationType | undefined {
+    mimeType: string,
+    roles: IScheme[] | null,
+  ): IAdaptationType | undefined {
     const topLevel = mimeType.split("/")[0];
-    if (arrayIncludes<IAdaptationType>(SUPPORTED_ADAPTATIONS_TYPE,
-                                       topLevel as IAdaptationType)) {
+    if (
+      arrayIncludes<IAdaptationType>(
+        SUPPORTED_ADAPTATIONS_TYPE,
+        topLevel as IAdaptationType,
+      )
+    ) {
       return topLevel as IAdaptationType;
     }
     if (mimeType === "application/ttml+xml") {
@@ -72,9 +74,11 @@ export default function inferAdaptationType(
     if (mimeType === "application/mp4") {
       if (roles !== null) {
         if (
-          arrayFind(roles, (role) =>
-            role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-            arrayIncludes(SUPPORTED_TEXT_TYPES, role.value)
+          arrayFind(
+            roles,
+            (role) =>
+              role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+              arrayIncludes(SUPPORTED_TEXT_TYPES, role.value),
           ) !== undefined
         ) {
           return "text";
@@ -83,7 +87,7 @@ export default function inferAdaptationType(
       return undefined;
     }
   }
-  function fromCodecs(codecs : string) : IAdaptationType | undefined {
+  function fromCodecs(codecs: string): IAdaptationType | undefined {
     switch (codecs.substring(0, 3)) {
       case "avc":
       case "hev":

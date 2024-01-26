@@ -1,9 +1,6 @@
 import * as React from "react";
 
-const {
-  useEffect,
-  useRef,
-} = React;
+const { useEffect, useRef } = React;
 
 /**
  * Simple text input which is focused when mounted.
@@ -25,16 +22,19 @@ function FocusedInput({
   placeholder?: string;
 }): JSX.Element {
   const inputEl = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (inputEl.current != null) {
-      inputEl.current.focus();
-    }
-  }, [] /* trigger only when mounted */);
+  useEffect(
+    () => {
+      if (inputEl.current != null) {
+        inputEl.current.focus();
+      }
+    },
+    [] /* trigger only when mounted */,
+  );
   const onInputChange = React.useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       onChange(evt.target.value);
     },
-    [onChange]
+    [onChange],
   );
   return (
     <input

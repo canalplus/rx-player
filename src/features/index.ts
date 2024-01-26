@@ -34,7 +34,4 @@ import features from "./features_object";
 import { IFeature } from "./types";
 
 export default features;
-export {
-  addFeatures,
-  IFeature,
-};
+export { addFeatures, IFeature };

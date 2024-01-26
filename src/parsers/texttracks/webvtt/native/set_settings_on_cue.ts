@@ -25,17 +25,17 @@ import isNonEmptyString from "../../../../utils/is_non_empty_string";
  * @param {ICompatVTTCue|TextTrackCue} cue
  */
 export default function setSettingsOnCue(
-  settings : Partial<Record<string, string>>,
-  cue : ICompatVTTCue
-) : void {
-  if (isNonEmptyString(settings.vertical) &&
-      (settings.vertical === "rl" || settings.vertical === "lr"))
-  {
+  settings: Partial<Record<string, string>>,
+  cue: ICompatVTTCue,
+): void {
+  if (
+    isNonEmptyString(settings.vertical) &&
+    (settings.vertical === "rl" || settings.vertical === "lr")
+  ) {
     cue.vertical = settings.vertical;
   }
 
   if (isNonEmptyString(settings.line)) {
-
     // Capture groups:
     //   1 -> percentage position
     //   2 -> optional decimals from percentage position
@@ -87,9 +87,10 @@ export default function setSettingsOnCue(
     cue.size = settings.size;
   }
 
-  if (typeof settings.align === "string" &&
-      arrayIncludes(["start", "center", "end", "left"], settings.align))
-  {
-    cue.align  = settings.align;
+  if (
+    typeof settings.align === "string" &&
+    arrayIncludes(["start", "center", "end", "left"], settings.align)
+  ) {
+    cue.align = settings.align;
   }
 }

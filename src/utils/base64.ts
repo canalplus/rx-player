@@ -40,11 +40,70 @@ base64abc.push("+");
 base64abc.push("/");
  */
 const base64abc = [
-  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-  "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-  "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "+",
+  "/",
 ];
 
 /*
@@ -59,14 +118,13 @@ base64abc.forEach((char, index) => {
 base64codes["=".charCodeAt(0)] = 0; // ignored anyway, so we just need to prevent an error
  */
 const base64codes = [
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 62, 255, 255, 255, 63,
-  52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 255, 255, 255, 0, 255, 255,
-  255, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 255, 255, 255, 255, 255,
-  255, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+  255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+  255, 255, 255, 255, 255, 255, 255, 255, 255, 62, 255, 255, 255, 63, 52, 53, 54, 55, 56,
+  57, 58, 59, 60, 61, 255, 255, 255, 0, 255, 255, 255, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 255, 255, 255, 255, 255,
+  255, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
+  47, 48, 49, 50, 51,
 ];
 
 /**
@@ -75,7 +133,7 @@ const base64codes = [
  * @param {number} charCode
  * @returns {number}
  */
-function getBase64Code(charCode: number) : number {
+function getBase64Code(charCode: number): number {
   if (charCode >= base64codes.length) {
     throw new Error("Unable to parse base64 string.");
   }
@@ -91,25 +149,27 @@ function getBase64Code(charCode: number) : number {
  * @param {Array.<number>|Uint8Array} bytes
  * @returns {string}
  */
-export function bytesToBase64(bytes: number[] | Uint8Array) : string {
+export function bytesToBase64(bytes: number[] | Uint8Array): string {
   let result = "";
   let i;
   const length = bytes.length;
   for (i = 2; i < length; i += 3) {
     result += base64abc[bytes[i - 2] >> 2];
     result += base64abc[((bytes[i - 2] & 0x03) << 4) | (bytes[i - 1] >> 4)];
-    result += base64abc[((bytes[i - 1] & 0x0F) << 2) | (bytes[i] >> 6)];
-    result += base64abc[bytes[i] & 0x3F];
+    result += base64abc[((bytes[i - 1] & 0x0f) << 2) | (bytes[i] >> 6)];
+    result += base64abc[bytes[i] & 0x3f];
   }
-  if (i === length + 1) { // 1 octet yet to write
+  if (i === length + 1) {
+    // 1 octet yet to write
     result += base64abc[bytes[i - 2] >> 2];
     result += base64abc[(bytes[i - 2] & 0x03) << 4];
     result += "==";
   }
-  if (i === length) { // 2 octets yet to write
+  if (i === length) {
+    // 2 octets yet to write
     result += base64abc[bytes[i - 2] >> 2];
     result += base64abc[((bytes[i - 2] & 0x03) << 4) | (bytes[i - 1] >> 4)];
-    result += base64abc[(bytes[i - 1] & 0x0F) << 2];
+    result += base64abc[(bytes[i - 1] & 0x0f) << 2];
     result += "=";
   }
   return result;
@@ -122,32 +182,30 @@ export function bytesToBase64(bytes: number[] | Uint8Array) : string {
  * @param {Array.<number>|Uint8Array} bytes
  * @returns {string}
  */
-export function base64ToBytes(str : string) : Uint8Array {
+export function base64ToBytes(str: string): Uint8Array {
   const paddingNeeded = str.length % 4;
   let paddedStr = str;
   if (paddingNeeded !== 0) {
     log.warn("base64ToBytes: base64 given miss padding");
-    paddedStr += paddingNeeded === 3 ? "=" :
-                 paddingNeeded === 2 ? "==" :
-                                       "==="; // invalid, but we will catch it
+    paddedStr += paddingNeeded === 3 ? "=" : paddingNeeded === 2 ? "==" : "==="; // invalid, but we will catch it
   }
   const index = paddedStr.indexOf("=");
   if (index !== -1 && index < paddedStr.length - 2) {
     throw new Error("Unable to parse base64 string.");
   }
-  const missingOctets = paddedStr.endsWith("==") ? 2 :
-                        paddedStr.endsWith("=") ? 1 : 0;
+  const missingOctets = paddedStr.endsWith("==") ? 2 : paddedStr.endsWith("=") ? 1 : 0;
   const n = paddedStr.length;
   const result = new Uint8Array((n / 4) * 3);
   let buffer: number;
   for (let i = 0, j = 0; i < n; i += 4, j += 3) {
-    buffer = getBase64Code(paddedStr.charCodeAt(i)) << 18 |
-             getBase64Code(paddedStr.charCodeAt(i + 1)) << 12 |
-             getBase64Code(paddedStr.charCodeAt(i + 2)) << 6 |
-             getBase64Code(paddedStr.charCodeAt(i + 3));
+    buffer =
+      (getBase64Code(paddedStr.charCodeAt(i)) << 18) |
+      (getBase64Code(paddedStr.charCodeAt(i + 1)) << 12) |
+      (getBase64Code(paddedStr.charCodeAt(i + 2)) << 6) |
+      getBase64Code(paddedStr.charCodeAt(i + 3));
     result[j] = buffer >> 16;
-    result[j + 1] = (buffer >> 8) & 0xFF;
-    result[j + 2] = buffer & 0xFF;
+    result[j + 1] = (buffer >> 8) & 0xff;
+    result[j + 2] = buffer & 0xff;
   }
   return result.subarray(0, result.length - missingOctets);
 }

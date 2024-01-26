@@ -35,40 +35,36 @@ function BufferOptions({
 }): JSX.Element {
   /* Value of the `wantedBufferAhead` input */
   const [wantedBufferAheadStr, setWantedBufferAheadStr] = useState(
-    String(wantedBufferAhead)
+    String(wantedBufferAhead),
   );
   /* Value of the `maxVideoBufferSize` input */
   const [maxVideoBufferSizeStr, setMaxVideoBufferSizeStr] = useState(
-    String(maxVideoBufferSize)
+    String(maxVideoBufferSize),
   );
   /* Value of the `maxBufferBehind` input */
-  const [maxBufferBehindStr, setMaxBufferBehindStr] = useState(
-    String(maxBufferBehind)
-  );
+  const [maxBufferBehindStr, setMaxBufferBehindStr] = useState(String(maxBufferBehind));
   /* Value of the `maxBufferAhead` input */
-  const [maxBufferAheadStr, setMaxBufferAheadStr] = useState(
-    String(maxBufferAhead)
-  );
+  const [maxBufferAheadStr, setMaxBufferAheadStr] = useState(String(maxBufferAhead));
   /*
    * Keep track of the "limit maxBufferAhead" toggle:
    * `false` == checkbox enabled
    */
   const [isMaxBufferAheadLimited, setMaxBufferAheadLimit] = useState(
-    maxBufferAhead !== Infinity
+    maxBufferAhead !== Infinity,
   );
   /*
    * Keep track of the "limit maxBufferBehind" toggle:
    * `false` == checkbox enabled
    */
   const [isMaxBufferBehindLimited, setMaxBufferBehindLimit] = useState(
-    maxBufferBehind !== Infinity
+    maxBufferBehind !== Infinity,
   );
   /*
    * Keep track of the "limit maxVideoBufferSize" toggle:
    * `false` == checkbox enabled
    */
   const [isMaxVideoBufferSizeLimited, setMaxVideoBufferSizeLimit] = useState(
-    maxVideoBufferSize !== Infinity
+    maxVideoBufferSize !== Infinity,
   );
 
   // Update `wantedBufferAhead` when its linked text change
@@ -77,71 +73,60 @@ function BufferOptions({
     // no quick and easy way to disable this in react.
     // This is not too problematic so I put up with it.
     let newVal = parseFloat(wantedBufferAheadStr);
-    newVal = isNaN(newVal) ?
-      DEFAULT_WANTED_BUFFER_AHEAD :
-      newVal;
+    newVal = isNaN(newVal) ? DEFAULT_WANTED_BUFFER_AHEAD : newVal;
     onWantedBufferAheadChange(newVal);
   }, [wantedBufferAheadStr]);
 
   // Update `maxVideoBufferSize` when its linked text change
   useEffect(() => {
     let newVal = parseFloat(maxVideoBufferSizeStr);
-    newVal = isNaN(newVal) ?
-      DEFAULT_MAX_VIDEO_BUFFER_SIZE :
-      newVal;
+    newVal = isNaN(newVal) ? DEFAULT_MAX_VIDEO_BUFFER_SIZE : newVal;
     onMaxVideoBufferSizeChange(newVal);
   }, [maxVideoBufferSizeStr]);
 
   // Update `maxBufferAhead` when its linked text change
   useEffect(() => {
     let newVal = parseFloat(maxBufferAheadStr);
-    newVal = isNaN(newVal) ?
-      DEFAULT_MAX_BUFFER_AHEAD :
-      newVal;
+    newVal = isNaN(newVal) ? DEFAULT_MAX_BUFFER_AHEAD : newVal;
     onMaxBufferAheadChange(newVal);
   }, [maxBufferAheadStr]);
 
   // Update `maxBufferBehind` when its linked text change
   useEffect(() => {
     let newVal = parseFloat(maxBufferBehindStr);
-    newVal = isNaN(newVal) ?
-      DEFAULT_MAX_BUFFER_BEHIND :
-      newVal;
+    newVal = isNaN(newVal) ? DEFAULT_MAX_BUFFER_BEHIND : newVal;
     onMaxBufferBehindChange(newVal);
   }, [maxBufferBehindStr]);
 
-  const onChangeLimitMaxBufferAhead = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited) {
-        setMaxBufferAheadLimit(false);
-        setMaxBufferAheadStr(String(Infinity));
-      } else {
-        setMaxBufferAheadLimit(true);
-        setMaxBufferAheadStr(String(DEFAULT_MAX_BUFFER_AHEAD));
-      }
-    }, []);
+  const onChangeLimitMaxBufferAhead = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMaxBufferAheadLimit(false);
+      setMaxBufferAheadStr(String(Infinity));
+    } else {
+      setMaxBufferAheadLimit(true);
+      setMaxBufferAheadStr(String(DEFAULT_MAX_BUFFER_AHEAD));
+    }
+  }, []);
 
-  const onChangeLimitMaxBufferBehind = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited) {
-        setMaxBufferBehindLimit(false);
-        setMaxBufferBehindStr(String(DEFAULT_MAX_BUFFER_AHEAD));
-      } else {
-        setMaxBufferBehindLimit(true);
-        setMaxBufferBehindStr(String(DEFAULT_MAX_BUFFER_BEHIND));
-      }
-    }, []);
+  const onChangeLimitMaxBufferBehind = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMaxBufferBehindLimit(false);
+      setMaxBufferBehindStr(String(DEFAULT_MAX_BUFFER_AHEAD));
+    } else {
+      setMaxBufferBehindLimit(true);
+      setMaxBufferBehindStr(String(DEFAULT_MAX_BUFFER_BEHIND));
+    }
+  }, []);
 
-  const onChangeLimitMaxVideoBufferSize = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited){
-        setMaxVideoBufferSizeLimit(false);
-        setMaxVideoBufferSizeStr(String(Infinity));
-      } else {
-        setMaxVideoBufferSizeLimit(true);
-        setMaxVideoBufferSizeStr(String(DEFAULT_MAX_VIDEO_BUFFER_SIZE));
-      }
-    }, []);
+  const onChangeLimitMaxVideoBufferSize = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMaxVideoBufferSizeLimit(false);
+      setMaxVideoBufferSizeStr(String(Infinity));
+    } else {
+      setMaxVideoBufferSizeLimit(true);
+      setMaxVideoBufferSizeStr(String(DEFAULT_MAX_VIDEO_BUFFER_SIZE));
+    }
+  }, []);
 
   const onWantedBufferAheadResetClick = React.useCallback(() => {
     setWantedBufferAheadStr(String(DEFAULT_WANTED_BUFFER_AHEAD));
@@ -176,8 +161,7 @@ function BufferOptions({
           onResetClick={onWantedBufferAheadResetClick}
         />
         <span className="option-desc">
-          Buffering around {wantedBufferAhead} second(s) ahead of the current
-          position
+          Buffering around {wantedBufferAhead} second(s) ahead of the current position
         </span>
       </li>
       <li>
@@ -201,12 +185,9 @@ function BufferOptions({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {
-            maxVideoBufferSize === Infinity ||
-            !isMaxVideoBufferSizeLimited ?
-              "Not setting a size limit to the video buffer (relying only on the wantedBufferAhead option)" :
-              `Buffering at most around ${maxVideoBufferSize} kilobyte(s) on the video buffer`
-          }
+          {maxVideoBufferSize === Infinity || !isMaxVideoBufferSizeLimited
+            ? "Not setting a size limit to the video buffer (relying only on the wantedBufferAhead option)"
+            : `Buffering at most around ${maxVideoBufferSize} kilobyte(s) on the video buffer`}
         </span>
       </li>
       <li>
@@ -230,12 +211,9 @@ function BufferOptions({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {
-            maxBufferAhead === Infinity ||
-            !isMaxBufferAheadLimited ?
-              "Not manually cleaning buffer far ahead of the current position" :
-              `Manually cleaning data ${maxBufferAhead} second(s) ahead of the current position`
-          }
+          {maxBufferAhead === Infinity || !isMaxBufferAheadLimited
+            ? "Not manually cleaning buffer far ahead of the current position"
+            : `Manually cleaning data ${maxBufferAhead} second(s) ahead of the current position`}
         </span>
       </li>
       <li>
@@ -259,12 +237,9 @@ function BufferOptions({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {
-            maxBufferBehind === Infinity ||
-            !isMaxBufferBehindLimited ?
-              "Not manually cleaning buffer behind the current position" :
-              `Manually cleaning data ${maxBufferBehind} second(s) behind the current position`
-          }
+          {maxBufferBehind === Infinity || !isMaxBufferBehindLimited
+            ? "Not manually cleaning buffer behind the current position"
+            : `Manually cleaning data ${maxBufferBehind} second(s) behind the current position`}
         </span>
       </li>
     </Fragment>

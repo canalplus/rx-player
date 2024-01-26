@@ -2,16 +2,13 @@ import * as React from "react";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";
-import type {
-  IVideoTrack,
-  IAvailableVideoTrack,
-} from "../../../../../src/public_types";
+import type { IVideoTrack, IAvailableVideoTrack } from "../../../../../src/public_types";
 
 function findVideoTrackIndex(
   videoTrack: IVideoTrack,
-  availableVideoTracks: IAvailableVideoTrack[]
+  availableVideoTracks: IAvailableVideoTrack[],
 ) {
-  return availableVideoTracks.findIndex(t => t.id === videoTrack.id);
+  return availableVideoTracks.findIndex((t) => t.id === videoTrack.id);
 }
 
 /**
@@ -23,7 +20,7 @@ function VideoTrackKnob({
   player,
   className,
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
   className?: string;
 }): JSX.Element {
   const currentVideoTrack = useModuleState(player, "videoTrack");
@@ -36,27 +33,28 @@ function VideoTrackKnob({
       ["no video track"].concat(
         availableVideoTracks.map((track, i) => `track ${i}: ${track.id}`),
       ),
-      currentVideoTrack != null ?
-        1 + findVideoTrackIndex(currentVideoTrack, availableVideoTracks) :
-        0
+      currentVideoTrack != null
+        ? 1 + findVideoTrackIndex(currentVideoTrack, availableVideoTracks)
+        : 0,
     ];
   }, [currentVideoTrack, availableVideoTracks]);
 
-  const onVideoTrackChange = React.useCallback((
-    { index }: { index: number }
-  ) => {
-    if (index > 0) {
-      const track = availableVideoTracks[index - 1];
-      if (track !== undefined) {
-        player.actions.setVideoTrack(track);
+  const onVideoTrackChange = React.useCallback(
+    ({ index }: { index: number }) => {
+      if (index > 0) {
+        const track = availableVideoTracks[index - 1];
+        if (track !== undefined) {
+          player.actions.setVideoTrack(track);
+        } else {
+          /* eslint-disable-next-line no-console */
+          console.error("Error: video track not found");
+        }
       } else {
-        /* eslint-disable-next-line no-console */
-        console.error("Error: video track not found");
+        player.actions.disableVideoTrack();
       }
-    } else {
-      player.actions.disableVideoTrack();
-    }
-  }, [availableVideoTracks, player]);
+    },
+    [availableVideoTracks, player],
+  );
 
   return (
     <Knob
