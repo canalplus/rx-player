@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
+/* eslint-disable-next-line max-len */
+import getBufferedDataPerMediaBuffer from "../../../core/main/utils/get_buffered_data_per_media_buffer";
 import type { ICorePlaybackObservation } from "../../../core/types";
 import type { IManifestMetadata } from "../../../manifest";
 import { getMaximumSafePosition } from "../../../manifest";
 import type { IMediaSourceInterface } from "../../../mse";
-import { SourceBufferType } from "../../../mse";
-import type { ITrackType } from "../../../public_types";
-import arrayFind from "../../../utils/array_find";
-import type { IRange } from "../../../utils/ranges";
 import type {
   IReadOnlySharedReference,
 } from "../../../utils/reference";
@@ -162,34 +160,4 @@ export function getPendingPaused(
 ): boolean | undefined {
   return initialPlayPerformed.getValue() ? undefined :
                                            !autoPlay;
-}
-
-export function getBufferedDataPerMediaBuffer(
-  mediaSourceInterface: IMediaSourceInterface | null,
-  textDisplayer: ITextDisplayer | null
-): Record<ITrackType, IRange[] | null> {
-  const buffered: Record<ITrackType, IRange[] | null> = {
-    audio: null,
-    video: null,
-    text: null,
-  };
-  if (textDisplayer !== null) {
-    buffered.text = textDisplayer.getBufferedRanges();
-  }
-  if (mediaSourceInterface === null) {
-    return buffered;
-  }
-  const audioBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
-                                s => s.type === SourceBufferType.Audio);
-  const videoBuffer = arrayFind(mediaSourceInterface.sourceBuffers,
-                                s => s.type === SourceBufferType.Video);
-  const audioBuffered = audioBuffer?.getBuffered();
-  if (audioBuffered !== undefined) {
-    buffered.audio = audioBuffered;
-  }
-  const videoBuffered = videoBuffer?.getBuffered();
-  if (videoBuffered !== undefined) {
-    buffered.video = videoBuffered;
-  }
-  return buffered;
 }
