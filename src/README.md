@@ -61,8 +61,8 @@ simplified schema for it:
         v  |                                                            |
   +---------------------------+         +----------------------------+  |
   |                           | creates |                            |  |
-  |      Worker Portal*       |-------->|       Manifest Fetcher     |  |
-  |(./core/core_portal/worker)|         | (./core/fetchers/manifest) |  |
+  |        Worker Main*       |-------->|       Manifest Fetcher     |  |
+  |   (./core/main/worker)    |         | (./core/fetchers/manifest) |  |
   |                           |         |                            |  |
   +---------------------------+         +----------------------------+  |
   (*Only if running in a   |            Load and     |                  |
@@ -149,7 +149,7 @@ Stream (./core/stream)     |                                       \    |
                     +-----------------------+  +-------------------------+     |
   Actually pushes   |      MediaSource      |  |      TextDisplayer      |     |
   audio and video   |       Interface       |  |      Message sender     |-----+
-  data to the right |        (./mse)        |  |   (./core/core_portal)  |
+  data to the right |        (./mse)        |  |      (./core/main)      |
   low-level buffers +-----------------------+  +-------------------------+
                                                Small interface
                                                facilitating communication

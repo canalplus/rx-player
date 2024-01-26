@@ -20,17 +20,17 @@ import AdaptiveRepresentationSelector, {
   IAdaptiveRepresentationSelectorArguments,
   IRepresentationEstimator,
 } from "../../core/adaptive";
-/* eslint-disable-next-line max-len */
-import createContentTimeBoundariesObserver from "../../core/core_portal/utils/create_content_time_boundaries_observer";
-// eslint-disable-next-line max-len
-import DecipherabilityFreezeDetector from "../../core/core_portal/utils/DecipherabilityFreezeDetector";
-// eslint-disable-next-line max-len
-import MainThreadTextInterface from "../../core/core_portal/utils/main_thread_text_displayer_interface";
 import {
   ManifestFetcher,
   SegmentFetcherCreator,
+  IManifestFetcherSettings,
 } from "../../core/fetchers";
-import { IManifestFetcherSettings } from "../../core/fetchers/manifest/manifest_fetcher";
+/* eslint-disable-next-line max-len */
+import createContentTimeBoundariesObserver from "../../core/main/utils/create_content_time_boundaries_observer";
+// eslint-disable-next-line max-len
+import DecipherabilityFreezeDetector from "../../core/main/utils/DecipherabilityFreezeDetector";
+// eslint-disable-next-line max-len
+import MainThreadTextInterface from "../../core/main/utils/main_thread_text_displayer_interface";
 import SegmentBuffersStore, {
   ITextDisplayerInterface,
 } from "../../core/segment_sinks";

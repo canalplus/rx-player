@@ -132,13 +132,13 @@ import {
   getKeySystemConfiguration,
 } from "../decrypt";
 import type { ContentInitializer } from "../init";
-import type {
+import TracksStore, {
   IMediaElementTracksStore,
   ITSPeriodObject,
 } from "../tracks_store";
-import TracksStore from "../tracks_store";
-import type { IParsedLoadVideoOptions, IParsedStartAtOption } from "./option_utils";
 import {
+  IParsedLoadVideoOptions,
+  IParsedStartAtOption,
   checkReloadOptions,
   parseConstructorOptions,
   parseLoadVideoOptions,
