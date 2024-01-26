@@ -25,6 +25,7 @@ import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 
 const generateMediaSourceId = idGenerator();
@@ -42,7 +43,7 @@ export default function prepareSourceBuffer(
   cleanUpSignal: CancellationSignal
 ): Promise<MainSourceBufferInterface> {
   return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
-    if (MediaSource_ == null) {
+    if (isNullOrUndefined(MediaSource_)) {
       throw new Error("No MediaSource Object was found in the current browser.");
     }
 

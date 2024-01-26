@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type {
   IAdaptationSetAttributes,
   IAdaptationSetChildren,
@@ -81,7 +82,7 @@ function parseAdaptationSetChildren(
           break;
 
         case "EssentialProperty":
-          if (children.essentialProperties == null) {
+          if (isNullOrUndefined(children.essentialProperties)) {
             children.essentialProperties = [parseScheme(currentElement)];
           } else {
             children.essentialProperties.push(parseScheme(currentElement));
@@ -113,7 +114,7 @@ function parseAdaptationSetChildren(
           break;
 
         case "Role":
-          if (children.roles == null) {
+          if (isNullOrUndefined(children.roles)) {
             children.roles = [parseScheme(currentElement)];
           } else {
             children.roles.push(parseScheme(currentElement));
@@ -121,7 +122,7 @@ function parseAdaptationSetChildren(
           break;
 
         case "SupplementalProperty":
-          if (children.supplementalProperties == null) {
+          if (isNullOrUndefined(children.supplementalProperties)) {
             children.supplementalProperties = [parseScheme(currentElement)];
           } else {
             children.supplementalProperties.push(parseScheme(currentElement));
