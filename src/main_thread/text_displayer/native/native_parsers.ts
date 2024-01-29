@@ -1,4 +1,4 @@
-import type { ICompatVTTCue } from "../../../compat";
+import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
 import features from "../../../features";
 import log from "../../../log";
 

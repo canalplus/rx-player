@@ -26,7 +26,7 @@ index 4f727229a..253aa1a72 100644
   * limitations under the License.
   */
  
--import { addClassName } from "../../../../compat";
+-import { addClassName } from "../../../../compat/add_class_name";
  import log from "../../../../log";
  import { REGXP_LENGTH } from "../regexps";
  

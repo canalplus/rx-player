@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { shouldRenewMediaKeySystemAccess } from "../../compat";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
+import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
