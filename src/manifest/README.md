@@ -3,7 +3,7 @@
 This directory regroups definitions, types and utils related to the `Manifest`
 concept which is a document/structure describing a played content.
 
-Most RxPlayer modules are expected to only need to rely on the type exported
+Most RxPlayer modules are expected to only need to rely on the types exported
 by this directory (they usually don't need to construct one). For this reason,
 the `Manifest` class and its sub-classes are exported only through the `classes`
 subdirectory. This is to make developers of other RxPlayer modules think hard if
