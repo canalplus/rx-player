@@ -357,31 +357,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(
       videoElement,
-      destroyCanceller.signal
+      destroyCanceller.signal,
     );
     this._priv_speed = new SharedReference(
       videoElement.playbackRate,
-      this._destroyCanceller.signal
+      this._destroyCanceller.signal,
     );
     this._priv_preferTrickModeTracks = false;
     this._priv_contentLock = new SharedReference<boolean>(
       false,
-      this._destroyCanceller.signal
+      this._destroyCanceller.signal,
     );
 
     this._priv_bufferOptions = {
       wantedBufferAhead: new SharedReference(
         wantedBufferAhead,
-        this._destroyCanceller.signal
+        this._destroyCanceller.signal,
       ),
       maxBufferAhead: new SharedReference(maxBufferAhead, this._destroyCanceller.signal),
       maxBufferBehind: new SharedReference(
         maxBufferBehind,
-        this._destroyCanceller.signal
+        this._destroyCanceller.signal,
       ),
       maxVideoBufferSize: new SharedReference(
         maxVideoBufferSize,
-        this._destroyCanceller.signal
+        this._destroyCanceller.signal,
       ),
     };
 
@@ -424,13 +424,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (typeof Worker !== "function") {
         log.warn("API: Cannot rely on a WebWorker: Worker API unavailable");
         return rej(
-          new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable")
+          new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
         );
       }
       if (!hasWebassembly) {
         log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
         return rej(
-          new WorkerInitializationError("INCOMPATIBLE_ERROR", "WebAssembly unavailable")
+          new WorkerInitializationError("INCOMPATIBLE_ERROR", "WebAssembly unavailable"),
         );
       }
       if (typeof workerSettings.workerUrl === "string") {
@@ -448,13 +448,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
         log.error(
           "API: Unexpected worker error",
-          evt.error instanceof Error ? evt.error : undefined
+          evt.error instanceof Error ? evt.error : undefined,
         );
         rej(
           new WorkerInitializationError(
             "UNKNOWN_ERROR",
-            'Unexpected Worker "error" event'
-          )
+            'Unexpected Worker "error" event',
+          ),
         );
       };
       const handleInitMessages = (msg: MessageEvent) => {
@@ -469,8 +469,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           rej(
             new WorkerInitializationError(
               "SETUP_ERROR",
-              "Worker parser initialization failed: " + msgData.value.errorMessage
-            )
+              "Worker parser initialization failed: " + msgData.value.errorMessage,
+            ),
           );
         } else if (msgData.type === WorkerMessageType.InitSuccess) {
           log.info("API: InitSuccess received from worker.");
@@ -510,7 +510,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             },
           });
         },
-        this._destroyCanceller.signal
+        this._destroyCanceller.signal,
       );
     });
   }
@@ -543,7 +543,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   addEventListener<TEventName extends keyof IPublicAPIEvent>(
     evt: TEventName,
-    fn: IListener<IPublicAPIEvent, TEventName>
+    fn: IListener<IPublicAPIEvent, TEventName>,
   ): void {
     // The EventEmitter's `addEventListener` method takes an optional third
     // argument that we do not want to expose in the public API.
@@ -628,7 +628,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     } else if (reloadOpts?.reloadAt?.relative !== undefined) {
       if (reloadPosition === undefined) {
         throw new Error(
-          "Can't reload to a relative position when previous content was not loaded."
+          "Can't reload to a relative position when previous content was not loaded.",
         );
       } else {
         startAt = { position: reloadOpts.reloadAt.relative + reloadPosition };
@@ -744,17 +744,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         if (!relyOnVideoVisibilityAndSize) {
           log.warn(
             "API: Can't apply throttleVideoBitrateWhenHidden because " +
-              "browser can't be trusted for visibility."
+              "browser can't be trusted for visibility.",
           );
         } else {
           throttlers.throttleBitrate = {
             video: createMappedReference(
               getVideoVisibilityRef(
                 this._priv_pictureInPictureRef,
-                currentContentCanceller.signal
+                currentContentCanceller.signal,
               ),
               (isActive) => (isActive ? Infinity : 0),
-              currentContentCanceller.signal
+              currentContentCanceller.signal,
             ),
           };
         }
@@ -763,14 +763,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         if (!relyOnVideoVisibilityAndSize) {
           log.warn(
             "API: Can't apply videoResolutionLimit because browser can't be " +
-              "trusted for video size."
+              "trusted for video size.",
           );
         } else {
           throttlers.limitResolution = {
             video: getElementResolutionRef(
               videoElement,
               this._priv_pictureInPictureRef,
-              currentContentCanceller.signal
+              currentContentCanceller.signal,
             ),
           };
         }
@@ -798,7 +798,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       const bufferOptions = objectAssign(
         { enableFastSwitching, onCodecSwitch },
-        this._priv_bufferOptions
+        this._priv_bufferOptions,
       );
 
       const segmentRequestOptions = {
@@ -813,14 +813,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_worker !== null &&
         transport === "dash" &&
         MULTI_THREAD_UNSUPPORTED_LOAD_VIDEO_OPTIONS.every((option) =>
-          isNullOrUndefined(options[option])
+          isNullOrUndefined(options[option]),
         ) &&
         typeof options.representationFilter !== "function";
       if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
         if (features.mainThreadMediaSourceInit === null) {
           throw new Error(
             "Cannot load video, neither in a WebWorker nor with the " +
-              "`MEDIA_SOURCE_MAIN` feature"
+              "`MEDIA_SOURCE_MAIN` feature",
           );
         }
         const transportFn = features.transports[transport];
@@ -866,12 +866,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         if (features.multithread === null) {
           throw new Error(
             "Cannot load video in multithread mode: `MULTI_THREAD` " +
-              "feature not imported."
+              "feature not imported.",
           );
         } else if (this._priv_worker === null) {
           throw new Error(
             "Cannot load video in multithread mode: `attachWorker` " +
-              "method not called."
+              "method not called.",
           );
         }
         assert(typeof options.representationFilter !== "function");
@@ -915,7 +915,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       log.info("API: Initializing DirectFile mode in the main thread");
       mediaElementTracksStore = this._priv_initializeMediaElementTracksStore(
-        currentContentCanceller.signal
+        currentContentCanceller.signal,
       );
       if (currentContentCanceller.isUsed()) {
         return;
@@ -967,40 +967,40 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
-      this.trigger("inbandEvents", inbandEvents)
+      this.trigger("inbandEvents", inbandEvents),
     );
     initializer.addEventListener("streamEvent", (streamEvent) =>
-      this.trigger("streamEvent", streamEvent)
+      this.trigger("streamEvent", streamEvent),
     );
     initializer.addEventListener("streamEventSkip", (streamEventSkip) =>
-      this.trigger("streamEventSkip", streamEventSkip)
+      this.trigger("streamEventSkip", streamEventSkip),
     );
     initializer.addEventListener("activePeriodChanged", (periodInfo) =>
-      this._priv_onActivePeriodChanged(contentInfos, periodInfo)
+      this._priv_onActivePeriodChanged(contentInfos, periodInfo),
     );
     initializer.addEventListener("periodStreamReady", (periodReadyInfo) =>
-      this._priv_onPeriodStreamReady(contentInfos, periodReadyInfo)
+      this._priv_onPeriodStreamReady(contentInfos, periodReadyInfo),
     );
     initializer.addEventListener("periodStreamCleared", (periodClearedInfo) =>
-      this._priv_onPeriodStreamCleared(contentInfos, periodClearedInfo)
+      this._priv_onPeriodStreamCleared(contentInfos, periodClearedInfo),
     );
     initializer.addEventListener("representationChange", (representationInfo) =>
-      this._priv_onRepresentationChange(contentInfos, representationInfo)
+      this._priv_onRepresentationChange(contentInfos, representationInfo),
     );
     initializer.addEventListener("adaptationChange", (adaptationInfo) =>
-      this._priv_onAdaptationChange(contentInfos, adaptationInfo)
+      this._priv_onAdaptationChange(contentInfos, adaptationInfo),
     );
     initializer.addEventListener("bitrateEstimateChange", (bitrateEstimateInfo) =>
-      this._priv_onBitrateEstimateChange(bitrateEstimateInfo)
+      this._priv_onBitrateEstimateChange(bitrateEstimateInfo),
     );
     initializer.addEventListener("manifestReady", (manifest) =>
-      this._priv_onManifestReady(contentInfos, manifest)
+      this._priv_onManifestReady(contentInfos, manifest),
     );
     initializer.addEventListener("manifestUpdate", (updates) =>
-      this._priv_onManifestUpdate(contentInfos, updates)
+      this._priv_onManifestUpdate(contentInfos, updates),
     );
     initializer.addEventListener("decipherabilityUpdate", (updates) =>
-      this._priv_onDecipherabilityUpdate(contentInfos, updates)
+      this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentSinksStore = evt.segmentSinksStore;
@@ -1035,7 +1035,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       initializer,
       videoElement,
       playbackObserver,
-      currentContentCanceller.signal
+      currentContentCanceller.signal,
     );
     currentContentCanceller.signal.register(() => {
       initializer.dispose();
@@ -1108,13 +1108,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             videoElement,
             () => this.trigger("play", null),
             () => this.trigger("pause", null),
-            currentContentCanceller.signal
+            currentContentCanceller.signal,
           );
         },
         {
           emitCurrentValue: false,
           clearSignal: currentContentCanceller.signal,
-        }
+        },
       );
     };
 
@@ -1156,11 +1156,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             playbackObserver,
             () => this.trigger("seeking", null),
             () => this.trigger("seeked", null),
-            seekEventsCanceller.signal
+            seekEventsCanceller.signal,
           );
         }
       },
-      { emitCurrentValue: true, clearSignal: currentContentCanceller.signal }
+      { emitCurrentValue: true, clearSignal: currentContentCanceller.signal },
     );
 
     // React to playback conditions change
@@ -1169,7 +1169,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         updateReloadingMetadata(this.state);
         this._priv_triggerPositionUpdate(contentInfos, observation);
       },
-      { clearSignal: currentContentCanceller.signal }
+      { clearSignal: currentContentCanceller.signal },
     );
 
     currentContentCanceller.signal.register(() => {
@@ -1186,7 +1186,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           initializer.start(videoElement, playbackObserver);
         }
       },
-      { emitCurrentValue: true, clearSignal: currentContentCanceller.signal }
+      { emitCurrentValue: true, clearSignal: currentContentCanceller.signal },
     );
   }
 
@@ -1311,7 +1311,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   public updateContentUrls(
     urls: string[] | undefined,
-    params?: { refresh?: boolean } | undefined
+    params?: { refresh?: boolean } | undefined,
   ): void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
@@ -1345,7 +1345,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const videoElement = this.videoElement;
     const bufferGap = getLeftSizeOfBufferedTimeRange(
       videoElement.buffered,
-      videoElement.currentTime
+      videoElement.currentTime,
     );
     if (bufferGap === Infinity) {
       return 0;
@@ -1574,7 +1574,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number} - The time the player has seek to
    */
   seekTo(
-    time: number | { relative: number } | { position: number } | { wallClockTime: number }
+    time:
+      | number
+      | { relative: number }
+      | { position: number }
+      | { wallClockTime: number },
   ): number {
     if (this.videoElement === null) {
       throw new Error("Disposed player");
@@ -1620,7 +1624,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error(
           "invalid time object. You must set one of the " +
             'following properties: "relative", "position" or ' +
-            '"wallClockTime"'
+            '"wallClockTime"',
         );
       }
     }
@@ -1827,7 +1831,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableAudioTracks(periodRef) ?? []
+      (tcm, periodRef) => tcm.getAvailableAudioTracks(periodRef) ?? [],
     );
   }
 
@@ -1848,7 +1852,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableTextTracks(periodRef) ?? []
+      (tcm, periodRef) => tcm.getAvailableTextTracks(periodRef) ?? [],
     );
   }
 
@@ -1868,7 +1872,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableVideoTracks(periodRef) ?? []
+      (tcm, periodRef) => tcm.getAvailableVideoTracks(periodRef) ?? [],
     );
   }
 
@@ -1889,7 +1893,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return mediaElementTracksStore.getChosenAudioTrack();
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenAudioTrack(periodRef)
+      tcm.getChosenAudioTrack(periodRef),
     );
   }
 
@@ -1910,7 +1914,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return mediaElementTracksStore.getChosenTextTrack();
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenTextTrack(periodRef)
+      tcm.getChosenTextTrack(periodRef),
     );
   }
 
@@ -1931,7 +1935,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return mediaElementTracksStore.getChosenVideoTrack();
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenVideoTrack(periodRef)
+      tcm.getChosenVideoTrack(periodRef),
     );
   }
 
@@ -1977,7 +1981,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         switchingMode,
         lockedRepresentations,
         relativeResumingPosition,
-      })
+      }),
     );
   }
 
@@ -2011,7 +2015,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       periodId = arg.periodId;
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.setTextTrack(periodRef, trackId)
+      tcm.setTextTrack(periodRef, trackId),
     );
   }
 
@@ -2029,7 +2033,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.disableTrack(periodRef, "text")
+      tcm.disableTrack(periodRef, "text"),
     );
   }
 
@@ -2075,7 +2079,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         switchingMode,
         lockedRepresentations,
         relativeResumingPosition,
-      })
+      }),
     );
   }
 
@@ -2092,7 +2096,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return mediaElementTracksStore.disableVideoTrack();
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.disableTrack(periodRef, "video")
+      tcm.disableTrack(periodRef, "video"),
     );
   }
 
@@ -2120,7 +2124,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       tcm.lockVideoRepresentations(periodRef, {
         representations: repsId,
         switchingMode,
-      })
+      }),
     );
   }
 
@@ -2148,7 +2152,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       tcm.lockAudioRepresentations(periodRef, {
         representations: repsId,
         switchingMode,
-      })
+      }),
     );
   }
 
@@ -2161,7 +2165,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return null;
     }
     return this._priv_callTracksStoreGetterSetter(periodId, null, (tcm, periodRef) =>
-      tcm.getLockedVideoRepresentations(periodRef)
+      tcm.getLockedVideoRepresentations(periodRef),
     );
   }
 
@@ -2174,7 +2178,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return null;
     }
     return this._priv_callTracksStoreGetterSetter(periodId, null, (tcm, periodRef) =>
-      tcm.getLockedAudioRepresentations(periodRef)
+      tcm.getLockedAudioRepresentations(periodRef),
     );
   }
 
@@ -2187,7 +2191,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.unlockVideoRepresentations(periodRef)
+      tcm.unlockVideoRepresentations(periodRef),
     );
   }
 
@@ -2200,7 +2204,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.unlockAudioRepresentations(periodRef)
+      tcm.unlockAudioRepresentations(periodRef),
     );
   }
 
@@ -2390,10 +2394,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         (err: unknown) => {
           log.error(
             "API: An error arised when trying to clean-up the DRM session:" +
-              (err instanceof Error ? err.toString() : "Unknown Error")
+              (err instanceof Error ? err.toString() : "Unknown Error"),
           );
           freeUpContentLock();
-        }
+        },
       );
     } else {
       freeUpContentLock();
@@ -2408,7 +2412,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onManifestReady(
     contentInfos: IPublicApiContentInfos,
-    manifest: IManifest | IManifestMetadata
+    manifest: IManifest | IManifestMetadata,
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2459,7 +2463,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onManifestUpdate(
     contentInfos: IPublicApiContentInfos,
-    updates: IPeriodsUpdateResult
+    updates: IPeriodsUpdateResult,
   ): void {
     if (this._priv_contentInfos === null || this._priv_contentInfos.manifest === null) {
       return;
@@ -2495,7 +2499,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   private _priv_onDecipherabilityUpdate(
     contentInfos: IPublicApiContentInfos,
-    elts: IDecipherabilityStatusChangedElement[]
+    elts: IDecipherabilityStatusChangedElement[],
   ): void {
     if (contentInfos === null || contentInfos.manifest === null) {
       return;
@@ -2514,7 +2518,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const isFound =
           arrayFind(
             acc,
-            (x) => x[0].id === elt.period.id && x[1] === elt.adaptation.type
+            (x) => x[0].id === elt.period.id && x[1] === elt.adaptation.type,
           ) !== undefined;
 
         if (!isFound) {
@@ -2546,7 +2550,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
         return acc;
       },
-      []
+      [],
     );
     for (const [period, trackType] of periodsAndTrackTypes) {
       this._priv_triggerEventIfNotStopped(
@@ -2556,7 +2560,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           trackType,
           reason: "decipherability-update",
         },
-        contentInfos.currentContentCanceller.signal
+        contentInfos.currentContentCanceller.signal,
       );
     }
   }
@@ -2570,7 +2574,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onActivePeriodChanged(
     contentInfos: IPublicApiContentInfos,
-    { period }: { period: IPeriodMetadata }
+    { period }: { period: IPeriodMetadata },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2583,24 +2587,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_triggerEventIfNotStopped(
         "periodChange",
         { start: period.start, end: period.end, id: period.id },
-        cancelSignal
+        cancelSignal,
       );
     }
 
     this._priv_triggerEventIfNotStopped(
       "availableAudioTracksChange",
       this.getAvailableAudioTracks(),
-      cancelSignal
+      cancelSignal,
     );
     this._priv_triggerEventIfNotStopped(
       "availableTextTracksChange",
       this.getAvailableTextTracks(),
-      cancelSignal
+      cancelSignal,
     );
     this._priv_triggerEventIfNotStopped(
       "availableVideoTracksChange",
       this.getAvailableVideoTracks(),
-      cancelSignal
+      cancelSignal,
     );
 
     const tracksStore = this._priv_contentInfos?.tracksStore;
@@ -2626,13 +2630,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_triggerEventIfNotStopped(
       "audioRepresentationChange",
       audioRepresentation,
-      cancelSignal
+      cancelSignal,
     );
     const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
     this._priv_triggerEventIfNotStopped(
       "videoRepresentationChange",
       videoRepresentation,
-      cancelSignal
+      cancelSignal,
     );
   }
 
@@ -2648,7 +2652,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       type: IBufferType;
       period: IPeriodMetadata;
       adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
-    }
+    },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2679,7 +2683,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamCleared(
     contentInfos: IPublicApiContentInfos,
-    value: { type: IBufferType; period: IPeriodMetadata }
+    value: { type: IBufferType; period: IPeriodMetadata },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2740,7 +2744,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       type: IBufferType;
       adaptation: IAdaptationMetadata | null;
       period: IPeriodMetadata;
-    }
+    },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2777,7 +2781,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_triggerEventIfNotStopped(
             "audioTrackChange",
             audioTrack,
-            cancelSignal
+            cancelSignal,
           );
           break;
         case "text":
@@ -2789,7 +2793,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_triggerEventIfNotStopped(
             "videoTrackChange",
             videoTrack,
-            cancelSignal
+            cancelSignal,
           );
           break;
       }
@@ -2814,7 +2818,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       type: IBufferType;
       period: IPeriodMetadata;
       representation: IRepresentationMetadata | null;
-    }
+    },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2844,13 +2848,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_triggerEventIfNotStopped(
           "videoRepresentationChange",
           representation,
-          cancelSignal
+          cancelSignal,
         );
       } else if (type === "audio") {
         this._priv_triggerEventIfNotStopped(
           "audioRepresentationChange",
           representation,
-          cancelSignal
+          cancelSignal,
         );
       }
     }
@@ -2878,7 +2882,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       /* eslint-disable-next-line */
       "__priv_bitrateEstimateChange" as any,
       /* eslint-disable-next-line */
-      { type, bitrate } as any
+      { type, bitrate } as any,
     );
   }
 
@@ -2907,7 +2911,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_triggerPositionUpdate(
     contentInfos: IPublicApiContentInfos,
-    observation: IPlaybackObservation
+    observation: IPlaybackObservation,
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -2957,7 +2961,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_triggerEventIfNotStopped<TEventName extends keyof IPublicAPIEvent>(
     evt: TEventName,
     arg: IEventPayload<IPublicAPIEvent, TEventName>,
-    currentContentCancelSignal: CancellationSignal
+    currentContentCancelSignal: CancellationSignal,
   ) {
     if (!currentContentCancelSignal.isCancelled()) {
       this.trigger(evt, arg);
@@ -2969,71 +2973,71 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Object}
    */
   private _priv_initializeMediaElementTracksStore(
-    cancelSignal: CancellationSignal
+    cancelSignal: CancellationSignal,
   ): IMediaElementTracksStore {
     assert(
       features.directfile !== null,
-      "Initializing `MediaElementTracksStore` without Directfile feature"
+      "Initializing `MediaElementTracksStore` without Directfile feature",
     );
     assert(
       this.videoElement !== null,
-      "Initializing `MediaElementTracksStore` on a disposed RxPlayer"
+      "Initializing `MediaElementTracksStore` on a disposed RxPlayer",
     );
 
     const mediaElementTracksStore = new features.directfile.mediaElementTracksStore(
-      this.videoElement
+      this.videoElement,
     );
 
     this._priv_triggerEventIfNotStopped(
       "availableAudioTracksChange",
       mediaElementTracksStore.getAvailableAudioTracks(),
-      cancelSignal
+      cancelSignal,
     );
     this._priv_triggerEventIfNotStopped(
       "availableVideoTracksChange",
       mediaElementTracksStore.getAvailableVideoTracks(),
-      cancelSignal
+      cancelSignal,
     );
     this._priv_triggerEventIfNotStopped(
       "availableTextTracksChange",
       mediaElementTracksStore.getAvailableTextTracks(),
-      cancelSignal
+      cancelSignal,
     );
 
     this._priv_triggerEventIfNotStopped(
       "audioTrackChange",
       mediaElementTracksStore.getChosenAudioTrack() ?? null,
-      cancelSignal
+      cancelSignal,
     );
     this._priv_triggerEventIfNotStopped(
       "textTrackChange",
       mediaElementTracksStore.getChosenTextTrack() ?? null,
-      cancelSignal
+      cancelSignal,
     );
     this._priv_triggerEventIfNotStopped(
       "videoTrackChange",
       mediaElementTracksStore.getChosenVideoTrack() ?? null,
-      cancelSignal
+      cancelSignal,
     );
 
     mediaElementTracksStore.addEventListener("availableVideoTracksChange", (val) =>
-      this.trigger("availableVideoTracksChange", val)
+      this.trigger("availableVideoTracksChange", val),
     );
     mediaElementTracksStore.addEventListener("availableAudioTracksChange", (val) =>
-      this.trigger("availableAudioTracksChange", val)
+      this.trigger("availableAudioTracksChange", val),
     );
     mediaElementTracksStore.addEventListener("availableTextTracksChange", (val) =>
-      this.trigger("availableTextTracksChange", val)
+      this.trigger("availableTextTracksChange", val),
     );
 
     mediaElementTracksStore.addEventListener("audioTrackChange", (val) =>
-      this.trigger("audioTrackChange", val)
+      this.trigger("audioTrackChange", val),
     );
     mediaElementTracksStore.addEventListener("videoTrackChange", (val) =>
-      this.trigger("videoTrackChange", val)
+      this.trigger("videoTrackChange", val),
     );
     mediaElementTracksStore.addEventListener("textTrackChange", (val) =>
-      this.trigger("textTrackChange", val)
+      this.trigger("textTrackChange", val),
     );
 
     return mediaElementTracksStore;
@@ -3042,7 +3046,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_callTracksStoreGetterSetter<T, U>(
     periodId: string | undefined,
     defaultValue: U,
-    cb: (tcm: TracksStore, periodRef: ITSPeriodObject) => T
+    cb: (tcm: TracksStore, periodRef: ITSPeriodObject) => T,
   ): T | U {
     if (
       this._priv_contentInfos === null ||
@@ -3080,7 +3084,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onAvailableTracksMayHaveChanged(
     trackType: IBufferType,
-    oPeriodRef?: ITSPeriodObject
+    oPeriodRef?: ITSPeriodObject,
   ): void {
     const contentInfos = this._priv_contentInfos;
     if (contentInfos === null) {
@@ -3101,7 +3105,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_triggerEventIfNotStopped(
           "availableVideoTracksChange",
           videoTracks ?? [],
-          cancelSignal
+          cancelSignal,
         );
         break;
       case "audio":
@@ -3109,7 +3113,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_triggerEventIfNotStopped(
           "availableAudioTracksChange",
           audioTracks ?? [],
-          cancelSignal
+          cancelSignal,
         );
         break;
       case "text":
@@ -3117,7 +3121,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this._priv_triggerEventIfNotStopped(
           "availableTextTracksChange",
           textTracks ?? [],
-          cancelSignal
+          cancelSignal,
         );
         break;
       default:
