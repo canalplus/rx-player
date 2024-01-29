@@ -1,7 +1,7 @@
 # File architecture
 
-This page describes how the player files are organized. Each chapter go through
-a single directory or subdirectory, in alphabetical order.
+This page describes how the player files are organized. Each chapter go through a single
+directory or subdirectory, in alphabetical order.
 
 ## `demo/`: Demo applications
 
@@ -9,24 +9,23 @@ The `demo/` directory contains demos of application using the RxPlayer.
 
 At the time of writing, there are two distinct demos:
 
-- _full_: Demo with a graphic interface, written with the React library, to
-  showcase what the player can do
+- _full_: Demo with a graphic interface, written with the React library, to showcase what
+  the player can do
 
-- _standalone_: Just expose the rx-player in `window`, to allow scripted
-  interactions with it in the console. The player is linked to a video tag in
-  the displayed page.
+- _standalone_: Just expose the rx-player in `window`, to allow scripted interactions with
+  it in the console. The player is linked to a video tag in the displayed page.
 
 ## `dist/`: Builds
 
 The `dist/` directory stores the player builds of the last version released.
 
-Directories can also be generated in here if the right scripts are called.
-These allow to publish more modular codebases to npm.
+Directories can also be generated in here if the right scripts are called. These allow to
+publish more modular codebases to npm.
 
 ## `doc/`: Documentation
 
-The `doc/` directory contains the RxPlayer's documentation, mostly written in
-markdown, on various subjects related to the rx-player:
+The `doc/` directory contains the RxPlayer's documentation, mostly written in markdown, on
+various subjects related to the rx-player:
 
 - API documentation
 - tutorials
@@ -37,8 +36,8 @@ markdown, on various subjects related to the rx-player:
 
 ## `scripts/`: Project-managing scripts
 
-The `scripts/` directory contains various scripts used to help the test and the
-management of the player code.
+The `scripts/` directory contains various scripts used to help the test and the management
+of the player code.
 
 For example:
 
@@ -55,68 +54,63 @@ It is subdivized into subdirectories which are defined here.
 
 ### `src/compat/`: Compatibility files
 
-`src/compat` contains functions allowing to use browser APIs in a
-cross-browser manner.
+`src/compat` contains functions allowing to use browser APIs in a cross-browser manner.
 
-For example, if an event does not have the same name depending on the browser,
-the compat files will expose a simple function allowing to make sure the event
-is catched, taking the task of registering the right event on the callback
-given.
+For example, if an event does not have the same name depending on the browser, the compat
+files will expose a simple function allowing to make sure the event is catched, taking the
+task of registering the right event on the callback given.
 
-Every functions needed in the rest of the code are exported in
-`compat/index.js`, making it easier to import (e.g. by just doing
-`import { whatINeed } from "../compat";`)
+Every functions needed in the rest of the code are exported in `compat/index.js`, making
+it easier to import (e.g. by just doing `import { whatINeed } from "../compat";`)
 
 ### `src/core/`: Core logic
 
-Defines the core logic of the RxPlayer, regardless of the browser and of the
-streaming technology used, that may optionally run in a WebWorker environment
-when the RxPlayer is in `"multithread"` mode.
+Defines the core logic of the RxPlayer, regardless of the browser and of the streaming
+technology used, that may optionally run in a WebWorker environment when the RxPlayer is
+in `"multithread"` mode.
 
-That's where the segments are downloaded and pushed to then be decoded by the
-browser, as well as where the Manifest file is loaded and pared.
+That's where the segments are downloaded and pushed to then be decoded by the browser, as
+well as where the Manifest file is loaded and pared.
 
 ### `src/errors/`: Error definitions
 
-Contains the definition of the error classes used in the rx-player and
-accessible through the API.
+Contains the definition of the error classes used in the rx-player and accessible through
+the API.
 
 ### `src/experimental/`: Experimental features
 
-You will find here experimental features. Those are tested features who might
-completely change their API in new player versions.
+You will find here experimental features. Those are tested features who might completely
+change their API in new player versions.
 
 ### `src/features/`: Feature switching
 
-This manage activated or deactivated features (e.g. DASH, TTML subtitles
-parsing).
+This manage activated or deactivated features (e.g. DASH, TTML subtitles parsing).
 
-It exports an object defining the different activated features and provide utils
-to initialize and update them.
+It exports an object defining the different activated features and provide utils to
+initialize and update them.
 
 ### `src/main_thread`: Main thread core logic
 
-Defines the core logic of the RxPlayer that is always intended to only run in
-main thread, even when a content is loaded in `"multithread"` mode.
+Defines the core logic of the RxPlayer that is always intended to only run in main thread,
+even when a content is loaded in `"multithread"` mode.
 
-It for example contains the public API, DRM-related logic,
-content-initialization logic and other type of code. It then calls into
-`src/core` for the core logic part which may optionally run in a WebWorker.
+It for example contains the public API, DRM-related logic, content-initialization logic
+and other type of code. It then calls into `src/core` for the core logic part which may
+optionally run in a WebWorker.
 
 ### `src/manifest/`: Manifest Object definition
 
-Defines a common `Manifest` class, regardless of the streaming technology (DASH,
-HSS...). This class is then used by the rest of the RxPlayer, to allow
-interaction with it without considering the underlying technology used.
+Defines a common `Manifest` class, regardless of the streaming technology (DASH, HSS...).
+This class is then used by the rest of the RxPlayer, to allow interaction with it without
+considering the underlying technology used.
 
 ### `src/mse/`: MSE abstractions
 
-Abstraction over Media Source Extensions API, which are the browser API allowing
-to buffer media.
+Abstraction over Media Source Extensions API, which are the browser API allowing to buffer
+media.
 
-This allows to provide a common API to the rest of the RxPlayer's code
-regardless of the environment (e.g. in a WebWorker without MSE API or in an
-environment with MSE API).
+This allows to provide a common API to the rest of the RxPlayer's code regardless of the
+environment (e.g. in a WebWorker without MSE API or in an environment with MSE API).
 
 ### `src/parsers/`: The parsers
 
@@ -131,8 +125,8 @@ The parsed data being either:
 
 ### `src/tools/`: RxPlayer tools
 
-This directory exports RxPlayer tools, which are standalone utilitary classes
-and function which are not included in the `RxPlayer` media player API.
+This directory exports RxPlayer tools, which are standalone utilitary classes and function
+which are not included in the `RxPlayer` media player API.
 
 ### `src/transports/`: Streaming protocols implementation
 
@@ -146,34 +140,31 @@ What is exported there are functions to load:
 
 For different streaming technologies.
 
-As in most of the code of the rx-player, everything used in the other parts of
-the code is exported in the index.js file at the root of this directory.
+As in most of the code of the rx-player, everything used in the other parts of the code is
+exported in the index.js file at the root of this directory.
 
 ### `src/utils/`: Util functions
 
-This directory contains general helpers which are used in different parts of the
-rx-player code.
+This directory contains general helpers which are used in different parts of the rx-player
+code.
 
 ## `src/**/__tests__`: Unit tests
 
-You will find multiple directories named `__tests__` in the RxPlayer.
-Those contain unit tests and are put in the same directory than the code it
-tests.
+You will find multiple directories named `__tests__` in the RxPlayer. Those contain unit
+tests and are put in the same directory than the code it tests.
 
-Most unit tests files contain only tests for a single source file. Those will
-be put directly at the root of `__tests__` under the name
-`<ORIGINAL_SRC_FILE>.test.ts` (where `<ORIGINAL_SRC_FILE>` is the filename of
-the tested file).
+Most unit tests files contain only tests for a single source file. Those will be put
+directly at the root of `__tests__` under the name `<ORIGINAL_SRC_FILE>.test.ts` (where
+`<ORIGINAL_SRC_FILE>` is the filename of the tested file).
 
-`__tests__` directories can also contain files defining tests for multiple files
-contained in the tested directory.
-Those can be quicker to write and easier to maintain at the expense of being
-less thorough.
+`__tests__` directories can also contain files defining tests for multiple files contained
+in the tested directory. Those can be quicker to write and easier to maintain at the
+expense of being less thorough.
 
-Those type of "global" unit tests are put in a special `__global__` directory,
-itself directly at the root of the corresponding `__tests__` directory.
-Their filename don't follow the same convention than single-source unit tests
-but should still be suffixed by `.test.ts`.
+Those type of "global" unit tests are put in a special `__global__` directory, itself
+directly at the root of the corresponding `__tests__` directory. Their filename don't
+follow the same convention than single-source unit tests but should still be suffixed by
+`.test.ts`.
 
 ## `tests/`: The RxPlayer's general tests
 
@@ -181,24 +172,23 @@ This directory contains most testing code for the RxPlayer.
 
 The rx-player contains multiple type of tests:
 
-- integration tests: test the whole player API and its behavior when playing
-  different contents. The main goal of those tests is to quickly detect
-  regressions.
+- integration tests: test the whole player API and its behavior when playing different
+  contents. The main goal of those tests is to quickly detect regressions.
 
   Those are entirely written in the `tests/integration` sub-directory.
 
-- conformance tests: Provide standalone page which allows to quickly test the
-  support of various media-related API on a given device and/or browser.
+- conformance tests: Provide standalone page which allows to quickly test the support of
+  various media-related API on a given device and/or browser.
 
-  The html documents you will find here are basic templates that can be easily
-  modified and deployed for quick testing.
+  The html documents you will find here are basic templates that can be easily modified
+  and deployed for quick testing.
 
-- unit tests: test specific parts of the code. The main goal here is to check
-  the implementation of smaller units of code.
+- unit tests: test specific parts of the code. The main goal here is to check the
+  implementation of smaller units of code.
 
-  They are written alongside the code, in `__tests__`
-  directories. All its configuration can be found at the root of the project,
-  in `jest.config.js` (we use the jest library for unit tests).
+  They are written alongside the code, in `__tests__` directories. All its configuration
+  can be found at the root of the project, in `jest.config.js` (we use the jest library
+  for unit tests).
 
 - memory tests: test the memory usage of the player.
 
