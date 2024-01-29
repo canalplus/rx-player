@@ -101,17 +101,21 @@ function formatInitDataValues(
 ): IFormattedInitDataValue[] {
   return initialValues
     .slice()
-    .sort((a, b) =>
-      a.systemId === b.systemId
-        ? 0
-        : a.systemId === undefined
-          ? 1
-          : b.systemId === undefined
-            ? -1
-            : a.systemId < b.systemId
-              ? -1
-              : 1,
-    )
+    .sort((a, b) => {
+      if (a.systemId === b.systemId) {
+        return 0;
+      }
+      if (a.systemId === undefined) {
+        return 1;
+      }
+      if (b.systemId === undefined) {
+        return -1;
+      }
+      if (a.systemId < b.systemId) {
+        return -1;
+      }
+      return 1;
+    })
     .map(({ systemId, data }) => ({ systemId, data, hash: hashBuffer(data) }));
 }
 

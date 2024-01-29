@@ -69,12 +69,14 @@ class IE11MediaKeySession
   }
   generateRequest(_initDataType: string, initData: BufferSource): Promise<void> {
     return new Promise((resolve) => {
-      const initDataU8 =
-        initData instanceof Uint8Array
-          ? initData
-          : initData instanceof ArrayBuffer
-            ? new Uint8Array(initData)
-            : new Uint8Array(initData.buffer);
+      let initDataU8: Uint8Array;
+      if (initData instanceof Uint8Array) {
+        initDataU8 = initData;
+      } else if (initData instanceof ArrayBuffer) {
+        initDataU8 = new Uint8Array(initData);
+      } else {
+        initDataU8 = new Uint8Array(initData.buffer);
+      }
       this._ss = this._mk.createSession("video/mp4", initDataU8);
       events.onKeyMessage(
         this._ss,

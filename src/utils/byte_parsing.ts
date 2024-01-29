@@ -246,11 +246,13 @@ function isABEqualBytes(buffer: ArrayBuffer, bytes: Uint8Array): boolean {
  * @returns {Uint8Array}
  */
 function toUint8Array(input: BufferSource): Uint8Array {
-  return input instanceof Uint8Array
-    ? input
-    : input instanceof ArrayBuffer
-      ? new Uint8Array(input)
-      : new Uint8Array(input.buffer);
+  if (input instanceof Uint8Array) {
+    return input;
+  } else if (input instanceof ArrayBuffer) {
+    return new Uint8Array(input);
+  } else {
+    return new Uint8Array(input.buffer);
+  }
 }
 
 export {

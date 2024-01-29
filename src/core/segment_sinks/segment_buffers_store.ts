@@ -155,11 +155,13 @@ export default class SegmentSinksStore {
     | { type: "uninitialized" }
     | { type: "disabled" } {
     const initializedBuffer = this._initializedSegmentSinks[bufferType];
-    return initializedBuffer === undefined
-      ? { type: "uninitialized" }
-      : initializedBuffer === null
-        ? { type: "disabled" }
-        : { type: "initialized", value: initializedBuffer };
+    if (initializedBuffer === undefined) {
+      return { type: "uninitialized" };
+    }
+    if (initializedBuffer === null) {
+      return { type: "disabled" };
+    }
+    return { type: "initialized", value: initializedBuffer };
   }
 
   /**

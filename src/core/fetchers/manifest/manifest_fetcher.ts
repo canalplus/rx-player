@@ -445,13 +445,14 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * Only perform parsing in `unsafeMode` when the last full parsing took a
      * lot of time and do not go higher than the maximum consecutive time.
      */
-
-    const unsafeModeEnabled =
-      this._consecutiveUnsafeMode > 0
-        ? this._consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE
-        : totalUpdateTime !== undefined
-          ? totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE
-          : false;
+    let unsafeModeEnabled = false;
+    if (this._consecutiveUnsafeMode > 0) {
+      unsafeModeEnabled =
+        this._consecutiveUnsafeMode < MAX_CONSECUTIVE_MANIFEST_PARSING_IN_UNSAFE_MODE;
+    } else if (totalUpdateTime !== undefined) {
+      unsafeModeEnabled =
+        totalUpdateTime >= MIN_MANIFEST_PARSING_TIME_TO_ENTER_UNSAFE_MODE;
+    }
 
     /** Time elapsed since the beginning of the Manifest request, in milliseconds. */
     const timeSinceRequest =

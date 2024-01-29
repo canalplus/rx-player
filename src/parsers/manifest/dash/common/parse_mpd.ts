@@ -308,12 +308,10 @@ function parseCompleteIntermediateRepresentation(
   const now = getMonotonicTimeStamp();
 
   if (!isDynamic) {
-    minimumTime =
-      minimumSafePosition !== undefined
-        ? minimumSafePosition
-        : parsedPeriods[0]?.start !== undefined
-          ? parsedPeriods[0].start
-          : 0;
+    minimumTime = minimumSafePosition;
+    if (minimumTime === undefined) {
+      minimumTime = parsedPeriods[0]?.start ?? 0;
+    }
     let finalMaximumSafePosition = mediaPresentationDuration ?? Infinity;
     if (parsedPeriods[parsedPeriods.length - 1] !== undefined) {
       const lastPeriod = parsedPeriods[parsedPeriods.length - 1];

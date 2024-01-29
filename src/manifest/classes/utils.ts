@@ -56,13 +56,16 @@ export function getLoggableSegmentId(
     return "";
   }
   const { period, adaptation, representation, segment } = content;
+  let segmentString;
+  if (segment.isInit) {
+    segmentString = "init";
+  } else if (segment.complete) {
+    segmentString = `${segment.time}-${segment.duration}`;
+  } else {
+    segmentString = `${segment.time}`;
+  }
   return (
     `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
-    `R: ${representation.id} S: ` +
-    (segment.isInit
-      ? "init"
-      : segment.complete
-        ? `${segment.time}-${segment.duration}`
-        : `${segment.time}`)
+    `R: ${representation.id} S: ${segmentString}`
   );
 }

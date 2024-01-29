@@ -234,6 +234,7 @@ module.exports = {
     "no-invalid-this": "error",
     "no-magic-numbers": "off",
     "no-new-wrappers": "error",
+    "no-nested-ternary": "error",
     "no-param-reassign": "error",
     "no-return-await": "error",
     "no-sequences": "error",
