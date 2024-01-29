@@ -55,12 +55,15 @@ function parseISOBMFFEmbeddedTextTrack(
   | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null> {
   const { periodStart, periodEnd, segment } = context;
 
-  const chunkBytes =
-    typeof data === "string"
-      ? strToUtf8(data)
-      : data instanceof Uint8Array
-        ? data
-        : new Uint8Array(data);
+  let chunkBytes;
+  if (typeof data === "string") {
+    chunkBytes = strToUtf8(data);
+  } else if (data instanceof Uint8Array) {
+    chunkBytes = data;
+  } else {
+    chunkBytes = new Uint8Array(data);
+  }
+
   if (segment.isInit) {
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
     return {

@@ -235,11 +235,13 @@ export function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus === "seeking"
-      ? PLAYER_STATES.SEEKING
-      : stalledStatus === "freezing"
-        ? PLAYER_STATES.FREEZING
-        : PLAYER_STATES.BUFFERING;
+    if (stalledStatus === "seeking") {
+      return PLAYER_STATES.SEEKING;
+    }
+    if (stalledStatus === "freezing") {
+      return PLAYER_STATES.FREEZING;
+    }
+    return PLAYER_STATES.BUFFERING;
   }
   return mediaElement.paused ? PLAYER_STATES.PAUSED : PLAYER_STATES.PLAYING;
 }
