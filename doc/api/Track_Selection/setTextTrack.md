@@ -4,9 +4,9 @@
 
 Change the text (subtitles) track.
 
-This method can take a string corresponding to the wanted track's `id` property.
-This `id` can for example be obtained on the corresponding track object returned
-by the `getAvailableTextTracks` method.
+This method can take a string corresponding to the wanted track's `id` property. This `id`
+can for example be obtained on the corresponding track object returned by the
+`getAvailableTextTracks` method.
 
 ```js
 // Setting the first text track
@@ -14,9 +14,8 @@ const textTracks = rxPlayer.getAvailableTextTracks();
 rxPlayer.setTextTrack(textTracks[0].id);
 ```
 
-`setTextTrack` can also accept an object argument allowing more precize
-settings, described below.
-In the case an object is given, the text track's id should be set as in a
+`setTextTrack` can also accept an object argument allowing more precize settings,
+described below. In the case an object is given, the text track's id should be set as in a
 `trackId` property.
 
 ```js
@@ -45,10 +44,9 @@ This has two potential reasons :
 
 ### Changing the text track for any Period
 
-You can change the text track for any
-[Period](../../Getting_Started/Glossary.md#period) (and not just the one being
-played) by indicating its `id` property in a `periodId` property of the Object
-given to `setTextTrack`.
+You can change the text track for any [Period](../../Getting_Started/Glossary.md#period)
+(and not just the one being played) by indicating its `id` property in a `periodId`
+property of the Object given to `setTextTrack`.
 
 Periods' `id` properties can be retrieved from several means such as the
 `getAvailablePeriods` method or the
@@ -74,9 +72,9 @@ rxPlayer.setTextTrack({
 
 ### Setting the text track as soon as possible
 
-If you want to set an text track as soon as possible, for example to choose an
-initial text track before any other one had time to be loaded, you can
-perform the `setTextTrack` call on the `newAvailablePeriods` event:
+If you want to set an text track as soon as possible, for example to choose an initial
+text track before any other one had time to be loaded, you can perform the `setTextTrack`
+call on the `newAvailablePeriods` event:
 
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
@@ -94,12 +92,12 @@ rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
 ```
 
 This will set the text track for any future
-[Period](../../Getting_Started/Glossary.md#period) being loaded, including in
-future and not-yet-loaded contents.
+[Period](../../Getting_Started/Glossary.md#period) being loaded, including in future and
+not-yet-loaded contents.
 
-If you want to also update the text track of already-loaded Periods, you can
-also call the `getAvailablePeriods` method to obtain their `id` property and
-update their text tracks right away:
+If you want to also update the text track of already-loaded Periods, you can also call the
+`getAvailablePeriods` method to obtain their `id` property and update their text tracks
+right away:
 
 ```js
 const periods = rxPlayer.getAvailablePeriods();
@@ -141,11 +139,11 @@ player.setTextTrack({
 
 - **arguments**:
 
-  1.  _arg_ `string|Object`: Either the text track's `id` property of the
-      track you want to set for current Period, or an object with the following
-      properties (only `trackId` is required):
+  1.  _arg_ `string|Object`: Either the text track's `id` property of the track you want
+      to set for current Period, or an object with the following properties (only
+      `trackId` is required):
 
       - `trackId` (`string`): The `id` property of the track you want to lock.
 
-      - `periodId` (`string|undefined`): If defined, the id of the concerned
-        Period. If not defined, it will be applied for the current Period.
+      - `periodId` (`string|undefined`): If defined, the id of the concerned Period. If
+        not defined, it will be applied for the current Period.

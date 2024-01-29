@@ -2,15 +2,15 @@
 
 ## Description
 
-Disable a lock previously set respectively with [the `lockVideoRepresentations`
-or the `lockAudioRepresentations`](./lockAudioVideoRepresentations.md)
+Disable a lock previously set respectively with
+[the `lockVideoRepresentations` or the `lockAudioRepresentations`](./lockAudioVideoRepresentations.md)
 methods.
 
 Without arguments, it unlocks locked Representation for the current
 [`Period`](../../Getting_Started/Glossary.md#period).
 
-You can also unlock Representations for any Period by providing its `id`
-property as argument.
+You can also unlock Representations for any Period by providing its `id` property as
+argument.
 
 ```js
 // Example: unlocking video Representations for the first Period
@@ -36,6 +36,6 @@ player.unlockAudioRepresentations(periodId);
 
 - **arguments**:
 
-  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want
-      to get its video or audio Representations unlock.
-      If not defined, it will apply to the currently-playing Period.
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want to get its
+      video or audio Representations unlock. If not defined, it will apply to the
+      currently-playing Period.
