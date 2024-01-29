@@ -19,8 +19,8 @@
  * It always should be imported through the `features` object.
  */
 
-import type { ICompatVTTCue } from "../../../compat";
-import { makeVTTCue } from "../../../compat";
+import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
+import makeVTTCue from "../../../compat/make_vtt_cue";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 

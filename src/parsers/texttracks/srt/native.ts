@@ -22,8 +22,8 @@
 // srt to VTTCue parser, Done for fun.
 // Heavily inspired from the WebVTT implementation
 
-import type { ICompatVTTCue } from "../../../compat/index";
-import { makeVTTCue } from "../../../compat/index";
+import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
+import makeVTTCue from "../../../compat/make_vtt_cue";
 import getCueBlocks from "./get_cue_blocks";
 import parseCueBlock from "./parse_cue";
 

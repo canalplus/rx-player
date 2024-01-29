@@ -19,7 +19,6 @@
  * It always should be imported through the `features` object.
  */
 
-import { enableAudioTrack } from "../../compat";
 import type {
   ICompatAudioTrack,
   ICompatAudioTrackList,
@@ -28,6 +27,7 @@ import type {
   ICompatVideoTrack,
   ICompatVideoTrackList,
 } from "../../compat/browser_compatibility_types";
+import enableAudioTrack from "../../compat/enable_audio_track";
 import type { IRepresentation } from "../../manifest";
 import type {
   IAudioTrack,

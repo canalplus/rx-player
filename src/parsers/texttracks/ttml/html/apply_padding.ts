@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { addClassName } from "../../../../compat";
+import addClassName from "../../../../compat/add_class_name";
 import log from "../../../../log";
 import { REGXP_LENGTH } from "../regexps";
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../../compat";
+import { MediaSource_ } from "../../../../compat/browser_compatibility_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IMediaConfiguration } from "../types";
 import { ProberStatus } from "../types";

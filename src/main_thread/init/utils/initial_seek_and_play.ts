@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { shouldValidateMetadata } from "../../../compat";
 import { isSafariMobile } from "../../../compat/browser_detection";
+import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IMediaElementPlaybackObserver } from "../../../playback_observer";

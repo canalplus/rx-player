@@ -60,9 +60,6 @@ For example, if an event does not have the same name depending on the browser, t
 files will expose a simple function allowing to make sure the event is catched, taking the
 task of registering the right event on the callback given.
 
-Every functions needed in the rest of the code are exported in `compat/index.js`, making
-it easier to import (e.g. by just doing `import { whatINeed } from "../compat";`)
-
 ### `src/core/`: Core logic
 
 Defines the core logic of the RxPlayer, regardless of the browser and of the streaming

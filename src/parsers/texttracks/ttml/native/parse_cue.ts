@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../../../compat";
-import { isVTTCue, makeVTTCue } from "../../../../compat";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
+import isVTTCue from "../../../../compat/is_vtt_cue";
+import makeVTTCue from "../../../../compat/make_vtt_cue";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IStyleList } from "../get_styling";

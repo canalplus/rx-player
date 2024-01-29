@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import { events } from "../../compat";
+import {
+  onRemoveSourceBuffers,
+  onSourceOpen,
+  onSourceBufferUpdate,
+} from "../../compat/event_listeners";
 import log from "../../log";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
-
-const { onRemoveSourceBuffers, onSourceOpen, onSourceBufferUpdate } = events;
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.

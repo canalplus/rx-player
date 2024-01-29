@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { canReuseMediaKeys } from "../../compat";
+import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";

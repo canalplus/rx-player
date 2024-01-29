@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { clearElementSrc } from "../../../compat";
+import clearElementSrc from "../../../compat/clear_element_src";
 import log from "../../../log";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";

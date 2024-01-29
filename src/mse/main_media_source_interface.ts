@@ -1,4 +1,5 @@
-import { MediaSource_, tryToChangeSourceBufferType } from "../compat";
+import { MediaSource_ } from "../compat/browser_compatibility_types";
+import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
 import { MediaError, SourceBufferError } from "../errors";
 import log from "../log";

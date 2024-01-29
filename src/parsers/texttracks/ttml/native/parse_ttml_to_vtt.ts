@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../../../compat";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
 import parseTtml from "../parse_ttml";
 import parseCue from "./parse_cue";
 

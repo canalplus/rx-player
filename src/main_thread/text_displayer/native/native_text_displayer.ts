@@ -1,5 +1,5 @@
-import type { ICompatTextTrack } from "../../../compat";
-import { addTextTrack } from "../../../compat";
+import addTextTrack from "../../../compat/add_text_track";
+import type { ICompatTextTrack } from "../../../compat/browser_compatibility_types";
 import removeCue from "../../../compat/remove_cue";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";

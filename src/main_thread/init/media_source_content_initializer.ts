@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { shouldReloadMediaSourceOnDecipherabilityUpdate } from "../../compat";
+import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import config from "../../config";
 import type {
   IAdaptiveRepresentationSelectorArguments,
