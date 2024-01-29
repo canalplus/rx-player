@@ -183,11 +183,12 @@ export default function generateAudioVideoSegmentParser({
       }
     }
 
-    const timescale = seemsToBeMP4
-      ? getMDHDTimescale(chunkData)
-      : containerType === "webm"
-        ? getTimeCodeScale(chunkData, 0)
-        : undefined;
+    let timescale;
+    if (seemsToBeMP4) {
+      timescale = getMDHDTimescale(chunkData);
+    } else if (containerType === "webm") {
+      timescale = getTimeCodeScale(chunkData, 0);
+    }
 
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined : timescale;
 

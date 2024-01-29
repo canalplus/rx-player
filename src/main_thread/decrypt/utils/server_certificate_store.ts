@@ -94,11 +94,13 @@ export default {
    */
   hasOne(mediaKeys: MediaKeys | ICustomMediaKeys): boolean | undefined {
     const currentServerCertificate = serverCertificateHashesMap.get(mediaKeys);
-    return currentServerCertificate === undefined
-      ? false
-      : currentServerCertificate === null
-        ? undefined
-        : true;
+    if (currentServerCertificate === undefined) {
+      return false;
+    }
+    if (currentServerCertificate === null) {
+      return undefined;
+    }
+    return true;
   },
 
   /**

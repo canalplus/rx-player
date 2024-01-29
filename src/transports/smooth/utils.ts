@@ -35,11 +35,13 @@ function constructSegmentUrl(
   wantedCdn: ICdnMetadata | null,
   segment: ISegment,
 ): string | null {
-  return wantedCdn === null
-    ? null
-    : segment.url === null
-      ? wantedCdn.baseUrl
-      : resolveURL(wantedCdn.baseUrl, segment.url);
+  if (wantedCdn === null) {
+    return null;
+  }
+  if (segment.url === null) {
+    return wantedCdn.baseUrl;
+  }
+  return resolveURL(wantedCdn.baseUrl, segment.url);
 }
 
 export { constructSegmentUrl, isMP4EmbeddedTrack };

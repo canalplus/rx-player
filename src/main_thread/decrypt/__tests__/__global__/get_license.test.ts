@@ -443,18 +443,26 @@ function checkGetLicense({
     contentDecryptor.onInitializationData(initDataEvent);
 
     if (!shouldFail) {
-      const timeout =
-        nbRetries === 0
-          ? 100
-          : nbRetries === 1
-            ? 300
-            : nbRetries === 2
-              ? 800
-              : nbRetries === 3
-                ? 1200
-                : nbRetries === 4
-                  ? 3000
-                  : 10000;
+      let timeout: number;
+      switch (nbRetries) {
+        case 0:
+          timeout = 100;
+          break;
+        case 1:
+          timeout = 300;
+          break;
+        case 2:
+          timeout = 800;
+          break;
+        case 3:
+          timeout = 1200;
+          break;
+        case 4:
+          timeout = 3000;
+          break;
+        default:
+          timeout = 10000;
+      }
       setTimeout(() => {
         try {
           if (ignoreLicenseRequests) {

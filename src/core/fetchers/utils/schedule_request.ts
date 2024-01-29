@@ -380,18 +380,16 @@ export async function scheduleRequestWithCdns<T>(
           if (acc === undefined) {
             return [x, blockedUntil];
           }
+          if (acc[1] === undefined) {
+            return acc;
+          }
           if (blockedUntil === undefined) {
-            if (acc[1] === undefined) {
-              return acc;
-            }
             return [x, undefined];
           }
-
-          return acc[1] === undefined
-            ? acc
-            : blockedUntil < acc[1]
-              ? [x, blockedUntil]
-              : acc;
+          if (blockedUntil < acc[1]) {
+            return [x, blockedUntil];
+          }
+          return acc;
         },
         undefined,
       )?.[0];

@@ -36,7 +36,13 @@ function parseString(
  * @returns {number|boolean}
  */
 function parseFloatOrBool(val: number): number | boolean {
-  return val === Infinity ? true : val === -Infinity ? false : val;
+  if (val === Infinity) {
+    return true;
+  }
+  if (val === -Infinity) {
+    return false;
+  }
+  return val;
 }
 
 export { parseString, parseFloatOrBool };

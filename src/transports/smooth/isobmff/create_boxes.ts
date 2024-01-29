@@ -285,7 +285,14 @@ function createFRMABox(dataFormat: string): Uint8Array {
  * @returns {Uint8Array}
  */
 function createAVCCBox(sps: Uint8Array, pps: Uint8Array, nalLen: number): Uint8Array {
-  const nal = nalLen === 2 ? 0x1 : nalLen === 4 ? 0x3 : 0x0;
+  let nal;
+  if (nalLen === 2) {
+    nal = 0x1;
+  } else if (nalLen === 4) {
+    nal = 0x3;
+  } else {
+    nal = 0x0;
+  }
 
   // Deduce AVC Profile from SPS
   const h264Profile = sps[1];

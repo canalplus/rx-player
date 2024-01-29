@@ -204,14 +204,18 @@ function applyTextStyle(
 
   // applies to body, div, p, region, span
   const wrapOption = style.wrapOption;
-  element.style.whiteSpace =
-    wrapOption === "noWrap"
-      ? shouldTrimWhiteSpace
-        ? "nowrap"
-        : "pre"
-      : shouldTrimWhiteSpace
-        ? "normal"
-        : "pre-wrap";
+
+  if (wrapOption === "noWrap") {
+    if (shouldTrimWhiteSpace) {
+      element.style.whiteSpace = "nowrap";
+    } else {
+      element.style.whiteSpace = "pre";
+    }
+  } else if (shouldTrimWhiteSpace) {
+    element.style.whiteSpace = "normal";
+  } else {
+    element.style.whiteSpace = "pre-wrap";
+  }
 }
 
 /**

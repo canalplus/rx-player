@@ -61,12 +61,15 @@ function parseISOBMFFEmbeddedTextTrack(
   const { segment } = context;
   const { isInit, indexRange } = segment;
 
-  const chunkBytes =
-    typeof data === "string"
-      ? strToUtf8(data)
-      : data instanceof Uint8Array
-        ? data
-        : new Uint8Array(data);
+  let chunkBytes;
+  if (typeof data === "string") {
+    chunkBytes = strToUtf8(data);
+  } else if (data instanceof Uint8Array) {
+    chunkBytes = data;
+  } else {
+    chunkBytes = new Uint8Array(data);
+  }
+
   if (isInit) {
     const segmentList = getSegmentsFromSidx(
       chunkBytes,
@@ -188,7 +191,7 @@ export default function generateTextTrackParser({
   /**
    * Parse TextTrack data.
    * @param {Object} loadedSegment
-   * @param {Object} content
+   * @param {Object} context
    * @param {number|undefined} initTimescale
    * @returns {Object}
    */
