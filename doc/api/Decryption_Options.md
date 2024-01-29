@@ -116,7 +116,7 @@ If this callback throws or rejects, the RxPlayer will either:
 
   If we have no Representation to fallback to anymore, we will throw a MediaError with a
   `NO_PLAYABLE_REPRESENTATION` code, as documented
-  [in the errors documentation](./Player_Errors.md#types-media_error).
+  [in the errors documentation](./Player_Errors.md#media_error).
 
 If the `getLicense` call throws/rejects, you can add any of the following properties (none
 are mandatory) to configure the behavior of the RxPlayer relative to that failure:
@@ -147,7 +147,7 @@ are mandatory) to configure the behavior of the RxPlayer relative to that failur
   rather try to fallback on other Representations (e.g. qualities) which might have a
   different decryption key. If no Representation is left, we will throw a MediaError with
   a `NO_PLAYABLE_REPRESENTATION` code, as documented
-  [in the errors documentation](./Player_Errors.md#types-media_error).
+  [in the errors documentation](./Player_Errors.md#media_error).
 
   This option is thus only useful for contents depending on multiple licenses.
 
@@ -354,7 +354,7 @@ or
 will be required, optional or not-allowed.
 
 It can be set to any value of the `MediaKeysRequirement` enumeration, as declared
-[here in the EME specification](#https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
+[here in the EME specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
 
 ### persistentState
@@ -373,7 +373,7 @@ value to `"required"` is redundant and therefore unnecessary (as exploiting pers
 licenses already necessitate the ability to persist session state).
 
 It can be set to any value of the `MediaKeysRequirement` enumeration, as declared
-[here in the EME specification](#https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
+[here in the EME specification](https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement).
 This is not needed for most use cases.
 
 ### onKeyOutputRestricted
@@ -393,7 +393,7 @@ default one if not is defined being `"error"`:
   status. This is the default behavior.
 
   The error emitted in that case should be an
-  [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+  [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
   `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses` property containing
   at least one string set to `"output-restricted"`.
 
@@ -426,7 +426,7 @@ default one if not is defined being `"error"`:
   status. This is the default behavior.
 
   The error emitted in that case should be an
-  [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+  [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
   `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses` property containing
   at least one string set to `"internal-error"`.
 
@@ -468,7 +468,7 @@ default one if not is defined being `"error"`:
   default behavior.
 
   The error emitted in that case should be an
-  [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+  [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
   `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses` property containing
   at least one string set to `"expired"`.
 

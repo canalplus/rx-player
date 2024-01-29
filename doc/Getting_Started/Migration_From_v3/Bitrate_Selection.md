@@ -195,10 +195,11 @@ As for the `Representation` objects themselves, they can for example be obtained
 
 - The [`videoTrackChange`](../../api/Player_Events.md#videotrackchange),
   [`audioTrackChange`](../../api/Player_Events.md#audiotrackchange),
-  [`availableVideoTracksChange`](../../api/Player_Events.md#availablevideotracks) and
-  [`availableAudioTracksChange`](../../api/Player_Events.md#availableaudiotracks) player
-  events which respectively emit data similar to the `getVideoTrack`, `getAudioTrack`,
-  `getAvailableVideoTracks` and `getAvailableAudioTracks` methods.
+  [`availableVideoTracksChange`](../../api/Player_Events.md#availablevideotrackschange)
+  and
+  [`availableAudioTracksChange`](../../api/Player_Events.md#availableaudiotrackschange)
+  player events which respectively emit data similar to the `getVideoTrack`,
+  `getAudioTrack`, `getAvailableVideoTracks` and `getAvailableAudioTracks` methods.
 
 ### Global idea to replace the previous API
 
