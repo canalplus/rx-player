@@ -2,26 +2,25 @@
 
 ## Preliminary notes
 
-You will find the architecture documentation alongside the code it documents,
-as `README.md` files (like this one).
+You will find the architecture documentation alongside the code it documents, as
+`README.md` files (like this one).
 
 ## Global architecture
 
-The RxPlayer may either run in a multithreaded "mode" or a monothreaded
-one depending on how it is configured.
-To easily allow for both, files containing its main logic are principally
-organized between two directories:
+The RxPlayer may either run in a multithreaded "mode" or a monothreaded one depending on
+how it is configured. To easily allow for both, files containing its main logic are
+principally organized between two directories:
 
-- `./main_thread` contains code that will always run in the main JS thread
-  regardless of the RxPlayer's current mode.
+- `./main_thread` contains code that will always run in the main JS thread regardless of
+  the RxPlayer's current mode.
 
-- `./core` contains code that may either run in a separate Worker thread (in
-  the multithreaded mode) or in main thread (in monothreaded mode).
+- `./core` contains code that may either run in a separate Worker thread (in the
+  multithreaded mode) or in main thread (in monothreaded mode).
 
 There are also several other files and directories those two may depend on.
 
-To better understand the player's architecture, you can find below a
-simplified schema for it:
+To better understand the player's architecture, you can find below a simplified schema for
+it:
 
 ``````
                +---------------------------------------------+
@@ -156,55 +155,51 @@ Stream (./core/stream)     |                                       \    |
                                                implementation
 ``````
 
-For the subdirectories and files in this directory not represented in that
-schema:
+For the subdirectories and files in this directory not represented in that schema:
 
-- `Compat` (_./compat_): Regroups every functions related to improving
-  compatibility with browsers / environments.
+- `Compat` (_./compat_): Regroups every functions related to improving compatibility with
+  browsers / environments.
 
 - `errors` (_./errors_): Defines error subclasses, most of all for the API.
 
-- `experimental` (_./experimental_): Special directory for "experimental" tools
-  and features.
+- `experimental` (_./experimental_): Special directory for "experimental" tools and
+  features.
 
 - `features` (_./features_): Special directory allowing feature switching
-  (enabling/disallowing features to not include unused code when importing the
-  RxPlayer).
+  (enabling/disallowing features to not include unused code when importing the RxPlayer).
 
-- `manifest` (_./manifest_): Defines a `Manifest` structure and its
-  properties, a central structure of the player describing a content.
+- `manifest` (_./manifest_): Defines a `Manifest` structure and its properties, a central
+  structure of the player describing a content.
 
-- `multithread` (_./multithread_): Global code specific to the multithreaded
-  "flavor" of the RxPlayer, that is a specific RxPlayer class which may run
-  its main logic in a WebWorker to improve performance.
+- `multithread` (_./multithread_): Global code specific to the multithreaded "flavor" of
+  the RxPlayer, that is a specific RxPlayer class which may run its main logic in a
+  WebWorker to improve performance.
 
 - `parsers` (_./parsers_): Various parsers for several formats
 
-- `tools` (_./tools_): Defines "tools", APIs which are not part of the
-  RxPlayer class.
+- `tools` (_./tools_): Defines "tools", APIs which are not part of the RxPlayer class.
 
-- `utils` (_./utils_): Define utils function, small functions which can be
-  used in several part of the RxPlayer's code.
+- `utils` (_./utils_): Define utils function, small functions which can be used in several
+  part of the RxPlayer's code.
 
-- `config.ts` (_./config.ts_): Exports an interface allowing to update the
-  RxPlayer's config.
+- `config.ts` (_./config.ts_): Exports an interface allowing to update the RxPlayer's
+  config.
 
-- `index.ts` (_./index.ts_): Exports the main entry point for the RxPlayer,
-  with a default set of features.
+- `index.ts` (_./index.ts_): Exports the main entry point for the RxPlayer, with a default
+  set of features.
 
 - `log.ts` (_./log.ts_): Exports the main RxPlayer's Logger instance.
 
-- `minimal.ts` (_./minimal.ts_): Exports the entry point for the minimal
-  RxPlayer, which is an RxPlayer without any feature. When relying on this
-  build, an application will have to manually add the specific features it
-  wants.
+- `minimal.ts` (_./minimal.ts_): Exports the entry point for the minimal RxPlayer, which
+  is an RxPlayer without any feature. When relying on this build, an application will have
+  to manually add the specific features it wants.
 
-- `multithread_types.ts` (_./multithread_types.ts_): TypeScript types used
-  specifically when running the RxPlayer in multithread mode.
+- `multithread_types.ts` (_./multithread_types.ts_): TypeScript types used specifically
+  when running the RxPlayer in multithread mode.
 
-- `public_types.ts` (_./public_types.ts_): List all TypeScript types which are
-  part of the API.
+- `public_types.ts` (_./public_types.ts_): List all TypeScript types which are part of the
+  API.
 
-- `worker_entry_point.ts` (_./worker_entry_point.ts_): Entry point for the
-  logic of the RxPlayer which will run in the WebWorker (and which will
-  have to be loaded separately by the application).
+- `worker_entry_point.ts` (_./worker_entry_point.ts_): Entry point for the logic of the
+  RxPlayer which will run in the WebWorker (and which will have to be loaded separately by
+  the application).

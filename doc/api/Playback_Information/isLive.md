@@ -2,8 +2,8 @@
 
 ## Description
 
-Returns `true` if the content is a "live" content (e.g. a live TV Channel).
-`false` otherwise.
+Returns `true` if the content is a "live" content (e.g. a live TV Channel). `false`
+otherwise.
 
 Also `false` if no content is loaded yet.
 
