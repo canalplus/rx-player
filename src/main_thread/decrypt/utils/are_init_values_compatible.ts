@@ -93,18 +93,22 @@ function _isAInB(
       return false;
     }
 
-    const aData: Uint8Array =
-      firstAElt.data instanceof Uint8Array
-        ? firstAElt.data
-        : typeof firstAElt.data === "string"
-          ? SerializableBytes.decode(firstAElt.data)
-          : firstAElt.data.initData;
-    const bData: Uint8Array =
-      bElt.data instanceof Uint8Array
-        ? bElt.data
-        : typeof bElt.data === "string"
-          ? SerializableBytes.decode(bElt.data)
-          : bElt.data.initData;
+    let aData: Uint8Array;
+    if (firstAElt.data instanceof Uint8Array) {
+      aData = firstAElt.data;
+    } else if (typeof firstAElt.data === "string") {
+      aData = SerializableBytes.decode(firstAElt.data);
+    } else {
+      aData = firstAElt.data.initData;
+    }
+    let bData: Uint8Array;
+    if (bElt.data instanceof Uint8Array) {
+      bData = bElt.data;
+    } else if (typeof bElt.data === "string") {
+      bData = SerializableBytes.decode(bElt.data);
+    } else {
+      bData = bElt.data.initData;
+    }
     if (!areArraysOfNumbersEqual(aData, bData)) {
       return false;
     }
@@ -125,18 +129,22 @@ function _isAInB(
         if (aElt.hash !== bNewElt.hash) {
           return false;
         }
-        const aNewData: Uint8Array =
-          aElt.data instanceof Uint8Array
-            ? aElt.data
-            : typeof aElt.data === "string"
-              ? SerializableBytes.decode(aElt.data)
-              : aElt.data.initData;
-        const bNewData: Uint8Array =
-          bNewElt.data instanceof Uint8Array
-            ? bNewElt.data
-            : typeof bNewElt.data === "string"
-              ? SerializableBytes.decode(bNewElt.data)
-              : bNewElt.data.initData;
+        let aNewData: Uint8Array;
+        if (aElt.data instanceof Uint8Array) {
+          aNewData = aElt.data;
+        } else if (typeof aElt.data === "string") {
+          aNewData = SerializableBytes.decode(aElt.data);
+        } else {
+          aNewData = aElt.data.initData;
+        }
+        let bNewData: Uint8Array;
+        if (bNewElt.data instanceof Uint8Array) {
+          bNewData = bNewElt.data;
+        } else if (typeof bNewElt.data === "string") {
+          bNewData = SerializableBytes.decode(bNewElt.data);
+        } else {
+          bNewData = bNewElt.data.initData;
+        }
         if (!areArraysOfNumbersEqual(aNewData, bNewData)) {
           return false;
         }

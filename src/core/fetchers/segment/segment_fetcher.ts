@@ -88,14 +88,15 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   lifecycleCallbacks: ISegmentFetcherLifecycleCallbacks,
   options: ISegmentFetcherOptions,
 ): ISegmentFetcher<TSegmentDataType> {
+  let connectionTimeout;
+  if (options.connectionTimeout === undefined || options.connectionTimeout < 0) {
+    connectionTimeout = undefined;
+  } else {
+    connectionTimeout = options.connectionTimeout;
+  }
   const requestOptions = {
     timeout: options.requestTimeout < 0 ? undefined : options.requestTimeout,
-    connectionTimeout:
-      options.connectionTimeout === undefined
-        ? undefined
-        : options.connectionTimeout < 0
-          ? undefined
-          : options.connectionTimeout,
+    connectionTimeout,
   };
 
   /**

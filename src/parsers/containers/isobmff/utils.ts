@@ -185,7 +185,13 @@ function getTrackFragmentDecodeTime(buffer: Uint8Array): number | undefined {
     return undefined;
   }
   const version = tfdt[0];
-  return version === 1 ? be8toi(tfdt, 4) : version === 0 ? be4toi(tfdt, 4) : undefined;
+  if (version === 1) {
+    return be8toi(tfdt, 4);
+  }
+  if (version === 0) {
+    return be4toi(tfdt, 4);
+  }
+  return undefined;
 }
 
 /**
@@ -329,11 +335,12 @@ function getMDHDTimescale(buffer: Uint8Array): number | undefined {
   let cursor = 0;
   const version = mdhd[cursor];
   cursor += 4;
-  return version === 1
-    ? be4toi(mdhd, cursor + 16)
-    : version === 0
-      ? be4toi(mdhd, cursor + 8)
-      : undefined;
+  if (version === 1) {
+    return be4toi(mdhd, cursor + 16);
+  } else if (version === 0) {
+    return be4toi(mdhd, cursor + 8);
+  }
+  return undefined;
 }
 
 /**

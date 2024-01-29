@@ -393,13 +393,15 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
         this._operationQueue.length > 0 &&
         this._operationQueue[0].operationName === SbiOperationName.Push
       ) {
-        const toConcat = [
-          ogData instanceof ArrayBuffer
-            ? new Uint8Array(ogData)
-            : ogData instanceof Uint8Array
-              ? ogData
-              : new Uint8Array(ogData.buffer),
-        ];
+        let prevU8;
+        if (ogData instanceof ArrayBuffer) {
+          prevU8 = new Uint8Array(ogData);
+        } else if (ogData instanceof Uint8Array) {
+          prevU8 = ogData;
+        } else {
+          prevU8 = new Uint8Array(ogData.buffer);
+        }
+        const toConcat = [prevU8];
         while (this._operationQueue[0]?.operationName === SbiOperationName.Push) {
           const followingElem = this._operationQueue[0];
           const cAw = params.appendWindow ?? [undefined, undefined];
@@ -413,13 +415,15 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
             cTo === fTo
           ) {
             const newData = followingElem.params[0];
-            toConcat.push(
-              newData instanceof ArrayBuffer
-                ? new Uint8Array(newData)
-                : newData instanceof Uint8Array
-                  ? newData
-                  : new Uint8Array(newData.buffer),
-            );
+            let newU8;
+            if (newData instanceof ArrayBuffer) {
+              newU8 = new Uint8Array(newData);
+            } else if (newData instanceof Uint8Array) {
+              newU8 = newData;
+            } else {
+              newU8 = new Uint8Array(newData.buffer);
+            }
+            toConcat.push(newU8);
             this._operationQueue.splice(0, 1);
             this._currentOperations.push({
               operationName: SbiOperationName.Push,
