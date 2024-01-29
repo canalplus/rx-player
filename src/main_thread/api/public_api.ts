@@ -19,8 +19,15 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import { events, getStartDate } from "../../compat";
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
+import type { IPictureInPictureEvent } from "../../compat/event_listeners";
+import {
+  getPictureOnPictureStateRef,
+  getVideoVisibilityRef,
+  getElementResolutionRef,
+  getScreenResolutionRef,
+} from "../../compat/event_listeners";
+import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWebassembly from "../../compat/has_webassembly";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
@@ -134,13 +141,6 @@ import {
 
 const generateContentId = idGenerator();
 
-const {
-  getPictureOnPictureStateRef,
-  getVideoVisibilityRef,
-  getElementResolutionRef,
-  getScreenResolutionRef,
-} = events;
-
 /**
  * Options of a `loadVideo` call which are for now not supported when running
  * in a "multithread" mode.
@@ -237,7 +237,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_preferTrickModeTracks: boolean;
 
   /** Refer to last picture in picture event received. */
-  private _priv_pictureInPictureRef: IReadOnlySharedReference<events.IPictureInPictureEvent>;
+  private _priv_pictureInPictureRef: IReadOnlySharedReference<IPictureInPictureEvent>;
 
   /** Store wanted configuration for the `videoResolutionLimit` option. */
   private readonly _priv_videoResolutionLimit: "videoElement" | "screen" | "none";

@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  shouldValidateMetadata,
-  shouldWaitForDataBeforeLoaded,
-  shouldWaitForHaveEnoughData,
-} from "../../../compat";
+import shouldValidateMetadata from "../../../compat/should_validate_metadata";
+import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded";
+import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,

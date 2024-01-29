@@ -29,7 +29,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   });
 
   it("should throw if no compatible MediaSource API", () => {
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: null,
     }));
     const probeMediaContentType = jest.requireActual(
@@ -43,7 +43,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   });
 
   it("should throw if no compatible isTypeSupported API", () => {
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: false,
       },
@@ -60,7 +60,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should throw if no specified contentType in config", (done) => {
     const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -88,7 +88,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should resolve with `Supported` when video contentType is supported", (done) => {
     const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -117,7 +117,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should resolve with `Supported` when audio contentType is supported", (done) => {
     const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -146,7 +146,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should resolve with `Supported` when both contentTypes are supported", (done) => {
     const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -178,7 +178,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should return `NotSupported` when audio contentType is not supported", (done) => {
     const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -207,7 +207,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should return `NotSupported` when video contentType is not supported", (done) => {
     const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -236,7 +236,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
   it("should resolve with `NotSupported` when contentTypes are not supported", (done) => {
     const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -270,7 +270,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     const mockIsTypeSupported = jest.fn((type: string) => {
       return type === "video/mp5";
     });
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
