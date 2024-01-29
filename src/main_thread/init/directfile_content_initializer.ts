@@ -19,7 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
-import { clearElementSrc } from "../../compat";
+import clearElementSrc from "../../compat/clear_element_src";
 import type { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";

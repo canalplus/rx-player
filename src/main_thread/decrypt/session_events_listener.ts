@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-import { events } from "../../compat";
 import type { ICustomMediaKeySession } from "../../compat/eme";
+import {
+  onKeyError,
+  onKeyMessage,
+  onKeyStatusesChange,
+} from "../../compat/event_listeners";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
@@ -25,8 +29,6 @@ import type { IBackoffOptions } from "../../utils/retry_promise_with_backoff";
 import retryPromiseWithBackoff from "../../utils/retry_promise_with_backoff";
 import TaskCanceller, { CancellationSignal } from "../../utils/task_canceller";
 import checkKeyStatuses from "./utils/check_key_statuses";
-
-const { onKeyError, onKeyMessage, onKeyStatusesChange } = events;
 
 /**
  * Listen to various events from a MediaKeySession and react accordingly

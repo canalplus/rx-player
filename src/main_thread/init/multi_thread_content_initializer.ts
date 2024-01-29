@@ -1,7 +1,5 @@
-import {
-  isCodecSupported,
-  shouldReloadMediaSourceOnDecipherabilityUpdate,
-} from "../../compat";
+import isCodecSupported from "../../compat/is_codec_supported";
+import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,

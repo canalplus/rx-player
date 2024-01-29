@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { addClassName } from "../../../../compat";
+import addClassName from "../../../../compat/add_class_name";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import objectAssign from "../../../../utils/object_assign";
 import type { IStyleList, IStyleObject } from "../get_styling";

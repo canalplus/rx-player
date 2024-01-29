@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { shouldUnsetMediaKeys } from "../../compat/";
+import shouldUnsetMediaKeys from "../../compat/should_unset_media_keys";
 import log from "../../log";
 import disposeDecryptionResources from "./dispose_decryption_resources";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
