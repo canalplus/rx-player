@@ -182,12 +182,9 @@ function createSmoothStreamingParser(
         const packetSize = getAttribute("PacketSize");
         const samplingRate = getAttribute("SamplingRate");
         const bitrateAttr = getAttribute("Bitrate");
-        const bitrate =
-          bitrateAttr === undefined
-            ? 0
-            : isNaN(parseInt(bitrateAttr, 10))
-              ? 0
-              : parseInt(bitrateAttr, 10);
+
+        let bitrate = bitrateAttr === undefined ? 0 : parseInt(bitrateAttr, 10);
+        bitrate = isNaN(bitrate) ? 0 : bitrate;
 
         if (
           (fourCC !== undefined && MIME_TYPES[fourCC] === undefined) ||
@@ -221,12 +218,9 @@ function createSmoothStreamingParser(
         const width = getAttribute("MaxWidth");
         const height = getAttribute("MaxHeight");
         const bitrateAttr = getAttribute("Bitrate");
-        const bitrate =
-          bitrateAttr === undefined
-            ? 0
-            : isNaN(parseInt(bitrateAttr, 10))
-              ? 0
-              : parseInt(bitrateAttr, 10);
+
+        let bitrate = bitrateAttr === undefined ? 0 : parseInt(bitrateAttr, 10);
+        bitrate = isNaN(bitrate) ? 0 : bitrate;
 
         if (
           (fourCC !== undefined && MIME_TYPES[fourCC] === undefined) ||
@@ -253,12 +247,10 @@ function createSmoothStreamingParser(
         const codecPrivateData = getAttribute("CodecPrivateData");
         const fourCC = getAttribute("FourCC");
         const bitrateAttr = getAttribute("Bitrate");
-        const bitrate =
-          bitrateAttr === undefined
-            ? 0
-            : isNaN(parseInt(bitrateAttr, 10))
-              ? 0
-              : parseInt(bitrateAttr, 10);
+
+        let bitrate = bitrateAttr === undefined ? 0 : parseInt(bitrateAttr, 10);
+        bitrate = isNaN(bitrate) ? 0 : bitrate;
+
         return {
           bitrate,
           customAttributes,
@@ -292,12 +284,10 @@ function createSmoothStreamingParser(
       isLive,
     } = args;
     const timescaleAttr = root.getAttribute("Timescale");
-    const _timescale =
-      timescaleAttr === null
-        ? timescale
-        : isNaN(+timescaleAttr)
-          ? timescale
-          : +timescaleAttr;
+    let _timescale = timescaleAttr === null ? timescale : +timescaleAttr;
+    if (isNaN(_timescale)) {
+      _timescale = timescale;
+    }
 
     const typeAttribute = root.getAttribute("Type");
     if (typeAttribute === null) {
@@ -488,11 +478,10 @@ function createSmoothStreamingParser(
     }
 
     const timescaleAttr = root.getAttribute("Timescale");
-    const timescale = !isNonEmptyString(timescaleAttr)
-      ? 10000000
-      : isNaN(+timescaleAttr)
-        ? 10000000
-        : +timescaleAttr;
+    let timescale = !isNonEmptyString(timescaleAttr) ? 10000000 : +timescaleAttr;
+    if (isNaN(timescale)) {
+      timescale = 10000000;
+    }
 
     const { protections, adaptationNodes } = reduceChildren<{
       protections: IContentProtectionSmooth[];
@@ -662,12 +651,10 @@ function createSmoothStreamingParser(
       timeshiftDepth = timeShiftBufferDepth ?? null;
     } else {
       minimumTime = safeMinimumTime ?? 0;
-      const maximumTime =
-        safeMaximumTime !== undefined
-          ? safeMaximumTime
-          : duration !== undefined
-            ? minimumTime + duration
-            : Infinity;
+      let maximumTime = safeMaximumTime;
+      if (maximumTime === undefined) {
+        maximumTime = duration !== undefined ? minimumTime + duration : Infinity;
+      }
       maximumTimeData = {
         isLinear: false,
         maximumSafePosition: maximumTime,
