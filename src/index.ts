@@ -20,6 +20,7 @@
  */
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
+import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
 import {
   DASH,
   DIRECTFILE,
@@ -37,24 +38,32 @@ import {
 import logger from "./log";
 import Player from "./main_thread/api";
 
-Player.addFeatures([
-  SMOOTH,
-  DASH,
-  DIRECTFILE,
-  EME,
-  NATIVE_TTML_PARSER,
-  NATIVE_SAMI_PARSER,
-  NATIVE_VTT_PARSER,
-  NATIVE_SRT_PARSER,
-  HTML_TTML_PARSER,
-  HTML_SAMI_PARSER,
-  HTML_VTT_PARSER,
-  HTML_SRT_PARSER,
-]);
-if (isDebugModeEnabled()) {
-  logger.setLevel("DEBUG");
-} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
-}
+// NOTE: We're here doing an IIFE to ensure those side-effects are performed
+// when this file's default export is imported while still respecting the
+// spirit of our `package.json`'s `sideEffects` attribute.
+export default (() => {
+  patchWebkitSourceBuffer();
 
-export default Player;
+  Player.addFeatures([
+    SMOOTH,
+    DASH,
+    DIRECTFILE,
+    EME,
+    NATIVE_TTML_PARSER,
+    NATIVE_SAMI_PARSER,
+    NATIVE_VTT_PARSER,
+    NATIVE_SRT_PARSER,
+    HTML_TTML_PARSER,
+    HTML_SAMI_PARSER,
+    HTML_VTT_PARSER,
+    HTML_SRT_PARSER,
+  ]);
+  if (isDebugModeEnabled()) {
+    logger.setLevel("DEBUG");
+  } else if (
+    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)
+  ) {
+    logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
+  }
+  return Player;
+})();

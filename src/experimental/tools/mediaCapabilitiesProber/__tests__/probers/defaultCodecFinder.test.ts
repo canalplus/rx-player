@@ -33,7 +33,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
         codec === 'video/webm;codecs="vp8"'
       );
     });
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -47,7 +47,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
 
   it("should not find default video codec", () => {
     const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -62,7 +62,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
   });
 
   it("should throw because no MediaSource", () => {
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: null,
     }));
     const { findDefaultVideoCodec } = jest.requireActual(
@@ -74,7 +74,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
   });
 
   it("should throw because no isTypeSupported", () => {
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {},
     }));
     const { findDefaultVideoCodec } = jest.requireActual(
@@ -97,7 +97,7 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
         codec === 'audio/mp4;codecs="mp4a.40.2"' || codec === "audio/webm;codecs=opus"
       );
     });
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -111,7 +111,7 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
 
   it("should not find default audio codec", () => {
     const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -126,7 +126,7 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
   });
 
   it("should throw because no MediaSource", () => {
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: null,
     }));
     const { findDefaultAudioCodec } = jest.requireActual(
@@ -138,7 +138,7 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
   });
 
   it("should throw because no isTypeSupported", () => {
-    jest.mock("../../../../../compat", () => ({
+    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {},
     }));
     const { findDefaultAudioCodec } = jest.requireActual(

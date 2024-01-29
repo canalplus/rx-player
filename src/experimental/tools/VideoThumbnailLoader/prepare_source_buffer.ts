@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../compat";
+import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import log from "../../../log";
 import { resetMediaElement } from "../../../main_thread/init/utils/create_media_source";
 import { SourceBufferType } from "../../../mse";

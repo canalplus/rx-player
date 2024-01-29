@@ -311,10 +311,18 @@ class MockedDecryptorEventEmitter extends EventEmitter<{
  * Mock functions coming from the compat directory.
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function mockCompat(exportedFunctions: Record<string, jest.Mock | null> = {}) {
+export function mockCompat(
+  presets: {
+    canReuseMediaKeys?: jest.Mock;
+    shouldRenewMediaKeySystemAccess?: jest.Mock;
+    onEncrypted?: jest.Mock;
+    requestMediaKeySystemAccess?: jest.Mock;
+    setMediaKeys?: jest.Mock;
+  } = {},
+) {
   const ee = new MockedDecryptorEventEmitter();
   const onEncrypted =
-    exportedFunctions.onEncrypted ??
+    presets.onEncrypted ??
     jest.fn(
       (elt: HTMLMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
         elt.addEventListener("encrypted", fn);
@@ -390,10 +398,8 @@ export function mockCompat(exportedFunctions: Record<string, jest.Mock | null> =
   };
 
   const mockRmksa =
-    exportedFunctions.requestMediaKeySystemAccess ??
-    jest.fn(requestMediaKeySystemAccessImpl);
-  const mockSetMediaKeys =
-    exportedFunctions.setMediaKeys ?? jest.fn(() => Promise.resolve());
+    presets.requestMediaKeySystemAccess ?? jest.fn(requestMediaKeySystemAccessImpl);
+  const mockSetMediaKeys = presets.setMediaKeys ?? jest.fn(() => Promise.resolve());
   const mockGenerateKeyRequest = jest.fn(
     (mks: MediaKeySessionImpl, initializationDataType, initializationData) => {
       return mks.generateRequest(initializationDataType, initializationData);
@@ -404,13 +410,21 @@ export function mockCompat(exportedFunctions: Record<string, jest.Mock | null> =
     return encryptedEvent;
   });
 
-  jest.mock("../../../../compat", () => ({
-    events: mockEvents,
-    shouldRenewMediaKeySystemAccess: jest.fn(() => false),
-    shouldWaitForEncryptedBeforeAttachment: jest.fn(() => false),
-    canReuseMediaKeys: jest.fn(() => true),
-    ...exportedFunctions,
-  }));
+  if (presets.shouldRenewMediaKeySystemAccess === undefined) {
+    jest.mock("../../../../compat/should_renew_media_key_system_access", () =>
+      jest.fn(() => false),
+    );
+  } else {
+    jest.mock(
+      "../../../../compat/should_renew_media_key_system_access",
+      () => presets.shouldRenewMediaKeySystemAccess,
+    );
+  }
+  if (presets.canReuseMediaKeys === undefined) {
+    jest.mock("../../../../compat/can_reuse_media_keys", () => jest.fn(() => true));
+  } else {
+    jest.mock("../../../../compat/can_reuse_media_keys", () => presets.canReuseMediaKeys);
+  }
 
   const emeImplementation = {
     onEncrypted,
@@ -423,7 +437,6 @@ export function mockCompat(exportedFunctions: Record<string, jest.Mock | null> =
     default: emeImplementation,
     getInitData: mockGetInitData,
     generateKeyRequest: mockGenerateKeyRequest,
-    ...exportedFunctions,
   }));
 
   return {
