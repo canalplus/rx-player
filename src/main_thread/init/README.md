@@ -5,26 +5,25 @@
 | Preferred import style  | Either through `features` or directory-only _[1]_ |
 | Multithread environment | Main thread, WebWorker or both depending on file  |
 
-_[1]_ The right `ContentInitializer` implementation wanted should be imported
-through the global `features` object. This improves feature-switching and thus
-may reduce bundle size for an application.
-Other imports should be performed through the `init` directory itself - which
-means that inner files of that directory shouldn't be imported by outside code
-(thus `./index.ts` should export everything that may be imported directly by
-outside code).
+_[1]_ The right `ContentInitializer` implementation wanted should be imported through the
+global `features` object. This improves feature-switching and thus may reduce bundle size
+for an application. Other imports should be performed through the `init` directory
+itself - which means that inner files of that directory shouldn't be imported by outside
+code (thus `./index.ts` should export everything that may be imported directly by outside
+code).
 
 ## Overview
 
-The ContentInitializer is the part of the code actually starting and running the
-logic behind playing a content.
+The ContentInitializer is the part of the code actually starting and running the logic
+behind playing a content.
 
 Its code is written in the `src/main_thread/init` directory.
 
-Every time you're calling the API to load a new video, a ContentInitializer is
-called by it (with multiple options).
+Every time you're calling the API to load a new video, a ContentInitializer is called by
+it (with multiple options).
 
-The ContentInitializer then starts loading the content and communicate back its progress to
-the API through events.
+The ContentInitializer then starts loading the content and communicate back its progress
+to the API through events.
 
 ```
                  +-----------+
@@ -53,8 +52,7 @@ Example of such submodules are:
 
 ## Usage
 
-Concretely, the ContentInitializer is a class respecting a given interface,
-allowing to:
+Concretely, the ContentInitializer is a class respecting a given interface, allowing to:
 
 - prepare a future content for future play - without influencing a potentially
   already-playing content (e.g. by pre-loading the next content's Manifest).
@@ -65,16 +63,15 @@ allowing to:
 
 ### Emitted Events
 
-Events allows the ContentInitializer to reports milestones of the content
-playback, such as when the content is ready to play.
+Events allows the ContentInitializer to reports milestones of the content playback, such
+as when the content is ready to play.
 
-It's also a way for the `ContentInitializer` to communicate information about
-the content and give some controls to the user.
+It's also a way for the `ContentInitializer` to communicate information about the content
+and give some controls to the user.
 
-For example, as available audio languages are only known after the manifest has
-been downloaded and parsed, and as it is most of all a user preference, the
-ContentInitializer can emit to the API, objects allowing the API to "choose" at
-any time the wanted language.
+For example, as available audio languages are only known after the manifest has been
+downloaded and parsed, and as it is most of all a user preference, the ContentInitializer
+can emit to the API, objects allowing the API to "choose" at any time the wanted language.
 
 ### Playback rate management
 
@@ -86,8 +83,8 @@ There can be three occasions for these updates:
 
 - the content needs to build its buffer.
 
-  In which case, the playback speed will be set to 0 (paused) even if the
-  API set another speed.
+  In which case, the playback speed will be set to 0 (paused) even if the API set another
+  speed.
 
-- the content has built enough buffer to un-pause.
-  The regular speed set by the user will be set again in that case.
+- the content has built enough buffer to un-pause. The regular speed set by the user will
+  be set again in that case.

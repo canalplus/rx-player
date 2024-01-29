@@ -2,12 +2,11 @@
 
 ## Description
 
-Returns the current "fatal error" if one happenned for the last loaded content.
-Returns `null` otherwise.
+Returns the current "fatal error" if one happenned for the last loaded content. Returns
+`null` otherwise.
 
-A "fatal error" is an error which led the current loading/loaded content to
-completely stop.
-Such errors are usually also sent through the `"error"` event when they happen.
+A "fatal error" is an error which led the current loading/loaded content to completely
+stop. Such errors are usually also sent through the `"error"` event when they happen.
 
 See [the Player Error documentation](../Player_Errors.md) for more information.
 
@@ -17,8 +16,8 @@ See [the Player Error documentation](../Player_Errors.md) for more information.
 const currentError = player.getError();
 ```
 
-- **return value** `Error|null`: The current fatal Error or `null` if no fatal
-  error happened yet.
+- **return value** `Error|null`: The current fatal Error or `null` if no fatal error
+  happened yet.
 
 ## Example
 

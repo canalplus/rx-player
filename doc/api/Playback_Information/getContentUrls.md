@@ -3,8 +3,7 @@
 ## Description
 
 Returns URLs through which the [Manifest](../../Getting_Started/Glossary.md#manifest)
-being played can be reached, or in `DirectFile` mode, of the content being
-played.
+being played can be reached, or in `DirectFile` mode, of the content being played.
 
 Returns `undefined` if no content is loaded yet or if no URL is known.
 
