@@ -230,12 +230,12 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // not straightforward as we would need to clean-up the segment after that.
     // The following logic corresponds to 100% of tested cases, so good enough for
     // now.
-    const range: [number, number] | undefined =
-      index.initialization !== undefined
-        ? index.initialization.range
-        : index.indexRange !== undefined
-          ? [0, index.indexRange[0] - 1]
-          : undefined;
+    let range: [number, number] | undefined;
+    if (index.initialization !== undefined) {
+      range = index.initialization.range;
+    } else if (index.indexRange !== undefined) {
+      range = [0, index.indexRange[0] - 1];
+    }
 
     this._index = {
       indexRange: index.indexRange,

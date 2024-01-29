@@ -328,11 +328,16 @@ export default class PlaybackObserver {
       this._getCurrentObservation("init"),
       this._canceller.signal,
     );
-    const interval = this._lowLatencyMode
-      ? SAMPLING_INTERVAL_LOW_LATENCY
-      : this._withMediaSource
-        ? SAMPLING_INTERVAL_MEDIASOURCE
-        : SAMPLING_INTERVAL_NO_MEDIASOURCE;
+
+    let interval: number;
+    if (this._lowLatencyMode) {
+      interval = SAMPLING_INTERVAL_LOW_LATENCY;
+    } else if (this._withMediaSource) {
+      interval = SAMPLING_INTERVAL_MEDIASOURCE;
+    } else {
+      interval = SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    }
+
     const onInterval = () => {
       this._generateObservationForEvent("timeupdate");
     };
@@ -480,11 +485,15 @@ export default class PlaybackObserver {
       bufferGap,
     );
 
-    const seekingState = isInternalSeeking
-      ? SeekingState.Internal
-      : seeking
-        ? SeekingState.External
-        : SeekingState.None;
+    let seekingState: SeekingState;
+    if (isInternalSeeking) {
+      seekingState = SeekingState.Internal;
+    } else if (seeking) {
+      seekingState = SeekingState.External;
+    } else {
+      seekingState = SeekingState.None;
+    }
+
     const timings: IPlaybackObservation = objectAssign({}, mediaTimings, {
       position: new ObservationPosition(mediaTimings.position, pendingPosition),
       event: tmpEvt,

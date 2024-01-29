@@ -155,11 +155,8 @@ export default function getInitialTime(
       liveTime = Math.min(maximumPosition, clockRelativeLiveTime);
     }
     const diffFromLiveTime =
-      suggestedPresentationDelay !== undefined
-        ? suggestedPresentationDelay
-        : lowLatencyMode
-          ? DEFAULT_LIVE_GAP.LOW_LATENCY
-          : DEFAULT_LIVE_GAP.DEFAULT;
+      suggestedPresentationDelay ??
+      (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY : DEFAULT_LIVE_GAP.DEFAULT);
     log.debug(
       `Init: ${liveTime} defined as the live time, applying a live gap` +
         ` of ${diffFromLiveTime}`,
