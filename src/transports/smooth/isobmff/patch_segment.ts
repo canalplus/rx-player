@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { canPatchISOBMFFSegment } from "../../../compat";
+import canPatchISOBMFFSegment from "../../../compat/can_patch_isobmff";
 import {
   createBoxWithChildren,
   getBox,

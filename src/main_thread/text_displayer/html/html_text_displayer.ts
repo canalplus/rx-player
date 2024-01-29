@@ -1,4 +1,5 @@
-import { events, onHeightWidthChange } from "../../../compat";
+import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners";
+import onHeightWidthChange from "../../../compat/on_height_width_change";
 import config from "../../../config";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";
@@ -11,8 +12,6 @@ import type { ITextDisplayer, ITextDisplayerData } from "../types";
 import parseTextTrackToElements from "./html_parsers";
 import TextTrackCuesStore from "./text_track_cues_store";
 import updateProportionalElements from "./update_proportional_elements";
-
-const { onEnded, onSeeked, onSeeking } = events;
 
 /**
  * @param {Element} element

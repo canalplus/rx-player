@@ -19,8 +19,8 @@
  * It always should be imported through the `features` object.
  */
 
-import type { ICompatVTTCue } from "../../../../compat/index";
-import { isVTTCue } from "../../../../compat/index";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
+import isVTTCue from "../../../../compat/is_vtt_cue";
 import getCueBlocks from "../get_cue_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
