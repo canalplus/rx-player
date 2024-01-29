@@ -4,52 +4,50 @@
 
 Re-load the last loaded content as fast as possible.
 
-This API can be called at any time after a content has been loaded (the LOADED
-state has been reached), even if the player has been stopped since and even if
-it was due to a fatal error.
+This API can be called at any time after a content has been loaded (the LOADED state has
+been reached), even if the player has been stopped since and even if it was due to a fatal
+error.
 
-The user may need to call this API in several cases. For example, it may be used
-in case of an error that will not reproduce or inversely when the error is
-consistent at a certain playback time (e.g. due to a specific chunk defect).
+The user may need to call this API in several cases. For example, it may be used in case
+of an error that will not reproduce or inversely when the error is consistent at a certain
+playback time (e.g. due to a specific chunk defect).
 
 The options argument is an object containing :
 
-- _reloadAt_ (`Object | undefined`): The object contain directives about
-  the starting playback position :
+- _reloadAt_ (`Object | undefined`): The object contain directives about the starting
+  playback position :
 
-  - _relative_ (`string | undefined`) : start playback relatively from the
-    last playback position (last played position before entering into STOPPED or
-    ENDED state).
-  - _position_ (`string`|`undefined`) : absolute position at which we should
-    start playback
+  - _relative_ (`string | undefined`) : start playback relatively from the last playback
+    position (last played position before entering into STOPPED or ENDED state).
+  - _position_ (`string`|`undefined`) : absolute position at which we should start
+    playback
 
-  If no reload position is defined, start playback at the last playback
-  position.
+  If no reload position is defined, start playback at the last playback position.
 
-- _autoPlay_ (`boolean | undefined`): If set to `true`, the reloaded content
-  will automatically play after being `"LOADED"`.
+- _autoPlay_ (`boolean | undefined`): If set to `true`, the reloaded content will
+  automatically play after being `"LOADED"`.
 
-  If set to `false`, it will stay in the `"LOADED"` state (and paused) once
-  loaded, without automatically played.
+  If set to `false`, it will stay in the `"LOADED"` state (and paused) once loaded,
+  without automatically played.
 
-  If unset or set to `undefined`, the content will automatically play if the
-  content was playing the last time it was played and stay in the `"LOADED"`
-  state (and paused) if it was paused last time it was played.
+  If unset or set to `undefined`, the content will automatically play if the content was
+  playing the last time it was played and stay in the `"LOADED"` state (and paused) if it
+  was paused last time it was played.
 
-- _keySystems_ (`Array.<Object> | undefined`): If set, a new configuration will
-  be set on this reloaded content regarding its decryption.
+- _keySystems_ (`Array.<Object> | undefined`): If set, a new configuration will be set on
+  this reloaded content regarding its decryption.
 
-  The value of this property follows the exact same structure than for the
-  original `loadVideo` call, it is described in the [decryption options
-  documentation page](../Decryption_Options.md).
+  The value of this property follows the exact same structure than for the original
+  `loadVideo` call, it is described in the
+  [decryption options documentation page](../Decryption_Options.md).
 
-  You might for example want to update that way the `keySystems` option compared
-  to the one of the original `loadVideo` call when you suspect that there is a
-  decryption-related issue with the original `keySystems` given.
+  You might for example want to update that way the `keySystems` option compared to the
+  one of the original `loadVideo` call when you suspect that there is a decryption-related
+  issue with the original `keySystems` given.
 
-Note that despite this method's name, the player will not go through the
-`RELOADING` state while reloading the content but through the regular `LOADING`
-state - as if `loadVideo` was called on that same content again.
+Note that despite this method's name, the player will not go through the `RELOADING` state
+while reloading the content but through the regular `LOADING` state - as if `loadVideo`
+was called on that same content again.
 
 <div class="note">
 On some browsers, auto-playing a media without user interaction is blocked
@@ -77,8 +75,8 @@ player.reload(options)`
 
 - **arguments**:
 
-  1. _options_ (optional) `Object | undefined`: Optional requirements, e.g. at
-     which position the player should reload.
+  1. _options_ (optional) `Object | undefined`: Optional requirements, e.g. at which
+     position the player should reload.
 
 ## Example
 
