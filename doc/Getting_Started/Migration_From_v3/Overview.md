@@ -107,7 +107,7 @@ playback issues, allowing us to more effectively work-around specific bugs.
 
 This means that you now have to make sure that state is considered. You can see more
 information on the `"RELOADING"` state
-[in the player state page](../../api/Player_States.md#the_reloading_state). Thankfully, it
+[in the player state page](../../api/Player_States.md#the-reloading-state). Thankfully, it
 is now possible to perform more operations under that state, such as switching tracks and
 qualities.
 

@@ -16,7 +16,7 @@ events and so on.
 
 ## Constructor options
 
-- [`videoElement`](../api/Creating_a_Player.md#videoElement): specifies the media element
+- [`videoElement`](../api/Creating_a_Player.md#videoelement): specifies the media element
   on which the content will play.
 
 - [`baseBandwidth`](../api/Creating_a_Player.md#basebandwidth): Base value for the
@@ -48,7 +48,7 @@ events and so on.
 - [`url`](../api/Loading_a_Content.md#url): URL to the content (e.g. DASH's MPD, Smooth's
   Manifest etc.)
 
-- [`keySystems`](../api/Decryption_Options.md#loadvideo_%60keysystems%60_options): DRM
+- [`keySystems`](../api/Decryption_Options.md#loadvideo-keysystems-options): DRM
   configuration for the content.
 
   - [`keySystems[].type`](../api/Decryption_Options.md#type): Name of the DRM technology
@@ -63,7 +63,7 @@ events and so on.
   - [`keySystems[].serverCertificate`](../api/Decryption_Options.md#servercertificate):
     Eventual certificate encrypting exchanges between the CDM and license server.
 
-  - [`keySystems[].persistentLicenseConfig`](../api/Decryption_Options.md#persistentLicenseConfig):
+  - [`keySystems[].persistentLicenseConfig`](../api/Decryption_Options.md#persistentlicenseconfig):
     Allows to ask for the DRM session to persist the license.
 
   - [`keySystems[].onKeyExpiration`](../api/Decryption_Options.md#onkeyexpiration):
@@ -98,12 +98,12 @@ events and so on.
     [persistentState](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate)
     property.
 
-  - [`keySystems[].audioCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+  - [`keySystems[].audioCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfig--audiocapabilitiesconfig):
     Allows the configuration of the
     [`audioCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-audiocapabilities)
     property.
 
-  - [`keySystems[].videoCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfigaudiocapabilitiesconfig):
+  - [`keySystems[].videoCapabilitiesConfig`](../api/Decryption_Options.md#videocapabilitiesconfig--audiocapabilitiesconfig):
     Allows the configuration of the
     [`videoCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-videocapabilities)
     property.
@@ -449,9 +449,6 @@ events and so on.
 
 - [`brokenRepresentationsLock`](../api/Player_Events.md#brokenrepresentationslock):
   Representations previously being locked was automatically unlocked by the RxPlayer.
-
-- [`autoTrackSwitch`](../api/Player_Events.md#autotrackswitch): A track previously set was
-  automatically changed by the RxPlayer.
 
 - [`play`](../api/Player_Events.md#play): Emitted when playback is no longer consider
   paused.

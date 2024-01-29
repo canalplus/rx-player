@@ -339,8 +339,9 @@ Both undocumented, the `audioRobustnesses` and `videoRobustnesses` properties of
 encrypted content.
 
 They have now been replaced by the much more powerful
-[`audioCapabilitiesConfig`](../../api/Decryption_Options.md#audiocapabilitiesconfig) and
-[`videoCapabilitiesConfig`](../../api/Decryption_Options.md#videocapabilitiesconfig)
+[`audioCapabilitiesConfig`](../../api/Decryption_Options.md#videocapabilitiesconfig--audiocapabilitiesconfig)
+and
+[`videoCapabilitiesConfig`](../../api/Decryption_Options.md#videocapabilitiesconfig--audiocapabilitiesconfig)
 respectively.
 
 What was previously written:
