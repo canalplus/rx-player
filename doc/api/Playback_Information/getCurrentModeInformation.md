@@ -2,20 +2,19 @@
 
 ## Description
 
-Returns information on which "mode" the RxPlayer is running for the current
-content (e.g. is the main logic running in a WebWorker or not, are we in
-directfile mode...).
+Returns information on which "mode" the RxPlayer is running for the current content (e.g.
+is the main logic running in a WebWorker or not, are we in directfile mode...).
 
 Returns `null` if no content is loaded or is on error.
 
 When returning, a value, it is an object with the following properties:
 
-- `isDirectFile` (`boolean`): If `true`, the currently-loaded content
-  is loaded in directfile mode, meaning that the corresponding `loadVideo`
-  call was made with the `"directfile"` `transport` option.
+- `isDirectFile` (`boolean`): If `true`, the currently-loaded content is loaded in
+  directfile mode, meaning that the corresponding `loadVideo` call was made with the
+  `"directfile"` `transport` option.
 
-- `useWorker` (`boolean`): If `true`, the current content relies on
-  multi-threading capabilities through a WebWorker.
+- `useWorker` (`boolean`): If `true`, the current content relies on multi-threading
+  capabilities through a WebWorker.
 
 #### Example
 

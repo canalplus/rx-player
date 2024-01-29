@@ -4,17 +4,16 @@
 
 Tools to convert strings into bytes and vice-versa.
 
-The RxPlayer internally has a lot of code dealing with strings to bytes
-conversion (and vice-versa). This tool exports that logic so you don't have to
-rewrite it yourself.
+The RxPlayer internally has a lot of code dealing with strings to bytes conversion (and
+vice-versa). This tool exports that logic so you don't have to rewrite it yourself.
 
-You might need one of those functions for example when dealing with challenge
-and licenses, which are often under a binary format.
+You might need one of those functions for example when dealing with challenge and
+licenses, which are often under a binary format.
 
 ## How to import it
 
-The simplest way to import the StringUtils is by importing it as a named export
-from "rx-player/tools", like so:
+The simplest way to import the StringUtils is by importing it as a named export from
+"rx-player/tools", like so:
 
 ```js
 import { StringUtils } from "rx-player/tools";
@@ -22,8 +21,8 @@ import { StringUtils } from "rx-player/tools";
 console.log(StringUtils.strToUtf8("hello😀"));
 ```
 
-You can also import only the function(s) you want to use by importing it
-directly from "rx-player/tools/string-utils":
+You can also import only the function(s) you want to use by importing it directly from
+"rx-player/tools/string-utils":
 
 ```js
 import { strToUtf8 } from "rx-player/tools/string-utils";
@@ -46,8 +45,8 @@ console.log(strToUtf8("hello😀"));
   //                    "h"  "e"  "l"  "l"  "o"  "grinning face" emoji
   ```
 
-- `utf8ToStr`: Convert a Uint8Array containing a string encoded with UTF-8
-  into a JS string.
+- `utf8ToStr`: Convert a Uint8Array containing a string encoded with UTF-8 into a JS
+  string.
 
   Example:
 
@@ -58,8 +57,8 @@ console.log(strToUtf8("hello😀"));
   // => "hello😀"
   ```
 
-  Note: if what you have is an `ArrayBuffer`, you have to convert it to an
-  `Uint8Array` first:
+  Note: if what you have is an `ArrayBuffer`, you have to convert it to an `Uint8Array`
+  first:
 
   ```js
   import { StringUtils } from "rx-player/tools";
@@ -67,9 +66,8 @@ console.log(strToUtf8("hello😀"));
   console.log(StringUtils.utf8ToStr(toUint8Array));
   ```
 
-- `strToUtf16LE`: Convert a JS string passed as argument to an Uint8Array
-  containing its corresponding representation in UTF-16-LE (little endian
-  UTF-16).
+- `strToUtf16LE`: Convert a JS string passed as argument to an Uint8Array containing its
+  corresponding representation in UTF-16-LE (little endian UTF-16).
 
   Example:
 
@@ -80,8 +78,8 @@ console.log(strToUtf8("hello😀"));
   //                    "h"     "i"     "grinning face" emoji
   ```
 
-- `utf16LEToStr`: Convert a Uint8Array containing a string encoded with
-  UTF-16-LE (little endian UTF-16) into a JS string.
+- `utf16LEToStr`: Convert a Uint8Array containing a string encoded with UTF-16-LE (little
+  endian UTF-16) into a JS string.
 
   Example:
 
@@ -92,8 +90,8 @@ console.log(strToUtf8("hello😀"));
   // => "hi😀"
   ```
 
-  Note: if what you have is an `ArrayBuffer`, you have to convert it to an
-  `Uint8Array` first:
+  Note: if what you have is an `ArrayBuffer`, you have to convert it to an `Uint8Array`
+  first:
 
   ```js
   import { StringUtils } from "rx-player/tools";
@@ -101,9 +99,8 @@ console.log(strToUtf8("hello😀"));
   console.log(StringUtils.utf16LEToStr(toUint8Array));
   ```
 
-- `strToUtf16BE`: Convert a JS string passed as argument to an Uint8Array
-  containing its corresponding representation in UTF-16-BE (big endian
-  UTF-16).
+- `strToUtf16BE`: Convert a JS string passed as argument to an Uint8Array containing its
+  corresponding representation in UTF-16-BE (big endian UTF-16).
 
   Example:
 
@@ -114,8 +111,8 @@ console.log(strToUtf8("hello😀"));
   //                    "h"     "i"     "grinning face" emoji
   ```
 
-- `utf16BEToStr`: Convert a Uint8Array containing a string encoded with
-  UTF-16-BE (big endian UTF-16) into a JS string.
+- `utf16BEToStr`: Convert a Uint8Array containing a string encoded with UTF-16-BE (big
+  endian UTF-16) into a JS string.
 
   Example:
 
@@ -126,8 +123,8 @@ console.log(strToUtf8("hello😀"));
   // => "hi😀"
   ```
 
-  Note: if what you have is an `ArrayBuffer`, you have to convert it to an
-  `Uint8Array` first:
+  Note: if what you have is an `ArrayBuffer`, you have to convert it to an `Uint8Array`
+  first:
 
   ```js
   import { StringUtils } from "rx-player/tools";

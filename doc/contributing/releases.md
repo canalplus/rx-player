@@ -4,14 +4,14 @@
 
 The RxPlayer has several types of releases:
 
-- Official releases, which are the main releases published on `npm` and
-  whose releases notes are [published on GitHub](https://github.com/canalplus/rx-player/releases).
+- Official releases, which are the main releases published on `npm` and whose releases
+  notes are [published on GitHub](https://github.com/canalplus/rx-player/releases).
 
-  Those releases have been thoroughly tested, and in most cases even ran in
-  production for some time with no discovered issue.
+  Those releases have been thoroughly tested, and in most cases even ran in production for
+  some time with no discovered issue.
 
-  Official releases are named following [semantic versionning](https://semver.org/)
-  under a very simple `MAJOR.MINOR.PATCH` name.
+  Official releases are named following [semantic versionning](https://semver.org/) under
+  a very simple `MAJOR.MINOR.PATCH` name.
 
   Examples:
 
@@ -21,27 +21,24 @@ The RxPlayer has several types of releases:
   4.0.0
   ```
 
-  When published on `npm`, we do not specify any specific tag, like we do for
-  other types of releases. This lead official releases to be branded under the
-  default `latest` tag by `npm`.
+  When published on `npm`, we do not specify any specific tag, like we do for other types
+  of releases. This lead official releases to be branded under the default `latest` tag by
+  `npm`.
 
-- `dev` releases, which are pre-releases made with the latest features, bug
-  fixes and improvements. Those can be made very quickly and as such are ideal
-  when wanting to perform tests before including the corresponding
-  developments in an official release.
+- `dev` releases, which are pre-releases made with the latest features, bug fixes and
+  improvements. Those can be made very quickly and as such are ideal when wanting to
+  perform tests before including the corresponding developments in an official release.
 
   However, we have less stability guarantees than for official releases.
 
   `dev` releases are also named following [semantic versionning](https://semver.org/)
-  beginning with the version of the next official releases it could be
-  released as (for example, if it only include patches on top of the previous
-  official release, only the `PATCH` part of that release should be
-  incremented).
+  beginning with the version of the next official releases it could be released as (for
+  example, if it only include patches on top of the previous official release, only the
+  `PATCH` part of that release should be incremented).
 
-  Then we add to it the `-dev.` string, followed by the date in a YYYYMMDD
-  format (e.g. `20230425` for April 25, 2023) followed by a number on two
-  digits, starting at `00`, which is incremented each time a `dev` release
-  is made that day.
+  Then we add to it the `-dev.` string, followed by the date in a YYYYMMDD format (e.g.
+  `20230425` for April 25, 2023) followed by a number on two digits, starting at `00`,
+  which is incremented each time a `dev` release is made that day.
 
   Examples:
 
@@ -58,28 +55,24 @@ The RxPlayer has several types of releases:
 
   When published on `npm`, they have the `dev` tag.
 
-- `alpha`, `beta`, `rc` releases. Those are pre-releases specifically made
-  before a very important official release (such as a new major version).
+- `alpha`, `beta`, `rc` releases. Those are pre-releases specifically made before a very
+  important official release (such as a new major version).
 
-  `alpha` releases are generally only communicated to Canal+'s applications
-  developers and have an API that may change completely from one release to
-  another.
+  `alpha` releases are generally only communicated to Canal+'s applications developers and
+  have an API that may change completely from one release to another.
 
-  `beta` releases generally have a much more stable API and is used to find
-  out the last bugs and friction points for applications. Those are generally
-  also documented through release notes on GitHub.
+  `beta` releases generally have a much more stable API and is used to find out the last
+  bugs and friction points for applications. Those are generally also documented through
+  release notes on GitHub.
 
-  `rc` (for "release candidate"): are releases that may become the
-  corresponding official release if no issue is detected in a sufficiently
-  long time.
-  Like for `beta` releases, those are documented through release notes on
-  GitHub.
+  `rc` (for "release candidate"): are releases that may become the corresponding official
+  release if no issue is detected in a sufficiently long time. Like for `beta` releases,
+  those are documented through release notes on GitHub.
 
-  All those kinds of releases are named following semantic versionning of the
-  final official release, followed by `-alpha`, `-beta` or `-rc` respectively
-  for an `alpha`, `beta` and `rc` release, then followed by a dot (`.`) and
-  then by a number starting at `0` then incrementing at each new release of
-  that type.
+  All those kinds of releases are named following semantic versionning of the final
+  official release, followed by `-alpha`, `-beta` or `-rc` respectively for an `alpha`,
+  `beta` and `rc` release, then followed by a dot (`.`) and then by a number starting at
+  `0` then incrementing at each new release of that type.
 
   Examples:
 
@@ -99,18 +92,17 @@ The RxPlayer has several types of releases:
 
   When published on `npm`, they all have the `next` tag.
 
-- `canal` releases are similar to `dev` releases, with added work-arounds and
-  features that are intended for Canal+ internal usage only. Either because
-  they work-around very specific Canal+ bugs (for example, known specific
-  badly-packaged contents) or because we're currently testing features we're
-  not sure about adding to a future release yet (such as for features which
-  are "risky" in terms of stability and compatibility).
+- `canal` releases are similar to `dev` releases, with added work-arounds and features
+  that are intended for Canal+ internal usage only. Either because they work-around very
+  specific Canal+ bugs (for example, known specific badly-packaged contents) or because
+  we're currently testing features we're not sure about adding to a future release yet
+  (such as for features which are "risky" in terms of stability and compatibility).
 
-  They are created both when a project at Canal+ (or one of its partners)
-  demands it, and after each official releases.
+  They are created both when a project at Canal+ (or one of its partners) demands it, and
+  after each official releases.
 
-  They are named exactly the same way than `dev` releases, excepted with
-  `-canal` instead of `-dev` in their name.
+  They are named exactly the same way than `dev` releases, excepted with `-canal` instead
+  of `-dev` in their name.
 
   When published on `npm`, they have the `canal` tag.
 
@@ -118,44 +110,51 @@ The RxPlayer has several types of releases:
 
 Before each official releases, a list of steps are performed by its maintainers:
 
-1. Checkout the branch that will be the base of the next release: generally it
-   is either `stable` (for patch releases) or `dev` (for minor versions).
+1. Checkout the branch that will be the base of the next release: generally it is either
+   `stable` (for patch releases) or `dev` (for minor versions).
 
-2. Rebase that branch on the `stable` branch if it is a different branch
-   (e.g.: `git rebase stable --rebase-merges`).
+2. Rebase that branch on the `stable` branch if it is a different branch (e.g.:
+   `git rebase stable --rebase-merges`).
 
-3. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the
-   semver of the wanted new version.
+3. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the semver of
+   the wanted new version.
 
 4. Update `CHANGELOG.md` file to add this new version's changelog and commit it.
 
-5. Call the npm script `update-version` for that release (`npm run update-version XX.XX.XX`,
-   where XX.XX.XX is the wanted new version SEMVER).
+5. Call the npm script `update-version` for that release
+   (`npm run update-version XX.XX.XX`, where XX.XX.XX is the wanted new version SEMVER).
 
-6. Check that the modifications it did make sense and create a signed commit
-   (`-S` option when commiting with git) updating the staged built files in step
-   `8`.
+6. Check that the modifications it did make sense and create a signed commit (`-S` option
+   when commiting with git) updating the staged built files in step `8`.
 
-7. Open a Pull Request on Github, named after the branch, putting the release's
-   changelog in the Pull Request's comment, and optional additional comments.
+7. Open a Pull Request on Github, named after the branch, putting the release's changelog
+   in the Pull Request's comment, and optional additional comments.
 
-8. Check that sonarcloud validated that branch. Resolve every bug and code
-   smells it finds.
+8. Check that sonarcloud validated that branch. Resolve every bug and code smells it
+   finds.
 
 9. Ensure that the CI doesn't detect any issue and fix them if that's the case.
 
-10. Run sanity checks on myCanal's repository, by using this new version instead
-    as a dependency.
+10. Run sanity checks on myCanal's repository, by using this new version instead as a
+    dependency.
 
-11. If and only if no problem was seen perform a signed merge without
-    fast-forward of the release branch into stable (`git merge -S --no-ff release/vXX.XX.XX stable`)
+<<<<<<< HEAD 11. If and only if no problem was seen perform a signed merge without
+fast-forward of the release branch into stable
+(`git merge -S --no-ff release/vXX.XX.XX stable`) ||||||| parent of 16f9945b7 (Allow width
+limit on markdown files with prettier) 11. If and only if no problem was seen perform a
+signed merge without fast-forward of the release branch into master
+(`git merge -S --no-ff release/vXX.XX.XX master`) ======= 11. If and only if no problem
+was seen perform a signed merge without fast-forward of the release branch into master
+(`git merge -S --no-ff release/vXX.XX.XX master`)
+
+> > > > > > > 16f9945b7 (Allow width limit on markdown files with prettier)
 
 12. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
 
 13. Launch script to update the gh-pages doc (`./scripts/update_gh-pages_doc`)
 
-14. Check that both of those worked, perform manual updates and update the
-    concerned scripts in other cases.
+14. Check that both of those worked, perform manual updates and update the concerned
+    scripts in other cases.
 
 15. Check that the new demo and the new doc work as expected
 
@@ -163,11 +162,11 @@ Before each official releases, a list of steps are performed by its maintainers:
 
 17. run `npm publish` to publish the new version on npm's registry.
 
-18. Test that importing this new version doesn't cause bundling issues (you
-    may do so through a ad-hoc package, or just myCanal for example).
+18. Test that importing this new version doesn't cause bundling issues (you may do so
+    through a ad-hoc package, or just myCanal for example).
 
-19. Create the new release through github's interface - don't forget to include
-    the built files on it.
+19. Create the new release through github's interface - don't forget to include the built
+    files on it.
 
 If any of the testing steps failed (after step `3`), run the following steps:
 
@@ -175,17 +174,15 @@ If any of the testing steps failed (after step `3`), run the following steps:
 
 2. Create a commit for the fix with a meaningful message.
 
-3. If (and only if) it make sense, update the changelog and create a commit for
-   it.
+3. If (and only if) it make sense, update the changelog and create a commit for it.
 
-4. Call the npm script `update-version` for that release (`npm run update-version XX.XX.XX`,
-   where XX.XX.XX is the wanted new version SEMVER).
+4. Call the npm script `update-version` for that release
+   (`npm run update-version XX.XX.XX`, where XX.XX.XX is the wanted new version SEMVER).
 
-5. Check that the modifications of that last step made sense and create a signed
-   commit (`-S` option when commiting with git) updating the staged built files.
+5. Check that the modifications of that last step made sense and create a signed commit
+   (`-S` option when commiting with git) updating the staged built files.
 
-6. Depending on the nature of the fix, either create a new branch and add a Pull
-   Request to merge it in the release branch or push it to the release branch
-   directly.
+6. Depending on the nature of the fix, either create a new branch and add a Pull Request
+   to merge it in the release branch or push it to the release branch directly.
 
 7. Go back to step `8` (sonarcloud + CI) of the previous workflow

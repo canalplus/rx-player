@@ -2,11 +2,11 @@
 
 ## Description
 
-Current volume of the player, from 0 (no sound) to 1 (maximum sound).
-0 if muted through the `mute` API.
+Current volume of the player, from 0 (no sound) to 1 (maximum sound). 0 if muted through
+the `mute` API.
 
-As the volume is not dependent on a single content (it is persistent), this
-method can also be called when no content is playing.
+As the volume is not dependent on a single content (it is persistent), this method can
+also be called when no content is playing.
 
 ## Syntax
 

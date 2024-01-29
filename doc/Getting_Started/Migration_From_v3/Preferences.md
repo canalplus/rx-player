@@ -2,8 +2,8 @@
 
 ## Methods and options removed
 
-All track preferences API have been removed in profit of a now more flexible
-track switching API which should allow to perform the same logic and more.
+All track preferences API have been removed in profit of a now more flexible track
+switching API which should allow to perform the same logic and more.
 
 This means that the following methods are all removed:
 
@@ -22,40 +22,37 @@ As well as the following constructor options:
 
 ## Why was those removed?
 
-Those methods and options have been removed because the new track switching API
-now allows an application to handle the full preference functionalities with
-even more customizability.
+Those methods and options have been removed because the new track switching API now allows
+an application to handle the full preference functionalities with even more
+customizability.
 
-Keeping both the preferences API and the new enhanced track switching API could
-have brought confusion in how they would interact, we have thus taken the choice
-of removing the preferences API altogether.
+Keeping both the preferences API and the new enhanced track switching API could have
+brought confusion in how they would interact, we have thus taken the choice of removing
+the preferences API altogether.
 
 ## How to replace them
 
 ### The notion of a "Period"
 
 The preferences API basically allowed to automatically set a default track each time a new
-track choice was available.
-Thus, the RxPlayer relied on them each time a new content was played, and more
-generally each time a new `Period` was encountered.
+track choice was available. Thus, the RxPlayer relied on them each time a new content was
+played, and more generally each time a new `Period` was encountered.
 
-This "Period" notion allows for example to handle several track choices on DASH
-contents with multiple `<Period>` elements, each with its own list of tracks.
-For example you could consider a multi-period live channel with a weather report
-in a single audio language followed by a multi-lingual film, here we would have
-two periods, each with its own selected track.
+This "Period" notion allows for example to handle several track choices on DASH contents
+with multiple `<Period>` elements, each with its own list of tracks. For example you could
+consider a multi-period live channel with a weather report in a single audio language
+followed by a multi-lingual film, here we would have two periods, each with its own
+selected track.
 
-To know the list of periods currently considered by the RxPlayer, you can now call
-the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
-RxPlayer method:
+To know the list of periods currently considered by the RxPlayer, you can now call the
+[`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md) RxPlayer method:
 
 ```js
 const periods = rxPlayer.getAvailablePeriods();
 ```
 
-To be notified when new Periods are being considered by the RxPlayer, you can
-react to the new
-[`newAvailablePeriods`](../../api/Player_Events.md#newavailableperiods) RxPlayer
+To be notified when new Periods are being considered by the RxPlayer, you can react to the
+new [`newAvailablePeriods`](../../api/Player_Events.md#newavailableperiods) RxPlayer
 event:
 
 ```js
@@ -66,16 +63,15 @@ rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
 
 ### Enhanced track methods
 
-Moreover, to let an application change the track of any of those `Period`
-elements linked to the current content, whether that Period already have been
-played, are playing or will be played, the following track setting methods can
-now receive the concerned period's `id` property as argument.
+Moreover, to let an application change the track of any of those `Period` elements linked
+to the current content, whether that Period already have been played, are playing or will
+be played, the following track setting methods can now receive the concerned period's `id`
+property as argument.
 
 - [`getAudioTrack`](../../api/Track_Selection/getAudioTrack.md):
 
-  For example, to get the audio track currently set for some `period` Period,
-  object returned by either `getAvailablePeriods` or the `newAvailablePeriods`
-  event, you can do:
+  For example, to get the audio track currently set for some `period` Period, object
+  returned by either `getAvailablePeriods` or the `newAvailablePeriods` event, you can do:
 
   ```js
   const audioTrackForPeriod = rxPlayer.getAudioTrack(period.id);
@@ -115,8 +111,8 @@ now receive the concerned period's `id` property as argument.
 
 - [`setAudioTrack`](../../api/Track_Selection/setAudioTrack.md):
 
-  For example, to set the audio track of some `period` element returned by
-  either `getAvailablePeriods` or the `newAvailablePeriods` event, you can do:
+  For example, to set the audio track of some `period` element returned by either
+  `getAvailablePeriods` or the `newAvailablePeriods` event, you can do:
 
   ```js
   rxPlayer.setAudioTrack({
@@ -144,9 +140,9 @@ now receive the concerned period's `id` property as argument.
 
 ### Simple example
 
-Thus, you can replicate most of the preferences API by simply manually listing
-the current tracks on new Periods as they start being considered by the
-RxPlayer, setting the more adapted one each time.
+Thus, you can replicate most of the preferences API by simply manually listing the current
+tracks on new Periods as they start being considered by the RxPlayer, setting the more
+adapted one each time.
 
 This can be done by reacting to the `newAvailablePeriods` event, like this:
 
@@ -180,11 +176,11 @@ function applyAudioTrackPreferences(period) {
 }
 ```
 
-This logic will only apply for future encountered periods, even though you may
-also want to apply the preference retroactively to the currently loaded Periods.
-If that is the case, you can also get the list of currently-considered Periods
-through the [`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md)
-method and also select a track for those:
+This logic will only apply for future encountered periods, even though you may also want
+to apply the preference retroactively to the currently loaded Periods. If that is the
+case, you can also get the list of currently-considered Periods through the
+[`getAvailablePeriods`](../../api/Basic_Methods/getAvailablePeriods.md) method and also
+select a track for those:
 
 ```js
 const currentPeriods = rxPlayer.getAvailablePeriods();
@@ -193,12 +189,11 @@ for (const period of currentPeriods) {
 }
 ```
 
-If you want to be thorough, you may also want to re-apply preferences in the
-extremely rare case where the chosen track would simply disappear for the
-corresponding Period (for example after a Manifest refresh).
-This almost never happens, but the RxPlayer now send
-a [`trackUpdate`](../../api/Player_Events.md#trackupdate) event in that case
-with a `reason` property set to `"missing"`.
+If you want to be thorough, you may also want to re-apply preferences in the extremely
+rare case where the chosen track would simply disappear for the corresponding Period (for
+example after a Manifest refresh). This almost never happens, but the RxPlayer now send a
+[`trackUpdate`](../../api/Player_Events.md#trackupdate) event in that case with a `reason`
+property set to `"missing"`.
 
 Here is how you could handle this:
 
@@ -214,14 +209,13 @@ rxPlayer.addEventListener("trackUpdate", (evt) => {
 
 ## Full example for audio preferences replacement
 
-As you've seen, applications now have all the elements to implement the same
-audio track preferences API than before, though now all that preference logic
-has to be written on the application-side.
+As you've seen, applications now have all the elements to implement the same audio track
+preferences API than before, though now all that preference logic has to be written on the
+application-side.
 
-Because we understand that just translating the preferences API to the newer
-more explicit one might take some time, we've written in this chapter code
-allowing to rely on the same preferences array as before while profiting from
-the more powerful API.
+Because we understand that just translating the preferences API to the newer more explicit
+one might take some time, we've written in this chapter code allowing to rely on the same
+preferences array as before while profiting from the more powerful API.
 
 Here's how a complete `applyAudioTrackPreferences` function, applying the audio
 preferences array from the v3.x.x on a specific Period, would be implemented:
@@ -335,9 +329,8 @@ function createAudioPreferenceMatcher(preferredAudioTrack) {
 }
 ```
 
-Like seen in the `How to replace then` chapter, you can trigger that logic for
-all futures track choices by listening to `newAvailablePeriods` and to
-`trackUpdate` events:
+Like seen in the `How to replace then` chapter, you can trigger that logic for all futures
+track choices by listening to `newAvailablePeriods` and to `trackUpdate` events:
 
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
@@ -356,8 +349,7 @@ rxPlayer.addEventListener("trackUpdate", (evt) => {
 });
 ```
 
-And if you also want to apply it to the Periods currently considered by the
-RxPlayer:
+And if you also want to apply it to the Periods currently considered by the RxPlayer:
 
 ```js
 const currentPeriods = rxPlayer.getAvailablePeriods();
@@ -368,9 +360,8 @@ for (const period of currentPeriods) {
 
 ## Full example for text preferences replacement
 
-Likewise, here's how a complete `applyTextTrackPreferences` function, applying
-the text preferences array from the v3.x.x on a specific Period, would be
-implemented:
+Likewise, here's how a complete `applyTextTrackPreferences` function, applying the text
+preferences array from the v3.x.x on a specific Period, would be implemented:
 
 ```js
 /**
@@ -460,9 +451,8 @@ function createTextPreferenceMatcher(preferredTextTrack) {
 }
 ```
 
-Like seen in the `How to replace then` chapter, you can trigger that logic for
-all futures track choices by listening to `newAvailablePeriods` and to
-`trackUpdate` events:
+Like seen in the `How to replace then` chapter, you can trigger that logic for all futures
+track choices by listening to `newAvailablePeriods` and to `trackUpdate` events:
 
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
@@ -492,9 +482,8 @@ for (const period of currentPeriods) {
 
 ## Full example for video preferences replacement
 
-As for video tracks, an `applyVideoTrackPreferences` function, applying the
-video preferences array from the v3.x.x on a specific Period, could be
-implemented this way:
+As for video tracks, an `applyVideoTrackPreferences` function, applying the video
+preferences array from the v3.x.x on a specific Period, could be implemented this way:
 
 ```js
 /**
@@ -593,9 +582,8 @@ function createVideoPreferenceMatcher(preferredVideoTrack) {
 }
 ```
 
-Like seen in the `How to replace then` chapter, you can trigger that logic for
-all futures track choices by listening to `newAvailablePeriods` and to
-`trackUpdate` events:
+Like seen in the `How to replace then` chapter, you can trigger that logic for all futures
+track choices by listening to `newAvailablePeriods` and to `trackUpdate` events:
 
 ```js
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {

@@ -1,13 +1,13 @@
 # Tutorial: Listening to stream events
 
-Some contents contain events a player will need to send at a particular point
-in time. We call those in the RxPlayer "stream events".
+Some contents contain events a player will need to send at a particular point in time. We
+call those in the RxPlayer "stream events".
 
-For example, stream events are often used jointly with ad-insertion, to allow a
-player to notify when an user begin to see a particular ad.
+For example, stream events are often used jointly with ad-insertion, to allow a player to
+notify when an user begin to see a particular ad.
 
-Stream events are not only restrained to ad-related usages though. Any event
-you want to synchronize with the played content can be inserted.
+Stream events are not only restrained to ad-related usages though. Any event you want to
+synchronize with the played content can be inserted.
 
 ## Event Formats understood by the RxPlayer
 
@@ -15,8 +15,8 @@ you want to synchronize with the played content can be inserted.
 
 For now, the RxPlayer only make use of DASH' EventStream elements.
 
-Such elements are defined in a DASH MPD in the concerned `Period`.
-Here is an example of such element in an MPD:
+Such elements are defined in a DASH MPD in the concerned `Period`. Here is an example of
+such element in an MPD:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -52,8 +52,8 @@ Here is an example of such element in an MPD:
 </MPD>
 ```
 
-Here the `<EventStream />` elements and its `<Event />` children elements will
-be parsed by the RxPlayer.
+Here the `<EventStream />` elements and its `<Event />` children elements will be parsed
+by the RxPlayer.
 
 Each `<Event />` element can then be sent through a single RxPlayer events.
 
@@ -69,9 +69,8 @@ The events related to stream events are:
 
 - `"streamEvent"`: an event has just been reached.
 
-- `"streamEventSkip"`: an event has been skipped over. This usually means
-  that a player seek operation resulted in the corresponds event being
-  "missed".
+- `"streamEventSkip"`: an event has been skipped over. This usually means that a player
+  seek operation resulted in the corresponds event being "missed".
 
 In any case, the corresponding event will be attached as a payload.
 
@@ -91,9 +90,8 @@ rxPlayer.addEventListener("streamEventSkip", (evt) => {
 
 ## The event format
 
-Whether you're listening to the `"streamEvent"` or the `"streamEventSkip"`
-event, you will receive an object containing the corresponding event
-information.
+Whether you're listening to the `"streamEvent"` or the `"streamEventSkip"` event, you will
+receive an object containing the corresponding event information.
 
 Here is an example of such events:
 
@@ -129,16 +127,15 @@ Here is an example of such events:
 }
 ```
 
-As written in this example, the underlying format of the event itself will
-depend on the source of the event. For example, an event generated from a DASH's
-`<EventStream />` won't be in the same format that an event generated from a
-MP4's `emsg` box.
+As written in this example, the underlying format of the event itself will depend on the
+source of the event. For example, an event generated from a DASH's `<EventStream />` won't
+be in the same format that an event generated from a MP4's `emsg` box.
 
-You can know which current format is used by checking the value of the
-`data.type` property.
+You can know which current format is used by checking the value of the `data.type`
+property.
 
-For now, we only have one format: DASH EventStream elements, which will have a
-`data.type` property equal to `"dash-event-stream"`.
+For now, we only have one format: DASH EventStream elements, which will have a `data.type`
+property equal to `"dash-event-stream"`.
 
 ### DASH EventStream elements
 
@@ -167,16 +164,15 @@ A DASH EventStream's event will be parsed under the following format:
 
 Where:
 
-- `SCHEME_ID_URI` will be the value of the corresponding EventStream's
-  `schemeIdUri` attribute
+- `SCHEME_ID_URI` will be the value of the corresponding EventStream's `schemeIdUri`
+  attribute
 
 - `EVENT_ELEMENT` will be the corresponding `<Event />` element in the MPD.
 
-- `EVENT_TIMESCALE` will be the value of the corresponding EventStream's
-  `timescale` attribute.
-  This indicates a way to convert some time information on an
-  `EVENT_ELEMENT` into seconds (by dividing the value by `timescale`),
-  though it can usually safely be ignored.
+- `EVENT_TIMESCALE` will be the value of the corresponding EventStream's `timescale`
+  attribute. This indicates a way to convert some time information on an `EVENT_ELEMENT`
+  into seconds (by dividing the value by `timescale`), though it can usually safely be
+  ignored.
 
 For example for the following EventStream:
 
@@ -188,8 +184,8 @@ For example for the following EventStream:
 </EventStream>
 ```
 
-The RxPlayer will define those three events (note: I used custom syntax here to
-include a readable `document` format):
+The RxPlayer will define those three events (note: I used custom syntax here to include a
+readable `document` format):
 
 ```jsx
 // The first event:
@@ -243,13 +239,13 @@ include a readable `document` format):
 
 ## Listening when an event has ended
 
-Some stream events have a `end` property, you could thus need to know when an
-event that the RxPlayer reached is now ended.
+Some stream events have a `end` property, you could thus need to know when an event that
+the RxPlayer reached is now ended.
 
 Thankfully, we planned this need in the API of the RxPlayer.
 
-Any event with a set `end` can be added an `onExit` callback. This callback will
-be called once the event has ended.
+Any event with a set `end` can be added an `onExit` callback. This callback will be called
+once the event has ended.
 
 So for example you can write:
 
@@ -264,15 +260,13 @@ rxPlayer.addEventListener("streamEvent", (evt) => {
 });
 ```
 
-When defined, that `onExit` callback will be called once the RxPlayer either
-reaches the end position of the event or seek outside of the scope of this
-event.
+When defined, that `onExit` callback will be called once the RxPlayer either reaches the
+end position of the event or seek outside of the scope of this event.
 
-Please note however that even if an event has an `end` property, it is possible
-that the `onExit` callback will never be called. For example, the user could
-stop the content while an event was "active" (we do not trigger `onExit`
-callbacks in that case) or the corresponding `<Event />` could "disappear" from
-the MPD once it has been refreshed.
+Please note however that even if an event has an `end` property, it is possible that the
+`onExit` callback will never be called. For example, the user could stop the content while
+an event was "active" (we do not trigger `onExit` callbacks in that case) or the
+corresponding `<Event />` could "disappear" from the MPD once it has been refreshed.
 
 ## Example
 

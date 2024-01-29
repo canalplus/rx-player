@@ -1,12 +1,12 @@
 # RxPlayer Static Properties
 
-The RxPlayer has multiple static properties allowing to read or modify global
-RxPlayer attributes.
+The RxPlayer has multiple static properties allowing to read or modify global RxPlayer
+attributes.
 
 ## version
 
-The `version` static property returns a string corresponding to the current
-version of the RxPlayer:
+The `version` static property returns a string corresponding to the current version of the
+RxPlayer:
 
 ### example
 
@@ -20,23 +20,20 @@ console.log("Current RxPlayer version:", RxPlayer.version);
 
 The current level of verbosity for the RxPlayer logs, as a string.
 
-Those logs all use the console.
-From the less verbose to the most:
+Those logs all use the console. From the less verbose to the most:
 
 - `"NONE"`: no log
 
 - `"ERROR"`: unexpected errors (via `console.error`)
 
-- `"WARNING"`: The previous level + minor problems encountered (via
-  `console.warn`)
+- `"WARNING"`: The previous level + minor problems encountered (via `console.warn`)
 
 - `"INFO"`: The previous levels + noteworthy events (via `console.info`)
 
-- `"DEBUG"`: The previous levels + normal events of the player (via
-  `console.log`)
+- `"DEBUG"`: The previous levels + normal events of the player (via `console.log`)
 
-If the value set to this property is different than those, it will be
-automatically set to `"NONE"`.
+If the value set to this property is different than those, it will be automatically set to
+`"NONE"`.
 
 ### Example
 
