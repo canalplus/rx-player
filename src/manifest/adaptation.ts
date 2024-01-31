@@ -279,6 +279,7 @@ export default class Adaptation implements IAdaptationMetadata {
       type: this.type,
       isSupported: this.isSupported,
       language: this.language,
+      isForcedSubtitles: this.isForcedSubtitles,
       isClosedCaption: this.isClosedCaption,
       isAudioDescription: this.isAudioDescription,
       isSignInterpreted: this.isSignInterpreted,
