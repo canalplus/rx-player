@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-import type {
-  IAdaptation,
-  ISegment,
-  IPeriod,
-  IRepresentation,
-} from "../../../manifest";
+import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
 
 /** Content information for a single buffered chunk */
 export interface IChunkContext {
   /** Adaptation this chunk is related to. */
-  adaptation : IAdaptation;
+  adaptation: IAdaptation;
   /** Period this chunk is related to. */
-  period : IPeriod;
+  period: IPeriod;
   /** Representation this chunk is related to. */
-  representation : IRepresentation;
+  representation: IRepresentation;
   /** Segment this chunk is related to. */
-  segment : ISegment;
+  segment: ISegment;
 }
-

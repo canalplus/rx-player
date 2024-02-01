@@ -8,12 +8,10 @@ import type {
   IPeriodsUpdateResult,
   IRepresentationIndex,
   IMetaPlaylistPrivateInfos,
-  IPrivateInfos } from "./classes";
-import type Manifest from "./classes";
-import {
-  areSameContent,
-  getLoggableSegmentId,
+  IPrivateInfos,
 } from "./classes";
+import type Manifest from "./classes";
+import { areSameContent, getLoggableSegmentId } from "./classes";
 
 /** Type of a `Manifest` class. */
 export type IManifest = Manifest;
@@ -36,10 +34,12 @@ export type {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
 };
+export { areSameContent, getLoggableSegmentId };
 export {
-  areSameContent,
-  getLoggableSegmentId,
-};
-export * from "./types";
+  ManifestMetadataFormat,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+} from "./types";
 export * from "./utils";
-

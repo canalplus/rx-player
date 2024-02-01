@@ -28,11 +28,10 @@ import { isIEOrEdge } from "./browser_detection";
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-export default function addTextTrack(
-  mediaElement : HTMLMediaElement
-) : { track : ICompatTextTrack;
-      trackElement : HTMLTrackElement | undefined; }
-{
+export default function addTextTrack(mediaElement: HTMLMediaElement): {
+  track: ICompatTextTrack;
+  trackElement: HTMLTrackElement | undefined;
+} {
   let track;
   let trackElement;
 
@@ -40,8 +39,11 @@ export default function addTextTrack(
 
   if (isIEOrEdge) {
     const tracksLength = mediaElement.textTracks.length;
-    track = (tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
-                                mediaElement.addTextTrack(kind)) as ICompatTextTrack;
+    track = (
+      tracksLength > 0
+        ? mediaElement.textTracks[tracksLength - 1]
+        : mediaElement.addTextTrack(kind)
+    ) as ICompatTextTrack;
     track.mode = track.SHOWING ?? "showing";
   } else {
     trackElement = document.createElement("track");

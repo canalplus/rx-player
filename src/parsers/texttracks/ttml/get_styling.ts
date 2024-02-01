@@ -19,14 +19,13 @@ import arrayIncludes from "../../../utils/array_includes";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import startsWith from "../../../utils/starts_with";
 
-export type IStyleList =
-  Partial<Record<string, string>>;
+export type IStyleList = Partial<Record<string, string>>;
 
 // Object defining a single element's (region/style...) style parameters
 export interface IStyleObject {
-  id : string; // The ID of the current element
-  style : IStyleList; // All set style preference
-  extendsStyles : string[]; // ID of the "style" elements this element extends
+  id: string; // The ID of the current element
+  style: IStyleList; // All set style preference
+  extendsStyles: string[]; // ID of the "style" elements this element extends
 }
 
 /**
@@ -43,18 +42,18 @@ export interface IStyleObject {
  * @returns {Object}
  */
 export function getStylingAttributes(
-  attributes : string[],
-  nodes : Node[],
-  styles : IStyleObject[],
-  regions : IStyleObject[]
-) : IStyleList {
-  const currentStyle : IStyleList = {};
+  attributes: string[],
+  nodes: Node[],
+  styles: IStyleObject[],
+  regions: IStyleObject[],
+): IStyleList {
+  const currentStyle: IStyleList = {};
   const leftAttributes = attributes.slice();
   for (let i = 0; i <= nodes.length - 1; i++) {
     const node = nodes[i];
     if (node !== undefined) {
-      let styleID : string|undefined;
-      let regionID : string|undefined;
+      let styleID: string | undefined;
+      let regionID: string | undefined;
 
       // 1. the style is directly set on a "tts:" attribute
       if (node.nodeType === Node.ELEMENT_NODE) {
@@ -102,7 +101,7 @@ export function getStylingAttributes(
       // 3. the node reference a region (which can have a value for the
       //    corresponding style)
       if (isNonEmptyString(regionID)) {
-        const region = arrayFind(regions, (x : IStyleObject) => x.id === regionID);
+        const region = arrayFind(regions, (x: IStyleObject) => x.id === regionID);
         if (region !== undefined) {
           for (let j = 0; j <= leftAttributes.length - 1; j++) {
             const attribute = leftAttributes[j];
@@ -129,12 +128,12 @@ export function getStylingAttributes(
  * @param {Node} node
  * @returns {Object}
  */
-export function getStylingFromElement(node : Node) : IStyleList {
+export function getStylingFromElement(node: Node): IStyleList {
   if (node.nodeType !== Node.ELEMENT_NODE) {
     return {};
   }
   const element = node as Element;
-  const currentStyle : IStyleList = {};
+  const currentStyle: IStyleList = {};
   for (let i = 0; i <= element.attributes.length - 1; i++) {
     const styleAttribute = element.attributes[i];
     if (startsWith(styleAttribute.name, "tts")) {

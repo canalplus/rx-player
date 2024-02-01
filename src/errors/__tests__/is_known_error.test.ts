@@ -23,8 +23,7 @@ import OtherError from "../other_error";
 
 describe("Errors - isKnownError", () => {
   it("should return false for a regular error", () => {
-    expect(isKnownError(new Error("nope")))
-      .toBe(false);
+    expect(isKnownError(new Error("nope"))).toBe(false);
   });
 
   it("should return false for a RequestError", () => {

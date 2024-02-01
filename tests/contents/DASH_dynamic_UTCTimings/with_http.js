@@ -1,9 +1,11 @@
-const BASE_URL = "http://" +
-               /* eslint-disable no-undef */
-               __TEST_CONTENT_SERVER__.URL + ":" +
-               __TEST_CONTENT_SERVER__.PORT +
-               /* eslint-enable no-undef */
-               "/DASH_dynamic_UTCTimings/media/";
+const BASE_URL =
+  "http://" +
+  /* eslint-disable no-undef */
+  __TEST_CONTENT_SERVER__.URL +
+  ":" +
+  __TEST_CONTENT_SERVER__.PORT +
+  /* eslint-enable no-undef */
+  "/DASH_dynamic_UTCTimings/media/";
 
 const manifestInfos = {
   url: BASE_URL + "Manifest_with_http.mpd",
@@ -28,8 +30,7 @@ const manifestInfos = {
                   init: {
                     url: "A48/init.mp4",
                   },
-                  segments: [
-                  ],
+                  segments: [],
                   // ...
                 },
               },
@@ -49,8 +50,7 @@ const manifestInfos = {
                   init: {
                     url: "V300/init.mp4",
                   },
-                  segments: [
-                  ],
+                  segments: [],
                   // ...
                 },
               },

@@ -17,8 +17,7 @@ position, as would normally be expected from a property named "duration".
 const duration = player.getMediaDuration();
 ```
 
-  - **return value** `number`: Current content duration, as taken from the
-    media element.
+- **return value** `number`: Current content duration, as taken from the media element.
 
 ## Example
 

@@ -5,8 +5,10 @@ export const hasLocalStorage = !!localStorage;
 
 if (!hasLocalStorage) {
   /* eslint-disable-next-line no-console */
-  console.warn("`localStorage` is not available." +
-               " You will not be able to store content information.");
+  console.warn(
+    "`localStorage` is not available." +
+      " You will not be able to store content information.",
+  );
 }
 
 /**
@@ -30,7 +32,7 @@ export function getLocalStorageContents(): IStoredContentInfo[] {
     try {
       const parsed = JSON.parse(localContentItems) as IStoredContentInfo[];
       localStorageContents.push(...parsed);
-    } catch(err) {
+    } catch (err) {
       /* eslint-disable-next-line */
       console.warn("Demo: Can't parse local storage content.");
     }
@@ -42,15 +44,12 @@ export function getLocalStorageContents(): IStoredContentInfo[] {
  * Save contents locally.
  * @param {Array.<Object>} localStorageContents
  */
-export function saveLocalStorageContents(
-  localStorageContents: IStoredContentInfo[]
-) {
+export function saveLocalStorageContents(localStorageContents: IStoredContentInfo[]) {
   if (!hasLocalStorage) {
     JS_LOCAL_STORAGE = localStorageContents;
     return;
   }
-  localStorage.setItem("rxPlayerLocalContents",
-                       JSON.stringify(localStorageContents));
+  localStorage.setItem("rxPlayerLocalContents", JSON.stringify(localStorageContents));
 }
 
 /**
@@ -64,7 +63,7 @@ export function storeContent(content: IContentInfo): IStoredContentInfo {
   let id: number;
   let index;
   if (content.id != null) {
-    index = localStorageContents.findIndex(e => e.id === id);
+    index = localStorageContents.findIndex((e) => e.id === id);
     id = content.id;
   } else {
     const lastContentID = localStorageContents.reduce((acc, val) => {
@@ -87,7 +86,6 @@ export function storeContent(content: IContentInfo): IStoredContentInfo {
     url: content.url,
   };
 
-
   if (index > -1) {
     localStorageContents.splice(index, 1, localContent);
   } else {
@@ -104,7 +102,7 @@ export function storeContent(content: IContentInfo): IStoredContentInfo {
  */
 export function removeStoredContent(id: number): boolean {
   const localStorageContents = getLocalStorageContents();
-  const idx = localStorageContents.findIndex(e => e.id === id);
+  const idx = localStorageContents.findIndex((e) => e.id === id);
 
   if (idx < 0) {
     return false;

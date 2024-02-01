@@ -6,12 +6,12 @@ Returns the current "wall-clock" playing position in seconds.
 
 That is:
 
-- for live contents, this is the current position scaled to correspond to a
-  live timestamp, in seconds.
+- for live contents, this is the current position scaled to correspond to a live
+  timestamp, in seconds.
 
-- for non-live contents, returns the position from the absolute beginning time
-  of the content, also in seconds. In the absolute majority of cases this will
-  be equal to the value returned by `getPosition`.
+- for non-live contents, returns the position from the absolute beginning time of the
+  content, also in seconds. In the absolute majority of cases this will be equal to the
+  value returned by `getPosition`.
 
 Use this method to display the current position to the user.
 
@@ -21,7 +21,7 @@ Use this method to display the current position to the user.
 const wallClockTime = player.getWallClockTime();
 ```
 
-  - **return value** `number`: Current "wall-clock" position.
+- **return value** `number`: Current "wall-clock" position.
 
 ## Example
 

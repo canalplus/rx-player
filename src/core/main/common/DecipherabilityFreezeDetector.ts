@@ -20,9 +20,8 @@ import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import type SegmentSinksStore from "../../segment_sinks";
 
 export default class DecipherabilityFreezeDetector {
-
   /** Emit the current playback conditions */
-  private _segmentSinksStore : SegmentSinksStore;
+  private _segmentSinksStore: SegmentSinksStore;
 
   /**
    * If set to something else than `null`, this is the monotonically-raising
@@ -34,9 +33,9 @@ export default class DecipherabilityFreezeDetector {
    *
    * It is also reset to `null` when and if there is no such issue anymore.
    */
-  private _currentFreezeTimestamp : number | null;
+  private _currentFreezeTimestamp: number | null;
 
-  constructor(segmentSinksStore : SegmentSinksStore) {
+  constructor(segmentSinksStore: SegmentSinksStore) {
     this._segmentSinksStore = segmentSinksStore;
     this._currentFreezeTimestamp = null;
   }
@@ -61,20 +60,13 @@ export default class DecipherabilityFreezeDetector {
    * decipherability freeze, in which case you should probably reload the
    * content.
    */
-  public needToReload(
-    observation : IDecipherabilityFreezeDetectorObservation
-  ): boolean {
-    const { readyState,
-            rebuffering,
-            freezing } = observation;
-    const bufferGap = observation.bufferGap !== undefined &&
-      isFinite(observation.bufferGap) ? observation.bufferGap :
-      0;
-    if (
-      bufferGap < 6 ||
-      (rebuffering === null && freezing === null) ||
-      readyState > 1
-    ) {
+  public needToReload(observation: IDecipherabilityFreezeDetectorObservation): boolean {
+    const { readyState, rebuffering, freezing } = observation;
+    const bufferGap =
+      observation.bufferGap !== undefined && isFinite(observation.bufferGap)
+        ? observation.bufferGap
+        : 0;
+    if (bufferGap < 6 || (rebuffering === null && freezing === null) || readyState > 1) {
       this._currentFreezeTimestamp = null;
       return false;
     }
@@ -85,8 +77,7 @@ export default class DecipherabilityFreezeDetector {
     }
     const rebufferingForTooLong =
       rebuffering !== null && now - rebuffering.timestamp > 4000;
-    const frozenForTooLong =
-      freezing !== null && now - freezing.timestamp > 4000;
+    const frozenForTooLong = freezing !== null && now - freezing.timestamp > 4000;
 
     if (
       (rebufferingForTooLong || frozenForTooLong) &&
@@ -102,7 +93,7 @@ export default class DecipherabilityFreezeDetector {
             const { representation } = segment.infos;
             if (representation.decipherable === false) {
               log.warn(
-                "Init: we have undecipherable segments left in the buffer, reloading"
+                "Init: we have undecipherable segments left in the buffer, reloading",
               );
               this._currentFreezeTimestamp = null;
               return true;
@@ -119,7 +110,7 @@ export default class DecipherabilityFreezeDetector {
       if (!isClear && hasOnlyDecipherableSegments) {
         log.warn(
           "Init: we are frozen despite only having decipherable " +
-          "segments left in the buffer, reloading"
+            "segments left in the buffer, reloading",
         );
         this._currentFreezeTimestamp = null;
         return true;
@@ -132,13 +123,13 @@ export default class DecipherabilityFreezeDetector {
 /** Playback observation needed by the `DecipherabilityFreezeDetector`. */
 export interface IDecipherabilityFreezeDetectorObservation {
   /** Current `readyState` value on the media element. */
-  readyState : number;
+  readyState: number;
   /**
    * Set if the player is short on audio and/or video media data and is a such,
    * rebuffering.
    * `null` if not.
    */
-  rebuffering : IRebufferingStatus | null;
+  rebuffering: IRebufferingStatus | null;
   /**
    * Set if the player is frozen, that is, stuck in place for unknown reason.
    * Note that this reason can be a valid one, such as a necessary license not
@@ -146,11 +137,11 @@ export interface IDecipherabilityFreezeDetectorObservation {
    *
    * `null` if the player is not frozen.
    */
-  freezing : IFreezingStatus | null;
+  freezing: IFreezingStatus | null;
   /**
    * Gap between `currentTime` and the next position with un-buffered data.
    * `Infinity` if we don't have buffered data right now.
    * `undefined` if we cannot determine the buffer gap.
    */
-  bufferGap : number | undefined;
+  bufferGap: number | undefined;
 }

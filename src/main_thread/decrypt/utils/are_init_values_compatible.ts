@@ -27,16 +27,18 @@ import SerializableBytes from "./serializable_bytes";
  * @returns {boolean}
  */
 export default function areInitializationValuesCompatible(
-  stored : Array<{ systemId : string | undefined;
-                   hash : number;
-                   data : Uint8Array | SerializableBytes | string; }>,
-  newElts : Array<{ systemId : string | undefined;
-                    hash : number;
-                    data : Uint8Array | SerializableBytes | string; }>
-) : boolean {
-  return _isAInB(stored, newElts) ??
-         _isAInB(newElts, stored) ??
-         false;
+  stored: Array<{
+    systemId: string | undefined;
+    hash: number;
+    data: Uint8Array | SerializableBytes | string;
+  }>,
+  newElts: Array<{
+    systemId: string | undefined;
+    hash: number;
+    data: Uint8Array | SerializableBytes | string;
+  }>,
+): boolean {
+  return _isAInB(stored, newElts) ?? _isAInB(newElts, stored) ?? false;
 }
 
 /**
@@ -60,13 +62,17 @@ export default function areInitializationValuesCompatible(
  * @returns {boolean}
  */
 function _isAInB(
-  a : Array<{ systemId : string | undefined;
-              hash : number;
-              data : Uint8Array | SerializableBytes | string; }>,
-  b : Array<{ systemId : string | undefined;
-              hash : number;
-              data : Uint8Array | SerializableBytes | string; }>
-) : boolean | null {
+  a: Array<{
+    systemId: string | undefined;
+    hash: number;
+    data: Uint8Array | SerializableBytes | string;
+  }>,
+  b: Array<{
+    systemId: string | undefined;
+    hash: number;
+    data: Uint8Array | SerializableBytes | string;
+  }>,
+): boolean | null {
   if (a.length === 0) {
     return false;
   }
@@ -87,14 +93,18 @@ function _isAInB(
       return false;
     }
 
-    const aData : Uint8Array =
-      firstAElt.data instanceof Uint8Array ? firstAElt.data :
-      typeof firstAElt.data === "string"   ? SerializableBytes.decode(firstAElt.data) :
-                                             firstAElt.data.initData;
-    const bData : Uint8Array =
-      bElt.data instanceof Uint8Array ? bElt.data :
-      typeof bElt.data === "string"   ? SerializableBytes.decode(bElt.data) :
-                                             bElt.data.initData;
+    const aData: Uint8Array =
+      firstAElt.data instanceof Uint8Array
+        ? firstAElt.data
+        : typeof firstAElt.data === "string"
+          ? SerializableBytes.decode(firstAElt.data)
+          : firstAElt.data.initData;
+    const bData: Uint8Array =
+      bElt.data instanceof Uint8Array
+        ? bElt.data
+        : typeof bElt.data === "string"
+          ? SerializableBytes.decode(bElt.data)
+          : bElt.data.initData;
     if (!areArraysOfNumbersEqual(aData, bData)) {
       return false;
     }
@@ -115,14 +125,18 @@ function _isAInB(
         if (aElt.hash !== bNewElt.hash) {
           return false;
         }
-        const aNewData : Uint8Array =
-          aElt.data instanceof Uint8Array ? aElt.data :
-          typeof aElt.data === "string"   ? SerializableBytes.decode(aElt.data) :
-                                                 aElt.data.initData;
-        const bNewData : Uint8Array =
-          bNewElt.data instanceof Uint8Array ? bNewElt.data :
-          typeof bNewElt.data === "string"   ? SerializableBytes.decode(bNewElt.data) :
-                                               bNewElt.data.initData;
+        const aNewData: Uint8Array =
+          aElt.data instanceof Uint8Array
+            ? aElt.data
+            : typeof aElt.data === "string"
+              ? SerializableBytes.decode(aElt.data)
+              : aElt.data.initData;
+        const bNewData: Uint8Array =
+          bNewElt.data instanceof Uint8Array
+            ? bNewElt.data
+            : typeof bNewElt.data === "string"
+              ? SerializableBytes.decode(bNewElt.data)
+              : bNewElt.data.initData;
         if (!areArraysOfNumbersEqual(aNewData, bNewData)) {
           return false;
         }

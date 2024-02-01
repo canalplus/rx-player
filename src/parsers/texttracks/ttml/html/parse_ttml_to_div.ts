@@ -39,10 +39,7 @@ import parseCue from "./parse_cue";
  * @param {string} str
  * @param {number} timeOffset
  */
-export default function parseTTMLToDiv(
-  str : string,
-  timeOffset : number
-): ITTMLHTMLCue[] {
+export default function parseTTMLToDiv(str: string, timeOffset: number): ITTMLHTMLCue[] {
   const parsedCues = parseTtml(str, timeOffset);
   const cues: ITTMLHTMLCue[] = [];
   for (let i = 0; i < parsedCues.length; i++) {

@@ -95,19 +95,45 @@
   },
   "typesVersions": {
     "*": {
-      "experimental": ["./dist/es2017/experimental/index.d.ts"],
-      "experimental/features": ["./dist/es2017/experimental/features/index.d.ts"],
-      "experimental/features/embeds": ["./dist/es2017/__GENERATED_CODE/index.d.ts"],
-      "experimental/features/*": ["./dist/es2017/experimental/features/*.d.ts"],
-      "experimental/tools": ["./dist/es2017/experimental/tools/index.d.ts"],
-      "experimental/tools/*": ["./dist/es2017/experimental/tools/*/index.d.ts"],
-      "features": ["./dist/es2017/features/list/index.d.ts"],
-      "features/*": ["./dist/es2017/features/list/*.d.ts"],
-      "logger": ["./dist/es2017/log.d.ts"],
-      "minimal": ["./dist/es2017/minimal.d.ts"],
-      "tools": ["./dist/es2017/tools/index.d.ts"],
-      "tools/*": ["./dist/es2017/tools/*/index.d.ts"],
-      "types": ["./dist/es2017/public_types.d.ts"]
+      "experimental": [
+        "./dist/es2017/experimental/index.d.ts"
+      ],
+      "experimental/features": [
+        "./dist/es2017/experimental/features/index.d.ts"
+      ],
+      "experimental/features/embeds": [
+        "./dist/es2017/__GENERATED_CODE/index.d.ts"
+      ],
+      "experimental/features/*": [
+        "./dist/es2017/experimental/features/*.d.ts"
+      ],
+      "experimental/tools": [
+        "./dist/es2017/experimental/tools/index.d.ts"
+      ],
+      "experimental/tools/*": [
+        "./dist/es2017/experimental/tools/*/index.d.ts"
+      ],
+      "features": [
+        "./dist/es2017/features/list/index.d.ts"
+      ],
+      "features/*": [
+        "./dist/es2017/features/list/*.d.ts"
+      ],
+      "logger": [
+        "./dist/es2017/log.d.ts"
+      ],
+      "minimal": [
+        "./dist/es2017/minimal.d.ts"
+      ],
+      "tools": [
+        "./dist/es2017/tools/index.d.ts"
+      ],
+      "tools/*": [
+        "./dist/es2017/tools/*/index.d.ts"
+      ],
+      "types": [
+        "./dist/es2017/public_types.d.ts"
+      ]
     }
   },
   "keywords": [
@@ -129,8 +155,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "./scripts/generate_build.mjs",
-    "build:dev": "./scripts/generate_build.mjs --dev-mode",
     "build:all": "npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
+    "build:dev": "./scripts/generate_build.mjs --dev-mode",
     "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown --release && node ../../../../../scripts/wasm-optimize.mjs target/wasm32-unknown-unknown/release/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm && cd ../../../../../ && npm run wasm-strip",
     "bundle": "webpack --progress --config webpack.config.mjs --env production",
@@ -140,14 +166,18 @@
     "certificate": "./scripts/generate_certificate",
     "check": "npm run check:types && npm run lint",
     "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run test:unit && npm run test:integration && npm run test:memory && node -r esm ./scripts/check_nodejs_import_compatibility.js",
-    "check:types": "tsc --noEmit --project .",
-    "check:types:watch": "tsc --noEmit --watch --project .",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/full",
+    "check:types": "tsc --noEmit --project .",
+    "check:types:watch": "tsc --noEmit --watch --project .",
     "demo": "node ./scripts/build_demo.mjs --production-mode",
     "demo:min": "node ./scripts/build_demo.mjs --production-mode --minify",
     "demo:watch": "node ./scripts/build_demo.mjs --watch --production-mode",
     "doc": "readme.doc doc/ doc/generated \"$(cat VERSION)\"",
+    "fmt:prettier": "prettier --write .",
+    "fmt:prettier:check": "prettier . --check",
+    "fmt:rust": "cd ./src/parsers/manifest/dash/wasm-parser && cargo fmt",
+    "fmt:rust:check": "cd ./src/parsers/manifest/dash/wasm-parser && cargo fmt --check",
     "lint": "eslint src -c .eslintrc.js",
     "lint:demo": "eslint -c demo/full/.eslintrc.js demo/full/scripts",
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
@@ -157,7 +187,6 @@
     "standalone": "node ./scripts/run_standalone_demo.mjs",
     "start": "node ./scripts/start_demo_web_server.mjs",
     "start:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
-    "wasm-strip": "node scripts/wasm-strip.mjs dist/mpd-parser.wasm",
     "test:integration": "node tests/integration/run.mjs --bchromehl --bfirefoxhl",
     "test:integration:chrome": "node tests/integration/run.mjs --bchrome",
     "test:integration:chrome:watch": "node tests/integration/run.mjs --bchrome --watch",
@@ -168,7 +197,8 @@
     "test:unit": "jest --maxWorkers=5",
     "test:unit:coverage": "jest --coverage",
     "update-version": "npm run version --git-tag-version=false",
-    "version": "./scripts/update-version"
+    "version": "./scripts/update-version",
+    "wasm-strip": "node scripts/wasm-strip.mjs dist/mpd-parser.wasm"
   },
   "repository": {
     "type": "git",
@@ -196,6 +226,7 @@
     "core-js": "3.34.0",
     "esbuild": "0.19.10",
     "eslint": "8.56.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-ban": "1.6.0",
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-jsdoc": "46.9.1",
@@ -213,6 +244,7 @@
     "karma-webpack": "5.0.0",
     "mocha": "10.2.0",
     "mocha-loader": "5.1.5",
+    "prettier": "^3.2.4",
     "raw-loader": "4.0.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -240,14 +272,18 @@
       "standalone": "Build and launch the \"standalone\" demo (without any UI) on a local server. Re-build on file updates.",
       "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)"
     },
-    "Type-check or lint the current code": {
+    "Type-check, format, or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
       "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
       "check:types": "Check TypeScript typings in src",
       "check:types:watch": "Check TypeScript typings in src each time files change",
       "lint": "Lint rx-player source files",
       "lint:demo": "Lint demo source files",
-      "lint:tests": "Lint integration tests source files"
+      "lint:tests": "Lint integration tests source files",
+      "fmt:prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files",
+      "fmt:prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files are well-formatted",
+      "fmt:rust": "Automatically format Rust files",
+      "fmt:rust:check": "Check that Rust files are well-formatted"
     },
     "Run tests": {
       "Integration tests (test the whole API, ensure the RxPlayer build is made BEFORE running them)": {

@@ -4,10 +4,9 @@ import type {
   IRemoveTextDataWorkerMessage,
   IStopTextDisplayerWorkerMessage,
   IResetTextDisplayerWorkerMessage,
-  IPushTextDataWorkerMessage } from "../../../multithread_types";
-import {
-  WorkerMessageType,
+  IPushTextDataWorkerMessage,
 } from "../../../multithread_types";
+import { WorkerMessageType } from "../../../multithread_types";
 import type { IRange } from "../../../utils/ranges";
 import { CancellationError } from "../../../utils/task_canceller";
 import type { ITextDisplayerInterface } from "../../segment_sinks";
@@ -19,9 +18,9 @@ import type { ITextDisplayerInterface } from "../../segment_sinks";
  * @class WorkerTextDisplayerInterface
  */
 export default class WorkerTextDisplayerInterface implements ITextDisplayerInterface {
-  private _contentId : string;
-  private _messageSender : (msg: IWorkerTextDisplayerInterfaceMessage) => void;
-  public _queues : {
+  private _contentId: string;
+  private _messageSender: (msg: IWorkerTextDisplayerInterfaceMessage) => void;
+  public _queues: {
     pushTextData: Array<{
       resolve: (ranges: IRange[]) => void;
       reject: (err: unknown) => void;
@@ -37,13 +36,12 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
    * @param {Object} messageSender
    */
   constructor(
-    contentId : string,
-    messageSender : (msg: IWorkerTextDisplayerInterfaceMessage) => void
+    contentId: string,
+    messageSender: (msg: IWorkerTextDisplayerInterfaceMessage) => void,
   ) {
     this._contentId = contentId;
     this._messageSender = messageSender;
-    this._queues = { pushTextData: [],
-                     remove: [] };
+    this._queues = { pushTextData: [], remove: [] };
   }
 
   /**
@@ -100,10 +98,10 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
 
   private _resetCurrentQueue(): void {
     const error = new CancellationError();
-    this._queues.pushTextData.forEach(elt => {
+    this._queues.pushTextData.forEach((elt) => {
       elt.reject(error);
     });
-    this._queues.remove.forEach(elt => {
+    this._queues.remove.forEach((elt) => {
       elt.reject(error);
     });
   }
@@ -157,7 +155,8 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   }
 }
 
-type IWorkerTextDisplayerInterfaceMessage = IPushTextDataWorkerMessage |
-                                            IRemoveTextDataWorkerMessage |
-                                            IStopTextDisplayerWorkerMessage |
-                                            IResetTextDisplayerWorkerMessage;
+type IWorkerTextDisplayerInterfaceMessage =
+  | IPushTextDataWorkerMessage
+  | IRemoveTextDataWorkerMessage
+  | IStopTextDisplayerWorkerMessage
+  | IResetTextDisplayerWorkerMessage;

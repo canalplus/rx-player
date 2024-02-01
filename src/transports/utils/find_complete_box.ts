@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  be4toi,
-  be8toi,
-} from "../../utils/byte_parsing";
+import { be4toi, be8toi } from "../../utils/byte_parsing";
 
 /**
  * Find the offset for the first declaration of the given box in an isobmff.
@@ -28,10 +25,7 @@ import {
  * @param {Number} wantedName
  * @returns {Number} - Offset where the box begins. -1 if not found.
  */
-export default function findCompleteBox(
-  buf : Uint8Array,
-  wantedName : number
-) : number {
+export default function findCompleteBox(buf: Uint8Array, wantedName: number): number {
   const len = buf.length;
   let i = 0;
   while (i + 8 <= len) {
@@ -46,7 +40,8 @@ export default function findCompleteBox(
       size = be8toi(buf, i + 8);
     }
 
-    if (isNaN(size) || size <= 0) { // should not happen
+    if (isNaN(size) || size <= 0) {
+      // should not happen
       return -1;
     }
 

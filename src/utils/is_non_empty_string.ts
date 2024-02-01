@@ -18,6 +18,6 @@
  * @param {*} x
  * @returns {string}
  */
-export default function isNonEmptyString(x : unknown) : x is Exclude<string, ""> {
+export default function isNonEmptyString(x: unknown): x is Exclude<string, ""> {
   return typeof x === "string" && x.length > 0;
 }

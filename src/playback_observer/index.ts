@@ -10,4 +10,3 @@ export type {
 } from "./types";
 export type IMediaElementPlaybackObserver = MediaElementPlaybackObserver;
 export { ObservationPosition };
-

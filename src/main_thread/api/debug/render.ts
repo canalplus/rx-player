@@ -6,10 +6,10 @@ import createSegmentSinkSizeGraph from "./modules/segment_buffer_size";
 import { createCompositeElement, createElement } from "./utils";
 
 export default function renderDebugElement(
-  parentElt : HTMLElement,
-  instance : RxPlayer,
-  cancelSignal : CancellationSignal
-) : void {
+  parentElt: HTMLElement,
+  instance: RxPlayer,
+  cancelSignal: CancellationSignal,
+): void {
   const debugElementTitleElt = createElement("div", {
     textContent: "RxPlayer Debug Information",
   });

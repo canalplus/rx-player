@@ -8,24 +8,25 @@ The argument can be an object with a single `Number` property, either:
 
 - `relative`: seek relatively to the current position
 
-- `position`: seek to the given absolute position (equivalent to `player.getVideoElement().currentTime = newPosition`)
+- `position`: seek to the given absolute position (equivalent to
+  `player.getVideoElement().currentTime = newPosition`)
 
 - `wallClockTime`: seek to the given wallClock position, as returned by
   `getWallClockTime`.
 
-The argument can also just be a `Number` property, which will have the same
-effect than the `position` property (absolute position).
+The argument can also just be a `Number` property, which will have the same effect than
+the `position` property (absolute position).
 
-Seeking should only be done when a content is loaded (i.e. the player isn't
-in the `STOPPED`, `LOADING` or `RELOADING` state).
+Seeking should only be done when a content is loaded (i.e. the player isn't in the
+`STOPPED`, `LOADING` or `RELOADING` state).
 
-The seek operation will start as soon as possible, in almost every cases
-directly after this method is called.
+The seek operation will start as soon as possible, in almost every cases directly after
+this method is called.
 
-You will know when the seek is being performed and has been performed
-respectively by listening to the `seeking` and `seeked` player events (see the
-[player events page](../Player_Events.md)). While seeking, the RxPlayer might
-also switch to the `SEEKING` state.
+You will know when the seek is being performed and has been performed respectively by
+listening to the `seeking` and `seeked` player events (see the
+[player events page](../Player_Events.md)). While seeking, the RxPlayer might also switch
+to the `SEEKING` state.
 
 ## Syntax
 
@@ -33,9 +34,9 @@ also switch to the `SEEKING` state.
 player.seekTo(position);
 ```
 
-  - **arguments**:
+- **arguments**:
 
-     1. _position_ `Object|number`: The position you want to seek to.
+  1.  _position_ `Object|number`: The position you want to seek to.
 
 ## Examples
 
