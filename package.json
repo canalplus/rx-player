@@ -217,7 +217,6 @@
     "@typescript-eslint/parser": "6.16.0",
     "arraybuffer-loader": "1.0.8",
     "babel-loader": "9.1.3",
-    "binaryen": "116.0.0",
     "chai": "4.3.10",
     "core-js": "3.34.0",
     "esbuild": "0.19.10",
