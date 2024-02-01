@@ -44,23 +44,23 @@ describe("decrypt - global tests - getLicense", () => {
 
   it("should retry after an increased time at each retry", () => {
     /*
-    * The delay after each retry is multiplied by a factor 2.
-    * This delay is slightly modified to randomize the distribution.
-    * Following table display the expected delay for each retry, in the
-    * most pessimists and most optimistics scenarios.
-    * The last two columns show the minimum and maximum accumulated time
-    * waited since the first try.
-    *
-    * |Retry| base  |  max  |  min  |totalMax|totalMin |
-    * |-----|-------|-------|-------|--------|---------|
-    * | 1   |200    | 260   | 140   | 260    |  140    |
-    * | 2   |400    | 520   | 280   | 780    |  420    |
-    * | 3   |800    | 1040  | 560   | 1820   |  980    |
-    * | 4   |1600   | 2080  | 1120  | 3900   |  21OO   |
-    * | 5   |3000   | 3000  | 2100  | 7800   |  4200   |
-    * | 6   |3000   | 3000  | 2100  | 11700  |  6300   |
-    * | 7   |3000   | 3000  | 2100  | 15600  |  8400   |
-    */
+     * The delay after each retry is multiplied by a factor 2.
+     * This delay is slightly modified to randomize the distribution.
+     * Following table display the expected delay for each retry, in the
+     * most pessimists and most optimistics scenarios.
+     * The last two columns show the minimum and maximum accumulated time
+     * waited since the first try.
+     *
+     * |Retry| base  |  max  |  min  |totalMax|totalMin |
+     * |-----|-------|-------|-------|--------|---------|
+     * | 1   |200    | 260   | 140   | 260    |  140    |
+     * | 2   |400    | 520   | 280   | 780    |  420    |
+     * | 3   |800    | 1040  | 560   | 1820   |  980    |
+     * | 4   |1600   | 2080  | 1120  | 3900   |  21OO   |
+     * | 5   |3000   | 3000  | 2100  | 7800   |  4200   |
+     * | 6   |3000   | 3000  | 2100  | 11700  |  6300   |
+     * | 7   |3000   | 3000  | 2100  | 15600  |  8400   |
+     */
     const baseDelay = 200;
     const maxDelay = 3000;
     expect(getRetryDelay(baseDelay, 1, maxDelay)).toBeGreaterThanOrEqual(140);
@@ -71,7 +71,7 @@ describe("decrypt - global tests - getLicense", () => {
 
     expect(getRetryDelay(baseDelay, 6, maxDelay)).toBeGreaterThanOrEqual(2100);
     expect(getRetryDelay(baseDelay, 6, maxDelay)).toBeLessThanOrEqual(3000);
-  })
+  });
 
   it("should update the session after getLicense resolves with a license", async () => {
     await checkGetLicense({
@@ -487,13 +487,19 @@ function checkGetLicense({
           timeout = 800;
           break;
         case 3:
-          timeout = 1200;
+          timeout = 2000;
           break;
         case 4:
-          timeout = 3000;
+          timeout = 4000;
+          break;
+        case 5:
+          timeout = 8000;
+          break;
+        case 6:
+          timeout = 12000;
           break;
         default:
-          timeout = 10000;
+          timeout = 16000;
       }
       setTimeout(() => {
         try {
