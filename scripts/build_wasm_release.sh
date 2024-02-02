@@ -8,7 +8,7 @@ print_toolchain_installation_notice() {
   echo " |                                                                                  |"
   echo " |  If you intend to develop on the RxPlayer regularly, it is recommended that you  |"
   echo " |  install globally rustup (with the \"wasm32-unknown-unknown\" target) as well as   |"
-  echo " |  binaryen. Once done, please remove this \".tmp\" directory.                       |"
+  echo " |  binaryen. Once done, please remove this \"tmp\" directory.                        |"
   echo " +----------------------------------------------------------------------------------+"
 }
 
