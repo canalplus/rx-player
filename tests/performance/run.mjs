@@ -219,7 +219,7 @@ async function prepareLastRxPlayerTests() {
 async function linkCurrentRxPlayer() {
   await removeFile(path.join(currentDirectory, "node_modules"));
   await fs.mkdir(path.join(currentDirectory, "node_modules"));
-  await spawnProc("npm run build:rxp:all",
+  await spawnProc("npm run build",
                   [],
                   (code) => new Error(`npm install exited with code ${code}`)).promise;
   await fs.symlink(
