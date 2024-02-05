@@ -1031,6 +1031,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
+        case WorkerMessageType.InitSuccess:
+        case WorkerMessageType.InitError:
+          // Should already be handled by the API
+          break;
+
         default:
           assertUnreachable(msgData);
       }

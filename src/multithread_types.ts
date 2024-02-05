@@ -573,6 +573,44 @@ export type ISentError = ISerializedNetworkError |
                          ISerializedEncryptedMediaError |
                          ISerializedOtherError;
 
+/**
+ * Message sent by the WebWorker when its initialization, started implicitely
+ * as soon as the `new Worker` call was made for it, has finished and succeeded.
+ *
+ * Once that message has been received, you can ensure that no
+ * `IInitErrorWorkerMessage` will ever be received for the same worker.
+ *
+ * Note that receiving this message is not a requirement before preparing and
+ * loading a content, both initialization and content loading can be started in
+ * parallel.
+ */
+export interface IInitSuccessWorkerMessage {
+  type: WorkerMessageType.InitSuccess;
+  value: null;
+}
+
+/**
+ * Message sent by the WebWorker when its initialization, started implicitely
+ * as soon as the `new Worker` call was made for it, has finished and failed.
+ *
+ * Once that message has been received, you can ensure that no
+ * `IInitErrorWorkerMessage` will ever be received for the same worker.
+ *
+ * Note that you may received this message while preparing and/or loading a
+ * content, both initialization and content loading can be started in
+ * parallel.
+ * As such, this message may be coupled with a content error.
+ */
+export interface IInitErrorWorkerMessage {
+  type: WorkerMessageType.InitError;
+  value: {
+    /** A string describing the error encountered. */
+    errorMessage: string;
+
+    kind: "dashWasmInitialization";
+  };
+}
+
 export interface INeedsBufferFlushWorkerMessage {
   type: WorkerMessageType.NeedsBufferFlush;
   contentId: string;
@@ -883,6 +921,8 @@ export const enum WorkerMessageType {
   EndOfStream = "end-of-stream",
   Error = "error",
   InbandEvent = "inband-event",
+  InitError = "init-error",
+  InitSuccess = "init-success",
   InterruptEndOfStream = "stop-end-of-stream",
   InterruptMediaSourceDurationUpdate = "stop-media-source-duration",
   LockedStream = "locked-stream",
@@ -921,6 +961,8 @@ export type IWorkerMessage = IAbortBufferWorkerMessage |
                              IEndOfStreamWorkerMessage |
                              IErrorWorkerMessage |
                              IInbandEventWorkerMessage |
+                             IInitSuccessWorkerMessage |
+                             IInitErrorWorkerMessage |
                              IInterruptMediaSourceDurationWorkerMessage |
                              ILockedStreamWorkerMessage |
                              ILogMessageWorkerMessage |
