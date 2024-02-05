@@ -190,8 +190,8 @@ by using:
 
   - The [`videoTrackChange`](../../api/Player_Events.md#videotrackchange),
     [`audioTrackChange`](../../api/Player_Events.md#audiotrackchange),
-    [`availableVideoTracksChange`](../../api/Player_Events.md#availablevideotracks) and
-    [`availableAudioTracksChange`](../../api/Player_Events.md#availableaudiotracks)
+    [`availableVideoTracksChange`](../../api/Player_Events.md#availablevideotrackschange) and
+    [`availableAudioTracksChange`](../../api/Player_Events.md#availableaudiotrackschange)
     player events which respectively emit data similar to the `getVideoTrack`,
     `getAudioTrack`, `getAvailableVideoTracks` and `getAvailableAudioTracks`
     methods.

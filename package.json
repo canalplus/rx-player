@@ -95,19 +95,45 @@
   },
   "typesVersions": {
     "*": {
-      "experimental": ["./dist/es2017/experimental/index.d.ts"],
-      "experimental/features": ["./dist/es2017/experimental/features/index.d.ts"],
-      "experimental/features/embeds": ["./dist/es2017/__GENERATED_CODE/index.d.ts"],
-      "experimental/features/*": ["./dist/es2017/experimental/features/*.d.ts"],
-      "experimental/tools": ["./dist/es2017/experimental/tools/index.d.ts"],
-      "experimental/tools/*": ["./dist/es2017/experimental/tools/*/index.d.ts"],
-      "features": ["./dist/es2017/features/list/index.d.ts"],
-      "features/*": ["./dist/es2017/features/list/*.d.ts"],
-      "logger": ["./dist/es2017/log.d.ts"],
-      "minimal": ["./dist/es2017/minimal.d.ts"],
-      "tools": ["./dist/es2017/tools/index.d.ts"],
-      "tools/*": ["./dist/es2017/tools/*/index.d.ts"],
-      "types": ["./dist/es2017/public_types.d.ts"]
+      "experimental": [
+        "./dist/es2017/experimental/index.d.ts"
+      ],
+      "experimental/features": [
+        "./dist/es2017/experimental/features/index.d.ts"
+      ],
+      "experimental/features/embeds": [
+        "./dist/es2017/__GENERATED_CODE/index.d.ts"
+      ],
+      "experimental/features/*": [
+        "./dist/es2017/experimental/features/*.d.ts"
+      ],
+      "experimental/tools": [
+        "./dist/es2017/experimental/tools/index.d.ts"
+      ],
+      "experimental/tools/*": [
+        "./dist/es2017/experimental/tools/*/index.d.ts"
+      ],
+      "features": [
+        "./dist/es2017/features/list/index.d.ts"
+      ],
+      "features/*": [
+        "./dist/es2017/features/list/*.d.ts"
+      ],
+      "logger": [
+        "./dist/es2017/log.d.ts"
+      ],
+      "minimal": [
+        "./dist/es2017/minimal.d.ts"
+      ],
+      "tools": [
+        "./dist/es2017/tools/index.d.ts"
+      ],
+      "tools/*": [
+        "./dist/es2017/tools/*/index.d.ts"
+      ],
+      "types": [
+        "./dist/es2017/public_types.d.ts"
+      ]
     }
   },
   "keywords": [
@@ -147,7 +173,7 @@
     "demo": "node ./scripts/build_demo.mjs --production-mode",
     "demo:min": "node ./scripts/build_demo.mjs --production-mode --minify",
     "demo:watch": "node ./scripts/build_demo.mjs --watch --production-mode",
-    "doc": "readme.doc doc/ doc/generated \"$(cat VERSION)\"",
+    "doc": "readme.doc --clean --input doc/ --output doc/generated -p \"$(cat VERSION)\"",
     "lint": "eslint src -c .eslintrc.js",
     "lint:demo": "eslint -c demo/full/.eslintrc.js demo/full/scripts",
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
@@ -179,7 +205,7 @@
     "@babel/plugin-transform-runtime": "7.23.6",
     "@babel/preset-env": "7.23.6",
     "@babel/preset-react": "7.23.3",
-    "@canalplus/readme.doc": "^0.3.0",
+    "@canalplus/readme.doc": "0.5.0",
     "@types/chai": "4.3.11",
     "@types/jest": "29.5.11",
     "@types/mocha": "10.0.6",
