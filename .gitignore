@@ -1,22 +1,11 @@
 /tmp
-/*.keys
-/*.log
-/.scannerwork
 /localhost.crt
 /localhost.key
 /node_modules
-/test-output.xml
 
 /demo/full/bundle.js
 /demo/full/worker.js
-/demo/full/lib.js
-/demo/full/bundle.js.LICENSE.txt
-/demo/full/lib.js.LICENSE.txt
 /demo/standalone/lib.js
-/demo/bundle.js
-
-/tests/integration/coverage
-/coverage
 
 /tests/performance/node_modules
 /tests/performance/bundle1.js
