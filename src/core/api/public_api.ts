@@ -36,6 +36,7 @@ import {
   IErrorType,
   MediaError,
 } from "../../errors";
+import WorkerInitializationError from "../../errors/worker_initialization_error";
 import features, {
   addFeatures,
   IFeature,
@@ -54,7 +55,11 @@ import Manifest, {
   ManifestMetadataFormat,
   createRepresentationFilterFromFnString,
 } from "../../manifest";
-import { MainThreadMessageType } from "../../multithread_types";
+import {
+  IWorkerMessage,
+  MainThreadMessageType,
+  WorkerMessageType,
+} from "../../multithread_types";
 import {
   IAudioRepresentation,
   IAudioRepresentationsSwitchingMode,
@@ -435,10 +440,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   public attachWorker(
     workerSettings : IWorkerSettings
-  ) : void {
-    if (!hasWebassembly) {
-      log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
-    } else {
+  ) : Promise<void> {
+    return new Promise((res, rej) => {
+      if (typeof Worker !== "function") {
+        log.warn("API: Cannot rely on a WebWorker: Worker API unavailable");
+        return rej(new WorkerInitializationError("INCOMPATIBLE_ERROR",
+                                                 "Worker unavailable"));
+      }
+      if (!hasWebassembly) {
+        log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
+        return rej(new WorkerInitializationError("INCOMPATIBLE_ERROR",
+                                                 "WebAssembly unavailable"));
+      }
       if (typeof workerSettings.workerUrl === "string") {
         this._priv_worker = new Worker(workerSettings.workerUrl);
       } else {
@@ -448,10 +461,40 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
 
       this._priv_worker.onerror = (evt: ErrorEvent) => {
-        this._priv_worker = null;
-        log.error("Unexpected worker error",
+        if (this._priv_worker !== null) {
+          this._priv_worker.terminate();
+          this._priv_worker = null;
+        }
+        log.error("API: Unexpected worker error",
                   evt.error instanceof Error ? evt.error : undefined);
+        rej(new WorkerInitializationError("UNKNOWN_ERROR",
+                                          "Unexpected Worker \"error\" event"));
       };
+      const handleInitMessages = (msg: MessageEvent) => {
+        const msgData = msg.data as unknown as IWorkerMessage;
+        if (msgData.type === WorkerMessageType.InitError) {
+          log.warn("API: Processing InitError worker message: detaching worker");
+          if (this._priv_worker !== null) {
+            this._priv_worker.removeEventListener("message", handleInitMessages);
+            this._priv_worker.terminate();
+            this._priv_worker = null;
+          }
+          rej(
+            new WorkerInitializationError(
+              "SETUP_ERROR",
+              "Worker parser initialization failed: " + msgData.value.errorMessage
+            )
+          );
+        } else if (msgData.type === WorkerMessageType.InitSuccess) {
+          log.info("API: InitSuccess received from worker.");
+          if (this._priv_worker !== null) {
+            this._priv_worker.removeEventListener("message", handleInitMessages);
+          }
+          res();
+        }
+      };
+      this._priv_worker.addEventListener("message", handleInitMessages);
+
       log.debug("---> Sending To Worker:", MainThreadMessageType.Init);
       this._priv_worker.postMessage({
         type: MainThreadMessageType.Init,
@@ -478,7 +521,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           },
         });
       }, this._destroyCanceller.signal);
-    }
+    });
   }
 
   /**
