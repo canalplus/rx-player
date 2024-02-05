@@ -251,12 +251,13 @@ fear that they may change in the future, in which case this documentation could
 easily be outdated.
 
 To be able to call those scripts, you will need to have the Rust compiler
-toolchain installed and ready to compile to WebAssembly.
+toolchain installed and ready to compile to WebAssembly as well as `binaryen`, a
+WebAssembly-specialized toolbox.
 
-To do this, the easiest way would be to rely on `rustup`, a tool to install and
-update Rust toolchains:
+There are several ways this can be done, with the easiest way generally being:
 
-  1. Install [rustup](https://rustup.rs/)
+  1. Install [rustup](https://rustup.rs/), which is a tool intended to
+     facilitate the installation of Rust toolchains
 
   2. Install and rely on the stable toolchain:
      ```sh
@@ -267,5 +268,7 @@ update Rust toolchains:
      ```sh
      rustup target add wasm32-unknown-unknown
      ```
+
+  4. Now install [binaryen](https://github.com/WebAssembly/binaryen)
 
 That should be it!
