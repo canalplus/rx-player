@@ -42,6 +42,7 @@
     "check:types:watch": "tsc --noEmit --watch --project .",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/full",
+    "clean:wasm": "rimraf dist/mpd-parser.wasm && rimraf ./src/parsers/manifest/dash/wasm-parser/target",
     "demo": "node ./scripts/generate_full_demo.js --production-mode",
     "demo:min": "node ./scripts/generate_full_demo.js --production-mode --minify",
     "demo:watch": "node ./scripts/generate_full_demo.js --watch --production-mode",
