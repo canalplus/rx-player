@@ -455,13 +455,19 @@ function checkGetLicense({
           timeout = 800;
           break;
         case 3:
-          timeout = 1200;
+          timeout = 2000;
           break;
         case 4:
-          timeout = 3000;
+          timeout = 4000;
+          break;
+        case 5:
+          timeout = 8000;
+          break;
+        case 6:
+          timeout = 12000;
           break;
         default:
-          timeout = 10000;
+          timeout = 16000;
       }
       setTimeout(() => {
         try {
