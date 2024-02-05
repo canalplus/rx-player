@@ -28,27 +28,20 @@ import logger from "./log";
 import Player from "./main_thread/api";
 import MainCodecSupportProber from "./mse/main_codec_support_prober";
 
-// NOTE: We're here doing an IIFE to ensure those side-effects are performed
-// when this file's default export is imported while still respecting the
-// spirit of our `package.json`'s `sideEffects` attribute.
-export default (() => {
-  patchWebkitSourceBuffer();
+patchWebkitSourceBuffer();
 
-  // TODO this should be auto-imported when the various features that needs it
-  // are added.
-  // For now, I'm scare of breaking things so I'm not removing it yet.
-  features.codecSupportProber = MainCodecSupportProber;
+// TODO this should be auto-imported when the various features that needs it
+// are added.
+// For now, I'm scare of breaking things so I'm not removing it yet.
+features.codecSupportProber = MainCodecSupportProber;
 
-  if (isDebugModeEnabled()) {
-    logger.setLevel("DEBUG");
-  } else if (
-    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)
-  ) {
-    logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
-  }
+if (isDebugModeEnabled()) {
+  logger.setLevel("DEBUG");
+} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
+  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
+}
 
-  /**
-   * Minimal Player which starts with no feature.
-   */
-  return Player;
-})();
+/**
+ * Minimal Player which starts with no feature.
+ */
+export default Player;
