@@ -367,6 +367,7 @@ export default class Manifest extends EventEmitter<IManifestEvents>
 
     this.updateUrl = manifestUpdateUrl;
     this.lifetime = parsedManifest.lifetime;
+    this.clockOffset = parsedManifest.clockOffset;
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
