@@ -59,9 +59,9 @@ The code style in `src` is automatically checked by a "linter", `eslint`.
 
 It basically follows those principles:
 
--   2 spaces indentation
--   90 columns maximum
--   readability and being explicit is generally better than performance and being smart
+- 2 spaces indentation
+- 90 columns maximum
+- readability and being explicit is generally better than performance and being smart
 
 You can easily check if you followed our style rules by calling `npm run lint`.
 
@@ -73,10 +73,10 @@ You can also check the style of the demo page (in the `demo` directory) by calli
 
 We try to be as strict as possible with types:
 
--   the `any` type should be avoided
+- the `any` type should be avoided
 
--   the `as` TypeScript keyword, used for type casting, should also be avoided as much as
-    possible.
+- the `as` TypeScript keyword, used for type casting, should also be avoided as much as
+  possible.
 
 This is to be sure we can detect as much as possible type errors automatically with
 TypeScript.
@@ -88,7 +88,7 @@ easier identification purposes\*:
 
 ```ts
 interface IMyObject {
-    someKey: string;
+  someKey: string;
 }
 
 type IStringOrNumber = string | number;
@@ -100,13 +100,13 @@ just types erased during transpilation):
 
 ```ts
 enum MyEnum {
-    ValueA = 1,
-    ValueB = 2,
+  ValueA = 1,
+  ValueB = 2,
 }
 
 const enum MyConstEnum {
-    Value1 = 1,
-    Value2 = 2,
+  Value1 = 1,
+  Value2 = 2,
 }
 ```
 
@@ -121,19 +121,19 @@ JavaScript re-implementations.
 
 This concerns the following static methods:
 
--   `Object.assign`: use `src/utils/object_assign.ts` instead
--   `Object.values`: use `src/utils/object_values.ts` instead
+- `Object.assign`: use `src/utils/object_assign.ts` instead
+- `Object.values`: use `src/utils/object_values.ts` instead
 
 And the following methods:
 
--   `Array.prototype.includes`: use `src/utils/array_includes.ts` instead
--   `Array.prototype.find`: use `src/utils/array_find.ts` instead
--   `Array.prototype.findIndex`: use `src/utils/array_find_index.ts` instead
--   `String.prototype.startsWith`: use `src/utils/starts_with.ts` instead
--   `String.prototype.substr`: use `String.prototype.substring` instead
--   `NodeList.prototype.forEach`: use a regular for loop instead
--   `Promise.prototype.finally`: Use `then` or both `then` and `catch` of that Promise's
-    methods instead.
+- `Array.prototype.includes`: use `src/utils/array_includes.ts` instead
+- `Array.prototype.find`: use `src/utils/array_find.ts` instead
+- `Array.prototype.findIndex`: use `src/utils/array_find_index.ts` instead
+- `String.prototype.startsWith`: use `src/utils/starts_with.ts` instead
+- `String.prototype.substr`: use `String.prototype.substring` instead
+- `NodeList.prototype.forEach`: use a regular for loop instead
+- `Promise.prototype.finally`: Use `then` or both `then` and `catch` of that Promise's
+  methods instead.
 
 ## The demo page
 
@@ -143,19 +143,19 @@ You might want to quickly test your code modification(s) on a real use case.
 
 For those types of need, we developped two demo pages:
 
--   the _full demo_ page, which is also the one used to showcase the player.
+- the _full demo_ page, which is also the one used to showcase the player.
 
-    This demo has a user-friendly interface and allow the most frequent API interactions.
+  This demo has a user-friendly interface and allow the most frequent API interactions.
 
-    It also exposes both the RxPlayer class through `window.RxPlayer` and the rxPlayer
-    instance through `window.rxPlayer` - both in the global scope. You can thus open a
-    debugger/inspector in your favorite browser to exploit directly the player's API.
+  It also exposes both the RxPlayer class through `window.RxPlayer` and the rxPlayer
+  instance through `window.rxPlayer` - both in the global scope. You can thus open a
+  debugger/inspector in your favorite browser to exploit directly the player's API.
 
--   the _standalone demo_ page, which is just a `<video />` tag linked to a RxPlayer
-    instance.
+- the _standalone demo_ page, which is just a `<video />` tag linked to a RxPlayer
+  instance.
 
-    In this demo too, `window.RxPlayer` and `window.rxPlayer` link to the RxPlayer class
-    and the rxPlayer instance respectively.
+  In this demo too, `window.RxPlayer` and `window.rxPlayer` link to the RxPlayer class and
+  the rxPlayer instance respectively.
 
 To use the full demo page, you can build it and run a local HTTP server on the port 8000
 by running the following npm script.
