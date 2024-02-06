@@ -133,6 +133,13 @@ const player = new RxPlayer(/* your usual options */);
 player.attachWorker({
     workerUrl: EMBEDDED_WORKER,
     dashWasmUrl: EMBEDDED_DASH_WASM,
+}).catch(err => {
+    console.error("An error arised while initializing the worker", err);
+    // Note the if `attachWorker` rejects, the next `loadVideo` / `reload` calls
+    // will not rely on the "multithread" mode anymore.
+    //
+    // However the last-loaded content may fail on error if it was already
+    // loading in "multithread" mode.
 });
 
 // Any further call to `loadVideo` may rely on WebWorker if possible (see
@@ -167,7 +174,8 @@ the following conditions are respected:
     examples) before that `loadVideo` call.
 
 -   You've called the `attachWorker` RxPlayer method (as shown in examples)
-    before the `loadVideo` call on that same RxPlayer instance.
+    before the `loadVideo` call on that same RxPlayer instance, and the returned
+    Promise is either still pending or resolved (i.e. it hasn't rejected).
 
 -   You're playing a DASH content (through the `"dash"` `transport` option of
     the `loadVideo` call).
@@ -184,6 +192,8 @@ the following conditions are respected:
 
 -   You did not force the `"main"` mode through the [`mode` loadVideo
     option](../Loading_a_Content.md#mode).
+
+-   You did not dispose the RxPlayer
 
 If any of those conditions may not be respected by your application, you might
 also want to be able to rely on the usual "main" mode (which runs everything
@@ -305,7 +315,46 @@ const player = new RxPlayer({ /* ... */ });
 player.attachWorker({
     workerUrl: URL_TO_WORKER_FILE,
     dashWasmUrl: URL_TO_DASH_WASM_FILE,
-});
+})
+  .then(() => console.log("Worker succesfully attached!"))
+  .catch(err => {
+    console.error("An error arised while initializing the worker", err);
+  });
+```
+
+As you can see, `attachWorker` returns a Promise resolving once the Worker
+attachment succeeded. It is not necessary to await this promise to load a
+content in "multithread" mode.
+
+If you don't await its returned promise before loading a content in
+"multithread" mode however, note that in the rare scenario where that
+Promise would reject (for example if the `workerUrl` or `dashWasmUrl` are not
+accessible or if security mechanisms prevents the initialization of the
+Worker), the player may fail to load that content (in which case it will trigger
+an `"error"` event for it).
+Once the Promise rejects, the RxPlayer, won't try to load in "multithread" mode
+anymore (excepted cases where `attachWorker` is called another time and if the
+[`mode` `loadVideo` option](../Loading_a_Content.md#mode) has been set to
+`"multithread"`).
+
+Consequently, unless you want to optimize the loading time of the first loaded
+content, it can be considered safer and simpler to just await `attachWorker`'s
+returned Promise before loading a content:
+```js
+const player = new RxPlayer({ /* ... */ });
+try {
+  await player.attachWorker({
+    workerUrl: URL_TO_WORKER_FILE,
+    dashWasmUrl: URL_TO_DASH_WASM_FILE,
+  })
+  console.log("Worker succesfully attached!");
+} catch (err) {
+  console.warn("An error arised while initializing the Worker", err);
+}
+
+// This loaded content may only load in "multithread" mode if `attachWorker`
+// succeeded
+player.loadVideo({ /* ... */ });
 ```
 
 ### Step 4: Load a content
