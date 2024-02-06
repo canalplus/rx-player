@@ -17,20 +17,6 @@
       "require": "./dist/commonjs/experimental/index.js",
       "default": "./dist/es2017/experimental/index.js"
     },
-    "./experimental/inline-worker": {
-      "node": "./experimental/inline-worker.commonjs.js",
-      "es2015": "./experimental/inline-worker.js",
-      "require": "./experimental/inline-worker.commonjs.js",
-      "import": "./experimental/inline-worker.js",
-      "default": "./experimental/inline-worker.js"
-    },
-    "./experimental/inline-mpd-parser": {
-      "node": "./experimental/inline-mpd-parser.commonjs.js",
-      "es2015": "./experimental/inline-mpd-parser.js",
-      "require": "./experimental/inline-mpd-parser.commonjs.js",
-      "import": "./experimental/inline-mpd-parser.js",
-      "default": "./experimental/inline-mpd-parser.js"
-    },
     "./experimental/features": {
       "import": "./dist/es2017/experimental/features/index.js",
       "require": "./dist/commonjs/experimental/features/index.js",
