@@ -142,7 +142,7 @@
   "scripts": {
     "build": "./scripts/generate_build.mjs",
     "build:dev": "./scripts/generate_build.mjs --dev-mode",
-    "build:all": "npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
+    "build:all": "npm run clean:build && npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
     "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "./scripts/build_wasm_release.sh",
     "bundle": "webpack --progress --config webpack.config.mjs --env production",
@@ -156,6 +156,7 @@
     "check:types:watch": "tsc --noEmit --watch --project .",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/full",
+    "clean:build": "rimraf dist",
     "demo": "node ./scripts/build_demo.mjs --production-mode",
     "demo:min": "node ./scripts/build_demo.mjs --production-mode --minify",
     "demo:watch": "node ./scripts/build_demo.mjs --watch --production-mode",
