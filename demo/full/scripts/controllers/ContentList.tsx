@@ -149,7 +149,16 @@ function constructContentList(): Partial<Record<string, IDisplayedContent[]>> {
     {},
   );
 }
-
+/**
+ * Generate a config object which can be used to reload the page with the
+ * current stored content or demo content. This can be used for example to
+ * share some content with other people.
+ * Returns null if it could not generate a config for the current content.
+ * @param {IPlayableContent} content - The content object as constructed in the
+ * ContentList.
+ * @param {Object} state - The current ContentList state.
+ * @returns {ContentConfig|null} The content config
+ */
 function generateConfigForContent(
   content: IPlayableContent,
   {
