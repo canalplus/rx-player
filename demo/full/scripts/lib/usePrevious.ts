@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
  * @param value the current value
  * @returns the previous value of the value passed in params
  */
-export function usePrevious<T>(value : T): T | undefined {
+export function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T>();
   useEffect(() => {
     ref.current = value;

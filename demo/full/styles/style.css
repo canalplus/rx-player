@@ -877,7 +877,7 @@ header .right {
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 10px;
-  margin-right: 60px; 
+  margin-right: 60px;
 }
 .copy-url-button {
   position: absolute;

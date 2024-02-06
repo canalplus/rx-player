@@ -54,10 +54,8 @@ function Player(): JSX.Element {
   const textTrackElementRef = useRef<HTMLDivElement>(null);
   const debugElementRef = useRef<HTMLDivElement>(null);
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
-  const [contentConfig, setContentConfig] =
-    React.useState<null | ContentConfig>(null);
-  const [isReactiveURLEnabled, setIsReactiveURLEnabled] =
-    useState<boolean>(true);
+  const [contentConfig, setContentConfig] = React.useState<null | ContentConfig>(null);
+  const [isReactiveURLEnabled, setIsReactiveURLEnabled] = useState<boolean>(true);
   const previousIsReactiveURLEnabled = usePrevious(isReactiveURLEnabled);
   const onIsReactiveURLEnabledChange = useCallback((newVal: boolean) => {
     setIsReactiveURLEnabled(newVal);
@@ -264,12 +262,11 @@ function Player(): JSX.Element {
     [playerModule],
   );
 
-  const handleContentConfigChange = useCallback(
-    (contentConfigArg: ContentConfig) => {
-      setContentConfig(contentConfigArg);
-    }, []);
+  const handleContentConfigChange = useCallback((contentConfigArg: ContentConfig) => {
+    setContentConfig(contentConfigArg);
+  }, []);
 
-  const generatedURL = React.useMemo<null | string >(() => {
+  const generatedURL = React.useMemo<null | string>(() => {
     if (contentConfig === null) {
       return null;
     }
@@ -277,7 +274,7 @@ function Player(): JSX.Element {
       contentConfig,
       loadVideoConfig: loadVideoOpts,
       playerConfig: playerOpts,
-      demoConfig: { reactiveURL: isReactiveURLEnabled }
+      demoConfig: { reactiveURL: isReactiveURLEnabled },
     });
   }, [contentConfig, loadVideoOpts, playerOpts, isReactiveURLEnabled]);
 
@@ -295,19 +292,17 @@ function Player(): JSX.Element {
   React.useEffect(() => {
     const parsedHash = parseHashInURL(decodeURI(location.hash));
     if (parsedHash !== null) {
-      const { loadVideoConfig , playerConfig, disableReactiveURL } = parsedHash;
+      const { loadVideoConfig, playerConfig, disableReactiveURL } = parsedHash;
       if (typeof loadVideoConfig === "string") {
         // maybe we want to check the shape of the object to
         // be error prone instead of casting?
-        setLoadVideoOpts(JSON.parse(loadVideoConfig) as
-        ILoadVideoSettings);
+        setLoadVideoOpts(JSON.parse(loadVideoConfig) as ILoadVideoSettings);
       }
 
       if (typeof playerConfig === "string") {
         // maybe we want to check the shape of the object to
         // be error prone instead of casting?
-        setPlayerOpts(JSON.parse(playerConfig) as
-        IConstructorSettings);
+        setPlayerOpts(JSON.parse(playerConfig) as IConstructorSettings);
       }
 
       if (disableReactiveURL) {
