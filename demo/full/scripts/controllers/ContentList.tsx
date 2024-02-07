@@ -698,7 +698,7 @@ function ContentList({
           />
         </div>
         <div className="content-inputs-middle">
-          {(isCustomContent || isLocalContent) && (
+          {isCustomContent || isLocalContent ? (
             <Button
               key={0}
               className={
@@ -718,7 +718,7 @@ function ContentList({
                     : "Store content"
               }
             />
-          )}
+          ) : null}
           <Checkbox
             className="enable-reactive-url"
             ariaLabel="Enable reactive url"
@@ -729,7 +729,7 @@ function ContentList({
             Reactive URL
           </Checkbox>
 
-          {isLocalContent && (
+          {isLocalContent ? (
             <Button
               className="choice-input-button erase-button"
               ariaLabel="Remove custom content from saved contents"
@@ -737,7 +737,7 @@ function ContentList({
               value={String.fromCharCode(0xf1f8)}
               disabled={false}
             />
-          )}
+          ) : null}
         </div>
         <div className="choice-input-button-wrapper">
           <Checkbox
@@ -758,7 +758,7 @@ function ContentList({
           />
         </div>
       </div>
-      {(isCustomContent || (isLocalContent && isSavingOrUpdating)) && (
+      {isCustomContent || (isLocalContent && isSavingOrUpdating) ? (
         <div className="custom-input-wrapper">
           {isSavingOrUpdating ? (
             <div className="update-control">
@@ -855,10 +855,10 @@ function ContentList({
                       </span>
                     </span>
                     <Checkbox
-                      ariaLabel="Enable for a low-latency content"
-                      name="isLowLatencyChecked"
-                      checked={isLowLatencyChecked}
-                      onChange={onLowLatencyClick}
+                      ariaLabel="Should fallback on key errors"
+                      name="shouldFallbackOnKeyError"
+                      checked={shouldFallbackOnKeyError}
+                      onChange={onChangeFallbackKeyError}
                     />
                   </span>
                 </div>
@@ -886,16 +886,16 @@ function ContentList({
               <span className={"low-latency-checkbox custom-checkbox"}>
                 Low-Latency content
                 <Checkbox
-                  ariaLabel="Should fallback on key errors"
-                  name="shouldFallbackOnKeyError"
-                  checked={shouldFallbackOnKeyError}
-                  onChange={onChangeFallbackKeyError}
+                  ariaLabel="Enable for a low-latency content"
+                  name="isLowLatencyChecked"
+                  checked={isLowLatencyChecked}
+                  onChange={onLowLatencyClick}
                 />
               </span>
             </div>
           ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
