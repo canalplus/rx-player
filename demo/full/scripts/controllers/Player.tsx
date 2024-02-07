@@ -24,6 +24,53 @@ const { useCallback, useEffect, useRef, useState } = React;
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
 
+const isShapeOfLoadVideoConfig = (arg: any): arg is ILoadVideoSettings => {
+  if (!(typeof arg === "object")) {
+    return false;
+  }
+  if (!(typeof arg.autoplay === "boolean")) {
+    return false;
+  }
+  if (!(typeof arg.defaultAudioTrackSwitchingMode === "string")) {
+    return false;
+  }
+  if (!(typeof arg.enableFastSwitching === "boolean")) {
+    return false;
+  }
+  if (!(typeof arg.requestConfig === "object")) {
+    return false;
+  }
+  if (!(typeof arg.onCodecSwitch === "string")) {
+    return false;
+  }
+  return true;
+};
+
+const isShapeOfPlayerConfig = (arg: any): arg is IConstructorSettings => {
+  if (!(typeof arg === "object")) {
+    return false;
+  }
+  if (!(typeof arg.videoResolutionLimit === "string")) {
+    return false;
+  }
+  if (!(typeof arg.maxBufferAhead === "number")) {
+    return false;
+  }
+  if (!(typeof arg.maxBufferBehind === "number")) {
+    return false;
+  }
+  if (!(typeof arg.maxVideoBufferSize === "number")) {
+    return false;
+  }
+  if (!(typeof arg.throttleVideoBitrateWhenHidden === "boolean")) {
+    return false;
+  }
+  if (!(typeof arg.wantedBufferAhead === "number")) {
+    return false;
+  }
+  return true;
+};
+
 function Player(): JSX.Element {
   const [
     defaultAudioRepresentationsSwitchingMode,
@@ -291,15 +338,25 @@ function Player(): JSX.Element {
     if (parsedHash !== null) {
       const { loadVideoConfig, playerConfig, disableReactiveURL } = parsedHash;
       if (typeof loadVideoConfig === "string") {
-        // maybe we want to check the shape of the object to
-        // be error prone instead of casting?
-        setLoadVideoOpts(JSON.parse(loadVideoConfig) as ILoadVideoSettings);
+        try {
+          const parsedVideoConfig = JSON.parse(loadVideoConfig);
+          if (isShapeOfLoadVideoConfig(parsedVideoConfig)) {
+            setLoadVideoOpts(parsedVideoConfig);
+          }
+        } catch {
+          // do nothing
+        }
       }
 
       if (typeof playerConfig === "string") {
-        // maybe we want to check the shape of the object to
-        // be error prone instead of casting?
-        setPlayerOpts(JSON.parse(playerConfig) as IConstructorSettings);
+        try {
+          const parsedPlayerConfig = JSON.parse(playerConfig);
+          if (isShapeOfPlayerConfig(parsedPlayerConfig)) {
+            setPlayerOpts(parsedPlayerConfig);
+          }
+        } catch {
+          // do nothing
+        }
       }
 
       if (disableReactiveURL) {
