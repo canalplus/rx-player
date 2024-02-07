@@ -80,7 +80,7 @@ interface IAdaptationSwitchingInfos {
 function isVisuallyImpaired(
   accessibility:
     | { schemeIdUri?: string | undefined; value?: string | undefined }
-    | undefined,
+    | undefined
 ): boolean {
   if (accessibility === undefined) {
     return false;
@@ -111,13 +111,13 @@ function isCaptionning(
     | undefined,
   roles:
     | Array<{ schemeIdUri?: string | undefined; value?: string | undefined }>
-    | undefined,
+    | undefined
 ): boolean {
   if (accessibilities !== undefined) {
     const hasDvbClosedCaptionSignaling = accessibilities.some(
       (accessibility) =>
         accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-        accessibility.value === "2",
+        accessibility.value === "2"
     );
     if (hasDvbClosedCaptionSignaling) {
       return true;
@@ -125,8 +125,7 @@ function isCaptionning(
   }
   if (roles !== undefined) {
     const hasDashCaptionSinaling = roles.some(
-      (role) =>
-        role.schemeIdUri === "urn:mpeg:dash:role:2011" && role.value === "caption",
+      (role) => role.schemeIdUri === "urn:mpeg:dash:role:2011" && role.value === "caption"
     );
     if (hasDashCaptionSinaling) {
       return true;
@@ -145,7 +144,7 @@ function isCaptionning(
 function hasSignLanguageInterpretation(
   accessibility:
     | { schemeIdUri?: string | undefined; value?: string | undefined }
-    | undefined,
+    | undefined
 ): boolean {
   if (accessibility === undefined) {
     return false;
@@ -172,7 +171,7 @@ function getAdaptationID(
     isSignInterpreted: boolean | undefined;
     isTrickModeTrack: boolean;
     type: string;
-  },
+  }
 ): string {
   if (isNonEmptyString(adaptation.attributes.id)) {
     return adaptation.attributes.id;
@@ -227,7 +226,7 @@ function getAdaptationID(
  * @returns {Array.<string>}
  */
 function getAdaptationSetSwitchingIDs(
-  adaptation: IAdaptationSetIntermediateRepresentation,
+  adaptation: IAdaptationSetIntermediateRepresentation
 ): string[] {
   if (!isNullOrUndefined(adaptation.children.supplementalProperties)) {
     const { supplementalProperties } = adaptation.children;
@@ -248,18 +247,42 @@ function getAdaptationSetSwitchingIDs(
 }
 
 /**
+ * Returns a list of ID this adaptation can be seamlessly switched to
+ * @param {Object} adaptation
+ * @returns {Array.<string>}
+ */
+function getConnectedPeriod(
+  adaptation: IAdaptationSetIntermediateRepresentation
+): string | undefined {
+  if (adaptation.children.supplementalProperties != null) {
+    const { supplementalProperties } = adaptation.children;
+    for (const supplementalProperty of supplementalProperties) {
+      if (
+        (supplementalProperty.schemeIdUri === "urn:mpeg:dash:period-continuity:2015" ||
+          supplementalProperty.schemeIdUri ===
+            "urn:mpeg:dash:period-connectivity:2015") &&
+        supplementalProperty.value !== undefined
+      ) {
+        return supplementalProperty.value;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
  * Process AdaptationSets intermediate representations to return under its final
  * form.
  * Note that the AdaptationSets returned are sorted by priority (from the most
  * priority to the least one).
  * @param {Array.<Object>} adaptationsIR
  * @param {Object} context
- * @returns {Array.<Object>}
+ * @returns {Object}
  */
 export default function parseAdaptationSets(
   adaptationsIR: IAdaptationSetIntermediateRepresentation[],
-  context: IAdaptationSetContext,
-): IParsedAdaptations {
+  context: IAdaptationSetContext
+): { adaptations: IParsedAdaptations; metadata: IParsedAdaptationsMetadata } {
   const parsedAdaptations: Record<
     ITrackType,
     Array<[IParsedAdaptation, IAdaptationSetOrderingData]>
@@ -271,6 +294,10 @@ export default function parseAdaptationSets(
   const adaptationSwitchingInfos: IAdaptationSwitchingInfos = {};
 
   const parsedAdaptationsIDs: string[] = [];
+  const metadata: IParsedAdaptationsMetadata = {
+    originalIds: new Map(),
+    connectedAdaptations: [],
+  };
 
   for (let adaptationIdx = 0; adaptationIdx < adaptationsIR.length; adaptationIdx++) {
     const adaptation = adaptationsIR[adaptationIdx];
@@ -303,7 +330,7 @@ export default function parseAdaptationSets(
       representationsIR,
       isNonEmptyString(adaptationMimeType) ? adaptationMimeType : null,
       isNonEmptyString(adaptationCodecs) ? adaptationCodecs : null,
-      !isNullOrUndefined(adaptationChildren.roles) ? adaptationChildren.roles : null,
+      !isNullOrUndefined(adaptationChildren.roles) ? adaptationChildren.roles : null
     );
     if (type === undefined) {
       continue;
@@ -366,7 +393,7 @@ export default function parseAdaptationSets(
       type === "text" &&
       roles !== undefined &&
       roles.some(
-        (role) => role.value === "forced-subtitle" || role.value === "forced_subtitle",
+        (role) => role.value === "forced-subtitle" || role.value === "forced_subtitle"
       )
     ) {
       isForcedSubtitle = true;
@@ -479,14 +506,18 @@ export default function parseAdaptationSets(
       }
     }
 
-    if (
-      !isNullOrUndefined(originalID) &&
-      isNullOrUndefined(adaptationSwitchingInfos[originalID])
-    ) {
-      adaptationSwitchingInfos[originalID] = {
-        newID,
-        adaptationSetSwitchingIDs,
-      };
+    const connectedPeriod = getConnectedPeriod(adaptation);
+    if (connectedPeriod !== undefined) {
+      metadata.connectedAdaptations.push({
+        periodId: connectedPeriod,
+        adaptationOriginalId: originalID,
+      });
+    }
+    if (originalID !== undefined) {
+      metadata.originalIds.set(originalID, newID);
+      if (adaptationSwitchingInfos[originalID] === undefined) {
+        adaptationSwitchingInfos[originalID] = { newID, adaptationSetSwitchingIDs };
+      }
     }
   }
 
@@ -496,16 +527,16 @@ export default function parseAdaptationSets(
       if (adaptationsParsedForType.length > 0) {
         adaptationsParsedForType.sort(compareAdaptations);
         acc[adaptationType] = adaptationsParsedForType.map(
-          ([parsedAdaptation]) => parsedAdaptation,
+          ([parsedAdaptation]) => parsedAdaptation
         );
       }
       return acc;
     },
-    {},
+    {}
   );
   parsedAdaptations.video.sort(compareAdaptations);
   attachTrickModeTrack(adaptationsPerType, trickModeAdaptations);
-  return adaptationsPerType;
+  return { adaptations: adaptationsPerType, metadata };
 }
 
 /** Metadata allowing to order AdaptationSets between one another. */
@@ -534,7 +565,7 @@ interface IAdaptationSetOrderingData {
  */
 function compareAdaptations(
   a: [IParsedAdaptation, IAdaptationSetOrderingData],
-  b: [IParsedAdaptation, IAdaptationSetOrderingData],
+  b: [IParsedAdaptation, IAdaptationSetOrderingData]
 ): number {
   const priorityDiff = b[1].priority - a[1].priority;
   if (priorityDiff !== 0) {
@@ -571,3 +602,20 @@ type IInheritedRepresentationContext = Omit<
   IRepresentationContext,
   "unsafelyBaseOnPreviousAdaptation" | "parentSegmentTemplates"
 >;
+
+export interface IParsedAdaptationsMetadata {
+  /**
+   * Link Adaptation's sets original id in the MPD, to their newly set id.
+   *
+   * AdaptationSet which didn't have an id in the MPD do not have an entry in
+   * this map.
+   */
+  originalIds: Map<string, string>;
+
+  connectedAdaptations: IConnectedAdaptationMetadata[];
+}
+
+export interface IConnectedAdaptationMetadata {
+  periodId: string;
+  adaptationOriginalId: string | undefined;
+}
