@@ -840,63 +840,6 @@ header .right {
   background-position: calc(100% - 8px) 50%;
 }
 
-.generated-url {
-  z-index: 1;
-  color: #3a3a3a;
-  font-size: 14px;
-  display: none;
-  margin-bottom: 10px;
-}
-
-.link-with-copy-button {
-  position: relative;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  display: flex;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 3px;
-}
-
-.generated-url.enabled {
-  animation: grow-generated-url 0.6s;
-  display: flex;
-  flex-direction: row;
-}
-
-.generated-url-link.none {
-  color: #222;
-  text-decoration: none;
-  font-style: italic;
-}
-.generated-url-link {
-  color: #ec3655;
-  text-decoration: none;
-}
-.generated-url-link-wrapper {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 10px;
-  margin-right: 60px;
-}
-.copy-url-button {
-  position: absolute;
-  height: 100%;
-  right: 0;
-  width: 60px;
-  border-radius: 3px;
-  border: solid 1px #d1d1d1;
-  background-color: white;
-}
-
-.copy-url-button:not(:disabled) {
-  color: #3a3a3a;
-}
-
-.copy-url-button:hover:not(:disabled) {
-  color: #ec3655;
-}
-
 .enable-reactive-url {
   margin-left: 8px;
   flex-direction: row;

@@ -15,8 +15,6 @@ import TextInput from "../components/Input";
 import Select from "../components/Select";
 import DEFAULT_CONTENTS from "../contents";
 import type { IDefaultContent, IDrmInfo } from "../contents";
-import GeneratedLinkURL from "../components/GenerateLinkURL";
-import GenerateLinkButton from "../components/GenerateLinkButton";
 import type { IKeySystemOption, ILoadVideoOptions } from "../../../../src/public_types";
 
 /* eslint-disable */
@@ -282,7 +280,6 @@ function ContentList({
   onContentConfigChange,
   showOptions,
   onOptionToggle,
-  generatedURL,
   isReactiveURLEnabled,
   onIsReactiveURLEnabledChange,
 }: {
@@ -290,7 +287,6 @@ function ContentList({
   onContentConfigChange: (config: ContentConfig) => void;
   showOptions: boolean;
   onOptionToggle: () => void;
-  generatedURL: string | null;
   isReactiveURLEnabled: boolean;
   onIsReactiveURLEnabledChange: (newVal: boolean) => void;
 }): JSX.Element {
@@ -306,8 +302,6 @@ function ContentList({
   const [chosenDRMType, setChosenDRMType] = React.useState(DRM_TYPES[0]);
   const [customKeySystem, setCustomKeySystem] = React.useState("");
   const [currentManifestURL, setCurrentManifestUrl] = React.useState("");
-  const [shouldDisplayGeneratedLink, setShouldDisplayGeneratedLink] =
-    React.useState(false);
   const [shouldDisplayDRMSettings, setShouldDisplayDRMSettings] = React.useState(false);
   const [shouldFallbackOnKeyError, setShouldFallbackOnKeyError] = React.useState(false);
   const [shouldFallbackOnLicenseReqError, setShouldFallbackOnLicenseReqError] =
@@ -666,10 +660,6 @@ function ContentList({
     ));
   }, [onDRMTypeClick, chosenDRMType]);
 
-  const onClickGenerateLink = React.useCallback(() => {
-    setShouldDisplayGeneratedLink((oldVal) => !oldVal);
-  }, []);
-
   const onChangeFallbackLicenseRequest = React.useCallback((should: boolean) => {
     setShouldFallbackOnLicenseReqError(should);
   }, []);
@@ -686,24 +676,6 @@ function ContentList({
 
   return (
     <div className="choice-inputs-wrapper">
-      <div className={"generated-url" + (shouldDisplayGeneratedLink ? " enabled" : "")}>
-        {shouldDisplayGeneratedLink && (
-          <>
-            <div className="link-with-copy-button">
-              <GeneratedLinkURL url={generatedURL} />
-            </div>
-            <Checkbox
-              className="enable-reactive-url"
-              ariaLabel="Enable reactive url"
-              checked={isReactiveURLEnabled}
-              onChange={onIsReactiveURLEnabledChange}
-              name="enableReactiveUrl"
-            >
-              Enable reactive URL
-            </Checkbox>
-          </>
-        )}
-      </div>
       <div className="content-inputs">
         <div className="content-inputs-selects">
           <Select
@@ -747,13 +719,16 @@ function ContentList({
               }
             />
           )}
-          {
-            <GenerateLinkButton
-              key={1}
-              enabled={shouldDisplayGeneratedLink}
-              onClick={onClickGenerateLink}
-            />
-          }
+          <Checkbox
+            className="enable-reactive-url"
+            ariaLabel="Enable reactive url"
+            checked={isReactiveURLEnabled}
+            onChange={onIsReactiveURLEnabledChange}
+            name="enableReactiveUrl"
+          >
+            Reactive URL
+          </Checkbox>
+
           {isLocalContent && (
             <Button
               className="choice-input-button erase-button"
