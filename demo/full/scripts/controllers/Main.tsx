@@ -12,7 +12,10 @@ function MainComponent(): JSX.Element {
             <a href="https://github.com/canalplus/rx-player">
               <img className="logo" alt="RxPlayer" src="./assets/logo_white.png" />
             </a>
-            <a href="https://github.com/canalplus/rx-player/releases" className="version">
+            <a
+              href="https://developers.canal-plus.com/rx-player/demo_page_by_version.html"
+              className="version"
+            >
               {" v" + RxPlayer.version}
             </a>
           </h1>
