@@ -18,7 +18,6 @@ import type {
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
 import { ContentConfig, generateURLForConfig, parseHashInURL } from "../lib/url_hash";
-import { usePrevious } from "../lib/usePrevious";
 
 const { useCallback, useEffect, useRef, useState } = React;
 
@@ -56,7 +55,6 @@ function Player(): JSX.Element {
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
   const [contentConfig, setContentConfig] = React.useState<null | ContentConfig>(null);
   const [isReactiveURLEnabled, setIsReactiveURLEnabled] = useState<boolean>(true);
-  const previousIsReactiveURLEnabled = usePrevious(isReactiveURLEnabled);
   const onIsReactiveURLEnabledChange = useCallback((newVal: boolean) => {
     setIsReactiveURLEnabled(newVal);
   }, []);
@@ -278,13 +276,12 @@ function Player(): JSX.Element {
     });
   }, [contentConfig, loadVideoOpts, playerOpts, isReactiveURLEnabled]);
 
-  const [sharableURL, setSharableURL] = React.useState("");
   React.useEffect(() => {
-    // still update URL if the last change was editing "isReactiveURLEnabled"
-    // value, so the "isReactiveURLEnabled" can be stored in the URL
-    const isEnabled = previousIsReactiveURLEnabled || isReactiveURLEnabled;
-    if (generatedURL && isEnabled) {
-      setSharableURL(generatedURL);
+    const parsedHash = parseHashInURL(decodeURI(location.hash));
+    const { disableReactiveURL } = parsedHash || {};
+
+    const shouldUpdateHref = isReactiveURLEnabled || !disableReactiveURL;
+    if (generatedURL && shouldUpdateHref) {
       window.location.href = generatedURL;
     }
   }, [generatedURL, isReactiveURLEnabled]);
@@ -319,7 +316,6 @@ function Player(): JSX.Element {
           onContentConfigChange={handleContentConfigChange}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
-          generatedURL={sharableURL}
           isReactiveURLEnabled={isReactiveURLEnabled}
           onIsReactiveURLEnabledChange={onIsReactiveURLEnabledChange}
         />
