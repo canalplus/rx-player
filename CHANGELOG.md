@@ -1,3 +1,21 @@
+## v4.0.0-rc.2 (2024-02-07)
+
+### Features
+
+  - MULTI_THREAD: `attachWorker` now returns a Promise to indicate when WebWorker attachment failed [#1374]
+
+### Bug fixes
+
+  - dash: Don't unnecessarily reload external `<UTCTiming>` resources at each refresh if it failed for the first request of the Manifest [#1370]
+  - dash: The `DASH_WASM` feature do not rely on WebAssembly's sign-extension operators anymore as that is poorly supported on older Samsung and LG TVs [#1372]
+  - MULTI_THREAD: properly categorize forced subtitles in multithread scenarios
+
+### Other improvements
+
+  - build: automatically install Rust and WASM toolchain locally if unavailable when building the RxPlayer [#1373]
+  - doc: Update our documentation generator and fix all invalid anchors in it
+  - npm: prevent the publishing of unnecessary files on the npm registry [#1377, #1378]
+
 ## v4.0.0-rc.1 (2024-01-24)
 
 ### Changes
