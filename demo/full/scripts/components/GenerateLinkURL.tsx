@@ -7,7 +7,7 @@ import Button from "./Button";
  */
 function GeneratedLinkURL({ url }: { url: string | undefined | null }): JSX.Element {
   const [hasBeenCopied, setHasBeenCopied] = React.useState(false);
-  const onCopyURLtoClipboard = () => {
+  const onCopyURLtoClipboard = React.useCallback(() => {
     setHasBeenCopied(true);
     setTimeout(() => setHasBeenCopied(false), 3000);
     if (typeof url === "string") {
@@ -16,7 +16,7 @@ function GeneratedLinkURL({ url }: { url: string | undefined | null }): JSX.Elem
         console.warn("Demo: Can't copy URL in clipboard.", err);
       });
     }
-  };
+  }, [url]);
 
   if (url === undefined || url === null || url === "") {
     return (

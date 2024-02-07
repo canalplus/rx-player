@@ -154,10 +154,10 @@ function constructContentList(): Partial<Record<string, IDisplayedContent[]>> {
  * current stored content or demo content. This can be used for example to
  * share some content with other people.
  * Returns null if it could not generate a config for the current content.
- * @param {IPlayableContent} content - The content object as constructed in the
+ * @param {Object} content - The content object as constructed in the
  * ContentList.
  * @param {Object} state - The current ContentList state.
- * @returns {ContentConfig|null} The content config
+ * @returns {Object|null} The content config
  */
 function generateConfigForContent(
   content: IPlayableContent,
@@ -369,7 +369,6 @@ function ContentList({
       setCustomKeySystem(customKeySystem);
       setCurrentManifestUrl(content.url ?? "");
       setShouldDisplayDRMSettings(hasDRMSettings);
-      setShouldDisplayGeneratedLink(false);
       setShouldFallbackOnLicenseReqError(fallbackLicenseRequest);
       setShouldFallbackOnKeyError(fallbackKeyError);
       setIsSavingOrUpdating(false);
@@ -428,21 +427,13 @@ function ContentList({
   const contentsToSelect = contentsPerType[transportType] ?? [];
   const chosenContent = contentsToSelect[contentChoiceIndex];
 
-  const isCustomContent = React.useMemo(() => {
-    return contentChoiceIndex === 0;
-  }, [contentChoiceIndex]);
+  const isCustomContent = contentChoiceIndex === 0;
 
-  const isCustomDRM = React.useMemo(() => {
-    return chosenDRMType === CUSTOM_DRM_NAME;
-  }, [chosenDRMType]);
+  const isCustomDRM = chosenDRMType === CUSTOM_DRM_NAME;
 
-  const hasURL = React.useMemo(() => {
-    return currentManifestURL !== "";
-  }, [currentManifestURL]);
+  const hasURL = currentManifestURL !== "";
 
-  const isLocalContent = React.useMemo(() => {
-    return !!(chosenContent && chosenContent.isLocalContent);
-  }, [chosenContent]);
+  const isLocalContent = !!(chosenContent && chosenContent.isLocalContent);
 
   const onTransportChange = React.useCallback(
     ({ value }: { value: string; index: number }) => {
@@ -452,7 +443,6 @@ function ContentList({
       setCustomKeySystem("");
       setCurrentManifestUrl("");
       setShouldDisplayDRMSettings(false);
-      setShouldDisplayGeneratedLink(false);
       setShouldFallbackOnLicenseReqError(false);
       setShouldFallbackOnKeyError(false);
       setIsSavingOrUpdating(false);
@@ -537,9 +527,7 @@ function ContentList({
     } else {
       content = contentsToSelect[contentChoiceIndex];
     }
-    loadContent(content)
-      // eslint-disable-next-line no-console
-      .catch((err) => console.log(err));
+    loadContent(content);
   };
 
   const saveCurrentContent = () => {
@@ -797,7 +785,7 @@ function ContentList({
       </div>
       {(isCustomContent || (isLocalContent && isSavingOrUpdating)) && (
         <div className="custom-input-wrapper">
-          {isSavingOrUpdating && (
+          {isSavingOrUpdating ? (
             <div className="update-control">
               <FocusedTextInput
                 className={"text-input need-to-fill"}
@@ -823,7 +811,7 @@ function ContentList({
                 />
               </div>
             </div>
-          )}
+          ) : null}
           <TextInput
             ariaLabel="Enter here the Manifest's URL"
             className="text-input"
@@ -851,10 +839,10 @@ function ContentList({
                 onChange={onChangeDisplayDRMSettings}
               />
             </span>
-            {shouldDisplayDRMSettings && (
+            {shouldDisplayDRMSettings ? (
               <div className="drm-settings">
                 <div className="drm-choice">{generateDRMButtons()}</div>
-                {isCustomDRM && (
+                {isCustomDRM ? (
                   <div>
                     <TextInput
                       ariaLabel={
@@ -866,7 +854,7 @@ function ContentList({
                       placeholder={"Key system (reverse domain name)"}
                     />
                   </div>
-                )}
+                ) : null}
                 <div>
                   <TextInput
                     ariaLabel="URL for the license server"
@@ -892,10 +880,10 @@ function ContentList({
                       </span>
                     </span>
                     <Checkbox
-                      ariaLabel="Should fallback on key errors"
-                      name="shouldFallbackOnKeyError"
-                      checked={shouldFallbackOnKeyError}
-                      onChange={onChangeFallbackKeyError}
+                      ariaLabel="Enable for a low-latency content"
+                      name="isLowLatencyChecked"
+                      checked={isLowLatencyChecked}
+                      onChange={onLowLatencyClick}
                     />
                   </span>
                 </div>
@@ -916,9 +904,9 @@ function ContentList({
                   </span>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
-          {transportType === "DASH" && (
+          {transportType === "DASH" ? (
             <div className="player-box player-box-load button-low-latency">
               <span className={"low-latency-checkbox custom-checkbox"}>
                 Low-Latency content
@@ -930,7 +918,7 @@ function ContentList({
                 />
               </span>
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>
