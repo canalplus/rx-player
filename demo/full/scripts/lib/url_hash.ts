@@ -206,6 +206,15 @@ export function generateURLForConfig({
   if (!transport) {
     return null;
   }
+
+  // create a copy that transform Infinity to the string "__INFINITY__"
+  // so it can be stringified. Once it's parsed again, the value
+  // __INFINITY__ can be parsed to Infinity.
+  const stringifiablePlayerConfig: Record<string, any> = {};
+  for (const [key, value] of Object.entries(playerConfig)) {
+    stringifiablePlayerConfig[key] = value === Infinity ? "__INFINITY__" : value;
+  }
+
   return generateURL([
     { value: lowLatency, key: "lowLatency" },
     { value: fallbackKeyError, key: "fallbackKeyError" },
@@ -217,7 +226,7 @@ export function generateURLForConfig({
     { value: licenseServerUrl, key: "licenseServ" },
     { value: serverCertificateUrl, key: "certServ" },
     { value: JSON.stringify(loadVideoConfig), key: "loadVideoConfig" },
-    { value: JSON.stringify(playerConfig), key: "playerConfig" },
+    { value: JSON.stringify(stringifiablePlayerConfig), key: "playerConfig" },
     { value: !reactiveURL, key: "disableReactiveURL" },
   ]);
 }

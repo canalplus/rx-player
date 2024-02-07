@@ -25,47 +25,47 @@ const { useCallback, useEffect, useRef, useState } = React;
 const SPINNER_TIMEOUT = 300;
 
 const isShapeOfLoadVideoConfig = (arg: any): arg is ILoadVideoSettings => {
-  if (!(typeof arg === "object")) {
+  if (typeof arg !== "object" && arg !== null) {
     return false;
   }
-  if (!(typeof arg.autoplay === "boolean")) {
+  if (typeof arg.autoPlay !== "boolean") {
     return false;
   }
-  if (!(typeof arg.defaultAudioTrackSwitchingMode === "string")) {
+  if (typeof arg.defaultAudioTrackSwitchingMode !== "string") {
     return false;
   }
-  if (!(typeof arg.enableFastSwitching === "boolean")) {
+  if (typeof arg.enableFastSwitching !== "boolean") {
     return false;
   }
-  if (!(typeof arg.requestConfig === "object")) {
+  if (typeof arg.requestConfig !== "object") {
     return false;
   }
-  if (!(typeof arg.onCodecSwitch === "string")) {
+  if (typeof arg.onCodecSwitch !== "string") {
     return false;
   }
   return true;
 };
 
 const isShapeOfPlayerConfig = (arg: any): arg is IConstructorSettings => {
-  if (!(typeof arg === "object")) {
+  if (typeof arg !== "object" && arg !== null) {
     return false;
   }
-  if (!(typeof arg.videoResolutionLimit === "string")) {
+  if (typeof arg.videoResolutionLimit !== "string") {
     return false;
   }
-  if (!(typeof arg.maxBufferAhead === "number")) {
+  if (typeof arg.maxBufferAhead !== "number") {
     return false;
   }
-  if (!(typeof arg.maxBufferBehind === "number")) {
+  if (typeof arg.maxBufferBehind !== "number") {
     return false;
   }
-  if (!(typeof arg.maxVideoBufferSize === "number")) {
+  if (typeof arg.maxVideoBufferSize !== "number") {
     return false;
   }
-  if (!(typeof arg.throttleVideoBitrateWhenHidden === "boolean")) {
+  if (typeof arg.throttleVideoBitrateWhenHidden !== "boolean") {
     return false;
   }
-  if (!(typeof arg.wantedBufferAhead === "number")) {
+  if (typeof arg.wantedBufferAhead !== "number") {
     return false;
   }
   return true;
@@ -339,23 +339,35 @@ function Player(): JSX.Element {
       const { loadVideoConfig, playerConfig, disableReactiveURL } = parsedHash;
       if (typeof loadVideoConfig === "string") {
         try {
-          const parsedVideoConfig = JSON.parse(loadVideoConfig);
-          if (isShapeOfLoadVideoConfig(parsedVideoConfig)) {
-            setLoadVideoOpts(parsedVideoConfig);
+          const parsedLoadVideoConfig = JSON.parse(loadVideoConfig);
+          if (isShapeOfLoadVideoConfig(parsedLoadVideoConfig)) {
+            setLoadVideoOpts(parsedLoadVideoConfig);
+          } else {
+            console.warn("Demo: Config is not of the shape LoadVideoConfig");
           }
         } catch {
-          // do nothing
+          console.warn("Demo: LoadVideoConfig is not a valid JSON string");
         }
       }
 
       if (typeof playerConfig === "string") {
         try {
-          const parsedPlayerConfig = JSON.parse(playerConfig);
+          // because `Infinity` is not stringifiable, `Infinity` has been transformed
+          // to the string "__INFINITY__" during stringification.
+          // Once we parse it, the value "__INFINITY__" must be parsed to Infinity.
+          const parsedPlayerConfig = JSON.parse(playerConfig, function (_key, value) {
+            return value === "__INFINITY__" ? Infinity : value;
+          });
           if (isShapeOfPlayerConfig(parsedPlayerConfig)) {
             setPlayerOpts(parsedPlayerConfig);
+          } else {
+            console.warn(
+              "Demo: Config is not of the shape PlayerConfig",
+              parsedPlayerConfig,
+            );
           }
         } catch {
-          // do nothing
+          console.warn("Demo: PlayerConfig is not a valid JSON string");
         }
       }
 
