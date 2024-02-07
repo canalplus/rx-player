@@ -56,6 +56,22 @@ function isDirectory(source) {
   return lstatSync(source).isDirectory();
 }
 
+export function getUrlsForVersion(initialPath, version) {
+  const demoUrl = `${initialPath}/${version}/demo/index.html`;
+
+  // documentation homepage changed for the v3.26.1
+  const docUrl = semver.gte(version, "3.26.1")
+    ? `${initialPath}/${version}/doc/api/Overview.html`
+    : `${initialPath}/${version}/doc/pages/index.html`;
+
+  const releaseNoteUrl = `https://github.com/canalplus/rx-player/releases/tag/v${version}`;
+  return {
+    demoUrl,
+    docUrl,
+    releaseNoteUrl,
+  };
+}
+
 const style = `<style type="text/css">
 body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #333; }
 ul { list-style-type: square; }
@@ -91,11 +107,20 @@ if (versions.length <= 0) {
   const sortedVersions = sortVersions(versions);
   for (let i = 0; i < sortedVersions.length; i++) {
     const version = sortedVersions[i];
-    // const versionAsNumber = +version.split(".").join();
-    const dirPath = join(INITIAL_PATH, version, "demo/index.html");
-    body += `<li><a href=${encode(dirPath)}>` +
+    const { docUrl, demoUrl, releaseNoteUrl } = getUrlsForVersion(INITIAL_PATH, version);
+    const demoUrlAttr = demoUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const docUrlAttr = docUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const releaseNoteUrlAttr = releaseNoteUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    body +=
+      "<li>" +
+      `<a href="${demoUrlAttr}">` +
       encode(version) +
-      "</a></li>";
+      "</a>" +
+      '<span style="font-size: 0.9em">' +
+      ` (see also: <i><a href="${releaseNoteUrlAttr}">Release Note</a></i>, ` +
+      `<i><a href="${docUrlAttr}">Documentation</a></i>)` +
+      "</span>" +
+      "</li>";
   }
   body += "</ul>";
 }

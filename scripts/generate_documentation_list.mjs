@@ -43,6 +43,7 @@ import {
 import { join } from "path";
 import { encode } from "html-entities";
 import * as semver from "semver";
+import { getUrlsForVersion } from "./generate_demo_list.mjs";
 
 const INITIAL_PATH = "./versions";
 
@@ -91,15 +92,20 @@ if (versions.length <= 0) {
   const sortedVersions = sortVersions(versions);
   for (let i = 0; i < sortedVersions.length; i++) {
     const version = sortedVersions[i];
-
-    // documentation homepage changed for the v3.26.1
-    const dirPath = semver.gte(version, "3.26.1") ?
-      join(INITIAL_PATH, version, "doc/api/Overview.html") :
-      join(INITIAL_PATH, version, "doc/pages/index.html");
-
-    body += `<li><a href=${encode(dirPath)}>` +
+    const { docUrl, demoUrl, releaseNoteUrl } = getUrlsForVersion(INITIAL_PATH, version);
+    const demoUrlAttr = demoUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const docUrlAttr = docUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const releaseNoteUrlAttr = releaseNoteUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    body +=
+      "<li>" +
+      `<a href="${docUrlAttr}">` +
       encode(version) +
-      "</a></li>";
+      "</a>" +
+      '<span style="font-size: 0.9em">' +
+      ` (see also: <i><a href="${releaseNoteUrlAttr}">Release Note</a></i>, ` +
+      `<i><a href="${demoUrlAttr}">Demo</a></i>)` +
+      "</span>" +
+      "</li>";
   }
   body += "</ul>";
 }
