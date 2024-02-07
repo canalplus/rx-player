@@ -34,10 +34,11 @@
  *      generated with all the right links.
  */
 
-const fs = require("fs");
-const path = require("path");
-const { encode } = require("html-entities");
-const semver = require("semver");
+import { lstatSync, readdirSync, existsSync, writeFileSync } from "fs";
+import { join } from "path";
+import { encode } from "html-entities";
+import * as semver from "semver";
+import { getUrlsForVersion } from "./generate_demo_list.mjs";
 
 const INITIAL_PATH = "./versions";
 
@@ -48,7 +49,7 @@ function sortVersions(versions) {
 }
 
 function isDirectory(source) {
-  return fs.lstatSync(source).isDirectory();
+  return lstatSync(source).isDirectory();
 }
 
 const style = `<style type="text/css">
@@ -67,12 +68,12 @@ const head = `<head>
 
 let body = "<body>";
 
-const files = fs.readdirSync(INITIAL_PATH);
+const files = readdirSync(INITIAL_PATH);
 const versions = [];
 for (let i = 0; i < files.length; i++) {
   const fileName = files[i];
-  const filePath = path.join(INITIAL_PATH, fileName);
-  if (isDirectory(filePath) && fs.existsSync(path.join(filePath, "doc"))) {
+  const filePath = join(INITIAL_PATH, fileName);
+  if (isDirectory(filePath) && existsSync(join(filePath, "doc"))) {
     versions.push(fileName);
   }
 }
@@ -86,15 +87,20 @@ if (versions.length <= 0) {
   const sortedVersions = sortVersions(versions);
   for (let i = 0; i < sortedVersions.length; i++) {
     const version = sortedVersions[i];
-
-    // documentation homepage changed for the v3.26.1
-    const dirPath = semver.gte(version, "3.26.1") ?
-      path.join(INITIAL_PATH, version, "doc/api/Overview.html") :
-      path.join(INITIAL_PATH, version, "doc/pages/index.html");
-
-    body += `<li><a href=${encode(dirPath)}>` +
+    const { docUrl, demoUrl, releaseNoteUrl } = getUrlsForVersion(INITIAL_PATH, version);
+    const demoUrlAttr = demoUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const docUrlAttr = docUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const releaseNoteUrlAttr = releaseNoteUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    body +=
+      "<li>" +
+      `<a href="${docUrlAttr}">` +
       encode(version) +
-      "</a></li>";
+      "</a>" +
+      '<span style="font-size: 0.9em">' +
+      ` (see also: <i><a href="${releaseNoteUrlAttr}">Release Note</a></i>, ` +
+      `<i><a href="${demoUrlAttr}">Demo</a></i>)` +
+      "</span>" +
+      "</li>";
   }
   body += "</ul>";
 }
@@ -106,4 +112,4 @@ const html = "<html>" +
   body +
   "<html>";
 
-fs.writeFileSync("./documentation_pages_by_version.html", html);
+writeFileSync("./documentation_pages_by_version.html", html);
