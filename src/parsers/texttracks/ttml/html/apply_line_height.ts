@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import { addClassName } from "../../../../compat";
 import log from "../../../../log";
 import { REGXP_LENGTH } from "../regexps";
 
 /**
- * @param {HTMLElement} element
+ * @param {HTMLElement} _element
  * @param {string} lineHeight
  */
 export default function applyLineHeight(
-  element : HTMLElement,
+  _element : HTMLElement,
   lineHeight : string
 ) : void {
   const trimmedLineHeight = lineHeight.trim();
@@ -40,10 +39,10 @@ export default function applyLineHeight(
       firstLineHeight[2] === "%" ||
       firstLineHeight[2] === "em")
   {
-    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
+    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
   } else if (firstLineHeight[2] === "c") {
-    addClassName(element, "proportional-style");
-    element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
+    // addClassName(element, "proportional-style");
+    // element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
   } else {
     log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
   }
