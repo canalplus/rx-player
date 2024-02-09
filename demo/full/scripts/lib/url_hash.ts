@@ -237,7 +237,7 @@ export function generateURLForConfig({
     { value: serverCertificateUrl, key: "certServ" },
     { value: JSON.stringify(loadVideoConfig), key: "loadVideoConfig" },
     { value: JSON.stringify(stringifiablePlayerConfig), key: "playerConfig" },
-    { value: !reactiveURL, key: "disableReactiveURL" },
+    { value: reactiveURL, key: "reactiveURL" },
     { value: relyOnWorker, key: "relyOnWorker" },
     {
       value: defaultVideoRepresentationsSwitchingMode,

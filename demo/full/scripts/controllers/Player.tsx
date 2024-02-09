@@ -101,7 +101,7 @@ function Player(): JSX.Element {
   const debugElementRef = useRef<HTMLDivElement>(null);
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
   const [contentConfig, setContentConfig] = React.useState<null | ContentConfig>(null);
-  const [isReactiveURLEnabled, setIsReactiveURLEnabled] = useState<boolean>(true);
+  const [isReactiveURLEnabled, setIsReactiveURLEnabled] = useState<boolean>(false);
   const onIsReactiveURLEnabledChange = useCallback((newVal: boolean) => {
     setIsReactiveURLEnabled(newVal);
   }, []);
@@ -336,9 +336,9 @@ function Player(): JSX.Element {
 
   React.useEffect(() => {
     const parsedHash = parseHashInURL(decodeURI(location.hash));
-    const { disableReactiveURL } = parsedHash || {};
+    const { reactiveURL } = parsedHash || {};
 
-    const shouldUpdateHref = isReactiveURLEnabled || !disableReactiveURL;
+    const shouldUpdateHref = isReactiveURLEnabled || reactiveURL;
     if (generatedURL && shouldUpdateHref) {
       window.location.href = encodeURI(generatedURL);
     }
@@ -350,7 +350,7 @@ function Player(): JSX.Element {
       const {
         loadVideoConfig,
         playerConfig,
-        disableReactiveURL,
+        reactiveURL,
         relyOnWorker,
         defaultVideoRepresentationsSwitchingMode,
         defaultAudioRepresentationsSwitchingMode,
@@ -390,8 +390,8 @@ function Player(): JSX.Element {
         }
       }
 
-      if (disableReactiveURL) {
-        setIsReactiveURLEnabled(false);
+      if (reactiveURL) {
+        setIsReactiveURLEnabled(true);
       }
 
       if (relyOnWorker) {
