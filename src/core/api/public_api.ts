@@ -2466,7 +2466,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           acc,
           (x) => x[0].id === elt.period.id &&
                  x[1] === elt.adaptation.type
-        ) === undefined;
+        ) !== undefined;
 
         if (!isFound) {
           // Only consider the currently-selected tracks.
