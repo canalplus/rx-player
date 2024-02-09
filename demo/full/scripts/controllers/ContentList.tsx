@@ -726,7 +726,7 @@ function ContentList({
             onChange={onIsReactiveURLEnabledChange}
             name="enableReactiveUrl"
           >
-            Reactive URL
+            Store config in URL
           </Checkbox>
 
           {isLocalContent ? (

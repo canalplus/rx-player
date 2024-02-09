@@ -852,6 +852,8 @@ header .right {
   padding-right: 5px;
   text-align: center;
   text-wrap: nowrap;
+  height: 41px;
+  box-sizing: border-box;
 }
 
 .enable-reactive-url > label:first-child {
