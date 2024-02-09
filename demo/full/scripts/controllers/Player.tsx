@@ -319,9 +319,20 @@ function Player(): JSX.Element {
       contentConfig,
       loadVideoConfig: loadVideoOpts,
       playerConfig: playerOpts,
+      relyOnWorker: relyOnWorker,
       demoConfig: { reactiveURL: isReactiveURLEnabled },
+      defaultVideoRepresentationsSwitchingMode: defaultVideoRepresentationsSwitchingMode,
+      defaultAudioRepresentationsSwitchingMode: defaultAudioRepresentationsSwitchingMode,
     });
-  }, [contentConfig, loadVideoOpts, playerOpts, isReactiveURLEnabled]);
+  }, [
+    contentConfig,
+    loadVideoOpts,
+    playerOpts,
+    isReactiveURLEnabled,
+    relyOnWorker,
+    defaultVideoRepresentationsSwitchingMode,
+    defaultAudioRepresentationsSwitchingMode,
+  ]);
 
   React.useEffect(() => {
     const parsedHash = parseHashInURL(decodeURI(location.hash));
@@ -336,7 +347,15 @@ function Player(): JSX.Element {
   React.useEffect(() => {
     const parsedHash = parseHashInURL(decodeURI(location.hash));
     if (parsedHash !== null) {
-      const { loadVideoConfig, playerConfig, disableReactiveURL } = parsedHash;
+      const {
+        loadVideoConfig,
+        playerConfig,
+        disableReactiveURL,
+        relyOnWorker,
+        defaultVideoRepresentationsSwitchingMode,
+        defaultAudioRepresentationsSwitchingMode,
+      } = parsedHash;
+
       if (typeof loadVideoConfig === "string") {
         try {
           const parsedLoadVideoConfig = JSON.parse(loadVideoConfig);
@@ -373,6 +392,21 @@ function Player(): JSX.Element {
 
       if (disableReactiveURL) {
         setIsReactiveURLEnabled(false);
+      }
+
+      if (relyOnWorker) {
+        setRelyOnWorker(true);
+      }
+
+      if (defaultAudioRepresentationsSwitchingMode) {
+        setDefaultAudioRepresentationsSwitchingMode(
+          defaultAudioRepresentationsSwitchingMode as IAudioRepresentationsSwitchingMode,
+        );
+      }
+      if (defaultVideoRepresentationsSwitchingMode) {
+        setDefaultVideoRepresentationsSwitchingMode(
+          defaultVideoRepresentationsSwitchingMode as IVideoRepresentationsSwitchingMode,
+        );
       }
     }
   }, []);

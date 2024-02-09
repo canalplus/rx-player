@@ -1,3 +1,7 @@
+import {
+  IAudioRepresentationsSwitchingMode,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../src/public_types";
 import type {
   ILoadVideoSettings,
   IConstructorSettings,
@@ -197,11 +201,17 @@ export function generateURLForConfig({
   demoConfig: {
     reactiveURL, // update reactively the URL when player options changes
   },
+  relyOnWorker,
+  defaultVideoRepresentationsSwitchingMode,
+  defaultAudioRepresentationsSwitchingMode,
 }: {
   contentConfig: ContentConfig;
   loadVideoConfig: ILoadVideoSettings;
   playerConfig: IConstructorSettings;
   demoConfig: { reactiveURL: boolean };
+  relyOnWorker: boolean;
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
+  defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
 }): string | null {
   if (!transport) {
     return null;
@@ -228,5 +238,14 @@ export function generateURLForConfig({
     { value: JSON.stringify(loadVideoConfig), key: "loadVideoConfig" },
     { value: JSON.stringify(stringifiablePlayerConfig), key: "playerConfig" },
     { value: !reactiveURL, key: "disableReactiveURL" },
+    { value: relyOnWorker, key: "relyOnWorker" },
+    {
+      value: defaultVideoRepresentationsSwitchingMode,
+      key: "defaultVideoRepresentationsSwitchingMode",
+    },
+    {
+      value: defaultAudioRepresentationsSwitchingMode,
+      key: "defaultAudioRepresentationsSwitchingMode",
+    },
   ]);
 }
