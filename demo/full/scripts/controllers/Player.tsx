@@ -340,7 +340,7 @@ function Player(): JSX.Element {
 
     const shouldUpdateHref = isReactiveURLEnabled || !disableReactiveURL;
     if (generatedURL && shouldUpdateHref) {
-      window.location.href = generatedURL;
+      window.location.href = encodeURI(generatedURL);
     }
   }, [generatedURL, isReactiveURLEnabled]);
 
