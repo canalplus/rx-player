@@ -102,7 +102,7 @@ function VideoAdaptiveSettings({
           name="videoResolutionLimit"
           onChange={onVideoResolutionLimitChange}
           selected={{
-            value: "none",
+            value: videoResolutionLimit,
             index: undefined,
           }}
           options={["videoElement", "screen", "none"]}
