@@ -1,4 +1,4 @@
-# RxPlayer errors
+# Migration from v3: RxPlayer errors
 
 Errors are what are sent through the `"error"` event, the `"warning"` event and
 optionally returned by the `getPlayerError` method.

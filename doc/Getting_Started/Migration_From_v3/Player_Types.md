@@ -1,4 +1,4 @@
-# RxPlayer types
+# Migration from v3: RxPlayer types
 
 Several of RxPlayer TypeScript types  have been removed, renamed or updated.
 

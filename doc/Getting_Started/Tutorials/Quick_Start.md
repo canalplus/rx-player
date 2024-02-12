@@ -1,4 +1,4 @@
-# Quick Start
+# Tutorial: Quick Start
 
 Because the RxPlayer exports a lot of functionnalities, you might want to
 quickly test basic use cases before you dive deep into the [whole API
