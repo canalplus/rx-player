@@ -1,4 +1,4 @@
-# Removal of track preferences API
+# Migration from v3: Removal of track preferences API
 
 ## Methods and options removed
 

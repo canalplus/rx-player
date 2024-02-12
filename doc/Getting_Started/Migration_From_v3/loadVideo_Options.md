@@ -1,4 +1,4 @@
-# `loadVideo` Options
+# Migration from v3: `loadVideo` Options
 
 Multiple options of the `loadVideo` have been changed or removed. They will all be listed
 in this page.

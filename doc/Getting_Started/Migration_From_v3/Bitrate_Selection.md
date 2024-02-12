@@ -1,4 +1,4 @@
-# Bitrate Selection
+# Migration from v3: Bitrate Selection
 
 ## Methods and options removed
 
