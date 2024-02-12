@@ -1,4 +1,4 @@
-# Constructor Options
+# Migration from v3: Constructor Options
 
 Constructor options are options given when instantiating a new RxPlayer.
 
