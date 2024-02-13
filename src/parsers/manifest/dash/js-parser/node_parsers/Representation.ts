@@ -15,6 +15,7 @@
  */
 
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   IRepresentationAttributes,
   IRepresentationChildren,
@@ -36,11 +37,11 @@ import {
 } from "./utils";
 
 /**
- * @param {NodeList} representationChildren
+ * @param {Array.<Object | string>} representationChildren
  * @returns {Object}
  */
 function parseRepresentationChildren(
-  representationChildren: NodeList,
+  representationChildren: Array<string | ITNode>,
 ): [IRepresentationChildren, Error[]] {
   const children: IRepresentationChildren = {
     baseURLs: [],
@@ -49,60 +50,61 @@ function parseRepresentationChildren(
 
   let warnings: Error[] = [];
   for (let i = 0; i < representationChildren.length; i++) {
-    if (representationChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentElement = representationChildren[i] as Element;
+    const currentElement = representationChildren[i];
+    if (typeof currentElement === "string") {
+      continue;
+    }
 
-      switch (currentElement.nodeName) {
-        case "BaseURL":
-          const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
-          if (baseURLObj !== undefined) {
-            children.baseURLs.push(baseURLObj);
-          }
-          warnings = warnings.concat(baseURLWarnings);
-          break;
-        case "InbandEventStream":
-          if (children.inbandEventStreams === undefined) {
-            children.inbandEventStreams = [];
-          }
-          children.inbandEventStreams.push(parseScheme(currentElement));
-          break;
-        case "SegmentBase":
-          const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
-          children.segmentBase = segmentBase;
-          if (segmentBaseWarnings.length > 0) {
-            warnings = warnings.concat(segmentBaseWarnings);
-          }
-          break;
-        case "SegmentList":
-          const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
-          warnings = warnings.concat(segmentListWarnings);
-          children.segmentList = segmentList;
-          break;
-        case "SegmentTemplate":
-          const [segmentTemplate, segmentTemplateWarnings] =
-            parseSegmentTemplate(currentElement);
-          warnings = warnings.concat(segmentTemplateWarnings);
-          children.segmentTemplate = segmentTemplate;
-          break;
+    switch (currentElement.tagName) {
+      case "BaseURL":
+        const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
+        if (baseURLObj !== undefined) {
+          children.baseURLs.push(baseURLObj);
+        }
+        warnings = warnings.concat(baseURLWarnings);
+        break;
+      case "InbandEventStream":
+        if (children.inbandEventStreams === undefined) {
+          children.inbandEventStreams = [];
+        }
+        children.inbandEventStreams.push(parseScheme(currentElement));
+        break;
+      case "SegmentBase":
+        const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
+        children.segmentBase = segmentBase;
+        if (segmentBaseWarnings.length > 0) {
+          warnings = warnings.concat(segmentBaseWarnings);
+        }
+        break;
+      case "SegmentList":
+        const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
+        warnings = warnings.concat(segmentListWarnings);
+        children.segmentList = segmentList;
+        break;
+      case "SegmentTemplate":
+        const [segmentTemplate, segmentTemplateWarnings] =
+          parseSegmentTemplate(currentElement);
+        warnings = warnings.concat(segmentTemplateWarnings);
+        children.segmentTemplate = segmentTemplate;
+        break;
 
-        case "ContentProtection":
-          const [contentProtection, contentProtectionWarnings] =
-            parseContentProtection(currentElement);
-          if (contentProtectionWarnings.length > 0) {
-            warnings = warnings.concat(contentProtectionWarnings);
-          }
-          if (contentProtection !== undefined) {
-            contentProtections.push(contentProtection);
-          }
-          break;
-        case "SupplementalProperty":
-          if (isNullOrUndefined(children.supplementalProperties)) {
-            children.supplementalProperties = [parseScheme(currentElement)];
-          } else {
-            children.supplementalProperties.push(parseScheme(currentElement));
-          }
-          break;
-      }
+      case "ContentProtection":
+        const [contentProtection, contentProtectionWarnings] =
+          parseContentProtection(currentElement);
+        if (contentProtectionWarnings.length > 0) {
+          warnings = warnings.concat(contentProtectionWarnings);
+        }
+        if (contentProtection !== undefined) {
+          contentProtections.push(contentProtection);
+        }
+        break;
+      case "SupplementalProperty":
+        if (isNullOrUndefined(children.supplementalProperties)) {
+          children.supplementalProperties = [parseScheme(currentElement)];
+        } else {
+          children.supplementalProperties.push(parseScheme(currentElement));
+        }
+        break;
     }
   }
   if (contentProtections.length > 0) {
@@ -112,25 +114,28 @@ function parseRepresentationChildren(
 }
 
 /**
- * @param {Element} representationElement
+ * @param {Object} root
  * @returns {Array}
  */
 function parseRepresentationAttributes(
-  representationElement: Element,
+  root: ITNode,
 ): [IRepresentationAttributes, Error[]] {
   const attributes: IRepresentationAttributes = {};
   const warnings: Error[] = [];
   const parseValue = ValueParser(attributes, warnings);
-  for (let i = 0; i < representationElement.attributes.length; i++) {
-    const attr = representationElement.attributes[i];
 
-    switch (attr.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "audioSamplingRate":
-        attributes.audioSamplingRate = attr.value;
+        attributes.audioSamplingRate = attributeVal;
         break;
 
       case "bandwidth":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "bitrate",
           parser: parseMPDInteger,
           dashName: "bandwidth",
@@ -138,11 +143,11 @@ function parseRepresentationAttributes(
         break;
 
       case "codecs":
-        attributes.codecs = attr.value;
+        attributes.codecs = attributeVal;
         break;
 
       case "codingDependency":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "codingDependency",
           parser: parseBoolean,
           dashName: "codingDependency",
@@ -150,7 +155,7 @@ function parseRepresentationAttributes(
         break;
 
       case "frameRate":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "frameRate",
           parser: parseMaybeDividedNumber,
           dashName: "frameRate",
@@ -158,7 +163,7 @@ function parseRepresentationAttributes(
         break;
 
       case "height":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "height",
           parser: parseMPDInteger,
           dashName: "height",
@@ -166,11 +171,11 @@ function parseRepresentationAttributes(
         break;
 
       case "id":
-        attributes.id = attr.value;
+        attributes.id = attributeVal;
         break;
 
       case "maxPlayoutRate":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "maxPlayoutRate",
           parser: parseMPDFloat,
           dashName: "maxPlayoutRate",
@@ -178,7 +183,7 @@ function parseRepresentationAttributes(
         break;
 
       case "maximumSAPPeriod":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "maximumSAPPeriod",
           parser: parseMPDFloat,
           dashName: "maximumSAPPeriod",
@@ -186,15 +191,15 @@ function parseRepresentationAttributes(
         break;
 
       case "mimeType":
-        attributes.mimeType = attr.value;
+        attributes.mimeType = attributeVal;
         break;
 
       case "profiles":
-        attributes.profiles = attr.value;
+        attributes.profiles = attributeVal;
         break;
 
       case "qualityRanking":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "qualityRanking",
           parser: parseMPDInteger,
           dashName: "qualityRanking",
@@ -202,15 +207,15 @@ function parseRepresentationAttributes(
         break;
 
       case "scte214:supplementalCodecs":
-        attributes.supplementalCodecs = attr.value;
+        attributes.supplementalCodecs = attributeVal;
         break;
 
       case "segmentProfiles":
-        attributes.segmentProfiles = attr.value;
+        attributes.segmentProfiles = attributeVal;
         break;
 
       case "width":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "width",
           parser: parseMPDInteger,
           dashName: "width",
@@ -218,7 +223,7 @@ function parseRepresentationAttributes(
         break;
 
       case "availabilityTimeOffset":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "availabilityTimeOffset",
           parser: parseMPDFloat,
           dashName: "availabilityTimeOffset",
@@ -226,7 +231,7 @@ function parseRepresentationAttributes(
         break;
 
       case "availabilityTimeComplete":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "availabilityTimeComplete",
           parser: parseBoolean,
           dashName: "availabilityTimeComplete",
@@ -241,14 +246,14 @@ function parseRepresentationAttributes(
 }
 
 /**
- * @param {Element} representationElement
+ * @param {Object} representationElement
  * @returns {Array}
  */
 export function createRepresentationIntermediateRepresentation(
-  representationElement: Element,
+  representationElement: ITNode,
 ): [IRepresentationIntermediateRepresentation, Error[]] {
   const [children, childrenWarnings] = parseRepresentationChildren(
-    representationElement.childNodes,
+    representationElement.children,
   );
   const [attributes, attrsWarnings] =
     parseRepresentationAttributes(representationElement);

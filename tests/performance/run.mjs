@@ -236,7 +236,7 @@ async function linkLastRxPlayer() {
   await removeFile(path.join(currentDirectory, "node_modules"));
   await spawnProc(
     "npm install",
-    ["--prefix", currentDirectory, "rx-player"],
+    ["--prefix", currentDirectory, "rx-player@next"],
     (code) => new Error(`npm install exited with code ${code}`),
   ).promise;
 }

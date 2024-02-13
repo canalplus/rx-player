@@ -15,6 +15,7 @@
  */
 
 import objectAssign from "../../../../../utils/object_assign";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   ISegmentListIntermediateRepresentation,
   ISegmentUrlIntermediateRepresentation,
@@ -23,26 +24,27 @@ import parseSegmentBase from "./SegmentBase";
 import parseSegmentURL from "./SegmentURL";
 
 /**
- * @param {Element} root
+ * @param {Object} root
  * @returns {Array}
  */
 export default function parseSegmentList(
-  root: Element,
+  root: ITNode,
 ): [ISegmentListIntermediateRepresentation, Error[]] {
   const [base, baseWarnings] = parseSegmentBase(root);
   let warnings: Error[] = baseWarnings;
 
   const list: ISegmentUrlIntermediateRepresentation[] = [];
 
-  const segmentListChildren = root.childNodes;
+  const segmentListChildren = root.children;
   for (let i = 0; i < segmentListChildren.length; i++) {
-    if (segmentListChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentNode = segmentListChildren[i] as Element;
-      if (currentNode.nodeName === "SegmentURL") {
-        const [segmentURL, segmentURLWarnings] = parseSegmentURL(currentNode);
-        list.push(segmentURL);
-        warnings = warnings.concat(segmentURLWarnings);
-      }
+    const currentNode = segmentListChildren[i];
+    if (typeof currentNode === "string") {
+      continue;
+    }
+    if (currentNode.tagName === "SegmentURL") {
+      const [segmentURL, segmentURLWarnings] = parseSegmentURL(currentNode);
+      list.push(segmentURL);
+      warnings = warnings.concat(segmentURLWarnings);
     }
   }
   const ret = objectAssign(base, { list });

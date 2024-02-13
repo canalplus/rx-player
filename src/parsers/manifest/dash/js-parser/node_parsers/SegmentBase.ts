@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { ISegmentBaseIntermediateRepresentation } from "../../node_parser_types";
 import parseInitialization from "./Initialization";
 import {
@@ -26,21 +28,21 @@ import {
 
 /**
  * Parse a SegmentBase element into a SegmentBase intermediate representation.
- * @param {Element} root - The SegmentBase root element.
+ * @param {Object} root - The SegmentBase root element.
  * @returns {Array}
  */
 export default function parseSegmentBase(
-  root: Element,
+  root: ITNode,
 ): [ISegmentBaseIntermediateRepresentation, Error[]] {
   const attributes: ISegmentBaseIntermediateRepresentation = {};
 
   let warnings: Error[] = [];
   const parseValue = ValueParser(attributes, warnings);
-  const segmentBaseChildren = root.childNodes;
+  const segmentBaseChildren = root.children;
   for (let i = 0; i < segmentBaseChildren.length; i++) {
-    if (segmentBaseChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentNode = segmentBaseChildren[i] as Element;
-      if (currentNode.nodeName === "Initialization") {
+    const currentNode = segmentBaseChildren[i];
+    if (typeof currentNode !== "string") {
+      if (currentNode.tagName === "Initialization") {
         const [initialization, initializationWarnings] = parseInitialization(currentNode);
         attributes.initialization = initialization;
         warnings = warnings.concat(initializationWarnings);
@@ -48,11 +50,14 @@ export default function parseSegmentBase(
     }
   }
 
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attr = root.attributes[i];
-    switch (attr.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "timescale":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "timescale",
           parser: parseMPDInteger,
           dashName: "timescale",
@@ -60,7 +65,7 @@ export default function parseSegmentBase(
         break;
 
       case "presentationTimeOffset":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "presentationTimeOffset",
           parser: parseMPDFloat,
           dashName: "presentationTimeOffset",
@@ -68,7 +73,7 @@ export default function parseSegmentBase(
         break;
 
       case "indexRange":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "indexRange",
           parser: parseByteRange,
           dashName: "indexRange",
@@ -76,7 +81,7 @@ export default function parseSegmentBase(
         break;
 
       case "indexRangeExact":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "indexRangeExact",
           parser: parseBoolean,
           dashName: "indexRangeExact",
@@ -84,7 +89,7 @@ export default function parseSegmentBase(
         break;
 
       case "availabilityTimeOffset":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "availabilityTimeOffset",
           parser: parseMPDFloat,
           dashName: "availabilityTimeOffset",
@@ -92,7 +97,7 @@ export default function parseSegmentBase(
         break;
 
       case "availabilityTimeComplete":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "availabilityTimeComplete",
           parser: parseBoolean,
           dashName: "availabilityTimeComplete",
@@ -100,7 +105,7 @@ export default function parseSegmentBase(
         break;
 
       case "duration":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "duration",
           parser: parseMPDInteger,
           dashName: "duration",
@@ -108,7 +113,7 @@ export default function parseSegmentBase(
         break;
 
       case "startNumber":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "startNumber",
           parser: parseMPDInteger,
           dashName: "startNumber",
@@ -116,7 +121,7 @@ export default function parseSegmentBase(
         break;
 
       case "endNumber":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "endNumber",
           parser: parseMPDInteger,
           dashName: "endNumber",

@@ -14,33 +14,34 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { IContentComponentAttributes } from "../../node_parser_types";
 
 /**
  * Parse a "ContentComponent" Element in a DASH MPD.
- * @param {Element} root
+ * @param {Object} root
  * @returns {Object}
  */
-export default function parseContentComponent(
-  root: Element,
-): IContentComponentAttributes {
+export default function parseContentComponent(root: ITNode): IContentComponentAttributes {
   const ret: IContentComponentAttributes = {};
-
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-
-    switch (attribute.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "id":
-        ret.id = attribute.value;
+        ret.id = attributeVal;
         break;
       case "lang":
-        ret.language = attribute.value;
+        ret.language = attributeVal;
         break;
       case "contentType":
-        ret.contentType = attribute.value;
+        ret.contentType = attributeVal;
         break;
       case "par":
-        ret.par = attribute.value;
+        ret.par = attributeVal;
         break;
     }
   }

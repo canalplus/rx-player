@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../../utils/xml-parser";
 import type { IIndexSegment } from "../../../../utils/index_helpers";
 import convertElementsToIndexSegment from "./convert_element_to_index_segment";
 import type { IParsedS } from "./parse_s_element";
@@ -24,12 +25,12 @@ import parseSElement from "./parse_s_element";
  * Call this function when the timeline is unknown.
  * This function was added to only perform that task lazily, i.e. only when
  * first needed.
- * @param {HTMLCollection} elements - All S nodes constituting the corresponding
+ * @param {Array.<Object>} elements - All S nodes constituting the corresponding
  * SegmentTimeline node.
  * @returns {Array.<Object>}
  */
 export default function constructTimelineFromElements(
-  elements: HTMLCollection,
+  elements: ITNode[],
 ): IIndexSegment[] {
   const initialTimeline: IParsedS[] = [];
   for (let i = 0; i < elements.length; i++) {

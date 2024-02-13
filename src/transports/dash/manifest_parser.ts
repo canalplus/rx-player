@@ -28,6 +28,8 @@ import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
+import type { ITNode } from "../../utils/xml-parser";
+import { parseXml } from "../../utils/xml-parser";
 import type {
   IManifestParserOptions,
   IManifestParserRequestScheduler,
@@ -126,7 +128,7 @@ export default function generateManifestParser(
       if (parsers.js === null) {
         throw new Error("No MPD parser is imported");
       }
-      const manifestDoc = getManifestAsDocument(responseData);
+      const manifestDoc = getManifestAsTNodes(responseData);
       const parsedManifest = parsers.js(manifestDoc, dashParserOpts);
       return processMpdParserResponse(parsedManifest);
     }
@@ -287,23 +289,20 @@ function assertLoadedResourcesFormatArrayBuffer(
 }
 
 /**
- * Try to convert a Manifest from an unknown format to a `Document` format.
- * Useful to exploit DOM-parsing APIs to quickly parse an XML Manifest.
+ * Try to convert a Manifest from an unknown format to an array of nodes as
+ * parsed by our XML DOM parser.
  *
  * Throws if the format cannot be converted.
  * @param {*} manifestSrc
- * @returns {Document}
+ * @returns {Array.<Object | string>}
  */
-function getManifestAsDocument(manifestSrc: unknown): Document {
+function getManifestAsTNodes(manifestSrc: unknown): Array<ITNode | string> {
   if (manifestSrc instanceof ArrayBuffer) {
-    return new DOMParser().parseFromString(
-      utf8ToStr(new Uint8Array(manifestSrc)),
-      "text/xml",
-    );
+    return parseXml(utf8ToStr(new Uint8Array(manifestSrc)));
   } else if (typeof manifestSrc === "string") {
-    return new DOMParser().parseFromString(manifestSrc, "text/xml");
+    return parseXml(manifestSrc);
   } else if (manifestSrc instanceof Document) {
-    return manifestSrc;
+    return parseXml(manifestSrc.documentElement.outerHTML);
   } else {
     throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
   }

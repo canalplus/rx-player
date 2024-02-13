@@ -15,6 +15,7 @@
  */
 
 import log from "../../../../../../log";
+import type { ITNode } from "../../../../../../utils/xml-parser";
 import type { IIndexSegment } from "../../../../utils/index_helpers";
 import constructTimelineFromElements from "./construct_timeline_from_elements";
 import convertElementToIndexSegment from "./convert_element_to_index_segment";
@@ -23,7 +24,7 @@ import type { IParsedS } from "./parse_s_element";
 import parseSElement from "./parse_s_element";
 
 export default function constructTimelineFromPreviousTimeline(
-  newElements: HTMLCollection,
+  newElements: ITNode[],
   prevTimeline: IIndexSegment[],
 ): IIndexSegment[] {
   // Find first index in both timeline where a common segment is found.

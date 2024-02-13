@@ -15,6 +15,8 @@
  */
 
 import log from "../../../../../../log";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../../utils/xml-parser";
 
 /** SegmentTimeline `S` element once parsed. */
 export interface IParsedS {
@@ -32,36 +34,38 @@ export interface IParsedS {
 
 /**
  * Parse a given <S> element in the MPD into a JS Object.
- * @param {Element} root
+ * @param {Object} root
  * @returns {Object}
  */
-export default function parseSElement(root: Element): IParsedS {
+export default function parseSElement(root: ITNode): IParsedS {
   const parsedS: IParsedS = {};
 
-  for (let j = 0; j < root.attributes.length; j++) {
-    const attribute = root.attributes[j];
-
-    switch (attribute.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "t":
-        const start = parseInt(attribute.value, 10);
+        const start = parseInt(attributeVal, 10);
         if (isNaN(start)) {
-          log.warn(`DASH: invalid t ("${attribute.value}")`);
+          log.warn(`DASH: invalid t ("${attributeVal}")`);
         } else {
           parsedS.start = start;
         }
         break;
       case "d":
-        const duration = parseInt(attribute.value, 10);
+        const duration = parseInt(attributeVal, 10);
         if (isNaN(duration)) {
-          log.warn(`DASH: invalid d ("${attribute.value}")`);
+          log.warn(`DASH: invalid d ("${attributeVal}")`);
         } else {
           parsedS.duration = duration;
         }
         break;
       case "r":
-        const repeatCount = parseInt(attribute.value, 10);
+        const repeatCount = parseInt(attributeVal, 10);
         if (isNaN(repeatCount)) {
-          log.warn(`DASH: invalid r ("${attribute.value}")`);
+          log.warn(`DASH: invalid r ("${attributeVal}")`);
         } else {
           parsedS.repeatCount = repeatCount;
         }

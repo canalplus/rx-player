@@ -26,6 +26,7 @@ import type { IPlayerError } from "../../../../../../public_types";
 import assert from "../../../../../../utils/assert";
 import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp";
+import type { ITNode } from "../../../../../../utils/xml-parser";
 import type { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
 import type { IIndexSegment } from "../../../../utils/index_helpers";
@@ -149,7 +150,7 @@ export interface ITimelineIndexIndexArgument {
    */
   presentationTimeOffset?: number | undefined;
 
-  timelineParser?: (() => HTMLCollection) | undefined;
+  timelineParser?: (() => ITNode[]) | undefined;
   timeline?: ISegmentTimelineElement[] | undefined;
 }
 
@@ -247,7 +248,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Lazily get the S elements from this timeline.
    * `null` once this call has been done once, to free memory.
    */
-  private _parseTimeline: (() => HTMLCollection) | null;
+  private _parseTimeline: (() => ITNode[]) | null;
 
   /**
    * This variable represents the same `TimelineRepresentationIndex` at the

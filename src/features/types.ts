@@ -35,6 +35,7 @@ import type {
 } from "../parsers/texttracks";
 import type { ITransportFunction } from "../transports";
 import type { CancellationSignal } from "../utils/task_canceller";
+import type { ITNode } from "../utils/xml-parser";
 
 /**
  * Function allowing to implement a text track rendered by displaying them
@@ -62,7 +63,7 @@ export type IHTMLTextTracksBuffer = new (
 export type INativeTextTracksBuffer = new (mediaElement: HTMLMediaElement) => SegmentSink;
 
 export type IDashJsParser = (
-  document: Document,
+  nodes: Array<ITNode | string>,
   args: IMPDParserArguments,
 ) => IDashParserResponse<string>;
 
