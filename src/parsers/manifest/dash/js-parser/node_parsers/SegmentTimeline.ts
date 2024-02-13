@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { ITimelineParser } from "../../node_parser_types";
 
 /**
- * @param {Element} root
+ * @param {Object} root
  * @returns {Function}
  */
-export default function createSegmentTimelineParser(root: Element): ITimelineParser {
-  let result: HTMLCollection | null = null;
-  return function (): HTMLCollection {
-    if (result === null) {
-      const elements = root.getElementsByTagName("S");
-      result = elements;
-      return elements;
+export default function createSegmentTimelineParser(root: ITNode): ITimelineParser {
+  const result: Array<ITNode | string> = root.children;
+  return function (): ITNode[] {
+    // In the great majority of cases, there's only `S` elements inside.
+    // However still clean-up just in rare occasions when that's not the case.
+    for (let i = result.length - 1; i >= 0; i--) {
+      const item = result[i];
+      if (typeof item === "string" || item.tagName !== "S") {
+        result.splice(i, 1);
+      }
     }
-    return result;
+    return result as ITNode[];
   };
 }

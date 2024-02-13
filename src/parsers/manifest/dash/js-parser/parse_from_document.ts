@@ -15,7 +15,8 @@
  */
 
 import { assertUnreachable } from "../../../../utils/assert";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../utils/xml-parser";
+import { parseXml } from "../../../../utils/xml-parser";
 import type { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments } from "../common";
 import parseMpdIr from "../common";
 import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
@@ -24,21 +25,25 @@ import { createMPDIntermediateRepresentation } from "./node_parsers/MPD";
 import { createPeriodIntermediateRepresentation } from "./node_parsers/Period";
 
 /**
- * Parse MPD through the JS parser, on a `Document` instance.
- * @param {Document} document - Original manifest as returned by the server
+ * Parse MPD through the JS parser, on a XML which went through our DOM Parser.
+ * @param {Array.<Object | string>} root - parsed MPD by our xml parser.
  * @param {Object} args - Various parsing options and information.
  * @returns {Object} - Response returned by the DASH-JS parser.
  */
-export default function parseFromDocument(
-  document: Document,
+export default function parseFromTNodes(
+  root: Array<ITNode | string>,
   args: IMPDParserArguments,
 ): IDashParserResponse<string> {
-  const root = document.documentElement;
-  if (isNullOrUndefined(root) || root.nodeName !== "MPD") {
+  const lastChild = root[root.length - 1];
+  if (
+    lastChild === undefined ||
+    typeof lastChild === "string" ||
+    lastChild.tagName !== "MPD"
+  ) {
     throw new Error("DASH Parser: document root should be MPD");
   }
 
-  const [mpdIR, warnings] = createMPDIntermediateRepresentation(root);
+  const [mpdIR, warnings] = createMPDIntermediateRepresentation(lastChild);
   const ret = parseMpdIr(mpdIR, args, warnings);
   return processReturn(ret);
 
@@ -90,20 +95,23 @@ export default function parseFromDocument(
                 throw xlinkResp.error;
               }
               const wrappedData = "<root>" + xlinkResp.data + "</root>";
-              const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
-              if (isNullOrUndefined(dataAsXML) || dataAsXML.children.length === 0) {
+              const dataAsXML = parseXml(wrappedData);
+              const innerParsed = dataAsXML[dataAsXML.length - 1];
+              if (innerParsed === undefined || typeof innerParsed === "string") {
                 throw new Error("DASH parser: Invalid external ressources");
               }
-              const periods = dataAsXML.children[0].children;
+              const periods = innerParsed.children;
               const periodsIR: IPeriodIntermediateRepresentation[] = [];
               const periodsIRWarnings: Error[] = [];
               for (let j = 0; j < periods.length; j++) {
-                if (periods[j].nodeType === Node.ELEMENT_NODE) {
-                  const [periodIR, periodWarnings] =
-                    createPeriodIntermediateRepresentation(periods[j]);
-                  periodsIRWarnings.push(...periodWarnings);
-                  periodsIR.push(periodIR);
+                const period = periods[j];
+                if (typeof period === "string" || period.tagName !== "Period") {
+                  continue;
                 }
+                const [periodIR, periodWarnings] =
+                  createPeriodIntermediateRepresentation(period);
+                periodsIRWarnings.push(...periodWarnings);
+                periodsIR.push(periodIR);
               }
               resourceInfos.push({
                 url,

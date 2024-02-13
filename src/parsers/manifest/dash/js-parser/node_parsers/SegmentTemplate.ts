@@ -16,6 +16,7 @@
 
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import objectAssign from "../../../../../utils/object_assign";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   ISegmentTemplateIntermediateRepresentation,
   ITimelineParser,
@@ -27,11 +28,11 @@ import { parseBoolean, parseMPDFloat, ValueParser } from "./utils";
 /**
  * Parse a SegmentTemplate element into a SegmentTemplate intermediate
  * representation.
- * @param {Element} root - The SegmentTemplate root element.
+ * @param {Object} root - The SegmentTemplate root element.
  * @returns {Array}
  */
 export default function parseSegmentTemplate(
-  root: Element,
+  root: ITNode,
 ): [ISegmentTemplateIntermediateRepresentation, Error[]] {
   const [base, segmentBaseWarnings] = parseSegmentBase(root);
   const warnings: Error[] = segmentBaseWarnings;
@@ -39,12 +40,10 @@ export default function parseSegmentTemplate(
   let timelineParser: ITimelineParser | undefined;
 
   // First look for a possible SegmentTimeline
-  for (let i = 0; i < root.childNodes.length; i++) {
-    if (root.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-      const currentNode = root.childNodes[i] as Element;
-      if (currentNode.nodeName === "SegmentTimeline") {
-        timelineParser = createSegmentTimelineParser(currentNode);
-      }
+  for (let i = 0; i < root.children.length; i++) {
+    const currentNode = root.children[i];
+    if (typeof currentNode !== "string" && currentNode.tagName === "SegmentTimeline") {
+      timelineParser = createSegmentTimelineParser(currentNode);
     }
   }
 
@@ -54,22 +53,25 @@ export default function parseSegmentTemplate(
   });
 
   const parseValue = ValueParser(ret, warnings);
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
 
-    switch (attribute.nodeName) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "initialization":
         if (isNullOrUndefined(ret.initialization)) {
-          ret.initialization = { media: attribute.value };
+          ret.initialization = { media: attributeVal };
         }
         break;
 
       case "index":
-        ret.index = attribute.value;
+        ret.index = attributeVal;
         break;
 
       case "availabilityTimeOffset":
-        parseValue(attribute.value, {
+        parseValue(attributeVal, {
           asKey: "availabilityTimeOffset",
           parser: parseMPDFloat,
           dashName: "availabilityTimeOffset",
@@ -77,7 +79,7 @@ export default function parseSegmentTemplate(
         break;
 
       case "availabilityTimeComplete":
-        parseValue(attribute.value, {
+        parseValue(attributeVal, {
           asKey: "availabilityTimeComplete",
           parser: parseBoolean,
           dashName: "availabilityTimeComplete",
@@ -85,11 +87,11 @@ export default function parseSegmentTemplate(
         break;
 
       case "media":
-        ret.media = attribute.value;
+        ret.media = attributeVal;
         break;
 
       case "bitstreamSwitching":
-        parseValue(attribute.value, {
+        parseValue(attributeVal, {
           asKey: "bitstreamSwitching",
           parser: parseBoolean,
           dashName: "bitstreamSwitching",

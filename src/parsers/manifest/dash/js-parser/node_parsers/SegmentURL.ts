@@ -14,30 +14,35 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { ISegmentUrlIntermediateRepresentation } from "../../node_parser_types";
 import { parseByteRange, ValueParser } from "./utils";
 
 /**
  * Parse a SegmentURL element into a SegmentURL intermediate
  * representation.
- * @param {Element} root - The SegmentURL root element.
+ * @param {Object} root - The SegmentURL root element.
  * @returns {Array}
  */
 export default function parseSegmentURL(
-  root: Element,
+  root: ITNode,
 ): [ISegmentUrlIntermediateRepresentation, Error[]] {
   const parsedSegmentURL: ISegmentUrlIntermediateRepresentation = {};
   const warnings: Error[] = [];
   const parseValue = ValueParser(parsedSegmentURL, warnings);
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-    switch (attribute.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "media":
-        parsedSegmentURL.media = attribute.value;
+        parsedSegmentURL.media = attributeVal;
         break;
 
       case "indexRange":
-        parseValue(attribute.value, {
+        parseValue(attributeVal, {
           asKey: "indexRange",
           parser: parseByteRange,
           dashName: "indexRange",
@@ -45,11 +50,11 @@ export default function parseSegmentURL(
         break;
 
       case "index":
-        parsedSegmentURL.index = attribute.value;
+        parsedSegmentURL.index = attributeVal;
         break;
 
       case "mediaRange":
-        parseValue(attribute.value, {
+        parseValue(attributeVal, {
           asKey: "mediaRange",
           parser: parseByteRange,
           dashName: "mediaRange",

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IBaseUrlIntermediateRepresentation,
@@ -24,56 +26,55 @@ import type {
 } from "../../node_parser_types";
 import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet";
 import parseBaseURL from "./BaseURL";
-import parseEventStream from "./EventStream";
 import parseSegmentTemplate from "./SegmentTemplate";
 import { parseBoolean, parseDuration, ValueParser } from "./utils";
 
 /**
- * @param {NodeList} periodChildren
+ * @param {Array.<Object | string>} periodChildren
  * @returns {Array}
  */
-function parsePeriodChildren(periodChildren: NodeList): [IPeriodChildren, Error[]] {
+function parsePeriodChildren(
+  periodChildren: Array<ITNode | string>,
+): [IPeriodChildren, Error[]] {
   const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
   const adaptations: IAdaptationSetIntermediateRepresentation[] = [];
   let segmentTemplate: ISegmentTemplateIntermediateRepresentation | undefined;
 
   let warnings: Error[] = [];
-  const eventStreams = [];
+  const eventStreams: [] = [];
   for (let i = 0; i < periodChildren.length; i++) {
-    if (periodChildren[i].nodeType === Node.ELEMENT_NODE) {
-      const currentElement = periodChildren[i] as Element;
+    const currentElement = periodChildren[i];
+    if (typeof currentElement === "string") {
+      continue;
+    }
+    switch (currentElement.tagName) {
+      case "BaseURL":
+        const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
+        if (baseURLObj !== undefined) {
+          baseURLs.push(baseURLObj);
+        }
+        warnings = warnings.concat(baseURLWarnings);
+        break;
 
-      switch (currentElement.nodeName) {
-        case "BaseURL":
-          const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
-          if (baseURLObj !== undefined) {
-            baseURLs.push(baseURLObj);
-          }
-          warnings = warnings.concat(baseURLWarnings);
-          break;
+      case "AdaptationSet":
+        const [adaptation, adaptationWarnings] =
+          createAdaptationSetIntermediateRepresentation(currentElement);
+        adaptations.push(adaptation);
+        warnings = warnings.concat(adaptationWarnings);
+        break;
 
-        case "AdaptationSet":
-          const [adaptation, adaptationWarnings] =
-            createAdaptationSetIntermediateRepresentation(currentElement);
-          adaptations.push(adaptation);
-          warnings = warnings.concat(adaptationWarnings);
-          break;
+      case "EventStream":
+        // XXX TODO
+        break;
 
-        case "EventStream":
-          const [eventStream, eventStreamWarnings] = parseEventStream(currentElement);
-          eventStreams.push(eventStream);
-          warnings = warnings.concat(eventStreamWarnings);
-          break;
-
-        case "SegmentTemplate":
-          const [parsedSegmentTemplate, segmentTemplateWarnings] =
-            parseSegmentTemplate(currentElement);
-          segmentTemplate = parsedSegmentTemplate;
-          if (segmentTemplateWarnings.length > 0) {
-            warnings = warnings.concat(segmentTemplateWarnings);
-          }
-          break;
-      }
+      case "SegmentTemplate":
+        const [parsedSegmentTemplate, segmentTemplateWarnings] =
+          parseSegmentTemplate(currentElement);
+        segmentTemplate = parsedSegmentTemplate;
+        if (segmentTemplateWarnings.length > 0) {
+          warnings = warnings.concat(segmentTemplateWarnings);
+        }
+        break;
     }
   }
 
@@ -81,23 +82,25 @@ function parsePeriodChildren(periodChildren: NodeList): [IPeriodChildren, Error[
 }
 
 /**
- * @param {Element} periodElement
+ * @param {Object} root
  * @returns {Array}
  */
-function parsePeriodAttributes(periodElement: Element): [IPeriodAttributes, Error[]] {
+function parsePeriodAttributes(root: ITNode): [IPeriodAttributes, Error[]] {
   const res: IPeriodAttributes = {};
   const warnings: Error[] = [];
   const parseValue = ValueParser(res, warnings);
-  for (let i = 0; i < periodElement.attributes.length; i++) {
-    const attr = periodElement.attributes[i];
-
-    switch (attr.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "id":
-        res.id = attr.value;
+        res.id = attributeVal;
         break;
 
       case "start":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "start",
           parser: parseDuration,
           dashName: "start",
@@ -105,7 +108,7 @@ function parsePeriodAttributes(periodElement: Element): [IPeriodAttributes, Erro
         break;
 
       case "duration":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "duration",
           parser: parseDuration,
           dashName: "duration",
@@ -113,7 +116,7 @@ function parsePeriodAttributes(periodElement: Element): [IPeriodAttributes, Erro
         break;
 
       case "bitstreamSwitching":
-        parseValue(attr.value, {
+        parseValue(attributeVal, {
           asKey: "bitstreamSwitching",
           parser: parseBoolean,
           dashName: "bitstreamSwitching",
@@ -121,11 +124,11 @@ function parsePeriodAttributes(periodElement: Element): [IPeriodAttributes, Erro
         break;
 
       case "xlink:href":
-        res.xlinkHref = attr.value;
+        res.xlinkHref = attributeVal;
         break;
 
       case "xlink:actuate":
-        res.xlinkActuate = attr.value;
+        res.xlinkActuate = attributeVal;
         break;
     }
   }
@@ -133,13 +136,13 @@ function parsePeriodAttributes(periodElement: Element): [IPeriodAttributes, Erro
 }
 
 /**
- * @param {Element} periodElement
+ * @param {Object} periodElement
  * @returns {Array}
  */
 export function createPeriodIntermediateRepresentation(
-  periodElement: Element,
+  periodElement: ITNode,
 ): [IPeriodIntermediateRepresentation, Error[]] {
-  const [children, childrenWarnings] = parsePeriodChildren(periodElement.childNodes);
+  const [children, childrenWarnings] = parsePeriodChildren(periodElement.children);
   const [attributes, attrsWarnings] = parsePeriodAttributes(periodElement);
   const warnings = childrenWarnings.concat(attrsWarnings);
   return [{ children, attributes }, warnings];

@@ -20,6 +20,8 @@
 import log from "../../../../../log";
 import { base64ToBytes } from "../../../../../utils/base64";
 import isNonEmptyString from "../../../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { IScheme } from "../../node_parser_types";
 
 const iso8601Duration =
@@ -283,21 +285,23 @@ function parseMaybeDividedNumber(
 }
 
 /**
- * @param {Element} root
+ * @param {Object} root
  * @returns {Object}
  */
-function parseScheme(root: Element): IScheme {
+function parseScheme(root: ITNode): IScheme {
   let schemeIdUri: string | undefined;
   let value: string | undefined;
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-
-    switch (attribute.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "schemeIdUri":
-        schemeIdUri = attribute.value;
+        schemeIdUri = attributeVal;
         break;
       case "value":
-        value = attribute.value;
+        value = attributeVal;
         break;
     }
   }
@@ -370,6 +374,11 @@ class MPDError extends Error {
     this.name = "MPDError";
     this.message = message;
   }
+}
+
+export function textContent(children: Array<ITNode | string>): string {
+  // XXX TODO?
+  return children.filter((c) => typeof c === "string").join(" ");
 }
 
 export {

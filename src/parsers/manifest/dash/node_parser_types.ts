@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../utils/xml-parser";
+
 /**
  * Those are types used when generating the MPD "Intermediate Representation"
  * which is an intermediate step between parsing the MPD (in XML) and generating
@@ -426,4 +428,4 @@ export interface IEventStreamEventIntermediateRepresentation {
   eventStreamData?: Element | ArrayBuffer;
 }
 
-export type ITimelineParser = () => HTMLCollection;
+export type ITimelineParser = () => ITNode[];
