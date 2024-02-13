@@ -16,27 +16,27 @@
 
 import { MediaError } from "../../errors";
 import log from "../../log";
-import type {
-  IAdaptationMetadata,
-  IManifestMetadata,
-  IPeriodMetadata,
-  IRepresentationMetadata,
-} from "../../manifest";
-import {
-  ManifestMetadataFormat,
-  getLivePosition,
-  getMaximumSafePosition,
-  getMinimumSafePosition,
-  getPeriodForTime,
-  getPeriodAfter,
-  toTaggedTrack,
-} from "../../manifest";
 import type { IParsedManifest } from "../../parsers/manifest";
 import type { ITrackType, IRepresentationFilter, IPlayerError } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import EventEmitter from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
 import warnOnce from "../../utils/warn_once";
+import type {
+  IAdaptationMetadata,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
+} from "../types";
+import { ManifestMetadataFormat } from "../types";
+import {
+  getLivePosition,
+  getMaximumSafePosition,
+  getMinimumSafePosition,
+  getPeriodForTime,
+  getPeriodAfter,
+  toTaggedTrack,
+} from "../utils";
 import type Adaptation from "./adaptation";
 import type { IManifestAdaptations } from "./period";
 import Period from "./period";
