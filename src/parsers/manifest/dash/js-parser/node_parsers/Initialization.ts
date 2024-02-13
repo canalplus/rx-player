@@ -14,24 +14,29 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { IInitializationAttributes } from "../../node_parser_types";
 import { parseByteRange, ValueParser } from "./utils";
 
 /**
- * @param {Element} root
+ * @param {Object} root
  * @returns {Array.<Object>}
  */
 export default function parseInitialization(
-  root: Element,
+  root: ITNode,
 ): [IInitializationAttributes, Error[]] {
   const parsedInitialization: IInitializationAttributes = {};
   const warnings: Error[] = [];
   const parseValue = ValueParser(parsedInitialization, warnings);
-  for (let i = 0; i < root.attributes.length; i++) {
-    const attribute = root.attributes[i];
-    switch (attribute.name) {
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    switch (attributeName) {
       case "range":
-        parseValue(attribute.value, {
+        parseValue(attributeVal, {
           asKey: "range",
           parser: parseByteRange,
           dashName: "range",
@@ -39,7 +44,7 @@ export default function parseInitialization(
         break;
 
       case "sourceURL":
-        parsedInitialization.media = attribute.value;
+        parsedInitialization.media = attributeVal;
         break;
     }
   }
