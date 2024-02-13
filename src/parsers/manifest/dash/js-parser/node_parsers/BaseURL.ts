@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../utils/xml-parser";
 import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
+import { textContent } from "./utils";
 
 /**
  * Parse an BaseURL element into an BaseURL intermediate
  * representation.
- * @param {Element} root - The BaseURL root element.
+ * @param {Object | string} root - The BaseURL root element.
  * @returns {Array.<Object|undefined>}
  */
 export default function parseBaseURL(
-  root: Element,
+  root: ITNode | string,
 ): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const value = root.textContent;
+  const value = typeof root === "string" ? root : textContent(root.children);
   const warnings: Error[] = [];
   if (value === null || value.length === 0) {
     return [undefined, warnings];
