@@ -1,4 +1,4 @@
-# RxPlayer methods
+# Migration from v3: RxPlayer methods
 
 Several RxPlayer methods have been removed, renamed or updated.
 

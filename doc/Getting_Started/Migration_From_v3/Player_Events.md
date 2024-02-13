@@ -1,4 +1,4 @@
-# RxPlayer events
+# Migration from v3: RxPlayer events
 
 RxPlayer events can be listened to thanks to the `addEventListener` method of the
 RxPlayer.
