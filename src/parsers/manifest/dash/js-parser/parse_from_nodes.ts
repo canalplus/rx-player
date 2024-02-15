@@ -28,11 +28,13 @@ import { createPeriodIntermediateRepresentation } from "./node_parsers/Period";
  * Parse MPD through the JS parser, on a XML which went through our DOM Parser.
  * @param {Array.<Object | string>} root - parsed MPD by our xml parser.
  * @param {Object} args - Various parsing options and information.
+ * @param {string} fullMpd
  * @returns {Object} - Response returned by the DASH-JS parser.
  */
 export default function parseFromTNodes(
   root: Array<ITNode | string>,
   args: IMPDParserArguments,
+  fullMpd: string,
 ): IDashParserResponse<string> {
   const lastChild = root[root.length - 1];
   if (
@@ -43,7 +45,7 @@ export default function parseFromTNodes(
     throw new Error("DASH Parser: document root should be MPD");
   }
 
-  const [mpdIR, warnings] = createMPDIntermediateRepresentation(lastChild);
+  const [mpdIR, warnings] = createMPDIntermediateRepresentation(lastChild, fullMpd);
   const ret = parseMpdIr(mpdIR, args, warnings);
   return processReturn(ret);
 
@@ -108,8 +110,10 @@ export default function parseFromTNodes(
                 if (typeof period === "string" || period.tagName !== "Period") {
                   continue;
                 }
-                const [periodIR, periodWarnings] =
-                  createPeriodIntermediateRepresentation(period);
+                const [periodIR, periodWarnings] = createPeriodIntermediateRepresentation(
+                  period,
+                  wrappedData,
+                );
                 periodsIRWarnings.push(...periodWarnings);
                 periodsIR.push(periodIR);
               }
