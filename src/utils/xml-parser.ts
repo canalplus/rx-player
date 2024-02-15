@@ -263,7 +263,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
           value = null;
           pos--;
         }
-        attributes[name] = value;
+        attributes[name] = value === null ? null : translateEntities(value);
       }
       pos++;
     }
@@ -356,9 +356,30 @@ function toContentString(tDom: ITNode | string | Array<ITNode | string>): string
   } else if (typeof tDom === "object") {
     return toContentString(tDom.children);
   } else {
-    return " " + tDom;
+    return " " + translateEntities(tDom);
   }
 }
+
+/**
+ * @param {string} str
+ * @returns {string}
+ */
+function translateEntities(str: string): string {
+  if (str.indexOf("&") < 0) {
+    // Fast path for when there's no entity
+    return str;
+  }
+  return str
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#x([A-Fa-f0-9]+);/g, (_, code: string) => {
+      return String.fromCharCode(parseInt(code, 16));
+    })
+    .replace(/&amp;/g, "&");
+}
+
 function getElementById(src: string, id: string): ITNode | string | undefined {
   const out = parseXml(src, {
     attrValue: id,
