@@ -15,6 +15,7 @@
  */
 
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import startsWith from "../../../../../utils/starts_with";
 import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   IBaseUrlIntermediateRepresentation,
@@ -39,7 +40,10 @@ import {
  * @param {Array.<Object | string>} mpdChildren
  * @returns {Array.<Object>}
  */
-function parseMPDChildren(mpdChildren: Array<ITNode | string>): [IMPDChildren, Error[]] {
+function parseMPDChildren(
+  mpdChildren: Array<ITNode | string>,
+  fullMpd: string,
+): [IMPDChildren, Error[]] {
   const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
   const locations: string[] = [];
   const periods: IPeriodIntermediateRepresentation[] = [];
@@ -65,8 +69,10 @@ function parseMPDChildren(mpdChildren: Array<ITNode | string>): [IMPDChildren, E
         break;
 
       case "Period":
-        const [period, periodWarnings] =
-          createPeriodIntermediateRepresentation(currentNode);
+        const [period, periodWarnings] = createPeriodIntermediateRepresentation(
+          currentNode,
+          fullMpd,
+        );
         periods.push(period);
         warnings = warnings.concat(periodWarnings);
         break;
@@ -175,6 +181,18 @@ function parseMPDAttributes(root: ITNode): [IMPDAttributes, Error[]] {
           dashName: "maxSubsegmentDuration",
         });
         break;
+
+      default:
+        if (startsWith(attributeName, "xmlns:")) {
+          if (res.namespaces === undefined) {
+            res.namespaces = [];
+          }
+          res.namespaces.push({
+            key: attributeName.substring(6),
+            value: attributeVal,
+          });
+        }
+        break;
     }
   }
   return [res, warnings];
@@ -182,12 +200,14 @@ function parseMPDAttributes(root: ITNode): [IMPDAttributes, Error[]] {
 
 /**
  * @param {Object} root
+ * @param {string} fullMpd
  * @returns {Array.<Object>}
  */
 export function createMPDIntermediateRepresentation(
   root: ITNode,
+  fullMpd: string,
 ): [IMPDIntermediateRepresentation, Error[]] {
-  const [children, childrenWarnings] = parseMPDChildren(root.children);
+  const [children, childrenWarnings] = parseMPDChildren(root.children, fullMpd);
   const [attributes, attrsWarnings] = parseMPDAttributes(root);
   const warnings = childrenWarnings.concat(attrsWarnings);
   return [{ children, attributes }, warnings];

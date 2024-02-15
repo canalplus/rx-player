@@ -65,6 +65,7 @@ export type INativeTextTracksBuffer = new (mediaElement: HTMLMediaElement) => Se
 export type IDashJsParser = (
   nodes: Array<ITNode | string>,
   args: IMPDParserArguments,
+  fullMpd: string,
 ) => IDashParserResponse<string>;
 
 /**
