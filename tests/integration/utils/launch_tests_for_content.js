@@ -301,7 +301,7 @@ export default function launchTestsForContent(
         expect(player.getPosition())
           .to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         player.seekTo({ position: manifestInfos.minimumPosition + 5 });
-        await sleep(0);
+        await sleep(1);
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition())
