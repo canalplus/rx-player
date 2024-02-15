@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-import parseFromDocument from "./parse_from_document";
-export default parseFromDocument;
+import parseFromTNodes from "./parse_from_nodes";
+export default parseFromTNodes;
