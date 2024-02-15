@@ -15,6 +15,8 @@
  */
 
 import log from "../../../../../../log";
+import type { ITNode } from "../../../../../../utils/xml-parser";
+import { parseXml } from "../../../../../../utils/xml-parser";
 import { createAdaptationSetIntermediateRepresentation } from "../AdaptationSet";
 import { MPDError } from "../utils";
 
@@ -23,10 +25,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="true" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="true" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: true },
@@ -35,10 +34,9 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
+    const element2 = parseXml(
       `<AdaptationSet ${attributeName}=\"false\" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },
@@ -53,10 +51,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="foobar" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="foobar" />`)[0] as ITNode;
     const error1 = new MPDError(
       `\`${attributeName}\` property is not a boolean value but "foobar"`,
     );
@@ -70,10 +65,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
     expect(spyLog).toHaveBeenCalledTimes(1);
     expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error2 = new MPDError(
       `\`${attributeName}\` property is not a boolean value but ""`,
     );
@@ -95,10 +87,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="foobar" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="foobar" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: "foobar" },
@@ -107,10 +96,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}=\"\" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}=\"\" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: "" },
@@ -128,10 +114,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="12.4" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="12.4" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12.4 },
@@ -140,10 +123,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="0" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="0" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
@@ -152,10 +132,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
       [],
     ]);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="27/2" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="27/2" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: 13.5 },
@@ -170,10 +147,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="toto" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="toto" />`)[0] as ITNode;
     const error1 = new MPDError(`\`${attributeName}\` property is invalid: "toto"`);
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
@@ -183,10 +157,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     expect(spyLog).toHaveBeenCalledTimes(1);
     expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="PT5M" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(`\`${attributeName}\` property is invalid: "PT5M"`);
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
@@ -196,10 +167,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     expect(spyLog).toHaveBeenCalledTimes(2);
     expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(`\`${attributeName}\` property is invalid: ""`);
 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
@@ -218,10 +186,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="012" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="012" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12 },
@@ -230,10 +195,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="0" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="0" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
@@ -242,10 +204,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
       [],
     ]);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="-50.12" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="-50.12" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: -50.12 },
@@ -260,10 +219,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="toto" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="toto" />`)[0] as ITNode;
     const error1 = new MPDError(`\`${attributeName}\` property is invalid: "toto"`);
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
@@ -273,10 +229,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     expect(spyLog).toHaveBeenCalledTimes(1);
     expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="PT5M" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(`\`${attributeName}\` property is invalid: "PT5M"`);
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
@@ -286,10 +239,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     expect(spyLog).toHaveBeenCalledTimes(2);
     expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(`\`${attributeName}\` property is invalid: ""`);
 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
@@ -308,10 +258,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="012" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="012" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12 },
@@ -320,10 +267,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="0" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="0" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
@@ -332,10 +276,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       [],
     ]);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="-50" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="-50" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: -50 },
@@ -350,10 +291,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="toto" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="toto" />`)[0] as ITNode;
     const error1 = new MPDError(
       `\`${attributeName}\` property is not an integer value but "toto"`,
     );
@@ -365,10 +303,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     expect(spyLog).toHaveBeenCalledTimes(1);
     expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="PT5M" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(
       `\`${attributeName}\` property is not an integer value but "PT5M"`,
     );
@@ -380,10 +315,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     expect(spyLog).toHaveBeenCalledTimes(2);
     expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(
       `\`${attributeName}\` property is not an integer value but ""`,
     );
@@ -407,10 +339,7 @@ function testNumberOrBooleanAttribute(
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="012" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="012" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12 },
@@ -419,10 +348,7 @@ function testNumberOrBooleanAttribute(
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="0" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="0" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
@@ -431,10 +357,7 @@ function testNumberOrBooleanAttribute(
       [],
     ]);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="-50" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="-50" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: -50 },
@@ -449,10 +372,7 @@ function testNumberOrBooleanAttribute(
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="toto" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="toto" />`)[0] as ITNode;
     const error1 = new MPDError(
       `\`${attributeName}\` property is not a boolean nor an integer but "toto"`,
     );
@@ -464,10 +384,7 @@ function testNumberOrBooleanAttribute(
     expect(spyLog).toHaveBeenCalledTimes(1);
     expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
 
-    const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="PT5M" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(
       `\`${attributeName}\` property is not a boolean nor an integer but "PT5M"`,
     );
@@ -479,10 +396,7 @@ function testNumberOrBooleanAttribute(
     expect(spyLog).toHaveBeenCalledTimes(2);
     expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
 
-    const element3 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(
       `\`${attributeName}\` property is not a boolean nor an integer but ""`,
     );
@@ -499,10 +413,7 @@ function testNumberOrBooleanAttribute(
 
   it(`should correctly parse an AdaptationSet element with a boolean ${attributeName} attribute`, () => {
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}="true" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml(`<AdaptationSet ${attributeName}="true" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: true },
@@ -511,10 +422,9 @@ function testNumberOrBooleanAttribute(
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
+    const element2 = parseXml(
       `<AdaptationSet ${attributeName}=\"false\" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },
@@ -530,8 +440,7 @@ function testNumberOrBooleanAttribute(
 
 describe("DASH Node Parsers - AdaptationSet", () => {
   it("should correctly parse an AdaptationSet element without attributes nor children", () => {
-    const element = new DOMParser().parseFromString("<AdaptationSet />", "text/xml")
-      .childNodes[0] as Element;
+    const element = parseXml("<AdaptationSet />")[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
       [],
@@ -568,19 +477,15 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   testFloatAttribute("availabilityTimeOffset");
 
   it("should correctly parse an empty baseURLs", () => {
-    const element1 = new DOMParser().parseFromString(
-      "<AdaptationSet><BaseURL /></AdaptationSet>",
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml("<AdaptationSet><BaseURL /></AdaptationSet>")[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
+    const element2 = parseXml(
       "<AdaptationSet><BaseURL></BaseURLs</AdaptationSet>",
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       { attributes: {}, children: { baseURLs: [], representations: [] } },
       [],
@@ -588,10 +493,9 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   });
 
   it("should correctly parse a non-empty baseURLs", () => {
-    const element1 = new DOMParser().parseFromString(
+    const element1 = parseXml(
       '<AdaptationSet><BaseURL serviceLocation="foo">a</BaseURL></AdaptationSet>',
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: {},
@@ -600,10 +504,9 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
+    const element2 = parseXml(
       '<AdaptationSet><BaseURL serviceLocation="4">foo bar</BaseURL></AdaptationSet>',
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: {},
@@ -614,10 +517,9 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   });
 
   it("should correctly parse multiple non-empty baseURLs", () => {
-    const element1 = new DOMParser().parseFromString(
+    const element1 = parseXml(
       '<AdaptationSet><BaseURL serviceLocation="">a</BaseURL><BaseURL serviceLocation="http://test.com">b</BaseURL></AdaptationSet>',
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: {},
