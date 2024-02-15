@@ -15,18 +15,20 @@
  */
 
 import type { IManifest } from "../../../../../manifest";
-import parseFromDocument from "../index";
+import type { ITNode } from "../../../../../utils/xml-parser";
+import { parseXml } from "../../../../../utils/xml-parser";
+import parseFromTNodes from "../parse_from_nodes";
 
-describe("parseFromDocument", () => {
-  function setDocumentFromString(str: string): Document {
-    return new DOMParser().parseFromString(str, "application/xml");
+describe("parseFromTNodes", () => {
+  function getNodes(str: string): Array<ITNode | string> {
+    return parseXml(str);
   }
 
   it("throws root if not MPD", function () {
-    const doc = setDocumentFromString("<foo></foo>");
+    const doc = getNodes("<foo></foo>");
 
     expect(function () {
-      parseFromDocument(doc, {
+      parseFromTNodes(doc, {
         url: "",
         externalClockOffset: 10,
         unsafelyBaseOnPreviousManifest: null,
@@ -34,7 +36,7 @@ describe("parseFromDocument", () => {
     }).toThrow("document root should be MPD");
     expect(function () {
       const prevManifest = {} as unknown as IManifest;
-      parseFromDocument(doc, {
+      parseFromTNodes(doc, {
         url: "",
         unsafelyBaseOnPreviousManifest: prevManifest,
       });
