@@ -14,32 +14,29 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../../utils/xml-parser";
+import { parseXml } from "../../../../../../utils/xml-parser";
 import parseContentComponent from "../ContentComponent";
 
 function testStringAttribute(attributeName: string, variableName?: string): void {
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse a contentComponent element with a correct ${attributeName} attribute`, () => {
-    const element1 = new DOMParser().parseFromString(
+    const element1 = parseXml(
       `<contentComponent ${attributeName}="foobar" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(parseContentComponent(element1)).toEqual({
       [_variableName]: "foobar",
     });
 
-    const element2 = new DOMParser().parseFromString(
-      `<contentComponent ${attributeName}=\"\" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<contentComponent ${attributeName}=\"\" />`)[0] as ITNode;
     expect(parseContentComponent(element2)).toEqual({ [_variableName]: "" });
   });
 }
 
 describe("DASH Node Parsers - ContentComponent", () => {
   it("should correctly parse a ContentComponent element without attributes", () => {
-    const element = new DOMParser().parseFromString("<Content />", "text/xml")
-      .childNodes[0] as Element;
+    const element = parseXml("<Content />")[0] as ITNode;
     expect(parseContentComponent(element)).toEqual({});
   });
   testStringAttribute("id");
@@ -48,15 +45,14 @@ describe("DASH Node Parsers - ContentComponent", () => {
   testStringAttribute("par");
 
   it("should correctly parse a contentComponent with every attributes", () => {
-    const element = new DOMParser().parseFromString(
+    const element = parseXml(
       `<contentComponent
         id ="foo"
         lang="bar"
         contentType="audio/mp5"
         par="3/4"
         />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(parseContentComponent(element)).toEqual({
       id: "foo",
       language: "bar",

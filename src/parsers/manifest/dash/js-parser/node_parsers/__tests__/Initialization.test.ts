@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../../utils/xml-parser";
+import { parseXml } from "../../../../../../utils/xml-parser";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -32,12 +35,10 @@ describe("DASH Node Parsers - Initialization", () => {
     const mockLog = jest.spyOn(log.default, "warn");
 
     const parseInitialization = jest.requireActual("../Initialization").default;
-    const element1 = new DOMParser().parseFromString("<Foo />", "text/xml")
-      .childNodes[0] as Element;
+    const element1 = parseXml("<Foo />")[0] as ITNode;
     expect(parseInitialization(element1)).toEqual([{}, []]);
 
-    const element2 = new DOMParser().parseFromString('<Foo test="" />', "text/xml")
-      .childNodes[0] as Element;
+    const element2 = parseXml('<Foo test="" />')[0] as ITNode;
     expect(parseInitialization(element2)).toEqual([{}, []]);
 
     expect(mockLog).not.toHaveBeenCalled();
@@ -50,14 +51,10 @@ describe("DASH Node Parsers - Initialization", () => {
     const mockLog = jest.spyOn(log.default, "warn");
 
     const parseInitialization = jest.requireActual("../Initialization").default;
-    const element1 = new DOMParser().parseFromString('<Foo range="0-1" />', "text/xml")
-      .childNodes[0] as Element;
+    const element1 = parseXml('<Foo range="0-1" />')[0] as ITNode;
     expect(parseInitialization(element1)).toEqual([{ range: [0, 1] }, []]);
 
-    const element2 = new DOMParser().parseFromString(
-      '<Foo range="100-1000" />',
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml('<Foo range="100-1000" />')[0] as ITNode;
     expect(parseInitialization(element2)).toEqual([{ range: [100, 1000] }, []]);
 
     expect(mockLog).not.toHaveBeenCalled();
@@ -71,16 +68,14 @@ describe("DASH Node Parsers - Initialization", () => {
 
     const parseInitialization = jest.requireActual("../Initialization").default;
     const MPDError = jest.requireActual("../utils").MPDError;
-    const element1 = new DOMParser().parseFromString('<Foo range="a" />', "text/xml")
-      .childNodes[0] as Element;
+    const element1 = parseXml('<Foo range="a" />')[0] as ITNode;
     const error1 = new MPDError('`range` property has an unrecognized format "a"');
     expect(parseInitialization(element1)).toEqual([{}, [error1]]);
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(error1.message);
 
-    const element2 = new DOMParser().parseFromString('<Foo range="" />', "text/xml")
-      .childNodes[0] as Element;
+    const element2 = parseXml('<Foo range="" />')[0] as ITNode;
     const error2 = new MPDError('`range` property has an unrecognized format ""');
     expect(parseInitialization(element2)).toEqual([{}, [error2]]);
 
@@ -96,12 +91,10 @@ describe("DASH Node Parsers - Initialization", () => {
     const mockLog = jest.spyOn(log.default, "warn");
 
     const parseInitialization = jest.requireActual("../Initialization").default;
-    const element1 = new DOMParser().parseFromString('<Foo sourceURL="a" />', "text/xml")
-      .childNodes[0] as Element;
+    const element1 = parseXml('<Foo sourceURL="a" />')[0] as ITNode;
     expect(parseInitialization(element1)).toEqual([{ media: "a" }, []]);
 
-    const element2 = new DOMParser().parseFromString('<Foo sourceURL="" />', "text/xml")
-      .childNodes[0] as Element;
+    const element2 = parseXml('<Foo sourceURL="" />')[0] as ITNode;
     expect(parseInitialization(element2)).toEqual([{ media: "" }, []]);
 
     expect(mockLog).not.toHaveBeenCalled();
@@ -114,10 +107,7 @@ describe("DASH Node Parsers - Initialization", () => {
     const mockLog = jest.spyOn(log.default, "warn");
 
     const parseInitialization = jest.requireActual("../Initialization").default;
-    const element1 = new DOMParser().parseFromString(
-      '<Foo sourceURL="a" range="4-10" />',
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element1 = parseXml('<Foo sourceURL="a" range="4-10" />')[0] as ITNode;
     expect(parseInitialization(element1)).toEqual([{ media: "a", range: [4, 10] }, []]);
 
     expect(mockLog).not.toHaveBeenCalled();
