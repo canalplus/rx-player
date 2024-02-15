@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../../utils/xml-parser";
+import { parseXml } from "../../../../../../utils/xml-parser";
 import {
   MPDError,
   parseBoolean,
@@ -167,46 +169,31 @@ describe("dash parser helpers", function () {
 
   describe("parseScheme", () => {
     it("should correctly parse an element with no known attribute", () => {
-      const element1 = new DOMParser().parseFromString("<Foo />", "text/xml")
-        .childNodes[0] as Element;
+      const element1 = parseXml("<Foo />")[0] as ITNode;
       expect(parseScheme(element1)).toEqual({});
 
-      const element2 = new DOMParser().parseFromString('<Foo test="" />', "text/xml")
-        .childNodes[0] as Element;
+      const element2 = parseXml('<Foo test="" />')[0] as ITNode;
       expect(parseScheme(element2)).toEqual({});
     });
 
     it("should correctly parse an element with a correct schemeIdUri attribute", () => {
-      const element1 = new DOMParser().parseFromString(
-        '<Foo schemeIdUri="foobar " />',
-        "text/xml",
-      ).childNodes[0] as Element;
+      const element1 = parseXml('<Foo schemeIdUri="foobar " />')[0] as ITNode;
       expect(parseScheme(element1)).toEqual({ schemeIdUri: "foobar " });
 
-      const element2 = new DOMParser().parseFromString(
-        '<Foo schemeIdUri="" />',
-        "text/xml",
-      ).childNodes[0] as Element;
+      const element2 = parseXml('<Foo schemeIdUri="" />')[0] as ITNode;
       expect(parseScheme(element2)).toEqual({ schemeIdUri: "" });
     });
 
     it("should correctly parse an element with a correct value attribute", () => {
-      const element1 = new DOMParser().parseFromString(
-        '<Foo value="foobar " />',
-        "text/xml",
-      ).childNodes[0] as Element;
+      const element1 = parseXml('<Foo value="foobar " />')[0] as ITNode;
       expect(parseScheme(element1)).toEqual({ value: "foobar " });
 
-      const element2 = new DOMParser().parseFromString('<Foo value="" />', "text/xml")
-        .childNodes[0] as Element;
+      const element2 = parseXml('<Foo value="" />')[0] as ITNode;
       expect(parseScheme(element2)).toEqual({ value: "" });
     });
 
     it("should correctly parse an element with both attributes", () => {
-      const element = new DOMParser().parseFromString(
-        '<Foo schemeIdUri="baz" value="foobar " />',
-        "text/xml",
-      ).childNodes[0] as Element;
+      const element = parseXml('<Foo schemeIdUri="baz" value="foobar " />')[0] as ITNode;
       expect(parseScheme(element)).toEqual({
         schemeIdUri: "baz",
         value: "foobar ",
