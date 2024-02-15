@@ -6,6 +6,8 @@
  * https://github.com/TobiasNickel/tXml
  */
 
+// import arrayIncludes from "./array_includes";
+
 /**
  * The MIT License (MIT)
  *
@@ -34,7 +36,8 @@ export interface ITNode {
   tagName: string;
   attributes: Partial<Record<string, string | null>>;
   children: Array<ITNode | string>;
-  pos?: number;
+  posStart: number;
+  posEnd: number;
 }
 
 export interface ITParseOptions {
@@ -226,6 +229,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
   }
 
   function parseNode(): ITNode {
+    const posStart = pos;
     pos++;
     const tagName = parseName();
     const attributes: Partial<Record<string, string | null>> = {};
@@ -252,13 +256,6 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
         let value;
         if (code === singleQuoteCC || code === doubleQuoteCC) {
           value = parseString();
-          if (pos === -1) {
-            return {
-              tagName,
-              attributes,
-              children,
-            };
-          }
         } else {
           value = null;
           pos--;
@@ -278,6 +275,8 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
       tagName,
       attributes,
       children,
+      posStart,
+      posEnd: pos,
     };
   }
 

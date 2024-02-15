@@ -421,11 +421,12 @@ export interface IEventStreamEventIntermediateRepresentation {
 
   /**
    * The `<Event>` element itself.
-   * Can be in two forms:
+   * Can be under any of those forms:
    *   - Either as an Element instance directly
    *   - Either as the Element's UTF-8 textual representation.
+   *   - Either as the Element's string representation.
    */
-  eventStreamData?: Element | ArrayBuffer;
+  eventStreamData?: Element | ArrayBuffer | string;
 }
 
 export type ITimelineParser = () => ITNode[];

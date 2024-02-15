@@ -316,7 +316,10 @@ function generateStreamEvents(
           try {
             xmlData = {
               namespaces: allNamespaces,
-              data: utf8ToStr(new Uint8Array(eventIr.eventStreamData as ArrayBuffer)),
+              data:
+                typeof eventIr.eventStreamData === "string"
+                  ? eventIr.eventStreamData
+                  : utf8ToStr(new Uint8Array(eventIr.eventStreamData as ArrayBuffer)),
             };
           } catch (err) {
             log.error(

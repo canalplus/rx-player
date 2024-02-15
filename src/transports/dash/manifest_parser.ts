@@ -28,7 +28,6 @@ import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import type { ITNode } from "../../utils/xml-parser";
 import { parseXml } from "../../utils/xml-parser";
 import type {
   IManifestParserOptions,
@@ -128,8 +127,9 @@ export default function generateManifestParser(
       if (parsers.js === null) {
         throw new Error("No MPD parser is imported");
       }
-      const manifestDoc = getManifestAsTNodes(responseData);
-      const parsedManifest = parsers.js(manifestDoc, dashParserOpts);
+      const manifestStr = getManifestAsString(responseData);
+      const manifestNodes = parseXml(manifestStr);
+      const parsedManifest = parsers.js(manifestNodes, dashParserOpts, manifestStr);
       return processMpdParserResponse(parsedManifest);
     }
 
@@ -296,13 +296,13 @@ function assertLoadedResourcesFormatArrayBuffer(
  * @param {*} manifestSrc
  * @returns {Array.<Object | string>}
  */
-function getManifestAsTNodes(manifestSrc: unknown): Array<ITNode | string> {
+function getManifestAsString(manifestSrc: unknown): string {
   if (manifestSrc instanceof ArrayBuffer) {
-    return parseXml(utf8ToStr(new Uint8Array(manifestSrc)));
+    return utf8ToStr(new Uint8Array(manifestSrc));
   } else if (typeof manifestSrc === "string") {
-    return parseXml(manifestSrc);
+    return manifestSrc;
   } else if (manifestSrc instanceof Document) {
-    return parseXml(manifestSrc.documentElement.outerHTML);
+    return manifestSrc.documentElement.outerHTML;
   } else {
     throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
   }
