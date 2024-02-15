@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../../../utils/xml-parser";
+import { parseXml } from "../../../../../../utils/xml-parser";
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -26,19 +29,15 @@ function testStringAttribute(attributeName: string, variableName?: string): void
 
   it(`should correctly parse a ContentProtection element with a correct ${attributeName} attribute`, () => {
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element1 = new DOMParser().parseFromString(
+    const element1 = parseXml(
       `<ContentProtection ${attributeName}="foobar" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    )[0] as ITNode;
     expect(parseContentProtection(element1)).toEqual([
       { attributes: { [_variableName]: "foobar" }, children: { cencPssh: [] } },
       [],
     ]);
 
-    const element2 = new DOMParser().parseFromString(
-      `<ContentProtection ${attributeName}=\"\" />`,
-      "text/xml",
-    ).childNodes[0] as Element;
+    const element2 = parseXml(`<ContentProtection ${attributeName}=\"\" />`)[0] as ITNode;
     expect(parseContentProtection(element2)).toEqual([
       { attributes: { [_variableName]: "" }, children: { cencPssh: [] } },
       [],
@@ -53,8 +52,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
 
   it("should correctly parse a ContentProtection element without attributes", () => {
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element = new DOMParser().parseFromString("<ContentProtection />", "text/xml")
-      .childNodes[0] as Element;
+    const element = parseXml("<ContentProtection />")[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
       { attributes: {}, children: { cencPssh: [] } },
       [],
@@ -73,22 +71,9 @@ describe("DASH Node Parsers - ContentProtection", () => {
       hexToBytes: mockHexToBytes,
     }));
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element1 = new DOMParser()
-      .parseFromString(
-        `<?xml version="1.0" encoding="utf-8"?>
-<MPD
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="urn:mpeg:dash:schema:mpd:2011"
-  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
-  xmlns:cenc="urn:mpeg:cenc:2013"
-  xmlns:mspr="urn:microsoft:playready"
-  xmlns:scte35="urn:scte:scte35:2014:xml+bin">
-  <ContentProtection cenc:default_KID=\"dead-beef\" />
-</MPD>
-`,
-        "text/xml",
-      )
-      .getElementsByTagName("ContentProtection")[0];
+    const element1 = parseXml(
+      '<ContentProtection cenc:default_KID="dead-beef" />',
+    )[0] as ITNode;
 
     expect(parseContentProtection(element1)).toEqual([
       { attributes: { keyId }, children: { cencPssh: [] } },
@@ -107,26 +92,13 @@ describe("DASH Node Parsers - ContentProtection", () => {
       hexToBytes: mockHexToBytes,
     }));
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element = new DOMParser()
-      .parseFromString(
-        `<?xml version="1.0" encoding="utf-8"?>
-<MPD
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="urn:mpeg:dash:schema:mpd:2011"
-  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
-  xmlns:cenc="urn:mpeg:cenc:2013"
-  xmlns:mspr="urn:microsoft:playready"
-  xmlns:scte35="urn:scte:scte35:2014:xml+bin">
-  <ContentProtection
+    const element = parseXml(
+      `<ContentProtection
     schemeIdUri="foo"
     value="bar"
     cenc:default_KID="dead-beef"
-  />
-</MPD>
-`,
-        "text/xml",
-      )
-      .getElementsByTagName("ContentProtection")[0];
+  />`,
+    )[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
       {
         attributes: { keyId, schemeIdUri: "foo", value: "bar" },
@@ -138,25 +110,14 @@ describe("DASH Node Parsers - ContentProtection", () => {
 
   it("should correctly parse a ContentProtection with cenc:pssh children", () => {
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element = new DOMParser()
-      .parseFromString(
-        `<?xml version="1.0" encoding="utf-8"?>
-<MPD
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="urn:mpeg:dash:schema:mpd:2011"
-  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
-  xmlns:cenc="urn:mpeg:cenc:2013"
-  xmlns:mspr="urn:microsoft:playready"
-  xmlns:scte35="urn:scte:scte35:2014:xml+bin">
-  <ContentProtection>
+    const element = parseXml(
+      `<ContentProtection>
     <cenc:pssh>AABBCC</cenc:pssh>
     <cenc:pssh>AAABAC</cenc:pssh>
   </ContentProtection>
-</MPD>
-`,
-        "text/xml",
-      )
-      .getElementsByTagName("ContentProtection")[0];
+</MPD>`,
+    )[0] as ITNode;
+
     expect(parseContentProtection(element)).toEqual([
       {
         attributes: {},
@@ -177,29 +138,16 @@ describe("DASH Node Parsers - ContentProtection", () => {
       hexToBytes: mockHexToBytes,
     }));
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element = new DOMParser()
-      .parseFromString(
-        `<?xml version="1.0" encoding="utf-8"?>
-<MPD
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="urn:mpeg:dash:schema:mpd:2011"
-  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
-  xmlns:cenc="urn:mpeg:cenc:2013"
-  xmlns:mspr="urn:microsoft:playready"
-  xmlns:scte35="urn:scte:scte35:2014:xml+bin">
-  <ContentProtection
+    const element = parseXml(
+      `<ContentProtection
     schemeIdUri="foo"
     value="bar"
     cenc:default_KID="dead-beef"
   >
     <cenc:pssh>AABBCC</cenc:pssh>
     <cenc:pssh>AAABAC</cenc:pssh>
-  </ContentProtection>
-</MPD>
-`,
-        "text/xml",
-      )
-      .getElementsByTagName("ContentProtection")[0];
+  </ContentProtection>`,
+    )[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
       {
         attributes: { keyId, schemeIdUri: "foo", value: "bar" },
@@ -213,25 +161,12 @@ describe("DASH Node Parsers - ContentProtection", () => {
 
   it("should return a warning if one of the cenc:pssh is invalid base64", () => {
     const parseContentProtection = jest.requireActual("../ContentProtection").default;
-    const element = new DOMParser()
-      .parseFromString(
-        `<?xml version="1.0" encoding="utf-8"?>
-<MPD
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="urn:mpeg:dash:schema:mpd:2011"
-  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
-  xmlns:cenc="urn:mpeg:cenc:2013"
-  xmlns:mspr="urn:microsoft:playready"
-  xmlns:scte35="urn:scte:scte35:2014:xml+bin">
-  <ContentProtection>
+    const element = parseXml(
+      `<ContentProtection>
     <cenc:pssh>AA!BCC</cenc:pssh>
     <cenc:pssh>AAABAC</cenc:pssh>
-  </ContentProtection>
-</MPD>
-`,
-        "text/xml",
-      )
-      .getElementsByTagName("ContentProtection")[0];
+  </ContentProtection>`,
+    )[0] as ITNode;
     const parsed = parseContentProtection(element);
     expect(parsed[0]).toEqual({
       attributes: {},
