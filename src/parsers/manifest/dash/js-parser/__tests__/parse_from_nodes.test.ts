@@ -32,14 +32,14 @@ describe("parseFromTNodes", () => {
         url: "",
         externalClockOffset: 10,
         unsafelyBaseOnPreviousManifest: null,
-      });
+      }, "<foo></foo>");
     }).toThrow("document root should be MPD");
     expect(function () {
       const prevManifest = {} as unknown as IManifest;
       parseFromTNodes(doc, {
         url: "",
         unsafelyBaseOnPreviousManifest: prevManifest,
-      });
+      }, "<foo></foo>");
     }).toThrow("document root should be MPD");
   });
 });

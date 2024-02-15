@@ -15,10 +15,12 @@
  */
 
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import startsWith from "../../../../../utils/starts_with";
 import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IBaseUrlIntermediateRepresentation,
+  IEventStreamIntermediateRepresentation,
   IPeriodAttributes,
   IPeriodChildren,
   IPeriodIntermediateRepresentation,
@@ -26,22 +28,25 @@ import type {
 } from "../../node_parser_types";
 import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet";
 import parseBaseURL from "./BaseURL";
+import { createEventStreamIntermediateRepresentation } from "./EventStream";
 import parseSegmentTemplate from "./SegmentTemplate";
 import { parseBoolean, parseDuration, ValueParser } from "./utils";
 
 /**
  * @param {Array.<Object | string>} periodChildren
+ * @param {string} fullMpd
  * @returns {Array}
  */
 function parsePeriodChildren(
   periodChildren: Array<ITNode | string>,
+  fullMpd: string,
 ): [IPeriodChildren, Error[]] {
   const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
   const adaptations: IAdaptationSetIntermediateRepresentation[] = [];
   let segmentTemplate: ISegmentTemplateIntermediateRepresentation | undefined;
 
   let warnings: Error[] = [];
-  const eventStreams: [] = [];
+  const eventStreams: IEventStreamIntermediateRepresentation[] = [];
   for (let i = 0; i < periodChildren.length; i++) {
     const currentElement = periodChildren[i];
     if (typeof currentElement === "string") {
@@ -64,7 +69,10 @@ function parsePeriodChildren(
         break;
 
       case "EventStream":
-        // XXX TODO
+        const [eventStream, eventStreamWarnings] =
+          createEventStreamIntermediateRepresentation(currentElement, fullMpd);
+        eventStreams.push(eventStream);
+        warnings = warnings.concat(eventStreamWarnings);
         break;
 
       case "SegmentTemplate":
@@ -130,6 +138,18 @@ function parsePeriodAttributes(root: ITNode): [IPeriodAttributes, Error[]] {
       case "xlink:actuate":
         res.xlinkActuate = attributeVal;
         break;
+
+      default:
+        if (startsWith(attributeName, "xmlns:")) {
+          if (res.namespaces === undefined) {
+            res.namespaces = [];
+          }
+          res.namespaces.push({
+            key: attributeName.substring(6),
+            value: attributeVal,
+          });
+        }
+        break;
     }
   }
   return [res, warnings];
@@ -137,12 +157,17 @@ function parsePeriodAttributes(root: ITNode): [IPeriodAttributes, Error[]] {
 
 /**
  * @param {Object} periodElement
+ * @param {string} fullMpd
  * @returns {Array}
  */
 export function createPeriodIntermediateRepresentation(
   periodElement: ITNode,
+  fullMpd: string,
 ): [IPeriodIntermediateRepresentation, Error[]] {
-  const [children, childrenWarnings] = parsePeriodChildren(periodElement.children);
+  const [children, childrenWarnings] = parsePeriodChildren(
+    periodElement.children,
+    fullMpd,
+  );
   const [attributes, attrsWarnings] = parsePeriodAttributes(periodElement);
   const warnings = childrenWarnings.concat(attrsWarnings);
   return [{ children, attributes }, warnings];
