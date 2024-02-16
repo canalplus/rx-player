@@ -33,11 +33,12 @@ export interface IParsedS {
 }
 
 /**
- * Parse a given <S> element in the MPD into a JS Object.
+ * Parse a given <S> element in the MPD under a parsed Node form into a JS
+ * Object.
  * @param {Object} root
  * @returns {Object}
  */
-export default function parseSElement(root: ITNode): IParsedS {
+export function parseSElementNode(root: ITNode): IParsedS {
   const parsedS: IParsedS = {};
 
   for (const attributeName of Object.keys(root.attributes)) {
@@ -66,6 +67,47 @@ export default function parseSElement(root: ITNode): IParsedS {
         const repeatCount = parseInt(attributeVal, 10);
         if (isNaN(repeatCount)) {
           log.warn(`DASH: invalid r ("${attributeVal}")`);
+        } else {
+          parsedS.repeatCount = repeatCount;
+        }
+        break;
+    }
+  }
+  return parsedS;
+}
+
+/**
+ * Parse a given <S> element in the MPD under an `Element` form into a JS
+ * Object.
+ * @param {Element} root
+ * @returns {Object}
+ */
+export function parseSHTMLElement(root: Element): IParsedS {
+  const parsedS: IParsedS = {};
+
+  for (let j = 0; j < root.attributes.length; j++) {
+    const attribute = root.attributes[j];
+    switch (attribute.name) {
+      case "t":
+        const start = parseInt(attribute.value, 10);
+        if (isNaN(start)) {
+          log.warn(`DASH: invalid t ("${attribute.value}")`);
+        } else {
+          parsedS.start = start;
+        }
+        break;
+      case "d":
+        const duration = parseInt(attribute.value, 10);
+        if (isNaN(duration)) {
+          log.warn(`DASH: invalid d ("${attribute.value}")`);
+        } else {
+          parsedS.duration = duration;
+        }
+        break;
+      case "r":
+        const repeatCount = parseInt(attribute.value, 10);
+        if (isNaN(repeatCount)) {
+          log.warn(`DASH: invalid r ("${attribute.value}")`);
         } else {
           parsedS.repeatCount = repeatCount;
         }

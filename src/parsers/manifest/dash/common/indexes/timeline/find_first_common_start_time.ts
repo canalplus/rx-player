@@ -29,7 +29,7 @@ import type { IIndexSegment } from "../../../../utils/index_helpers";
  */
 export default function findFirstCommonStartTime(
   prevTimeline: IIndexSegment[],
-  newElements: ITNode[],
+  newElements: ITNode[] | HTMLCollection,
 ): {
   /** Index in `prevSegments` where the first common segment start is found. */
   prevSegmentsIdx: number;
@@ -50,7 +50,9 @@ export default function findFirstCommonStartTime(
     return null;
   }
   const prevInitialStart = prevTimeline[0].start;
-  const newFirstTAttr = newElements[0].attributes.t;
+  const newFirstTAttr = Array.isArray(newElements)
+    ? newElements[0].attributes.t
+    : newElements[0].getAttribute("t");
   const newInitialStart = isNullOrUndefined(newFirstTAttr)
     ? null
     : parseInt(newFirstTAttr, 10);
@@ -102,15 +104,18 @@ export default function findFirstCommonStartTime(
     }
   } else {
     let newElementsIdx = 0;
-    let newElt = newElements[0];
+    let newNodeElt: ITNode | null = Array.isArray(newElements) ? newElements[0] : null;
+    let newDomElt: Element | null = Array.isArray(newElements) ? null : newElements[0];
     let currentTimeOffset = newInitialStart;
     while (true) {
-      const dAttr = newElt.attributes.d;
+      const dAttr =
+        newNodeElt !== null ? newNodeElt.attributes.d : newDomElt?.getAttribute("d");
       const duration = isNullOrUndefined(dAttr) ? null : parseInt(dAttr, 10);
       if (duration === null || Number.isNaN(duration)) {
         return null;
       }
-      const rAttr = newElt.attributes.r;
+      const rAttr =
+        newNodeElt !== null ? newNodeElt.attributes.r : newDomElt?.getAttribute("r");
       const repeatCount = isNullOrUndefined(rAttr) ? null : parseInt(rAttr, 10);
 
       if (repeatCount !== null) {
@@ -137,8 +142,13 @@ export default function findFirstCommonStartTime(
       if (newElementsIdx >= newElements.length) {
         return null;
       }
-      newElt = newElements[newElementsIdx];
-      const tAttr = newElt.attributes.t;
+      if (Array.isArray(newElements)) {
+        newNodeElt = newElements[newElementsIdx];
+      } else {
+        newDomElt = newElements[newElementsIdx];
+      }
+      const tAttr =
+        newNodeElt !== null ? newNodeElt.attributes.t : newDomElt?.getAttribute("t");
       const time = isNullOrUndefined(tAttr) ? null : parseInt(tAttr, 10);
       if (time !== null) {
         if (Number.isNaN(time)) {
