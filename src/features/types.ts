@@ -62,7 +62,12 @@ export type IHTMLTextTracksBuffer = new (
  */
 export type INativeTextTracksBuffer = new (mediaElement: HTMLMediaElement) => SegmentSink;
 
-export type IDashJsParser = (
+export type IDashNativeParser = (
+  dom: Document,
+  args: IMPDParserArguments,
+) => IDashParserResponse<string>;
+
+export type IDashFastJsParser = (
   nodes: Array<ITNode | string>,
   args: IMPDParserArguments,
   fullMpd: string,
@@ -145,9 +150,13 @@ export interface IFeaturesObject {
      */
     wasm: DashWasmParser | null;
     /**
-     * JavaScript-based Manifest DASH parser.
+     * Entirely JavaScript-based Manifest DASH parser.
      */
-    js: IDashJsParser | null;
+    fastJs: IDashFastJsParser | null;
+    /**
+     * JavaScript+Browser's DOMParser-based Manifest DASH parser.
+     */
+    native: IDashNativeParser | null;
   };
   /** Implement text track rendering through `<track>` HTML elements. */
   nativeTextDisplayer: typeof NativeTextDisplayer | null;

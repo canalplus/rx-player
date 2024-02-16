@@ -16,22 +16,22 @@
 
 import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
 import mainCodecSupportProber from "../../../mse/main_codec_support_prober";
-import nativeDashParser from "../../../parsers/manifest/dash/native-parser";
+import dashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
 import DASHFeature from "../../../transports/dash";
 import type { IFeaturesObject } from "../../types";
-import addDASHFeature from "../dash";
+import addDASHJsFeature from "../dash_js";
 
 describe("Features list - DASH", () => {
   it("should add DASH in the current features", () => {
     const featureObject = {
       transports: {},
-      dashParsers: { fastJs: null, native: null, wasm: null },
+      dashParsers: { native: null, fastJs: null, wasm: null },
       mainThreadMediaSourceInit: null,
     } as unknown as IFeaturesObject;
-    addDASHFeature(featureObject);
+    addDASHJsFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { dash: DASHFeature },
-      dashParsers: { native: nativeDashParser, fastJs: null, wasm: null },
+      dashParsers: { fastJs: dashFastJsParser, native: null, wasm: null },
       mainThreadMediaSourceInit: MediaSourceContentInitializer,
       codecSupportProber: mainCodecSupportProber,
     });

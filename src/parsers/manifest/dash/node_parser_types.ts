@@ -429,4 +429,4 @@ export interface IEventStreamEventIntermediateRepresentation {
   eventStreamData?: Element | ArrayBuffer | string;
 }
 
-export type ITimelineParser = () => ITNode[];
+export type ITimelineParser = () => ITNode[] | HTMLCollection;
