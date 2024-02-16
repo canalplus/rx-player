@@ -12,6 +12,7 @@ import type {
   IReferenceUpdateMessage,
 } from "../../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
+import DashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import { ObservationPosition } from "../../../playback_observer";
 import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
@@ -73,6 +74,7 @@ export default function initializeWorkerMain() {
   // TODO allow worker-side feature-switching? Not sure how
   const dashWasmParser = new DashWasmParser();
   features.dashParsers.wasm = dashWasmParser;
+  features.dashParsers.fastJs = DashFastJsParser;
   features.transports.dash = createDashPipelines;
 
   /**
@@ -94,19 +96,23 @@ export default function initializeWorkerMain() {
         const diffWorker = Date.now() - performance.now();
         mainThreadTimestampDiff.setValueIfChanged(diffWorker - diffMain);
         updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
-        dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).then(
-          () => {
-            sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
-          },
-          (err) => {
-            const error = err instanceof Error ? err.toString() : "Unknown Error";
-            log.error("Worker: Could not initialize DASH_WASM parser", error);
-            sendMessage({
-              type: WorkerMessageType.InitError,
-              value: { errorMessage: error, kind: "dashWasmInitialization" },
-            });
-          },
-        );
+        if (msg.value.dashWasmUrl !== undefined) {
+          dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).then(
+            () => {
+              sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+            },
+            (err) => {
+              const error = err instanceof Error ? err.toString() : "Unknown Error";
+              log.error("Worker: Could not initialize DASH_WASM parser", error);
+              sendMessage({
+                type: WorkerMessageType.InitError,
+                value: { errorMessage: error, kind: "dashWasmInitialization" },
+              });
+            },
+          );
+        } else {
+          sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+        }
 
         if (!msg.value.hasVideo || msg.value.hasMseInWorker) {
           contentPreparer.disposeCurrentContent();
