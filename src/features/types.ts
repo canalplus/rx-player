@@ -35,7 +35,6 @@ import type {
 } from "../parsers/texttracks";
 import type { ITransportFunction } from "../transports";
 import type { CancellationSignal } from "../utils/task_canceller";
-import type { ITNode } from "../utils/xml-parser";
 
 /**
  * Function allowing to implement a text track rendered by displaying them
@@ -68,9 +67,8 @@ export type IDashNativeParser = (
 ) => IDashParserResponse<string>;
 
 export type IDashFastJsParser = (
-  nodes: Array<ITNode | string>,
+  xml: string,
   args: IMPDParserArguments,
-  fullMpd: string,
 ) => IDashParserResponse<string>;
 
 /**
