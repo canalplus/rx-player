@@ -1,0 +1,193 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import { MediaError } from "../../errors";
+import log from "../../log";
+import arrayFindIndex from "../../utils/array_find_index";
+import objectAssign from "../../utils/object_assign";
+import { MANIFEST_UPDATE_TYPE } from "./types";
+import updatePeriodInPlace from "./update_period_in_place";
+/**
+ * Update old periods by adding new periods and removing
+ * not available ones.
+ * @param {Array.<Object>} oldPeriods
+ * @param {Array.<Object>} newPeriods
+ * @returns {Object}
+ */
+export function replacePeriods(oldPeriods, newPeriods) {
+    const res = {
+        updatedPeriods: [],
+        addedPeriods: [],
+        removedPeriods: [],
+    };
+    let firstUnhandledPeriodIdx = 0;
+    for (let i = 0; i < newPeriods.length; i++) {
+        const newPeriod = newPeriods[i];
+        let j = firstUnhandledPeriodIdx;
+        let oldPeriod = oldPeriods[j];
+        while (oldPeriod !== undefined && oldPeriod.id !== newPeriod.id) {
+            j++;
+            oldPeriod = oldPeriods[j];
+        }
+        if (oldPeriod !== undefined) {
+            const result = updatePeriodInPlace(oldPeriod, newPeriod, MANIFEST_UPDATE_TYPE.Full);
+            res.updatedPeriods.push({
+                period: {
+                    id: oldPeriod.id,
+                    start: oldPeriod.start,
+                    end: oldPeriod.end,
+                    duration: oldPeriod.duration,
+                    streamEvents: oldPeriod.streamEvents,
+                },
+                result,
+            });
+            const periodsToInclude = newPeriods.slice(firstUnhandledPeriodIdx, i);
+            const nbrOfPeriodsToRemove = j - firstUnhandledPeriodIdx;
+            const removed = oldPeriods.splice(firstUnhandledPeriodIdx, nbrOfPeriodsToRemove, ...periodsToInclude);
+            res.removedPeriods.push(...removed.map((p) => ({
+                id: p.id,
+                start: p.start,
+                end: p.end,
+            })));
+            res.addedPeriods.push(...periodsToInclude.map((p) => p.getMetadataSnapshot()));
+            firstUnhandledPeriodIdx = i + 1;
+        }
+    }
+    if (firstUnhandledPeriodIdx > oldPeriods.length) {
+        log.error("Manifest: error when updating Periods");
+        return res;
+    }
+    if (firstUnhandledPeriodIdx < oldPeriods.length) {
+        const removed = oldPeriods.splice(firstUnhandledPeriodIdx, oldPeriods.length - firstUnhandledPeriodIdx);
+        res.removedPeriods.push(...removed.map((p) => ({
+            id: p.id,
+            start: p.start,
+            end: p.end,
+        })));
+    }
+    const remainingNewPeriods = newPeriods.slice(firstUnhandledPeriodIdx, newPeriods.length);
+    if (remainingNewPeriods.length > 0) {
+        oldPeriods.push(...remainingNewPeriods);
+        res.addedPeriods.push(...remainingNewPeriods.map((p) => p.getMetadataSnapshot()));
+    }
+    return res;
+}
+/**
+ * Update old periods by adding new periods and removing
+ * not available ones.
+ * @param {Array.<Object>} oldPeriods
+ * @param {Array.<Object>} newPeriods
+ * @returns {Object}
+ */
+export function updatePeriods(oldPeriods, newPeriods) {
+    const res = {
+        updatedPeriods: [],
+        addedPeriods: [],
+        removedPeriods: [],
+    };
+    if (oldPeriods.length === 0) {
+        oldPeriods.splice(0, 0, ...newPeriods);
+        res.addedPeriods.push(...newPeriods.map((p) => p.getMetadataSnapshot()));
+        return res;
+    }
+    if (newPeriods.length === 0) {
+        return res;
+    }
+    const oldLastPeriod = oldPeriods[oldPeriods.length - 1];
+    if (oldLastPeriod.start < newPeriods[0].start) {
+        if (oldLastPeriod.end !== newPeriods[0].start) {
+            throw new MediaError("MANIFEST_UPDATE_ERROR", "Cannot perform partial update: not enough data");
+        }
+        oldPeriods.push(...newPeriods);
+        res.addedPeriods.push(...newPeriods.map((p) => p.getMetadataSnapshot()));
+        return res;
+    }
+    /** Index, in `oldPeriods` of the first element of `newPeriods` */
+    const indexOfNewFirstPeriod = arrayFindIndex(oldPeriods, ({ id }) => id === newPeriods[0].id);
+    if (indexOfNewFirstPeriod < 0) {
+        throw new MediaError("MANIFEST_UPDATE_ERROR", "Cannot perform partial update: incoherent data");
+    }
+    // The first updated Period can only be a partial part
+    const updateRes = updatePeriodInPlace(oldPeriods[indexOfNewFirstPeriod], newPeriods[0], MANIFEST_UPDATE_TYPE.Partial);
+    res.updatedPeriods.push({
+        period: objectAssign(oldPeriods[indexOfNewFirstPeriod].getMetadataSnapshot(), {
+            adaptations: undefined,
+        }),
+        result: updateRes,
+    });
+    // Search each consecutive elements of `newPeriods` - after the initial one already
+    // processed - in `oldPeriods`, removing and adding unfound Periods in the process
+    let prevIndexOfNewPeriod = indexOfNewFirstPeriod + 1;
+    for (let i = 1; i < newPeriods.length; i++) {
+        const newPeriod = newPeriods[i];
+        let indexOfNewPeriod = -1;
+        for (let j = prevIndexOfNewPeriod; j < oldPeriods.length; j++) {
+            if (newPeriod.id === oldPeriods[j].id) {
+                indexOfNewPeriod = j;
+                break; // end the loop
+            }
+        }
+        if (indexOfNewPeriod < 0) {
+            // Next element of `newPeriods` not found: insert it
+            let toRemoveUntil = -1;
+            for (let j = prevIndexOfNewPeriod; j < oldPeriods.length; j++) {
+                if (newPeriod.start < oldPeriods[j].start) {
+                    toRemoveUntil = j;
+                    break; // end the loop
+                }
+            }
+            const nbElementsToRemove = toRemoveUntil - prevIndexOfNewPeriod;
+            const removed = oldPeriods.splice(prevIndexOfNewPeriod, nbElementsToRemove, newPeriod);
+            res.addedPeriods.push(newPeriod.getMetadataSnapshot());
+            res.removedPeriods.push(...removed.map((p) => ({
+                id: p.id,
+                start: p.start,
+                end: p.end,
+            })));
+        }
+        else {
+            if (indexOfNewPeriod > prevIndexOfNewPeriod) {
+                // Some old periods were not found: remove
+                log.warn("Manifest: old Periods not found in new when updating, removing");
+                const removed = oldPeriods.splice(prevIndexOfNewPeriod, indexOfNewPeriod - prevIndexOfNewPeriod);
+                res.removedPeriods.push(...removed.map((p) => ({
+                    id: p.id,
+                    start: p.start,
+                    end: p.end,
+                })));
+                indexOfNewPeriod = prevIndexOfNewPeriod;
+            }
+            // Later Periods can be fully replaced
+            const result = updatePeriodInPlace(oldPeriods[indexOfNewPeriod], newPeriod, MANIFEST_UPDATE_TYPE.Full);
+            res.updatedPeriods.push({
+                period: objectAssign(oldPeriods[indexOfNewPeriod].getMetadataSnapshot(), {
+                    adaptations: undefined,
+                }),
+                result,
+            });
+        }
+        prevIndexOfNewPeriod++;
+    }
+    if (prevIndexOfNewPeriod < oldPeriods.length) {
+        log.warn("Manifest: Ending Periods not found in new when updating, removing");
+        const removed = oldPeriods.splice(prevIndexOfNewPeriod, oldPeriods.length - prevIndexOfNewPeriod);
+        res.removedPeriods.push(...removed.map((p) => ({
+            id: p.id,
+            start: p.start,
+            end: p.end,
+        })));
+    }
+    return res;
+}

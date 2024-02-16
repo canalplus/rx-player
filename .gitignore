@@ -13,8 +13,6 @@
 /tests/performance/package.json
 /tests/performance/package-lock.json
 
-/dist/
-
 /doc/generated
 
 /src/__GENERATED_CODE
