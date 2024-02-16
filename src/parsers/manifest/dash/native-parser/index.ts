@@ -14,25 +14,5 @@
  * limitations under the License.
  */
 
-import type { IFeaturesObject } from "./types";
-
-/**
- * Initial features object, with no feature activated by default.
- * @type {Object}
- */
-const features: IFeaturesObject = {
-  dashParsers: { wasm: null, native: null, fastJs: null },
-  codecSupportProber: null,
-  createDebugElement: null,
-  directfile: null,
-  decrypt: null,
-  htmlTextDisplayer: null,
-  htmlTextTracksParsers: {},
-  mainThreadMediaSourceInit: null,
-  multithread: null,
-  nativeTextDisplayer: null,
-  nativeTextTracksParsers: {},
-  transports: {},
-};
-
-export default features;
+import parseFromDocument from "./parse_from_document";
+export default parseFromDocument;

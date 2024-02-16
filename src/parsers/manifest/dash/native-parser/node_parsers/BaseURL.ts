@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-import type { IFeaturesObject } from "./types";
+import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
 
 /**
- * Initial features object, with no feature activated by default.
- * @type {Object}
+ * Parse an BaseURL element into an BaseURL intermediate
+ * representation.
+ * @param {Element} root - The BaseURL root element.
+ * @returns {Array.<Object|undefined>}
  */
-const features: IFeaturesObject = {
-  dashParsers: { wasm: null, native: null, fastJs: null },
-  codecSupportProber: null,
-  createDebugElement: null,
-  directfile: null,
-  decrypt: null,
-  htmlTextDisplayer: null,
-  htmlTextTracksParsers: {},
-  mainThreadMediaSourceInit: null,
-  multithread: null,
-  nativeTextDisplayer: null,
-  nativeTextTracksParsers: {},
-  transports: {},
-};
-
-export default features;
+export default function parseBaseURL(
+  root: Element,
+): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
+  const value = root.textContent;
+  const warnings: Error[] = [];
+  if (value === null || value.length === 0) {
+    return [undefined, warnings];
+  }
+  return [{ value }, warnings];
+}

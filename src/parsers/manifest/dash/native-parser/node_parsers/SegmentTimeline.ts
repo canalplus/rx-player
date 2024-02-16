@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-import type { IFeaturesObject } from "./types";
+import type { ITimelineParser } from "../../node_parser_types";
 
 /**
- * Initial features object, with no feature activated by default.
- * @type {Object}
+ * @param {Element} root
+ * @returns {Function}
  */
-const features: IFeaturesObject = {
-  dashParsers: { wasm: null, native: null, fastJs: null },
-  codecSupportProber: null,
-  createDebugElement: null,
-  directfile: null,
-  decrypt: null,
-  htmlTextDisplayer: null,
-  htmlTextTracksParsers: {},
-  mainThreadMediaSourceInit: null,
-  multithread: null,
-  nativeTextDisplayer: null,
-  nativeTextTracksParsers: {},
-  transports: {},
-};
-
-export default features;
+export default function createSegmentTimelineParser(root: Element): ITimelineParser {
+  let result: HTMLCollection | null = null;
+  return function (): HTMLCollection {
+    if (result === null) {
+      const elements = root.getElementsByTagName("S");
+      result = elements;
+      return elements;
+    }
+    return result;
+  };
+}
