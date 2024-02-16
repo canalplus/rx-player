@@ -28,7 +28,6 @@ import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import { parseXml } from "../../utils/xml-parser";
 import type {
   IManifestParserOptions,
   IManifestParserRequestScheduler,
@@ -126,8 +125,7 @@ export default function generateManifestParser(
       | Promise<IManifestParserResult> {
       if (parsers.fastJs !== null) {
         const manifestStr = getManifestAsString(responseData);
-        const manifestNodes = parseXml(manifestStr);
-        const parsedManifest = parsers.fastJs(manifestNodes, dashParserOpts, manifestStr);
+        const parsedManifest = parsers.fastJs(manifestStr, dashParserOpts);
         return processMpdParserResponse(parsedManifest);
       } else if (parsers.native !== null) {
         const manifestDocument = getManifestAsDocument(responseData);

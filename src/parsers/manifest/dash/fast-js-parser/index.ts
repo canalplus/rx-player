@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-import parseFromTNodes from "./parse_from_nodes";
-export default parseFromTNodes;
+import parseFromString from "./parse_from_xml_string";
+export default parseFromString;

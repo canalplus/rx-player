@@ -15,7 +15,6 @@
  */
 
 import { assertUnreachable } from "../../../../utils/assert";
-import type { ITNode } from "../../../../utils/xml-parser";
 import { parseXml } from "../../../../utils/xml-parser";
 import type { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments } from "../common";
 import parseMpdIr from "../common";
@@ -25,17 +24,16 @@ import { createMPDIntermediateRepresentation } from "./node_parsers/MPD";
 import { createPeriodIntermediateRepresentation } from "./node_parsers/Period";
 
 /**
- * Parse MPD through the JS parser, on a XML which went through our DOM Parser.
- * @param {Array.<Object | string>} root - parsed MPD by our xml parser.
+ * Parse MPD through the Fast JS parser.
+ * @param {string} xml - MPD under a string format
  * @param {Object} args - Various parsing options and information.
- * @param {string} fullMpd
  * @returns {Object} - Response returned by the DASH-JS parser.
  */
-export default function parseFromTNodes(
-  root: Array<ITNode | string>,
+export default function parseFromString(
+  xml: string,
   args: IMPDParserArguments,
-  fullMpd: string,
 ): IDashParserResponse<string> {
+  const root = parseXml(xml);
   const lastChild = root[root.length - 1];
   if (
     lastChild === undefined ||
@@ -45,7 +43,7 @@ export default function parseFromTNodes(
     throw new Error("DASH Parser: document root should be MPD");
   }
 
-  const [mpdIR, warnings] = createMPDIntermediateRepresentation(lastChild, fullMpd);
+  const [mpdIR, warnings] = createMPDIntermediateRepresentation(lastChild, xml);
   const ret = parseMpdIr(mpdIR, args, warnings);
   return processReturn(ret);
 
