@@ -17,6 +17,7 @@
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
+import { convertWebkitNeedKeyEvent, WebkitNeedKeyEvent } from "../../core/decrypt/patch_weebkit_need_key";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
@@ -164,17 +165,20 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     };
     this.error = null;
 
-    eme.onEncrypted(
-      mediaElement,
-      (evt) => {
-        log.debug("DRM: Encrypted event received from media element.");
-        const initData = getInitData(evt as MediaEncryptedEvent);
-        if (initData !== null) {
-          this.onInitializationData(initData);
-        }
-      },
-      canceller.signal,
-    );
+
+    eme.onEncrypted(mediaElement, evt => {
+      let event = evt as MediaEncryptedEvent;
+      if ((evt as WebkitNeedKeyEvent)?.type === "webkitneedkey") {
+        event = convertWebkitNeedKeyEvent(evt as WebkitNeedKeyEvent);
+        console.warn("PATCHING EVENT WEBKITNEEDKEY", event);
+      }
+
+      log.debug("DRM: Encrypted event received from media element.");
+      const initData = getInitData(event);
+      if (initData !== null) {
+        this.onInitializationData(initData);
+      }
+    }, canceller.signal);
 
     initMediaKeys(mediaElement, ksOptions, canceller.signal)
       .then((mediaKeysInfo) => {
