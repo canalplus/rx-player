@@ -51,6 +51,7 @@ if ! [ -f tmp/cargo/bin/cargo ]; then
 fi
 
 # Should normally not be needed but CI have shown weird results
+ensure tmp/cargo/bin/rustup default stable
 ensure tmp/cargo/bin/rustup target add wasm32-unknown-unknown
 
 ostype="$(uname -s)"

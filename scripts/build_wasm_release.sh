@@ -50,6 +50,7 @@ cd ./src/parsers/manifest/dash/wasm-parser
 echo "Building mpd-parser WebAssembly file with Cargo..."
 if $has_local_cargo; then
   echo "⚠️  NOTE  ⚠️ : Relying on local cargo in ./tmp/cargo/bin/cargo"
+  . ../../../../../tmp/cargo/env
   ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release
 else
   cargo build --target wasm32-unknown-unknown --release
