@@ -8,7 +8,7 @@ import type { ICompatHTMLMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
-import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
+// import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
 import CustomMediaKeySystemAccess from "./custom_key_system_access";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor,
@@ -130,13 +130,17 @@ function getEmeApiImplementation(
   let implementation: IEmeApiImplementation["implementation"];
   if (
     (preferredApiType === "standard" ||
-      (preferredApiType === "auto" && !shouldFavourCustomSafariEME())) &&
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    (isNode || !isNullOrUndefined(navigator.requestMediaKeySystemAccess))
+      (preferredApiType === "auto")
+    ) &&
+    (
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      isNode || !isNullOrUndefined(navigator.requestMediaKeySystemAccess)
+    )
   ) {
+    console.info('DEBUG: using modern EME')
     requestMediaKeySystemAccess = (...args) =>
       navigator.requestMediaKeySystemAccess(...args);
-    onEncrypted = createCompatibleEventListener(["encrypted"]);
+    onEncrypted = createCompatibleEventListener(["encrypted", "webkitneedkey"]);
     implementation = "standard";
   } else {
     let isTypeSupported: (keyType: string) => boolean;
