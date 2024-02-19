@@ -7,43 +7,91 @@ const BASE_URL =
   /* eslint-enable no-undef */
   "/DASH_static_SegmentTimeline/media/";
 
-const elt_p1_1 = `<Event presentationTime="50000" duration="30000" id="0">
+const elt_p1_1 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="50000" duration="30000" id="0">
         <data> 5 - 8 </data>
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="50000" duration="30000" id="0">
+        <data> 5 - 8 </data>
+      </Event>`,
+];
 
-const elt_p1_2 = `<Event presentationTime="200000" id="1">
+const elt_p1_2 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="200000" id="1">
         20
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="200000" id="1">
+        20
+      </Event>`,
+];
 
-const elt_p1_3 = `<Event presentationTime="400000" duration="100000" id="2">
+const elt_p1_3 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="400000" duration="100000" id="2">
         40 - 50
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="400000" duration="100000" id="2">
+        40 - 50
+      </Event>`,
+];
 
-const elt_p1_4 = `<Event presentationTime="450000" duration="90000" id="3">
+const elt_p1_4 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="450000" duration="90000" id="3">
         45 - 55
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="450000" duration="90000" id="3">
+        45 - 55
+      </Event>`,
+];
 
-const elt_p2_1 = '<Event id="foo" />';
+const elt_p2_1 = [
+  '<Event xmlns="urn:mpeg:dash:schema:mpd:2011" id="foo" />',
+  '<Event id="foo" />',
+];
 
-const elt_p2_2 = `<Event presentationTime="0" id="bar">
+const elt_p2_2 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="0" id="bar">
         <data>0</data>
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="0" id="bar">
+        <data>0</data>
+      </Event>`,
+];
 
-const elt_p2_3 = `<Event presentationTime="4000" duration="5000" id="0">
+const elt_p2_3 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="4000" duration="5000" id="0">
         <data>4 - 9</data>
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="4000" duration="5000" id="0">
+        <data>4 - 9</data>
+      </Event>`,
+];
 
-const elt_p2_4 = `<Event presentationTime="20000" id="1">
+const elt_p2_4 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="20000" id="1">
         20
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="20000" id="1">
+        20
+      </Event>`,
+];
 
-const elt_p2_5 = `<Event presentationTime="40000" duration="3000" id="2">
+const elt_p2_5 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="40000" duration="3000" id="2">
         40-43
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="40000" duration="3000" id="2">
+        40-43
+      </Event>`,
+];
 
-const elt_p2_6 = `<Event presentationTime="60000" duration="1" id="4">
+const elt_p2_6 = [
+  `<Event xmlns="urn:mpeg:dash:schema:mpd:2011" presentationTime="60000" duration="1" id="4">
         60-60.001
-      </Event>`;
+      </Event>`,
+  `<Event presentationTime="60000" duration="1" id="4">
+        60-60.001
+      </Event>`,
+];
 
 const PERIOD_2_START = 101.568367;
 const PERIOD_2_END = 101.568367 * 2;
