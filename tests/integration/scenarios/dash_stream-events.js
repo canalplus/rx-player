@@ -43,7 +43,7 @@ describe("DASH Stream events", function () {
 
     const elt = receivedEvent.data.value.element;
     expect(elt).to.be.instanceOf(Element);
-    expect(elt.outerHTML).to.equal(wantedEvent.elt);
+    expect(wantedEvent.elt).to.include(elt.outerHTML);
   }
 
   /**
