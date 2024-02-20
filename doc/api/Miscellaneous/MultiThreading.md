@@ -50,32 +50,32 @@ ensure a smooth playback.
 This can be interesting for performance reasons, especially if you encounter one of the
 following situations:
 
--   Your application run on devices on which you can encounter performance issues. Here
-    loading contents in a multithread mode might bring a better experience, such as a more
-    responsive application and less rebuffering.
+- Your application run on devices on which you can encounter performance issues. Here
+  loading contents in a multithread mode might bring a better experience, such as a more
+  responsive application and less rebuffering.
 
-    We also noticed on various smart TV devices targeted by Canal+ noticeably far fewer
-    unexpected media quality drops (and consequently, a much more stable video quality).
-    This is because most of those drops were linked to heavy processing performed by the
-    full application, which has an effect on the RxPlayer's adaptive and networking logic.
+  We also noticed on various smart TV devices targeted by Canal+ noticeably far fewer
+  unexpected media quality drops (and consequently, a much more stable video quality).
+  This is because most of those drops were linked to heavy processing performed by the
+  full application, which has an effect on the RxPlayer's adaptive and networking logic.
 
-    When running in "multithread" mode, performance issues coming from the application
-    will influence much less negatively the RxPlayer code (and vice-versa), as its main
-    logic will run in a separate thread.
+  When running in "multithread" mode, performance issues coming from the application will
+  influence much less negatively the RxPlayer code (and vice-versa), as its main logic
+  will run in a separate thread.
 
--   Your application is very dynamic and you cannot afford to have a big media buffer (for
-    example because you play live contents, because you're playing very high quality
-    content on a device with limited memory or both).
+- Your application is very dynamic and you cannot afford to have a big media buffer (for
+  example because you play live contents, because you're playing very high quality content
+  on a device with limited memory or both).
 
-    Here the issue is that lengthy computations started by your application may prevent
-    temporarily the RxPlayer from loading new media data. If the media buffer is small to
-    begin with, we may be left with playback being frozen if the end of the buffer is
-    reached before the RxPlayer had time to load new media data.
+  Here the issue is that lengthy computations started by your application may prevent
+  temporarily the RxPlayer from loading new media data. If the media buffer is small to
+  begin with, we may be left with playback being frozen if the end of the buffer is
+  reached before the RxPlayer had time to load new media data.
 
-    When running in "multithreading" mode, loading segments (and in browsers supporting
-    the feature, even buffering segments) is perfomed concurrently to any computation
-    linked to your user interface, ensuring that this important buffering operation can
-    run without being blocked.
+  When running in "multithreading" mode, loading segments (and in browsers supporting the
+  feature, even buffering segments) is perfomed concurrently to any computation linked to
+  your user interface, ensuring that this important buffering operation can run without
+  being blocked.
 
 If you do not encounter those situations, the advantages of "multithread" mode may be less
 evident. In any case, you may want to test that mode to see if it is improving your
@@ -113,8 +113,8 @@ import { MULTI_THREAD } from "rx-player/experimental/features";
 // supplementary code used by the `MULTI_THREAD` feature.
 // We could also load them on demand through URLs
 import {
-    EMBEDDED_WORKER, // Code which will run in the "Worker"
-    EMBEDDED_DASH_WASM, // To be able to play DASH contents
+  EMBEDDED_WORKER, // Code which will run in the "Worker"
+  EMBEDDED_DASH_WASM, // To be able to play DASH contents
 } from "rx-player/experimental/features/embeds";
 
 // Add the MULTI_THREAD feature, like any other feature
@@ -126,35 +126,35 @@ const player = new RxPlayer(/* your usual options */);
 // After instantiation, you can at any time "attach" a WebWorker so any
 // following `loadVideo` call can rely on it when possible.
 player
-    .attachWorker({
-        workerUrl: EMBEDDED_WORKER,
-        dashWasmUrl: EMBEDDED_DASH_WASM,
-    })
-    .catch((err) => {
-        console.error("An error arised while initializing the worker", err);
-        // Note the if `attachWorker` rejects, the next `loadVideo` / `reload` calls
-        // will not rely on the "multithread" mode anymore.
-        //
-        // However the last-loaded content may fail on error if it was already
-        // loading in "multithread" mode.
-    });
+  .attachWorker({
+    workerUrl: EMBEDDED_WORKER,
+    dashWasmUrl: EMBEDDED_DASH_WASM,
+  })
+  .catch((err) => {
+    console.error("An error arised while initializing the worker", err);
+    // Note the if `attachWorker` rejects, the next `loadVideo` / `reload` calls
+    // will not rely on the "multithread" mode anymore.
+    //
+    // However the last-loaded content may fail on error if it was already
+    // loading in "multithread" mode.
+  });
 
 // Any further call to `loadVideo` may rely on WebWorker if possible (see
 // limitations below)
 player.loadVideo({
-    /* ... */
+  /* ... */
 });
 
 // As a long as a content is loaded (or even loading or reloading), you can know
 // if we rely on a WebWorker to play it by calling:
 const currentModeInfo = player.getCurrentModeInformation();
 if (currentModeInfo === null) {
-    console.info("No content loaded."); // Note that this may also happen when an
-    // error prevented the content from loading.
+  console.info("No content loaded."); // Note that this may also happen when an
+  // error prevented the content from loading.
 } else if (currentModeInfo.useWorker) {
-    console.info("We're running the RxPlayer's main logic in a WebWorker!");
+  console.info("We're running the RxPlayer's main logic in a WebWorker!");
 } else {
-    console.info("We're running completely in main thread.");
+  console.info("We're running completely in main thread.");
 }
 ```
 
@@ -163,63 +163,63 @@ if (currentModeInfo === null) {
 Note that the `"multithread"` mode will only run on a `loadVideo` call if all the
 following conditions are respected:
 
--   Your supported platforms both are compatible to the `WebWorker` browser feature (the
-    great majority are) and WebAssembly (very old platforms might not).
+- Your supported platforms both are compatible to the `WebWorker` browser feature (the
+  great majority are) and WebAssembly (very old platforms might not).
 
--   You've added the `MULTI_THREAD` feature to the `RxPlayer` class (as shown in examples)
-    before that `loadVideo` call.
+- You've added the `MULTI_THREAD` feature to the `RxPlayer` class (as shown in examples)
+  before that `loadVideo` call.
 
--   You've called the `attachWorker` RxPlayer method (as shown in examples) before the
-    `loadVideo` call on that same RxPlayer instance, and the returned Promise is either
-    still pending or resolved (i.e. it hasn't rejected).
+- You've called the `attachWorker` RxPlayer method (as shown in examples) before the
+  `loadVideo` call on that same RxPlayer instance, and the returned Promise is either
+  still pending or resolved (i.e. it hasn't rejected).
 
--   You're playing a DASH content (through the `"dash"` `transport` option of the
-    `loadVideo` call).
+- You're playing a DASH content (through the `"dash"` `transport` option of the
+  `loadVideo` call).
 
--   You're not using any of those unsupported `loadVideo` options:
+- You're not using any of those unsupported `loadVideo` options:
 
-    -   `manifestLoader`
+  - `manifestLoader`
 
-    -   `segmentLoader`
+  - `segmentLoader`
 
--   If using the `representationFilter` `loadVideo` option is defined, it is under a
-    string form (see
-    [corresponding documentation page](../Loading_a_Content.md#representationfilter).
+- If using the `representationFilter` `loadVideo` option is defined, it is under a string
+  form (see
+  [corresponding documentation page](../Loading_a_Content.md#representationfilter).
 
--   You did not force the `"main"` mode through the
-    [`mode` loadVideo option](../Loading_a_Content.md#mode).
+- You did not force the `"main"` mode through the
+  [`mode` loadVideo option](../Loading_a_Content.md#mode).
 
--   You did not dispose the RxPlayer
+- You did not dispose the RxPlayer
 
 If any of those conditions may not be respected by your application, you might also want
 to be able to rely on the usual "main" mode (which runs everything on main thread).
 
 Thankfully, this is very easy to do:
 
--   If you rely on the minimal build of the RxPlayer, ensure you've added the feature for
-    the wanted streaming protocol(s).
+- If you rely on the minimal build of the RxPlayer, ensure you've added the feature for
+  the wanted streaming protocol(s).
 
-    For example to both be able to play DASH contents on the main thread and through a
-    WebWorker, you may do:
+  For example to both be able to play DASH contents on the main thread and through a
+  WebWorker, you may do:
 
-    ```js
-    import RxPlayer from "rx-player/minimal";
-    import { MULTI_THREAD } from "rx-player/experimental/features";
-    import { DASH } from "rx-player/features";
+  ```js
+  import RxPlayer from "rx-player/minimal";
+  import { MULTI_THREAD } from "rx-player/experimental/features";
+  import { DASH } from "rx-player/features";
 
-    RxPlayer.addFeatures([
-        // Allow DASH playback on the main thread
-        DASH,
+  RxPlayer.addFeatures([
+    // Allow DASH playback on the main thread
+    DASH,
 
-        // Allow DASH playback in "multithread" mode
-        MULTI_THREAD,
-    ]);
+    // Allow DASH playback in "multithread" mode
+    MULTI_THREAD,
+  ]);
 
-    // ...
-    ```
+  // ...
+  ```
 
--   If you rely on the default RxPlayer build, you've nothing special to do, the `DASH`
-    and `SMOOTH` features being already imported by default.
+- If you rely on the default RxPlayer build, you've nothing special to do, the `DASH` and
+  `SMOOTH` features being already imported by default.
 
 Also note that the `addFeatures` call and the `attachWorker` call may be performed in any
 order and at any point in time, even after some contents have already been loaded. This
@@ -233,43 +233,42 @@ have already been played on the main thread.
 The RxPlayer will need to be able to obtain two files to be able to run in multithread
 mode:
 
--   `worker.js`: The "worker" file, which will run in a WebWorker concurrently to your
-    application.
+- `worker.js`: The "worker" file, which will run in a WebWorker concurrently to your
+  application.
 
--   `mpd-parser.wasm`: The DASH WebAssembly parser, today the only supported transport's
-    parser in a "multithread" scenario (Microsoft Smooth streaming, local contents and
-    Metaplaylist are not yet supported).
+- `mpd-parser.wasm`: The DASH WebAssembly parser, today the only supported transport's
+  parser in a "multithread" scenario (Microsoft Smooth streaming, local contents and
+  Metaplaylist are not yet supported).
 
 You can find them at any of the following places:
 
--   The easiest way is to just import in your application the "embedded" versions of each
-    of them, exported through the `"rx-player/experimental/features/embeds"` path:
+- The easiest way is to just import in your application the "embedded" versions of each of
+  them, exported through the `"rx-player/experimental/features/embeds"` path:
 
-    ```js
-    import {
-        EMBEDDED_WORKER, // "embedded" version of the `worker.js` file
-        EMBEDDED_DASH_WASM, // "embedded" version of the `mpd-parser.wasm` file
-    } from "rx-player/experimental/features/embeds";
-    ```
+  ```js
+  import {
+    EMBEDDED_WORKER, // "embedded" version of the `worker.js` file
+    EMBEDDED_DASH_WASM, // "embedded" version of the `mpd-parser.wasm` file
+  } from "rx-player/experimental/features/embeds";
+  ```
 
-    This allows to bypass the need to store and serve separately those two files. Note
-    however that including those "embeds" in your application may sensibly increase its
-    size.
+  This allows to bypass the need to store and serve separately those two files. Note
+  however that including those "embeds" in your application may sensibly increase its
+  size.
 
-    If you would prefer more control and a smaller bundle size, you may instead consider
-    the other following ways to load those as separate files. This will lead to smaller
-    file sizes and they will only be loaded on demand, but at a maintenance cost: you'll
-    have to store and serve those files yourself as well as not forget to update them each
-    time you update the RxPlayer.
+  If you would prefer more control and a smaller bundle size, you may instead consider the
+  other following ways to load those as separate files. This will lead to smaller file
+  sizes and they will only be loaded on demand, but at a maintenance cost: you'll have to
+  store and serve those files yourself as well as not forget to update them each time you
+  update the RxPlayer.
 
--   With every release note published on GitHub (you should only use the files linked to
-    the RxPlayer's version you're using), as `worker.js` and `mpd-parser.wasm`
-    respectively.
+- With every release note published on GitHub (you should only use the files linked to the
+  RxPlayer's version you're using), as `worker.js` and `mpd-parser.wasm` respectively.
 
--   They are also available as respectively as `dist/worker.js` and `dist/mpd-parser.wasm`
-    from the root directory of the project published on npm. As such, they might already
-    be found in your project's directory, for example in the `node_modules` directory
-    (most probably in `node_modules/rx-player/dist/` depending on your project).
+- They are also available as respectively as `dist/worker.js` and `dist/mpd-parser.wasm`
+  from the root directory of the project published on npm. As such, they might already be
+  found in your project's directory, for example in the `node_modules` directory (most
+  probably in `node_modules/rx-player/dist/` depending on your project).
 
 Once you've retrieved those files and unless you relied on the embedded versions, you will
 need to store them and give its URL to the RxPlayer so it will be able to load them
@@ -304,17 +303,17 @@ version - to it:
 
 ```js
 const player = new RxPlayer({
-    /* ... */
+  /* ... */
 });
 player
-    .attachWorker({
-        workerUrl: URL_TO_WORKER_FILE,
-        dashWasmUrl: URL_TO_DASH_WASM_FILE,
-    })
-    .then(() => console.log("Worker succesfully attached!"))
-    .catch((err) => {
-        console.error("An error arised while initializing the worker", err);
-    });
+  .attachWorker({
+    workerUrl: URL_TO_WORKER_FILE,
+    dashWasmUrl: URL_TO_DASH_WASM_FILE,
+  })
+  .then(() => console.log("Worker succesfully attached!"))
+  .catch((err) => {
+    console.error("An error arised while initializing the worker", err);
+  });
 ```
 
 As you can see, `attachWorker` returns a Promise resolving once the Worker attachment
@@ -336,22 +335,22 @@ loading a content:
 
 ```js
 const player = new RxPlayer({
-    /* ... */
+  /* ... */
 });
 try {
-    await player.attachWorker({
-        workerUrl: URL_TO_WORKER_FILE,
-        dashWasmUrl: URL_TO_DASH_WASM_FILE,
-    });
-    console.log("Worker succesfully attached!");
+  await player.attachWorker({
+    workerUrl: URL_TO_WORKER_FILE,
+    dashWasmUrl: URL_TO_DASH_WASM_FILE,
+  });
+  console.log("Worker succesfully attached!");
 } catch (err) {
-    console.warn("An error arised while initializing the Worker", err);
+  console.warn("An error arised while initializing the Worker", err);
 }
 
 // This loaded content may only load in "multithread" mode if `attachWorker`
 // succeeded
 player.loadVideo({
-    /* ... */
+  /* ... */
 });
 ```
 
@@ -370,11 +369,11 @@ mode) or not ("main" mode), by calling the
 ```js
 const currentModeInfo = player.getCurrentModeInformation();
 if (currentModeInfo === null) {
-    console.info("No content loaded."); // Note that this may also happen when an
-    // error prevented the content from loading.
+  console.info("No content loaded."); // Note that this may also happen when an
+  // error prevented the content from loading.
 } else if (currentModeInfo.useWorker) {
-    console.info("We're running the RxPlayer's main logic in a WebWorker!");
+  console.info("We're running the RxPlayer's main logic in a WebWorker!");
 } else {
-    console.info("We're running completely in main thread.");
+  console.info("We're running completely in main thread.");
 }
 ```
