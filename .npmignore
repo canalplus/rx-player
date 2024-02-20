@@ -1,9 +1,8 @@
 /*.keys
 /*.log
 /.eslintignore
-/.eslintrc
 /.scannerwork
-/.sonar-project.properties
+/sonar-project.properties
 /localhost.crt
 /localhost.key
 /.travis.yml
@@ -22,4 +21,17 @@
 /dist/_esm5.raw
 
 /doc
-/src/parsers/manifest/dash/wasm-parser/target
+/src
+/.github
+/scripts
+
+/FILES.md
+/CONTRIBUTING.md
+/MAINTAINERS.md
+
+# tools config
+/.editorconfig
+/.eslintrc*
+/jest.config.js
+/tsconfig*.json
+/webpack.config.mjs
