@@ -157,6 +157,7 @@
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/full",
     "clean:build": "rimraf dist",
+    "clean:wasm": "rimraf dist/mpd-parser.wasm && rimraf ./src/parsers/manifest/dash/wasm-parser/target",
     "demo": "node ./scripts/build_demo.mjs --production-mode",
     "demo:min": "node ./scripts/build_demo.mjs --production-mode --minify",
     "demo:watch": "node ./scripts/build_demo.mjs --watch --production-mode",
