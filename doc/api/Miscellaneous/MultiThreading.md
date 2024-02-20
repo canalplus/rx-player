@@ -235,15 +235,10 @@ You can find it at any of the following places:
   import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
   ```
 
-  This allows to bypass the need to store and serve separately those two files. Note
-  however that including those "embeds" in your application may sensibly increase its
-  size. This allows to bypass the need to store and serve separately those two files.
+  This allows to bypass the need to store and serve separately that file.
 
-If you would prefer more control and a smaller bundle size, you may instead consider the
-other following ways to load those as separate files. This will lead to smaller file sizes
-and they will only be loaded on demand, but at a maintenance cost: you'll have to store
-and serve those files yourself as well as not forget to update them each time you update
-the RxPlayer.
+  If you would prefer more control and a smaller bundle size, you may instead consider the
+  other following ways to it as a separate file.
 
 - With every release note published on GitHub as `worker.js` (you should only use the file
   linked to the RxPlayer's version you're using),
