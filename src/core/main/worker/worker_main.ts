@@ -96,22 +96,11 @@ export default function initializeWorkerMain() {
         const diffWorker = Date.now() - performance.now();
         mainThreadTimestampDiff.setValueIfChanged(diffWorker - diffMain);
         updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
-        if (msg.value.dashWasmUrl !== undefined) {
-          dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).then(
-            () => {
-              sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
-            },
-            (err) => {
-              const error = err instanceof Error ? err.toString() : "Unknown Error";
-              log.error("Worker: Could not initialize DASH_WASM parser", error);
-              sendMessage({
-                type: WorkerMessageType.InitError,
-                value: { errorMessage: error, kind: "dashWasmInitialization" },
-              });
-            },
-          );
-        } else {
-          sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+        if (msg.value.dashWasmUrl !== undefined && dashWasmParser.isCompatible()) {
+          dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
+            const error = err instanceof Error ? err.toString() : "Unknown Error";
+            log.error("Worker: Could not initialize DASH_WASM parser", error);
+          });
         }
 
         if (!msg.value.hasVideo || msg.value.hasMseInWorker) {
@@ -125,6 +114,8 @@ export default function initializeWorkerMain() {
         features.codecSupportProber = msg.value.hasMseInWorker
           ? MainCodecSupportProber
           : WorkerCodecSupportProber;
+
+        sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
         break;
 
       case MainThreadMessageType.LogLevelUpdate:
