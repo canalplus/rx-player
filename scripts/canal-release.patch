@@ -1,12 +1,12 @@
 diff --git a/src/parsers/texttracks/ttml/html/apply_extent.ts b/src/parsers/texttracks/ttml/html/apply_extent.ts
-index 5772fa8fb..eb3a051e4 100644
+index aa173eee7..4887c11dc 100644
 --- a/src/parsers/texttracks/ttml/html/apply_extent.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_extent.ts
-@@ -54,7 +54,14 @@ export default function applyExtent(
-         secondExtent[2] === "%" ||
-         secondExtent[2] === "em")
-     {
--      element.style.height = secondExtent[1] + secondExtent[2];
+@@ -36,7 +36,14 @@ export default function applyExtent(element: HTMLElement, extent: string): void
+   const secondExtent = REGXP_LENGTH.exec(splittedExtent[1]);
+   if (firstExtent !== null && secondExtent !== null) {
+     if (firstExtent[2] === "px" || firstExtent[2] === "%" || firstExtent[2] === "em") {
+-      element.style.width = firstExtent[1] + firstExtent[2];
 +      const toNum = Number(secondExtent[1]);
 +      if (secondExtent[2] === "%" && !isNaN(toNum) &&
 +          (toNum < 0 || toNum > 100))
@@ -15,18 +15,18 @@ index 5772fa8fb..eb3a051e4 100644
 +      } else {
 +        element.style.height = secondExtent[1] + secondExtent[2];
 +      }
-     } else if (secondExtent[2] === "c") {
+     } else if (firstExtent[2] === "c") {
        addClassName(element, "proportional-style");
-       element.setAttribute("data-proportional-height", secondExtent[1]);
+       element.setAttribute("data-proportional-width", firstExtent[1]);
 diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-index 4f727229a..253aa1a72 100644
+index 63c98bbfc..92a8796e0 100644
 --- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-@@ -14,16 +14,15 @@
+@@ -14,15 +14,14 @@
   * limitations under the License.
   */
  
--import { addClassName } from "../../../../compat/add_class_name";
+-import addClassName from "../../../../compat/add_class_name";
  import log from "../../../../log";
  import { REGXP_LENGTH } from "../regexps";
  
@@ -35,16 +35,15 @@ index 4f727229a..253aa1a72 100644
 + * @param {HTMLElement} _element
   * @param {string} lineHeight
   */
- export default function applyLineHeight(
--  element : HTMLElement,
-+  _element : HTMLElement,
-   lineHeight : string
- ) : void {
+-export default function applyLineHeight(element: HTMLElement, lineHeight: string): void {
++export default function applyLineHeight(_element: HTMLElement, lineHeight: string): void {
    const trimmedLineHeight = lineHeight.trim();
-@@ -40,10 +39,10 @@ export default function applyLineHeight(
-       firstLineHeight[2] === "%" ||
-       firstLineHeight[2] === "em")
-   {
+   const splittedLineHeight = trimmedLineHeight.split(" ");
+ 
+@@ -38,10 +37,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
+     firstLineHeight[2] === "%" ||
+     firstLineHeight[2] === "em"
+   ) {
 -    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
 +    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
    } else if (firstLineHeight[2] === "c") {
@@ -56,13 +55,13 @@ index 4f727229a..253aa1a72 100644
      log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
    }
 diff --git a/src/parsers/texttracks/ttml/html/apply_origin.ts b/src/parsers/texttracks/ttml/html/apply_origin.ts
-index 01a205aad..91d69fa3c 100644
+index 856449c2f..b924ed248 100644
 --- a/src/parsers/texttracks/ttml/html/apply_origin.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_origin.ts
-@@ -53,7 +53,15 @@ export default function applyOrigin(
-         secondOrigin[2] === "%" ||
-         secondOrigin[2] === "em")
-     {
+@@ -44,7 +44,15 @@ export default function applyOrigin(element: HTMLElement, origin: string): void
+     }
+ 
+     if (secondOrigin[2] === "px" || secondOrigin[2] === "%" || secondOrigin[2] === "em") {
 -      element.style.top = secondOrigin[1] + secondOrigin[2];
 +      const toNum = Number(secondOrigin[1]);
 +      if (secondOrigin[2] === "%" && !isNaN(toNum) &&
