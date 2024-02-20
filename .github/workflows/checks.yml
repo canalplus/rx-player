@@ -5,7 +5,7 @@ name: RxPlayer Tests
 
 on:
   push:
-    branches: [ master, next ]
+    branches: [legacy-v3]
   pull_request:
     types: [opened, synchronize, reopened]
 

@@ -8,7 +8,7 @@
 #
 # To use it:
 #
-#   1. Be sure that you're on a clean (no staged files and no diff) master
+#   1. Be sure that you're on a clean (no staged files and no diff) legacy-v3
 #      branch.
 #
 #   2. Call this script.
@@ -22,9 +22,9 @@ set -e
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version=$(cat VERSION)
 
-if ! [ "$current_branch" == "master" ]; then
+if ! [ "$current_branch" == "legacy-v3" ]; then
   echo $current_branch
-  echo "ERROR: The current branch should be master"
+  echo "ERROR: The current branch should be legacy-v3"
   exit 1;
 fi
 
@@ -32,7 +32,7 @@ fi
 npm run doc
 
 if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Please commit your modifications to master"
+  echo "ERROR: Please commit your modifications to legacy-v3"
   exit 1;
 fi
 
@@ -50,7 +50,6 @@ rm -rf "versions/$current_version/doc"
 mkdir -p "versions/$current_version/doc"
 rm -rf doc
 mv $tmpDir/* "versions/$current_version/doc"
-ln -s "./versions/$current_version/doc" doc
 mv $tmpDocList  generate_documentation_list.js
 
 node generate_documentation_list.js
@@ -103,4 +102,4 @@ else
   echo "nothing to do on the gh-pages branch"
 fi
 
-git checkout master
+git checkout legacy-v3

@@ -119,54 +119,52 @@ The RxPlayer has several types of releases:
 Before each official releases, a list of steps are performed by its maintainers:
 
 1. Checkout the branch that will be the base of the next release: generally it
-   is either `master` (for patch releases) or `next` (for minor versions).
+   is `legacy-v3` (for v3 releases)
 
-2. Rebase that branch on the `master` branch if it is a different branch
-   (e.g.: `git rebase master --rebase-merges`).
-
-3. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the
+2. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the
    semver of the wanted new version.
 
-4. Update `CHANGELOG.md` file to add this new version's changelog and commit it.
+3. Update `CHANGELOG.md` file to add this new version's changelog and commit it.
 
-5. Call the npm script `update-version` for that release (`npm run update-version XX.XX.XX`,
+4. Call the npm script `update-version` for that release (`npm run update-version XX.XX.XX`,
    where XX.XX.XX is the wanted new version SEMVER).
 
-6. Check that the modifications it did make sense and create a signed commit
+5. Check that the modifications it did make sense and create a signed commit
    (`-S` option when commiting with git) updating the staged built files in step
    `8`.
 
-7. Open a Pull Request on Github, named after the branch, putting the release's
+6. Open a Pull Request on Github, named after the branch, putting the release's
    changelog in the Pull Request's comment, and optional additional comments.
 
-8. Check that sonarcloud validated that branch. Resolve every bug and code
+7. Check that sonarcloud validated that branch. Resolve every bug and code
    smells it finds.
 
-9. Ensure that the CI doesn't detect any issue and fix them if that's the case.
+8. Ensure that the CI doesn't detect any issue and fix them if that's the case.
 
-10. Run sanity checks on myCanal's repository, by using this new version instead
-    as a dependency.
+9. Run sanity checks on myCanal's repository, by using this new version instead
+   as a dependency.
 
-11. If and only if no problem was seen perform a signed merge without
+10. If and only if no problem was seen perform a signed merge without
     fast-forward of the release branch into master (`git merge -S --no-ff release/vXX.XX.XX master`)
 
-12. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
+11. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
 
-13. Launch script to update the gh-pages doc (`./scripts/update_gh-pages_doc`)
+12. Launch script to update the gh-pages doc (`./scripts/update_gh-pages_doc`)
 
-14. Check that both of those worked, perform manual updates and update the
+13. Check that both of those worked, perform manual updates and update the
     concerned scripts in other cases.
 
-15. Check that the new demo and the new doc work as expected
+14. Check that the new demo and the new doc work as expected
 
-16. If all seems good, push to origin/master your local master branch.
+15. If all seems good, push to origin/master your local master branch.
 
-17. run `npm publish` to publish the new version on npm's registry.
+16. run `npm publish --tag legacy-v3` to publish the new version on npm's
+    registry with the `legacy-v3` tag.
 
-18. Test that importing this new version doesn't cause bundling issues (you
+17. Test that importing this new version doesn't cause bundling issues (you
     may do so through a ad-hoc package, or just myCanal for example).
 
-19. Create the new release through github's interface - don't forget to include
+18. Create the new release through github's interface - don't forget to include
     the built files on it.
 
 If any of the testing steps failed (after step `3`), run the following steps:
