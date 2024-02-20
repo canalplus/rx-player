@@ -125,7 +125,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
             );
           }
 
-          if (pos + 1) {
+          if (pos !== -1) {
             pos += 1;
           }
 
@@ -139,8 +139,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
               !(
                 src.charCodeAt(pos) === closeBracketCC &&
                 src.charCodeAt(pos - 1) === minusCC &&
-                src.charCodeAt(pos - 2) === minusCC &&
-                pos !== -1
+                src.charCodeAt(pos - 2) === minusCC
               )
             ) {
               pos = src.indexOf(closeBracket, pos + 1);
