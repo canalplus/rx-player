@@ -230,7 +230,7 @@ function exitFullscreen() {
 
 `getImageTrackData` has been deprecated like most API related to BIF thumbnail
 parsing.
-You can read [the related chapter](#bif-apis) for more information.
+You can read [the related chapter](#image-bif-apis) for more information.
 
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
@@ -403,7 +403,7 @@ mediaElement.addEventListener("fullscreenChange", () => {
 
 `imageTrackUpdate` events have been deprecated like most API related to BIF
 thumbnail parsing.
-You can read [the related chapter](#bif-apis) for more information.
+You can read [the related chapter](#image-bif-apis) for more information.
 
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.
@@ -414,8 +414,8 @@ The following loadVideo options are deprecated.
 
 ### defaultAudioTrack
 
-[The `preferredAudioTracks` loadVideo
-option](../Loading_a_Content.md#preferredaudiotracks) is now the preferred
+[The `preferredAudioTracks` constructor
+option](../Creating_a_Player.md#preferredaudiotracks) is now the preferred
 (no pun intended) solution to set the default audio track.
 This new option allows to handle much more complex use cases and can even be
 updated at any time through [the `setPreferredAudioTracks`
@@ -456,7 +456,7 @@ player.setPreferredAudioTracks([{ language: "fra", audioDescription: false }]);
 ### defaultTextTrack
 
 `defaultTextTrack` is replaced by [the `preferredTextTracks` constructor
-option](../Loading_a_Content.md#preferredtexttracks) for the same reason
+option](../Creating_a_Player.md#preferredtexttracks) for the same reason
 than `defaultAudioTrack`.
 
 #### How to replace that option
@@ -543,7 +543,7 @@ The `TextTrackRenderer` tool is documented [here](../Tools/TextTrackRenderer.md)
 
 The `supplementaryImageTracks` events have been deprecated like most API related
 to BIF thumbnail parsing.
-You can read [the related chapter](#bif-apis) for more information.
+You can read [the related chapter](#image-bif-apis) for more information.
 
 You can replace this API by using the
 [parseBifThumbnails](../Tools/parseBifThumbnails.md) tool.

@@ -15,7 +15,7 @@ loaded. The returned object will have at most a key for each type ("video",
 Objects.
 
 The Representation object structure is relatively complex and is described in the
-[Manifest Object structure page](../Miscellaneous/Manifest_Object.md#structure_of_a_representation).
+[Manifest Object structure page](../Miscellaneous/Manifest_Object.md#structure-of-a-representation-object).
 
 `null` if the current Representations are not known yet.
 

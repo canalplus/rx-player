@@ -499,7 +499,7 @@ considered stable:
   added/substracted to unix time. However we consider those situations rare enough
   (and the effect should be relatively weak) to let this as is for the moment. For
   a complete explanation, you can look at the [corresponding chapter of the
-  low-latency documentation](./Miscellaneous/Low_Latency.md#note-time-sync).
+  low-latency documentation](./Miscellaneous/Low_Latency.md#note-about-time-synchronization).
 
 - **referenceDateTime** (`number|undefined`):
 
@@ -941,7 +941,7 @@ rx-player add to it.
 This has an effect only if:
 
 - the current `textTrackMode` is equal to `"native"` (see [textTrackMode
-  option](#textTrackmode))
+  option](#texttrackmode))
 
 - a text track is currently active
 

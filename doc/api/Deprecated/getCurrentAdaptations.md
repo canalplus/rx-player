@@ -15,7 +15,7 @@ loaded. The returned object will have at most a key for each type ("video",
 Objects.
 
 The Adaptation object structure is relatively complex and is described in the
-[Manifest Object structure page](../Miscellaneous/Manifest_Object.md#structure_of_an_adaptation).
+[Manifest Object structure page](../Miscellaneous/Manifest_Object.md#structure-of-an-adaptation-object).
 
 `null` if the current Adaptations are not known yet.
 

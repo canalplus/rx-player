@@ -126,15 +126,15 @@ As you can see, this function takes two arguments:
          More information on its structure can be found on the documentation
          linked below [5].
 
-     [1] [Manifest structure](./Manifest_Object.md#manifest)
+     [1] [Manifest structure](./Manifest_Object.md#structure-of-a-manifest-object)
 
-     [2] [Period structure](./Manifest_Object.md#period)
+     [2] [Period structure](./Manifest_Object.md#structure-of-a-period-object)
 
-     [3] [Adaptation structure](./Manifest_Object.md#adaptation)
+     [3] [Adaptation structure](./Manifest_Object.md#structure-of-an-adaptation-object)
 
-     [4] [Representation structure](./Manifest_Object.md#representation)
+     [4] [Representation structure](./Manifest_Object.md#structure-of-a-representation-object)
 
-     [5] [Segment structure](./Manifest_Object.md#segment)
+     [5] [Segment structure](./Manifest_Object.md#structure-of-a-segment-object)
 
   2. **callbacks**: An object containing multiple callbacks to allow this
      `segmentLoader` to communicate various events to the RxPlayer.
@@ -402,7 +402,7 @@ The representationFilter will be called each time we load a
 
 - representation `{Representation}`: The concerned `Representation`.
   A `Representation` structure's is described [in the Manifest structure
-  documentation](./Manifest_Object.md#representation).
+  documentation](./Manifest_Object.md#structure-of-a-representation-object).
 
 - representationInfos `{Object}`: Basic information about this
   `Representation`. Contains the following keys:
@@ -460,4 +460,4 @@ function representationFilter(representation, infos) {
 }
 ```
 
-[1] [Representation structure](./Manifest_Object.md#representation)
+[1] [Representation structure](./Manifest_Object.md#structure-of-a-representation-object)

@@ -45,7 +45,7 @@
     "demo": "node ./scripts/generate_full_demo.js --production-mode",
     "demo:min": "node ./scripts/generate_full_demo.js --production-mode --minify",
     "demo:watch": "node ./scripts/generate_full_demo.js --watch --production-mode",
-    "doc": "readme.doc doc/ doc/generated \"$(cat VERSION)\"",
+    "doc": "readme.doc --clean --input doc/ --output doc/generated -p \"$(cat VERSION)\"",
     "lint": "eslint src -c .eslintrc.js",
     "lint:demo": "eslint -c demo/full/.eslintrc.js demo/full/scripts",
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
@@ -85,7 +85,7 @@
     "@babel/plugin-transform-runtime": "7.22.15",
     "@babel/preset-env": "7.22.20",
     "@babel/preset-react": "7.22.15",
-    "@canalplus/readme.doc": "^0.3.0",
+    "@canalplus/readme.doc": "^0.5.0",
     "@types/chai": "4.3.6",
     "@types/jest": "29.5.5",
     "@types/mocha": "10.0.1",
@@ -199,8 +199,7 @@
     "Build the documentation pages": {
       "doc": "Generate the HTML documentation in doc/generated/pages"
     },
-    "Update the RxPlayer's version": {
-    },
+    "Update the RxPlayer's version": {},
     "Make a release": {
       "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) with the code in the current branch",
       "update-version": "Update the version to the string given in argument (example: `npm run update-version 3.8.0`). Will update the codebase and perform every builds."

@@ -86,7 +86,8 @@ console.log(manifest.adaptations);
 console.log(manifest.periods[0].adaptations);
 ```
 
-See [the Period chapter](#period-props) for more information on Adaptations.
+See [the Period chapter](#structure-of-a-period-object) for more information on
+Periods.
 
 #### isLive
 
@@ -148,11 +149,11 @@ it is the current last content of the current Manifest.
 
 _type_: `Object`
 
-The [Adaptations](../../Getting_Started/Glossary.md#adaptation) (tracks if you want) for the current
-content, per-type (audio/video/text/image).
+The [Adaptations](../../Getting_Started/Glossary.md#adaptation) (tracks if you
+want) for the current content, per-type (audio/video/text/image).
 
-See [the Adaptation chapter](#adaptation) for more info about an Adaptation's
-structure.
+See [the Adaptation chapter](#structure-of-an-adaptation-object) for more info
+about an Adaptation's structure.
 
 The Adaptation object _can_ contain any of the following keys:
 
@@ -163,8 +164,9 @@ The Adaptation object _can_ contain any of the following keys:
 
 ## Structure of an Adaptation Object
 
-An [Adaptation](../../Getting_Started/Glossary.md#adaptation) is a set of streams representing the
-exact same contents in multiple forms (different sizes, different bitrates...).
+An [Adaptation](../../Getting_Started/Glossary.md#adaptation) is a set of
+streams representing the exact same contents in multiple forms (different
+sizes, different bitrates...).
 Concretely, a frequent usecase is to have a single video Adaptation and multiple
 audio ones, one for each language available.
 
@@ -235,10 +237,11 @@ if the user start the trick mode on the respective main adaptation.
 
 _type_: `Array.<Representation>`
 
-The [Represesentations](../../Getting_Started/Glossary.md#representation) for this Adaptation.
+The [Represesentations](../../Getting_Started/Glossary.md#representation) for
+this Adaptation.
 
-See [the Representation chapter](#representation) for more info about a
-Representation's structure.
+See [the Representation chapter](#structure-of-a-representation-object) for
+more info about a Representation's structure.
 
 ### methods
 
@@ -251,9 +254,10 @@ Returns every bitrates available for this Adaptation.
 ## Structure of a Representation Object
 
 A [Representation](../../Getting_Started/Glossary.md#representation) is an
-[Adaptation](../../Getting_Started/Glossary.md#adaptation) encoded in a certain way. It is defined by
-multiple values (a codec, a bitrate). Only some of them are documented here (as
-stated before, open an issue if you would like to access other properties).
+[Adaptation](../../Getting_Started/Glossary.md#adaptation) encoded in a
+certain way. It is defined by multiple values (a codec, a bitrate).
+Only some of them are documented here (as stated before, open an issue if
+you would like to access other properties).
 
 ### properties
 
@@ -308,7 +312,7 @@ _type_: `RepresentationIndex`
 
 The represesentation index for this Representation.
 
-See [the RepresentationIndex chapter](#representation-index) for more info about
+See [the RepresentationIndex chapter](#structure-of-a-representationindex-object) for more info about
 a RepresentationIndex's structure.
 
 #### frameRate
@@ -350,7 +354,7 @@ _return value_: `Array.<Segment>`
 Returns the needed segments as defined by the current Manifest during an asked
 timeframe.
 
-See [the Segment chapter](#segment) for more info about a Segment's structure.
+See [the Segment chapter](#structure-of-a-segment-object) for more info about a Segment's structure.
 
 ## Structure of a Segment Object
 

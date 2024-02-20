@@ -102,7 +102,7 @@ APIs</a>).
 ### MEDIA_ERROR
 
 Error related to the media itself. It can both come from the player itself
-([Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object)
+([Manifest](../Getting_Started/Glossary.md#manifest)
 parsing) or from the browser itself (content playback).
 
 They all have a `type` property equal to `"MEDIA_ERROR"`.
@@ -143,7 +143,7 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
   linked to that codec by inspecting the error's `trackInfo` property, described below.
 
 - `"MANIFEST_PARSE_ERROR"`: Generic error to signal than the
-  [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object) could not be parsed.
+  [Manifest](../Getting_Started/Glossary.md#manifest) could not be parsed.
 
 - `"MANIFEST_UNSUPPORTED_ADAPTATION_TYPE"`: One of the
   [Adaptation](../Getting_Started/Glossary.md#adaptation) has a type (e.g. "audio", "text" or
@@ -194,13 +194,13 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
 
 - `"MEDIA_TIME_BEFORE_MANIFEST"`: The current time in the media is behind
   what is currently declared in the
-  [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object).
+  [Manifest](../Getting_Started/Glossary.md#manifest).
   This can lead to stalling indefinitely as the player won't be able to
   download new segments arround the current time.
 
 - `"MEDIA_TIME_AFTER_MANIFEST"`: The current time in the media is after what
   is currently declared in the
-  [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object).
+  [Manifest](../Getting_Started/Glossary.md#manifest).
   This can lead to stalling indefinitely as the player won't be able to
   download new segments arround the current time.
 
@@ -480,12 +480,12 @@ They all have a `type` property equal to `"OTHER_ERROR"`.
 An error of `type` `OTHER_ERROR` can have the following codes (`code` property):
 
 - `"PIPELINE_LOAD_ERROR"`: The
-  [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object) or segment
+  [Manifest](../Getting_Started/Glossary.md#manifest) or segment
   request failed and the request has been done through a given callback (i.e.
   not the RxPlayer's XMLHttpRequest implementation).
 
 - `"PIPELINE_PARSE_ERROR"`: The RxPlayer's
-  [Manifest](../Getting_Started/Glossary.md#structure_of_a_manifest_object)
+  [Manifest](../Getting_Started/Glossary.md#manifest)
   or segment parsing logic failed. This is most likely due to a malformed
   Manifest or segment.
 

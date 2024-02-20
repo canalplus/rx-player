@@ -82,12 +82,12 @@ Example of such types are:
 ### Chunk
 
 Depending on the context, a chunk can be either a sub-part of a [Media
-Segment](#media_segment) or the Media segment itself.
+Segment](#media-segment) or the Media segment itself.
 
 ### Initialization segment
 
 An initialization segment is a specific type of [media
-segment](#media_segment), which includes metadata necessary to initialize the
+segment](#media-segment), which includes metadata necessary to initialize the
 browser's internal decoder.
 
 Those are sometimes needed before we can actually begin to push any "real" media

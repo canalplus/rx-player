@@ -531,7 +531,7 @@ _payload type_: `Object`
 Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen changes.
 
 The payload is the corresponding Period. See [the Manifest
-documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)
+documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-period-object)
 for more information.
 
 <div class="warning">
@@ -569,15 +569,15 @@ Each of those objects have the following properties:
 
 - `representation`: The Representation concerned (more information on its
   structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_representation_object)).
+  documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-representation-object)).
 - `adaptation`: The Adaptation linked to that Representation (more information
   on its structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_an_adaptation_object)).
+  documentation](./Miscellaneous/Manifest_Object.md#structure-of-an-adaptation-object)).
 - `period`: The Period linked to that Representation (more information on its
   structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_period_object)).
+  documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-period-object)).
 - `manifest`: The current Manifest (more information on its structure [in the
-  Manifest documentation](./Miscellaneous/Manifest_Object.md#structure_of_a_manifest_object)).
+  Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-manifest-object)).
 
 You can then know if any of those Representations are becoming decipherable or
 not through their `decipherable` property.
@@ -765,3 +765,10 @@ a single `<track>` when a text track is set.
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
+
+
+### volumeChange
+
+_payload type_: `number`
+
+Notify about a change of audio volume, with the corresponding volume as a payload.

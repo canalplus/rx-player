@@ -53,7 +53,7 @@ rxPlayer.loadVideo({
 ```
 
 More infos on the `manifestLoader` can be found
-[here](./plugins.md#manifestLoader).
+[here](./plugins.md#manifestloader).
 
 ## How to import this feature
 

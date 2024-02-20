@@ -17,7 +17,7 @@ properties, methods, events and so on.
 
 ## Constructor options
 
-  - [`videoElement`](../api/Creating_a_Player.md#videoElement): specifies the
+  - [`videoElement`](../api/Creating_a_Player.md#videoelement): specifies the
     media element on which the content will play.
 
   - [`initialVideoBitrate`](../api/Creating_a_Player.md#initialvideobitrate):
@@ -82,7 +82,7 @@ properties, methods, events and so on.
   - [`url`](../api/Loading_a_Content.md#url): URL to the content (e.g. DASH's
     MPD, Smooth's Manifest etc.)
 
-  - [`keySystems`](../api/Decryption_Options.md#loadvideo_%60keysystems%60_options):
+  - [`keySystems`](../api/Decryption_Options.md#loadvideo-keysystems-options):
     DRM configuration for the content.
 
     - [`keySystems[].type`](../api/Decryption_Options.md#type): Name of the
@@ -232,7 +232,7 @@ properties, methods, events and so on.
   - [`supplementaryTextTracks`](../api/Loading_a_Content.md#supplementarytexttracks):
     [Deprecated] Add supplementary tracks in the content for text.
 
-  - [`defaultAudioTrack`](../api/Loading_a_Content.md#defaultaudioTrack):
+  - [`defaultAudioTrack`](../api/Loading_a_Content.md#defaultaudiotrack):
     [Deprecated] Default characteristics wanted for the audio track.
 
   - [`defaultTextTrack`](../api/Loading_a_Content.md#defaulttexttrack):

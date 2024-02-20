@@ -128,7 +128,7 @@ If this callback throws or rejects, the RxPlayer will either:
 
     If we have no Representation to fallback to anymore, we will throw a
     MediaError with a `NO_PLAYABLE_REPRESENTATION` code, as documented [in
-    the errors documentation](./Player_Errors.md#types-media_error).
+    the errors documentation](./Player_Errors.md#media_error).
 
 If the `getLicense` call throws/rejects, you can add any of the following
 properties (none are mandatory) to configure the behavior of the RxPlayer
@@ -163,7 +163,7 @@ relative to that failure:
     Representations (e.g. qualities) which might have a different decryption
     key. If no Representation is left, we will throw a MediaError with a
     `NO_PLAYABLE_REPRESENTATION` code, as documented [in the errors
-    documentation](./Player_Errors.md#types-media_error).
+    documentation](./Player_Errors.md#media_error).
 
     You will receive a `decipherabilityUpdate` event when the RxPlayer
     fallbacks from any Representation. You can find documentation on this
@@ -424,6 +424,47 @@ session state).
 
 This is very rarely needed.
 
+### fallbackOn
+
+`fallbackOn` allows to configure the RxPlayer behavior to fallback on different
+qualities when a decryption key becomes unusable
+
+There is two possible sub-properties in it:
+
+- `keyInternalError`: fallback when the corresponding key has the
+  [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+  `"internal-error"`. We found that most widevine implementation use
+  this error when a key is refused.
+- `keyOutputRestricted`: fallback when the corresponding key has the
+  [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+  `"output-restricted"`. This is the proper status for a key refused due
+  to output restrictions.
+
+Both are booleans, and for the moment we recommend to set both to true in most
+cases if your content relies on multiple keys depending on the quality.
+
+For people on embedded devices with specific key systems, you can look a little
+more into what [MediaKeyStatus](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
+is set when a key is refused, and just set one of both.
+
+Here is an example:
+
+```js
+rxPlayer.loadVideo({
+  url: MANIFEST_URL,
+  transport: "dash",
+  keySystems: [
+    {
+      type: "widevine",
+      getLicense,
+      fallbackOn: {
+        keyInternalError: true,
+        keyOutputRestricted: true,
+      },
+    },
+  ],
+});
+```
 
 ### onKeyExpiration
 
@@ -440,7 +481,7 @@ the default one if not is defined being `"error"`:
     This is the default behavior.
 
     The error emiited in that case should be an
-    [EncryptedMediaError](./Player_Errors.md#encryptedmediaerror) with a
+    [EncryptedMediaError](./Player_Errors.md#encrypted_media_error) with a
     `KEY_STATUS_CHANGE_ERROR` `code` property with a set `keyStatuses`
     property containing at least one string set to `"expired"`.
 
@@ -570,3 +611,81 @@ player.loadVideo({
   ],
 });
 ```
+
+## persistentLicense
+
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
+
+_type_: `Boolean | undefined`
+
+To set to `true` if you want to rely on persistent licenses, in which case you
+should also set the `licenseStorage` property.
+
+### licenseStorage
+
+<div class="warning">
+This option is deprecated, it will disappear in the next major release
+`v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.md">Deprecated
+APIs</a>).
+</div>
+
+_type_: `Object | undefined`
+
+The `licenseStorage` property is an object allowing the RxPlayer to load and
+saved information on persisted sessions.
+
+It needs to contain two functions:
+
+- `save`: Which sould store the argument given. The argument will be an array
+  of Objects.
+- `load`: Called without any argument, it has to return what was given to the
+  last `save` call. Any return value which is not an Array will be ignored
+  (example: when `save` has never been called).
+
+If the ability to retrieve persistent-licenses from older RxPlayer version is
+not important to you, you can also add a `disableRetroCompatibility` property
+set to `true`, this will unlock supplementary optimizations on contents.
+
+This API can very simply be implemented with the
+[localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
+browser API:
+
+```js
+rxPlayer.loadVideo({
+  url: MANIFEST_URL,
+  transport: "dash",
+  keySystems: [
+    {
+      type: "widevine",
+      getLicense,
+      persistentLicense: true,
+      licenseStorage: {
+        save(data) {
+          localStorage.setItem("RxPlayer-licenseStorage", JSON.stringify(data));
+        },
+        load() {
+          const item = localStorage.getItem("RxPlayer-licenseStorage");
+          return item === null ? [] : JSON.parse(item);
+        },
+      },
+    },
+  ],
+});
+```
+
+Do not be scared about security implications, the data saved is not secret and
+does not help to identify a user.
+
+You can also use every storage API at your disposition (some embedded devices
+might have their own).
+
+As a nice bonus, you can note that the data given is perfectly "serializable"
+through the JSON.stringify browser API. This means that, as the example shown
+above, you can call `JSON.stringify` on that data and retrieve it through a
+`JSON.parse` call.
+
+This is very useful for storage APIs which cannot store JavaScript objects.

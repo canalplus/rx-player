@@ -11,7 +11,7 @@ APIs</a>).
 Returns the current loaded [Manifest](../../Getting_Started/Glossary.md#manifest)
 if one.
 The Manifest object structure is relatively complex and is described in the
-[Manifest Object structure page](../Miscellaneous/Manifest_Object.md#structure_of_a_manifest).
+[Manifest Object structure page](../Miscellaneous/Manifest_Object.md#structure-of-a-manifest-object).
 
 `null` if the player is either stopped or not loaded.
 
