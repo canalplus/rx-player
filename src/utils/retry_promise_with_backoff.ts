@@ -73,16 +73,31 @@ export default function retryPromiseWithBackoff<T>(
       if (typeof onRetry === "function") {
         onRetry(error, retryCount);
       }
-
-      const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
-                             maxDelay);
-
-      const fuzzedDelay = getFuzzedDelay(delay);
-      await sleep(fuzzedDelay);
+      const delay = getRetryDelay(baseDelay, retryCount, maxDelay);
+      await sleep(delay);
       const res = iterate();
       return res;
     }
   }
+}
+/**
+ * Get the delay that should be applied to the following retry, it depends on
+ * the base delay and is increaser for with the retry count. The result is
+ * ceiled by the maxDelay.
+ * @param {number} baseDelay - delay after wich the first request is retried
+ * after a failure
+ * @param {numbe} retryCount - count of retries
+ * @param {number} maxDelay - maximum delay
+ * @returns {number} - the delay that should be applied to the following retry
+ */
+export function getRetryDelay(
+  baseDelay: number,
+  retryCount: number,
+  maxDelay: number
+) : number {
+  const delay = baseDelay * Math.pow(2, retryCount - 1);
+  const fuzzedDelay = getFuzzedDelay(delay);
+  return Math.min(fuzzedDelay, maxDelay);
 }
 
 export interface IBackoffOptions {
