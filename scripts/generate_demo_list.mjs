@@ -34,10 +34,10 @@
  *      all the right links.
  */
 
-const fs = require("fs");
-const path = require("path");
-const { encode } = require("html-entities");
-const semver = require("semver");
+import { lstatSync, readdirSync, existsSync, writeFileSync } from "fs";
+import { join } from "path";
+import { encode } from "html-entities";
+import * as semver from "semver";
 
 const INITIAL_PATH = "./versions";
 
@@ -48,7 +48,7 @@ function sortVersions(versions) {
 }
 
 function isDirectory(source) {
-  return fs.lstatSync(source).isDirectory();
+  return lstatSync(source).isDirectory();
 }
 
 export function getUrlsForVersion(initialPath, version) {
@@ -83,12 +83,12 @@ const head = `<head>
 
 let body = "<body>";
 
-const files = fs.readdirSync(INITIAL_PATH);
+const files = readdirSync(INITIAL_PATH);
 const versions = [];
 for (let i = 0; i < files.length; i++) {
   const fileName = files[i];
-  const filePath = path.join(INITIAL_PATH, fileName);
-  if (isDirectory(filePath) && fs.existsSync(path.join(filePath, "demo"))) {
+  const filePath = join(INITIAL_PATH, fileName);
+  if (isDirectory(filePath) && existsSync(join(filePath, "demo"))) {
     versions.push(fileName);
   }
 }
@@ -127,4 +127,4 @@ const html = "<html>" +
   body +
   "<html>";
 
-fs.writeFileSync("./demo_page_by_version.html", html);
+writeFileSync("./demo_page_by_version.html", html);

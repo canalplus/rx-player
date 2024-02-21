@@ -145,7 +145,8 @@ Before each official releases, a list of steps are performed by its maintainers:
    as a dependency.
 
 10. If and only if no problem was seen perform a signed merge without
-    fast-forward of the release branch into master (`git merge -S --no-ff release/vXX.XX.XX master`)
+    fast-forward of the release branch into legacy-v3
+    (`git merge -S --no-ff release/vXX.XX.XX legacy-v3`)
 
 11. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
 
@@ -156,7 +157,7 @@ Before each official releases, a list of steps are performed by its maintainers:
 
 14. Check that the new demo and the new doc work as expected
 
-15. If all seems good, push to origin/master your local master branch.
+15. If all seems good, push to remote `legacy-v3` your local `legacy-v3` branch.
 
 16. run `npm publish --tag legacy-v3` to publish the new version on npm's
     registry with the `legacy-v3` tag.
