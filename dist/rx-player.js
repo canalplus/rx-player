@@ -7299,7 +7299,7 @@ function retryPromiseWithBackoff(runProm, options, cancelSignal) {
   }
   function _iterate() {
     _iterate = (0,asyncToGenerator/* default */.Z)( /*#__PURE__*/regenerator_default().mark(function _callee() {
-      var res, delay, fuzzedDelay, _res;
+      var res, delay, _res;
       return regenerator_default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -7333,14 +7333,13 @@ function retryPromiseWithBackoff(runProm, options, cancelSignal) {
             if (typeof onRetry === "function") {
               onRetry(_context.t0, retryCount);
             }
-            delay = Math.min(baseDelay * Math.pow(2, retryCount - 1), maxDelay);
-            fuzzedDelay = (0,get_fuzzed_delay/* default */.Z)(delay);
-            _context.next = 20;
-            return (0,sleep/* default */.Z)(fuzzedDelay);
-          case 20:
+            delay = getRetryDelay(baseDelay, retryCount, maxDelay);
+            _context.next = 19;
+            return (0,sleep/* default */.Z)(delay);
+          case 19:
             _res = iterate();
             return _context.abrupt("return", _res);
-          case 22:
+          case 21:
           case "end":
             return _context.stop();
         }
@@ -7348,6 +7347,21 @@ function retryPromiseWithBackoff(runProm, options, cancelSignal) {
     }));
     return _iterate.apply(this, arguments);
   }
+}
+/**
+ * Get the delay that should be applied to the following retry, it depends on
+ * the base delay and is increaser for with the retry count. The result is
+ * ceiled by the maxDelay.
+ * @param {number} baseDelay - delay after wich the first request is retried
+ * after a failure
+ * @param {numbe} retryCount - count of retries
+ * @param {number} maxDelay - maximum delay
+ * @returns {number} - the delay that should be applied to the following retry
+ */
+function getRetryDelay(baseDelay, retryCount, maxDelay) {
+  var delay = baseDelay * Math.pow(2, retryCount - 1);
+  var fuzzedDelay = (0,get_fuzzed_delay/* default */.Z)(delay);
+  return Math.min(fuzzedDelay, maxDelay);
 }
 ;// CONCATENATED MODULE: ./src/compat/eme/get_uuid_kid_from_keystatus_kid.ts
 /**
@@ -27217,6 +27231,7 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
     _this.uris = parsedManifest.uris === undefined ? [] : parsedManifest.uris;
     _this.updateUrl = manifestUpdateUrl;
     _this.lifetime = parsedManifest.lifetime;
+    _this.clockOffset = parsedManifest.clockOffset;
     _this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     _this.availabilityStartTime = parsedManifest.availabilityStartTime;
     _this.publishTime = parsedManifest.publishTime;
@@ -53126,7 +53141,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.0";
+    _this.version = /* PLAYER_VERSION */"3.33.1";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -55576,7 +55591,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   }]);
   return Player;
 }(event_emitter/* default */.Z);
-Player.version = /* PLAYER_VERSION */"3.33.0";
+Player.version = /* PLAYER_VERSION */"3.33.1";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
