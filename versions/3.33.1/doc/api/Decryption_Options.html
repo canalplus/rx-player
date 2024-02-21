@@ -494,33 +494,7 @@ property.
 You can set the <code>message</code> property on the rejected/thrown value as a
 <code>string</code>. In this case, that string will be used as the error message of
 the <code>KEY_STATUS_CHANGE_ERROR</code> error (and used at its <code>message</code> property).</p>
-<a name="example"></a><h2>Example</h2>
-<p>Example of a simple DRM configuration for widevine and playready DRMs:</p>
-<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
-  <span class="hljs-attr">url</span>: manifestURL,
-  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
-  <span class="hljs-attr">keySystems</span>: [
-    {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">"widevine"</span>,
-      <span class="hljs-title function_">getLicense</span>(<span class="hljs-params">challenge</span>) {
-        <span class="hljs-comment">// ajaxPromise is here an AJAX implementation doing a POST request on the</span>
-        <span class="hljs-comment">// widevineLicenseServer with the challenge in its body.</span>
-        <span class="hljs-keyword">return</span> <span class="hljs-title function_">ajaxPromise</span>(widevineLicenseServer, challenge);
-      },
-    },
-    {
-      <span class="hljs-attr">type</span>: <span class="hljs-string">"playready"</span>,
-      <span class="hljs-title function_">getLicense</span>(<span class="hljs-params">challenge</span>) {
-        <span class="hljs-comment">// idem</span>
-        <span class="hljs-comment">// Note: you may need to format the challenge before doing the request</span>
-        <span class="hljs-comment">// depending on the server configuration.</span>
-        <span class="hljs-keyword">return</span> <span class="hljs-title function_">ajaxPromise</span>(playreadyLicenseServer, challenge);
-      },
-    },
-  ],
-});
-</code></pre>
-<a name="persistentlicense"></a><h2>persistentLicense</h2>
+<a name="persistentlicense"></a><h3>persistentLicense</h3>
 <div class="warning">
 This option is deprecated, it will disappear in the next major release
 `v4.0.0` (see <a href="./Miscellaneous/Deprecated_APIs.html">Deprecated
@@ -582,6 +556,32 @@ through the JSON.stringify browser API. This means that, as the example shown
 above, you can call <code>JSON.stringify</code> on that data and retrieve it through a
 <code>JSON.parse</code> call.</p>
 <p>This is very useful for storage APIs which cannot store JavaScript objects.</p>
+<a name="example"></a><h2>Example</h2>
+<p>Example of a simple DRM configuration for widevine and playready DRMs:</p>
+<pre><code class="language-js">player.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-attr">url</span>: manifestURL,
+  <span class="hljs-attr">transport</span>: <span class="hljs-string">"dash"</span>,
+  <span class="hljs-attr">keySystems</span>: [
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"widevine"</span>,
+      <span class="hljs-title function_">getLicense</span>(<span class="hljs-params">challenge</span>) {
+        <span class="hljs-comment">// ajaxPromise is here an AJAX implementation doing a POST request on the</span>
+        <span class="hljs-comment">// widevineLicenseServer with the challenge in its body.</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">ajaxPromise</span>(widevineLicenseServer, challenge);
+      },
+    },
+    {
+      <span class="hljs-attr">type</span>: <span class="hljs-string">"playready"</span>,
+      <span class="hljs-title function_">getLicense</span>(<span class="hljs-params">challenge</span>) {
+        <span class="hljs-comment">// idem</span>
+        <span class="hljs-comment">// Note: you may need to format the challenge before doing the request</span>
+        <span class="hljs-comment">// depending on the server configuration.</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">ajaxPromise</span>(playreadyLicenseServer, challenge);
+      },
+    },
+  ],
+});
+</code></pre>
 </body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./Loading_a_Content.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Loading a Content</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Basic_Methods/getPlayerState.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">getPlayerState</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#decryption-options">Decryption Options</a></p>
 <ul>
 <li><a href="#overview">Overview</a></li>
@@ -602,14 +602,11 @@ above, you can call <code>JSON.stringify</code> on that data and retrieve it thr
 <li><a href="#onkeyexpiration">onKeyExpiration</a></li>
 <li><a href="#throwonlicenseexpiration">throwOnLicenseExpiration</a></li>
 <li><a href="#onkeystatuseschange">onKeyStatusesChange</a></li>
-</ul>
-</li>
-<li><a href="#example">Example</a></li>
-<li><a href="#persistentlicense">persistentLicense</a>
-<ul>
+<li><a href="#persistentlicense">persistentLicense</a></li>
 <li><a href="#licensestorage">licenseStorage</a></li>
 </ul>
 </li>
+<li><a href="#example">Example</a></li>
 </ul>
 </div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../Getting_Started/Welcome.html">Welcome</a></li>
 <li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../Getting_Started/Tutorials/Quick_Start.html">Quick Start</a></li>
