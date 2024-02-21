@@ -53141,7 +53141,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.1";
+    _this.version = /* PLAYER_VERSION */"3.33.2";
     _this.log = log/* default */.Z;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -55591,7 +55591,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
   }]);
   return Player;
 }(event_emitter/* default */.Z);
-Player.version = /* PLAYER_VERSION */"3.33.1";
+Player.version = /* PLAYER_VERSION */"3.33.2";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
