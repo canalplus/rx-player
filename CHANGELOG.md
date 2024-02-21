@@ -1,22 +1,4 @@
-## v4.0.0-rc.2 (2024-02-07)
-
-### Features
-
-  - MULTI_THREAD: `attachWorker` now returns a Promise to indicate when WebWorker attachment failed [#1374]
-
-### Bug fixes
-
-  - dash: Don't unnecessarily reload external `<UTCTiming>` resources at each refresh if it failed for the first request of the Manifest [#1370]
-  - dash: The `DASH_WASM` feature do not rely on WebAssembly's sign-extension operators anymore as that is poorly supported on older Samsung and LG TVs [#1372]
-  - MULTI_THREAD: properly categorize forced subtitles in multithread scenarios
-
-### Other improvements
-
-  - build: automatically install Rust and WASM toolchain locally if unavailable when building the RxPlayer [#1373]
-  - doc: Update our documentation generator and fix all invalid anchors in it
-  - npm: prevent the publishing of unnecessary files on the npm registry [#1377, #1378]
-
-## v4.0.0-rc.1 (2024-01-24)
+## v4.0.0 (2024-02-21)
 
 ### Changes
 
@@ -45,7 +27,7 @@
   - Rename `maximumBufferTime` in `positionUpdate` events to `maximumPosition`
   - Remove `getVideoPlayedTime` and `getVideoLoadedTime` methods. Their names was very confusing and can be re-implemented relatively easily using the media element's buffered property.
   - Rename `getVideoDuration` to `getMediaDuration`, to avoid confusion with the video track's duration.
-  - Rename `getVideoBufferGap` to `getCurrentBufferGap, to avoid confusion with the "buffer gap" specific to the video track.
+  - Rename `getVideoBufferGap` to `getCurrentBufferGap`, to avoid confusion with the "buffer gap" specific to the video track.
   - Remove image-related API: `supplementaryImageTracks` `loadVideo` option, `imageTrackUpdate` event, `getImageTrackData` method. Those are better handled by an application. The `parseBifThumbnails` tool is still available.
   - Replace `keySystems[].licenseStorage` `keySystems` option (for a `loadVideo` call) by the better-named `persistentLicenseConfig`. The `persistentLicense` boolean (also a `keySystems` option) has also been removed because it was redundant with it) [#1147]
   - Remove `persistentStateRequired` API, in profit of the more powerful `persistentState` API [#1148]
@@ -90,6 +72,7 @@
 ### Features
 
   - Add `MULTI_THREAD` experimental feature to enable multithreading capabilities through a WebWorker
+  - Add `attachWorker` method to attach a WebWorker to an RxPlayer instance.
   - `setAudioTrack`, `setVideoTrack` and `setTextTrack` now may take an object in argument, with the track's id set as a `trackId` property, to allow new features
   - Add `switchingMode` optional property to `setVideoTrack` and `setAudioTrack`, to configure the way in which the RxPlayer switches between the previous and new track
   - Add optional `periodId` property to `setAudioTrack`, `setVideoTrack` and `setTextTrack`, to allow setting the track of another, future or past, Period.
@@ -134,6 +117,8 @@
 ### Bug fixes
 
   - Tizen (Samsung TVs): Try again to work around all potential issues that could arise due to tizen seeking back by itself [#1327, #1355]
+  - dash: Don't unnecessarily reload external `<UTCTiming>` resources at each refresh if it failed for the first request of the Manifest [#1370]
+  - dash: The `DASH_WASM` feature do not rely on WebAssembly's sign-extension operators anymore as that is poorly supported on older Samsung and LG TVs [#1372]
 
 ### Other improvements
 
@@ -174,6 +159,9 @@
   - Add exception to text Garbage collection logic to avoid unnecessarily reload text segments frequently [#1325]
   - Avoid logging too much the buffer's content when our debugging UI or the demo is used [#1341]
   - Demo: Fix reporting of live position in demo page [#1313]
+  - build: automatically install Rust and WASM toolchain locally if unavailable when building the RxPlayer [#1373]
+  - doc: Update our documentation generator and fix all invalid anchors in it
+  - npm: prevent the publishing of unnecessary files on the npm registry [#1377, #1378]
 
 
 ## v3.32.1 (2023-10-19)
