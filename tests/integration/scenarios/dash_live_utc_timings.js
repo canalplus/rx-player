@@ -26,7 +26,7 @@ describe("DASH live - UTCTimings", () => {
         url: manifestInfos.url,
         transport: manifestInfos.transport,
       });
-      await sleep(100);
+      await sleep(200);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
       expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 3);
     });
@@ -41,7 +41,7 @@ describe("DASH live - UTCTimings", () => {
           clientTime: performance.now(),
         },
       });
-      await sleep(100);
+      await sleep(200);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
@@ -85,7 +85,7 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(100);
+      await sleep(200);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
@@ -108,7 +108,7 @@ describe("DASH live - UTCTimings", () => {
         url: manifestInfos.url,
         transport: manifestInfos.transport,
       });
-      await sleep(100);
+      await sleep(200);
 
       const timeShiftBufferDepth = 5 * 60;
       const maximumPosition = Date.now() / 1000 - manifestInfos.availabilityStartTime;
@@ -129,7 +129,7 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(100);
+      await sleep(200);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
@@ -168,7 +168,7 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(100);
+      await sleep(200);
       expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
       expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
