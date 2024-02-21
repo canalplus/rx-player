@@ -6,7 +6,6 @@
   "favicon": {
     "srcPath": "./static/img/favicon.png"
   },
-  "otherVersionsLink": "https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html",
   "linksLeft": [
     {
       "type": "local-doc",
@@ -43,7 +42,8 @@
       "link": "https://github.com/canalplus/rx-player"
     },
     {
-      "type": "version"
+      "type": "version",
+      "link": "https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"
     }
   ]
 }
