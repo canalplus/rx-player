@@ -581,38 +581,7 @@ You can set the `message` property on the rejected/thrown value as a
 `string`. In this case, that string will be used as the error message of
 the `KEY_STATUS_CHANGE_ERROR` error (and used at its `message` property).
 
-
-## Example
-
-Example of a simple DRM configuration for widevine and playready DRMs:
-
-```js
-player.loadVideo({
-  url: manifestURL,
-  transport: "dash",
-  keySystems: [
-    {
-      type: "widevine",
-      getLicense(challenge) {
-        // ajaxPromise is here an AJAX implementation doing a POST request on the
-        // widevineLicenseServer with the challenge in its body.
-        return ajaxPromise(widevineLicenseServer, challenge);
-      },
-    },
-    {
-      type: "playready",
-      getLicense(challenge) {
-        // idem
-        // Note: you may need to format the challenge before doing the request
-        // depending on the server configuration.
-        return ajaxPromise(playreadyLicenseServer, challenge);
-      },
-    },
-  ],
-});
-```
-
-## persistentLicense
+### persistentLicense
 
 <div class="warning">
 This option is deprecated, it will disappear in the next major release
@@ -689,3 +658,34 @@ above, you can call `JSON.stringify` on that data and retrieve it through a
 `JSON.parse` call.
 
 This is very useful for storage APIs which cannot store JavaScript objects.
+
+
+## Example
+
+Example of a simple DRM configuration for widevine and playready DRMs:
+
+```js
+player.loadVideo({
+  url: manifestURL,
+  transport: "dash",
+  keySystems: [
+    {
+      type: "widevine",
+      getLicense(challenge) {
+        // ajaxPromise is here an AJAX implementation doing a POST request on the
+        // widevineLicenseServer with the challenge in its body.
+        return ajaxPromise(widevineLicenseServer, challenge);
+      },
+    },
+    {
+      type: "playready",
+      getLicense(challenge) {
+        // idem
+        // Note: you may need to format the challenge before doing the request
+        // depending on the server configuration.
+        return ajaxPromise(playreadyLicenseServer, challenge);
+      },
+    },
+  ],
+});
+```
