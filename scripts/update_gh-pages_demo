@@ -59,12 +59,6 @@ git pull origin gh-pages
 
 rm -rf "versions/$current_version/demo"
 mkdir -p "versions/$current_version/demo"
-rm index.html
-rm plus.ico
-rm bundle.js
-rm -rf fonts
-rm -rf assets
-rm -rf styles
 mv $tmpIndexFile "versions/$current_version/demo/index.html"
 mv $tmpFaviconFile "versions/$current_version/demo/plus.ico"
 mv $tmpDemoFile "versions/$current_version/demo/bundle.js"

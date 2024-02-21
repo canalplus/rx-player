@@ -48,7 +48,6 @@ git pull origin gh-pages
 
 rm -rf "versions/$current_version/doc"
 mkdir -p "versions/$current_version/doc"
-rm -rf doc
 mv $tmpDir/* "versions/$current_version/doc"
 mv $tmpDocList  generate_documentation_list.mjs
 
