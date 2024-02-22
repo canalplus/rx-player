@@ -6,7 +6,7 @@ import {
   WithHTTP,
   WithoutTimings,
 } from "../../contents/DASH_dynamic_UTCTimings";
-import sleep from "../../utils/sleep.js";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 describe("DASH live - UTCTimings", () => {
   describe("DASH live content (SegmentTemplate + Direct UTCTiming)", function () {
@@ -26,9 +26,20 @@ describe("DASH live - UTCTimings", () => {
         url: manifestInfos.url,
         transport: manifestInfos.transport,
       });
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
-      expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 3);
+
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
+            expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 3);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+            expect(player.getMaximumPosition()).to.equal(null);
+          },
+        },
+      );
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -41,9 +52,19 @@ describe("DASH live - UTCTimings", () => {
           clientTime: performance.now(),
         },
       });
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+            expect(player.getMaximumPosition()).to.equal(null);
+          },
+        },
+      );
     });
   });
 
@@ -63,15 +84,24 @@ describe("DASH live - UTCTimings", () => {
       player.loadVideo({
         url: manifestInfos.url,
         transport: manifestInfos.transport,
-        manifestLoader(arg, cbs) {
+        manifestLoader(_arg, cbs) {
           cbs.fallback();
         },
         segmentLoader() {
           // noop
         },
       });
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1558791848, 3);
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1558791848, 3);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+          },
+        },
+      );
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -85,9 +115,19 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+            expect(player.getMaximumPosition()).to.equal(null);
+          },
+        },
+      );
     });
   });
 
@@ -108,14 +148,25 @@ describe("DASH live - UTCTimings", () => {
         url: manifestInfos.url,
         transport: manifestInfos.transport,
       });
-      await sleep(200);
 
-      const timeShiftBufferDepth = 5 * 60;
-      const maximumPosition = Date.now() / 1000 - manifestInfos.availabilityStartTime;
-      const minimumPosition = maximumPosition - timeShiftBufferDepth;
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            const timeShiftBufferDepth = 5 * 60;
+            const maximumPosition =
+              Date.now() / 1000 - manifestInfos.availabilityStartTime;
+            const minimumPosition = maximumPosition - timeShiftBufferDepth;
 
-      expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 3);
-      expect(player.getMaximumPosition()).to.be.closeTo(maximumPosition, 3);
+            expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 3);
+            expect(player.getMaximumPosition()).to.be.closeTo(maximumPosition, 3);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+            expect(player.getMaximumPosition()).to.equal(null);
+          },
+        },
+      );
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -129,9 +180,19 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+            expect(player.getMaximumPosition()).to.equal(null);
+          },
+        },
+      );
     });
   });
 
@@ -153,8 +214,17 @@ describe("DASH live - UTCTimings", () => {
         transport: manifestInfos.transport,
       });
 
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+          },
+        },
+      );
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -168,9 +238,19 @@ describe("DASH live - UTCTimings", () => {
         },
       });
 
-      await sleep(200);
-      expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
-      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+      await checkAfterSleepWithBackoff(
+        { maxTimeMs: 1000 },
+        {
+          resolveWhen() {
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
+          },
+          untilSuccess() {
+            expect(player.getMinimumPosition()).to.equal(null);
+            expect(player.getMaximumPosition()).to.equal(null);
+          },
+        },
+      );
     });
   });
 });

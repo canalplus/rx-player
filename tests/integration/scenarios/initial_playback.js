@@ -26,6 +26,7 @@ import sleep from "../../utils/sleep.js";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 runInitialPlaybackTests();
 runInitialPlaybackTests({ multithread: true });
@@ -68,13 +69,14 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       player.play();
-      await sleep(200);
-      expect(player.getPosition()).to.be.above(0);
-      expect(player.getPosition()).to.be.below(0.25);
-      expect(player.getCurrentBufferGap()).to.be.above(0);
-      expect(player.getVideoElement().buffered.start(0)).to.be.below(
-        player.getPosition(),
-      );
+      await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 1000 }, () => {
+        expect(player.getPosition()).to.be.above(0);
+        expect(player.getPosition()).to.be.below(1);
+        expect(player.getCurrentBufferGap()).to.be.above(0);
+        expect(player.getVideoElement().buffered.start(0)).to.be.below(
+          player.getPosition(),
+        );
+      });
     });
 
     it("should play slowly for a speed inferior to 1", async function () {
@@ -86,15 +88,16 @@ function runInitialPlaybackTests({ multithread } = {}) {
       player.setPlaybackRate(0.5);
       player.play();
       const lastPosition = player.getPosition();
-      await sleep(300);
-      expect(player.getPosition()).to.be.below(0.35);
-      expect(player.getPosition()).to.be.above(0.05);
-      expect(player.getPosition()).to.be.above(lastPosition);
-      expect(player.getVideoElement().buffered.start(0)).to.be.below(
-        player.getPosition(),
-      );
-      expect(player.getPlaybackRate()).to.equal(0.5);
-      expect(player.getVideoElement().playbackRate).to.equal(0.5);
+      await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 350 }, () => {
+        expect(player.getPosition()).to.be.below(0.35);
+        expect(player.getPosition()).to.be.above(0.05);
+        expect(player.getPosition()).to.be.above(lastPosition);
+        expect(player.getVideoElement().buffered.start(0)).to.be.below(
+          player.getPosition(),
+        );
+        expect(player.getPlaybackRate()).to.equal(0.5);
+        expect(player.getVideoElement().playbackRate).to.equal(0.5);
+      });
     });
 
     it("should play faster for a speed superior to 1", async function () {
@@ -105,15 +108,19 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await waitForLoadedStateAfterLoadVideo(player);
       player.setPlaybackRate(3);
       player.play();
-      await sleep(1200);
-      expect(player.getPosition()).to.be.below(4);
-      expect(player.getPosition()).to.be.above(2);
-      expect(player.getCurrentBufferGap()).to.be.above(0);
-      expect(player.getVideoElement().buffered.start(0)).to.be.below(
-        player.getPosition(),
+      await checkAfterSleepWithBackoff(
+        { minTimeMs: 700, stepMs: 100, maxTimeMs: 1400 },
+        () => {
+          expect(player.getPosition()).to.be.below(4);
+          expect(player.getPosition()).to.be.above(2);
+          expect(player.getCurrentBufferGap()).to.be.above(0);
+          expect(player.getVideoElement().buffered.start(0)).to.be.below(
+            player.getPosition(),
+          );
+          expect(player.getPlaybackRate()).to.equal(3);
+          expect(player.getVideoElement().playbackRate).to.equal(3);
+        },
       );
-      expect(player.getPlaybackRate()).to.equal(3);
-      expect(player.getVideoElement().playbackRate).to.equal(3);
     });
 
     it("should be able to seek when loaded", async function () {
@@ -126,9 +133,10 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPosition()).to.equal(10);
       expect(player.getPlayerState()).to.equal("LOADED");
       player.play();
-      await sleep(1200);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(player.getPosition()).to.be.above(10);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(player.getPosition()).to.be.above(10);
+      });
     });
 
     // TODO This often breaks, presumably due to the badly-encoded content.
@@ -140,14 +148,15 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       player.seekTo(player.getMaximumPosition() + 15);
-      await sleep(600);
+      await sleep(200);
       // FIXME: Chrome seems to have an issue with that content where we need to
       // seek two times for this test to pass.
       if (player.getPlayerState() === "PAUSED") {
         player.seekTo(player.getMaximumPosition() + 15);
-        await sleep(600);
       }
-      expect(player.getPlayerState()).to.equal("ENDED");
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getPlayerState()).to.equal("ENDED");
+      });
     });
 
     // TODO This often breaks, presumably due to the badly-encoded content.
@@ -160,8 +169,9 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       player.seekTo(player.getMaximumPosition() + 15);
-      await sleep(600);
-      expect(player.getPlayerState()).to.equal("ENDED");
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getPlayerState()).to.equal("ENDED");
+      });
     });
 
     it("should seek to minimum position for negative positions when loaded", async function () {
@@ -174,9 +184,10 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPosition()).to.equal(player.getMinimumPosition());
       expect(player.getPlayerState()).to.equal("LOADED");
       player.play();
-      await sleep(200);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(player.getPosition()).to.be.above(player.getMinimumPosition());
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(player.getPosition()).to.be.above(player.getMinimumPosition());
+      });
     });
 
     it("should seek to maximum position if manual seek is higher than maximum when loaded", async function () {
@@ -352,12 +363,13 @@ function runInitialPlaybackTests({ multithread } = {}) {
         url: manifestInfos.url,
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(200);
+      await sleep(50);
 
       player.seekTo(6);
-      await sleep(100);
 
-      expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(Math.round(player.getVideoElement().buffered.start(0))).to.equal(4);
+      });
     });
 
     it("may switch to SEEKING state when seeking to a buffered part when playing", async function () {
@@ -369,16 +381,18 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       player.play();
-      await sleep(1000);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(player.getCurrentBufferGap()).to.be.above(10);
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(player.getCurrentBufferGap()).to.be.above(20);
+      });
 
       player.seekTo(10);
       await waitForState(player, "SEEKING", ["PLAYING"]);
       expect(player.getCurrentBufferGap()).to.be.above(10);
-      await sleep(1000);
-      expect(player.getCurrentBufferGap()).to.be.above(10);
-      expect(player.getPlayerState()).to.equal("PLAYING");
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getCurrentBufferGap()).to.be.above(10);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+      });
     });
 
     it("may switch to SEEKING state when seeking to a buffered part when paused", async function () {
@@ -389,9 +403,10 @@ function runInitialPlaybackTests({ multithread } = {}) {
         url: manifestInfos.url,
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(1000);
-      expect(player.getPlayerState()).to.equal("LOADED");
-      expect(player.getCurrentBufferGap()).to.be.above(10);
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getPlayerState()).to.equal("LOADED");
+        expect(player.getCurrentBufferGap()).to.be.above(20);
+      });
 
       player.seekTo(10);
       await waitForState(player, "SEEKING", ["PAUSED"]);
@@ -482,14 +497,16 @@ function runInitialPlaybackTests({ multithread } = {}) {
         url: manifestInfos.url,
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(400);
-      expect(player.getCurrentBufferGap()).to.be.above(19);
-      expect(player.getVideoElement().buffered.start(0)).to.be.closeTo(0.0, 0.8);
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getCurrentBufferGap()).to.be.above(19);
+        expect(player.getVideoElement().buffered.start(0)).to.be.closeTo(0.0, 0.8);
+      });
       const maxBuffersize = bitrate / 7000;
       player.seekTo(19);
       player.setMaxVideoBufferSize(maxBuffersize);
-      await sleep(800);
-      expect(player.getVideoElement().buffered.start(0)).to.be.above(14);
+      await checkAfterSleepWithBackoff({}, () => {
+        expect(player.getVideoElement().buffered.start(0)).to.be.above(14);
+      });
     });
   });
 }

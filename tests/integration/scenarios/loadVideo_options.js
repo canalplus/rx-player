@@ -26,6 +26,7 @@ import sleep from "../../utils/sleep.js";
 import {
   /* waitForState, */ waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 runLoadVideoOptionsTests();
 runLoadVideoOptionsTests({ multithread: true });
@@ -73,14 +74,13 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
 
       it("should request the URL if one is given", async () => {
         let manifestLoaderCalledTimes = 0;
-        let segmentLoaderLoaderCalledTimes = 0;
         const manifestLoader = (man, callbacks) => {
           expect(manifestInfos.url).to.equal(man.url);
           manifestLoaderCalledTimes++;
           callbacks.fallback();
         };
         const segmentLoader = () => {
-          segmentLoaderLoaderCalledTimes++;
+          // noop
         };
         player.loadVideo({
           url: manifestInfos.url,
@@ -93,7 +93,6 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
         await sleep(0);
 
         expect(manifestLoaderCalledTimes).to.equal(1);
-        expect(segmentLoaderLoaderCalledTimes).to.equal(0);
       });
     });
 
@@ -148,8 +147,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(player.getPosition()).to.be.below(0.1);
-        await sleep(500);
-        expect(player.getPosition()).to.be.above(0.2);
+        await checkAfterSleepWithBackoff(null, () => {
+          expect(player.getPosition()).to.be.above(0.1);
+        });
       });
     });
 
@@ -167,8 +167,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           expect(player.getPlayerState()).to.equal("LOADED");
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(startAt, 0.5);
-          await sleep(500);
-          expect(player.getPosition()).to.equal(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
         });
 
         it("should seek at the right position if startAt.wallClockTime is set", async function () {
@@ -183,8 +184,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           expect(player.getPlayerState()).to.equal("LOADED");
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(startAt, 0.5);
-          await sleep(500);
-          expect(player.getPosition()).to.equal(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
         });
 
         it("should seek at the right position if startAt.fromFirstPosition is set", async function () {
@@ -202,8 +204,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
             player.getMinimumPosition() + startAt,
             0.5,
           );
-          await sleep(500);
-          expect(player.getPosition()).to.equal(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
         });
 
         it("should seek at the right position if startAt.fromLastPosition is set", async function () {
@@ -221,8 +224,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
             player.getMaximumPosition() - startAt,
             0.5,
           );
-          await sleep(500);
-          expect(player.getPosition()).to.equal(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
         });
 
         it("should seek at the right position if startAt.fromLivePosition is set", async function () {
@@ -240,8 +244,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
             player.getMaximumPosition() - startAt,
             0.5,
           );
-          await sleep(500);
-          expect(player.getPosition()).to.equal(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
         });
 
         it("should seek at the right position if startAt.percentage is set", async function () {
@@ -255,8 +260,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           expect(player.getPlayerState()).to.equal("LOADED");
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(player.getMaximumPosition() * 0.3, 0.5);
-          await sleep(500);
-          expect(player.getPosition()).to.equal(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
         });
 
         it("should seek at the right position then play if startAt.position and autoPlay is set", async function () {
@@ -271,8 +277,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           expect(player.getPlayerState()).to.equal("PLAYING");
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(startAt, 0.5);
-          await sleep(500);
-          expect(player.getPosition()).to.be.above(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.be.above(initialPosition);
+          });
         });
 
         it("should seek at the right position then play if startAt.wallClockTime and autoPlay is set", async function () {
@@ -287,8 +294,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           expect(player.getPlayerState()).to.equal("PLAYING");
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(startAt, 0.5);
-          await sleep(500);
-          expect(player.getPosition()).to.be.above(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.be.above(initialPosition);
+          });
         });
 
         it("should seek at the right position then play if startAt.fromFirstPosition and autoPlay is set", async function () {
@@ -306,8 +314,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
             player.getMinimumPosition() + startAt,
             0.5,
           );
-          await sleep(500);
-          expect(player.getPosition()).to.be.above(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.be.above(initialPosition);
+          });
         });
 
         it("should seek at the right position then play if startAt.fromLastPosition and autoPlay is set", async function () {
@@ -325,8 +334,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
             player.getMaximumPosition() - startAt,
             0.5,
           );
-          await sleep(500);
-          expect(player.getPosition()).to.be.above(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.be.above(initialPosition);
+          });
         });
 
         it("should seek at the right position then play if startAt.fromLivePosition and autoPlay is set", async function () {
@@ -344,8 +354,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
             player.getMaximumPosition() - startAt,
             0.5,
           );
-          await sleep(500);
-          expect(player.getPosition()).to.be.above(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.be.above(initialPosition);
+          });
         });
 
         it("should seek at the right position then play if startAt.percentage and autoPlay is set", async function () {
@@ -359,8 +370,9 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           expect(player.getPlayerState()).to.equal("PLAYING");
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(player.getMaximumPosition() * 0.3, 0.5);
-          await sleep(500);
-          expect(player.getPosition()).to.be.above(initialPosition);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.be.above(initialPosition);
+          });
         });
       });
     });

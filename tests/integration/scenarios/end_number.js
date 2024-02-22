@@ -3,11 +3,11 @@ import { manifestInfosEndNumber as numberBasedManifestInfos } from "../../conten
 import { endNumberManifestInfos as templateManifestinfos } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
 import { segmentTimelineEndNumber as timeBasedManifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../dist/es2017";
-import sleep from "../../utils/sleep.js";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
 import { lockLowestBitrates } from "../../utils/bitrates";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 let player;
 
@@ -31,9 +31,10 @@ describe("end number", function () {
       transport,
       autoPlay: false,
     });
-    await sleep(500);
-    expect(player.getMinimumPosition()).to.eql(0);
-    expect(player.getMaximumPosition()).to.eql(120 + 30);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      expect(player.getMinimumPosition()).to.eql(0);
+      expect(player.getMaximumPosition()).to.eql(120 + 30);
+    });
   });
 
   it("should not load segment later than the end number on a time-based SegmentTimeline", async function () {
@@ -53,19 +54,22 @@ describe("end number", function () {
       autoPlay: false,
       segmentLoader,
     });
-    await sleep(50);
-    expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
-    expect(requestedSegments.length).to.equal(4); // Init+media of audio+video
+    await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+      expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
+      expect(requestedSegments.length).to.equal(4); // Init+media of audio+video
+    });
     if (player.getPlayerState() !== "LOADED") {
       await waitForLoadedStateAfterLoadVideo(player);
     }
     player.seekTo(19);
     player.play();
-    await sleep(10);
-    player.setWantedBufferAhead(Infinity);
-    expect(requestedSegments.length).to.equal(6); // + last audio + video
-    await sleep(50);
-    expect(requestedSegments.length).to.equal(6); // + last audio + video
+    await checkAfterSleepWithBackoff({ maxTimeMs: 10 }, () => {
+      player.setWantedBufferAhead(Infinity);
+      expect(requestedSegments.length).to.equal(6); // + last audio + video
+    });
+    await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+      expect(requestedSegments.length).to.equal(6); // + last audio + video
+    });
     await waitForState(player, "ENDED", ["BUFFERING", "RELOADING", "PLAYING"]);
     expect(player.getPosition()).to.be.closeTo(20, 1);
   });
@@ -81,7 +85,8 @@ describe("end number", function () {
       transport,
       autoPlay: true,
     });
-    await sleep(100);
-    expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 100 }, () => {
+      expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
+    });
   });
 });

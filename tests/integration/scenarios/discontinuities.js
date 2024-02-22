@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
-import sleep from "../../utils/sleep.js";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import {
   discontinuitiesBetweenPeriodsInfos,
@@ -41,10 +41,11 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await sleep(3000);
-      expect(player.getPosition()).to.be.above(131);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(discontinuitiesWarningReceived).to.equal(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        expect(player.getPosition()).to.be.above(131);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.equal(1);
+      });
     });
 
     it("should seek to next Period when loading in discontinuity", async function () {
@@ -80,10 +81,11 @@ describe("discontinuities handling", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(122);
-      await sleep(1000);
-      expect(player.getPosition()).to.be.at.least(131);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(discontinuitiesWarningReceived).to.equal(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000 }, () => {
+        expect(player.getPosition()).to.be.at.least(131);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.equal(1);
+      });
     });
   });
 
@@ -106,10 +108,11 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await sleep(3000);
-      expect(player.getPosition()).to.be.above(131);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(discontinuitiesWarningReceived).to.equal(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        expect(player.getPosition()).to.be.above(131);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.equal(1);
+      });
     });
 
     it("should seek to next Period when loading in discontinuity", async function () {
@@ -145,14 +148,15 @@ describe("discontinuities handling", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(122);
-      await sleep(1000);
-      expect(player.getPosition()).to.be.at.least(131);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(discontinuitiesWarningReceived).to.be.at.least(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000 }, () => {
+        expect(player.getPosition()).to.be.at.least(131);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.be.at.least(1);
 
-      // TODO this is a known very minor issue, investigate and fix in the
-      // RxPlayer's code?
-      expect(discontinuitiesWarningReceived).to.be.at.most(2);
+        // TODO this is a known very minor issue, investigate and fix in the
+        // RxPlayer's code?
+        expect(discontinuitiesWarningReceived).to.be.at.most(2);
+      });
     });
   });
 
@@ -175,10 +179,11 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await sleep(4000);
-      expect(player.getPosition()).to.be.above(28);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(discontinuitiesWarningReceived).to.equal(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 4000 }, () => {
+        expect(player.getPosition()).to.be.above(28);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.equal(1);
+      });
     });
 
     it("should seek over discontinuity when loading on one", async function () {
@@ -214,14 +219,15 @@ describe("discontinuities handling", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(25);
-      await sleep(4000);
-      expect(player.getPosition()).to.be.at.least(28);
-      expect(player.getPlayerState()).to.equal("PLAYING");
-      expect(discontinuitiesWarningReceived).to.be.at.least(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 4000 }, () => {
+        expect(player.getPosition()).to.be.at.least(28);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.be.at.least(1);
 
-      // Due to an issue seen in Firefox, the discontinuity might actually
-      // be seeked in two parts in it
-      expect(discontinuitiesWarningReceived).to.be.at.most(2);
+        // Due to an issue seen in Firefox, the discontinuity might actually
+        // be seeked in two parts in it
+        expect(discontinuitiesWarningReceived).to.be.at.most(2);
+      });
     });
   });
 
@@ -236,9 +242,10 @@ describe("discontinuities handling", () => {
         startAt: { position: 0 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(2000);
-      expect(player.getPosition()).to.be.above(12);
-      expect(player.getPlayerState()).to.equal("PLAYING");
+      await checkAfterSleepWithBackoff({ maxTimeMs: 2000 }, () => {
+        expect(player.getPosition()).to.be.above(12);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+      });
     });
   });
 });
