@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
 import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 import sleep from "../../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
@@ -28,7 +29,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   async function goToSecondPeriod() {
     player.seekTo(120);
-    await sleep(500);
+    await sleep(10);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
@@ -37,7 +38,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   async function goToFirstPeriod() {
     player.seekTo(5);
-    await sleep(500);
+    await sleep(10);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
@@ -354,12 +355,12 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       segmentLoader,
     });
 
-    await sleep(50);
-
-    expect(eventCalled).to.equal(1);
-    checkAudioTrack("fr", "fra", false);
-    checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      expect(eventCalled).to.equal(1);
+      checkAudioTrack("fr", "fra", false);
+      checkTextTrack("de", "deu", false);
+      checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    });
 
     if (player.getPlayerState() !== "LOADED") {
       await waitForLoadedStateAfterLoadVideo(player);
@@ -394,27 +395,29 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("setting the current track should not be persisted between Periods", async () => {
     await loadContent();
-    await sleep(300);
-
-    // TODO AUDIO codec
-    checkAudioTrack("de", "deu", false);
-    checkNoTextTrack();
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      // TODO AUDIO codec
+      checkAudioTrack("de", "deu", false);
+      checkNoTextTrack();
+      checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    });
 
     setAudioTrack("fr", true);
     setTextTrack("de", false);
     setVideoTrack({ all: false, test: /avc1\.640028/ }, true);
-
-    await sleep(300);
-    checkAudioTrack("fr", "fra", true);
-    checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      checkAudioTrack("fr", "fra", true);
+      checkTextTrack("de", "deu", false);
+      checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
+    });
 
     await goToSecondPeriod();
-    checkAudioTrack("fr", "fra", true);
-    checkNoTextTrack();
-    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+      checkAudioTrack("fr", "fra", true);
+      checkNoTextTrack();
+      checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
+      checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    });
   });
 
   it("setting a track should be persisted when seeking back to that Period", async () => {
@@ -429,10 +432,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     setTextTrack("de", false);
     setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
 
-    await sleep(50);
-    checkAudioTrack("fr", "fra", true);
-    checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      checkAudioTrack("fr", "fra", true);
+      checkTextTrack("de", "deu", false);
+      checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
+    });
 
     await goToSecondPeriod();
     await goToFirstPeriod();
@@ -450,18 +454,20 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       relativeResumingPosition: 10,
       switchingMode: "direct",
     });
-    await sleep(300);
-    checkAudioTrack("fr", "fra", true);
-    expect(player.getPosition()).to.be.within(10, 11);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      checkAudioTrack("fr", "fra", true);
+      expect(player.getPosition()).to.be.within(10, 11);
 
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+      checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    });
     setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, {
       relativeResumingPosition: -5,
       switchingMode: "direct",
     });
-    await sleep(300);
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
-    expect(player.getPosition()).to.be.within(5, 6);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
+      expect(player.getPosition()).to.be.within(5, 6);
+    });
   });
 
   it("setting a track with relativeResumingPosition should have no effect if switchingMode is 'seamless'", async () => {
@@ -473,17 +479,19 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       relativeResumingPosition: 10,
       switchingMode: "seamless",
     });
-    await sleep(300);
-    checkAudioTrack("fr", "fra", true);
-    expect(player.getPosition()).to.be.within(0, 1);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      checkAudioTrack("fr", "fra", true);
+      expect(player.getPosition()).to.be.within(0, 1);
 
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+      checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+    });
     setVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined, {
       relativeResumingPosition: 10,
       switchingMode: "seamless",
     });
-    await sleep(300);
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
-    expect(player.getPosition()).to.be.within(0, 1);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
+      checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
+      expect(player.getPosition()).to.be.within(0, 1);
+    });
   });
 });

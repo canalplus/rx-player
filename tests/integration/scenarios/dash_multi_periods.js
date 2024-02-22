@@ -11,6 +11,7 @@ import waitForPlayerState, {
 } from "../../utils/waitForPlayerState.js";
 import sleep from "../../utils/sleep.js";
 import { lockHighestBitrates } from "../../utils/bitrates";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 describe("DASH non-linear multi-periods content (SegmentTemplate)", function () {
   launchTestsForContent(manifestInfos);
@@ -30,7 +31,7 @@ describe("DASH multi-Period with different choices", function () {
 
   async function goToFirstPeriod() {
     player.seekTo(5);
-    await sleep(500);
+    await sleep(50);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
@@ -39,7 +40,7 @@ describe("DASH multi-Period with different choices", function () {
 
   async function goToSecondPeriod() {
     player.seekTo(120);
-    await sleep(500);
+    await sleep(50);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
     }
@@ -175,7 +176,7 @@ describe("DASH multi-Period with different choices", function () {
     // still first Period
     player.play();
     player.seekTo(100);
-    await sleep(100);
+    await sleep(50);
     if (player.getPlayerState() !== "PLAYING") {
       await waitForPlayerState(player, "PLAYING", ["SEEKING", "BUFFERING"]);
     }
@@ -187,22 +188,23 @@ describe("DASH multi-Period with different choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(periodChangeEvents).to.have.length(1);
 
-    await sleep(4000);
-    expect(player.getPosition()).to.be.at.least(102);
+    await checkAfterSleepWithBackoff({}, () => {
+      expect(player.getPosition()).to.be.at.least(102);
 
-    expect(availableAudioTracksChange).to.have.length(2);
-    expect(availableAudioTracksChange[1]).to.have.length(5);
+      expect(availableAudioTracksChange).to.have.length(2);
+      expect(availableAudioTracksChange[1]).to.have.length(5);
 
-    expect(availableVideoTracksChange).to.have.length(2);
-    expect(availableVideoTracksChange[1]).to.have.length(2);
+      expect(availableVideoTracksChange).to.have.length(2);
+      expect(availableVideoTracksChange[1]).to.have.length(2);
 
-    expect(audioTrackChangeEvents).to.have.length(2);
-    expect(audioTrackChangeEvents[1].id).to.equal("audio-fr-audio-mp4a.40.2-audio/mp4");
+      expect(audioTrackChangeEvents).to.have.length(2);
+      expect(audioTrackChangeEvents[1].id).to.equal("audio-fr-audio-mp4a.40.2-audio/mp4");
 
-    expect(videoTrackChangeEvents).to.have.length(2);
-    expect(videoTrackChangeEvents[1].id).to.equal("video-si-video-video/mp4");
+      expect(videoTrackChangeEvents).to.have.length(2);
+      expect(videoTrackChangeEvents[1].id).to.equal("video-si-video-video/mp4");
 
-    expect(periodChangeEvents).to.have.length(2);
+      expect(periodChangeEvents).to.have.length(2);
+    });
   });
 });
 
@@ -219,7 +221,7 @@ describe("DASH multi-Period with same choices", function () {
 
   async function goToFirstPeriod() {
     player.seekTo(5);
-    await sleep(500);
+    await sleep(50);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     }
@@ -228,7 +230,7 @@ describe("DASH multi-Period with same choices", function () {
 
   async function goToSecondPeriod() {
     player.seekTo(120);
-    await sleep(500);
+    await sleep(50);
     if (player.getPlayerState() !== "PAUSED") {
       await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     }
@@ -364,7 +366,7 @@ describe("DASH multi-Period with same choices", function () {
     // still first Period
     player.play();
     player.seekTo(100);
-    await sleep(100);
+    await sleep(50);
     if (player.getPlayerState() !== "PLAYING") {
       await waitForPlayerState(player, "PLAYING", ["SEEKING", "BUFFERING"]);
     }
@@ -376,21 +378,22 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(periodChangeEvents).to.have.length(1);
 
-    await sleep(4000);
-    expect(player.getPosition()).to.be.at.least(102);
+    await checkAfterSleepWithBackoff({}, () => {
+      expect(player.getPosition()).to.be.at.least(102);
 
-    expect(availableAudioTracksChange).to.have.length(2);
-    expect(availableAudioTracksChange[1]).to.have.length(8);
+      expect(availableAudioTracksChange).to.have.length(2);
+      expect(availableAudioTracksChange[1]).to.have.length(8);
 
-    expect(availableVideoTracksChange).to.have.length(2);
-    expect(availableVideoTracksChange[1]).to.have.length(4);
+      expect(availableVideoTracksChange).to.have.length(2);
+      expect(availableVideoTracksChange[1]).to.have.length(4);
 
-    expect(audioTrackChangeEvents).to.have.length(2);
-    expect(audioTrackChangeEvents[1].id).to.equal("audio-de-audio-mp4a.40.2-audio/mp4");
+      expect(audioTrackChangeEvents).to.have.length(2);
+      expect(audioTrackChangeEvents[1].id).to.equal("audio-de-audio-mp4a.40.2-audio/mp4");
 
-    expect(videoTrackChangeEvents).to.have.length(2);
-    expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
+      expect(videoTrackChangeEvents).to.have.length(2);
+      expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
 
-    expect(periodChangeEvents).to.have.length(2);
+      expect(periodChangeEvents).to.have.length(2);
+    });
   });
 });
