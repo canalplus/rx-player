@@ -9,6 +9,7 @@ import {
 } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff";
 
 describe("Video Thumbnail Loader", () => {
   let rxPlayer;
@@ -61,7 +62,7 @@ describe("Video Thumbnail Loader", () => {
   it("should not work when no period at given time", async () => {
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     rxPlayer.loadVideo({ url: trickModeInfos.url, transport: "dash" });
-    await sleep(500);
+    await waitForLoadedStateAfterLoadVideo(rxPlayer);
 
     const manifest = rxPlayer.__priv_getManifest();
 
@@ -213,17 +214,21 @@ describe("Video Thumbnail Loader", () => {
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
 
-    await sleep(75);
-    expect(requestedSegments).to.have.length(4);
-    expect(requestedSegments).to.include(
-      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000.dash",
-    );
-    expect(requestedSegments).to.include(
-      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash",
-    );
-    expect(videoElement.buffered.length).to.equal(1);
-    expect(videoElement.buffered.start(0)).to.be.closeTo(wantedThumbnail1.range[0], 0.01);
-    expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 75 }, () => {
+      expect(requestedSegments).to.have.length(4);
+      expect(requestedSegments).to.include(
+        "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000.dash",
+      );
+      expect(requestedSegments).to.include(
+        "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash",
+      );
+      expect(videoElement.buffered.length).to.equal(1);
+      expect(videoElement.buffered.start(0)).to.be.closeTo(
+        wantedThumbnail1.range[0],
+        0.01,
+      );
+      expect(videoElement.buffered.end(0)).to.be.closeTo(wantedThumbnail1.range[1], 0.01);
+    });
   });
 
   it("should not re-trigger common segments requests when loading contiguous thumbnails", async () => {
@@ -245,15 +250,17 @@ describe("Video Thumbnail Loader", () => {
 
     rxPlayer.setWantedBufferAhead(0);
     videoThumbnailLoader.setTime(wantedThumbnail1.time);
-    await sleep(200);
-    const before = requestedVideoSegments.length;
-    expect(requestedVideoSegments).to.include(
-      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash",
-    );
-    expect(requestedVideoSegments).to.include(
-      "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-4004.dash",
-    );
-    videoThumbnailLoader.setTime(wantedThumbnail1.time + 2);
+    let before;
+    await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+      before = requestedVideoSegments.length;
+      expect(requestedVideoSegments).to.include(
+        "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-0.dash",
+      );
+      expect(requestedVideoSegments).to.include(
+        "http://127.0.0.1:3000/DASH_static_SegmentTimeline/media/dash/ateam-video=400000-4004.dash",
+      );
+      videoThumbnailLoader.setTime(wantedThumbnail1.time + 2);
+    });
     await sleep(75);
     expect(requestedVideoSegments.length).to.equal(before);
 

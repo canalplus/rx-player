@@ -4,6 +4,7 @@ import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import { lockHighestBitrates, lockLowestBitrates } from "../../utils/bitrates";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 describe("Fast-switching", function () {
   let player;
@@ -24,23 +25,26 @@ describe("Fast-switching", function () {
     player.setWantedBufferAhead(10);
     player.loadVideo({ url, transport, autoPlay: false });
     await waitForLoadedStateAfterLoadVideo(player);
-    await sleep(1000);
+    await checkAfterSleepWithBackoff({}, () => {
+      expect(player.getCurrentBufferGap()).to.be.above(9);
+    });
 
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
-    await sleep(1000);
-    const videoSegmentBuffered = player
-      .__priv_getSegmentSinkContent("video")
-      .map(({ infos }) => {
-        return {
-          bitrate: infos.representation.bitrate,
-          time: infos.segment.time,
-          end: infos.segment.end,
-        };
-      });
-    expect(videoSegmentBuffered.length).to.be.at.least(3);
-    expect(videoSegmentBuffered[1].bitrate).to.equal(1996000);
-    expect(videoSegmentBuffered[2].bitrate).to.equal(1996000);
+    await checkAfterSleepWithBackoff({}, () => {
+      const videoSegmentBuffered = player
+        .__priv_getSegmentSinkContent("video")
+        .map(({ infos }) => {
+          return {
+            bitrate: infos.representation.bitrate,
+            time: infos.segment.time,
+            end: infos.segment.end,
+          };
+        });
+      expect(videoSegmentBuffered.length).to.be.at.least(3);
+      expect(videoSegmentBuffered[1].bitrate).to.equal(1996000);
+      expect(videoSegmentBuffered[2].bitrate).to.equal(1996000);
+    });
   });
 
   it("should enable fast-switching if explicitely enabled", async function () {
@@ -54,22 +58,26 @@ describe("Fast-switching", function () {
       enableFastSwitching: true,
     });
     await waitForLoadedStateAfterLoadVideo(player);
-    await sleep(1000);
+    await checkAfterSleepWithBackoff({}, () => {
+      expect(player.getCurrentBufferGap()).to.be.above(9);
+    });
+
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
-    await sleep(1000);
-    const videoSegmentBuffered = player
-      .__priv_getSegmentSinkContent("video")
-      .map(({ infos }) => {
-        return {
-          bitrate: infos.representation.bitrate,
-          time: infos.segment.time,
-          end: infos.segment.end,
-        };
-      });
-    expect(videoSegmentBuffered.length).to.be.at.least(3);
-    expect(videoSegmentBuffered[1].bitrate).to.equal(1996000);
-    expect(videoSegmentBuffered[2].bitrate).to.equal(1996000);
+    await checkAfterSleepWithBackoff({}, () => {
+      const videoSegmentBuffered = player
+        .__priv_getSegmentSinkContent("video")
+        .map(({ infos }) => {
+          return {
+            bitrate: infos.representation.bitrate,
+            time: infos.segment.time,
+            end: infos.segment.end,
+          };
+        });
+      expect(videoSegmentBuffered.length).to.be.at.least(3);
+      expect(videoSegmentBuffered[1].bitrate).to.equal(1996000);
+      expect(videoSegmentBuffered[2].bitrate).to.equal(1996000);
+    });
   });
 
   it("should disable fast-switching if explicitely disabled", async function () {
@@ -83,7 +91,9 @@ describe("Fast-switching", function () {
       enableFastSwitching: false,
     });
     await waitForLoadedStateAfterLoadVideo(player);
-    await sleep(1000);
+    await checkAfterSleepWithBackoff({}, () => {
+      expect(player.getCurrentBufferGap()).to.be.above(9);
+    });
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
     await sleep(1000);

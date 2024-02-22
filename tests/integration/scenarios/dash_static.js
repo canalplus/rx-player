@@ -16,6 +16,7 @@ import {
   multiCodecsManifestInfos as segmentBaseMultiCodecsInfos,
 } from "../../contents/DASH_static_SegmentBase";
 import { manifestInfos as numberBasedTimelineManifestInfos } from "../../contents/DASH_static_number_based_SegmentTimeline";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 describe("DASH non-linear content (SegmentTimeline)", function () {
   launchTestsForContent(segmentTimelineManifestInfos);
@@ -147,13 +148,14 @@ describe("DASH content CENC wrong version in MPD", function () {
         },
       ],
     });
-    await sleep(200);
-    expect(generateRequestStub.called).to.equal(true, "generateRequest was not called");
-    expect(foundCencV1).to.equal(true, "should have found a CENC pssh v1");
-    expect(foundOtherCencVersion).to.equal(
-      false,
-      "should not have found a CENC pssh other than v1",
-    );
+    await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+      expect(generateRequestStub.called).to.equal(true, "generateRequest was not called");
+      expect(foundCencV1).to.equal(true, "should have found a CENC pssh v1");
+      expect(foundOtherCencVersion).to.equal(
+        false,
+        "should not have found a CENC pssh other than v1",
+      );
+    });
   });
 });
 
@@ -199,21 +201,21 @@ describe('DASH non-linear content with a "broken" sidx', function () {
     player.seekTo(player.getMaximumPosition() - 1);
     await sleep(10);
     player.setWantedBufferAhead(30);
-    await sleep(50);
-
-    expect(requestedSegments.length).to.be.at.least(2);
-    const foundTruncatedVideoSegment = requestedSegments.some((seg) => {
-      return (
-        isBrokenVideoSegment(seg.url) &&
-        seg.byteRanges.some(
-          (byteRange) => byteRange[0] === 696053 && byteRange[1] === 746228,
-        )
+    await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+      expect(requestedSegments.length).to.be.at.least(2);
+      const foundTruncatedVideoSegment = requestedSegments.some((seg) => {
+        return (
+          isBrokenVideoSegment(seg.url) &&
+          seg.byteRanges.some(
+            (byteRange) => byteRange[0] === 696053 && byteRange[1] === 746228,
+          )
+        );
+      });
+      expect(foundTruncatedVideoSegment).to.equal(
+        true,
+        "should have requested the video segment with a bad range initially",
       );
     });
-    expect(foundTruncatedVideoSegment).to.equal(
-      true,
-      "should have requested the video segment with a bad range initially",
-    );
 
     player.setWantedBufferAhead(1);
 
@@ -233,22 +235,22 @@ describe('DASH non-linear content with a "broken" sidx', function () {
     player.seekTo(player.getMaximumPosition() - 1);
     await sleep(10);
     player.setWantedBufferAhead(30);
-    await sleep(50);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+      expect(requestedSegments.length).to.be.at.least(2);
+      const foundFixedVideoSegment = requestedSegments.some((seg) => {
+        return (
+          isBrokenVideoSegment(seg.url) &&
+          seg.byteRanges.some(
+            (byteRange) => byteRange[0] === 696053 && byteRange[1] === Infinity,
+          )
+        );
+      });
 
-    expect(requestedSegments.length).to.be.at.least(2);
-    const foundFixedVideoSegment = requestedSegments.some((seg) => {
-      return (
-        isBrokenVideoSegment(seg.url) &&
-        seg.byteRanges.some(
-          (byteRange) => byteRange[0] === 696053 && byteRange[1] === Infinity,
-        )
+      expect(foundFixedVideoSegment).to.equal(
+        true,
+        "should have fixed the video segment with a bad range",
       );
     });
-
-    expect(foundFixedVideoSegment).to.equal(
-      true,
-      "should have fixed the video segment with a bad range",
-    );
     player.dispose();
   });
 });
@@ -286,15 +288,15 @@ describe("DASH non-linear content with number-based SegmentTimeline", function (
     expect(requestedManifests[0]).to.equal(numberBasedTimelineManifestInfos.url);
     expect(player.getPlayerState()).to.equal("LOADING");
 
-    await sleep(100);
-
-    // segment requests should be pending
-    expect(requestedSegments.length).to.be.at.least(1);
-    expect(requestedSegments).to.include(
-      "http://127.0.0.1:3000/DASH_static_number_based_SegmentTimeline/media/video_190_avc-1.mp4",
-    );
-    expect(requestedSegments).to.include(
-      "http://127.0.0.1:3000/DASH_static_number_based_SegmentTimeline/media/audio_64_aaclc_fra-1.ts",
-    );
+    await checkAfterSleepWithBackoff({ maxTimeMs: 100 }, () => {
+      // segment requests should be pending
+      expect(requestedSegments.length).to.be.at.least(1);
+      expect(requestedSegments).to.include(
+        "http://127.0.0.1:3000/DASH_static_number_based_SegmentTimeline/media/video_190_avc-1.mp4",
+      );
+      expect(requestedSegments).to.include(
+        "http://127.0.0.1:3000/DASH_static_number_based_SegmentTimeline/media/audio_64_aaclc_fra-1.ts",
+      );
+    });
   });
 });
