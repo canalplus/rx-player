@@ -29,7 +29,6 @@ import {
 } from "../../compat/event_listeners";
 import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
-import hasWebassembly from "../../compat/has_webassembly";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import type {
   IAdaptationChoice,
@@ -425,12 +424,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         log.warn("API: Cannot rely on a WebWorker: Worker API unavailable");
         return rej(
           new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
-        );
-      }
-      if (!hasWebassembly) {
-        log.warn("API: Cannot rely on a WebWorker: WebAssembly unavailable");
-        return rej(
-          new WorkerInitializationError("INCOMPATIBLE_ERROR", "WebAssembly unavailable"),
         );
       }
       if (typeof workerSettings.workerUrl === "string") {

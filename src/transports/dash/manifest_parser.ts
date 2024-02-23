@@ -123,12 +123,17 @@ export default function generateManifestParser(
     function runDefaultJsParser():
       | IManifestParserResult
       | Promise<IManifestParserResult> {
-      if (parsers.js === null) {
+      if (parsers.fastJs !== null) {
+        const manifestStr = getManifestAsString(responseData);
+        const parsedManifest = parsers.fastJs(manifestStr, dashParserOpts);
+        return processMpdParserResponse(parsedManifest);
+      } else if (parsers.native !== null) {
+        const manifestDocument = getManifestAsDocument(responseData);
+        const parsedManifest = parsers.native(manifestDocument, dashParserOpts);
+        return processMpdParserResponse(parsedManifest);
+      } else {
         throw new Error("No MPD parser is imported");
       }
-      const manifestDoc = getManifestAsDocument(responseData);
-      const parsedManifest = parsers.js(manifestDoc, dashParserOpts);
-      return processMpdParserResponse(parsedManifest);
     }
 
     /**
@@ -284,6 +289,26 @@ function assertLoadedResourcesFormatArrayBuffer(
     }
     throw new Error("Invalid data given to the LoadedRessource");
   });
+}
+
+/**
+ * Try to convert a Manifest from an unknown format to an array of nodes as
+ * parsed by our XML DOM parser.
+ *
+ * Throws if the format cannot be converted.
+ * @param {*} manifestSrc
+ * @returns {Array.<Object | string>}
+ */
+function getManifestAsString(manifestSrc: unknown): string {
+  if (manifestSrc instanceof ArrayBuffer) {
+    return utf8ToStr(new Uint8Array(manifestSrc));
+  } else if (typeof manifestSrc === "string") {
+    return manifestSrc;
+  } else if (manifestSrc instanceof Document) {
+    return manifestSrc.documentElement.outerHTML;
+  } else {
+    throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
+  }
 }
 
 /**

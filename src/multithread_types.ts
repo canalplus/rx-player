@@ -43,7 +43,7 @@ export interface IInitMessage {
   type: MainThreadMessageType.Init;
   value: {
     /** Link to the DASH_WASM's feature WebAssembly file to parse DASH MPDs. */
-    dashWasmUrl: string;
+    dashWasmUrl: string | undefined;
     /**
      * If `true` the final element on the current page displaying the content
      * can display video content.
