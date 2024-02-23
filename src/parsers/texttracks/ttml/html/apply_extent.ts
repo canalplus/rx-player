@@ -36,7 +36,14 @@ export default function applyExtent(element: HTMLElement, extent: string): void 
   const secondExtent = REGXP_LENGTH.exec(splittedExtent[1]);
   if (firstExtent !== null && secondExtent !== null) {
     if (firstExtent[2] === "px" || firstExtent[2] === "%" || firstExtent[2] === "em") {
-      element.style.width = firstExtent[1] + firstExtent[2];
+      const toNum = Number(secondExtent[1]);
+      if (secondExtent[2] === "%" && !isNaN(toNum) &&
+          (toNum < 0 || toNum > 100))
+      {
+        element.style.width = "80%";
+      } else {
+        element.style.height = secondExtent[1] + secondExtent[2];
+      }
     } else if (firstExtent[2] === "c") {
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-width", firstExtent[1]);
