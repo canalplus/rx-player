@@ -117,6 +117,9 @@ export const enum TagName {
 
   /// Indicate a `<Location>` node.
   Location = 23,
+
+  /// Indicate a <ContentSteering> node
+  ContentSteering = 24,
 }
 
 /**
