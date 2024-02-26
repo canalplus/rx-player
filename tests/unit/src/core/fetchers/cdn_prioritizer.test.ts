@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import CdnPrioritizer from "../../../../../src/core/fetchers/cdn_prioritizer.ts";
+import type { ITransportPipelines } from "../../../../../src/transports/types.ts";
+import { DummyManifest } from "../../../mocks/manifest.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -28,6 +30,10 @@ vi.mock("../../../../../src/utils/event_emitter", () => {
   return { default: MockEventEmitter };
 });
 
+const dummyManifest = new DummyManifest();
+// Patch it so it doesn't throw
+vi.spyOn(dummyManifest, "addEventListener").mockImplementation(vi.fn());
+
 function makeCancellationSignal(): any {
   let _cb: (() => void) | null = null;
   return {
@@ -49,36 +55,64 @@ describe("CdnPrioritizer", () => {
     vi.useRealTimers();
   });
 
+  const transportPipeline: ITransportPipelines = {
+    transportName: "dash",
+    manifest: {
+      loadManifest: vi.fn(),
+      parseManifest: vi.fn(),
+    },
+    video: {
+      loadSegment: vi.fn(),
+      parseSegment: vi.fn(),
+    },
+    audio: {
+      loadSegment: vi.fn(),
+      parseSegment: vi.fn(),
+    },
+    text: {
+      loadSegment: vi.fn(),
+      parseSegment: vi.fn(),
+    },
+    thumbnails: {
+      loadThumbnail: vi.fn(),
+      parseThumbnail: vi.fn(),
+    },
+    steeringManifest: {
+      loadSteeringManifest: vi.fn(),
+      parseSteeringManifest: vi.fn(),
+    },
+  };
+
   it("returns single CDN as-is without prioritization", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdns = [{ id: "cdn1", baseUrl: "https://cdn1.example.com" }];
-    expect(prioritizer.getCdnPreferenceForResource(cdns)).toEqual(cdns);
+    expect(prioritizer.getCdnPreferenceForResource(cdns).syncValue).toEqual(cdns);
   });
 
   it("returns multiple CDNs in original order when none are downgraded", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdns = [
       { id: "cdn1", baseUrl: "https://cdn1.example.com" },
       { id: "cdn2", baseUrl: "https://cdn2.example.com" },
     ];
-    expect(prioritizer.getCdnPreferenceForResource(cdns)).toEqual(cdns);
+    expect(prioritizer.getCdnPreferenceForResource(cdns).syncValue).toEqual(cdns);
   });
 
   it("puts downgraded CDN last", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn1 = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     const cdn2 = { id: "cdn2", baseUrl: "https://cdn2.example.com" };
     prioritizer.downgradeCdn(cdn1);
     const result = prioritizer.getCdnPreferenceForResource([cdn1, cdn2]);
-    expect(result).toEqual([cdn2, cdn1]);
+    expect(result.syncValue).toEqual([cdn2, cdn1]);
   });
 
   it("triggers priorityChange when downgrading a CDN", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     prioritizer.downgradeCdn(cdn);
     expect((prioritizer as any).trigger).toHaveBeenCalledWith("priorityChange", null);
@@ -87,7 +121,7 @@ describe("CdnPrioritizer", () => {
   it("triggers priorityChange when downgrade expires", () => {
     mockGetCurrent.mockReturnValue({ DEFAULT_CDN_DOWNGRADE_TIME: 5000 });
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     prioritizer.downgradeCdn(cdn);
     const triggerMock = (prioritizer as any).trigger;
@@ -99,19 +133,19 @@ describe("CdnPrioritizer", () => {
   it("CDN is no longer downgraded after timeout expires", () => {
     mockGetCurrent.mockReturnValue({ DEFAULT_CDN_DOWNGRADE_TIME: 5000 });
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn1 = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     const cdn2 = { id: "cdn2", baseUrl: "https://cdn2.example.com" };
     prioritizer.downgradeCdn(cdn1);
     vi.advanceTimersByTime(5000);
     const result = prioritizer.getCdnPreferenceForResource([cdn1, cdn2]);
-    expect(result[0]).toEqual(cdn1);
+    expect(result.syncValue?.[0]).toEqual(cdn1);
   });
 
   it("re-downgrading a CDN resets its downgrade timer", () => {
     mockGetCurrent.mockReturnValue({ DEFAULT_CDN_DOWNGRADE_TIME: 5000 });
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn1 = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     const cdn2 = { id: "cdn2", baseUrl: "https://cdn2.example.com" };
 
@@ -120,22 +154,22 @@ describe("CdnPrioritizer", () => {
     prioritizer.downgradeCdn(cdn1); // reset
     vi.advanceTimersByTime(3000); // only 3s since reset, should still be downgraded
     const result = prioritizer.getCdnPreferenceForResource([cdn1, cdn2]);
-    expect(result[0]).toEqual(cdn2);
+    expect(result.syncValue?.[0]).toEqual(cdn2);
   });
 
   it("matches CDN by baseUrl when id is undefined", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn1 = { baseUrl: "https://cdn1.example.com" } as any;
     const cdn2 = { baseUrl: "https://cdn2.example.com" } as any;
     prioritizer.downgradeCdn(cdn1);
     const result = prioritizer.getCdnPreferenceForResource([cdn1, cdn2]);
-    expect(result).toEqual([cdn2, cdn1]);
+    expect(result.syncValue).toEqual([cdn2, cdn1]);
   });
 
   it("clears timeouts and resets on destroy signal", () => {
     const { signal, cancel } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     prioritizer.downgradeCdn(cdn);
     cancel();
@@ -146,21 +180,21 @@ describe("CdnPrioritizer", () => {
 
   it("returns empty array when given empty array", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
-    expect(prioritizer.getCdnPreferenceForResource([])).toEqual([]);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
+    expect(prioritizer.getCdnPreferenceForResource([]).syncValue).toEqual([]);
   });
 
   it("handles multiple downgraded CDNs correctly", () => {
     const { signal } = makeCancellationSignal();
-    const prioritizer = new CdnPrioritizer(signal);
+    const prioritizer = new CdnPrioritizer(dummyManifest, transportPipeline, signal);
     const cdn1 = { id: "cdn1", baseUrl: "https://cdn1.example.com" };
     const cdn2 = { id: "cdn2", baseUrl: "https://cdn2.example.com" };
     const cdn3 = { id: "cdn3", baseUrl: "https://cdn3.example.com" };
     prioritizer.downgradeCdn(cdn1);
     prioritizer.downgradeCdn(cdn2);
     const result = prioritizer.getCdnPreferenceForResource([cdn1, cdn2, cdn3]);
-    expect(result[0]).toEqual(cdn3);
-    expect(result).toContain(cdn1);
-    expect(result).toContain(cdn2);
+    expect(result.syncValue?.[0]).toEqual(cdn3);
+    expect(result.syncValue).toContain(cdn1);
+    expect(result.syncValue).toContain(cdn2);
   });
 });
