@@ -1,23 +1,21 @@
 diff --git a/src/parsers/texttracks/ttml/html/apply_extent.ts b/src/parsers/texttracks/ttml/html/apply_extent.ts
-index aa173eee7..4887c11dc 100644
+index aa173eee7..bba6ad77c 100644
 --- a/src/parsers/texttracks/ttml/html/apply_extent.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_extent.ts
-@@ -36,7 +36,14 @@ export default function applyExtent(element: HTMLElement, extent: string): void
-   const secondExtent = REGXP_LENGTH.exec(splittedExtent[1]);
-   if (firstExtent !== null && secondExtent !== null) {
-     if (firstExtent[2] === "px" || firstExtent[2] === "%" || firstExtent[2] === "em") {
--      element.style.width = firstExtent[1] + firstExtent[2];
+@@ -45,7 +45,12 @@ export default function applyExtent(element: HTMLElement, extent: string): void
+     }
+ 
+     if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
+-      element.style.height = secondExtent[1] + secondExtent[2];
 +      const toNum = Number(secondExtent[1]);
-+      if (secondExtent[2] === "%" && !isNaN(toNum) &&
-+          (toNum < 0 || toNum > 100))
-+      {
++      if (secondExtent[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
 +        element.style.width = "80%";
 +      } else {
 +        element.style.height = secondExtent[1] + secondExtent[2];
 +      }
-     } else if (firstExtent[2] === "c") {
+     } else if (secondExtent[2] === "c") {
        addClassName(element, "proportional-style");
-       element.setAttribute("data-proportional-width", firstExtent[1]);
+       element.setAttribute("data-proportional-height", secondExtent[1]);
 diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
 index 63c98bbfc..92a8796e0 100644
 --- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
