@@ -61,6 +61,7 @@ export const DummyManifest = makeMockedClass<Manifest>(
     availabilityStartTime: undefined,
     publishTime: undefined,
     clockOffset: undefined,
+    contentSteering: null,
     timeBounds: {
       minimumSafePosition: undefined,
       timeshiftDepth: null,
