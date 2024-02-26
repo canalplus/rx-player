@@ -57,6 +57,7 @@ export default function parseLocalManifest(
 
   return {
     availabilityStartTime: 0,
+    contentSteering: null,
     expired: localManifest.expired,
     transportType: "local",
     isDynamic: !isFinished,

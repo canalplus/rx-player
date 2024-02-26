@@ -114,6 +114,9 @@ export const enum TagName {
 
   /// Indicate an <Initialization> node
   Initialization = 22,
+
+  /// Indicate a <ContentSteering> node
+  ContentSteering = 23,
 }
 
 /**

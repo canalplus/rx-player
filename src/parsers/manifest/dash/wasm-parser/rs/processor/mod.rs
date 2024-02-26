@@ -106,6 +106,11 @@ impl MPDProcessor {
                         attributes::report_base_url_attrs(&tag);
                         self.process_base_url_element();
                     }
+                    b"ContentSteering" => {
+                        TagName::ContentSteering.report_tag_open();
+                        attributes::report_content_steering_attrs(&tag);
+                        self.process_content_steering_element();
+                    }
                     b"cenc:pssh" => self.process_cenc_pssh_element(),
                     b"Location" => self.process_location_element(),
                     b"Label" => {
@@ -333,6 +338,15 @@ impl MPDProcessor {
             AttributeName::Text,
             Some(TagName::BaseURL),
             "Unexpected end of file in a BaseURL.",
+        );
+    }
+
+    fn process_content_steering_element(&mut self) {
+        self.process_text_element(
+            b"ContentSteering",
+            AttributeName::Text,
+            Some(TagName::ContentSteering),
+            "Unexpected end of file in a ContentSteering.",
         );
     }
 
