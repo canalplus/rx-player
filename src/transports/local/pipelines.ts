@@ -101,5 +101,6 @@ export default function getLocalManifestPipelines(
         throw new Error("Thumbnail tracks aren't implemented with the local transport");
       },
     },
+    steeringManifest: null,
   };
 }

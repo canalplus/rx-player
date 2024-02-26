@@ -184,6 +184,7 @@ export default class VideoThumbnailLoader {
       const segmentFetcher = createSegmentFetcher({
         bufferType: "video",
         pipeline: loader.video,
+        // TODO implement ContentSteering for the VideoThumbnailLoader?
         cdnPrioritizer: null,
         cmcdDataBuilder: null,
         requestOptions: {

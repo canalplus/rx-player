@@ -107,6 +107,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [],
+      contentSteering: null,
     };
 
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -149,6 +150,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IPeriod) {
@@ -200,6 +202,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     const representationFilter = function () {
@@ -254,6 +257,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -310,6 +314,7 @@ describe("Manifest - Manifest", () => {
       },
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -378,6 +383,7 @@ describe("Manifest - Manifest", () => {
       periods: [oldPeriod1, oldPeriod2],
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
+      contentSteering: null,
     };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
@@ -408,6 +414,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       uris: [],
+      contentSteering: null,
     };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getUrls()).toEqual([]);
@@ -447,6 +454,7 @@ describe("Manifest - Manifest", () => {
       },
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
+      contentSteering: null,
     };
 
     const manifest = new Manifest(oldManifestArgs, {});

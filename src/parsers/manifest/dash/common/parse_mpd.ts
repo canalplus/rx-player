@@ -18,10 +18,11 @@ import config from "../../../../config.ts";
 import log from "../../../../log.ts";
 import type { IManifest } from "../../../../manifest/index.ts";
 import arrayFind from "../../../../utils/array_find.ts";
+import getLastItemFromArray from "../../../../utils/get_last_item_from_array.ts";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
 import { getFilenameIndexInUrl } from "../../../../utils/url-utils.ts";
-import type { IParsedManifest } from "../../types.ts";
+import type { IContentSteeringMetadata, IParsedManifest } from "../../types.ts";
 import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
@@ -299,6 +300,18 @@ function parseCompleteIntermediateRepresentation(
     time: number;
   };
 
+  let contentSteering: IContentSteeringMetadata | null = null;
+  const lastContentSteering = getLastItemFromArray(rootChildren.ContentSteering);
+  if (lastContentSteering !== undefined) {
+    const { attributes } = lastContentSteering;
+    contentSteering = {
+      url: lastContentSteering.value,
+      defaultId: attributes.defaultServiceLocation,
+      queryBeforeStart: attributes.queryBeforeStart === true,
+      proxyUrl: attributes.proxyServerUrl,
+    };
+  }
+
   if (
     rootAttributes.minimumUpdatePeriod !== undefined &&
     rootAttributes.minimumUpdatePeriod >= 0
@@ -421,6 +434,7 @@ function parseCompleteIntermediateRepresentation(
   const parsedMPD: IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
+    contentSteering,
     isDynamic,
     isLive: isDynamic,
     isLastPeriodKnown,
