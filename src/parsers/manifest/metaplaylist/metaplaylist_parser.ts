@@ -336,6 +336,7 @@ function createManifest(
   const manifest = {
     availabilityStartTime: 0,
     clockOffset,
+    contentSteering: null,
     suggestedPresentationDelay: 10,
     periods,
     transportType: "metaplaylist",

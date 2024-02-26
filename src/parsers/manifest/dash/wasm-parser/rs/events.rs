@@ -86,6 +86,9 @@ pub enum TagName {
     // -- Inside a <SegmentList> --
     /// Indicate a <SegmentURL> node
     SegmentUrl = 20,
+
+    /// Indicate a <ContentSteering> node
+    ContentSteering = 21,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -277,6 +280,12 @@ pub enum AttributeName {
     Label = 71, // String
 
     ServiceLocation = 72, // String
+
+    QueryBeforeStart = 73, // Boolean
+
+    ProxyServerUrl = 74, // String
+
+    DefaultServiceLocation = 75,
 
     // SegmentTemplate
     EndNumber = 76, // f64

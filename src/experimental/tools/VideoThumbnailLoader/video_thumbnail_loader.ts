@@ -183,6 +183,7 @@ export default class VideoThumbnailLoader {
       const segmentFetcher = createSegmentFetcher(
         "video",
         loader.video,
+        // TODO implement ContentSteering for the VideoThumbnailLoader?
         null,
         // We don't care about the SegmentFetcher's lifecycle events
         {},

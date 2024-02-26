@@ -15,6 +15,7 @@
  */
 
 import config from "../../../config";
+import type { IManifest } from "../../../manifest";
 import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type { IBufferType } from "../../segment_sinks";
@@ -59,10 +60,11 @@ export default class SegmentFetcherCreator {
    */
   constructor(
     transport: ITransportPipelines,
+    manifest: IManifest,
     options: ISegmentFetcherCreatorBackoffOptions,
     cancelSignal: CancellationSignal,
   ) {
-    const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
+    const cdnPrioritizer = new CdnPrioritizer(manifest, transport, cancelSignal);
 
     const { MIN_CANCELABLE_PRIORITY, MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import type { ITNode } from "../../../../../utils/xml-parser";
 import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
 import { textContent } from "./utils";
@@ -25,12 +26,23 @@ import { textContent } from "./utils";
  * @returns {Array.<Object|undefined>}
  */
 export default function parseBaseURL(
-  root: ITNode | string,
+  root: ITNode,
 ): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
+  const attributes: { serviceLocation?: string } = {};
   const value = typeof root === "string" ? root : textContent(root.children);
   const warnings: Error[] = [];
   if (value === null || value.length === 0) {
     return [undefined, warnings];
   }
-  return [{ value }, warnings];
+
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    if (attributeName === "serviceLocation") {
+      attributes.serviceLocation = attributeVal;
+    }
+  }
+  return [{ value, attributes }, warnings];
 }
