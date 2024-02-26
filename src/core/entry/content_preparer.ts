@@ -166,18 +166,6 @@ export default class ContentPreparer {
         },
       );
 
-      const cdnPrioritizer = new CdnPrioritizer(contentCanceller.signal);
-      const segmentQueueCreator = new SegmentQueueCreator(
-        transportPipelines,
-        cdnPrioritizer,
-        cmcdDataBuilder,
-        context.segmentRetryOptions,
-      );
-      const fetchThumbnailData = createThumbnailFetcher(
-        transportPipelines.thumbnails,
-        cdnPrioritizer,
-      );
-
       const trackChoiceSetter = new TrackChoiceSetter();
 
       const [mediaSource, segmentSinksStore, coreTextSender] =
@@ -202,8 +190,8 @@ export default class ContentPreparer {
         manifestFetcher,
         representationEstimator,
         segmentSinksStore,
-        segmentQueueCreator,
-        fetchThumbnailData,
+        segmentQueueCreator: null,
+        fetchThumbnailData: null,
         coreTextSender,
         trackChoiceSetter,
         mseInWorker: playbackSupport.mseInWorker,
@@ -240,8 +228,27 @@ export default class ContentPreparer {
             return;
           }
           manifest = man;
+
+          const cdnPrioritizer = new CdnPrioritizer(
+            manifest,
+            transportPipelines,
+            contentCanceller.signal,
+          );
+          const segmentQueueCreator = new SegmentQueueCreator({
+            cdnPrioritizer,
+            transportPipelines,
+            cmcdDataBuilder,
+            backoffOptions: context.segmentRetryOptions,
+          });
+          const fetchThumbnailData = createThumbnailFetcher(
+            transportPipelines.thumbnails,
+            cdnPrioritizer,
+          );
+
           if (this._currentContent !== null) {
             this._currentContent.manifest = manifest;
+            this._currentContent.segmentQueueCreator = segmentQueueCreator;
+            this._currentContent.fetchThumbnailData = fetchThumbnailData;
           }
           checkIfReadyAndValidate();
         },
@@ -443,10 +450,15 @@ export interface IPreparedContentData {
   /**
    * Allows to create `SegmentQueue` which simplifies complex media segment
    * fetching.
+   *
+   * Set to `null` until the Manifest has been fetched.
    */
-  segmentQueueCreator: SegmentQueueCreator;
-  /** Allows to load image thumbnails. */
-  fetchThumbnailData: IThumbnailFetcher;
+  segmentQueueCreator: SegmentQueueCreator | null;
+  /**
+   * Allows to load image thumbnails.
+   * Set to `null` until the Manifest has been fetched.
+   */
+  fetchThumbnailData: IThumbnailFetcher | null;
   /**
    * Allows to store and update the wanted tracks and Representation inside that
    * track.

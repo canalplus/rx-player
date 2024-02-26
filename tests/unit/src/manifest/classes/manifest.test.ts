@@ -108,6 +108,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -151,6 +152,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [period1, period2],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IPeriod) {
@@ -203,6 +205,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [period1, period2],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     const representationFilter = function () {
@@ -258,6 +261,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [period1, period2],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -314,6 +318,7 @@ describe("Manifest - Manifest", () => {
       },
       suggestedPresentationDelay: 99,
       refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -382,6 +387,7 @@ describe("Manifest - Manifest", () => {
       periods: [oldPeriod1, oldPeriod2],
       suggestedPresentationDelay: 99,
       refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
+      contentSteering: null,
     };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
@@ -412,6 +418,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       refreshUrls: [],
+      contentSteering: null,
     };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getRefreshUrls()).toEqual([]);
@@ -451,6 +458,7 @@ describe("Manifest - Manifest", () => {
       },
       suggestedPresentationDelay: 99,
       refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
+      contentSteering: null,
     };
 
     const manifest = new Manifest(oldManifestArgs, {});

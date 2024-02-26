@@ -21,6 +21,10 @@ import { addManifestIntegrityChecks } from "./integrity_checks.ts";
 import generateManifestParser from "./manifest_parser.ts";
 import generateSegmentLoader from "./segment_loader.ts";
 import generateAudioVideoSegmentParser from "./segment_parser.ts";
+import {
+  loadSteeringManifest,
+  parseSteeringManifest,
+} from "./steering_manifest_pipeline.ts";
 import generateTextTrackLoader from "./text_loader.ts";
 import generateTextTrackParser from "./text_parser.ts";
 import { loadThumbnail, parseThumbnail } from "./thumbnails.ts";
@@ -60,6 +64,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
       loadThumbnail,
       parseThumbnail,
     },
+    steeringManifest: { loadSteeringManifest, parseSteeringManifest },
   };
 }
 
