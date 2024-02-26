@@ -410,5 +410,6 @@ export default function (options: ITransportOptions): ITransportPipelines {
         throw new Error("Thumbnail tracks aren't implemented with MetaPlaylist");
       },
     },
+    steeringManifest: null,
   };
 }
