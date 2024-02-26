@@ -54,12 +54,7 @@ export default function getLoadedReference(
         return;
       }
 
-      if (
-        !shouldWaitForDataBeforeLoaded(
-          isDirectfile,
-          mediaElement.hasAttribute("playsinline"),
-        )
-      ) {
+      if (!shouldWaitForDataBeforeLoaded(isDirectfile, mediaElement)) {
         if (mediaElement.duration > 0) {
           isLoaded.setValue(true);
           listenCanceller.cancel();

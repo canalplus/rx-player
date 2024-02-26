@@ -22,14 +22,12 @@ import { isSafariMobile } from "./browser_detection";
  * We might go into BUFFERING just after that state, but that's a small price to
  * pay.
  * @param {Boolean} isDirectfile
+ * @param {HTMLMediaElement} mediaElement
  * @returns {Boolean}
  */
 export default function shouldWaitForDataBeforeLoaded(
   isDirectfile: boolean,
-  mustPlayInline: boolean,
+  mediaElement: HTMLMediaElement,
 ): boolean {
-  if (isDirectfile && isSafariMobile) {
-    return mustPlayInline;
-  }
-  return true;
+  return !(isSafariMobile && isDirectfile && mediaElement.paused);
 }
