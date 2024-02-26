@@ -22,6 +22,7 @@ import { AttributeName, TagName } from "../types";
 import { parseString } from "../utils";
 import { generateBaseUrlAttrParser } from "./BaseURL";
 import { generateContentProtectionAttrParser } from "./ContentProtection";
+import { generateContentSteeringAttrParser } from "./ContentSteering";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period";
 import { generateSchemeAttrParser } from "./Scheme";
 
@@ -47,6 +48,19 @@ export function generateMPDChildrenParser(
 
         const childrenParser = noop; // BaseURL have no sub-element
         const attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
+        parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
+        break;
+      }
+
+      case TagName.ContentSteering: {
+        const contentSteering = { value: "", attributes: {} };
+        mpdChildren.contentSteering = contentSteering;
+
+        const childrenParser = noop; // ContentSteering have no sub-element
+        const attributeParser = generateContentSteeringAttrParser(
+          contentSteering,
+          linearMemory,
+        );
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
       }

@@ -440,9 +440,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     );
 
     const segmentQueueCreator = new SegmentQueueCreator(
-      transport,
-      this._cmcdDataBuilder,
-      segmentRequestOptions,
+      {
+        transportPipelines: transport,
+        cmcdDataBuilder: this._cmcdDataBuilder,
+        manifest,
+        backoffOptions: segmentRequestOptions,
+      },
       initCanceller.signal,
     );
 

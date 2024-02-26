@@ -15,6 +15,7 @@
  */
 
 import config from "../../../config";
+import type { IManifest } from "../../../manifest";
 import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type CmcdDataBuilder from "../../cmcd";
@@ -59,20 +60,26 @@ export default class SegmentQueueCreator {
   private _cmcdDataBuilder: CmcdDataBuilder | null;
 
   /**
-   * @param {Object} transport
-   * @param {Object} options
-   * @param {Object} cancelSignal
+   * @param {Object} args
    */
   constructor(
-    transport: ITransportPipelines,
-    cmcdDataBuilder: CmcdDataBuilder | null,
-    options: ISegmentQueueCreatorBackoffOptions,
+    {
+      transportPipelines,
+      manifest,
+      cmcdDataBuilder,
+      backoffOptions,
+    }: {
+      transportPipelines: ITransportPipelines;
+      manifest: IManifest;
+      cmcdDataBuilder: CmcdDataBuilder | null;
+      backoffOptions: ISegmentQueueCreatorBackoffOptions;
+    },
     cancelSignal: CancellationSignal,
   ) {
-    const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
+    const cdnPrioritizer = new CdnPrioritizer(manifest, transportPipelines, cancelSignal);
 
     const { MIN_CANCELABLE_PRIORITY, MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
-    this._transport = transport;
+    this._transport = transportPipelines;
     this._prioritizer = new TaskPrioritizer({
       prioritySteps: {
         high: MAX_HIGH_PRIORITY_LEVEL,
@@ -80,7 +87,7 @@ export default class SegmentQueueCreator {
       },
     });
     this._cdnPrioritizer = cdnPrioritizer;
-    this._backoffOptions = options;
+    this._backoffOptions = backoffOptions;
     this._cmcdDataBuilder = cmcdDataBuilder;
   }
 

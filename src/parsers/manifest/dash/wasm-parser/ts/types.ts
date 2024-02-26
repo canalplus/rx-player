@@ -111,6 +111,9 @@ export const enum TagName {
 
   /// Indicate a <Label> node
   Label = 21,
+
+  /// Indicate a <ContentSteering> node
+  ContentSteering = 22,
 }
 
 /**

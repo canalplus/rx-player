@@ -477,14 +477,17 @@ describe("DASH Node Parsers - AdaptationSet", () => {
     ]);
   });
 
-  it("should correctly parse a non-empty baseURLs", () => {
+  it("should correctly parse a non-empty baseURL", () => {
     const element1 = parseXml(
       '<AdaptationSet><BaseURL serviceLocation="foo">a</BaseURL></AdaptationSet>',
     )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: {},
-        children: { baseURLs: [{ value: "a" }], representations: [] },
+        children: {
+          baseURLs: [{ attributes: { serviceLocation: "foo" }, value: "a" }],
+          representations: [],
+        },
       },
       [],
     ]);
@@ -495,7 +498,10 @@ describe("DASH Node Parsers - AdaptationSet", () => {
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: {},
-        children: { baseURLs: [{ value: "foo bar" }], representations: [] },
+        children: {
+          baseURLs: [{ attributes: { serviceLocation: "4" }, value: "foo bar" }],
+          representations: [],
+        },
       },
       [],
     ]);
@@ -509,7 +515,10 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       {
         attributes: {},
         children: {
-          baseURLs: [{ value: "a" }, { value: "b" }],
+          baseURLs: [
+            { attributes: { serviceLocation: "" }, value: "a" },
+            { attributes: { serviceLocation: "http://test.com" }, value: "b" },
+          ],
           representations: [],
         },
       },
