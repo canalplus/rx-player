@@ -26,3 +26,4 @@
 /jest.config.js
 /tsconfig*.json
 /webpack.config.mjs
+/.vscode
