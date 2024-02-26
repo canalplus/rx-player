@@ -25,6 +25,7 @@ import type {
 } from "../../node_parser_types.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
+import parseContentSteering from "./ContentSteering.ts";
 import { createPeriodIntermediateRepresentation } from "./Period.ts";
 import {
   parseDateTime,
@@ -49,6 +50,7 @@ function parseMPDChildren(
     Period: [],
     UTCTiming: [],
     ContentProtection: [],
+    ContentSteering: [],
   };
 
   let warnings: Error[] = [];
@@ -60,6 +62,16 @@ function parseMPDChildren(
     switch (currentNode.tagName) {
       case "BaseURL": {
         ret.BaseURL.push(parseBaseURL(currentNode));
+        break;
+      }
+
+      case "ContentSteering": {
+        const [contentSteeringObj, contentSteeringWarnings] =
+          parseContentSteering(currentNode);
+        if (contentSteeringObj !== undefined) {
+          ret.ContentSteering.push(contentSteeringObj);
+        }
+        warnings = warnings.concat(contentSteeringWarnings);
         break;
       }
 

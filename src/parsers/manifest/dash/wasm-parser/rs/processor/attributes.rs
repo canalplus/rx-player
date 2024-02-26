@@ -165,6 +165,20 @@ pub fn report_location_attrs(element: &crate::xml::Element) {
     }
 }
 
+pub fn report_content_steering_attrs(element: &crate::xml::Element) {
+    for res_attr in element.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key {
+                b"defaultServiceLocation" => DefaultServiceLocation.try_report_as_string(&attr),
+                b"proxyServerUrl" => ProxyServerUrl.try_report_as_string(&attr),
+                b"queryBeforeStart" => QueryBeforeStart.try_report_as_bool(&attr),
+                _ => {}
+            },
+            Err(err) => err.report_err(),
+        };
+    }
+}
+
 pub fn report_segment_template_attrs(element: &crate::xml::Element) {
     for res_attr in element.attributes() {
         match res_attr {

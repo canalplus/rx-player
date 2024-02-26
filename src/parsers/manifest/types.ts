@@ -98,7 +98,8 @@ export interface ICdnMetadata {
   baseUrl: string;
 
   /**
-   * Identifier that might be re-used in other documents.
+   * Identifier that might be re-used in other documents, for example a
+   * Content Steering Manifest, to identify this CDN.
    */
   id?: string | undefined;
 }
@@ -459,4 +460,13 @@ export interface IParsedManifest {
    * Here only the `baseUrl` allows to construct the URL.
    */
   refreshUrls: ICdnMetadata[];
+
+  contentSteering: IContentSteeringMetadata | null;
+}
+
+export interface IContentSteeringMetadata {
+  url: string;
+  defaultId: string | undefined;
+  queryBeforeStart: boolean;
+  proxyUrl: string | undefined;
 }
