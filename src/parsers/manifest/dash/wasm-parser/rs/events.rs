@@ -92,6 +92,9 @@ pub enum TagName {
 
     /// Indicate an <Initialization> node
     Initialization = 22,
+
+    /// Indicate a <ContentSteering> node
+    ContentSteering = 23,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -283,6 +286,12 @@ pub enum AttributeName {
     Namespace = 70,
 
     ServiceLocation = 72, // String
+
+    QueryBeforeStart = 73, // Boolean
+
+    ProxyServerUrl = 74, // String
+
+    DefaultServiceLocation = 75,
 
     // SegmentTemplate
     EndNumber = 76, // f64

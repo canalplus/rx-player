@@ -25,6 +25,8 @@ import cancellableSleep from "../../../utils/cancellable_sleep.ts";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay.ts";
 import getTimestamp from "../../../utils/monotonic_timestamp.ts";
 import { RequestError } from "../../../utils/request/index.ts";
+import type { ISyncOrAsyncValue } from "../../../utils/sync_or_async.ts";
+import SyncOrAsync from "../../../utils/sync_or_async.ts";
 import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 import TaskCanceller from "../../../utils/task_canceller.ts";
 import type CdnPrioritizer from "../cdn_prioritizer.ts";
@@ -171,8 +173,17 @@ export async function scheduleRequestWithCdns<T>(
   }
 
   const missedAttempts: Map<ICdnMetadata | null, ICdnAttemptMetadata> = new Map();
-  const initialCdnToRequest = getCdnToRequest();
-  if (initialCdnToRequest === undefined) {
+  const cdnsResponse = getCdnToRequest();
+  let initialCdnToRequest;
+  if (cdnsResponse.syncValue === null) {
+    initialCdnToRequest = await cdnsResponse.getValueAsAsync();
+  } else {
+    initialCdnToRequest = cdnsResponse.syncValue;
+  }
+
+  if (initialCdnToRequest === "no-http") {
+    initialCdnToRequest = null;
+  } else if (initialCdnToRequest === undefined) {
     throw new Error("No CDN to request");
   }
   return requestCdn(initialCdnToRequest);
@@ -180,25 +191,35 @@ export async function scheduleRequestWithCdns<T>(
   /**
    * Returns what is now the most prioritary CDN to request the wanted resource.
    *
-   * A return value of `null` indicates that the resource can be requested
+   * A return value of `"no-http"` indicates that the resource can be requested
    * through another mean than by doing an HTTP request.
    *
    * A return value of `undefined` indicates that there's no CDN left to request
    * the resource.
    * @returns {Object|null|undefined}
    */
-  function getCdnToRequest(): ICdnMetadata | null | undefined {
+  function getCdnToRequest(): ISyncOrAsyncValue<ICdnMetadata | "no-http" | undefined> {
     if (cdns === null) {
       const nullAttemptObject = missedAttempts.get(null);
       if (nullAttemptObject !== undefined && nullAttemptObject.isBlacklisted) {
-        return undefined;
+        return SyncOrAsync.createSync(undefined);
       }
-      return null;
+      return SyncOrAsync.createSync("no-http");
     } else if (cdnPrioritizer === null) {
-      return getPrioritaryRequestableCdnFromSortedList(cdns);
+      return SyncOrAsync.createSync(getPrioritaryRequestableCdnFromSortedList(cdns));
     } else {
       const prioritized = cdnPrioritizer.getCdnPreferenceForResource(cdns);
-      return getPrioritaryRequestableCdnFromSortedList(prioritized);
+      // TODO order by `blockedUntil` DESC if `missedAttempts` is not empty
+      if (prioritized.syncValue !== null) {
+        return SyncOrAsync.createSync(
+          getPrioritaryRequestableCdnFromSortedList(prioritized.syncValue),
+        );
+      }
+      return SyncOrAsync.createAsync(
+        prioritized
+          .getValueAsAsync()
+          .then((v) => getPrioritaryRequestableCdnFromSortedList(v)),
+      );
     }
   }
 
@@ -269,13 +290,21 @@ export async function scheduleRequestWithCdns<T>(
    * @returns {Promise}
    */
   async function retryWithNextCdn(prevRequestError: unknown): Promise<T> {
-    const nextCdn = getCdnToRequest();
+    const currCdnResponse = getCdnToRequest();
+    let nextCdn;
+    if (currCdnResponse.syncValue === null) {
+      nextCdn = await currCdnResponse.getValueAsAsync();
+    } else {
+      nextCdn = currCdnResponse.syncValue;
+    }
 
     if (cancellationSignal.isCancelled()) {
       throw cancellationSignal.cancellationError;
     }
 
-    if (nextCdn === undefined) {
+    if (nextCdn === "no-http") {
+      nextCdn = null;
+    } else if (nextCdn === undefined) {
       throw prevRequestError;
     }
 
@@ -317,12 +346,20 @@ export async function scheduleRequestWithCdns<T>(
     return new Promise<T>((res, rej) => {
       cdnPrioritizer?.addEventListener(
         "priorityChange",
-        () => {
-          const updatedPrioritaryCdn = getCdnToRequest();
+        async () => {
+          const newCdnsResponse = getCdnToRequest();
+          let updatedPrioritaryCdn;
+          if (newCdnsResponse.syncValue === null) {
+            updatedPrioritaryCdn = await newCdnsResponse.getValueAsAsync();
+          } else {
+            updatedPrioritaryCdn = newCdnsResponse.syncValue;
+          }
           if (cancellationSignal.isCancelled()) {
             return;
           }
-          if (updatedPrioritaryCdn === undefined) {
+          if (updatedPrioritaryCdn === "no-http") {
+            updatedPrioritaryCdn = null;
+          } else if (updatedPrioritaryCdn === undefined) {
             return cleanAndReject(prevRequestError);
           }
           if (updatedPrioritaryCdn !== nextWantedCdn) {

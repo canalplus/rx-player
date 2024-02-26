@@ -430,6 +430,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         throw new Error("Thumbnail tracks aren't implemented with smooth");
       },
     },
+    steeringManifest: null,
   };
 }
 
