@@ -55,8 +55,12 @@ export default function getLoadedReference(
       return ;
     }
 
-    if (!shouldWaitForDataBeforeLoaded(isDirectfile))
-    {
+    if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
+      // The duration is NaN if no media data is available,
+      // which means media is not loaded yet.
+      if (isNaN(mediaElement.duration)) {
+        return;
+      }
       if (mediaElement.duration > 0) {
         isLoaded.setValue(true);
         listenCanceller.cancel();
