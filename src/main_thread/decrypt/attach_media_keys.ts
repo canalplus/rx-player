@@ -21,6 +21,7 @@ import type {
 } from "../../compat/eme";
 import eme from "../../compat/eme";
 import { setMediaKeys } from "../../compat/eme/set_media_keys";
+import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -89,11 +90,10 @@ export default async function attachMediaKeys(
       log.info("DRM: MediaKeys attached with success");
     })
     .catch((err) => {
-      // TODO proper error (rely on the `CREATE_MEDIA_KEYS` code or create a new
-      // one?).
-      log.error(
-        "DRM: Could not set MediaKeys",
-        err instanceof Error ? err : "Unknown Error",
+      const errMessage = err instanceof Error ? err.toString() : "Unknown Error";
+      throw new EncryptedMediaError(
+        "CREATE_MEDIA_KEYS_ERROR",
+        "Could not attach the MediaKeys to the media element: " + errMessage,
       );
     });
 }
