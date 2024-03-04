@@ -446,6 +446,16 @@ An error of `type` `ENCRYPTED_MEDIA_ERROR` can have the following codes (`code` 
   It has been encountered mainly on some faulty Android devices and Electron applications.
   If this happens repeatedly, try reinstalling the CDM module on your device.
 
+- `MEDIA_KEYS_ATTACHMENT_ERROR`: An error happened when trying to attach a CDM instance to
+  the media element playing it.
+
+  More specifically, this error happens when the EME
+  [`setMediaKeys` API](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemaccess-createmediakeys)
+  throws or rejects.
+
+  This is a very rare issue generally linked to an issue with the CDM integrated in the
+  browser.
+
 - `"MULTIPLE_SESSIONS_SAME_INIT_DATA"`: This error should never be emitted by the
   RxPlayer. Please open an issue if you encounter it.
 
