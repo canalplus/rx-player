@@ -92,7 +92,7 @@ export default async function attachMediaKeys(
     .catch((err) => {
       const errMessage = err instanceof Error ? err.toString() : "Unknown Error";
       throw new EncryptedMediaError(
-        "CREATE_MEDIA_KEYS_ERROR",
+        "MEDIA_KEYS_ATTACHMENT_ERROR",
         "Could not attach the MediaKeys to the media element: " + errMessage,
       );
     });
