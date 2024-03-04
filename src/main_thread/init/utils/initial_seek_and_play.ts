@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isSafariMobile } from "../../../compat/browser_detection";
+import canSeekDirectlyAfterLoadedMetadata from "../../../compat/can_seek_directly_after_loaded_metadata";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
@@ -118,15 +118,12 @@ export default function performInitialSeekAndPlay(
               const initiallySeekedTime =
                 typeof startTime === "number" ? startTime : startTime();
               if (initiallySeekedTime !== 0) {
-                if (isSafariMobile) {
-                  // On safari mobile (version 17.1.2) seeking too early cause the video
-                  // to never buffer media data. Using setTimeout 0 defers the seek
-                  // to a moment at which safari should be more able to handle a seek.
+                if (canSeekDirectlyAfterLoadedMetadata) {
+                  performInitialSeek(initiallySeekedTime);
+                } else {
                   setTimeout(() => {
                     performInitialSeek(initiallySeekedTime);
                   }, 0);
-                } else {
-                  performInitialSeek(initiallySeekedTime);
                 }
               }
               waitForSeekable();
