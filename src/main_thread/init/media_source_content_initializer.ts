@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import config from "../../config";
@@ -150,7 +151,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     this.prepare(); // Load Manifest if not already done
@@ -208,7 +209,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private _initializeMediaSourceAndDecryption(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     protectionRef: IReadOnlySharedReference<IContentProtection | null>,
   ): Promise<{
     mediaSource: MainMediaSourceInterface;
@@ -308,7 +309,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private async _onInitialMediaSourceReady(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     initialMediaSource: MainMediaSourceInterface,
     playbackObserver: IMediaElementPlaybackObserver,
     drmSystemId: string | undefined,
@@ -1026,7 +1027,7 @@ interface IBufferingMediaSettings {
   /* Manifest of the content we want to play. */
   manifest: IManifest;
   /** Media Element on which the content will be played. */
-  mediaElement: HTMLMediaElement;
+  mediaElement: IMediaElement;
   /** Emit playback conditions regularly. */
   playbackObserver: IMediaElementPlaybackObserver;
   /** Estimate the right Representation. */

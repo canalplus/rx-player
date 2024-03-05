@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
@@ -71,7 +72,7 @@ export interface IMediaKeysInfos {
  * @returns {Promise.<Object>}
  */
 export default async function getMediaKeysInfos(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {
