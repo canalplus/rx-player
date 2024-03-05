@@ -19,6 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import clearElementSrc from "../../compat/clear_element_src";
 import type { MediaError } from "../../errors";
 import log from "../../log";
@@ -85,7 +86,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * information.
    */
   public start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     const cancelSignal = this._initCanceller.signal;
@@ -210,7 +211,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   private _seekAndPlay(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     const cancelSignal = this._initCanceller.signal;
@@ -258,7 +259,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
  * @returns {number}
  */
 function getDirectFileInitialTime(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   startAt?: IInitialTimeOptions,
 ): number {
   if (isNullOrUndefined(startAt)) {

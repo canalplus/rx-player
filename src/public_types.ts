@@ -3,6 +3,7 @@
  * Those types are considered as part of the API.
  */
 
+import type { IMediaElement } from "./compat/browser_compatibility_types";
 import type { IPreferredEmeApiType } from "./compat/eme";
 import type { EncryptedMediaError, MediaError, NetworkError, OtherError } from "./errors";
 import type {
@@ -38,7 +39,7 @@ export interface IConstructorOptions {
   videoResolutionLimit?: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden?: boolean;
 
-  videoElement?: HTMLMediaElement;
+  videoElement?: IMediaElement;
   baseBandwidth?: number;
 }
 

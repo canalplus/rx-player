@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type {
   ISegmentSinksStore,
   IBufferType,
@@ -83,7 +84,7 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * intervals.
    */
   public abstract start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void;
 

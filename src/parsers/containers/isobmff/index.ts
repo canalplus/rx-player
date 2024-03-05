@@ -38,4 +38,9 @@ export {
   patchPssh,
   updateBoxLength,
 } from "./utils";
-export { extractCompleteChunks, findCompleteBox, getPsshSystemID, takePSSHOut };
+export {
+  extractCompleteChunks,
+  findCompleteBox,
+  getPsshSystemID,
+  takePSSHOut,
+};

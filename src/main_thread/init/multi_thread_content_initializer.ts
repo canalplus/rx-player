@@ -1,3 +1,4 @@
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
@@ -207,7 +208,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     this.prepare(); // Load Manifest if not already done
@@ -1099,7 +1100,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   private _initializeContentDecryption(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
@@ -1264,7 +1265,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   private _reload(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     textDisplayer: ITextDisplayer | null,
     playbackObserver: IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
@@ -1342,7 +1343,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     parameters: {
       initialTime: number;
       autoPlay: boolean;
-      mediaElement: HTMLMediaElement;
+      mediaElement: IMediaElement;
       textDisplayer: ITextDisplayer | null;
       playbackObserver: IMediaElementPlaybackObserver;
     },
@@ -1498,7 +1499,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * playback start.
    */
   private _startPlaybackIfReady(parameters: {
-    mediaElement: HTMLMediaElement;
+    mediaElement: IMediaElement;
     textDisplayer: ITextDisplayer | null;
     playbackObserver: IMediaElementPlaybackObserver;
     drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
@@ -1582,7 +1583,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _onCreateMediaSourceMessage(
     msg: ICreateMediaSourceWorkerMessage,
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     worker: Worker,
   ): void {

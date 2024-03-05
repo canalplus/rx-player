@@ -18,7 +18,7 @@ import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import startsWith from "../../../utils/starts_with";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { IMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import type {
   ICustomMediaKeys,
@@ -30,7 +30,7 @@ import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
 import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
-  _setVideo: (videoElement: HTMLMediaElement) => void;
+  _setVideo: (videoElement: IMediaElement) => void;
   createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
   setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
@@ -47,15 +47,11 @@ function isFairplayKeyType(keyType: string): boolean {
 /**
  * Set media keys on video element using native HTMLMediaElement
  * setMediaKeys from WebKit.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} elt
  * @param {Object|null} mediaKeys
  * @returns {Promise}
  */
-function setWebKitMediaKeys(
-  videoElement: HTMLMediaElement,
-  mediaKeys: unknown,
-): Promise<unknown> {
-  const elt: ICompatHTMLMediaElement = videoElement;
+function setWebKitMediaKeys(elt: IMediaElement, mediaKeys: unknown): Promise<unknown> {
   return wrapInPromise(() => {
     if (elt.webkitSetMediaKeys === undefined) {
       throw new Error("No webKitMediaKeys API.");
@@ -80,7 +76,7 @@ class WebkitMediaKeySession
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
 
-  private readonly _videoElement: HTMLMediaElement;
+  private readonly _videoElement: IMediaElement;
   private readonly _keyType: string;
   private _nativeSession: undefined | MediaKeySession;
   private _serverCertificate: Uint8Array | undefined;
@@ -94,7 +90,7 @@ class WebkitMediaKeySession
    * @param {Uint8Array | undefined} serverCertificate
    */
   constructor(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     keyType: string,
     serverCertificate?: Uint8Array,
   ) {
@@ -144,7 +140,7 @@ class WebkitMediaKeySession
 
   public generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
     return new Promise((resolve) => {
-      const elt = this._videoElement as ICompatHTMLMediaElement;
+      const elt = this._videoElement;
       if (elt.webkitKeys?.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
@@ -233,7 +229,7 @@ class WebkitMediaKeySession
 }
 
 class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
-  private _videoElement?: HTMLMediaElement;
+  private _videoElement?: IMediaElement;
   private _mediaKeys?: IWebKitMediaKeys;
   private _serverCertificate?: Uint8Array;
   private _keyType: string;
@@ -246,7 +242,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     this._mediaKeys = new WebKitMediaKeysConstructor(keyType);
   }
 
-  _setVideo(videoElement: HTMLMediaElement): Promise<unknown> {
+  _setVideo(videoElement: IMediaElement): Promise<unknown> {
     this._videoElement = videoElement;
     if (this._videoElement === undefined) {
       throw new Error("Video not attached to the MediaKeys");
@@ -275,7 +271,7 @@ export default function getWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => WebKitCustomMediaKeys;
   setMediaKeys: (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
@@ -285,7 +281,7 @@ export default function getWebKitMediaKeysCallbacks(): {
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
   const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {

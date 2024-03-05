@@ -20,8 +20,6 @@ import findCompleteBox from "./find_complete_box";
 /**
  * Take a chunk of ISOBMFF data and extract complete `moof`+`mdat` subsegments
  * which are ready to be decoded.
- * Returns a tuple of two containing first an array of those subsegments
- * followed by tha last un-decodable part.
  * @param {Uint8Array} buffer
  * @returns {Array}
  */
@@ -40,32 +38,48 @@ export default function extractCompleteChunks(
     const moofIndex = findCompleteBox(currentBuffer, 0x6d6f6f66 /* moof */);
     if (moofIndex < 0) {
       // no moof, not a media segment.
-      break;
-    }
-    const moofLen = be4toi(buffer, moofIndex + _position);
-    const moofEnd = _position + moofIndex + moofLen;
-    if (moofEnd > buffer.length) {
-      // not a complete moof segment
-      break;
-    }
+      const moovIndex = findCompleteBox(currentBuffer, 0x6d6f6f76 /* moov */);
+      if (moovIndex < 0) {
+        // no moov, not an init segment.
+        break;
+      }
 
-    const mdatIndex = findCompleteBox(currentBuffer, 0x6d646174 /* mdat */);
-    if (mdatIndex < 0) {
-      // no mdat, not a segment.
-      break;
-    }
-    const mdatLen = be4toi(buffer, mdatIndex + _position);
-    const mdatEnd = _position + mdatIndex + mdatLen;
-    if (mdatEnd > buffer.length) {
-      // not a complete mdat segment
-      break;
-    }
+      const moovLen = be4toi(buffer, moovIndex + _position);
+      const moovEnd = _position + moovIndex + moovLen;
+      if (moovEnd > buffer.length) {
+        // not a complete moof segment
+        break;
+      }
 
-    const maxEnd = Math.max(moofEnd, mdatEnd);
-    const chunk = buffer.subarray(_position, maxEnd);
-    chunks.push(chunk);
+      const chunk = buffer.subarray(_position, moovEnd);
+      chunks.push(chunk);
+      _position = moovEnd;
+    } else {
+      const moofLen = be4toi(buffer, moofIndex + _position);
+      const moofEnd = _position + moofIndex + moofLen;
+      if (moofEnd > buffer.length) {
+        // not a complete moof segment
+        break;
+      }
 
-    _position = maxEnd;
+      const mdatIndex = findCompleteBox(currentBuffer, 0x6d646174 /* mdat */);
+      if (mdatIndex < 0) {
+        // no mdat, not a segment.
+        break;
+      }
+      const mdatLen = be4toi(buffer, mdatIndex + _position);
+      const mdatEnd = _position + mdatIndex + mdatLen;
+      if (mdatEnd > buffer.length) {
+        // not a complete mdat segment
+        break;
+      }
+
+      const maxEnd = Math.max(moofEnd, mdatEnd);
+      const chunk = buffer.subarray(_position, maxEnd);
+      chunks.push(chunk);
+
+      _position = maxEnd;
+    }
   }
   if (chunks.length === 0) {
     return [null, currentBuffer];
