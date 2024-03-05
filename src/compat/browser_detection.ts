@@ -67,6 +67,9 @@ let isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
+/** `true` for the PlayStation 4 game console. */
+let isPlayStation4 = false;
+
 /** `true` for the PlayStation 5 game console. */
 let isPlayStation5 = false;
 
@@ -128,7 +131,9 @@ let isXbox = false;
     isSamsungBrowser = true;
   }
 
-  if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
+  if (navigator.userAgent.indexOf("PlayStation 4") !== -1) {
+    isPlayStation4 = true;
+  } else if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
     isPlayStation5 = true;
   } else if (/Tizen/.test(navigator.userAgent)) {
     isTizen = true;
@@ -163,6 +168,7 @@ export {
   isIEOrEdge,
   isFirefox,
   isPanasonic,
+  isPlayStation4,
   isPlayStation5,
   isXbox,
   isSafariDesktop,
