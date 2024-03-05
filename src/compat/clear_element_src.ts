@@ -16,12 +16,13 @@
 
 import log from "../log";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
+import type { IMediaElement } from "./browser_compatibility_types";
 
 /**
  * Clear element's src attribute.
  * @param {HTMLMediaElement} element
  */
-export default function clearElementSrc(element: HTMLMediaElement): void {
+export default function clearElementSrc(element: IMediaElement): void {
   // On some browsers, we first have to make sure the textTracks elements are
   // both disabled and removed from the DOM.
   // If we do not do that, we may be left with displayed text tracks on the

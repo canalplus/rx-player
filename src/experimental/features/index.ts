@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+export { DUMMY_MEDIA_ELEMENT } from "./dummy_media_element";
 export { METAPLAYLIST } from "./metaplaylist";
 export { LOCAL_MANIFEST } from "./local";
 export { MULTI_THREAD } from "./multi_thread";

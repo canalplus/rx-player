@@ -19,7 +19,11 @@ import {
   HTML_VTT_PARSER,
   SMOOTH,
 } from "../../../../src/features/list";
-import { METAPLAYLIST, MULTI_THREAD } from "../../../../src/experimental/features";
+import {
+  METAPLAYLIST,
+  MULTI_THREAD,
+  DUMMY_MEDIA_ELEMENT,
+} from "../../../../src/experimental/features";
 import RxPlayer from "../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
@@ -221,7 +225,10 @@ const PlayerModule = declareModule(
   ) => {
     let hasAttachedMultithread = false;
     const { debugElement, textTrackElement, ...constructorOpts } = initOpts;
-    const player = new RxPlayer(constructorOpts);
+    const player = new RxPlayer({
+      ...constructorOpts,
+      videoElement: DUMMY_MEDIA_ELEMENT.create(),
+    });
     let debugEltInstance: { dispose(): void } | undefined;
 
     // facilitate DEV mode

@@ -1,3 +1,4 @@
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import { EncryptedMediaError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
@@ -33,7 +34,7 @@ import type { IContentProtection, IProcessedProtectionData } from "../../decrypt
  * initialization.
  */
 export default function initializeContentDecryption(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   keySystems: IKeySystemOption[],
   protectionRef: IReadOnlySharedReference<null | IContentProtection>,
   callbacks: {

@@ -19,6 +19,7 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
 import type { IPictureInPictureEvent } from "../../compat/event_listeners";
 import {
@@ -103,7 +104,7 @@ import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import assert, { assertUnreachable } from "../../utils/assert";
 import type { IEventPayload, IListener } from "../../utils/event_emitter";
-import EventEmitter from "../../utils/event_emitter";
+import EventEmitter, { addEventListener } from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type Logger from "../../utils/logger";
@@ -167,13 +168,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * This is used to check that a video element is not shared between multiple instances.
    * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
    */
-  private static _priv_currentlyUsedVideoElements = new WeakSet<HTMLMediaElement>();
+  private static _priv_currentlyUsedVideoElements = new WeakSet<IMediaElement>();
 
   /**
    * Media element attached to the RxPlayer.
    * Set to `null` when the RxPlayer is disposed.
    */
-  public videoElement: HTMLMediaElement | null; // null on dispose
+  public videoElement: IMediaElement | null; // null on dispose
 
   /** Logger the RxPlayer uses.  */
   public readonly log: Logger;
@@ -352,7 +353,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param videoElement the video element to register.
    * @throws Error - Throws if the element is already used by another player instance.
    */
-  private static _priv_registerVideoElement(videoElement: HTMLMediaElement) {
+  private static _priv_registerVideoElement(videoElement: IMediaElement) {
     if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
       const errorMessage =
         "The video element is already attached to another RxPlayer instance." +
@@ -374,7 +375,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Deregister the video element of the set of elements currently in use.
    * @param videoElement the video element to deregister.
    */
-  static _priv_deregisterVideoElement(videoElement: HTMLMediaElement) {
+  static _priv_deregisterVideoElement(videoElement: IMediaElement) {
     if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
       Player._priv_currentlyUsedVideoElements.delete(videoElement);
     }
@@ -472,10 +473,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         muted: videoElement.muted,
       });
     };
-    videoElement.addEventListener("volumechange", onVolumeChange);
-    destroyCanceller.signal.register(() => {
-      videoElement.removeEventListener("volumechange", onVolumeChange);
-    });
+    addEventListener(
+      videoElement,
+      "volumechange",
+      onVolumeChange,
+      destroyCanceller.signal,
+    );
   }
 
   /**
@@ -1271,9 +1274,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {HTMLMediaElement|null} - The HTMLMediaElement used (`null` when
    * disposed)
    */
+  /* eslint-disable @typescript-eslint/ban-types */
   getVideoElement(): HTMLMediaElement | null {
-    return this.videoElement;
+    return this.videoElement as HTMLMediaElement;
   }
+  /* eslint-enable @typescript-eslint/ban-types */
 
   /**
    * Returns the player's current state.

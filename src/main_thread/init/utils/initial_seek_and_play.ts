@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import canSeekDirectlyAfterLoadedMetadata from "../../../compat/can_seek_directly_after_loaded_metadata";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import { MediaError } from "../../../errors";
@@ -68,7 +69,7 @@ export default function performInitialSeekAndPlay(
     isDirectfile,
     onWarning,
   }: {
-    mediaElement: HTMLMediaElement;
+    mediaElement: IMediaElement;
     playbackObserver: IMediaElementPlaybackObserver;
     startTime: number | (() => number);
     mustAutoPlay: boolean;

@@ -15,6 +15,7 @@
  */
 
 import { MediaSource_ } from "../../../compat/browser_compatibility_types";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import log from "../../../log";
 import { resetMediaElement } from "../../../main_thread/init/utils/create_media_source";
 import { SourceBufferType } from "../../../mse";
@@ -36,7 +37,7 @@ const generateMediaSourceId = idGenerator();
  * @returns {Promise.<Object>}
  */
 export default function prepareSourceBuffer(
-  videoElement: HTMLVideoElement,
+  videoElement: IMediaElement,
   codec: string,
   cleanUpSignal: CancellationSignal,
 ): Promise<MainSourceBufferInterface> {
