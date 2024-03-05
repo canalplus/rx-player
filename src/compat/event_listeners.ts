@@ -17,6 +17,7 @@
 import config from "../config";
 import log from "../log";
 import type { IEventEmitter } from "../utils/event_emitter";
+import { addEventListener } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
@@ -26,8 +27,8 @@ import SharedReference from "../utils/reference";
 import type { CancellationSignal } from "../utils/task_canceller";
 import type {
   ICompatDocument,
-  ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
+  IMediaElement,
 } from "./browser_compatibility_types";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
@@ -195,8 +196,8 @@ function getDocumentVisibilityRef(
   }
 
   const hidden = isNonEmptyString(prefix) ? ((prefix + "Hidden") as "hidden") : "hidden";
-  const visibilityChangeEvent = isNonEmptyString(prefix)
-    ? prefix + "visibilitychange"
+  const visibilityChangeEvent: keyof DocumentEventMap = isNonEmptyString(prefix)
+    ? ((prefix + "visibilitychange") as "visibilitychange")
     : "visibilitychange";
 
   const isHidden = document[hidden];
@@ -228,15 +229,14 @@ export interface IPictureInPictureEvent {
 
 /**
  * Emit when video enters and leaves Picture-In-Picture mode.
- * @param {HTMLMediaElement} elt
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} stopListening
  * @returns {Object}
  */
 function getPictureOnPictureStateRef(
-  elt: HTMLMediaElement,
+  mediaElement: IMediaElement,
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<IPictureInPictureEvent> {
-  const mediaElement = elt as ICompatHTMLMediaElement;
   if (
     mediaElement.webkitSupportsPresentationMode === true &&
     typeof mediaElement.webkitSetPresentationMode === "function"
@@ -251,8 +251,8 @@ function getPictureOnPictureStateRef(
       stopListening,
     );
     addEventListener(
-      mediaElement,
-      "webkitpresentationmodechanged",
+      mediaElement as HTMLVideoElement,
+      "webkitpresentationmodechanged" as keyof HTMLVideoElementEventMap,
       () => {
         const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
         ref.setValue({ isEnabled, pipWindow: null });
@@ -263,13 +263,14 @@ function getPictureOnPictureStateRef(
   }
 
   const isPIPEnabled =
-    (document as ICompatDocument).pictureInPictureElement === mediaElement;
+    (document as ICompatDocument).pictureInPictureElement ===
+    (mediaElement as unknown as HTMLElement);
   const ref = new SharedReference<IPictureInPictureEvent>(
     { isEnabled: isPIPEnabled, pipWindow: null },
     stopListening,
   );
   addEventListener(
-    mediaElement,
+    mediaElement as HTMLVideoElement,
     "enterpictureinpicture",
     (evt) => {
       ref.setValue({
@@ -285,7 +286,7 @@ function getPictureOnPictureStateRef(
     stopListening,
   );
   addEventListener(
-    mediaElement,
+    mediaElement as HTMLVideoElement,
     "leavepictureinpicture",
     () => {
       ref.setValue({ isEnabled: false, pipWindow: null });
@@ -392,7 +393,7 @@ function getScreenResolutionRef(
  * @returns {Object}
  */
 function getElementResolutionRef(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   pipStatusRef: IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<{
@@ -418,7 +419,12 @@ function getElementResolutionRef(
   );
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkElementResolution, { clearSignal: stopListening });
-  addEventListener(globalScope, "resize", checkElementResolution, stopListening);
+  addEventListener(
+    globalScope as unknown as Window,
+    "resize",
+    checkElementResolution,
+    stopListening,
+  );
   addEventListener(
     mediaElement,
     "enterpictureinpicture",
@@ -585,30 +591,7 @@ const onSeeked = createCompatibleEventListener(["seeked"]);
  */
 const onEnded = createCompatibleEventListener(["ended"]);
 
-/**
- * Utilitary function allowing to add an event listener and remove it
- * automatically once the given `CancellationSignal` emits.
- * @param {EventTarget} elt - The element on which should be attached the event
- * listener.
- * @param {string} evt - The event you wish to listen to
- * @param {Function} listener - The listener function
- * @param {Object} stopListening - Removes the event listener once this signal
- * emits
- */
-function addEventListener(
-  elt: IEventEmitterLike,
-  evt: string,
-  listener: (x?: unknown) => void,
-  stopListening: CancellationSignal,
-): void {
-  elt.addEventListener(evt, listener);
-  stopListening.register(() => {
-    elt.removeEventListener(evt, listener);
-  });
-}
-
 export {
-  addEventListener,
   createCompatibleEventListener,
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,

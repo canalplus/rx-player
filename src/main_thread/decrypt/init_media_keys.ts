@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -29,7 +30,7 @@ import getMediaKeysInfos from "./get_media_keys";
  * @returns {Promise.<Object>}
  */
 export default async function initMediaKeys(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
@@ -278,7 +279,7 @@ function buildKeySystemConfigurations(
  * @returns {Promise.<Object>}
  */
 export default function getMediaKeySystemAccess(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IFoundMediaKeySystemAccessEvent> {

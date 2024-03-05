@@ -16,7 +16,7 @@
 
 import globalScope from "../../../utils/global_scope";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { IMediaElement } from "../../browser_compatibility_types";
 import type { ICustomMediaKeys } from "./types";
 
 interface IMozMediaKeysConstructor {
@@ -44,7 +44,7 @@ export default function getMozMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
   setMediaKeys: (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
@@ -64,11 +64,10 @@ export default function getMozMediaKeysCallbacks(): {
     return new MozMediaKeysConstructor(keyType);
   };
   const setMediaKeys = (
-    mediaElement: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     return wrapInPromise(() => {
-      const elt: ICompatHTMLMediaElement = mediaElement;
       if (
         elt.mozSetMediaKeys === undefined ||
         typeof elt.mozSetMediaKeys !== "function"

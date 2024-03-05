@@ -61,6 +61,18 @@ module.exports = {
           Symbol: {
             message: "Avoid using the `Symbol` type. Did you mean `symbol`?",
           },
+          HTMLMediaElement: {
+            message:
+              "Avoid relying on `HTMLMediaElement` directly unless it is API-facing. Prefer our more restricted `IMediaElement` type",
+          },
+          MediaSource: {
+            message:
+              "Avoid relying on `MediaSource` directly unless it is API-facing. Prefer our more restricted `IMediaSource` type",
+          },
+          SourceBuffer: {
+            message:
+              "Avoid relying on `SourceBuffer` directly unless it is API-facing. Prefer our more restricted `ISourceBuffer` type",
+          },
         },
       },
     ],

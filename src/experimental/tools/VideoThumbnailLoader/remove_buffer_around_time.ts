@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 
 /**
@@ -28,7 +29,7 @@ import type { MainSourceBufferInterface } from "../../../mse/main_media_source_i
  * @returns {Promise}
  */
 export default function removeBufferAroundTime(
-  videoElement: HTMLMediaElement,
+  videoElement: IMediaElement,
   sourceBufferInterface: MainSourceBufferInterface,
   time: number,
   margin: number | undefined,
