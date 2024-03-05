@@ -15,7 +15,7 @@
  */
 
 import globalScope from "../../../utils/global_scope";
-import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { IMediaElement } from "../../browser_compatibility_types";
 
 type IWebKitMediaKeys = unknown;
 
@@ -36,8 +36,7 @@ if (
   WebKitMediaKeys !== undefined &&
   typeof WebKitMediaKeys.isTypeSupported === "function" &&
   typeof WebKitMediaKeys.prototype.createSession === "function" &&
-  typeof (HTMLMediaElement.prototype as ICompatHTMLMediaElement).webkitSetMediaKeys ===
-    "function"
+  typeof (HTMLMediaElement.prototype as IMediaElement).webkitSetMediaKeys === "function"
 ) {
   WebKitMediaKeysConstructor = WebKitMediaKeys;
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import shouldUnsetMediaKeys from "../../compat/should_unset_media_keys";
 import log from "../../log";
 import disposeDecryptionResources from "./dispose_decryption_resources";
@@ -25,7 +26,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @param {HTMLMediaElement} mediaElement
  * @returns {Promise}
  */
-export default function clearOnStop(mediaElement: HTMLMediaElement): Promise<unknown> {
+export default function clearOnStop(mediaElement: IMediaElement): Promise<unknown> {
   log.info("DRM: Clearing-up DRM session.");
   if (shouldUnsetMediaKeys()) {
     log.info("DRM: disposing current MediaKeys.");

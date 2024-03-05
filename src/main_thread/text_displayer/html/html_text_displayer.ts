@@ -1,3 +1,4 @@
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners";
 import onHeightWidthChange from "../../../compat/on_height_width_change";
 import config from "../../../config";
@@ -55,7 +56,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * The video element the cues refer to.
    * Used to know when the user is seeking, for example.
    */
-  private readonly _videoElement: HTMLMediaElement;
+  private readonly _videoElement: IMediaElement;
 
   /** Allows to cancel the interval at which subtitles are updated. */
   private _subtitlesIntervalCanceller: TaskCanceller;
@@ -100,7 +101,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @param {HTMLMediaElement} videoElement
    * @param {HTMLElement} textTrackElement
    */
-  constructor(videoElement: HTMLMediaElement, textTrackElement: HTMLElement) {
+  constructor(videoElement: IMediaElement, textTrackElement: HTMLElement) {
     log.debug("HTD: Creating HTMLTextDisplayer");
     this._buffered = new ManualTimeRanges();
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import extractCompleteChunks from "./extract_complete_chunks";
+import extractCompleteChunks, { splitCompleteChunks } from "./extract_complete_chunks";
 import findCompleteBox from "./find_complete_box";
 import takePSSHOut, { getPsshSystemID } from "./take_pssh_out";
 
@@ -38,4 +38,10 @@ export {
   patchPssh,
   updateBoxLength,
 } from "./utils";
-export { extractCompleteChunks, findCompleteBox, getPsshSystemID, takePSSHOut };
+export {
+  extractCompleteChunks,
+  findCompleteBox,
+  getPsshSystemID,
+  splitCompleteChunks,
+  takePSSHOut,
+};

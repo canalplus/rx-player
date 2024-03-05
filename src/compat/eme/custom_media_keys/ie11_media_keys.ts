@@ -18,7 +18,7 @@ import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import TaskCanceller from "../../../utils/task_canceller";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { IMediaElement } from "../../browser_compatibility_types";
 import * as events from "../../event_listeners";
 import type { MSMediaKeys, MSMediaKeySession } from "./ms_media_keys_constructor";
 import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
@@ -124,7 +124,7 @@ class IE11MediaKeySession
 }
 
 class IE11CustomMediaKeys implements ICustomMediaKeys {
-  private _videoElement?: ICompatHTMLMediaElement;
+  private _videoElement?: IMediaElement;
   private _mediaKeys?: MSMediaKeys;
 
   constructor(keyType: string) {
@@ -134,9 +134,9 @@ class IE11CustomMediaKeys implements ICustomMediaKeys {
     this._mediaKeys = new MSMediaKeysConstructor(keyType);
   }
 
-  _setVideo(videoElement: HTMLMediaElement): Promise<unknown> {
+  _setVideo(videoElement: IMediaElement): Promise<unknown> {
     return wrapInPromise(() => {
-      this._videoElement = videoElement as ICompatHTMLMediaElement;
+      this._videoElement = videoElement;
       if (this._videoElement.msSetMediaKeys !== undefined) {
         this._videoElement.msSetMediaKeys(this._mediaKeys);
       }
@@ -159,7 +159,7 @@ export default function getIE11MediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => IE11CustomMediaKeys;
   setMediaKeys: (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
@@ -174,7 +174,7 @@ export default function getIE11MediaKeysCallbacks(): {
   };
   const createCustomMediaKeys = (keyType: string) => new IE11CustomMediaKeys(keyType);
   const setMediaKeys = (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {

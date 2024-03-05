@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import config from "../../config";
 import type {
   IPlaybackObservation,
@@ -22,6 +23,7 @@ import type {
 import { SeekingState } from "../../playback_observer";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
+import { addEventListener } from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
@@ -40,7 +42,7 @@ import type { ContentInitializer, IStallingSituation } from "../init";
  * remove all listeners this function has registered.
  */
 export function emitSeekEvents(
-  mediaElement: HTMLMediaElement | null,
+  mediaElement: IMediaElement | null,
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   onSeeking: () => void,
   onSeeked: () => void,
@@ -82,7 +84,7 @@ export function emitSeekEvents(
  * remove all listeners this function has registered.
  */
 export function emitPlayPauseEvents(
-  mediaElement: HTMLMediaElement | null,
+  mediaElement: IMediaElement | null,
   onPlay: () => void,
   onPause: () => void,
   cancelSignal: CancellationSignal,
@@ -90,12 +92,8 @@ export function emitPlayPauseEvents(
   if (cancelSignal.isCancelled() || mediaElement === null) {
     return;
   }
-  mediaElement.addEventListener("play", onPlay);
-  mediaElement.addEventListener("pause", onPause);
-  cancelSignal.register(() => {
-    mediaElement.removeEventListener("play", onPlay);
-    mediaElement.removeEventListener("pause", onPause);
-  });
+  addEventListener(mediaElement, "play", onPlay, cancelSignal);
+  addEventListener(mediaElement, "pause", onPause, cancelSignal);
 }
 
 /** Player state dictionnary. */
@@ -114,7 +112,7 @@ export const enum PLAYER_STATES {
 
 export function constructPlayerStateReference(
   initializer: ContentInitializer,
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<IPlayerState> {
@@ -212,7 +210,7 @@ export function constructPlayerStateReference(
  * @returns {string}
  */
 export function getLoadedContentState(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   stalledStatus: IStallingSituation | null,
 ): IPlayerState {
   const { FORCED_ENDED_THRESHOLD } = config.getCurrent();

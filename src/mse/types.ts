@@ -163,6 +163,7 @@ export type IMediaSourceHandle =
        * Do not forget to revoke such URL (e.g. through `URL.revokeObjectURL`) when
        * you're done.
        */
+      /* eslint-disable-next-line @typescript-eslint/ban-types */
       value: MediaSource;
     };
 

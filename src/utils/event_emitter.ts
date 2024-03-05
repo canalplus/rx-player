@@ -17,6 +17,78 @@
 import isNullOrUndefined from "./is_null_or_undefined";
 import type { CancellationSignal } from "./task_canceller";
 
+// After making way too many attempts, I'm just listing cases here
+/* eslint-disable @typescript-eslint/ban-types */
+export function addEventListener(
+  target: Window,
+  eventType: keyof WindowEventMap,
+  eventFn: (evt: Event) => void,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener(
+  target: Document,
+  eventType: keyof DocumentEventMap,
+  eventFn: (evt: Event) => void,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener(
+  target: SourceBuffer,
+  eventType: keyof SourceBufferEventMap,
+  eventFn: (evt: Event) => void,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener(
+  target: MediaSource,
+  eventType: keyof MediaSourceEventMap,
+  eventFn: (evt: Event) => void,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener(
+  target: HTMLVideoElement,
+  eventType: keyof HTMLVideoElementEventMap,
+  eventFn: (evt: Event) => void,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener<T, TEventName extends keyof T>(
+  target: IEventEmitter<T>,
+  eventType: TEventName,
+  eventFn: IListener<T, TEventName>,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener<T, TEventName extends keyof T>(
+  target: IEventEmitter<T>,
+  eventType: TEventName,
+  eventFn: IListener<T, TEventName>,
+  cancelSignal?: CancellationSignal | undefined,
+): void;
+export function addEventListener<T, TEventName extends keyof T>(
+  target:
+    | SourceBuffer
+    | MediaSource
+    | HTMLMediaElement
+    | HTMLVideoElement
+    | Document
+    | Window
+    | IEventEmitter<T>,
+  eventType: string,
+  eventFn: IListener<T, TEventName> | ((evt: Event) => void),
+  cancelSignal?: CancellationSignal | undefined,
+): void {
+  /* eslint-disable @typescript-eslint/no-unsafe-call */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  (target as any).addEventListener(eventType, eventFn);
+  if (cancelSignal !== undefined) {
+    cancelSignal.register(() => {
+      (target as any).removeEventListener(eventType, eventFn);
+    });
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-call */
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-enable @typescript-eslint/ban-types */
+}
+
 export interface IEventEmitter<T> {
   addEventListener<TEventName extends keyof T>(
     evt: TEventName,

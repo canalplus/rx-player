@@ -4,7 +4,7 @@ import globalScope from "../../utils/global_scope";
 import isNode from "../../utils/is_node";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import type { ICompatHTMLMediaElement } from "../browser_compatibility_types";
+import type { IMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
@@ -77,7 +77,7 @@ export interface IEmeApiImplementation {
    * scenario.
    */
   setMediaKeys: (
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 
@@ -278,17 +278,16 @@ function getEmeApiImplementation(
 /**
  * Set the given MediaKeys on the given HTMLMediaElement.
  * Emits null when done then complete.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLMediaElement} elt
  * @param {Object} mediaKeys
  * @returns {Promise}
  */
 function defaultSetMediaKeys(
-  mediaElement: HTMLMediaElement,
+  elt: IMediaElement,
   mediaKeys: MediaKeys | ICustomMediaKeys | null,
 ): Promise<unknown> {
   try {
     let ret: unknown;
-    const elt: ICompatHTMLMediaElement = mediaElement;
     /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       ret = elt.setMediaKeys(mediaKeys as MediaKeys);

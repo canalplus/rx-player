@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
@@ -23,7 +24,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @returns {Array|null}
  */
 export default function getKeySystemConfiguration(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
 ): [string, MediaKeySystemConfiguration] | null {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   if (currentState === null) {

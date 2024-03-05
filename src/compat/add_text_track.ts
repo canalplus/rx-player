@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICompatTextTrack } from "./browser_compatibility_types";
+import type { ICompatTextTrack, IMediaElement } from "./browser_compatibility_types";
 import { isIEOrEdge } from "./browser_detection";
 
 /**
@@ -28,7 +28,7 @@ import { isIEOrEdge } from "./browser_detection";
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-export default function addTextTrack(mediaElement: HTMLMediaElement): {
+export default function addTextTrack(mediaElement: IMediaElement): {
   track: ICompatTextTrack;
   trackElement: HTMLTrackElement | undefined;
 } {
@@ -42,7 +42,7 @@ export default function addTextTrack(mediaElement: HTMLMediaElement): {
     track = (
       tracksLength > 0
         ? mediaElement.textTracks[tracksLength - 1]
-        : mediaElement.addTextTrack(kind)
+        : mediaElement.addTextTrack?.(kind)
     ) as ICompatTextTrack;
     track.mode = track.SHOWING ?? "showing";
   } else {

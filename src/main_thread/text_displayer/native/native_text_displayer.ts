@@ -1,5 +1,8 @@
 import addTextTrack from "../../../compat/add_text_track";
-import type { ICompatTextTrack } from "../../../compat/browser_compatibility_types";
+import type {
+  ICompatTextTrack,
+  IMediaElement,
+} from "../../../compat/browser_compatibility_types";
 import removeCue from "../../../compat/remove_cue";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";
@@ -16,7 +19,7 @@ import parseTextTrackToCues from "./native_parsers";
  * @class NativeTextDisplayer
  */
 export default class NativeTextDisplayer implements ITextDisplayer {
-  private readonly _videoElement: HTMLMediaElement;
+  private readonly _videoElement: IMediaElement;
   private readonly _track: ICompatTextTrack;
   private readonly _trackElement: HTMLTrackElement | undefined;
 
@@ -25,7 +28,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   /**
    * @param {HTMLMediaElement} videoElement
    */
-  constructor(videoElement: HTMLMediaElement) {
+  constructor(videoElement: IMediaElement) {
     log.debug("NTD: Creating NativeTextDisplayer");
     const { track, trackElement } = addTextTrack(videoElement);
     this._buffered = new ManualTimeRanges();

@@ -15,12 +15,13 @@
  */
 
 import log from "../../log";
+import type { ISourceBuffer } from "../browser_compatibility_types";
 import tryToChangeSourceBufferType from "../change_source_buffer_type";
 
 describe("Compat - tryToChangeSourceBufferType", () => {
   it("should just return false if the SourceBuffer provided does not have a changeType method", () => {
     const spy = jest.spyOn(log, "warn");
-    const fakeSourceBuffer: SourceBuffer = {} as unknown as SourceBuffer;
+    const fakeSourceBuffer: ISourceBuffer = {} as unknown as ISourceBuffer;
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(false);
     expect(spy).not.toHaveBeenCalled();
   });
@@ -30,7 +31,7 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     const changeTypeFn = jest.fn();
     const fakeSourceBuffer = {
       changeType: changeTypeFn,
-    } as unknown as SourceBuffer;
+    } as unknown as ISourceBuffer;
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(true);
     expect(spy).not.toHaveBeenCalled();
   });
@@ -43,7 +44,7 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     });
     const fakeSourceBuffer = {
       changeType: changeTypeFn,
-    } as unknown as SourceBuffer;
+    } as unknown as ISourceBuffer;
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(false);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
