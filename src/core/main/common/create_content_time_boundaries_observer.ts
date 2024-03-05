@@ -24,7 +24,7 @@ export interface IContentTimeBoundariesObserverCallbacks {
  * Various methods from that class need then to be called at various events
  * (see `ContentTimeBoundariesObserver`).
  * @param {Object} manifest
- * @param {MediaSource} mediaSource
+ * @param {Object} mediaSource
  * @param {Object} streamObserver
  * @param {Object} segmentSinksStore
  * @param {Object} cancelSignal

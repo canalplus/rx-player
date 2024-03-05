@@ -82,7 +82,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    * @constructor
    * @param {string} bufferType
    * @param {string} codec
-   * @param {MediaSource} mediaSource
+   * @param {Object} mediaSource
    */
   constructor(
     bufferType: SourceBufferType,
