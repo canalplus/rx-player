@@ -19,6 +19,7 @@
  * throw if something is wrong, and return a normalized option object.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import config from "../../config";
 import log from "../../log";
 import type {
@@ -57,7 +58,7 @@ export interface IParsedConstructorOptions {
   videoResolutionLimit: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden: boolean;
 
-  videoElement: HTMLMediaElement;
+  videoElement: IMediaElement;
   baseBandwidth: number;
 }
 
@@ -132,7 +133,7 @@ function parseConstructorOptions(
   let wantedBufferAhead: number;
   let maxVideoBufferSize: number;
 
-  let videoElement: HTMLMediaElement;
+  let videoElement: IMediaElement;
   let baseBandwidth: number;
 
   const {
@@ -193,7 +194,10 @@ function parseConstructorOptions(
 
   if (isNullOrUndefined(options.videoElement)) {
     videoElement = document.createElement("video");
-  } else if (options.videoElement instanceof HTMLMediaElement) {
+  } else if (
+    options.videoElement.nodeName.toLowerCase() === "video" ||
+    options.videoElement.nodeName.toLowerCase() === "audio"
+  ) {
     videoElement = options.videoElement;
   } else {
     throw new Error("Invalid videoElement parameter. Should be a HTMLMediaElement.");

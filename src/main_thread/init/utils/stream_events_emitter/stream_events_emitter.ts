@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
 import config from "../../../../config";
 import type { IManifestMetadata } from "../../../../manifest";
 import { SeekingState } from "../../../../playback_observer";
@@ -43,7 +44,7 @@ interface IStreamEventsEmitterEvent {
  */
 export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitterEvent> {
   private _manifest: IManifestMetadata;
-  private _mediaElement: HTMLMediaElement;
+  private _mediaElement: IMediaElement;
   private _playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>;
   private _scheduledEventsRef: SharedReference<
     Array<IStreamEventPayload | INonFiniteStreamEventPayload>
@@ -61,7 +62,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
    */
   constructor(
     manifest: IManifestMetadata,
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   ) {
     super();
