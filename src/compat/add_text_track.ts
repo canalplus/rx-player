@@ -42,7 +42,7 @@ export default function addTextTrack(mediaElement: IMediaElement): {
     track = (
       tracksLength > 0
         ? mediaElement.textTracks[tracksLength - 1]
-        : mediaElement.addTextTrack(kind)
+        : mediaElement.addTextTrack?.(kind)
     ) as ICompatTextTrack;
     track.mode = track.SHOWING ?? "showing";
   } else {

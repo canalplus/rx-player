@@ -196,8 +196,8 @@ function getDocumentVisibilityRef(
   }
 
   const hidden = isNonEmptyString(prefix) ? ((prefix + "Hidden") as "hidden") : "hidden";
-  const visibilityChangeEvent = isNonEmptyString(prefix)
-    ? prefix + "visibilitychange"
+  const visibilityChangeEvent: keyof DocumentEventMap = isNonEmptyString(prefix)
+    ? ((prefix + "visibilitychange") as "visibilitychange")
     : "visibilitychange";
 
   const isHidden = document[hidden];
@@ -251,8 +251,8 @@ function getPictureOnPictureStateRef(
       stopListening,
     );
     addEventListener(
-      mediaElement,
-      "webkitpresentationmodechanged",
+      mediaElement as HTMLVideoElement,
+      "webkitpresentationmodechanged" as keyof HTMLVideoElementEventMap,
       () => {
         const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
         ref.setValue({ isEnabled, pipWindow: null });
@@ -269,7 +269,7 @@ function getPictureOnPictureStateRef(
     stopListening,
   );
   addEventListener(
-    mediaElement,
+    mediaElement as HTMLVideoElement,
     "enterpictureinpicture",
     (evt) => {
       ref.setValue({
@@ -285,7 +285,7 @@ function getPictureOnPictureStateRef(
     stopListening,
   );
   addEventListener(
-    mediaElement,
+    mediaElement as HTMLVideoElement,
     "leavepictureinpicture",
     () => {
       ref.setValue({ isEnabled: false, pipWindow: null });
@@ -418,7 +418,12 @@ function getElementResolutionRef(
   );
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkElementResolution, { clearSignal: stopListening });
-  addEventListener(globalScope, "resize", checkElementResolution, stopListening);
+  addEventListener(
+    globalScope as unknown as Window,
+    "resize",
+    checkElementResolution,
+    stopListening,
+  );
   addEventListener(
     mediaElement,
     "enterpictureinpicture",
@@ -608,7 +613,6 @@ function addEventListener(
 }
 
 export {
-  addEventListener,
   createCompatibleEventListener,
   getPictureOnPictureStateRef,
   getVideoVisibilityRef,

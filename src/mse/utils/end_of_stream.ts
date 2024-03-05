@@ -25,6 +25,7 @@ import {
   onSourceBufferUpdate,
 } from "../../compat/event_listeners";
 import log from "../../log";
+import { addEventListener } from "../../utils/event_emitter";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 
@@ -33,7 +34,9 @@ import TaskCanceller from "../../utils/task_canceller";
  * @param {SourceBufferList} sourceBuffers
  * @returns {Array.<SourceBuffer>}
  */
-function getUpdatingSourceBuffers(sourceBuffers: ISourceBufferList): ISourceBuffer[] {
+function getUpdatingSourceBuffers(
+  sourceBuffers: ISourceBufferList | ISourceBuffer[],
+): ISourceBuffer[] {
   const updatingSourceBuffers: ISourceBuffer[] = [];
   for (let i = 0; i < sourceBuffers.length; i++) {
     const SourceBuffer = sourceBuffers[i];
@@ -92,6 +95,21 @@ export default function triggerEndOfStream(
       },
       innerCanceller.signal,
     );
+  }
+
+  if (Array.isArray(sourceBuffers)) {
+    sourceBuffers.forEach((sb) => {
+      addEventListener(
+        sb,
+        "updateend",
+        () => {
+          innerCanceller.cancel();
+          triggerEndOfStream(mediaSource, cancelSignal);
+        },
+        innerCanceller.signal,
+      );
+    });
+    return;
   }
 
   onRemoveSourceBuffers(

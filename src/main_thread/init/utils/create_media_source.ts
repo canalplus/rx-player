@@ -53,6 +53,10 @@ export function resetMediaElement(
       );
     }
   }
+
+  if (mediaElement.srcObject !== null) {
+    mediaElement.srcObject = null;
+  }
 }
 
 /**
@@ -75,7 +79,10 @@ function createMediaSource(
   // make sure the media has been correctly reset
   const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
   resetMediaElement(mediaElement, oldSrc);
-  const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+  const mediaSource = new MainMediaSourceInterface(
+    generateMediaSourceId(),
+    "FORCED_MEDIA_SOURCE" in mediaElement ? mediaElement.FORCED_MEDIA_SOURCE : undefined,
+  );
   unlinkSignal.register(() => {
     mediaSource.dispose();
   });

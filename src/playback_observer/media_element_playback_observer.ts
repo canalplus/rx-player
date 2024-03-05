@@ -18,6 +18,7 @@ import type { IMediaElement } from "../compat/browser_compatibility_types";
 import isSeekingApproximate from "../compat/is_seeking_approximate";
 import config from "../config";
 import log from "../log";
+import { addEventListener } from "../utils/event_emitter";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import noop from "../utils/noop";
 import objectAssign from "../utils/object_assign";
@@ -158,10 +159,12 @@ export default class PlaybackObserver {
         this._actuallySetCurrentTime(positionToSeekTo);
       }
     };
-    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-    this._canceller.signal.register(() => {
-      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
-    });
+    addEventListener(
+      mediaElement,
+      "loadedmetadata",
+      onLoadedMetadata,
+      this._canceller.signal,
+    );
   }
 
   /**

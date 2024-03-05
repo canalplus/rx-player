@@ -135,7 +135,7 @@ export interface IMediaSource extends IEventTarget<IMediaSourceEventMap> {
   duration: number;
   handle?: MediaProvider | IMediaSource | undefined;
   readyState: "closed" | "open" | "ended";
-  sourceBuffers: ISourceBufferList;
+  sourceBuffers: ISourceBufferList | ISourceBuffer[];
 
   addSourceBuffer(type: string): ISourceBuffer;
   clearLiveSeekableRange(): void;
@@ -229,6 +229,8 @@ export interface IMediaElementEventMap {
  *     implement it.
  */
 export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
+  FORCED_MEDIA_SOURCE?: (new () => IMediaSource) | undefined;
+
   /* From `HTMLMediaElement`: */
   autoplay: boolean;
   buffered: TimeRanges;

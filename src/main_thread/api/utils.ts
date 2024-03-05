@@ -23,6 +23,7 @@ import type {
 import { SeekingState } from "../../playback_observer";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
+import { addEventListener } from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
@@ -91,12 +92,8 @@ export function emitPlayPauseEvents(
   if (cancelSignal.isCancelled() || mediaElement === null) {
     return;
   }
-  mediaElement.addEventListener("play", onPlay);
-  mediaElement.addEventListener("pause", onPause);
-  cancelSignal.register(() => {
-    mediaElement.removeEventListener("play", onPlay);
-    mediaElement.removeEventListener("pause", onPause);
-  });
+  addEventListener(mediaElement, "play", onPlay, cancelSignal);
+  addEventListener(mediaElement, "pause", onPause, cancelSignal);
 }
 
 /** Player state dictionnary. */

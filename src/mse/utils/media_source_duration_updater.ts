@@ -16,6 +16,7 @@
 
 import type {
   IMediaSource,
+  ISourceBuffer,
   ISourceBufferList,
 } from "../../compat/browser_compatibility_types";
 import { onSourceOpen, onSourceEnded, onSourceClose } from "../../compat/event_listeners";
@@ -249,7 +250,7 @@ const enum MediaSourceDurationUpdateStatus {
  * @returns {Object}
  */
 function createSourceBuffersUpdatingReference(
-  sourceBuffers: ISourceBufferList,
+  sourceBuffers: ISourceBufferList | ISourceBuffer[],
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
   if (sourceBuffers.length === 0) {
