@@ -89,7 +89,7 @@ export default class SegmentSinksStore {
   private _hasVideo: boolean;
 
   /**
-   * @param {MediaSource} mediaSource
+   * @param {Object} mediaSource
    * @constructor
    */
   constructor(
