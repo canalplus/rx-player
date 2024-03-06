@@ -25,7 +25,6 @@ import {
   onSourceBufferUpdate,
 } from "../../compat/event_listeners";
 import log from "../../log";
-import { addEventListener } from "../../utils/event_emitter";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 
@@ -99,15 +98,14 @@ export default function triggerEndOfStream(
 
   if (Array.isArray(sourceBuffers)) {
     sourceBuffers.forEach((sb) => {
-      addEventListener(
-        sb,
-        "updateend",
-        () => {
-          innerCanceller.cancel();
-          triggerEndOfStream(mediaSource, cancelSignal);
-        },
-        innerCanceller.signal,
-      );
+      const onUpdateEnd = () => {
+        innerCanceller.cancel();
+        triggerEndOfStream(mediaSource, cancelSignal);
+      };
+      sb.addEventListener("updateend", onUpdateEnd);
+      innerCanceller.signal.register(() => {
+        sb.removeEventListener("updateend", onUpdateEnd);
+      });
     });
     return;
   }
