@@ -16,7 +16,6 @@
 
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import { MediaError } from "../../../errors";
-import { addEventListener } from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 
@@ -34,7 +33,10 @@ export default function listenToMediaError(
     return;
   }
 
-  addEventListener(mediaElement, "error", onMediaError, cancelSignal);
+  mediaElement.addEventListener("error", onMediaError);
+  cancelSignal.register(() => {
+    mediaElement.removeEventListener("error", onMediaError);
+  });
 
   function onMediaError(): void {
     const mediaError = mediaElement.error;

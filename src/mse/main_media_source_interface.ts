@@ -5,7 +5,7 @@ import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_list
 import { MediaError, SourceBufferError } from "../errors";
 import log from "../log";
 import { concat } from "../utils/byte_parsing";
-import EventEmitter, { addEventListener } from "../utils/event_emitter";
+import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import objectAssign from "../utils/object_assign";
 import type { IRange } from "../utils/ranges";
@@ -215,8 +215,13 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
     const onError = this._onError.bind(this);
     const onUpdateEnd = this._onUpdateEnd.bind(this);
-    addEventListener(sourceBuffer, "updateend", onUpdateEnd, this._canceller.signal);
-    addEventListener(sourceBuffer, "error", onError, this._canceller.signal);
+
+    sourceBuffer.addEventListener("updateend", onUpdateEnd);
+    sourceBuffer.addEventListener("error", onError);
+    this._canceller.signal.register(() => {
+      sourceBuffer.removeEventListener("updateend", onUpdateEnd);
+      sourceBuffer.removeEventListener("error", onError);
+    });
   }
 
   /** @see ISourceBufferInterface */
