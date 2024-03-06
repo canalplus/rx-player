@@ -53,10 +53,6 @@ export function resetMediaElement(
       );
     }
   }
-
-  if (mediaElement.srcObject !== null) {
-    mediaElement.srcObject = null;
-  }
 }
 
 /**
