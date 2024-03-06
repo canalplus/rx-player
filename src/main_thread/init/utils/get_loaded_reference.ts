@@ -16,7 +16,6 @@
 
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded";
-import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
@@ -72,7 +71,7 @@ export default function getLoadedReference(
         }
       }
 
-      const minReadyState = shouldWaitForHaveEnoughData() ? 4 : 3;
+      const minReadyState = 3;
       if (observation.readyState >= minReadyState) {
         if (observation.currentRange !== null || observation.ended) {
           if (!shouldValidateMetadata() || mediaElement.duration > 0) {
