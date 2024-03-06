@@ -1,4 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 
 // Needed for calling require (which itself is needed to mock properly) because
 // it is not type-checked:
@@ -23,7 +24,7 @@ describe("compat - addTextTrack", () => {
     const fakeMediaElement = {
       textTracks: [fakeTextTrack],
       addTextTrack: mockAddTextTrack,
-    } as unknown as HTMLMediaElement;
+    } as unknown as IMediaElement;
 
     vi.doMock("../browser_detection", () => ({
       isIEOrEdge: true,
@@ -51,7 +52,7 @@ describe("compat - addTextTrack", () => {
     const fakeMediaElement = {
       textTracks: fakeTextTracks,
       addTextTrack: mockAddTextTrack,
-    } as unknown as HTMLMediaElement;
+    } as unknown as IMediaElement;
 
     vi.doMock("../browser_detection", () => ({
       isIEOrEdge: true,
@@ -95,7 +96,7 @@ describe("compat - addTextTrack", () => {
       textTracks: fakeTextTracks,
       appendChild: mockAppendChild,
       childNodes: fakeChildNodes,
-    } as unknown as HTMLMediaElement;
+    } as unknown as IMediaElement;
 
     const spyOnCreateElement = vi
       .spyOn(document, "createElement")

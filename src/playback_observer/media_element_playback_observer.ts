@@ -18,7 +18,6 @@ import type { IMediaElement } from "../compat/browser_compatibility_types";
 import isSeekingApproximate from "../compat/is_seeking_approximate";
 import config from "../config";
 import log from "../log";
-import { addEventListener } from "../utils/event_emitter";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import noop from "../utils/noop";
 import objectAssign from "../utils/object_assign";
@@ -159,12 +158,10 @@ export default class PlaybackObserver {
         this._actuallySetCurrentTime(positionToSeekTo);
       }
     };
-    addEventListener(
-      mediaElement,
-      "loadedmetadata",
-      onLoadedMetadata,
-      this._canceller.signal,
-    );
+    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
+    this._canceller.signal.register(() => {
+      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+    });
   }
 
   /**
@@ -351,12 +348,10 @@ export default class PlaybackObserver {
         this._generateObservationForEvent(eventName);
       };
 
-      addEventListener(
-        this._mediaElement,
-        eventName,
-        onMediaEvent,
-        this._canceller.signal,
-      );
+      this._mediaElement.addEventListener(eventName, onMediaEvent);
+      this._canceller.signal.register(() => {
+        this._mediaElement.removeEventListener(eventName, onMediaEvent);
+      });
     });
     this._canceller.signal.register(() => {
       clearInterval(intervalId);
