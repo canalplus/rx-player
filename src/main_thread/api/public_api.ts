@@ -104,7 +104,7 @@ import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import assert, { assertUnreachable } from "../../utils/assert";
 import type { IEventPayload, IListener } from "../../utils/event_emitter";
-import EventEmitter, { addEventListener } from "../../utils/event_emitter";
+import EventEmitter from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type Logger from "../../utils/logger";
@@ -473,12 +473,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         muted: videoElement.muted,
       });
     };
-    addEventListener(
-      videoElement,
-      "volumechange",
-      onVolumeChange,
-      destroyCanceller.signal,
-    );
+
+    videoElement.addEventListener("volumechange", onVolumeChange);
+    destroyCanceller.signal.register(() => {
+      videoElement.removeEventListener("volumechange", onVolumeChange);
+    });
   }
 
   /**

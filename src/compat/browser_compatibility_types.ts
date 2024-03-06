@@ -106,11 +106,11 @@ export interface IMediaSourceEventMap {
  *     which do not implement it.
  */
 export interface IMediaSource extends IEventTarget<IMediaSourceEventMap> {
-  activeSourceBuffers: ISourceBuffer[] | SourceBufferList;
+  activeSourceBuffers: SourceBufferList;
   duration: number;
   handle?: MediaProvider | IMediaSource | undefined;
   readyState: "closed" | "open" | "ended";
-  sourceBuffers: ISourceBuffer[] | SourceBufferList;
+  sourceBuffers: SourceBufferList;
 
   addSourceBuffer(type: string): ISourceBuffer;
   clearLiveSeekableRange(): void;
@@ -234,7 +234,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   textTracks: TextTrackList | never[];
   volume: number;
 
-  addTextTrack?: (kind: TextTrackKind) => TextTrack;
+  addTextTrack: (kind: TextTrackKind) => TextTrack;
   appendChild<T extends Node>(x: T): void;
   hasAttribute(attr: string): boolean;
   hasChildNodes(): boolean;
@@ -276,8 +276,8 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   webkitKeys?: {
     createSession?: (mimeType: string, initData: BufferSource) => MediaKeySession;
   };
-  readonly audioTracks?: ICompatAudioTrackList;
-  readonly videoTracks?: ICompatVideoTrackList;
+  audioTracks?: ICompatAudioTrackList;
+  videoTracks?: ICompatVideoTrackList;
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
