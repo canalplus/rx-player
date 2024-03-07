@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { be4toi, concat } from "../../utils/byte_parsing";
-import findCompleteBox from "../utils/find_complete_box";
+import { be4toi, concat } from "../../../utils/byte_parsing";
+import findCompleteBox from "./find_complete_box";
 
 /**
  * Take a chunk of ISOBMFF data and extract complete `moof`+`mdat` subsegments
@@ -31,11 +31,15 @@ export default function extractCompleteChunks(
   let _position = 0;
   const chunks: Uint8Array[] = [];
   let currentBuffer = null;
-  while (_position < buffer.length) {
+  while (_position <= buffer.length) {
+    if (_position === buffer.length) {
+      currentBuffer = null;
+      break;
+    }
     currentBuffer = buffer.subarray(_position, Infinity);
     const moofIndex = findCompleteBox(currentBuffer, 0x6d6f6f66 /* moof */);
     if (moofIndex < 0) {
-      // no moof, not a segment.
+      // no moof, not a media segment.
       break;
     }
     const moofLen = be4toi(buffer, moofIndex + _position);

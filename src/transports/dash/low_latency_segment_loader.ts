@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { extractCompleteChunks } from "../../parsers/containers/isobmff";
 import { concat } from "../../utils/byte_parsing";
 import type { IFetchedDataObject } from "../../utils/request/fetch";
 import fetchRequest from "../../utils/request/fetch";
@@ -25,7 +26,6 @@ import type {
   ISegmentLoaderResultChunkedComplete,
 } from "../types";
 import byteRange from "../utils/byte_range";
-import extractCompleteChunks from "./extract_complete_chunks";
 
 /**
  * Load segments through a "chunk" mode (decodable chunk by decodable chunk).
