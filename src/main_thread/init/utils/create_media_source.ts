@@ -75,10 +75,7 @@ function createMediaSource(
   // make sure the media has been correctly reset
   const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
   resetMediaElement(mediaElement, oldSrc);
-  const mediaSource = new MainMediaSourceInterface(
-    generateMediaSourceId(),
-    "FORCED_MEDIA_SOURCE" in mediaElement ? mediaElement.FORCED_MEDIA_SOURCE : undefined,
-  );
+  const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
   unlinkSignal.register(() => {
     mediaSource.dispose();
   });
