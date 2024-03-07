@@ -230,12 +230,6 @@ export interface IMediaElementEventMap {
  *     implement it.
  */
 export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
-  /**
-   * Optional property allowing to force a specific MSE Implementation when
-   * relying on a given `IMediaElement`.
-   */
-  FORCED_MEDIA_SOURCE?: new () => IMediaSource;
-
   /* From `HTMLMediaElement`: */
   autoplay: boolean;
   buffered: TimeRanges;
