@@ -17,6 +17,7 @@
 import type {
   IMediaSource,
   ISourceBuffer,
+  ISourceBufferList,
 } from "../../compat/browser_compatibility_types";
 import {
   onRemoveSourceBuffers,
@@ -34,7 +35,7 @@ import TaskCanceller from "../../utils/task_canceller";
  * @returns {Array.<SourceBuffer>}
  */
 function getUpdatingSourceBuffers(
-  sourceBuffers: SourceBufferList | ISourceBuffer[],
+  sourceBuffers: ISourceBufferList | ISourceBuffer[],
 ): ISourceBuffer[] {
   const updatingSourceBuffers: ISourceBuffer[] = [];
   for (let i = 0; i < sourceBuffers.length; i++) {

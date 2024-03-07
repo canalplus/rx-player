@@ -73,6 +73,10 @@ module.exports = {
             message:
               "Avoid relying on `SourceBuffer` directly unless it is API-facing. Prefer our more restricted `ISourceBuffer` type",
           },
+          SourceBufferList: {
+            message:
+              "Avoid relying on `SourceBufferList` directly unless it is API-facing. Prefer our more restricted `ISourceBufferList` type",
+          },
         },
       },
     ],
