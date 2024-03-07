@@ -15,7 +15,7 @@
  */
 
 import { OtherError } from "../../errors";
-import findCompleteBox from "./find_complete_box";
+import { findCompleteBox } from "../../parsers/containers/isobmff";
 
 /**
  * Check if an ISOBMFF segment has all the right box needed to be decoded.

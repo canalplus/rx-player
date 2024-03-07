@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { be4toi, be8toi } from "../../utils/byte_parsing";
+import { be4toi, be8toi } from "../../../utils/byte_parsing";
 
 /**
  * Find the offset for the first declaration of the given box in an isobmff.
