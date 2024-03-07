@@ -85,6 +85,33 @@ export interface IEventTarget<TEventMap> {
   ): void;
 }
 
+/** Events potentially dispatched by an `ISourceBufferList` */
+export interface ISourceBufferListEventMap {
+  addsourcebuffer: Event;
+  removesourcebuffer: Event;
+}
+
+/**
+ * More restrictive and type-compatible with the `SourceBufferList` type (i.e. a
+ * `SourceBufferList` is a valid `ISourceBufferList`), the `ISourceBufferList`
+ * type allows to:
+ *
+ *   - re-define some attributes or methods in cases where we detected that some
+ *     platforms have a different implementation.
+ *
+ *   - list all `SourceBufferList` attributes, methods and events that are
+ *     relied on by the RxPlayer.
+ *
+ *   - Allow an easier re-definition of that API for tests or for platforms
+ *     which do not implement it.
+ */
+export interface ISourceBufferList extends IEventTarget<ISourceBufferListEventMap> {
+  readonly length: number;
+  onaddsourcebuffer: ((evt: Event) => void) | null;
+  onremovesourcebuffer: ((evt: Event) => void) | null;
+  [index: number]: ISourceBuffer;
+}
+
 /** Events potentially dispatched by an `IMediaSource` */
 export interface IMediaSourceEventMap {
   sourceopen: Event;
@@ -106,11 +133,10 @@ export interface IMediaSourceEventMap {
  *     which do not implement it.
  */
 export interface IMediaSource extends IEventTarget<IMediaSourceEventMap> {
-  activeSourceBuffers: SourceBufferList;
   duration: number;
   handle?: MediaProvider | IMediaSource | undefined;
   readyState: "closed" | "open" | "ended";
-  sourceBuffers: SourceBufferList;
+  sourceBuffers: ISourceBufferList;
 
   addSourceBuffer(type: string): ISourceBuffer;
   clearLiveSeekableRange(): void;
@@ -300,6 +326,13 @@ function testSourceBuffer(x: SourceBuffer) {
   assetCompatibleISourceBuffer(x);
 }
 function assetCompatibleISourceBuffer(_x: ISourceBuffer) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testSourceBufferList(x: SourceBufferList) {
+  assetCompatibleISourceBufferList(x);
+}
+function assetCompatibleISourceBufferList(_x: ISourceBufferList) {
   // Noop
 }
 /* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
