@@ -21,16 +21,28 @@ import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBacko
 describe("DASH non-linear content (SegmentTimeline)", function () {
   launchTestsForContent(segmentTimelineManifestInfos);
   launchTestsForContent(segmentTimelineManifestInfos, { multithread: true });
+  launchTestsForContent(segmentTimelineManifestInfos, {
+    multithread: true,
+    es5Worker: true,
+  });
 });
 
 describe("DASH non-linear content multi-codecs (SegmentBase)", function () {
   launchTestsForContent(segmentBaseMultiCodecsInfos);
   launchTestsForContent(segmentBaseMultiCodecsInfos, { multithread: true });
+  launchTestsForContent(segmentBaseMultiCodecsInfos, {
+    multithread: true,
+    es5Worker: true,
+  });
 });
 
 describe("DASH non-linear content not starting at 0 (SegmentTimeline)", function () {
   launchTestsForContent(notStartingAt0ManifestInfos);
   launchTestsForContent(notStartingAt0ManifestInfos, { multithread: true });
+  launchTestsForContent(notStartingAt0ManifestInfos, {
+    multithread: true,
+    es5Worker: true,
+  });
 });
 
 describe("DASH non-linear content with SegmentTemplate inheritance (Period-AdaptationSet)", function () {
@@ -38,11 +50,19 @@ describe("DASH non-linear content with SegmentTemplate inheritance (Period-Adapt
   launchTestsForContent(segmentTemplateInheritancePeriodAS, {
     multithread: true,
   });
+  launchTestsForContent(segmentTemplateInheritancePeriodAS, {
+    multithread: true,
+    es5Worker: true,
+  });
 });
 
 describe("DASH non-linear content with SegmentTemplate inheritance (AdaptationSet-Representation)", function () {
   launchTestsForContent(segmentTemplateInheritanceASRep);
   launchTestsForContent(segmentTemplateInheritanceASRep, { multithread: true });
+  launchTestsForContent(segmentTemplateInheritanceASRep, {
+    multithread: true,
+    es5Worker: true,
+  });
 });
 
 describe("DASH content CENC wrong version in MPD", function () {
