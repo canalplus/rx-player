@@ -602,6 +602,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       manifest.addEventListener(
         "decipherabilityUpdate",
         (elts) => {
+          console.warn(
+            "DECIPH UPDATE",
+            mediaElement.error !== null &&
+              mediaElement.error.code
+          );
           if (elts.some((e) => e.representation.decipherable !== true)) {
             reloadMediaSource(0, undefined, undefined);
           }
