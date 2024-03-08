@@ -444,7 +444,7 @@ describe("API - Public API", () => {
     describe("Player instantiation", () => {
       it("should throw an error if creating two players attached to the same video element", () => {
         const PublicAPI = jest.requireActual("../public_api").default;
-        const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+        const warn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
         const videoElement = document.createElement("video");
         const player1 = new PublicAPI({ videoElement });
         expect(player1.getVideoElement()).toBe(videoElement);
@@ -472,7 +472,7 @@ describe("API - Public API", () => {
       it(`should not throw an error if creating a player attached to 
         the same video element after the previous one was disposed`, () => {
         const PublicAPI = jest.requireActual("../public_api").default;
-        const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+        const warn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
         const videoElement = document.createElement("video");
         const player1 = new PublicAPI({ videoElement });
         expect(player1.getVideoElement()).toBe(videoElement);

@@ -344,6 +344,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       "\nMake sure to dispose the previous instance with player.dispose() before creating" +
       " a new player instance attaching that video element.";
     if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
+      // eslint-disable-next-line no-console
       console.warn(errorMessage);
       /*
        * TODO: for next major version 5.0: this need to throw an error instead of just logging
