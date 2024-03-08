@@ -339,11 +339,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @throws Error - Throws if the element is already used by another player instance.
    */
   private static _priv_registerVideoElement(videoElement: HTMLMediaElement) {
-    const errorMessage =
+    if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
+      const errorMessage =
       "The video element is already attached to another RxPlayer instance." +
       "\nMake sure to dispose the previous instance with player.dispose() before creating" +
       " a new player instance attaching that video element.";
-    if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
       // eslint-disable-next-line no-console
       console.warn(errorMessage);
       /*
