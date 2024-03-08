@@ -4,6 +4,7 @@ import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.j
 import {
   EMBEDDED_WORKER,
   EMBEDDED_DASH_WASM,
+  EMBEDDED_WORKER_ES5,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import sleep from "../../utils/sleep.js";
 import waitForState, {
@@ -57,8 +58,13 @@ import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBacko
  * @param {Boolean} [options.multithread] - If `true`, those tests will be run
  * if the RxPlayer runs in multithread mode.
  * In any other cases, tests will run in monothread mode.
+ * @param {Boolean} [options.es5Worker] - If `true`, multithread tests will be
+ * run in the ES5 version of the WebWorker file.
  */
-export default function launchTestsForContent(manifestInfos, { multithread } = {}) {
+export default function launchTestsForContent(
+  manifestInfos,
+  { multithread, es5Worker } = {},
+) {
   let player;
 
   if (multithread === true) {
@@ -80,7 +86,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
       player = new RxPlayer();
       if (multithread === true) {
         player.attachWorker({
-          workerUrl: EMBEDDED_WORKER,
+          workerUrl: es5Worker ? EMBEDDED_WORKER_ES5 : EMBEDDED_WORKER,
           dashWasmUrl: EMBEDDED_DASH_WASM,
         });
       }

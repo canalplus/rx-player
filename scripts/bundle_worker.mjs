@@ -11,9 +11,11 @@
  * right options.
  */
 
-import { join } from "path";
+import * as path from "path";
 import { pathToFileURL } from "url";
 import esbuild from "esbuild";
+import TerserPlugin from "terser-webpack-plugin";
+import webpack from "webpack";
 import rootDirectory from "./utils/project_root_directory.mjs";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 
@@ -29,6 +31,12 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const production = argv.includes("-p") || argv.includes("--production-mode");
   const silent = argv.includes("-s") || argv.includes("--silent");
   buildWorker({
+    watch: shouldWatch,
+    minify: shouldMinify,
+    production,
+    silent,
+  });
+  buildWorkerEs5({
     watch: shouldWatch,
     minify: shouldMinify,
     production,
@@ -54,7 +62,7 @@ export default function buildWorker(options) {
   const watch = !!options.watch;
   const isDevMode = !options.production;
   const isSilent = options.silent;
-  const outfile = options.outfile ?? join(rootDirectory, "dist/worker.js");
+  const outfile = options.outfile ?? path.join(rootDirectory, "dist/worker.js");
 
   /** Declare a plugin to anounce when a build begins and ends */
   const consolePlugin = {
@@ -62,7 +70,8 @@ export default function buildWorker(options) {
     setup(build) {
       build.onStart(() => {
         console.log(
-          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` + "New worker build started",
+          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+            "New Worker file build started",
         );
       });
       build.onEnd((result) => {
@@ -70,14 +79,14 @@ export default function buildWorker(options) {
           const { errors, warnings } = result;
           console.log(
             `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-              `Worker re-built with ${errors.length} error(s) and ` +
+              `Worker file re-built with ${errors.length} error(s) and ` +
               ` ${warnings.length} warning(s) `,
           );
           return;
         }
         console.log(
           `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-            `Worker updated at ${outfile}!`,
+            `Worker file updated at ${outfile}!`,
         );
       });
     },
@@ -87,7 +96,7 @@ export default function buildWorker(options) {
 
   // Create a context for incremental builds
   return esbuild[meth]({
-    entryPoints: [join(rootDirectory, "src/worker_entry_point.ts")],
+    entryPoints: [path.join(rootDirectory, "src/worker_entry_point.ts")],
     bundle: true,
     target: "es2017",
     minify,
@@ -111,12 +120,133 @@ export default function buildWorker(options) {
     .catch((err) => {
       if (!isSilent) {
         console.error(
-          `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Worker build failed:`,
+          `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Worker file build failed:`,
           err,
         );
       }
       throw err;
     });
+}
+
+export function buildWorkerEs5(options) {
+  const shouldMinify = !!options.minify;
+  const watch = !!options.watch;
+  const isDevMode = !options.production;
+  const isSilent = options.silent;
+  const outfile = options.outfile ?? path.join(rootDirectory, "dist/worker.es5.js");
+  const outputPath = path.dirname(outfile);
+  const filename = path.basename(outfile);
+
+  const plugins = [
+    new webpack.DefinePlugin({
+      __ENVIRONMENT__: {
+        PRODUCTION: 0,
+        DEV: 1,
+        CURRENT_ENV: isDevMode ? 1 : 0,
+      },
+      __LOGGER_LEVEL__: JSON.stringify({ CURRENT_LEVEL: "NONE" }),
+    }),
+  ];
+
+  if (!isSilent) {
+    console.log(
+      `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+        "New ES5 Worker file build started",
+    );
+  }
+
+  const compiler = webpack({
+    mode: isDevMode ? "development" : "production",
+    entry: [path.join(rootDirectory, "src/worker_entry_point.ts")],
+    output: {
+      path: outputPath,
+      filename,
+      environment: {
+        arrowFunction: false,
+        asyncFunction: false,
+        bigIntLiteral: false,
+        const: false,
+        destructuring: false,
+        dynamicImport: false,
+        dynamicImportInWorker: false,
+        forOf: false,
+        globalThis: false,
+        module: false,
+        optionalChaining: false,
+        templateLiteral: false,
+      },
+    },
+    optimization: {
+      minimize: shouldMinify,
+      minimizer: shouldMinify ? [new TerserPlugin()] : [],
+    },
+    performance: {
+      maxEntrypointSize: shouldMinify ? 600000 : 2500000,
+      maxAssetSize: shouldMinify ? 600000 : 2500000,
+    },
+    resolve: {
+      extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+    },
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          use: [
+            {
+              loader: "babel-loader",
+              options: {
+                cacheDirectory: true,
+                presets: [["@babel/env", { loose: true, modules: false }]],
+                plugins: [["@babel/plugin-transform-runtime"]],
+              },
+            },
+            { loader: "ts-loader" },
+          ],
+        },
+      ],
+    },
+    plugins,
+  });
+
+  return new Promise((res, rej) => {
+    if (watch) {
+      compiler.watch({}, (err) => {
+        if (err) {
+          if (!isSilent) {
+            console.error(
+              `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ES5 Worker file build failed:`,
+              err,
+            );
+          }
+          rej(err);
+        } else if (!isSilent) {
+          console.log(
+            `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
+              `ES5 Worker file updated at ${outfile}!`,
+          );
+        }
+        res();
+      });
+      return;
+    }
+    compiler.run((err) => {
+      if (err) {
+        if (!isSilent) {
+          console.error(
+            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ES5 Worker file build failed:`,
+            err,
+          );
+        }
+        rej(err);
+      } else if (!isSilent) {
+        console.log(
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
+            `ES5 Worker file written at ${outfile}!`,
+        );
+      }
+      res();
+    });
+  });
 }
 
 /**
