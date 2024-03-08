@@ -339,12 +339,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @throws Error - Throws if the element is already used by another player instance.
    */
   private static _priv_registerVideoElement(videoElement: HTMLMediaElement) {
+    const errorMessage =
+      "The video element is already attached to another RxPlayer instance." +
+      "\nMake sure to dispose the previous instance with player.dispose() before creating" +
+      " a new player instance attaching that video element.";
     if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
-      throw new Error(
-        "The video element is already attached to another RxPlayer instance." +
-          "\nMake sure to dispose the previous instance with player.dispose() before creating" +
-          " a new player instance attaching that video element.",
-      );
+      console.warn(errorMessage);
+      /*
+       * TODO: for next major version 5.0: this need to throw an error instead of just logging
+       * this was not done for minor version as it could be considerated a breaking change.
+       *
+       * throw new Error(errorMessage);
+       */
     }
     Player._priv_currentlyUsedVideoElements.add(videoElement);
   }
