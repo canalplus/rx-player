@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import config from "../../config";
 import type {
@@ -596,6 +597,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentSinksStore,
     );
 
+    if (mayMediaElementFailOnUndecipherableData) {
+      // On some devices, just reload immediately when data become undecipherable
+      manifest.addEventListener(
+        "decipherabilityUpdate",
+        (elts) => {
+          if (elts.some((e) => e.representation.decipherable !== true)) {
+            reloadMediaSource(0, undefined, undefined);
+          }
+        },
+        cancelSignal,
+      );
+    }
+
     playbackObserver.listen(
       (observation) => {
         if (decipherabilityFreezeDetector.needToReload(observation)) {
@@ -820,22 +834,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         bitrateEstimateChange: (value) => self.trigger("bitrateEstimateChange", value),
 
         needsMediaSourceReload: (payload) => {
-          const lastObservation = coreObserver.getReference().getValue();
-          const currentPosition = lastObservation.position.isAwaitingFuturePosition()
-            ? lastObservation.position.getWanted()
-            : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
-          const isPaused =
-            lastObservation.paused.pending ??
-            coreObserver.getIsPaused() ??
-            lastObservation.paused.last;
-          let position = currentPosition + payload.timeOffset;
-          if (payload.minimumPosition !== undefined) {
-            position = Math.max(payload.minimumPosition, position);
-          }
-          if (payload.maximumPosition !== undefined) {
-            position = Math.min(payload.maximumPosition, position);
-          }
-          onReloadOrder({ position, autoPlay: !isPaused });
+          reloadMediaSource(
+            payload.timeOffset,
+            payload.minimumPosition,
+            payload.maximumPosition,
+          );
         },
 
         needsDecipherabilityFlush() {
@@ -876,6 +879,38 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         error: (err) => self._onFatalError(err),
       };
+    }
+
+    /**
+     * Callback allowing to reload the current content.
+     * @param {number} deltaPosition - Position you want to seek to after
+     * reloading, as a delta in seconds from the last polled playing position.
+     * @param {number|undefined} minimumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     * @param {number|undefined} maximumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     */
+    function reloadMediaSource(
+      deltaPosition: number,
+      minimumPosition: number | undefined,
+      maximumPosition: number | undefined,
+    ): void {
+      const lastObservation = coreObserver.getReference().getValue();
+      const currentPosition = lastObservation.position.isAwaitingFuturePosition()
+        ? lastObservation.position.getWanted()
+        : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+      const isPaused =
+        lastObservation.paused.pending ??
+        coreObserver.getIsPaused() ??
+        lastObservation.paused.last;
+      let position = currentPosition + deltaPosition;
+      if (minimumPosition !== undefined) {
+        position = Math.max(minimumPosition, position);
+      }
+      if (maximumPosition !== undefined) {
+        position = Math.min(maximumPosition, position);
+      }
+      onReloadOrder({ position, autoPlay: !isPaused });
     }
   }
 
