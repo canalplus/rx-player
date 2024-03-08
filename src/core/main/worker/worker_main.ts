@@ -22,7 +22,7 @@ import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
 import type { ILoggerLevel } from "../../../utils/logger";
-import { mainThreadTimestampDiff } from "../../../utils/monotonic_timestamp";
+import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
@@ -90,11 +90,7 @@ export default function initializeWorkerMain() {
       case MainThreadMessageType.Init:
         assert(!isInitialized);
         isInitialized = true;
-
-        const diffMain = msg.value.date - msg.value.timestamp;
-        /* eslint-disable-next-line no-restricted-properties */
-        const diffWorker = Date.now() - performance.now();
-        mainThreadTimestampDiff.setValueIfChanged(diffWorker - diffMain);
+        scaleTimestamp(msg.value);
         updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
         if (msg.value.dashWasmUrl !== undefined && dashWasmParser.isCompatible()) {
           dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {

@@ -260,7 +260,7 @@ module.exports = {
         object: "performance",
         property: "now",
         message:
-          "Avoid using `performance.now` directly as timestamps may be different in the worker and the main thread. Please use the `getMonotonicTimeStamp` util instead.",
+          "Avoid using `performance.now` directly as timestamps may be different in the worker and the main thread and some platforms don't have it in a Worker environment. Please use the `getMonotonicTimeStamp` util instead.",
       },
       {
         object: "window",
