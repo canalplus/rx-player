@@ -1,4 +1,5 @@
 import isCodecSupported from "../../compat/is_codec_supported";
+import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type {
   IAdaptiveRepresentationSelectorArguments,
@@ -75,57 +76,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    *
    * `null` when no content is prepared yet.
    */
-  private _currentContentInfo: {
-    /**
-     * "contentId", which is the identifier for the currently loaded content.
-     * Allows to ensure that the WebWorker is referencing the current content, not
-     * a previously stopped one.
-     */
-    contentId: string;
-    /**
-     * Current parsed Manifest.
-     * `null` if not fetched / parsed yet.
-     */
-    manifest: IManifestMetadata | null;
-    /**
-     * Current MediaSource linked to the content.
-     *
-     * `null` if no MediaSource is currently created for the content.
-     */
-    mainThreadMediaSource: MainMediaSourceInterface | null;
-    /**
-     * Current `RebufferingController` linked to the content, allowing to
-     * detect and handle rebuffering situations.
-     *
-     * `null` if none is currently created for the content.
-     */
-    rebufferingController: RebufferingController | null;
-    /**
-     * Current `StreamEventsEmitter` linked to the content, allowing to
-     * send events found in the Manifest.
-     *
-     * `null` if none is currently created for the content.
-     */
-    streamEventsEmitter: StreamEventsEmitter | null;
-    /**
-     * The initial position to seek to in seconds once the content is loadeed.
-     * `undefined` if unknown yet.
-     */
-    initialTime: number | undefined;
-    /**
-     * Whether to automatically play once the content is loaded.
-     * `undefined` if unknown yet.
-     */
-    autoPlay: boolean | undefined;
-    /**
-     * Set to `true` once the initial play (or skipping the initial play when
-     * autoplay is not enabled) has been done.
-     * Set to `false` when it hasn't been done yet.
-     *
-     * Set to `null` when those considerations are not taken yet.
-     */
-    initialPlayPerformed: IReadOnlySharedReference<boolean> | null;
-  } | null;
+  private _currentContentInfo: IMultiThreadContentInitializerContentInfos | null;
   /**
    * `TaskCanceller` allowing to abort everything that the
    * `MultiThreadContentInitializer` is doing.
@@ -302,6 +253,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       mediaElement,
       lastContentProtection,
       mediaSourceStatus,
+      () => reloadMediaSource(0, undefined, undefined),
       this._initCanceller.signal,
     );
 
@@ -330,6 +282,50 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
     );
+
+    /**
+     * Callback allowing to reload the current content.
+     * @param {number} deltaPosition - Position you want to seek to after
+     * reloading, as a delta in seconds from the last polled playing position.
+     * @param {number|undefined} minimumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     * @param {number|undefined} maximumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     */
+    const reloadMediaSource = (
+      deltaPosition: number,
+      minimumPosition: number | undefined,
+      maximumPosition: number | undefined,
+    ): void => {
+      const contentInfo = this._currentContentInfo;
+      if (contentInfo === null) {
+        log.warn("MTCI: Asked to reload when no content is loaded.");
+        return;
+      }
+      const lastObservation = playbackObserver.getReference().getValue();
+      const currentPosition = lastObservation.position.getWanted();
+      const isPaused =
+        contentInfo.initialPlayPerformed?.getValue() === true ||
+        contentInfo.autoPlay === undefined
+          ? lastObservation.paused
+          : !contentInfo.autoPlay;
+      let position = currentPosition + deltaPosition;
+      if (minimumPosition !== undefined) {
+        position = Math.max(minimumPosition, position);
+      }
+      if (maximumPosition !== undefined) {
+        position = Math.min(maximumPosition, position);
+      }
+
+      this._reload(
+        mediaElement,
+        textDisplayer,
+        playbackObserver,
+        mediaSourceStatus,
+        position,
+        !isPaused,
+      );
+    };
 
     const onmessage = (msg: MessageEvent) => {
       const msgData = msg.data as unknown as IWorkerMessage;
@@ -999,29 +995,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               return;
             }
 
-            const contentInfo = this._currentContentInfo;
-            const lastObservation = playbackObserver.getReference().getValue();
-            const currentPosition = lastObservation.position.getWanted();
-            const isPaused =
-              contentInfo.initialPlayPerformed?.getValue() === true ||
-              contentInfo.autoPlay === undefined
-                ? lastObservation.paused
-                : !contentInfo.autoPlay;
-            let position = currentPosition + msgData.value.timeOffset;
-            if (msgData.value.minimumPosition !== undefined) {
-              position = Math.max(msgData.value.minimumPosition, position);
-            }
-            if (msgData.value.maximumPosition !== undefined) {
-              position = Math.min(msgData.value.maximumPosition, position);
-            }
-
-            this._reload(
-              mediaElement,
-              textDisplayer,
-              playbackObserver,
-              mediaSourceStatus,
-              position,
-              !isPaused,
+            reloadMediaSource(
+              msgData.value.timeOffset,
+              msgData.value.minimumPosition,
+              msgData.value.maximumPosition,
             );
           }
           break;
@@ -1032,26 +1009,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               return;
             }
 
-            const contentInfo = this._currentContentInfo;
-            const lastObservation = playbackObserver.getReference().getValue();
-
-            const currentPosition = lastObservation.position.getWanted();
             const keySystem = getKeySystemConfiguration(mediaElement);
             if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-              const isPaused =
-                contentInfo.initialPlayPerformed?.getValue() === true ||
-                contentInfo.autoPlay === undefined
-                  ? lastObservation.paused
-                  : !contentInfo.autoPlay;
-              this._reload(
-                mediaElement,
-                textDisplayer,
-                playbackObserver,
-                mediaSourceStatus,
-                currentPosition,
-                !isPaused,
-              );
+              reloadMediaSource(0, undefined, undefined);
             } else {
+              const lastObservation = playbackObserver.getReference().getValue();
+
+              const currentPosition = lastObservation.position.getWanted();
+
               // simple seek close to the current position
               // to flush the buffers
               if (currentPosition + 0.001 < lastObservation.duration) {
@@ -1137,6 +1102,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     mediaElement: HTMLMediaElement,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
+    reloadMediaSource: () => void,
     cancelSignal: CancellationSignal,
   ): IReadOnlySharedReference<IDrmInitializationStatus> {
     const { keySystems } = this._settings;
@@ -1195,14 +1161,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this._currentContentInfo.manifest,
         updates,
       );
-      sendMessage(this._settings.worker, {
-        type: MainThreadMessageType.DecipherabilityStatusUpdate,
-        contentId: this._currentContentInfo.contentId,
-        value: manUpdates.map((s) => ({
-          representationUniqueId: s.representation.uniqueId,
-          decipherable: s.representation.decipherable,
-        })),
-      });
+      if (
+        mayMediaElementFailOnUndecipherableData &&
+        manUpdates.some((e) => e.representation.decipherable !== true)
+      ) {
+        reloadMediaSource();
+      } else {
+        sendMessage(this._settings.worker, {
+          type: MainThreadMessageType.DecipherabilityStatusUpdate,
+          contentId: this._currentContentInfo.contentId,
+          value: manUpdates.map((s) => ({
+            representationUniqueId: s.representation.uniqueId,
+            decipherable: s.representation.decipherable,
+          })),
+        });
+      }
       this.trigger("decipherabilityUpdate", manUpdates);
     });
     contentDecryptor.addEventListener("blackListProtectionData", (protData) => {
@@ -1216,14 +1189,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this._currentContentInfo.manifest,
         protData,
       );
-      sendMessage(this._settings.worker, {
-        type: MainThreadMessageType.DecipherabilityStatusUpdate,
-        contentId: this._currentContentInfo.contentId,
-        value: manUpdates.map((s) => ({
-          representationUniqueId: s.representation.uniqueId,
-          decipherable: s.representation.decipherable,
-        })),
-      });
+      if (
+        mayMediaElementFailOnUndecipherableData &&
+        manUpdates.some((e) => e.representation.decipherable !== true)
+      ) {
+        reloadMediaSource();
+      } else {
+        sendMessage(this._settings.worker, {
+          type: MainThreadMessageType.DecipherabilityStatusUpdate,
+          contentId: this._currentContentInfo.contentId,
+          value: manUpdates.map((s) => ({
+            representationUniqueId: s.representation.uniqueId,
+            decipherable: s.representation.decipherable,
+          })),
+        });
+      }
       this.trigger("decipherabilityUpdate", manUpdates);
     });
     contentDecryptor.addEventListener("stateChange", (state) => {
@@ -1670,6 +1650,58 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     }
   }
+}
+
+export interface IMultiThreadContentInitializerContentInfos {
+  /**
+   * "contentId", which is the identifier for the currently loaded content.
+   * Allows to ensure that the WebWorker is referencing the current content, not
+   * a previously stopped one.
+   */
+  contentId: string;
+  /**
+   * Current parsed Manifest.
+   * `null` if not fetched / parsed yet.
+   */
+  manifest: IManifestMetadata | null;
+  /**
+   * Current MediaSource linked to the content.
+   *
+   * `null` if no MediaSource is currently created for the content.
+   */
+  mainThreadMediaSource: MainMediaSourceInterface | null;
+  /**
+   * Current `RebufferingController` linked to the content, allowing to
+   * detect and handle rebuffering situations.
+   *
+   * `null` if none is currently created for the content.
+   */
+  rebufferingController: RebufferingController | null;
+  /**
+   * Current `StreamEventsEmitter` linked to the content, allowing to
+   * send events found in the Manifest.
+   *
+   * `null` if none is currently created for the content.
+   */
+  streamEventsEmitter: StreamEventsEmitter | null;
+  /**
+   * The initial position to seek to in seconds once the content is loadeed.
+   * `undefined` if unknown yet.
+   */
+  initialTime: number | undefined;
+  /**
+   * Whether to automatically play once the content is loaded.
+   * `undefined` if unknown yet.
+   */
+  autoPlay: boolean | undefined;
+  /**
+   * Set to `true` once the initial play (or skipping the initial play when
+   * autoplay is not enabled) has been done.
+   * Set to `false` when it hasn't been done yet.
+   *
+   * Set to `null` when those considerations are not taken yet.
+   */
+  initialPlayPerformed: IReadOnlySharedReference<boolean> | null;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
