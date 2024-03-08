@@ -72,7 +72,6 @@ export default (env) => {
       rules: [
         {
           test: /\.tsx?$/,
-          exclude: /node_modules/,
           use: [
             {
               loader: "babel-loader",
@@ -88,8 +87,5 @@ export default (env) => {
       ],
     },
     plugins,
-    watchOptions: {
-      ignored: /node_modules/,
-    },
   };
 };

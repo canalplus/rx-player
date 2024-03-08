@@ -50,11 +50,13 @@ import { fileURLToPath, pathToFileURL } from "url";
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const originalWasmFilePath = join(currentDir, "../dist/mpd-parser.wasm");
 const originalWorkerFilePath = join(currentDir, "../dist/worker.js");
+const originalWorkerEs5FilePath = join(currentDir, "../dist/worker.es5.js");
 
 const codeGenDir = join(currentDir, "../src/__GENERATED_CODE");
 const indexPath = join(codeGenDir, "./index.ts");
 const mpdEmbedPath = join(codeGenDir, "./embedded_dash_wasm.ts");
 const workerEmbedPath = join(codeGenDir, "./embedded_worker.ts");
+const workerEs5EmbedPath = join(codeGenDir, "./embedded_worker_es5.ts");
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -68,7 +70,12 @@ async function generateEmbeds() {
     if (!fs.existsSync(codeGenDir)) {
       fs.mkdirSync(codeGenDir);
     }
-    await Promise.all([writeWebAssemblyEmbed(), writeWorkerEmbed(), writeIndexCode()]);
+    await Promise.all([
+      writeWebAssemblyEmbed(),
+      writeWorkerEmbed(),
+      writeWorkerEs5Embed(),
+      writeIndexCode(),
+    ]);
   } catch (err) {
     console.log(err);
     return Promise.reject(err);
@@ -98,10 +105,22 @@ export default blob;`;
   await writeFile(workerEmbedPath, workerEmbedCode);
 }
 
+async function writeWorkerEs5Embed() {
+  const workerEs5Data = await readFile(originalWorkerEs5FilePath, "utf-8");
+  const workerEs5EmbedCode =
+    "const blob = new Blob([" +
+    `"(function(){" + ${JSON.stringify(workerEs5Data)} + "})()"` +
+    `], { type: "application/javascript" });
+export { blob as EMBEDDED_WORKER_ES5 };
+export default blob;`;
+  await writeFile(workerEs5EmbedPath, workerEs5EmbedCode);
+}
+
 async function writeIndexCode() {
   // Hardcode the code declaring and exporting the embedded URL:
   const indexCode = `export { EMBEDDED_DASH_WASM } from "./embedded_dash_wasm";
-export { EMBEDDED_WORKER } from "./embedded_worker";`;
+export { EMBEDDED_WORKER } from "./embedded_worker";
+export { EMBEDDED_WORKER_ES5 } from "./embedded_worker_es5";`;
   await writeFile(indexPath, indexCode);
 }
 

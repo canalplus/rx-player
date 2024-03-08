@@ -24,7 +24,7 @@ import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
-import buildWorker from "./bundle_worker.mjs";
+import buildWorker, { buildWorkerEs5 } from "./bundle_worker.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -77,13 +77,21 @@ async function generateBuild(options = {}) {
       );
     }
 
-    console.log(" 👷 Bundling worker code...");
-    await buildWorker({
-      watch: false,
-      minify: !devMode,
-      production: !devMode,
-      silent: true,
-    });
+    console.log(" 👷 Bundling worker files...");
+    await Promise.all([
+      buildWorker({
+        watch: false,
+        minify: !devMode,
+        production: !devMode,
+        silent: true,
+      }),
+      buildWorkerEs5({
+        watch: false,
+        minify: !devMode,
+        production: !devMode,
+        silent: true,
+      }),
+    ]);
 
     console.log(" 🤖 Generating embedded code...");
     await generateEmbeds();
