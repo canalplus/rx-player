@@ -1,3 +1,35 @@
+# Changelog
+
+## Unrelased
+
+### Features
+
+-   Add a supplementary `worker.es5.js` file and its corresponding `EMBEDDED_WORKER_ES5`
+    embed to make the `MULTI_THREAD` experimental feature work on old browser environments
+    [#1400]
+
+### Bug fixes
+
+-   Directfile/compat: On safari mobile in directfile mode, do not stay in an infinite
+    `LOADING` state if the `duration` is set to `NaN` (rare issue in a
+    normally-unsupported multiple RxPlayer-per-media-element scenario) [#1393]
+
+### Other improvements
+
+-   Signal an error if multiple active RxPlayer are linked to the same media element
+    [#1394]
+-   MULTI_THREAD: The experimental `MULTI_THREAD` feature does not need a `dashWasmUrl`
+    anymore nor compatibility to WebAssembly [#1384]
+-   MULTI_THREAD: Perform several actions so that our `MULTI_THREAD` experimental feature
+    now works on older browser and on the playstation 4 [#1400, #1401, #1402]
+-   DRM: Refactor MediaKeys attachment logic to simplify device support updates [#1357]
+-   tests: use exponential backoff to speed up integration tests [#1389]
+-   code: Rely on the TypeScript `type` keyword at type imports to be sure they have no
+    code impact on our final build [#1365]
+-   code: Reorganize core RxPlayer code into a `src/main_thread` and `src/core`
+    respectively for main thread and worker code in a "multithread" mode [#1365]
+-   code: Rely on the prettier and rustfmt formatting tools in the codebase [#1387]
+
 ## v4.0.0 (2024-02-21)
 
 ### Changes
