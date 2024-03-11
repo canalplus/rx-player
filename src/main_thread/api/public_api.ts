@@ -29,6 +29,7 @@ import {
 } from "../../compat/event_listeners";
 import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
+import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import type {
   IAdaptationChoice,
@@ -460,7 +461,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   public attachWorker(workerSettings: IWorkerSettings): Promise<void> {
     return new Promise((res, rej) => {
-      if (typeof Worker !== "function") {
+      if (!hasWorkerApi()) {
         log.warn("API: Cannot rely on a WebWorker: Worker API unavailable");
         return rej(
           new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
