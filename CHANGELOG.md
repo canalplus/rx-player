@@ -7,6 +7,7 @@
 ### Bug fixes
 
   - Directfile/compat: On safari mobile in directfile mode, do not stay in an infinite `LOADING` state if the `duration` is set to `NaN` (rare issue in a normally-unsupported multiple RxPlayer-per-media-element scenario) [#1393]
+  - DRM/Compat: On the PlayStation 5, reload directly when a decryption key become unusable to prevent fatal errors [#1399]
 
 ### Other improvements
 
