@@ -206,6 +206,9 @@ function Player(): JSX.Element {
     ) {
       return;
     }
+    if (playerModule) {
+      playerModule.destroy();
+    }
     const playerMod = new PlayerModule(
       Object.assign(
         {},
@@ -219,7 +222,7 @@ function Player(): JSX.Element {
     );
     setPlayerModule(playerMod);
     return playerMod;
-  }, [playerOpts]);
+  }, [playerOpts, playerModule]);
 
   const onVideoClick = useCallback(() => {
     if (playerModule === null) {
