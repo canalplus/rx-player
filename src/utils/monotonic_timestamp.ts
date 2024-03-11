@@ -7,7 +7,16 @@ import SharedReference from "./reference";
  */
 const mainThreadTimestampDiff = new SharedReference(0);
 
-export { mainThreadTimestampDiff };
+export function scaleTimestamp({ date, timestamp }: { date: number; timestamp: number }) {
+  const delta = date - timestamp;
+
+  const diffCurrentEnv =
+    typeof performance !== "undefined"
+      ? /* eslint-disable-next-line no-restricted-properties */
+        Date.now() - performance.now()
+      : 0;
+  mainThreadTimestampDiff.setValueIfChanged(diffCurrentEnv - delta);
+}
 
 /**
  * Provide a "monotonically-raising timestamp". That is, a timestamp that is
@@ -25,7 +34,10 @@ export { mainThreadTimestampDiff };
  * provide a monotonic timestamp synchronized with the main thread.
  * @returns {number}
  */
-export default function getMonotonicTimeStamp(): number {
-  /* eslint-disable-next-line no-restricted-properties */
-  return performance.now() + mainThreadTimestampDiff.getValue();
-}
+const getMonotonicTimeStamp =
+  typeof performance !== "undefined"
+    ? /* eslint-disable-next-line no-restricted-properties */
+      () => performance.now() + mainThreadTimestampDiff.getValue()
+    : () => Date.now() + mainThreadTimestampDiff.getValue();
+
+export default getMonotonicTimeStamp;
