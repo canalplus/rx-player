@@ -20,8 +20,8 @@ import type { IProcessedProtectionData } from "../../decrypt";
  * "`initialized`" state and the `onError` callback will be triggered as soon
  * as protection information is received.
  *
- * @param {HTMLMediaElement} mediaElement - `HTMLMediaElement` on which content
- * decryption may be wanted.
+ * @param {HTMLMediaElement|null} mediaElement - `HTMLMediaElement` on which
+ * content decryption may be wanted.
  * @param {Array.<Object>} keySystems - Key system configuration(s) wanted
  * Empty array if no content decryption capability is wanted.
  * protection initialization data will be sent through.
@@ -33,7 +33,7 @@ import type { IProcessedProtectionData } from "../../decrypt";
  * initialization.
  */
 export default function initializeContentDecryption(
-  mediaElement: IMediaElement,
+  mediaElement: IMediaElement | null,
   keySystems: IKeySystemOption[],
   callbacks: {
     onWarning: (err: IPlayerError) => void;
@@ -63,6 +63,9 @@ export default function initializeContentDecryption(
     return createEmeDisabledReference("No `keySystems` option given.");
   } else if (features.decrypt === null) {
     return createEmeDisabledReference("EME feature not activated.");
+  } else if (mediaElement === null) {
+    // XXX TODO store through `protectionRef` instead?
+    return createEmeDisabledReference("Preloading does not allow DRM for now");
   }
 
   const decryptorCanceller = new TaskCanceller();

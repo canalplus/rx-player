@@ -58,7 +58,7 @@ import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
-import { ContentInitializer } from "./types";
+import { ContentInitializerState, ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import {
   resetMediaElement,
@@ -79,6 +79,8 @@ const generateContentId = idGenerator();
  * @class MultiThreadContentInitializer
  */
 export default class MultiThreadContentInitializer extends ContentInitializer {
+  public state: ContentInitializerState;
+
   /** Constructor settings associated to this `MultiThreadContentInitializer`. */
   private _settings: IInitializeArguments;
 
@@ -133,6 +135,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
+    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller = new TaskCanceller();
@@ -143,6 +146,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       resolvers: new Map(),
     };
     this._queuedCoreMessages = null;
+  }
+
+  public getState(): ContentInitializerState {
+    return this.state;
   }
 
   /**
@@ -159,6 +166,27 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       this._settings.bufferOptions;
     const initialVideoBitrate = adaptiveOptions.initialBitrates.video;
     const initialAudioBitrate = adaptiveOptions.initialBitrates.audio;
+
+    let textDisplayer: ITextDisplayer | null = null;
+    if (
+      this._settings.textTrackOptions.textTrackMode === "html" &&
+      features.htmlTextDisplayer !== null
+    ) {
+      assert(this._hasTextBufferFeature());
+      textDisplayer = new features.htmlTextDisplayer(
+        null,
+        this._settings.textTrackOptions.textTrackElement,
+      );
+    } else if (features.nativeTextDisplayer !== null) {
+      assert(this._hasTextBufferFeature());
+      textDisplayer = new features.nativeTextDisplayer(null);
+    } else {
+      assert(!this._hasTextBufferFeature());
+    }
+    this._initCanceller.signal.register(() => {
+      textDisplayer?.stop();
+    });
+
     this._currentContentInfo = {
       contentId,
       contentDecryptor: null,
@@ -169,6 +197,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
+      textDisplayer,
     };
     coreInterface.sendMessage({
       type: MainThreadMessageType.PrepareContent,
@@ -288,6 +317,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
+
+    if (this.state === ContentInitializerState.Idle) {
+      this.state = ContentInitializerState.Preparing;
+      this.trigger("stateChange", this.state);
+    }
   }
 
   /**
@@ -309,44 +343,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {HTMLMediaElement} mediaElement
    * @param {Object} playbackObserver
    */
-  public start(
-    mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
-  ): void {
+  public start(playbackObserver: IMediaElementPlaybackObserver): void {
+    this.state = ContentInitializerState.Loading;
+    this.trigger("stateChange", this.state);
+    if (this._initCanceller.isUsed()) {
+      return;
+    }
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
       return;
     }
-
-    let textDisplayer: ITextDisplayer | null = null;
-    if (
-      this._settings.textTrackOptions.textTrackMode === "html" &&
-      features.htmlTextDisplayer !== null
-    ) {
-      assert(this._hasTextBufferFeature());
-      textDisplayer = new features.htmlTextDisplayer(
-        mediaElement,
-        this._settings.textTrackOptions.textTrackElement,
-      );
-    } else if (features.nativeTextDisplayer !== null) {
-      assert(this._hasTextBufferFeature());
-      textDisplayer = new features.nativeTextDisplayer(mediaElement);
-    } else {
-      assert(!this._hasTextBufferFeature());
-    }
-    this._initCanceller.signal.register(() => {
-      textDisplayer?.stop();
-    });
-
-    /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      this._initCanceller.signal,
-    );
 
     /**
      * Send content protection initialization data.
@@ -358,44 +366,64 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       MediaSourceInitializationStatus.Nothing,
     );
 
-    const { statusRef: drmInitializationStatus, contentDecryptor } =
-      this._initializeContentDecryption(
+    const playbackStartParamsRef = new SharedReference<null | {
+      mediaElement: IMediaElement;
+      textDisplayer: ITextDisplayer | null;
+      playbackObserver: IMediaElementPlaybackObserver;
+      drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
+      mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
+    }>(null);
+
+    playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
+      listenToMediaError(
         mediaElement,
-        lastContentProtection,
-        mediaSourceStatus,
-        () => reloadMediaSource(0, undefined, undefined),
+        (error: MediaError) => this._onFatalError(error),
         this._initCanceller.signal,
       );
-    const contentInfo = this._currentContentInfo;
-    if (contentInfo !== null) {
-      contentInfo.contentDecryptor = contentDecryptor;
-    }
 
-    const playbackStartParams = {
-      mediaElement,
-      textDisplayer,
-      playbackObserver,
-      drmInitializationStatus,
-      mediaSourceStatus,
-    };
-    mediaSourceStatus.onUpdate(
-      (msInitStatus, stopListeningMSStatus) => {
-        if (msInitStatus === MediaSourceInitializationStatus.Attached) {
-          stopListeningMSStatus();
-          this._startPlaybackIfReady(playbackStartParams);
-        }
-      },
-      { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
-    );
-    drmInitializationStatus.onUpdate(
-      (initializationStatus, stopListeningDrm) => {
-        if (initializationStatus.initializationState.type === "initialized") {
-          stopListeningDrm();
-          this._startPlaybackIfReady(playbackStartParams);
-        }
-      },
-      { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
-    );
+      const { statusRef: drmInitializationStatus, contentDecryptor } =
+        this._initializeContentDecryption(
+          mediaElement,
+          lastContentProtection,
+          mediaSourceStatus,
+          () => reloadMediaSource(0, undefined, undefined),
+          this._initCanceller.signal,
+        );
+      const contentInfo = this._currentContentInfo;
+      if (contentInfo !== null) {
+        contentInfo.contentDecryptor = contentDecryptor;
+      }
+
+      const textDisplayer = contentInfo?.textDisplayer ?? null;
+      textDisplayer?.attachMediaElement(mediaElement);
+
+      const startParams = {
+        mediaElement,
+        textDisplayer,
+        playbackObserver,
+        drmInitializationStatus,
+        mediaSourceStatus,
+      };
+      mediaSourceStatus.onUpdate(
+        (msInitStatus, stopListeningMSStatus) => {
+          if (msInitStatus === MediaSourceInitializationStatus.Attached) {
+            stopListeningMSStatus();
+            this._startPlaybackIfReady(startParams);
+          }
+        },
+        { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
+      );
+      drmInitializationStatus.onUpdate(
+        (initializationStatus, stopListeningDrm) => {
+          if (initializationStatus.initializationState.type === "initialized") {
+            stopListeningDrm();
+            this._startPlaybackIfReady(startParams);
+          }
+        },
+        { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
+      );
+      playbackStartParamsRef.setValue(startParams);
+    }, this._initCanceller.signal);
 
     /**
      * Callback allowing to reload the current content.
@@ -416,6 +444,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         log.warn("MTCI: Asked to reload when no content is loaded.");
         return;
       }
+      const mediaElement = playbackObserver.getMediaElement();
+      if (mediaElement === null) {
+        // XXX TODO: We should ask to flush buffers here?
+        return;
+      }
       const lastObservation = playbackObserver.getReference().getValue();
       const currentPosition = lastObservation.position.getWanted();
       const isPaused =
@@ -433,7 +466,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
       this._reload(
         mediaElement,
-        textDisplayer,
         playbackObserver,
         mediaSourceStatus,
         position,
@@ -447,32 +479,34 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const mediaSourceLink = msgData.value;
-          mediaSourceStatus.onUpdate(
-            (currStatus, stopListening) => {
-              if (currStatus === MediaSourceInitializationStatus.AttachNow) {
-                stopListening();
-                log.info("MTCI: Attaching MediaSource URL to the media element");
-                if (mediaSourceLink.type === "handle") {
-                  mediaElement.srcObject = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    mediaElement.srcObject = null;
-                  });
-                } else {
-                  mediaElement.src = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    resetMediaElement(mediaElement, mediaSourceLink.value);
-                  });
+          playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
+            const mediaSourceLink = msgData.value;
+            mediaSourceStatus.onUpdate(
+              (currStatus, stopListening) => {
+                if (currStatus === MediaSourceInitializationStatus.AttachNow) {
+                  stopListening();
+                  log.info("MTCI: Attaching MediaSource URL to the media element");
+                  if (mediaSourceLink.type === "handle") {
+                    mediaElement.srcObject = mediaSourceLink.value;
+                    this._currentMediaSourceCanceller.signal.register(() => {
+                      mediaElement.srcObject = null;
+                    });
+                  } else {
+                    mediaElement.src = mediaSourceLink.value;
+                    this._currentMediaSourceCanceller.signal.register(() => {
+                      resetMediaElement(mediaElement, mediaSourceLink.value);
+                    });
+                  }
+                  disableRemotePlaybackOnManagedMediaSource(
+                    mediaElement,
+                    this._currentMediaSourceCanceller.signal,
+                  );
+                  mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
                 }
-                disableRemotePlaybackOnManagedMediaSource(
-                  mediaElement,
-                  this._currentMediaSourceCanceller.signal,
-                );
-                mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
-              }
-            },
-            { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
-          );
+              },
+              { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
+            );
+          }, this._currentMediaSourceCanceller.signal);
           break;
         }
 
@@ -491,12 +525,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
 
         case WorkerMessageType.CreateMediaSource:
-          this._onCreateMediaSourceMessage(
-            msgData,
-            mediaElement,
-            mediaSourceStatus,
-            this._settings.coreInterface,
-          );
+          {
+            playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
+              this._onCreateMediaSourceMessage(
+                msgData,
+                mediaElement,
+                mediaSourceStatus,
+                this._settings.coreInterface,
+              );
+            }, this._currentMediaSourceCanceller.signal);
+          }
           break;
 
         case WorkerMessageType.AddSourceBuffer:
@@ -691,6 +729,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const mediaElement = playbackObserver.getMediaElement();
+          if (mediaElement === null) {
+            return; // Nothing to do
+          }
           const currentTime = mediaElement.currentTime;
           const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(
@@ -821,7 +863,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           const manifest = msgData.value.manifest;
           this._currentContentInfo.manifest = manifest;
           this._updateCodecSupport(manifest);
-          this._startPlaybackIfReady(playbackStartParams);
+          const playbackStartParams = playbackStartParamsRef.getValue();
+          if (playbackStartParams !== null) {
+            this._startPlaybackIfReady(playbackStartParams);
+          }
           break;
         }
 
@@ -1012,6 +1057,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn("Init: Received AddTextData message but no text displayer exists");
           } else {
@@ -1038,6 +1084,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn(
               "Init: Received RemoveTextData message but no text displayer exists",
@@ -1069,6 +1116,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn(
               "Init: Received ResetTextDisplayer message but no text displayer exists",
@@ -1083,6 +1131,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn(
               "Init: Received StopTextDisplayer message but no text displayer exists",
@@ -1111,6 +1160,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           {
             if (this._currentContentInfo?.contentId !== msgData.contentId) {
               return;
+            }
+            const mediaElement = playbackObserver.getMediaElement();
+            if (mediaElement === null) {
+              return; // Nothing to do I guess
             }
 
             const keySystem = getKeySystemConfiguration(mediaElement);
@@ -1174,12 +1227,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
   }
 
-  public dispose(): void {
+  public stop(): void {
     this._initCanceller.cancel();
+    this._initCanceller = new TaskCanceller();
     if (this._currentContentInfo !== null) {
       this._currentContentInfo.mainThreadMediaSource?.dispose();
       this._currentContentInfo = null;
     }
+    this.state = ContentInitializerState.Idle;
+    this.trigger("stateChange", this.state);
   }
 
   private _onFatalError(err: unknown) {
@@ -1404,7 +1460,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
   private _reload(
     mediaElement: IMediaElement,
-    textDisplayer: ITextDisplayer | null,
     playbackObserver: IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     position: number,
@@ -1427,7 +1482,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             initialTime: position,
             autoPlay,
             mediaElement,
-            textDisplayer,
             playbackObserver,
           },
           this._currentMediaSourceCanceller.signal,
@@ -1482,7 +1536,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       initialTime: number;
       autoPlay: boolean;
       mediaElement: IMediaElement;
-      textDisplayer: ITextDisplayer | null;
       playbackObserver: IMediaElementPlaybackObserver;
     },
     cancelSignal: CancellationSignal,
@@ -1501,14 +1554,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
     const { manifest, mainThreadMediaSource: mediaSource } = this._currentContentInfo;
     const { speed } = this._settings;
-    const { initialTime, autoPlay, mediaElement, textDisplayer, playbackObserver } =
-      parameters;
+    const { initialTime, autoPlay, playbackObserver } = parameters;
     this._currentContentInfo.initialTime = initialTime;
     this._currentContentInfo.autoPlay = autoPlay;
 
     const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
       {
-        mediaElement,
         playbackObserver,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
@@ -1518,6 +1569,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       cancelSignal,
     );
     this._currentContentInfo.initialPlayPerformed = initialPlayPerformed;
+    const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
     const corePlaybackObserver = createCorePlaybackObserver(
       playbackObserver,
       {
@@ -1693,7 +1745,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         initialTime,
         autoPlay: this._settings.autoPlay,
         mediaElement: parameters.mediaElement,
-        textDisplayer: parameters.textDisplayer,
         playbackObserver: parameters.playbackObserver,
       },
       this._currentMediaSourceCanceller.signal,
@@ -1850,6 +1901,7 @@ export interface IMultiThreadContentInitializerContentInfos {
    * `null` if none is currently created for the content.
    */
   streamEventsEmitter: StreamEventsEmitter | null;
+  textDisplayer: ITextDisplayer | null;
   /**
    * The initial position to seek to in seconds once the content is loadeed.
    * `undefined` if unknown yet.

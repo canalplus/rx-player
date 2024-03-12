@@ -198,7 +198,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
          */
         const targetTime = observation.position.isAwaitingFuturePosition()
           ? observation.position.getWanted()
-          : this._playbackObserver.getCurrentTime();
+          : (this._playbackObserver.getCurrentTime() ?? observation.position.getPolled());
 
         if (
           stalledPosition !== null &&

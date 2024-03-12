@@ -15,8 +15,9 @@
  */
 
 import AudioVideoSegmentSink from "./audio_video";
+import DummySegmentSink from "./dummy_segment_sink";
 import type { ITextDisplayerInterface } from "./text";
 export * from "./types";
 
 export type { ITextDisplayerInterface };
-export { AudioVideoSegmentSink };
+export { AudioVideoSegmentSink, DummySegmentSink };
