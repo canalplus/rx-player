@@ -205,6 +205,7 @@ export default class ContentPreparer {
         if (
           manifest === null ||
           mediaSource.readyState === "closed" ||
+          mediaSource.readyState === "transfer" ||
           currentMediaSourceCanceller.isUsed()
         ) {
           return;

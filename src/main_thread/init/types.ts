@@ -33,6 +33,7 @@ import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
 import type SharedReference from "../../utils/reference";
+import type { IReadOnlySharedReference } from "../../utils/reference";
 import type {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
@@ -84,7 +85,7 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * intervals.
    */
   public abstract start(
-    mediaElement: IMediaElement,
+    mediaElement: IReadOnlySharedReference<IMediaElement>,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void;
 

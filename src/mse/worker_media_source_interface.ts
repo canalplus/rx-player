@@ -79,6 +79,10 @@ export default class WorkerMediaSourceInterface
     });
   }
 
+  public transfer(): void {
+    throw new Error("Not implemented yet.");
+  }
+
   public onMediaSourceReadyStateChanged(readyState: ReadyState): void {
     switch (readyState) {
       case "closed":

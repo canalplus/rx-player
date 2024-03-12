@@ -70,6 +70,7 @@ class DummySourceBufferListBase extends EventEmitter<ISourceBufferListEventMap> 
 
 interface IDummyMediaSourceCallbacks {
   hasMediaElementErrored: () => boolean;
+  onInitSegmentsReceived: () => void;
   onBufferedUpdate: () => void;
   updateMediaElementDuration: (duration: number) => void;
 }
@@ -102,6 +103,7 @@ export class DummyMediaSource
   public eventScheduler: EventScheduler;
   private _stored: IStoredMediaSourceInfo;
   private _callbacks: IDummyMediaSourceCallbacks;
+  private _initSegmentStatus: WeakMap<ISourceBuffer, boolean>;
 
   constructor() {
     super();
@@ -124,8 +126,10 @@ export class DummyMediaSource
     this._callbacks = {
       hasMediaElementErrored: () => false,
       onBufferedUpdate: noop,
+      onInitSegmentsReceived: noop,
       updateMediaElementDuration: noop,
     };
+    this._initSegmentStatus = new WeakMap();
     this._duration = NaN;
     this.liveSeekableRange = new ManualTimeRanges();
     this.eventScheduler = new EventScheduler();
@@ -203,6 +207,12 @@ export class DummyMediaSource
       },
       onBufferedUpdate: () => {
         this._callbacks.onBufferedUpdate();
+      },
+      onInitSegmentReceived: () => {
+        this._initSegmentStatus.set(sb, true);
+        if (this.sourceBuffers.every((s) => this._initSegmentStatus.get(s) === true)) {
+          this._callbacks.onInitSegmentsReceived();
+        }
       },
     });
     this._stored.sourceBuffers.push({ type, operations });
@@ -313,6 +323,7 @@ interface IDummySourceBufferInternalCallbacks {
   hasMediaElementErrored: () => boolean;
   getMediaSourceDuration: () => number;
   getMediaSourceReadyState: () => "open" | "ended" | "closed";
+  onInitSegmentReceived: () => void;
   openMediaSource: () => void;
   onBufferedUpdate: () => void;
 }
@@ -488,10 +499,12 @@ export class DummySourceBuffer
           this.updating = false;
           return this.eventScheduler.schedule(this, "error", null);
         }
+        let hasInit = false;
         for (const chunk of chunks[0]) {
           const moovIndex = findCompleteBox(chunk, 0x6d6f6f76);
           if (moovIndex >= 0) {
             this._lastInitTimescale = getMDHDTimescale(chunk) ?? null;
+            hasInit = true;
           } else {
             const trackFragmentDecodeTime = getTrackFragmentDecodeTime(chunk);
             let trunDuration = getDurationFromTrun(chunk);
@@ -517,7 +530,12 @@ export class DummySourceBuffer
         for (const { start, end } of segmentRanges) {
           this.buffered.insert(start, end);
         }
-        this._callbacks.onBufferedUpdate();
+        if (hasInit) {
+          this._callbacks.onInitSegmentReceived();
+        }
+        if (segmentRanges.length > 0) {
+          this._callbacks.onBufferedUpdate();
+        }
         this.updating = false;
         return this.eventScheduler.schedule(this, "update", canceller.signal);
       })
@@ -958,9 +976,26 @@ export class DummyMediaElement
   }
 
   private _attachMediaSource(dummyMs: DummyMediaSource): void {
+    const triggerLoadedMetadata = () => {
+      if (this.readyState === 0) {
+        const canceller = this._currentContentCanceller;
+        if (canceller === null) {
+          return;
+        }
+        this.readyState = 1;
+        this.seekable.insert(0, Infinity);
+        this._eventScheduler
+          .schedule(this, "loadedmetadata", canceller.signal)
+          .catch(noop);
+      }
+    };
     dummyMs.updateCallbacks({
       hasMediaElementErrored: () => {
         return this.error !== null;
+      },
+
+      onInitSegmentsReceived: () => {
+        triggerLoadedMetadata();
       },
 
       onBufferedUpdate: () => {
@@ -975,15 +1010,7 @@ export class DummyMediaElement
             this.buffered.insert(range.start, range.end);
           }
           if (this.readyState === 0) {
-            const canceller = this._currentContentCanceller;
-            if (canceller === null) {
-              return;
-            }
-            this.readyState = 1;
-            this.seekable.insert(0, Infinity);
-            this._eventScheduler
-              .schedule(this, "loadedmetadata", canceller.signal)
-              .catch(noop);
+            triggerLoadedMetadata();
           } else if (
             this.readyState === 1 &&
             isTimeInRanges(allBuffered, this.currentTime)

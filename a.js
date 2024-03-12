@@ -33,7 +33,11 @@ preloadPlayer.loadVideo({
 
 // ... Wait until initially loaded content ended
 
-// stop `preloadPlayer` and play it on the real media element
+// Stop initial player, and set a DUMMY media element on it to load the
+// preloaded content on the real media element.
+player.replaceMediaElement(DUMMY_MEDIA_ELEMENT.create());
+preloadPlayer.replaceMediaElement(videoElement);
+
 const preloadedData = preloadMediaElement.getLoadedData();
 preloadPlayer.stop();
 player.loadVideo({

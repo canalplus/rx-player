@@ -80,15 +80,16 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
    * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
-   * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
+   * @param {Object} mediaElementRef - HTMLMediaElement on which the
    * content will be played.
    * @param {Object} playbackObserver - Object regularly emitting playback
    * information.
    */
   public start(
-    mediaElement: IMediaElement,
+    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
+    const mediaElement = mediaElementRef.getValue();
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
 
@@ -116,7 +117,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(
-      mediaElement,
+      mediaElementRef,
       (error: MediaError) => this._onFatalError(error),
       cancelSignal,
     );

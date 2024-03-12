@@ -253,13 +253,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {HTMLMediaElement} mediaElement
+   * @param {Object} mediaElementRef
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: IMediaElement,
+    // XXX TODO
+    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
+    const mediaElement = mediaElementRef.getValue();
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
       return;
@@ -287,7 +289,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(
-      mediaElement,
+      mediaElementRef,
       (error: MediaError) => this._onFatalError(error),
       this._initCanceller.signal,
     );
