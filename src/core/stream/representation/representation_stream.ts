@@ -443,7 +443,7 @@ export default function RepresentationStream<TSegmentDataType>(
       // We can thus ignore it, it is very unlikely to lead to true buffer issues.
       return;
     }
-    log.warn(
+    log.error(
       "Stream",
       "Received fatal buffer error",
       {
