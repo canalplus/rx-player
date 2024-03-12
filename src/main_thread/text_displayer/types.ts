@@ -1,3 +1,4 @@
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ITextTrackSegmentData } from "../../transports";
 import type { IRange } from "../../utils/ranges";
 
@@ -10,6 +11,8 @@ export interface ITextDisplayer {
    * Start/restart `ITextDisplayer` (e.g. when changing text tracks).
    */
   reset(): void;
+
+  attachMediaElement(videoElement: IMediaElement): void;
 
   /**
    * Add timed text media data to the displayer so it can later be displayed at
