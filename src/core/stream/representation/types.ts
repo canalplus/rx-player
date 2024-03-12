@@ -139,7 +139,7 @@ export interface IStreamEventAddedSegmentPayload {
   /** The concerned Segment. */
   segment: ISegment;
   /** Ranges of the concerned SegmentSink after the segment was pushed. */
-  buffered: IRange[];
+  buffered: IRange[] | undefined;
 }
 
 /** Structure describing an "inband" event, as found in a media segment. */
