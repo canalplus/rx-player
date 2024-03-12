@@ -80,6 +80,8 @@ export default class MainMediaSourceInterface
    *
    * You can then obtain a link to that `MediaSource`, for example to link it
    * to an `HTMLMediaElement`, through the `handle` property.
+   *
+   * @param {string} id
    */
   constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
     super();
@@ -273,7 +275,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   /** @see ISourceBufferInterface */
-  public getBuffered(): IRange[] {
+  public getBuffered(): IRange[] | undefined {
     try {
       return convertToRanges(this._sourceBuffer.buffered);
     } catch (err) {
@@ -311,6 +313,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // we don't care
     }
     this._emptyCurrentQueue();
+    this._canceller.cancel();
   }
 
   private _onError(evt: Event) {

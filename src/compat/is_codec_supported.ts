@@ -35,7 +35,7 @@ const supportMap: Map<string, boolean> = new Map();
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLMediaElement|null} mediaElement
  * @param {string} mimeType - The MIME media type that you want to test support
  * for in the current browser.
  * This may include the codecs parameter to provide added details about the
@@ -43,12 +43,12 @@ const supportMap: Map<string, boolean> = new Map();
  * @returns {Boolean}
  */
 export default function isCodecSupported(
-  mediaElement: IMediaElement,
+  mediaElement: IMediaElement | null,
   mimeType: string,
 ): boolean {
-  // TODO: We only added that as a hotfix for now, to allow support of the right codecs
+  // XXX TODO: We only added that as a hotfix for now, to allow support of the right codecs
   // on a dummy media element
-  if ((mediaElement as DummyMediaElement).isDummy) {
+  if (mediaElement !== null && (mediaElement as DummyMediaElement).isDummy) {
     return (mediaElement as DummyMediaElement).FORCED_MEDIA_SOURCE.isTypeSupported(
       mimeType,
     );

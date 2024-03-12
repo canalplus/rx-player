@@ -63,7 +63,7 @@ export function getCodecsWithUnknownSupport(
 export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
   contentDecryptor: ContentDecryptor | null,
-  mediaElement: IMediaElement,
+  mediaElement: IMediaElement | null,
   isPlayingWithMSEinWorker: boolean,
 ): ICodecSupportInfo[] {
   const codecSupportMap: Map<

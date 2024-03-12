@@ -220,7 +220,7 @@ export default function initializeCoreEntry(
       case MainThreadMessageType.MediaSourceReload:
         {
           const preparedContent = contentPreparer.getCurrentContent();
-          if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+          if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
             return;
           }
           currentContentHandle?.signalMediaSourceReload();
@@ -229,7 +229,7 @@ export default function initializeCoreEntry(
 
       case MainThreadMessageType.SourceBufferSuccess: {
         const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+        if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
           return;
         }
         const { sourceBuffers } = preparedContent.mediaSource;
@@ -257,7 +257,7 @@ export default function initializeCoreEntry(
 
       case MainThreadMessageType.SourceBufferError: {
         const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+        if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
           return;
         }
         const { sourceBuffers } = preparedContent.mediaSource;
@@ -287,7 +287,7 @@ export default function initializeCoreEntry(
 
       case MainThreadMessageType.MediaSourceReadyStateChange: {
         const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+        if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
           return;
         }
         if (preparedContent.mediaSource.onMediaSourceReadyStateChanged === undefined) {
@@ -452,6 +452,21 @@ export default function initializeCoreEntry(
         break;
       }
 
+      case MainThreadMessageType.MediaElementReady: {
+        const preparedContent = contentPreparer.getCurrentContent();
+        if (msg.contentId !== preparedContent?.contentId) {
+          return;
+        }
+        contentPreparer.attachMediaSource(sendMessage).catch((err) => {
+          sendMessage({
+            type: CoreMessageType.Error,
+            contentId: preparedContent.contentId,
+            value: formatErrorForSender(err),
+          });
+        });
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }
@@ -610,7 +625,6 @@ function loadPreparedContent(
       cmcdDataBuilder,
       enableRepresentationAvoidance,
       manifest,
-      mediaSource,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -662,7 +676,6 @@ function loadPreparedContent(
 
     const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
       manifest,
-      mediaSource,
       playbackObserver,
       segmentSinksStore,
       {
@@ -983,7 +996,7 @@ function loadPreparedContent(
       currentLoadCanceller.cancel();
       currentLoadCanceller = null;
     }
-    const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
+    const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource?.id;
     if (mediaSourceId === undefined) {
       log.warn("Core", "Cannot reload MediaSource: no MediaSource currently.");
       return;

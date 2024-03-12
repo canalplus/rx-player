@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
 import type {
@@ -48,6 +47,10 @@ import type {
  */
 export abstract class ContentInitializer extends EventEmitter<IContentInitializerEvents> {
   /**
+   * Exposes the state the `ContentInitializer` is currenly in.
+   */
+  public abstract getState(): ContentInitializerState;
+  /**
    * Prepare the content linked to this `ContentInitializer` in the background,
    * without actually trying to play it.
    *
@@ -69,21 +72,11 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * phase before `start` is called (the `ContentInitializer` should stay
    * resilient in both scenarios).
    *
-   * @param {HTMLMediaElement} mediaElement - `HTMLMediaElement` on which the
-   * content will play. This is given to `start` (and not sooner) to ensure
-   * that no prior step influence the `HTMLMediaElement`, on which a previous
-   * content could have been playing until then.
-   *
-   * If a content was already playing on that `HTMLMediaElement`, it will be
-   * stopped.
-   * @param {Object} playbackObserver - Interface allowing to poll playback
-   * information on what's playing on the `HTMLMediaElement` at regular
-   * intervals.
+   * @param {Object} playbackObserver - Interface allowing to interact with
+   * the media element on the page, most notably to poll playback information
+   * on what's playing on the `HTMLMediaElement` at regular intervals.
    */
-  public abstract start(
-    mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
-  ): void;
+  public abstract start(playbackObserver: IMediaElementPlaybackObserver): void;
 
   /**
    * Update URL of the content currently being played (e.g. DASH's MPD).
@@ -105,6 +98,33 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
   public abstract dispose(): void;
 }
 
+/** List of "states" in which a `ContentInitializer` may be in. */
+export const enum ContentInitializerState {
+  /**
+   * The `ContentInitializer` has been created but nothing has been done on it
+   * yet.
+   */
+  Idle,
+  /**
+   * A content is being or has been "prepared" which is a step where only some
+   * non-destructive steps, such as loading a Manifest, is performed.
+   *
+   * Note that this state should only be set when the `ContentInitializer` is
+   * only preloading a content, not when it is a step in a `Loading` or
+   * `Preloading` step.
+   */
+  Preparing,
+  /**
+   * A content is being pre-loaded. That is, it is being pre-fetched without
+   * truly playing it yet.
+   * It will switch to `Loading` mode once an `HTMLMediaElement` is attached to
+   * the `PlaybackObserver` linked to that `ContentInitializer`.
+   */
+  Preloading,
+  /** A content is being loaded on a media element. */
+  Loading,
+}
+
 /** Every events emitted by a `ContentInitializer`. */
 export interface IContentInitializerEvents {
   /** Event sent when a minor happened. */
@@ -115,6 +135,8 @@ export interface IContentInitializerEvents {
   manifestReady: IManifestMetadata;
   /** Event sent after the Manifest has been updated. */
   manifestUpdate: IPeriodsUpdateResult;
+  /** Event sent when the "state" of the ContentInitializer updates. */
+  stateChange: ContentInitializerState;
   /**
    * The codecs support for some tracks may have changed.
    */

@@ -205,6 +205,70 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Get direct access to the `HTMLMediaElement`.
+   * `null` if no `HTMLMediaElement` has yet been "attached" to that
+   * `PlaybackObserver` yet.
+   * @returns {HTMLMediaElement|null}
+   */
+  getMediaElement(): IMediaElement | null {
+    return this._mediaElementRef.getValue();
+  }
+
+  /**
+   * Register a callback to be called when the `HTMLMediaElement` has been
+   * attached to this `PlaybackObserver`.
+   *
+   * @param {Function} cb - Callback that will be called as soon as the media
+   * element is attached, with the media element as argument. This callback
+   * may be called at most one time.
+   * @param {CancellationSignal} cancelSignal - When and if that
+   * `CancellationSignal` triggers, the callback will not be called anymore
+   * on media element attachment.
+   */
+  onMediaElementAttachment(
+    cb: (mediaElement: IMediaElement) => void,
+    cancelSignal: CancellationSignal,
+  ) {
+    if (cancelSignal.isCancelled()) {
+      return;
+    }
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement !== null) {
+      try {
+        cb(mediaElement);
+      } catch (err) {
+        log.error(
+          "API",
+          "onMediaElementAttachment error",
+          err instanceof Error ? err : "Unknown Error",
+        );
+      }
+    } else {
+      this._mediaElementRef.onUpdate(
+        (lastMediaElement, stopListening) => {
+          if (lastMediaElement === null) {
+            return;
+          }
+          stopListening();
+          try {
+            cb(lastMediaElement);
+          } catch (err) {
+            log.error(
+              "API",
+              "onMediaElementAttachment error",
+              err instanceof Error ? err : "Unknown Error",
+            );
+          }
+        },
+        {
+          clearSignal: cancelSignal,
+          emitCurrentValue: false,
+        },
+      );
+    }
+  }
+
+  /**
    * Stop the `PlaybackObserver` from emitting playback observations and free all
    * resources reserved to emitting them such as event listeners and intervals.
    *
