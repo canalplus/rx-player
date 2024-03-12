@@ -240,6 +240,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_contentInfos: IPublicApiContentInfos | null;
 
+  private _priv_currentPreloads: Map<string, IPublicApiContentInfos>;
+
   /** If `true` trickMode video tracks will be chosen if available. */
   private _priv_preferTrickModeTracks: boolean;
 
@@ -456,6 +458,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_currentError = null;
     this._priv_contentInfos = null;
+    this._priv_currentPreloads = new Map();
 
     this._priv_contentEventsMemory = {};
 
@@ -665,8 +668,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const options = parseLoadVideoOptions(opts);
     log.info("API: Calling loadvideo", options.url, options.transport);
     this._priv_reloadingMetadata = { options };
-    this._priv_initializeContentPlayback(options);
+    this._priv_initializeContentPlayback(options, false);
     this._priv_lastAutoPlay = options.autoPlay;
+  }
+
+  preloadVideo(opts: ILoadVideoOptions): { id: string } {
+    const options = parseLoadVideoOptions(opts);
+    log.info("API: Calling preloadvideo", options.url, options.transport);
+    const id = this._priv_initializeContentPlayback(options, true);
+    return { id };
   }
 
   /**
@@ -723,7 +733,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (keySystems !== undefined) {
       newOptions.keySystems = keySystems;
     }
-    this._priv_initializeContentPlayback(newOptions);
+    this._priv_initializeContentPlayback(newOptions, false);
   }
 
   public createDebugElement(element: HTMLElement): {
@@ -744,8 +754,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * From given options, initialize content playback.
    * @param {Object} options
+   * @param {string} isPreload
    */
-  private _priv_initializeContentPlayback(options: IParsedLoadVideoOptions): void {
+  private _priv_initializeContentPlayback(
+    options: IParsedLoadVideoOptions,
+    isPreload: boolean,
+  ): string {
     const {
       autoPlay,
       cmcd,
@@ -780,6 +794,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /** Emit to stop the current content. */
     const currentContentCanceller = new TaskCanceller();
+    const contentId = generateContentId();
 
     const videoElement = this.videoElement;
 
@@ -889,9 +904,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
         const transportFn = features.transports[transport];
         if (typeof transportFn !== "function") {
-          // Stop previous content and reset its state
-          this.stop();
-          this._priv_currentError = null;
+          if (!isPreload) {
+            // Stop previous content and reset its state
+            this.stop();
+            this._priv_currentError = null;
+          }
           throw new Error(`transport "${transport}" not supported`);
         }
 
@@ -977,6 +994,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         this.stop();
         this._priv_currentError = null;
         throw new Error("DirectFile feature not activated in your build.");
+      } else if (isPreload) {
+        throw new Error("DirectFile feature not authorized when pre-loading");
       } else if (isNullOrUndefined(url)) {
         throw new Error("No URL for a DirectFile content");
       }
@@ -986,7 +1005,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         currentContentCanceller.signal,
       );
       if (currentContentCanceller.isUsed()) {
-        return;
+        return contentId;
       }
       initializer = new features.directfile.initDirectFile({
         autoPlay,
@@ -999,7 +1018,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /** Future `this._priv_contentInfos` related to this content. */
     const contentInfos: IPublicApiContentInfos = {
-      contentId: generateContentId(),
+      isPreload,
+      contentId,
       originalUrl: url,
       currentContentCanceller,
       defaultAudioTrackSwitchingMode,
@@ -1033,15 +1053,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_segmentSinkMetricsCallback = null;
       this._priv_lastAutoPlay = payload.autoPlay;
     });
-    initializer.addEventListener("inbandEvents", (inbandEvents) =>
-      this.trigger("inbandEvents", inbandEvents),
-    );
-    initializer.addEventListener("streamEvent", (streamEvent) =>
-      this.trigger("streamEvent", streamEvent),
-    );
-    initializer.addEventListener("streamEventSkip", (streamEventSkip) =>
-      this.trigger("streamEventSkip", streamEventSkip),
-    );
+    initializer.addEventListener("inbandEvents", (inbandEvents) => {
+      if (!contentInfos.isPreload) {
+        this.trigger("inbandEvents", inbandEvents);
+      }
+    });
+    initializer.addEventListener("streamEvent", (streamEvent) => {
+      if (!contentInfos.isPreload) {
+        this.trigger("streamEvent", streamEvent);
+      }
+    });
+    initializer.addEventListener("streamEventSkip", (streamEventSkip) => {
+      if (!contentInfos.isPreload) {
+        this.trigger("streamEventSkip", streamEventSkip);
+      }
+    });
     initializer.addEventListener("activePeriodChanged", (periodInfo) =>
       this._priv_onActivePeriodChanged(contentInfos, periodInfo),
     );
@@ -1080,22 +1106,27 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // Now, that most events are linked, prepare the next content.
     initializer.prepare();
 
-    // Now that the content is prepared, stop previous content and reset state
-    // This is done after content preparation as `stop` could technically have
-    // a long and synchronous blocking time.
-    // Note that this call is done **synchronously** after all events linking.
-    // This is **VERY** important so:
-    //   - the `STOPPED` state is switched to synchronously after loading a new
-    //     content.
-    //   - we can avoid involontarily catching events linked to the previous
-    //     content.
-    this.stop();
+    if (!isPreload) {
+      // Now that the content is prepared, stop previous content and reset state
+      // This is done after content preparation as `stop` could technically have
+      // a long and synchronous blocking time.
+      // Note that this call is done **synchronously** after all events linking.
+      // This is **VERY** important so:
+      //   - the `STOPPED` state is switched to synchronously after loading a new
+      //     content.
+      //   - we can avoid involontarily catching events linked to the previous
+      //     content.
+      this.stop();
+    }
 
     /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
-      withMediaSource: !isDirectFile,
-      lowLatencyMode,
-    });
+    const playbackObserver = new MediaElementPlaybackObserver(
+      isPreload ? null : videoElement,
+      {
+        withMediaSource: !isDirectFile,
+        lowLatencyMode,
+      },
+    );
 
     currentContentCanceller.signal.register(() => {
       playbackObserver.stop();
@@ -1119,6 +1150,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * @param {string} state - The player state we're about to switch to.
      */
     const updateReloadingMetadata = (state: IPlayerState) => {
+      if (contentInfos.isPreload) {
+        return;
+      }
       switch (state) {
         case "STOPPED":
         case "RELOADING":
@@ -1158,7 +1192,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       playerStateRef.onUpdate(
         (val, stopListeningToStateUpdates) => {
-          if (!isLoadedState(val)) {
+          if (!isLoadedState(val) || contentInfos.isPreload) {
             return; // content not loaded yet: no event
           }
           stopListeningToStateUpdates();
@@ -1195,7 +1229,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
 
     this._priv_currentError = null;
-    this._priv_contentInfos = contentInfos;
+    if (isPreload) {
+      this._priv_currentPreloads.set(contentId, contentInfos);
+    } else {
+      this._priv_contentInfos = contentInfos;
+    }
 
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
@@ -1207,6 +1245,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // React to player state change
     playerStateRef.onUpdate(
       (newState: IPlayerState) => {
+        if (contentInfos.isPreload) {
+          return;
+        }
         updateReloadingMetadata(newState);
         this._priv_setPlayerState(newState);
 
@@ -1238,7 +1279,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     playbackObserver.listen(
       (observation) => {
         updateReloadingMetadata(this.state);
-        this._priv_triggerPositionUpdate(contentInfos, observation);
+        if (!contentInfos.isPreload) {
+          this._priv_triggerPositionUpdate(contentInfos, observation);
+        }
       },
       { clearSignal: currentContentCanceller.signal },
     );
@@ -1254,11 +1297,48 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           stopListeningToLock();
 
           // start playback!
-          initializer.start(videoElement, playbackObserver);
+          initializer.start(isPreload ? null : videoElement, playbackObserver);
         }
       },
       { emitCurrentValue: true, clearSignal: currentContentCanceller.signal },
     );
+    return contentId;
+  }
+
+  startPreload(preloadId: string): void {
+    if (this.videoElement === null) {
+      throw new Error("Cannot start content: The RxPlayer is disposed.");
+    }
+    const preloadObject = this._priv_currentPreloads.get(preloadId);
+    if (preloadObject === undefined) {
+      throw new Error("No content preloaded with that id.");
+    }
+    this.stop();
+    preloadObject.isPreload = false;
+    this._priv_contentInfos = preloadObject;
+    this._priv_currentPreloads.delete(preloadId);
+    this._priv_setPlayerState(PLAYER_STATES.LOADING);
+    // XXX TODO also transform the RELOADING event into a loading one
+    preloadObject.initializer.attachMediaElement(this.videoElement);
+  }
+
+  getCurrentPreloads(): Array<{
+    id: string;
+  }> {
+    return Array.from(this._priv_currentPreloads.keys()).map((id) => ({ id }));
+  }
+
+  removePreload(preloadId: string): boolean {
+    const preloadObject = this._priv_currentPreloads.get(preloadId);
+    if (preloadObject === undefined) {
+      return false;
+    }
+    preloadObject.currentContentCanceller.cancel();
+    return this._priv_currentPreloads.delete(preloadId);
+  }
+
+  clearPreloads(): void {
+    this.getCurrentPreloads().forEach((preload) => this.removePreload(preload.id));
   }
 
   /**
@@ -2478,12 +2558,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos: IPublicApiContentInfos,
     manifest: IManifest | IManifestMetadata,
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
     contentInfos.manifest = manifest;
 
-    if (manifest.manifestFormat === ManifestMetadataFormat.Class) {
+    if (
+      !contentInfos.isPreload &&
+      manifest.manifestFormat === ManifestMetadataFormat.Class
+    ) {
       this._priv_reloadingMetadata.manifest = manifest as IManifest;
     }
 
@@ -2492,29 +2578,33 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       defaultAudioTrackSwitchingMode: contentInfos.defaultAudioTrackSwitchingMode,
     });
     contentInfos.tracksStore = tracksStore;
-    tracksStore.addEventListener("newAvailablePeriods", (p) => {
-      this.trigger("newAvailablePeriods", p);
-    });
-    tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
-      this.trigger("brokenRepresentationsLock", e);
-    });
-    tracksStore.addEventListener("trackUpdate", (e) => {
-      this.trigger("trackUpdate", e);
+    if (!contentInfos.isPreload) {
+      tracksStore.addEventListener("newAvailablePeriods", (p) => {
+        this.trigger("newAvailablePeriods", p);
+      });
+      tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
+        this.trigger("brokenRepresentationsLock", e);
+      });
+      tracksStore.addEventListener("trackUpdate", (e) => {
+        this.trigger("trackUpdate", e);
 
-      const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
-      if (
-        e.reason === "no-playable-representation" &&
-        e.period.id === currentPeriod?.id
-      ) {
-        this._priv_onAvailableTracksMayHaveChanged(e.trackType);
-      }
-    });
+        const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+        if (
+          e.reason === "no-playable-representation" &&
+          e.period.id === currentPeriod?.id
+        ) {
+          this._priv_onAvailableTracksMayHaveChanged(e.trackType);
+        }
+      });
+    }
     contentInfos.tracksStore.addEventListener("warning", (err) => {
       this.trigger("warning", err);
     });
-    contentInfos.tracksStore.addEventListener("error", (err) => {
-      this._priv_onFatalError(err, contentInfos);
-    });
+    if (!contentInfos.isPreload) {
+      contentInfos.tracksStore.addEventListener("error", (err) => {
+        this._priv_onFatalError(err, contentInfos);
+      });
+    }
 
     contentInfos.tracksStore.onManifestUpdate(manifest);
   }
@@ -2537,25 +2627,28 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isNullOrUndefined(contentInfos?.tracksStore)) {
       contentInfos.tracksStore.onManifestUpdate(this._priv_contentInfos.manifest);
     }
-    const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
-    const currTracksStore = this._priv_contentInfos?.tracksStore;
-    if (currentPeriod === undefined || isNullOrUndefined(currTracksStore)) {
-      return;
-    }
-    for (const update of updates.updatedPeriods) {
-      if (update.period.id === currentPeriod.id) {
-        if (
-          update.result.addedAdaptations.length > 0 ||
-          update.result.removedAdaptations.length > 0
-        ) {
-          // We might have new (or less) tracks, send events just to be sure
-          const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
-          if (periodRef === undefined) {
-            return;
+
+    if (!contentInfos.isPreload) {
+      const currentPeriod = this._priv_contentInfos?.currentPeriod ?? undefined;
+      const currTracksStore = this._priv_contentInfos?.tracksStore;
+      if (currentPeriod === undefined || isNullOrUndefined(currTracksStore)) {
+        return;
+      }
+      for (const update of updates.updatedPeriods) {
+        if (update.period.id === currentPeriod.id) {
+          if (
+            update.result.addedAdaptations.length > 0 ||
+            update.result.removedAdaptations.length > 0
+          ) {
+            // We might have new (or less) tracks, send events just to be sure
+            const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
+            if (periodRef === undefined) {
+              return;
+            }
+            this._priv_onAvailableTracksMayHaveChanged("audio");
+            this._priv_onAvailableTracksMayHaveChanged("text");
+            this._priv_onAvailableTracksMayHaveChanged("video");
           }
-          this._priv_onAvailableTracksMayHaveChanged("audio");
-          this._priv_onAvailableTracksMayHaveChanged("text");
-          this._priv_onAvailableTracksMayHaveChanged("video");
         }
       }
     }
@@ -2586,59 +2679,64 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       contentInfos.tracksStore.onDecipherabilityUpdates();
     }
 
-    /**
-     * Array of tuples only including once the Period/Track combination, and
-     * only when it concerns the currently-selected track.
-     */
-    const periodsAndTrackTypes = elts.reduce(
-      (acc: Array<[IPeriodMetadata, ITrackType]>, elt) => {
-        const isFound =
-          arrayFind(
-            acc,
-            (x) => x[0].id === elt.period.id && x[1] === elt.adaptation.type,
-          ) !== undefined;
+    if (!contentInfos.isPreload) {
+      /**
+       * Array of tuples only including once the Period/Track combination, and
+       * only when it concerns the currently-selected track.
+       */
+      const periodsAndTrackTypes = elts.reduce(
+        (acc: Array<[IPeriodMetadata, ITrackType]>, elt) => {
+          const isFound =
+            arrayFind(
+              acc,
+              (x) => x[0].id === elt.period.id && x[1] === elt.adaptation.type,
+            ) !== undefined;
 
-        if (!isFound) {
-          // Only consider the currently-selected tracks.
-          // NOTE: Maybe there's room for optimizations? Unclear.
-          const tStore = contentInfos.tracksStore;
-          if (tStore === null) {
-            return acc;
+          if (!isFound) {
+            // Only consider the currently-selected tracks.
+            // NOTE: Maybe there's room for optimizations? Unclear.
+            const tStore = contentInfos.tracksStore;
+            if (tStore === null) {
+              return acc;
+            }
+            let isCurrent = false;
+            const periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
+            if (periodRef === undefined) {
+              return acc;
+            }
+            switch (elt.adaptation.type) {
+              case "audio":
+                isCurrent =
+                  tStore.getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+              case "video":
+                isCurrent =
+                  tStore.getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+              case "text":
+                isCurrent =
+                  tStore.getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
+                break;
+            }
+            if (isCurrent) {
+              acc.push([elt.period, elt.adaptation.type]);
+            }
           }
-          let isCurrent = false;
-          const periodRef = tStore.getPeriodObjectFromPeriod(elt.period);
-          if (periodRef === undefined) {
-            return acc;
-          }
-          switch (elt.adaptation.type) {
-            case "audio":
-              isCurrent = tStore.getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
-              break;
-            case "video":
-              isCurrent = tStore.getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
-              break;
-            case "text":
-              isCurrent = tStore.getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
-              break;
-          }
-          if (isCurrent) {
-            acc.push([elt.period, elt.adaptation.type]);
-          }
-        }
-        return acc;
-      },
-      [],
-    );
-    for (const [period, trackType] of periodsAndTrackTypes) {
-      this._priv_triggerEventIfNotStopped(
-        "representationListUpdate",
-        {
-          period: { start: period.start, end: period.end, id: period.id },
-          trackType,
-          reason: "decipherability-update",
+          return acc;
         },
-        contentInfos.currentContentCanceller.signal,
+        [],
       );
+      for (const [period, trackType] of periodsAndTrackTypes) {
+        this._priv_triggerEventIfNotStopped(
+          "representationListUpdate",
+          {
+            period: { start: period.start, end: period.end, id: period.id },
+            trackType,
+            reason: "decipherability-update",
+          },
+          contentInfos.currentContentCanceller.signal,
+        );
+      }
     }
   }
 
@@ -2653,68 +2751,81 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos: IPublicApiContentInfos,
     { period }: { period: IPeriodMetadata },
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
     contentInfos.currentPeriod = period;
 
-    const cancelSignal = contentInfos.currentContentCanceller.signal;
-    if (this._priv_contentEventsMemory.periodChange !== period) {
-      this._priv_contentEventsMemory.periodChange = period;
+    if (!contentInfos.isPreload) {
+      const cancelSignal = contentInfos.currentContentCanceller.signal;
+      if (this._priv_contentEventsMemory.periodChange !== period) {
+        this._priv_contentEventsMemory.periodChange = period;
+        this._priv_triggerEventIfNotStopped(
+          "periodChange",
+          { start: period.start, end: period.end, id: period.id },
+          cancelSignal,
+        );
+      }
+
       this._priv_triggerEventIfNotStopped(
-        "periodChange",
-        { start: period.start, end: period.end, id: period.id },
+        "availableAudioTracksChange",
+        this.getAvailableAudioTracks(),
+        cancelSignal,
+      );
+      this._priv_triggerEventIfNotStopped(
+        "availableTextTracksChange",
+        this.getAvailableTextTracks(),
+        cancelSignal,
+      );
+      this._priv_triggerEventIfNotStopped(
+        "availableVideoTracksChange",
+        this.getAvailableVideoTracks(),
+        cancelSignal,
+      );
+
+      const tracksStore = this._priv_contentInfos?.tracksStore;
+
+      // Emit initial events for the Period
+      if (!isNullOrUndefined(tracksStore)) {
+        const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
+        if (periodRef) {
+          const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+          this._priv_triggerEventIfNotStopped(
+            "audioTrackChange",
+            audioTrack,
+            cancelSignal,
+          );
+          const textTrack = tracksStore.getChosenTextTrack(periodRef);
+          this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
+          const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+          this._priv_triggerEventIfNotStopped(
+            "videoTrackChange",
+            videoTrack,
+            cancelSignal,
+          );
+        }
+      } else {
+        this._priv_triggerEventIfNotStopped("audioTrackChange", null, cancelSignal);
+        this._priv_triggerEventIfNotStopped("textTrackChange", null, cancelSignal);
+        this._priv_triggerEventIfNotStopped("videoTrackChange", null, cancelSignal);
+      }
+
+      const audioRepresentation = this.__priv_getCurrentRepresentations()?.audio ?? null;
+      this._priv_triggerEventIfNotStopped(
+        "audioRepresentationChange",
+        audioRepresentation,
+        cancelSignal,
+      );
+      const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
+      this._priv_triggerEventIfNotStopped(
+        "videoRepresentationChange",
+        videoRepresentation,
         cancelSignal,
       );
     }
-
-    this._priv_triggerEventIfNotStopped(
-      "availableAudioTracksChange",
-      this.getAvailableAudioTracks(),
-      cancelSignal,
-    );
-    this._priv_triggerEventIfNotStopped(
-      "availableTextTracksChange",
-      this.getAvailableTextTracks(),
-      cancelSignal,
-    );
-    this._priv_triggerEventIfNotStopped(
-      "availableVideoTracksChange",
-      this.getAvailableVideoTracks(),
-      cancelSignal,
-    );
-
-    const tracksStore = this._priv_contentInfos?.tracksStore;
-
-    // Emit initial events for the Period
-    if (!isNullOrUndefined(tracksStore)) {
-      const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
-      if (periodRef) {
-        const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
-        this._priv_triggerEventIfNotStopped("audioTrackChange", audioTrack, cancelSignal);
-        const textTrack = tracksStore.getChosenTextTrack(periodRef);
-        this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
-        const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
-        this._priv_triggerEventIfNotStopped("videoTrackChange", videoTrack, cancelSignal);
-      }
-    } else {
-      this._priv_triggerEventIfNotStopped("audioTrackChange", null, cancelSignal);
-      this._priv_triggerEventIfNotStopped("textTrackChange", null, cancelSignal);
-      this._priv_triggerEventIfNotStopped("videoTrackChange", null, cancelSignal);
-    }
-
-    const audioRepresentation = this.__priv_getCurrentRepresentations()?.audio ?? null;
-    this._priv_triggerEventIfNotStopped(
-      "audioRepresentationChange",
-      audioRepresentation,
-      cancelSignal,
-    );
-    const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
-    this._priv_triggerEventIfNotStopped(
-      "videoRepresentationChange",
-      videoRepresentation,
-      cancelSignal,
-    );
   }
 
   /**
@@ -2731,7 +2842,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
     },
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
     const { type, period, adaptationRef } = value;
@@ -2762,7 +2876,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos: IPublicApiContentInfos,
     value: { type: IBufferType; period: IPeriodMetadata },
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
     const { type, period } = value;
@@ -2823,7 +2940,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       period: IPeriodMetadata;
     },
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
 
@@ -2840,39 +2960,45 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodAdaptations[type] = adaptation;
     }
 
-    const { tracksStore } = contentInfos;
-    const cancelSignal = contentInfos.currentContentCanceller.signal;
-    if (
-      tracksStore !== null &&
-      currentPeriod !== null &&
-      !isNullOrUndefined(period) &&
-      period.id === currentPeriod.id
-    ) {
-      const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
-      if (periodRef === undefined) {
-        return;
-      }
-      switch (type) {
-        case "audio":
-          const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
-          this._priv_triggerEventIfNotStopped(
-            "audioTrackChange",
-            audioTrack,
-            cancelSignal,
-          );
-          break;
-        case "text":
-          const textTrack = tracksStore.getChosenTextTrack(periodRef);
-          this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
-          break;
-        case "video":
-          const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
-          this._priv_triggerEventIfNotStopped(
-            "videoTrackChange",
-            videoTrack,
-            cancelSignal,
-          );
-          break;
+    if (!contentInfos.isPreload) {
+      const { tracksStore } = contentInfos;
+      const cancelSignal = contentInfos.currentContentCanceller.signal;
+      if (
+        tracksStore !== null &&
+        currentPeriod !== null &&
+        !isNullOrUndefined(period) &&
+        period.id === currentPeriod.id
+      ) {
+        const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
+        if (periodRef === undefined) {
+          return;
+        }
+        switch (type) {
+          case "audio":
+            const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+            this._priv_triggerEventIfNotStopped(
+              "audioTrackChange",
+              audioTrack,
+              cancelSignal,
+            );
+            break;
+          case "text":
+            const textTrack = tracksStore.getChosenTextTrack(periodRef);
+            this._priv_triggerEventIfNotStopped(
+              "textTrackChange",
+              textTrack,
+              cancelSignal,
+            );
+            break;
+          case "video":
+            const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+            this._priv_triggerEventIfNotStopped(
+              "videoTrackChange",
+              videoTrack,
+              cancelSignal,
+            );
+            break;
+        }
       }
     }
   }
@@ -2897,7 +3023,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       representation: IRepresentationMetadata | null;
     },
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
 
@@ -2915,24 +3044,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activePeriodRepresentations[type] = representation;
     }
 
-    if (
-      !isNullOrUndefined(period) &&
-      currentPeriod !== null &&
-      currentPeriod.id === period.id
-    ) {
-      const cancelSignal = this._priv_contentInfos.currentContentCanceller.signal;
-      if (type === "video") {
-        this._priv_triggerEventIfNotStopped(
-          "videoRepresentationChange",
-          representation,
-          cancelSignal,
-        );
-      } else if (type === "audio") {
-        this._priv_triggerEventIfNotStopped(
-          "audioRepresentationChange",
-          representation,
-          cancelSignal,
-        );
+    if (!contentInfos.isPreload) {
+      if (
+        !isNullOrUndefined(period) &&
+        currentPeriod !== null &&
+        currentPeriod.id === period.id
+      ) {
+        const cancelSignal = contentInfos.currentContentCanceller.signal;
+        if (type === "video") {
+          this._priv_triggerEventIfNotStopped(
+            "videoRepresentationChange",
+            representation,
+            cancelSignal,
+          );
+        } else if (type === "audio") {
+          this._priv_triggerEventIfNotStopped(
+            "audioRepresentationChange",
+            representation,
+            cancelSignal,
+          );
+        }
       }
     }
   }
@@ -2972,6 +3103,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_setPlayerState(newState: IPlayerState): void {
     if (this.state !== newState) {
+      if (
+        (this.state === "LOADING" && newState === "RELOADING") ||
+        (this.state === "LOADED" && newState === "PAUSED")
+      ) {
+        // We don't do those transitions
+        log.info("API: ignored playerStateChange event", newState, this.state);
+        return;
+      }
       this.state = newState;
       log.info("API: playerStateChange event", newState);
       this.trigger("playerStateChange", newState);
@@ -2990,7 +3129,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos: IPublicApiContentInfos,
     observation: IPlaybackObservation,
   ): void {
-    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+    if (
+      !contentInfos.isPreload &&
+      contentInfos.contentId !== this._priv_contentInfos?.contentId
+    ) {
       return; // Event for another content
     }
 
@@ -3221,17 +3363,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
     formattedError.fatal = true;
     contentInfos.currentContentCanceller.cancel();
-    this._priv_cleanUpCurrentContentState();
-    this._priv_currentError = formattedError;
-    log.error("API: The player stopped because of an error", formattedError);
-    this._priv_setPlayerState(PLAYER_STATES.STOPPED);
+    if (!contentInfos.isPreload) {
+      this._priv_cleanUpCurrentContentState();
+      this._priv_currentError = formattedError;
+      log.error("API: The player stopped because of an error", formattedError);
+      this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
-    // TODO This condition is here because the eventual callback called when the
-    // player state is updated can launch a new content, thus the error will not
-    // be here anymore, in which case triggering the "error" event is unwanted.
-    // This is very ugly though, and we should probable have a better solution
-    if (this._priv_currentError === formattedError) {
-      this.trigger("error", formattedError);
+      // TODO This condition is here because the eventual callback called when the
+      // player state is updated can launch a new content, thus the error will not
+      // be here anymore, in which case triggering the "error" event is unwanted.
+      // This is very ugly though, and we should probable have a better solution
+      if (this._priv_currentError === formattedError) {
+        this.trigger("error", formattedError);
+      }
     }
   }
 }
@@ -3269,8 +3413,18 @@ interface IPublicAPIEvent {
   inbandEvents: IInbandEvent[];
 }
 
-/** State linked to a particular contents loaded by the public API. */
+/** State linked to a particular content loaded by the public API. */
 interface IPublicApiContentInfos {
+  /**
+   * If `true`, this content is a "preload" which is pre-buffering before
+   * truly loading on a media element.
+   *
+   * Such contents' events and configuration also go through a different way in
+   * the API than a classical content, as the regular RxPlayer API and events
+   * apply to the currently loaded content, and a content may be currently
+   * loaded while several other are being preloaded.
+   */
+  isPreload: boolean;
   /**
    * Unique identifier for this `IPublicApiContentInfos` object.
    * Allows to identify and thus compare this `contentInfos` object with another

@@ -1,6 +1,7 @@
 import addTextTrack from "../../../compat/add_text_track";
 import type {
   ICompatTextTrack,
+  ICompatVTTCue,
   IMediaElement,
 } from "../../../compat/browser_compatibility_types";
 import removeCue from "../../../compat/remove_cue";
@@ -19,22 +20,41 @@ import parseTextTrackToCues from "./native_parsers";
  * @class NativeTextDisplayer
  */
 export default class NativeTextDisplayer implements ITextDisplayer {
-  private readonly _videoElement: IMediaElement;
-  private readonly _track: ICompatTextTrack;
-  private readonly _trackElement: HTMLTrackElement | undefined;
-
+  private _videoElement: IMediaElement | null;
+  private _track: ICompatTextTrack | null;
+  private _trackElement: HTMLTrackElement | undefined;
   private _buffered: ManualTimeRanges;
+
+  private _cueBuffer: Array<ICompatVTTCue | TextTrackCue>;
 
   /**
    * @param {HTMLMediaElement} videoElement
    */
-  constructor(videoElement: IMediaElement) {
+  constructor(videoElement: IMediaElement | null) {
     log.debug("NTD: Creating NativeTextDisplayer");
-    const { track, trackElement } = addTextTrack(videoElement);
+    if (videoElement !== null) {
+      const { track, trackElement } = addTextTrack(videoElement);
+      this._track = track;
+      this._trackElement = trackElement;
+    } else {
+      this._track = null;
+      this._trackElement = undefined;
+    }
     this._buffered = new ManualTimeRanges();
     this._videoElement = videoElement;
+    this._cueBuffer = [];
+  }
+
+  public attachMediaElement(videoElement: IMediaElement): void {
+    this._clearTrackElement();
+    this._videoElement = videoElement;
+    const { track, trackElement } = addTextTrack(videoElement);
     this._track = track;
     this._trackElement = trackElement;
+    for (let i = 0; i < this._cueBuffer.length; i++) {
+      this._track.addCue(this._cueBuffer[i]);
+    }
+    this._cueBuffer.length = 0;
   }
 
   /**
@@ -121,15 +141,19 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       // ones are in the past. this is supposed to fix an issue on
       // IE/Edge.
       // TODO Move to compat
-      const currentCues = this._track.cues;
+      const currentCues = this._track?.cues ?? this._cueBuffer;
       if (currentCues !== null && currentCues.length > 0) {
         if (firstCue.startTime < currentCues[currentCues.length - 1].startTime) {
           this._removeData(firstCue.startTime, +Infinity);
         }
       }
 
-      for (const cue of cues) {
-        this._track.addCue(cue);
+      if (this._track === null) {
+        this._cueBuffer.push(...cues);
+      } else {
+        for (const cue of cues) {
+          this._track.addCue(cue);
+        }
       }
     }
     this._buffered.insert(start, end);
@@ -166,7 +190,11 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     this._removeData(0, Infinity);
     const { _trackElement, _videoElement } = this;
 
-    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
+    if (
+      _videoElement !== null &&
+      _trackElement !== undefined &&
+      _videoElement.hasChildNodes()
+    ) {
       try {
         _videoElement.removeChild(_trackElement);
       } catch (e) {
@@ -174,7 +202,9 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       }
     }
 
-    this._track.mode = "disabled";
+    if (this._track !== null) {
+      this._track.mode = "disabled";
+    }
 
     if (this._trackElement !== undefined) {
       this._trackElement.innerHTML = "";
@@ -183,14 +213,17 @@ export default class NativeTextDisplayer implements ITextDisplayer {
 
   private _removeData(start: number, end: number): void {
     log.debug("NTD: Removing native text track data", start, end);
-    const track = this._track;
-    const cues = track.cues;
+    const cues = this._track?.cues ?? this._cueBuffer;
     if (cues !== null) {
       for (let i = cues.length - 1; i >= 0; i--) {
         const cue = cues[i];
         const { startTime, endTime } = cue;
         if (startTime >= start && startTime <= end && endTime <= end) {
-          removeCue(track, cue);
+          if (this._track !== null) {
+            removeCue(this._track, cue);
+          } else {
+            this._cueBuffer.splice(i, 1);
+          }
         }
       }
     }
@@ -200,7 +233,11 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   private _clearTrackElement(): void {
     const { _trackElement, _videoElement } = this;
 
-    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
+    if (
+      _videoElement !== null &&
+      _trackElement !== undefined &&
+      _videoElement.hasChildNodes()
+    ) {
       try {
         _videoElement.removeChild(_trackElement);
       } catch (e) {
@@ -209,9 +246,11 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     }
 
     // Ugly trick to work-around browser bugs by refreshing its mode
-    const oldMode = this._track.mode;
-    this._track.mode = "disabled";
-    this._track.mode = oldMode;
+    if (this._track !== null) {
+      const oldMode = this._track.mode;
+      this._track.mode = "disabled";
+      this._track.mode = oldMode;
+    }
 
     if (this._trackElement !== undefined) {
       this._trackElement.innerHTML = "";

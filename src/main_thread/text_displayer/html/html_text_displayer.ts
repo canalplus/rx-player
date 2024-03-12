@@ -56,13 +56,13 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * The video element the cues refer to.
    * Used to know when the user is seeking, for example.
    */
-  private readonly _videoElement: IMediaElement;
+  private _videoElement: IMediaElement | null;
 
   /** Allows to cancel the interval at which subtitles are updated. */
   private _subtitlesIntervalCanceller: TaskCanceller;
 
   /** HTMLElement which will contain the cues */
-  private readonly _textTrackElement: HTMLElement;
+  private readonly _textTrackElement: HTMLElement | null;
 
   /** Buffer containing the data */
   private readonly _buffer: TextTrackCuesStore;
@@ -101,7 +101,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @param {HTMLMediaElement} videoElement
    * @param {HTMLElement} textTrackElement
    */
-  constructor(videoElement: IMediaElement, textTrackElement: HTMLElement) {
+  constructor(videoElement: IMediaElement | null, textTrackElement: HTMLElement) {
     log.debug("HTD: Creating HTMLTextDisplayer");
     this._buffered = new ManualTimeRanges();
 
@@ -112,6 +112,16 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
     this._isAutoRefreshing = false;
+  }
+
+  public attachMediaElement(videoElement: IMediaElement): void {
+    this._disableCurrentCues();
+    this._isAutoRefreshing = false;
+    this._subtitlesIntervalCanceller.cancel();
+    this._videoElement = videoElement;
+    if (!this._isAutoRefreshing && !this._buffer.isEmpty()) {
+      this.autoRefreshSubtitles(this._subtitlesIntervalCanceller.signal);
+    }
   }
 
   /**
@@ -250,6 +260,9 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * Remove the current cue from being displayed.
    */
   private _disableCurrentCues(): void {
+    if (this._textTrackElement === null) {
+      return;
+    }
     this._sizeUpdateCanceller.cancel();
     if (this._currentCues.length > 0) {
       for (const cue of this._currentCues) {
@@ -264,6 +277,9 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @param {HTMLElement} elements
    */
   private _displayCues(elements: HTMLElement[]): void {
+    if (this._textTrackElement === null) {
+      return;
+    }
     const nothingChanged =
       this._currentCues.length === elements.length &&
       this._currentCues.every((current, index) => current.element === elements[index]);
@@ -327,7 +343,11 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @param {Object} cancellationSignal
    */
   private autoRefreshSubtitles(cancellationSignal: CancellationSignal): void {
-    if (this._isAutoRefreshing || cancellationSignal.isCancelled()) {
+    if (
+      this._isAutoRefreshing ||
+      this._videoElement === null ||
+      cancellationSignal.isCancelled()
+    ) {
       return;
     }
     let autoRefreshCanceller: TaskCanceller | null = null;
@@ -374,6 +394,9 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * position.
    */
   private refreshSubtitles(): void {
+    if (this._videoElement === null) {
+      return;
+    }
     const { MAXIMUM_HTML_TEXT_TRACK_UPDATE_INTERVAL } = config.getCurrent();
     let time;
     if (this._videoElement.paused || this._videoElement.playbackRate <= 0) {

@@ -22,7 +22,7 @@ import type {
 import { maintainEndOfStream } from "./utils/end_of_stream";
 import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 
-/**
+/*
  * `IMediaSourceInterface` object for when the MSE API are directly available.
  * @see IMediaSourceInterface
  * @class {MainMediaSourceInterface}
@@ -43,7 +43,7 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public sourceBuffers: MainSourceBufferInterface[];
   /** @see IMediaSourceInterface */
-  public readyState: ReadyState;
+  public readyState: "open" | "closed" | "ended";
   /** The MSE `MediaSource` instance linked to that `IMediaSourceInterface`. */
   private _mediaSource: IMediaSource;
   /**
@@ -68,6 +68,8 @@ export default class MainMediaSourceInterface
    *
    * You can then obtain a link to that `MediaSource`, for example to link it
    * to an `HTMLMediaElement`, through the `handle` property.
+   *
+   * @param {string} id
    */
   constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
     super();
@@ -94,30 +96,24 @@ export default class MainMediaSourceInterface
     this.readyState = mediaSource.readyState;
     this._durationUpdater = new MediaSourceDurationUpdater(mediaSource);
     this._endOfStreamCanceller = null;
-    onSourceOpen(
-      mediaSource,
-      () => {
-        this.readyState = mediaSource.readyState;
-        this.trigger("mediaSourceOpen", null);
-      },
-      this._canceller.signal,
-    );
-    onSourceEnded(
-      mediaSource,
-      () => {
-        this.readyState = mediaSource.readyState;
-        this.trigger("mediaSourceEnded", null);
-      },
-      this._canceller.signal,
-    );
-    onSourceClose(
-      mediaSource,
-      () => {
-        this.readyState = mediaSource.readyState;
-        this.trigger("mediaSourceClose", null);
-      },
-      this._canceller.signal,
-    );
+    onSourceOpen(mediaSource, this._onSourceOpen.bind(this), this._canceller.signal);
+    onSourceEnded(mediaSource, this._onSourceEnded.bind(this), this._canceller.signal);
+    onSourceClose(mediaSource, this._onSourceClose.bind(this), this._canceller.signal);
+  }
+
+  private _onSourceOpen(): void {
+    this.readyState = this._mediaSource.readyState;
+    this.trigger("mediaSourceOpen", null);
+  }
+
+  private _onSourceEnded(): void {
+    this.readyState = this._mediaSource.readyState;
+    this.trigger("mediaSourceEnded", null);
+  }
+
+  private _onSourceClose(): void {
+    this.readyState = this._mediaSource.readyState;
+    this.trigger("mediaSourceClose", null);
   }
 
   /** @see IMediaSourceInterface */
@@ -197,6 +193,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * `null` if no known operation is pending.
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
+  private _isTransferring: boolean;
 
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
@@ -212,6 +209,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
+    this._isTransferring = false;
 
     const onError = this._onError.bind(this);
     const onUpdateEnd = this._onUpdateEnd.bind(this);
@@ -249,7 +247,10 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   /** @see ISourceBufferInterface */
-  public getBuffered(): IRange[] {
+  public getBuffered(): IRange[] | undefined {
+    if (this._isTransferring) {
+      return undefined;
+    }
     try {
       return convertToRanges(this._sourceBuffer.buffered);
     } catch (err) {
@@ -280,6 +281,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // we don't care
     }
     this._emptyCurrentQueue();
+    this._canceller.cancel();
   }
 
   private _onError(evt: Event) {
@@ -363,7 +365,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _performNextOperation(): void {
-    if (this._currentOperations.length !== 0 || this._sourceBuffer.updating) {
+    if (
+      this._currentOperations.length !== 0 ||
+      this._sourceBuffer.updating ||
+      this._isTransferring
+    ) {
       return;
     }
     const nextElem = this._operationQueue.shift();

@@ -190,7 +190,33 @@ function Player(): JSX.Element {
     }
   }, [playerModule]);
 
-  const startContent = useCallback(
+  const preloadContentCallback = useCallback(
+    (contentInfo: ILoadVideoOptions) => {
+      let playerMod = playerModule;
+
+      // TODO this risks stopping the previous content if instance options
+      // have been updated
+      if (playerMod === null || hasUpdatedPlayerOptions) {
+        setHasUpdatedPlayerOptions(false);
+        const created = createNewPlayerModule();
+        if (created === undefined) {
+          return;
+        }
+        created.actions.updateWorkerMode(relyOnWorker);
+        playerMod = created;
+      }
+      preloadContent(playerMod, contentInfo, loadVideoOpts);
+    },
+    [
+      playerModule,
+      relyOnWorker,
+      hasUpdatedPlayerOptions,
+      createNewPlayerModule,
+      loadVideoOpts,
+    ],
+  );
+
+  const startContentCallback = useCallback(
     (contentInfo: ILoadVideoOptions) => {
       let playerMod = playerModule;
       if (playerMod === null || hasUpdatedPlayerOptions) {
@@ -261,7 +287,8 @@ function Player(): JSX.Element {
     <section className="video-player-section">
       <div className="video-player-content">
         <ContentList
-          loadVideo={startContent}
+          loadVideo={startContentCallback}
+          preloadVideo={preloadContentCallback}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
         />
@@ -350,6 +377,14 @@ function loadContent(
   }
   playerModule.actions.setPlaybackRate(1);
   playerModule.actions.load(Object.assign({}, contentInfo, loadVideoOpts));
+}
+
+function preloadContent(
+  playerModule: IPlayerModule,
+  contentInfo: ILoadVideoOptions,
+  loadVideoOpts: ILoadVideoSettings,
+) {
+  playerModule.actions.preload(Object.assign({}, contentInfo, loadVideoOpts));
 }
 
 export default Player;

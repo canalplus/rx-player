@@ -123,7 +123,9 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           ) {
             log.warn("Init: trying to seek to un-freeze player");
             this._playbackObserver.setCurrentTime(
-              this._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION,
+              (this._playbackObserver.getCurrentTime() ??
+                this._playbackObserver.getReference().getValue().position.getPolled()) +
+                UNFREEZING_DELTA_POSITION,
             );
             prevFreezingState = { attemptTimestamp: now };
           }
@@ -199,7 +201,11 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           );
           if (skippableDiscontinuity !== null) {
             const realSeekTime = skippableDiscontinuity + 0.001;
-            if (realSeekTime <= this._playbackObserver.getCurrentTime()) {
+            if (
+              realSeekTime <=
+              (this._playbackObserver.getCurrentTime() ??
+                this._playbackObserver.getReference().getValue().position.getPolled())
+            ) {
               log.info(
                 "Init: position to seek already reached, no seeking",
                 this._playbackObserver.getCurrentTime(),
@@ -239,7 +245,11 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
         ) {
           const seekTo = positionBlockedAt + nextBufferRangeGap + EPSILON;
-          if (this._playbackObserver.getCurrentTime() < seekTo) {
+          if (
+            (this._playbackObserver.getCurrentTime() ??
+              this._playbackObserver.getReference().getValue().position.getPolled()) <
+            seekTo
+          ) {
             log.warn(
               "Init: discontinuity encountered inferior to the threshold",
               positionBlockedAt,
@@ -263,7 +273,8 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
             if (
               this._manifest.periods[i + 1].start > positionBlockedAt &&
               this._manifest.periods[i + 1].start >
-                this._playbackObserver.getCurrentTime()
+                (this._playbackObserver.getCurrentTime() ??
+                  this._playbackObserver.getReference().getValue().position.getPolled())
             ) {
               const nextPeriod = this._manifest.periods[i + 1];
               this._playbackObserver.setCurrentTime(nextPeriod.start);

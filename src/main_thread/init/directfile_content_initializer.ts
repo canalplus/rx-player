@@ -30,7 +30,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
-import { ContentInitializer } from "./types";
+import { ContentInitializer, ContentInitializerState } from "./types";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
@@ -49,6 +49,7 @@ import listenToMediaError from "./utils/throw_on_media_error";
  * @class DirectFileContentInitializer
  */
 export default class DirectFileContentInitializer extends ContentInitializer {
+  public state: ContentInitializerState;
   /**
    * Initial options given to the `DirectFileContentInitializer`.
    */
@@ -65,8 +66,13 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   constructor(settings: IDirectFileOptions) {
     super();
+    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
+  }
+
+  public getState(): ContentInitializerState {
+    return this.state;
   }
 
   /**
@@ -79,15 +85,26 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
    * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
-   * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
+   * @param {HTMLMediaElement|null} mediaElement - HTMLMediaElement on which the
    * content will be played.
    * @param {Object} playbackObserver - Object regularly emitting playback
    * information.
    */
   public start(
-    mediaElement: IMediaElement,
+    mediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
+    if (mediaElement === null) {
+      throw new Error(
+        "A directfile content cannot play or preload without a media element",
+      );
+    }
+
+    this.state = ContentInitializerState.Loading;
+    this.trigger("stateChange", this.state);
+    if (this._initCanceller.isUsed()) {
+      return;
+    }
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
 
@@ -170,6 +187,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     );
   }
 
+  public attachMediaElement(_mediaElement: IMediaElement): void {
+    throw new Error("Content preloading not loaded in directfile mode");
+  }
+
   /**
    * Update URL this `ContentIntializer` depends on.
    * @param {Array.<string>|undefined} _urls
@@ -184,6 +205,8 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   public dispose(): void {
     this._initCanceller.cancel();
+    this.state = ContentInitializerState.Idle;
+    this.trigger("stateChange", this.state);
   }
 
   /**

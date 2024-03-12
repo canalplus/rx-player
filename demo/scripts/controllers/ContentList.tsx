@@ -247,10 +247,12 @@ function getKeySystemsOption(
 
 function ContentList({
   loadVideo,
+  preloadVideo,
   showOptions,
   onOptionToggle,
 }: {
   loadVideo: (opts: ILoadVideoOptions) => void;
+  preloadVideo: (opts: ILoadVideoOptions) => void;
   showOptions: boolean;
   onOptionToggle: () => void;
 }): JSX.Element {
@@ -315,6 +317,43 @@ function ContentList({
   );
 
   /**
+   * Load the given displayed content through the player.
+   * @param {Object|null} content
+   */
+  const preloadContent = React.useCallback(
+    (content: IDisplayedContent) => {
+      const {
+        url,
+        transport,
+        fallbackKeyError,
+        fallbackLicenseRequest,
+        isLowLatency,
+        drmInfos,
+      } = content;
+
+      getKeySystemsOption(drmInfos ?? [], {
+        fallbackKeyError: !!fallbackKeyError,
+        fallbackLicenseRequest: !!fallbackLicenseRequest,
+      }).then(
+        (keySystems) => {
+          preloadVideo({
+            url: url ?? "",
+            transport: transport ?? "",
+            textTrackMode: "html",
+            lowLatencyMode: isLowLatency,
+            keySystems,
+          });
+        },
+        () => {
+          /* eslint-disable-next-line no-console */
+          console.error("Could not construct key systems option");
+        },
+      );
+    },
+    [loadVideo],
+  );
+
+  /**
    * Load a custom content entered in a custom link.
    * @param {string} url
    * @param {Array.<Object>} drmInfos
@@ -327,6 +366,41 @@ function ContentList({
       }).then(
         (keySystems) => {
           loadVideo({
+            url: url,
+            transport: transportType.toLowerCase(),
+            textTrackMode: "html",
+            lowLatencyMode: isLowLatencyChecked,
+            keySystems,
+          });
+        },
+        () => {
+          /* eslint-disable-next-line no-console */
+          console.error("Could not construct key systems option");
+        },
+      );
+    },
+    [
+      loadVideo,
+      shouldFallbackOnKeyError,
+      shouldFallbackOnLicenseReqError,
+      transportType,
+      isLowLatencyChecked,
+    ],
+  );
+
+  /**
+   * Load a custom content entered in a custom link.
+   * @param {string} url
+   * @param {Array.<Object>} drmInfos
+   */
+  const preloadUrl = React.useCallback(
+    (url: string, drmInfos: IDrmInfo[]) => {
+      getKeySystemsOption(drmInfos, {
+        fallbackKeyError: !!shouldFallbackOnKeyError,
+        fallbackLicenseRequest: !!shouldFallbackOnLicenseReqError,
+      }).then(
+        (keySystems) => {
+          preloadVideo({
             url: url,
             transport: transportType.toLowerCase(),
             textTrackMode: "html",
@@ -512,6 +586,22 @@ function ContentList({
       loadUrl(currentManifestURL, drmInfos);
     } else {
       loadContent(contentsToSelect[contentChoiceIndex]);
+    }
+  };
+
+  const onClickPreload = () => {
+    if (contentChoiceIndex === 0) {
+      const drmInfos = [
+        {
+          licenseServerUrl,
+          serverCertificateUrl,
+          drm: chosenDRMType,
+          customKeySystem,
+        },
+      ];
+      preloadUrl(currentManifestURL, drmInfos);
+    } else {
+      preloadContent(contentsToSelect[contentChoiceIndex]);
     }
   };
 
@@ -749,6 +839,13 @@ function ContentList({
             ariaLabel="Load the selected content now"
             onClick={onClickLoad}
             value={String.fromCharCode(0xf144)}
+            disabled={false}
+          />
+          <Button
+            className="choice-input-button load-button"
+            ariaLabel="Preload the selected content now"
+            onClick={onClickPreload}
+            value={String.fromCharCode(0x2b07)}
             disabled={false}
           />
         </div>

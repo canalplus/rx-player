@@ -339,7 +339,12 @@ export default function AdaptationStream(
         callbacks.error(err);
       },
       addedSegment(segmentInfo) {
-        abrCallbacks.addedSegment(segmentInfo);
+        if (segmentInfo.buffered !== undefined) {
+          abrCallbacks.addedSegment({
+            buffered: segmentInfo.buffered,
+            content: segmentInfo.content,
+          });
+        }
       },
       terminating() {
         if (repStreamTerminatingCanceller.isUsed()) {
