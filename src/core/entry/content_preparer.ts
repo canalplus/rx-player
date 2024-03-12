@@ -91,8 +91,15 @@ export default class ContentPreparer {
    * are all ready and you can thus begin to load the content.
    *
    * Reject if it failed to do so.
+   * NOTE: The `MediaSource` which will allow to actually play the content on
+   * screen is not yet created here, media stored by the linked
+   * `SegmentSinksStore` will first begin to be stored in-memory until the
+   * `attachMediaSource` method is called.
+   *
+   * @param {Function} sendMessage
    * @param {Object} context - Information on the content that should be
    * initialized.
+   * @param {Object} throttlers
    * @param {Object} corePlugins - Callbacks that may have been registered by
    * the application if it loaded the core independently as a worker.
    * @returns {Promise.<Object>}
@@ -122,8 +129,6 @@ export default class ContentPreparer {
         enableRepresentationAvoidance,
         transport,
       } = context;
-      let manifest: IManifest | null = null;
-
       const transportFn = features.transports[transport];
       if (typeof transportFn !== "function") {
         rej(
@@ -179,24 +184,22 @@ export default class ContentPreparer {
 
       const trackChoiceSetter = new TrackChoiceSetter();
 
-      const [mediaSource, segmentSinksStore, coreTextSender] =
-        createMediaSourceInterfaceAndSegmentSinksStore(
-          sendMessage,
-          contentId,
-          {
-            mseInWorker: playbackSupport.mseInWorker,
-            videoTrack: playbackSupport.videoTrack,
-            textTrack: playbackSupport.textTrack,
-          },
-          currentMediaSourceCanceller.signal,
-        );
+      const [segmentSinksStore, coreTextSender] = createSegmentSinksStore(
+        sendMessage,
+        contentId,
+        {
+          videoTrack: playbackSupport.videoTrack,
+          textTrack: playbackSupport.textTrack,
+        },
+        currentMediaSourceCanceller.signal,
+      );
       const freezeResolver = new FreezeResolver(segmentSinksStore);
-      this._currentContent = {
+      const currentContent: IPreparedContentData = {
         cmcdDataBuilder,
         contentId,
         enableRepresentationAvoidance,
         freezeResolver,
-        mediaSource,
+        mediaSource: null,
         manifest: null,
         manifestFetcher,
         representationEstimator,
@@ -209,13 +212,7 @@ export default class ContentPreparer {
         videoTrack: playbackSupport.videoTrack,
         textTrack: playbackSupport.textTrack,
       };
-      mediaSource.addEventListener(
-        "mediaSourceOpen",
-        function () {
-          checkIfReadyAndValidate();
-        },
-        currentMediaSourceCanceller.signal,
-      );
+      this._currentContent = currentContent;
 
       contentCanceller.signal.register((err) => {
         manifestFetcher.dispose(err.reason);
@@ -233,18 +230,8 @@ export default class ContentPreparer {
       );
       manifestFetcher.addEventListener(
         "manifestReady",
-        (man: IManifest) => {
-          if (manifest !== null) {
-            log.warn("Core", "Multiple `manifestReady` events, ignoring");
-            return;
-          }
-          manifest = man;
-          if (this._currentContent !== null) {
-            this._currentContent.manifest = manifest;
-          }
-          checkIfReadyAndValidate();
-        },
-        currentMediaSourceCanceller.signal,
+        resolveWithManifest,
+        contentCanceller.signal,
       );
       manifestFetcher.addEventListener(
         "error",
@@ -255,14 +242,11 @@ export default class ContentPreparer {
       );
       manifestFetcher.start();
 
-      function checkIfReadyAndValidate() {
-        if (
-          manifest === null ||
-          mediaSource.readyState === "closed" ||
-          currentMediaSourceCanceller.isUsed()
-        ) {
+      function resolveWithManifest(manifest: IManifest) {
+        if (contentCanceller.isUsed()) {
           return;
         }
+        currentContent.manifest = manifest;
         updateCodecSupportInWorkerMode(manifest);
         manifest.addEventListener(
           "manifestUpdate",
@@ -296,6 +280,69 @@ export default class ContentPreparer {
   }
 
   /**
+   * Actually `attach` a `MediaSource` for the content currently prepared through
+   * the `initializeNewContent` method (it didn't have to resolve yet).
+   *
+   * This allows to actually push media data to the media element on the page
+   * instead of in-memory.
+   *
+   * Note that calling `attachMediaSource` despite already having a `MediaSource`
+   * attached will lead to Promise rejection, as well as calling
+   * `attachMediaSource` despite having no current content prepared.
+   * @param {Function} sendMessage
+   * @returns {Promise}
+   */
+  public attachMediaSource(
+    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
+  ): Promise<unknown> {
+    const currentContent = this._currentContent;
+    if (currentContent === null) {
+      log.error("Core", "Attaching MediaSource despite having no content. Aborting...");
+      return Promise.reject(new Error("Cannot Attach MediaSource: No content pending"));
+    }
+    if (currentContent.mediaSource !== null) {
+      log.error("Core", "Attaching MediaSource despite already having one. Aborting...");
+      return Promise.reject(new Error("Cannot Attach MediaSource: Already have one"));
+    }
+    const currentMediaSourceCanceller = this._currentMediaSourceCanceller;
+    const mediaSourceInterface = createMediaSourceInterface(
+      sendMessage,
+      currentContent.contentId,
+      currentContent.mseInWorker,
+      this._currentMediaSourceCanceller.signal,
+    );
+    currentContent.mediaSource = mediaSourceInterface;
+
+    return new Promise((res, rej) => {
+      currentMediaSourceCanceller.signal.register(onCancellation);
+      const onMediaSourceOpen = () => {
+        mediaSourceInterface.removeEventListener("mediaSourceOpen", onMediaSourceOpen);
+        currentMediaSourceCanceller.signal.deregister(onCancellation);
+        if (currentMediaSourceCanceller.signal.isCancelled()) {
+          return;
+        }
+        currentContent.segmentSinksStore
+          .attachOpenedMediaSource(mediaSourceInterface)
+          .then(res, rej);
+      };
+
+      if (mediaSourceInterface.readyState === "open") {
+        onMediaSourceOpen();
+      } else {
+        mediaSourceInterface.addEventListener(
+          "mediaSourceOpen",
+          onMediaSourceOpen,
+          currentMediaSourceCanceller.signal,
+        );
+      }
+      function onCancellation(err: CancellationError) {
+        mediaSourceInterface.removeEventListener("mediaSourceOpen", onMediaSourceOpen);
+        rej(err);
+      }
+    });
+  }
+
+  /**
    * Schedule an update for the Manifest file,
    *
    * Do nothing if no content is currently prepared.
@@ -317,50 +364,72 @@ export default class ContentPreparer {
    */
   public reloadMediaSource(
     sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
-  ): Promise<void> {
-    this._currentMediaSourceCanceller.cancel("ContentPreparer MediaSource reload");
-    if (this._currentContent === null) {
+  ): Promise<unknown> {
+    const currentContent = this._currentContent;
+    if (currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
     }
-    this._currentContent.trackChoiceSetter.reset();
-    this._currentContent.coreTextSender?.stop("ContentPreparer MediaSource reload");
-    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
-    this._currentMediaSourceCanceller.linkToSignal(this._contentCanceller.signal);
-
-    const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
-      createMediaSourceInterfaceAndSegmentSinksStore(
-        sendMessage,
-        this._currentContent.contentId,
-        {
-          mseInWorker: this._currentContent.mseInWorker,
-          videoTrack: this._currentContent.videoTrack,
-          textTrack: this._currentContent.textTrack,
-        },
-        this._currentMediaSourceCanceller.signal,
-      );
-    this._currentContent.mediaSource = mediaSourceInterface;
-    this._currentContent.segmentSinksStore = segmentSinksStore;
-    this._currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
-    this._currentContent.coreTextSender = coreTextSender;
-    return new Promise((res, rej) => {
-      mediaSourceInterface.addEventListener(
-        "mediaSourceOpen",
-        function () {
-          res();
-        },
-        this._currentMediaSourceCanceller.signal,
-      );
-      mediaSourceInterface.addEventListener(
-        "mediaSourceClose",
-        function () {
-          rej(new Error("MediaSource ReadyState changed to close during init."));
-        },
-        this._currentMediaSourceCanceller.signal,
-      );
-      this._currentMediaSourceCanceller.signal.register((error) => {
-        rej(error);
+    if (currentContent.mediaSource === null) {
+      // No media source: Just empty initialized SegmentSinks
+      const proms: Array<Promise<unknown>> = [];
+      currentContent.segmentSinksStore.getBufferTypes().forEach((bufferType) => {
+        const sinkStatus = currentContent.segmentSinksStore.getStatus(bufferType);
+        if (sinkStatus.type === "initialized") {
+          proms.push(sinkStatus.value.removeBuffer(0, Infinity));
+        }
       });
-    });
+      return Promise.all(proms);
+    } else {
+      // With a `MediaSource`: Re-create the `MediaSource` and associated
+      // `SegmentSinksStore`
+      this._currentMediaSourceCanceller.cancel("Reloading MediaSource");
+      currentContent.trackChoiceSetter.reset();
+      currentContent.coreTextSender?.stop("ContentPreparer MediaSource reload");
+      this._currentMediaSourceCanceller = new TaskCanceller(
+        "ContentPreparer MediaSource",
+      );
+      this._currentMediaSourceCanceller.linkToSignal(this._contentCanceller.signal);
+
+      const [segmentSinksStore, coreTextSender] = createSegmentSinksStore(
+        sendMessage,
+        currentContent.contentId,
+        {
+          videoTrack: currentContent.videoTrack,
+          textTrack: currentContent.textTrack,
+        },
+        this._currentMediaSourceCanceller.signal,
+      );
+
+      const mediaSourceInterface = createMediaSourceInterface(
+        sendMessage,
+        currentContent.contentId,
+        currentContent.mseInWorker,
+        this._currentMediaSourceCanceller.signal,
+      );
+      currentContent.mediaSource = mediaSourceInterface;
+      currentContent.segmentSinksStore = segmentSinksStore;
+      currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
+      currentContent.coreTextSender = coreTextSender;
+      return new Promise((res, rej) => {
+        mediaSourceInterface.addEventListener(
+          "mediaSourceOpen",
+          function () {
+            res(undefined);
+          },
+          this._currentMediaSourceCanceller.signal,
+        );
+        mediaSourceInterface.addEventListener(
+          "mediaSourceClose",
+          function () {
+            rej(new Error("MediaSource ReadyState changed to close during init."));
+          },
+          this._currentMediaSourceCanceller.signal,
+        );
+        this._currentMediaSourceCanceller.signal.register((error) => {
+          rej(error);
+        });
+      });
+    }
   }
 
   /**
@@ -402,7 +471,7 @@ export interface IPreparedContentData {
    * Interface to the MediaSource implementation, allowing to buffer audio
    * and video media segments.
    */
-  mediaSource: IMediaSourceInterface;
+  mediaSource: IMediaSourceInterface | null;
   /** Class abstracting Manifest fetching and refreshing. */
   manifestFetcher: ManifestFetcher;
   /**
@@ -460,25 +529,18 @@ export interface IPreparedContentData {
 /**
  * @param {Function} sendMessage
  * @param {string} contentId
- * @param {Object} playbackSupport
- * @param {boolean} playbackSupport.mseInWorker
- * @param {boolean} playbackSupport.videoTrack
- * @param {boolean} playbackSupport.textTrack
+ * @param {boolean} mseInWorker
  * @param {Object} cancelSignal
- * @returns {Array.<Object>}
+ * @returns {Object}
  */
-function createMediaSourceInterfaceAndSegmentSinksStore(
+function createMediaSourceInterface(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentId: string,
-  playbackSupport: {
-    mseInWorker: boolean;
-    videoTrack: boolean;
-    textTrack: boolean;
-  },
+  mseInWorker: boolean,
   cancelSignal: CancellationSignal,
-): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
+): IMediaSourceInterface {
   let mediaSourceInterface: IMediaSourceInterface;
-  if (playbackSupport.mseInWorker) {
+  if (mseInWorker) {
     if (BROWSER_GLOBALS.MediaSource_ === undefined) {
       throw new Error("ContentPreparer: Cannot use MSE-in-Worker: no MSE");
     }
@@ -517,21 +579,38 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
       sendMessage,
     );
   }
+  cancelSignal.register((err) => {
+    mediaSourceInterface.dispose(err.reason);
+  });
+  return mediaSourceInterface;
+}
 
+/**
+ * @param {string} contentId
+ * @param {Object} playbackSupport
+ * @param {boolean} playbackSupport.videoTrack
+ * @param {boolean} playbackSupport.textTrack
+ * @param {Object} cancelSignal
+ * @returns {Array.<Object>}
+ */
+function createSegmentSinksStore(
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
+  contentId: string,
+  playbackSupport: {
+    videoTrack: boolean;
+    textTrack: boolean;
+  },
+  cancelSignal: CancellationSignal,
+): [SegmentSinksStore, CoreTextDisplayerInterface | null] {
   const textSender = playbackSupport.textTrack
     ? new CoreTextDisplayerInterface(contentId, sendMessage)
     : null;
   const { videoTrack } = playbackSupport;
-  const segmentSinksStore = new SegmentSinksStore(
-    mediaSourceInterface,
-    videoTrack,
-    textSender,
-  );
+  const segmentSinksStore = new SegmentSinksStore(null, videoTrack, textSender);
   cancelSignal.register((err) => {
     segmentSinksStore.disposeAll(err.reason);
     textSender?.stop(err.reason);
-    mediaSourceInterface.dispose(err.reason);
   });
 
-  return [mediaSourceInterface, segmentSinksStore, textSender];
+  return [segmentSinksStore, textSender];
 }

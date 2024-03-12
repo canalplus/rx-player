@@ -54,7 +54,7 @@ import arrayFind from "../../utils/array_find.ts";
 import assert, { assertUnreachable } from "../../utils/assert.ts";
 import idGenerator from "../../utils/id_generator.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
-import { IAcceptedLogValue } from "../../utils/logger.ts";
+import type { IAcceptedLogValue } from "../../utils/logger.ts";
 import objectAssign from "../../utils/object_assign.ts";
 import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import SharedReference from "../../utils/reference.ts";
@@ -69,7 +69,7 @@ import type { ITextDisplayer } from "../text_displayer/index.ts";
 import { MainThreadMessageType } from "../types.ts";
 import { canHandleTextTracks } from "../utils/media_capabilities.ts";
 import type { ITextDisplayerOptions } from "./types.ts";
-import { ContentInitializer } from "./types.ts";
+import { ContentInitializer, ContentInitializerState } from "./types.ts";
 import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer.ts";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer.ts";
 import type { IInitialTimeOptions } from "./utils/get_initial_time.ts";
@@ -87,7 +87,9 @@ const generateContentId = idGenerator();
  * @class MediaSourceContentInitializer
  */
 export default class MediaSourceContentInitializer extends ContentInitializer {
-  /** Constructor settings associated to this `MediaSourceContentInitializer`. */
+  public state: ContentInitializerState;
+
+  /** Constructor settings associated to this `MultiThreadContentInitializer`. */
   private _settings: IInitializeArguments;
 
   /**
@@ -150,6 +152,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     >;
   };
 
+  private _isPlaybackReady: boolean;
+
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
    * settings.
@@ -157,6 +161,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
+    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller("Init");
     this._currentMediaSourceCanceller = new TaskCanceller("Init MediaSource");
@@ -168,6 +173,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       pendingThumbnailFetching: new Map(),
     };
     this._queuedCoreMessages = null;
+    this._isPlaybackReady = false;
+  }
+
+  public getState(): ContentInitializerState {
+    return this.state;
   }
 
   /**
@@ -189,6 +199,27 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._settings.bufferOptions;
     const initialVideoBitrate = adaptiveOptions.initialBitrates.video;
     const initialAudioBitrate = adaptiveOptions.initialBitrates.audio;
+
+    let textDisplayer: ITextDisplayer | null = null;
+    if (
+      this._settings.textTrackOptions.textTrackMode === "html" &&
+      features.htmlTextDisplayer !== null
+    ) {
+      assert(canHandleTextTracks(this._settings.textTrackOptions));
+      textDisplayer = new features.htmlTextDisplayer(
+        null,
+        this._settings.textTrackOptions.textTrackElement,
+      );
+    } else if (features.nativeTextDisplayer !== null) {
+      assert(canHandleTextTracks(this._settings.textTrackOptions));
+      textDisplayer = new features.nativeTextDisplayer(null);
+    } else {
+      assert(!canHandleTextTracks(this._settings.textTrackOptions));
+    }
+    this._initCanceller.signal.register((err) => {
+      textDisplayer?.stop(err.reason);
+    });
+
     this._currentContentInfo = {
       contentId,
       contentDecryptor: null,
@@ -199,6 +230,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       autoPlay: undefined,
       initialPlayPerformed: null,
       useMseInWorker: playbackSupport.mseInWorker,
+      textDisplayer,
     };
     coreInterface.sendMessage({
       type: MainThreadMessageType.PrepareContent,
@@ -322,6 +354,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
+
+    if (this.state === ContentInitializerState.Idle) {
+      this.state = ContentInitializerState.Preparing;
+      this.trigger("stateChange", this.state);
+    }
   }
 
   /**
@@ -343,53 +380,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {HTMLMediaElement} mediaElement
    * @param {Object} playbackObserver
    */
-  public start(
-    mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
-  ): void {
+  public start(playbackObserver: IMediaElementPlaybackObserver): void {
+    this.state = ContentInitializerState.Loading;
+    this.trigger("stateChange", this.state);
+    if (this._initCanceller.isUsed()) {
+      return;
+    }
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
       return;
     }
-
-    let textDisplayer: ITextDisplayer | null = null;
-    try {
-      if (
-        this._settings.textTrackOptions.textTrackMode === "html" &&
-        features.htmlTextDisplayer !== null
-      ) {
-        assert(canHandleTextTracks(this._settings.textTrackOptions));
-        textDisplayer = new features.htmlTextDisplayer(
-          mediaElement,
-          this._settings.textTrackOptions.textTrackElement,
-        );
-      } else if (features.nativeTextDisplayer !== null) {
-        assert(canHandleTextTracks(this._settings.textTrackOptions));
-        textDisplayer = new features.nativeTextDisplayer(mediaElement);
-      } else {
-        assert(!canHandleTextTracks(this._settings.textTrackOptions));
-      }
-    } catch (err) {
-      log.error(
-        "Init",
-        "failed to initialize text displayer",
-        err instanceof Error ? err : "Unknown Error",
-      );
-    }
-
-    this._initCanceller.signal.register((err) => {
-      textDisplayer?.stop(err.reason);
-    });
-
-    /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      this._initCanceller.signal,
-    );
 
     /**
      * Send content protection initialization data.
@@ -400,19 +402,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const mediaSourceStatus = new SharedReference<MediaSourceInitializationStatus>(
       MediaSourceInitializationStatus.Nothing,
     );
-
-    const { statusRef: drmInitializationStatus, contentDecryptor } =
-      this._initializeContentDecryption(
-        mediaElement,
-        lastContentProtection,
-        mediaSourceStatus,
-        () => notifyAndStartMediaSourceReload(0, undefined, undefined),
-        this._initCanceller.signal,
-      );
-    const contentInfo = this._currentContentInfo;
-    if (contentInfo !== null) {
-      contentInfo.contentDecryptor = contentDecryptor;
-    }
 
     const streamEventsEmitter = new StreamEventsEmitter(playbackObserver);
     streamEventsEmitter.addEventListener(
@@ -433,32 +422,69 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       streamEventsEmitter.stop(err.reason);
     });
 
+    const drmInitializationStatus = new SharedReference<IDrmInitializationStatus>({
+      initializationState: {
+        type: "uninitialized",
+        value: null,
+      },
+      drmSystemId: undefined,
+    });
     const playbackStartParams = {
-      mediaElement,
-      textDisplayer,
+      textDisplayer: this._currentContentInfo?.textDisplayer ?? null,
       playbackObserver,
       drmInitializationStatus,
       mediaSourceStatus,
       streamEventsEmitter,
     };
-    mediaSourceStatus.onUpdate(
-      (msInitStatus, stopListeningMSStatus) => {
-        if (msInitStatus === MediaSourceInitializationStatus.Attached) {
-          stopListeningMSStatus();
-          this._startPlaybackIfReady(playbackStartParams);
-        }
-      },
-      { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
-    );
-    drmInitializationStatus.onUpdate(
-      (initializationStatus, stopListeningDrm) => {
-        if (initializationStatus.initializationState.type === "initialized") {
-          stopListeningDrm();
-          this._startPlaybackIfReady(playbackStartParams);
-        }
-      },
-      { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
-    );
+
+    playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
+      listenToMediaError(
+        mediaElement,
+        (error: MediaError) => this._onFatalError(error),
+        this._initCanceller.signal,
+      );
+
+      const contentDecryptor = this._initializeContentDecryption(
+        mediaElement,
+        lastContentProtection,
+        drmInitializationStatus,
+        mediaSourceStatus,
+        () => reloadMediaSource(0, undefined, undefined),
+        this._initCanceller.signal,
+      );
+      const contentInfo = this._currentContentInfo;
+      if (contentInfo === null) {
+        return;
+      }
+      contentInfo.contentDecryptor = contentDecryptor;
+
+      const textDisplayer = contentInfo.textDisplayer ?? null;
+      textDisplayer?.attachMediaElement(mediaElement);
+
+      mediaSourceStatus.onUpdate(
+        (msInitStatus, stopListeningMSStatus) => {
+          if (msInitStatus === MediaSourceInitializationStatus.Attached) {
+            stopListeningMSStatus();
+            this._startPlaybackIfReady(playbackStartParams);
+          }
+        },
+        { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
+      );
+      drmInitializationStatus.onUpdate(
+        (initializationStatus, stopListeningDrm) => {
+          if (initializationStatus.initializationState.type === "initialized") {
+            stopListeningDrm();
+            this._startPlaybackIfReady(playbackStartParams);
+          }
+        },
+        { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
+      );
+      this._settings.coreInterface.sendMessage({
+        type: MainThreadMessageType.MediaElementReady,
+        contentId: contentInfo.contentId,
+        value: null,
+      });
+    }, this._initCanceller.signal);
 
     /**
      * Reset directly (synchronously) the current `MediaSource` and signal to
@@ -522,6 +548,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         log.warn("Init", "Asked to reload when no content is loaded.");
         return;
       }
+      const mediaElement = playbackObserver.getMediaElement();
+      if (mediaElement === null) {
+        // XXX TODO: We should ask to flush buffers here?
+        return;
+      }
       const lastObservation = playbackObserver.getReference().getValue();
       const currentPosition = lastObservation.position.getWanted();
       const isPaused =
@@ -538,8 +569,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       }
 
       this._reload(
-        mediaElement,
-        textDisplayer,
         playbackObserver,
         mediaSourceStatus,
         streamEventsEmitter,
@@ -554,6 +583,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+
           if (this._currentContentInfo !== null) {
             if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
               this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(
@@ -565,32 +595,34 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               mediaSourceId: msgData.mediaSourceId,
             };
           }
-          const mediaSourceLink = msgData.value;
-          mediaSourceStatus.onUpdate(
-            (currStatus, stopListening) => {
-              if (currStatus === MediaSourceInitializationStatus.AttachNow) {
-                stopListening();
-                log.info("media", "Attaching MediaSource URL to the media element");
-                if (mediaSourceLink.type === "handle") {
-                  mediaElement.srcObject = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    mediaElement.srcObject = null;
-                  });
-                } else {
-                  mediaElement.src = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    resetMediaElement(mediaElement, mediaSourceLink.value);
-                  });
+          playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
+            const mediaSourceLink = msgData.value;
+            mediaSourceStatus.onUpdate(
+              (currStatus, stopListening) => {
+                if (currStatus === MediaSourceInitializationStatus.AttachNow) {
+                  stopListening();
+                  log.info("media", "Attaching MediaSource URL to the media element");
+                  if (mediaSourceLink.type === "handle") {
+                    mediaElement.srcObject = mediaSourceLink.value;
+                    this._currentMediaSourceCanceller.signal.register(() => {
+                      mediaElement.srcObject = null;
+                    });
+                  } else {
+                    mediaElement.src = mediaSourceLink.value;
+                    this._currentMediaSourceCanceller.signal.register(() => {
+                      resetMediaElement(mediaElement, mediaSourceLink.value);
+                    });
+                  }
+                  disableRemotePlaybackOnManagedMediaSource(
+                    mediaElement,
+                    this._currentMediaSourceCanceller.signal,
+                  );
+                  mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
                 }
-                disableRemotePlaybackOnManagedMediaSource(
-                  mediaElement,
-                  this._currentMediaSourceCanceller.signal,
-                );
-                mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
-              }
-            },
-            { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
-          );
+              },
+              { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
+            );
+          }, this._currentMediaSourceCanceller.signal);
           break;
         }
 
@@ -609,12 +641,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.CreateMediaSource:
-          this._onCreateMediaSourceMessage(
-            msgData,
-            mediaElement,
-            mediaSourceStatus,
-            this._settings.coreInterface,
-          );
+          {
+            playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
+              this._onCreateMediaSourceMessage(
+                msgData,
+                mediaElement,
+                mediaSourceStatus,
+                this._settings.coreInterface,
+              );
+            }, this._currentMediaSourceCanceller.signal);
+          }
           break;
 
         case CoreMessageType.AddSourceBuffer:
@@ -824,9 +860,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             return;
           }
           const lastObservation = playbackObserver.getReference().getValue();
-          const currentTime = lastObservation.position.isAwaitingFuturePosition()
-            ? lastObservation.position.getWanted()
-            : mediaElement.currentTime;
+          let currentTime;
+          if (lastObservation.position.isAwaitingFuturePosition()) {
+            currentTime = lastObservation.position.getWanted();
+          } else {
+            const mediaElement = playbackObserver.getMediaElement();
+            if (mediaElement === null) {
+              return; // Nothing to do
+            }
+            currentTime = mediaElement.currentTime;
+          }
           const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(
             msgData.value?.relativePosHasBeenDefaulted,
@@ -1148,6 +1191,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn("text", "Received AddTextData message but no text displayer exists");
           } else {
@@ -1174,6 +1218,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn(
               "text",
@@ -1206,6 +1251,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn(
               "text",
@@ -1221,6 +1267,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          const textDisplayer = this._currentContentInfo?.textDisplayer ?? null;
           if (textDisplayer === null) {
             log.warn(
               "text",
@@ -1260,6 +1307,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           {
             if (this._currentContentInfo?.contentId !== msgData.contentId) {
               return;
+            }
+            const mediaElement = playbackObserver.getMediaElement();
+            if (mediaElement === null) {
+              return; // Nothing to do I guess
             }
 
             const keySystem = getKeySystemConfiguration(mediaElement);
@@ -1348,13 +1399,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   public dispose(reason: string | undefined): void {
-    this._initCanceller.cancel("Init dispose");
+    this._initCanceller.cancel("Init dispose: " + String(reason));
+    this._initCanceller = new TaskCanceller("Init dispose: " + String(reason));
     if (this._currentContentInfo !== null) {
       if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
         this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(reason);
       }
       this._currentContentInfo = null;
     }
+    this.state = ContentInitializerState.Idle;
+    this.trigger("stateChange", this.state);
   }
 
   private _onFatalError(err: unknown) {
@@ -1368,13 +1422,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _initializeContentDecryption(
     mediaElement: IMediaElement,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
+    drmInitializationStatus: SharedReference<IDrmInitializationStatus>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
     cancelSignal: CancellationSignal,
-  ): {
-    statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
-    contentDecryptor: IContentDecryptor | null;
-  } {
+  ): IContentDecryptor | null {
     const { keySystems } = this._settings;
 
     // TODO private?
@@ -1396,16 +1448,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         },
         { clearSignal: cancelSignal },
       );
-      const ref = new SharedReference({
+      drmInitializationStatus.setValue({
         initializationState: {
           type: "initialized" as const,
           value: null,
         },
-        contentDecryptor: null,
         drmSystemId: undefined,
       });
-      ref.finish(); // We know that no new value will be triggered
-      return { statusRef: ref, contentDecryptor: null };
+      drmInitializationStatus.finish(); // We know that no new value will be triggered
+      return null;
     };
 
     if (keySystems.length === 0) {
@@ -1423,14 +1474,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const ContentDecryptor = features.decrypt;
     const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
-    const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
-      {
-        initializationState: { type: "uninitialized", value: null },
-        drmSystemId: undefined,
-      },
-      cancelSignal,
-    );
-
     const updateCodecSupportOnStateChange = (state: ContentDecryptorState) => {
       if (state > ContentDecryptorState.Initializing) {
         const manifest = this._currentContentInfo?.manifest;
@@ -1518,7 +1561,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           { clearSignal: cancelSignal, emitCurrentValue: true },
         );
       } else if (state === ContentDecryptorState.ReadyForContent) {
-        drmStatusRef.setValue({
+        drmInitializationStatus.setValue({
           initializationState: { type: "initialized", value: null },
           drmSystemId: contentDecryptor.systemId,
         });
@@ -1548,7 +1591,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       contentDecryptor.dispose(err.reason);
     });
 
-    return { statusRef: drmStatusRef, contentDecryptor };
+    return contentDecryptor;
   }
   /**
    * Retrieves all unknown codecs from the current manifest, checks these unknown codecs
@@ -1579,8 +1622,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private _reload(
-    mediaElement: IMediaElement,
-    textDisplayer: ITextDisplayer | null,
     playbackObserver: IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     streamEventsEmitter: StreamEventsEmitter,
@@ -1604,8 +1645,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           {
             initialTime: position,
             autoPlay,
-            mediaElement,
-            textDisplayer,
             playbackObserver,
             streamEventsEmitter,
           },
@@ -1660,8 +1699,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     parameters: {
       initialTime: number;
       autoPlay: boolean;
-      mediaElement: IMediaElement;
-      textDisplayer: ITextDisplayer | null;
       playbackObserver: IMediaElementPlaybackObserver;
       streamEventsEmitter: StreamEventsEmitter;
     },
@@ -1681,21 +1718,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const { manifest, mediaSourceInfo } = this._currentContentInfo;
     const { speed } = this._settings;
-    const {
-      initialTime,
-      autoPlay,
-      mediaElement,
-      textDisplayer,
-      playbackObserver,
-      streamEventsEmitter,
-    } = parameters;
+    const { initialTime, autoPlay, playbackObserver, streamEventsEmitter } = parameters;
     this._currentContentInfo.initialTime = initialTime;
     this._currentContentInfo.autoPlay = autoPlay;
     streamEventsEmitter.pause(); // Only start polling events once ready to play
 
     const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
       {
-        mediaElement,
         playbackObserver,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
@@ -1714,6 +1743,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
+    const textDisplayer = this._currentContentInfo.textDisplayer;
     const corePlaybackObserver = createCorePlaybackObserver(
       playbackObserver,
       {
@@ -1861,27 +1891,39 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * playback.
    *
    * @param {Object} parameters
-   * @returns {boolean} - Returns `true` if all conditions where met for
-   * playback start.
    */
-  private _startPlaybackIfReady(parameters: {
-    mediaElement: IMediaElement;
-    textDisplayer: ITextDisplayer | null;
-    playbackObserver: IMediaElementPlaybackObserver;
-    drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
-    mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
-    streamEventsEmitter: StreamEventsEmitter;
-  }): boolean {
+  private _startPlaybackIfReady(parameters: IStartPlaybackParams) {
     if (this._currentContentInfo === null || this._currentContentInfo.manifest === null) {
-      return false;
+      return;
     }
-    const drmInitStatus = parameters.drmInitializationStatus.getValue();
-    if (drmInitStatus.initializationState.type !== "initialized") {
-      return false;
+    if (this._isPlaybackReady) {
+      return;
     }
-    const msInitStatus = parameters.mediaSourceStatus.getValue();
-    if (msInitStatus !== MediaSourceInitializationStatus.Attached) {
-      return false;
+    this._isPlaybackReady = true;
+
+    /**
+     * `true` when an `HTMLMediaElement` is available for playback.
+     * In that case we check that other preconditions are filled: DRM
+     * initialization is done, the `MediaSource` is attached etc., before
+     * actually loading the content.
+     *
+     * `false` when the `HTMLMediaElement` is not yet available.
+     * In that case we will just load media segments in memory, where those
+     * pre-conditions are not needed.
+     */
+    const hasMediaElement = parameters.playbackObserver.getMediaElement() !== null;
+
+    let drmSystemId: string | undefined;
+    if (hasMediaElement) {
+      const drmInitStatus = parameters.drmInitializationStatus.getValue();
+      if (drmInitStatus.initializationState.type === "uninitialized") {
+        return false;
+      }
+      drmSystemId = drmInitStatus.drmSystemId;
+      const msInitStatus = parameters.mediaSourceStatus.getValue();
+      if (msInitStatus !== MediaSourceInitializationStatus.Attached) {
+        return false;
+      }
     }
 
     const { contentId, manifest } = this._currentContentInfo;
@@ -1897,8 +1939,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       {
         initialTime,
         autoPlay: this._settings.autoPlay,
-        mediaElement: parameters.mediaElement,
-        textDisplayer: parameters.textDisplayer,
         playbackObserver: parameters.playbackObserver,
         streamEventsEmitter: parameters.streamEventsEmitter,
       },
@@ -1918,9 +1958,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       value: {
         initialTime,
         initialObservation: sentInitialObservation,
-        drmSystemId: drmInitStatus.drmSystemId,
+        drmSystemId,
         enableFastSwitching,
         onCodecSwitch,
+        hasMediaElement,
       },
     });
 
@@ -2070,6 +2111,8 @@ export interface IMediaSourceContentInitializerContentInfos {
    * `null` if none is currently created for the content.
    */
   rebufferingController: RebufferingController | null;
+  /** Text displayer prepared for this content, if text tracks are supported. */
+  textDisplayer: ITextDisplayer | null;
   /**
    * The initial position to seek to in seconds once the content is loadeed.
    * `undefined` if unknown yet.
@@ -2362,6 +2405,7 @@ type IDecryptionInitializationState =
    * `HTMLMediaElement` (such as linking a content / `MediaSource` to it).
    */
   | { type: "uninitialized"; value: null }
+  | { type: "skipped"; value: null }
   /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
@@ -2405,4 +2449,12 @@ function formatSentLogObject(arg: ISentLogValue): IAcceptedLogValue {
     return formatCoreError(arg as ISentError);
   }
   return arg as Exclude<ISentLogValue, ISentError>;
+}
+
+interface IStartPlaybackParams {
+  textDisplayer: ITextDisplayer | null;
+  playbackObserver: IMediaElementPlaybackObserver;
+  drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
+  mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
+  streamEventsEmitter: StreamEventsEmitter;
 }
