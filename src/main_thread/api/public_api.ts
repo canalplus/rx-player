@@ -174,8 +174,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Media element attached to the RxPlayer.
    * Set to `null` when the RxPlayer is disposed.
+   * @deprecated Use `getVideoElement()` instead
    */
   public videoElement: IMediaElement | null; // null on dispose
+
+  private _videoElementRef: SharedReference<IMediaElement | null>;
 
   /** Logger the RxPlayer uses.  */
   public readonly log: Logger;
@@ -392,7 +395,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
-    Player._priv_registerVideoElement(this.videoElement);
+    Player._priv_registerVideoElement(videoElement);
+    this._videoElementRef = new SharedReference<IMediaElement | null>(videoElement);
     const destroyCanceller = new TaskCanceller();
     this._destroyCanceller = destroyCanceller;
 
@@ -527,7 +531,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           sendBackLogs: isDebugModeEnabled(),
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
-          hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
+          hasVideo: this._videoElementRef.getValue()?.nodeName.toLowerCase() === "video",
           hasMseInWorker,
         },
       });
@@ -609,10 +613,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // free resources linked to the loaded content
     this.stop();
 
-    if (this.videoElement !== null) {
-      Player._priv_deregisterVideoElement(this.videoElement);
+    const mediaElement = this._videoElementRef.getValue();
+    if (mediaElement !== null) {
+      Player._priv_deregisterVideoElement(mediaElement);
       // free resources used for decryption management
-      disposeDecryptionResources(this.videoElement).catch((err: unknown) => {
+      disposeDecryptionResources(mediaElement).catch((err: unknown) => {
         const message = err instanceof Error ? err.message : "Unknown error";
         log.error("API: Could not dispose decryption resources: " + message);
       });
@@ -625,6 +630,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // un-attach video element
     this.videoElement = null;
+    this._videoElementRef.setValue(null);
 
     if (this._priv_worker !== null) {
       this._priv_worker.terminate();
@@ -744,8 +750,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       url,
     } = options;
 
+    const videoElement = this._videoElementRef.getValue();
+
     // Perform multiple checks on the given options
-    if (this.videoElement === null) {
+    if (videoElement === null) {
       throw new Error("the attached video element is disposed");
     }
 
@@ -753,8 +761,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     /** Emit to stop the current content. */
     const currentContentCanceller = new TaskCanceller();
-
-    const videoElement = this.videoElement;
 
     let initializer: ContentInitializer;
 
@@ -805,6 +811,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         } else {
           throttlers.limitResolution = {
             video: getElementResolutionRef(
+              // XXX TODO
               videoElement,
               this._priv_pictureInPictureRef,
               currentContentCanceller.signal,
@@ -1220,7 +1227,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           stopListeningToLock();
 
           // start playback!
-          initializer.start(videoElement, playbackObserver);
+          // XXX TODO
+          initializer.start(
+            this._videoElementRef as SharedReference<IMediaElement>,
+            playbackObserver,
+          );
         }
       },
       { emitCurrentValue: true, clearSignal: currentContentCanceller.signal },
@@ -1245,7 +1256,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   /* eslint-disable @typescript-eslint/ban-types */
   getVideoElement(): HTMLMediaElement | null {
-    return this.videoElement as HTMLMediaElement;
+    return this._videoElementRef.getValue() as HTMLMediaElement | null;
   }
   /* eslint-enable @typescript-eslint/ban-types */
 
@@ -1283,11 +1294,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * `false` otherwise.
    */
   isPaused(): boolean {
-    if (this.videoElement) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement) {
       if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
         return !this._priv_lastAutoPlay;
       } else {
-        return this.videoElement.paused;
+        return videoElement.paused;
       }
     }
     return true;
@@ -1365,10 +1377,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getMediaDuration(): number {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    return this.videoElement.duration;
+    return videoElement.duration;
   }
 
   /**
@@ -1378,10 +1391,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getCurrentBufferGap(): number {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    const videoElement = this.videoElement;
     const bufferGap = getLeftSizeOfBufferedTimeRange(
       videoElement.buffered,
       videoElement.currentTime,
@@ -1407,20 +1420,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getWallClockTime(): number {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
     if (this._priv_contentInfos === null) {
-      return this.videoElement.currentTime;
+      return videoElement.currentTime;
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
-      const startDate = getStartDate(this.videoElement);
-      return (startDate ?? 0) + this.videoElement.currentTime;
+      const startDate = getStartDate(videoElement);
+      return (startDate ?? 0) + videoElement.currentTime;
     }
     if (manifest !== null) {
-      const currentTime = this.videoElement.currentTime;
+      const currentTime = videoElement.currentTime;
       const ast =
         manifest.availabilityStartTime !== undefined ? manifest.availabilityStartTime : 0;
       return currentTime + ast;
@@ -1440,10 +1454,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getPosition(): number {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    return this.videoElement.currentTime;
+    return videoElement.currentTime;
   }
 
   /**
@@ -1578,11 +1593,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Promise}
    */
   play(): Promise<void> {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
 
-    const playPromise = this.videoElement.play();
+    const playPromise = videoElement.play();
     /* eslint-disable @typescript-eslint/unbound-method */
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
       /* eslint-enable @typescript-eslint/unbound-method */
@@ -1601,10 +1617,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Pause the current video.
    */
   pause(): void {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    this.videoElement.pause();
+    videoElement.pause();
   }
 
   /**
@@ -1619,7 +1636,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       | { position: number }
       | { wallClockTime: number },
   ): number {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
     if (this._priv_contentInfos === null) {
@@ -1642,7 +1660,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         position?: number;
         wallClockTime?: number;
       } = time;
-      const currentTs = this.videoElement.currentTime;
+      const currentTs = videoElement.currentTime;
       if (!isNullOrUndefined(timeObj.relative)) {
         positionWanted = currentTs + timeObj.relative;
       } else if (!isNullOrUndefined(timeObj.position)) {
@@ -1650,8 +1668,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (!isNullOrUndefined(timeObj.wallClockTime)) {
         if (manifest !== null) {
           positionWanted = timeObj.wallClockTime - (manifest.availabilityStartTime ?? 0);
-        } else if (isDirectFile && this.videoElement !== null) {
-          const startDate = getStartDate(this.videoElement);
+        } else if (isDirectFile && videoElement !== null) {
+          const startDate = getStartDate(videoElement);
           if (startDate !== undefined) {
             positionWanted = timeObj.wallClockTime - startDate;
           }
@@ -1672,7 +1690,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("invalid time given");
     }
     log.info("API: API Seek to", positionWanted);
-    this.videoElement.currentTime = positionWanted;
+    videoElement.currentTime = positionWanted;
     return positionWanted;
   }
 
@@ -1682,10 +1700,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVolume(): number {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    return this.videoElement.volume;
+    return videoElement.volume;
   }
 
   /**
@@ -1693,11 +1712,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} volume
    */
   setVolume(volume: number): void {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
 
-    const videoElement = this.videoElement;
     if (volume !== videoElement.volume) {
       videoElement.volume = volume;
     }
@@ -1708,18 +1727,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Boolean}
    */
   isMute(): boolean {
-    return this.videoElement?.muted === true;
+    return this._videoElementRef.getValue()?.muted === true;
   }
 
   /**
    * Mute audio.
    */
   mute(): void {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    if (!this.videoElement.muted) {
-      this.videoElement.muted = true;
+    if (!videoElement.muted) {
+      videoElement.muted = true;
     }
   }
 
@@ -1727,11 +1747,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Unmute audio.
    */
   unMute(): void {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    if (this.videoElement.muted) {
-      this.videoElement.muted = false;
+    if (videoElement.muted) {
+      videoElement.muted = false;
     }
   }
 
@@ -1824,10 +1845,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Object|null}
    */
   getKeySystemConfiguration(): IKeySystemConfigurationOutput | null {
-    if (this.videoElement === null) {
+    const videoElement = this._videoElementRef.getValue();
+    if (videoElement === null) {
       throw new Error("Disposed player");
     }
-    const values = getKeySystemConfiguration(this.videoElement);
+    const values = getKeySystemConfiguration(videoElement);
     if (values === null) {
       return null;
     }
@@ -2301,16 +2323,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
 
+    const videoElement = this._videoElementRef.getValue();
     if (isDirectFile) {
-      if (this.videoElement === null) {
+      if (videoElement === null) {
         throw new Error("Disposed player");
       }
-      return this.videoElement.duration;
+      return videoElement.duration;
     }
 
     if (manifest !== null) {
-      if (!manifest.isDynamic && this.videoElement !== null) {
-        return this.videoElement.duration;
+      if (!manifest.isDynamic && videoElement !== null) {
+        return videoElement.duration;
       }
       return getMaximumSafePosition(manifest);
     }
@@ -2417,15 +2440,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // DRM-related clean-up
     const freeUpContentLock = () => {
-      if (this.videoElement !== null) {
+      if (this._videoElementRef.getValue() !== null) {
         // If not disposed
         log.debug("Unlocking `contentLock`. Next content can begin.");
         this._priv_contentLock.setValue(false);
       }
     };
 
-    if (!isNullOrUndefined(this.videoElement)) {
-      clearOnStop(this.videoElement).then(
+    const videoElement = this._videoElementRef.getValue();
+    if (!isNullOrUndefined(videoElement)) {
+      clearOnStop(videoElement).then(
         () => {
           log.debug("API: DRM session cleaned-up with success!");
           freeUpContentLock();
@@ -2976,6 +3000,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           : observation.bufferGap,
     };
 
+    const videoElement = this._videoElementRef.getValue();
     if (manifest !== null && manifest.isLive && observation.position.getPolled() > 0) {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position.getPolled() + ast;
@@ -2983,8 +3008,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (livePosition !== undefined) {
         positionData.liveGap = livePosition - observation.position.getPolled();
       }
-    } else if (isDirectFile && this.videoElement !== null) {
-      const startDate = getStartDate(this.videoElement);
+    } else if (isDirectFile && videoElement !== null) {
+      const startDate = getStartDate(videoElement);
       if (startDate !== undefined) {
         positionData.wallClockTime = startDate + observation.position.getPolled();
       }
@@ -3018,13 +3043,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       features.directfile !== null,
       "Initializing `MediaElementTracksStore` without Directfile feature",
     );
+    const videoElement = this._videoElementRef.getValue();
     assert(
-      this.videoElement !== null,
+      videoElement !== null,
       "Initializing `MediaElementTracksStore` on a disposed RxPlayer",
     );
 
     const mediaElementTracksStore = new features.directfile.mediaElementTracksStore(
-      this.videoElement,
+      videoElement,
     );
 
     this._priv_triggerEventIfNotStopped(
