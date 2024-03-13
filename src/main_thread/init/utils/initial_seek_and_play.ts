@@ -150,7 +150,12 @@ export default function performInitialSeekAndPlay(
         let hasStartedSeeking = false;
         playbackObserver.listen(
           (obs, stopListening) => {
-            if (!hasStartedSeeking && obs.seeking !== SeekingState.None) {
+            if (
+              !hasStartedSeeking &&
+              (obs.seeking !== SeekingState.None ||
+                obs.event === "seeking" ||
+                obs.event === "internal-seeking")
+            ) {
               hasStartedSeeking = true;
             }
             if ((hasAskedForInitialSeek && !hasStartedSeeking) || obs.readyState === 0) {
