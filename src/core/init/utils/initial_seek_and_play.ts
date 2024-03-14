@@ -156,7 +156,10 @@ export default function performInitialSeekAndPlay(
      */
     let isAwaitingSeek = hasAskedForInitialSeek;
     playbackObserver.listen((observation, stopListening) => {
-      if (hasAskedForInitialSeek && observation.seeking) {
+      if (hasAskedForInitialSeek &&
+        (observation.seeking ||
+          observation.event === "seeking" ||
+          observation.event === "internal-seeking")) {
         isAwaitingSeek = false;
         return;
       }
