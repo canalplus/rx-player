@@ -55,8 +55,7 @@ export default function getLoadedReference(
       return ;
     }
 
-    if (!shouldWaitForDataBeforeLoaded(isDirectfile,
-                                       mediaElement.hasAttribute("playsinline")))
+    if (!shouldWaitForDataBeforeLoaded(isDirectfile))
     {
       if (mediaElement.duration > 0) {
         isLoaded.setValue(true);
