@@ -92,9 +92,8 @@ export interface ISourceBufferListEventMap {
 }
 
 /**
- * More restrictive and type-compatible with the `SourceBufferList` type (i.e. a
- * `SourceBufferList` is a valid `ISourceBufferList`), the `ISourceBufferList`
- * type allows to:
+ * Type-compatible with the `SourceBufferList` type (i.e. a `SourceBufferList`
+ * is a valid `ISourceBufferList`), the `ISourceBufferList` type allows to:
  *
  *   - re-define some attributes or methods in cases where we detected that some
  *     platforms have a different implementation.
@@ -120,8 +119,8 @@ export interface IMediaSourceEventMap {
 }
 
 /**
- * More restrictive and type-compatible with the `MediaSource` type (i.e. a
- * `MediaSource` is a valid `IMediaSource`), the `IMediaSource` type allows to:
+ * Type-compatible with the `MediaSource` type (i.e. a `MediaSource` is a valid
+ * `IMediaSource`), the `IMediaSource` type allows to:
  *
  *   - re-define some attributes or methods in cases where we detected that some
  *     platforms have a different implementation.
@@ -159,9 +158,8 @@ export interface ISourceBufferEventMap {
 }
 
 /**
- * More restrictive and type-compatible with the `SourceBuffer` type (i.e. a
- * `SourceBuffer` is a valid `ISourceBuffer`), the `ISourceBuffer` type allows
- * to:
+ * Type-compatible with the `SourceBuffer` type (i.e. a `SourceBuffer` is a valid
+ * `ISourceBuffer`), the `ISourceBuffer` type allows to:
  *
  *   - re-define some attributes or methods in cases where we detected that some
  *     platforms have a different implementation.
@@ -216,9 +214,8 @@ export interface IMediaElementEventMap {
 }
 
 /**
- * More restrictive and type-compatible with the `HTMLMediaElement` type (i.e. a
- * `HTMLMediaElement` is a valid `IMediaElement`), the `IMediaElement` type
- * allows to:
+ * Type-compatible with the `HTMLMediaElement` type (i.e. a `HTMLMediaElement` is
+ * a valid `IMediaElement`), the `IMediaElement` type allows to:
  *
  *   - re-define some attributes or methods in cases where we detected that some
  *     platforms have a different implementation.
