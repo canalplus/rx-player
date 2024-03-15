@@ -80,7 +80,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
    * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
-   * @param {Object|null} mediaElement - HTMLMediaElement on which the
+   * @param {HTMLMediaElement|null} mediaElement - HTMLMediaElement on which the
    * content will be played.
    * @param {Object} playbackObserver - Object regularly emitting playback
    * information.

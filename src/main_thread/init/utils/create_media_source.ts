@@ -17,6 +17,7 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import clearElementSrc from "../../../compat/clear_element_src";
 import log from "../../../log";
+import type { IFakeMediaSourceInterfaceInMemoryData } from "../../../mse/fake_media_source_interface";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import idGenerator from "../../../utils/id_generator";
@@ -64,19 +65,17 @@ export function resetMediaElement(
  *
  * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
  * SourceBuffers are aborted and some minor cleaning is done.
- * @param {HTMLMediaElement|null} mediaElement
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} unlinkSignal
  * @returns {MediaSource}
  */
 function createMediaSource(
-  mediaElement: IMediaElement | null,
+  mediaElement: IMediaElement,
   unlinkSignal: CancellationSignal,
 ): MainMediaSourceInterface {
-  if (mediaElement !== null) {
-    // make sure the media has been correctly reset
-    const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
-    resetMediaElement(mediaElement, oldSrc);
-  }
+  // make sure the media has been correctly reset
+  const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
+  resetMediaElement(mediaElement, oldSrc);
   const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
   unlinkSignal.register(() => {
     mediaSource.dispose();
@@ -90,21 +89,27 @@ function createMediaSource(
  *
  * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
  * SourceBuffers are aborted and some minor cleaning is done.
- * @param {HTMLMediaElement|null} mediaElement
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Array.<Object>} preloadData
  * @param {Object} unlinkSignal
  * @returns {Promise}
  */
 export default function openMediaSource(
   mediaElement: IMediaElement,
+  preloadData: IFakeMediaSourceInterfaceInMemoryData | null,
   unlinkSignal: CancellationSignal,
 ): Promise<MainMediaSourceInterface> {
-  return createCancellablePromise(unlinkSignal, (resolve) => {
+  return createCancellablePromise(unlinkSignal, (resolve, reject) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
     mediaSource.addEventListener(
       "mediaSourceOpen",
       () => {
         log.info("Init: MediaSource opened");
-        resolve(mediaSource);
+        if (preloadData !== null) {
+          mediaSource.transferData(preloadData).then(() => resolve(mediaSource), reject);
+        } else {
+          resolve(mediaSource);
+        }
       },
       unlinkSignal,
     );

@@ -40,6 +40,7 @@ import features from "../../features";
 import log from "../../log";
 import type { IManifest, IPeriodMetadata } from "../../manifest";
 import type { IMediaSourceInterface } from "../../mse";
+import type { IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
 import FakeMediaSourceInterface from "../../mse/fake_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
@@ -105,10 +106,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
   private _preloadInfo: {
     segmentSinksStore: SegmentSinksStore;
+    mediaSourceInterface: FakeMediaSourceInterface;
     protectionRef: SharedReference<IContentProtection | null>;
-    playbackObserver: IMediaElementPlaybackObserver;
-    currentMediaSourceCanceller: TaskCanceller;
-    canceller: TaskCanceller;
+    initialTime: number;
+    autoPlay: boolean;
+    onReloadOrder: (reloadOrder: {
+      position: number;
+      autoPlay: boolean;
+      mediaElement: IMediaElement | null;
+      softReload: boolean;
+    }) => void;
   } | null;
 
   private _textDisplayer: ITextDisplayer | null;
@@ -203,6 +210,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       });
   }
 
+  public attachMediaElement(mediaElement: IMediaElement): void {
+    if (this._preloadInfo === null) {
+      throw new Error("No content previously preloaded on that ContentInitializer");
+    }
+    const preloadInfo = this._preloadInfo;
+    listenToMediaError(
+      mediaElement,
+      (error: MediaError) => this._onFatalError(error),
+      this._initCanceller.signal,
+    );
+    preloadInfo.onReloadOrder({
+      position: preloadInfo.initialTime,
+      autoPlay: preloadInfo.autoPlay,
+      mediaElement,
+      softReload: true,
+    });
+  }
+
   /**
    * Update URL of the Manifest.
    * @param {Array.<string>|undefined} urls - URLs to reach that Manifest from
@@ -295,7 +320,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             const mediaSource = new FakeMediaSourceInterface(idGenerator()());
             mediaSourceCanceller.signal.register(() => {
               // XXX TODO NO!
-              mediaSource.dispose();
+              // mediaSource.dispose();
             });
             resolve({
               mediaSource,
@@ -303,7 +328,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               unlinkMediaSource: mediaSourceCanceller,
             });
           } else {
-            createMediaSource(mediaElement, mediaSourceCanceller.signal)
+            createMediaSource(mediaElement, null, mediaSourceCanceller.signal)
               .then((mediaSource) => {
                 const lastDrmStatus = drmInitRef.getValue();
                 if (lastDrmStatus.initializationState.type === "awaiting-media-link") {
@@ -524,12 +549,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const newCanceller = new TaskCanceller();
       newCanceller.linkToSignal(this._initCanceller.signal);
 
-      const createMediaSourceAndLoad = () => {
+      const createMediaSourceAndLoad = (
+        preload: IFakeMediaSourceInterfaceInMemoryData | null,
+      ) => {
         if (reloadOrder.mediaElement === null) {
           const newMediaSource = new FakeMediaSourceInterface(idGenerator()());
           newCanceller.signal.register(() => {
             // XXX TODO NO!
-            newMediaSource.dispose();
+            // newMediaSource.dispose();
           });
           const newSettings: IBufferingMediaSettings = {
             ...settings,
@@ -541,7 +568,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           this._recursivelyLoadOnMediaSource(newSettings, newCanceller);
           return;
         }
-        createMediaSource(reloadOrder.mediaElement, newCanceller.signal)
+
+        createMediaSource(reloadOrder.mediaElement, preload, newCanceller.signal)
           .then((newMediaSource) => {
             const newSettings: IBufferingMediaSettings = {
               ...settings,
@@ -563,8 +591,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       if (!reloadOrder.softReload || this._preloadInfo === null) {
         this._textDisplayer?.reset();
         settings.segmentSinksStore.disposeAll();
-        createMediaSourceAndLoad();
+        createMediaSourceAndLoad(null);
       } else {
+        const storedData = this._preloadInfo.mediaSourceInterface.getStoredData();
+        createMediaSourceAndLoad(storedData);
         // XXX TODO
         // // TODO for now text is not enabled when preloading
         // this._preloadInfo.segmentSinksStore.disposeSegmentSink("text");
@@ -756,9 +786,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
           const segmentSinkStatus = segmentSinksStore.getStatus(tType);
           if (segmentSinkStatus.type === "initialized") {
-            segmentSinkStatus.value.synchronizeInventory(
-              observation.buffered[tType] ?? [],
-            );
+            const buffered = observation.buffered[tType];
+            if (buffered !== null) {
+              segmentSinkStatus.value.synchronizeInventory(buffered);
+            }
           }
         });
       },
@@ -818,6 +849,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       handleStreamOrchestratorCallbacks(),
       cancelSignal,
     );
+
+    if (mediaSource instanceof FakeMediaSourceInterface) {
+      this._preloadInfo = {
+        segmentSinksStore,
+        mediaSourceInterface: mediaSource,
+        protectionRef,
+        initialTime,
+        autoPlay,
+        onReloadOrder,
+      };
+    }
 
     /**
      * Returns Object handling the callbacks from a `StreamOrchestrator`, which

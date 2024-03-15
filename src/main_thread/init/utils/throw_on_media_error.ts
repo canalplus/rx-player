@@ -25,7 +25,7 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
  * @param {Object} cancelSignal
  */
 export default function listenToMediaError(
-  mediaElement : IMediaElement,
+  mediaElement: IMediaElement,
   onError: (error: MediaError) => void,
   cancelSignal: CancellationSignal,
 ): void {

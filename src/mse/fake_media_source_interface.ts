@@ -7,6 +7,20 @@ import type {
   SourceBufferType,
 } from "./types";
 
+export interface IFakeMediaSourceInterfaceInMemoryData {
+  sourceBuffers: Array<{
+    type: SourceBufferType;
+    codec: string;
+    buffer: IFakeSourceBufferBufferedOperation[];
+  }>;
+}
+
+/**
+ * `IMediaSourceInterface` implementation which will actually push buffer
+ * operations in a JS array, thus allowing to store media segments in-memory for
+ * later playback.
+ * @class FakeMediaSourceInterface
+ */
 export default class FakeMediaSourceInterface
   extends EventEmitter<IMediaSourceInterfaceEvents>
   implements IMediaSourceInterface
@@ -20,18 +34,13 @@ export default class FakeMediaSourceInterface
   /** @see IMediaSourceInterface */
   public readyState: "open" | "closed" | "ended";
   private _sourceBuffersList: Array<{
-    type: string;
+    type: SourceBufferType;
     codec: string;
     sourceBuffer: FakeSourceBufferInterface;
   }>;
 
   /**
-   * Creates a new `FakeMediaSourceInterface` alongside its `MediaSource` MSE
-   * object.
-   *
-   * You can then obtain a link to that `MediaSource`, for example to link it
-   * to an `HTMLMediaElement`, through the `handle` property.
-   *
+   * Creates a new `FakeMediaSourceInterface`.
    * @param {string} id
    */
   constructor(id: string) {
@@ -41,6 +50,14 @@ export default class FakeMediaSourceInterface
     this.handle = undefined;
     this.readyState = "closed";
     this._sourceBuffersList = [];
+  }
+
+  public getStoredData(): IFakeMediaSourceInterfaceInMemoryData {
+    return {
+      sourceBuffers: this._sourceBuffersList.map((x) => {
+        return { type: x.type, codec: x.codec, buffer: x.sourceBuffer.buffer };
+      }),
+    };
   }
 
   /** @see IMediaSourceInterface */
@@ -110,7 +127,8 @@ export type IFakeSourceBufferBufferedOperation =
   | IFakeSourceBufferBufferedOperationRemove;
 
 /**
- * `ISourceBufferInterface` object for when the MSE API are directly available.
+ * `ISourceBufferInterface` implementation which will store in-memory all
+ * performed operations, for later playback.
  * @see ISourceBufferInterface
  * @class {FakeSourceBufferInterface}
  */
@@ -123,8 +141,7 @@ export class FakeSourceBufferInterface implements ISourceBufferInterface {
   public buffer: IFakeSourceBufferBufferedOperation[];
 
   /**
-   * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
-   * instance.
+   * Creates a new `FakeSourceBufferInterface`.
    * @param {string} sbType
    * @param {string} codec
    */
