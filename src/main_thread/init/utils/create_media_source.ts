@@ -95,14 +95,11 @@ function createMediaSource(
  * @returns {Promise}
  */
 export default function openMediaSource(
-  mediaElement: IMediaElement | null,
+  mediaElement: IMediaElement,
   unlinkSignal: CancellationSignal,
 ): Promise<MainMediaSourceInterface> {
   return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
-    if (mediaElement === null) {
-      return Promise.resolve(mediaSource);
-    }
     mediaSource.addEventListener(
       "mediaSourceOpen",
       () => {

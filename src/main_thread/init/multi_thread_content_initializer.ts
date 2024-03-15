@@ -204,15 +204,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {Object} mediaElementRef
+   * @param {HTMLMediaElement|null} mediaElement
    * @param {Object} playbackObserver
    */
   public start(
-    // XXX TODO
-    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
+    mediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
-    const mediaElement = mediaElementRef.getValue();
+    if (mediaElement === null) {
+      throw new Error(
+        "Cannot play or preload in multithread mode without a media element for now",
+      );
+    }
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
       return;
@@ -240,7 +243,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(
-      mediaElementRef,
+      mediaElement,
       (error: MediaError) => this._onFatalError(error),
       this._initCanceller.signal,
     );

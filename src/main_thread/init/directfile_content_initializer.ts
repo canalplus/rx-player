@@ -80,16 +80,20 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
    * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
-   * @param {Object} mediaElementRef - HTMLMediaElement on which the
+   * @param {Object|null} mediaElement - HTMLMediaElement on which the
    * content will be played.
    * @param {Object} playbackObserver - Object regularly emitting playback
    * information.
    */
   public start(
-    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
+    mediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
-    const mediaElement = mediaElementRef.getValue();
+    if (mediaElement === null) {
+      throw new Error(
+        "A directfile content cannot play or preload without a media element",
+      );
+    }
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
 
@@ -117,7 +121,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(
-      mediaElementRef,
+      mediaElement,
       (error: MediaError) => this._onFatalError(error),
       cancelSignal,
     );

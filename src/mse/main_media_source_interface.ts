@@ -1,15 +1,9 @@
 import type { IMediaSource, ISourceBuffer } from "../compat/browser_compatibility_types";
 import { MediaSource_ } from "../compat/browser_compatibility_types";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
-import type {
-  ISourceBufferOperation,
-  IStoredMediaSourceInfo,
-} from "../compat/dummy_media_element";
-import { SourceBufferOperation } from "../compat/dummy_media_element";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
 import { MediaError, SourceBufferError } from "../errors";
 import log from "../log";
-import arrayFind from "../utils/array_find";
 import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
@@ -17,6 +11,8 @@ import objectAssign from "../utils/object_assign";
 import type { IRange } from "../utils/ranges";
 import { convertToRanges } from "../utils/ranges";
 import TaskCanceller, { CancellationError } from "../utils/task_canceller";
+import type { IFakeSourceBufferBufferedOperation } from "./fake_media_source_interface";
+import { FakeSourceBufferInterfaceOperationName } from "./fake_media_source_interface";
 import type {
   IMediaSourceHandle,
   IMediaSourceInterface,
@@ -28,7 +24,7 @@ import type {
 import { maintainEndOfStream } from "./utils/end_of_stream";
 import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 
-/**
+/*
  * `IMediaSourceInterface` object for when the MSE API are directly available.
  * @see IMediaSourceInterface
  * @class {MainMediaSourceInterface}
@@ -45,13 +41,13 @@ export default class MainMediaSourceInterface
    * Note: A `MainMediaSourceInterface`'s handle is never `undefined`.
    * It can thus always be relied on when linking it to an `HTMLMediaElement`.
    */
-  public handle: IMediaSourceHandle | undefined;
+  public handle: IMediaSourceHandle;
   /** @see IMediaSourceInterface */
   public sourceBuffers: MainSourceBufferInterface[];
   /** @see IMediaSourceInterface */
-  public readyState: "open" | "closed" | "ended" | "transfer";
+  public readyState: "open" | "closed" | "ended";
   /** The MSE `MediaSource` instance linked to that `IMediaSourceInterface`. */
-  private _mediaSource: IMediaSource | null;
+  private _mediaSource: IMediaSource;
   /**
    * Abstraction allowing to set and update the MediaSource's duration.
    */
@@ -68,11 +64,6 @@ export default class MainMediaSourceInterface
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  private _lastDurationSetting: {
-    duration: number;
-    isRealEndKnown: boolean;
-  } | null;
-
   /**
    * Creates a new `MainMediaSourceInterface` alongside its `MediaSource` MSE
    * object.
@@ -81,39 +72,31 @@ export default class MainMediaSourceInterface
    * to an `HTMLMediaElement`, through the `handle` property.
    *
    * @param {string} id
-   * @param {boolean} [noMediaSource=true]
    */
-  constructor(id: string, noMediaSource: boolean = true) {
+  constructor(id: string) {
     super();
     this.id = id;
     this.sourceBuffers = [];
     this._currentMediaSourceCanceller = new TaskCanceller();
 
-    if (!noMediaSource) {
-      if (isNullOrUndefined(MediaSource_)) {
-        throw new MediaError(
-          "MEDIA_SOURCE_NOT_SUPPORTED",
-          "No MediaSource Object was found in the current browser.",
-        );
-      }
-
-      log.info("Init: Creating MediaSource");
-      const mediaSource = new MediaSource_();
-      const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
-      this.handle = isNullOrUndefined(handle)
-        ? /* eslint-disable-next-line @typescript-eslint/ban-types */
-        { type: "media-source", value: mediaSource as unknown as MediaSource }
-          : { type: "handle", value: handle };
-      this._mediaSource = mediaSource;
-      this.readyState = mediaSource.readyState;
-    } else {
-      this.handle = undefined;
-      this._mediaSource = null;
-      this.readyState = "closed";
+    if (isNullOrUndefined(MediaSource_)) {
+      throw new MediaError(
+        "MEDIA_SOURCE_NOT_SUPPORTED",
+        "No MediaSource Object was found in the current browser.",
+      );
     }
+
+    log.info("Init: Creating MediaSource");
+    const mediaSource = new MediaSource_();
+    const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
+    this.handle = isNullOrUndefined(handle)
+      ? /* eslint-disable-next-line @typescript-eslint/ban-types */
+        { type: "media-source", value: mediaSource as unknown as MediaSource }
+      : { type: "handle", value: handle };
+    this._mediaSource = mediaSource;
+    this.readyState = mediaSource.readyState;
     this._durationUpdater = new MediaSourceDurationUpdater(mediaSource);
     this._endOfStreamCanceller = null;
-    this._lastDurationSetting = null;
     onSourceOpen(
       mediaSource,
       this._onSourceOpen.bind(this),
@@ -146,112 +129,112 @@ export default class MainMediaSourceInterface
     this.trigger("mediaSourceClose", null);
   }
 
-  public transfer(): void {
-    if (this.readyState === "transfer") {
-      throw new Error('MediaSourceInterface already "transfering"');
-    }
-    if (isNullOrUndefined(MediaSource_)) {
-      throw new MediaError(
-        "MEDIA_SOURCE_NOT_SUPPORTED",
-        "No MediaSource Object was found in the current browser.",
-      );
-    }
+  // public transfer(): void {
+  //   if (this.readyState === "transfer") {
+  //     throw new Error('MediaSourceInterface already "transfering"');
+  //   }
+  //   if (isNullOrUndefined(MediaSource_)) {
+  //     throw new MediaError(
+  //       "MEDIA_SOURCE_NOT_SUPPORTED",
+  //       "No MediaSource Object was found in the current browser.",
+  //     );
+  //   }
 
-    this.readyState = "transfer";
-    this._currentMediaSourceCanceller.cancel();
-    const currentMSCanceller = new TaskCanceller();
-    this._currentMediaSourceCanceller = currentMSCanceller;
-    this._endOfStreamCanceller = null;
+  //   this.readyState = "transfer";
+  //   this._currentMediaSourceCanceller.cancel();
+  //   const currentMSCanceller = new TaskCanceller();
+  //   this._currentMediaSourceCanceller = currentMSCanceller;
+  //   this._endOfStreamCanceller = null;
 
-    const oldMediaSource = this._mediaSource;
-    const cancelReset = currentMSCanceller.signal.register(() => {
-      resetMediaSource(oldMediaSource);
-    });
+  //   const oldMediaSource = this._mediaSource;
+  //   const cancelReset = currentMSCanceller.signal.register(() => {
+  //     resetMediaSource(oldMediaSource);
+  //   });
 
-    // XXX TODO get fetched metadata
-    const metadata: IStoredMediaSourceInfo = { sourceBuffers: [] };
+  //   // XXX TODO get fetched metadata
+  //   const metadata: IStoredMediaSourceInfo = { sourceBuffers: [] };
 
-    log.info("Init: Creating MediaSource");
-    const mediaSource = new MediaSource_();
-    const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
-    this.handle = isNullOrUndefined(handle)
-      ? /* eslint-disable-next-line @typescript-eslint/ban-types */
-        { type: "media-source", value: mediaSource as unknown as MediaSource }
-      : { type: "handle", value: handle };
-    this._mediaSource = mediaSource;
+  //   log.info("Init: Creating MediaSource");
+  //   const mediaSource = new MediaSource_();
+  //   const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
+  //   this.handle = isNullOrUndefined(handle)
+  //     ? /* eslint-disable-next-line @typescript-eslint/ban-types */
+  //       { type: "media-source", value: mediaSource as unknown as MediaSource }
+  //     : { type: "handle", value: handle };
+  //   this._mediaSource = mediaSource;
 
-    this._durationUpdater.stopUpdating();
-    this._durationUpdater = new MediaSourceDurationUpdater(mediaSource);
-    if (this._lastDurationSetting !== null) {
-      this._durationUpdater.updateDuration(
-        this._lastDurationSetting.duration,
-        this._lastDurationSetting.isRealEndKnown,
-      );
-    }
+  //   this._durationUpdater.stopUpdating();
+  //   this._durationUpdater = new MediaSourceDurationUpdater(mediaSource);
+  //   if (this._lastDurationSetting !== null) {
+  //     this._durationUpdater.updateDuration(
+  //       this._lastDurationSetting.duration,
+  //       this._lastDurationSetting.isRealEndKnown,
+  //     );
+  //   }
 
-    onSourceOpen(
-      mediaSource,
-      () => {
-        if (this.readyState !== "transfer") {
-          this._onSourceOpen();
-          return;
-        }
-        const proms: Array<Promise<unknown>> = [];
-        for (const item of metadata.sourceBuffers) {
-          const found = arrayFind(this.sourceBuffers, (sbi) => {
-            // XXX TODO `sbi.type` which doesn't change instead
-            return sbi.codec === item.type;
-          });
-          if (found !== undefined) {
-            const sourceBuffer = mediaSource.addSourceBuffer(item.type);
-            proms.push(found.transfer(sourceBuffer, item.operations));
-          }
-        }
+  //   onSourceOpen(
+  //     mediaSource,
+  //     () => {
+  //       if (this.readyState !== "transfer") {
+  //         this._onSourceOpen();
+  //         return;
+  //       }
+  //       const proms: Array<Promise<unknown>> = [];
+  //       for (const item of metadata.sourceBuffers) {
+  //         const found = arrayFind(this.sourceBuffers, (sbi) => {
+  //           // XXX TODO `sbi.type` which doesn't change instead
+  //           return sbi.codec === item.type;
+  //         });
+  //         if (found !== undefined) {
+  //           const sourceBuffer = mediaSource.addSourceBuffer(item.type);
+  //           proms.push(found.transfer(sourceBuffer, item.operations));
+  //         }
+  //       }
 
-        Promise.all(proms)
-          .then(() => {
-            cancelReset();
-            resetMediaSource(oldMediaSource);
-            if (currentMSCanceller.isUsed()) {
-              return;
-            }
-            this.readyState = mediaSource.readyState;
-            switch (this.readyState) {
-              case "open":
-                this.trigger("mediaSourceOpen", null);
-                break;
-              case "ended":
-                this.trigger("mediaSourceEnded", null);
-                break;
-              case "closed":
-                this.trigger("mediaSourceClose", null);
-                break;
-            }
-            if (!currentMSCanceller.isUsed() && this._endOfStreamCanceller !== null) {
-              this.maintainEndOfStream();
-            }
-          })
-          .catch(() => {
-            cancelReset();
-            resetMediaSource(oldMediaSource);
-            // XXX TODO
-          });
-        onSourceEnded(
-          mediaSource,
-          this._onSourceEnded.bind(this),
-          currentMSCanceller.signal,
-        );
-        onSourceClose(
-          mediaSource,
-          this._onSourceClose.bind(this),
-          currentMSCanceller.signal,
-        );
-      },
-      currentMSCanceller.signal,
-    );
+  //       Promise.all(proms)
+  //         .then(() => {
+  //           cancelReset();
+  //           resetMediaSource(oldMediaSource);
+  //           if (currentMSCanceller.isUsed()) {
+  //             return;
+  //           }
+  //           this.readyState = mediaSource.readyState;
+  //           switch (this.readyState) {
+  //             case "open":
+  //               this.trigger("mediaSourceOpen", null);
+  //               break;
+  //             case "ended":
+  //               this.trigger("mediaSourceEnded", null);
+  //               break;
+  //             case "closed":
+  //               this.trigger("mediaSourceClose", null);
+  //               break;
+  //           }
+  //           if (!currentMSCanceller.isUsed() && this._endOfStreamCanceller !== null) {
+  //             this.maintainEndOfStream();
+  //           }
+  //         })
+  //         .catch(() => {
+  //           cancelReset();
+  //           resetMediaSource(oldMediaSource);
+  //           // XXX TODO
+  //         });
+  //       onSourceEnded(
+  //         mediaSource,
+  //         this._onSourceEnded.bind(this),
+  //         currentMSCanceller.signal,
+  //       );
+  //       onSourceClose(
+  //         mediaSource,
+  //         this._onSourceClose.bind(this),
+  //         currentMSCanceller.signal,
+  //       );
+  //     },
+  //     currentMSCanceller.signal,
+  //   );
 
-    this.trigger("mediaSourceTransfer", null);
-  }
+  //   this.trigger("mediaSourceTransfer", null);
+  // }
 
   /** @see IMediaSourceInterface */
   public addSourceBuffer(
@@ -266,13 +249,11 @@ export default class MainMediaSourceInterface
 
   /** @see IMediaSourceInterface */
   public setDuration(newDuration: number, isRealEndKnown: boolean): void {
-    this._lastDurationSetting = { duration: newDuration, isRealEndKnown };
     this._durationUpdater.updateDuration(newDuration, isRealEndKnown);
   }
 
   /** @see IMediaSourceInterface */
   public interruptDurationSetting() {
-    this._lastDurationSetting = null;
     this._durationUpdater.stopUpdating();
   }
 
@@ -332,10 +313,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * `null` if no known operation is pending.
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
-
-  private _transferData: {
-    buffered: IRange[];
-  } | null;
+  private _isTransferring: boolean;
 
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
@@ -351,7 +329,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
-    this._transferData = null;
+    this._isTransferring = false;
 
     const onError = this._onError.bind(this);
     const onUpdateEnd = this._onUpdateEnd.bind(this);
@@ -410,74 +388,26 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._performNextOperation();
   }
 
-  public transfer(
-    sourceBuffer: ISourceBuffer,
-    operations: ISourceBufferOperation[],
-  ): Promise<unknown> {
-    if (this._transferData !== null) {
+  public transfer(operations: IFakeSourceBufferBufferedOperation[]): Promise<unknown> {
+    if (this._isTransferring) {
       throw new Error('SourceBufferInterface already "transfering"');
     }
-    const onError = this._onError.bind(this);
-    this._transferData = {
-      buffered: this.getBuffered(),
-    };
-    this._sourceBufferCanceller.cancel();
-    const currentSBCanceller = new TaskCanceller();
-    this._sourceBufferCanceller = currentSBCanceller;
+
     const proms: Array<Promise<unknown>> = [];
-
-    const actuallyTransfer = (): void => {
-      this._sourceBuffer.abort();
-      this._sourceBuffer = sourceBuffer;
-      while (true) {
-        const operation = operations.shift();
-        if (operation === undefined) {
-          break;
-        }
-        if (operation.type === SourceBufferOperation.Append) {
-          proms.push(
-            this.appendBuffer(operation.segment, {
-              codec: operation.mimeType,
-              timestampOffset: operation.timestampOffset,
-              appendWindow: [operation.appendWindowStart, operation.appendWindowEnd],
-            }),
-          );
-        } else if (operation.type === SourceBufferOperation.Remove) {
-          proms.push(this.remove(operation.start, operation.end));
-        }
+    while (true) {
+      const operation = operations.shift();
+      if (operation === undefined) {
+        break;
       }
-    };
-
-    if (this._sourceBuffer.updating) {
-      const cleanUp = () => {
-        this._sourceBuffer.removeEventListener("updateend", actuallyTransfer);
-        this._sourceBuffer.removeEventListener("error", onError);
-      };
-      this._sourceBuffer.addEventListener("updateend", () => {
-        cleanUp();
-        actuallyTransfer();
-      });
-      this._sourceBuffer.addEventListener("error", (evt) => {
-        cleanUp();
-        onError(evt);
-      });
-      currentSBCanceller.signal.register(cleanUp);
-    } else {
-      actuallyTransfer();
+      if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
+        proms.push(this.appendBuffer(...operation.params));
+      } else {
+        proms.push(this.remove(...operation.params));
+      }
     }
 
     return Promise.all(proms).then(() => {
-      this._transferData = null;
-      const onUpdateEnd = this._onUpdateEnd.bind(this);
-      sourceBuffer.addEventListener("updateend", onUpdateEnd);
-      sourceBuffer.addEventListener("error", onError);
-      currentSBCanceller.signal.register(() => {
-        sourceBuffer.removeEventListener("updateend", onUpdateEnd);
-        sourceBuffer.removeEventListener("error", onError);
-      });
-      if (currentSBCanceller.isUsed()) {
-        return;
-      }
+      this._isTransferring = false;
       this._onUpdateEnd();
     });
   }
@@ -508,9 +438,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   /** @see ISourceBufferInterface */
-  public getBuffered(): IRange[] {
-    if (this._transferData !== null) {
-      return this._transferData.buffered;
+  public getBuffered(): IRange[] | undefined {
+    if (this._isTransferring) {
+      return undefined;
     }
     try {
       return convertToRanges(this._sourceBuffer.buffered);
@@ -582,7 +512,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     if (
       this._currentOperations.length !== 0 ||
       this._sourceBuffer.updating ||
-      this._transferData !== null
+      this._isTransferring
     ) {
       return;
     }

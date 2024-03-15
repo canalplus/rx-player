@@ -20,56 +20,6 @@ import type {
 
 const { useCallback, useEffect, useRef, useState } = React;
 
-document.addEventListener("keydown", (evt) => {
-  if (evt.ctrlKey) {
-    {
-      const storedInfo = player.getVideoElement().srcObject._stored;
-      let videoElement = document.querySelector("video");
-      if (!videoElement) {
-        videoElement = document.createElement("video");
-        videoElement.style.height = "480px";
-        document.body.prepend(videoElement);
-      }
-      videoElement.autoplay = true;
-      videoElement.src = "";
-      const mediaSource = new MediaSource();
-
-      const url = URL.createObjectURL(mediaSource);
-      videoElement.src = url;
-
-      mediaSource.addEventListener("sourceopen", () => {
-        for (const item of storedInfo.sourceBuffers) {
-          const sourceBuffer = mediaSource.addSourceBuffer(item.type);
-          let operationIndex = 0;
-          sourceBuffer.addEventListener("updateend", () => {
-            performOperation(sourceBuffer, item.operations, operationIndex++);
-          });
-          Promise.resolve().then(() => {
-            performOperation(sourceBuffer, item.operations, operationIndex++);
-          });
-        }
-      });
-
-      function performOperation(sourceBuffer, operations, idx) {
-        const nextOperation = operations[idx];
-        if (nextOperation === undefined) {
-          return;
-        }
-        if (nextOperation.type === 0) {
-          sourceBuffer.timestampOffset = nextOperation.timestampOffset;
-          sourceBuffer.appendWindowStart = nextOperation.appendWindowStart;
-          sourceBuffer.appendWindowEnd = nextOperation.appendWindowEnd;
-          // TODO mimetype
-
-          sourceBuffer.appendBuffer(nextOperation.segment);
-        } else if (nextOperation.type === 1) {
-          sourceBuffer.remove(nextOperation.start, nextOperation.end);
-        }
-      }
-    }
-  }
-});
-
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
 
@@ -196,7 +146,11 @@ function Player(): JSX.Element {
   }, [playerModule]);
 
   const createNewPlayerModule = useCallback(() => {
-    if (textTrackElementRef.current === null || debugElementRef.current === null) {
+    if (
+      videoElementRef.current === null ||
+      textTrackElementRef.current === null ||
+      debugElementRef.current === null
+    ) {
       return;
     }
     if (playerModule) {
@@ -206,6 +160,7 @@ function Player(): JSX.Element {
       Object.assign(
         {},
         {
+          videoElement: videoElementRef.current,
           textTrackElement: textTrackElementRef.current,
           debugElement: debugElementRef.current,
         },
@@ -349,7 +304,7 @@ function Player(): JSX.Element {
               ) : null}
               <div className="text-track" ref={textTrackElementRef} />
               <div className="debug-element" ref={debugElementRef} />
-              <div style={{ height: "480px" }} ref={videoElementRef} />
+              <video ref={videoElementRef} />
             </div>
             {playerModule ? (
               <PlayerKnobsSettings

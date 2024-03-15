@@ -67,7 +67,7 @@ export interface ISourceBufferInterface {
   appendBuffer(
     data: BufferSource,
     params: ISourceBufferInterfaceAppendBufferParameters,
-  ): Promise<IRange[]>;
+  ): Promise<IRange[] | undefined>;
   /**
    * Remove media data present between the given start time in seconds and the
    * given end time in seconds.
@@ -88,7 +88,7 @@ export interface ISourceBufferInterface {
    * @param {number} end
    * @returns {Promise.<Array.<Object>>}
    */
-  remove(start: number, end: number): Promise<IRange[]>;
+  remove(start: number, end: number): Promise<IRange[] | undefined>;
   /** Abort all operations pending on the `SourceBuffer`. */
   abort(): void;
   /**
@@ -185,7 +185,7 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * /!\ May be known asynchronously after it is updated. You can rely on events
    * to be notified of its change.
    */
-  readyState: "open" | "closed" | "ended" | "transfer";
+  readyState: "open" | "closed" | "ended";
   /**
    * Mean to link the underlying `MediaSource` to an `HTMLMediaElement`.
    *
@@ -211,7 +211,6 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * `ISourceBufferInterface` useful as a discriminant for that array.
    */
   sourceBuffers: ISourceBufferInterface[];
-  transfer(): void;
   /**
    * Add a new `ISourceBufferInterface` (and its corresponding underlying MSE
    * `SourceBuffer` object) linked to the given `SourceBufferType`.
@@ -276,12 +275,6 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
 
 /** Events that should be sent by an `IMediaSourceInterface`. */
 export interface IMediaSourceInterfaceEvents {
-  /**
-   * Indicate that the `IMediaSourceInterface`'s `MediaSource` is being
-   * "transferred" (going from a dummy implementation to a real MediaSource
-   * implementation.
-   */
-  mediaSourceTransfer: null;
   /**
    * Indicate that the `IMediaSourceInterface`'s `readyState` property just
    * changed to `"open"`.

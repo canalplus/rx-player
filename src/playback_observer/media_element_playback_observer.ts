@@ -17,6 +17,7 @@
 import type { IMediaElement } from "../compat/browser_compatibility_types";
 import isSeekingApproximate from "../compat/is_seeking_approximate";
 import config from "../config";
+import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges";
 import log from "../log";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import noop from "../utils/noop";
@@ -397,7 +398,10 @@ export default class PlaybackObserver {
     let pendingPosition: number | null = this._pendingSeek;
 
     /** Initially-polled playback observation, before adjustments. */
-    const mediaTimings = getMediaInfos(this._mediaElement);
+    const mediaTimings =
+      this._mediaElement === null
+        ? getEmptyMediaInfo()
+        : getMediaInfos(this._mediaElement);
     const { buffered, readyState, position, seeking } = mediaTimings;
     if (tmpEvt === "seeking") {
       // We just began seeking.
@@ -612,6 +616,23 @@ function hasLoadedUntilTheEnd(
     return ended && Math.abs(duration - currentTime) <= REBUFFERING_GAP[suffix];
   }
   return currentRange !== null && duration - currentRange.end <= REBUFFERING_GAP[suffix];
+}
+
+/**
+ * Get basic playback information.
+ * @returns {Object}
+ */
+function getEmptyMediaInfo(): IMediaInfos {
+  return {
+    buffered: new ManualTimeRanges(),
+    position: 0,
+    duration: NaN,
+    ended: false,
+    paused: true,
+    playbackRate: 1,
+    readyState: 0,
+    seeking: false,
+  };
 }
 
 /**
@@ -942,8 +963,9 @@ function prettyPrintBuffered(buffered: TimeRanges, currentTime: number): string 
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservation {
-  const mediaTimings = getMediaInfos(mediaElement);
+function getInitialObservation(mediaElement: IMediaElement | null): IPlaybackObservation {
+  const mediaTimings =
+    mediaElement === null ? getEmptyMediaInfo() : getMediaInfos(mediaElement);
   return objectAssign(mediaTimings, {
     rebuffering: null,
     event: "init" as const,
