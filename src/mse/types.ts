@@ -189,9 +189,17 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
   /**
    * Mean to link the underlying `MediaSource` to an `HTMLMediaElement`.
    *
-   * `undefined` if this `IMediaSourceInterface` cannot rely on MSE API
-   * directly to create a `MediaSource`, in which case it will have sent
-   * message by itself to the main thread for MediaSource creation.
+   * `undefined` if either:
+   *
+   *   - This `IMediaSourceInterface` cannot rely on MSE API directly to create
+   *     a `MediaSource`, in which case it will have sent message by itself to
+   *     the main thread for MediaSource creation.
+   *
+   *   - This `IMediaSourceInterface` does not rely for now on an actual
+   *     `MediaSource` instance as it is only preloading content.
+   *
+   * In both cases, data can still be buffered as usual on its underlying
+   * `SourceBufferInterface` instances.
    */
   handle: IMediaSourceHandle | undefined;
   /**

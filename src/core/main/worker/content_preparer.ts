@@ -381,25 +381,28 @@ function createMediaSourceAndBuffersStore(
 
     let sentMediaSourceLink: IAttachMediaSourceWorkerMessagePayload;
     const handle = mainMediaSource.handle;
-    if (handle.type === "handle") {
-      sentMediaSourceLink = { type: "handle" as const, value: handle.value };
-    } else {
-      const url = URL.createObjectURL(handle.value);
-      sentMediaSourceLink = { type: "url" as const, value: url };
-      cancelSignal.register(() => {
-        URL.revokeObjectURL(url);
-      });
-    }
+    // XXX TODO
+    if (handle !== undefined) {
+      if (handle.type === "handle") {
+        sentMediaSourceLink = { type: "handle" as const, value: handle.value };
+      } else {
+        const url = URL.createObjectURL(handle.value);
+        sentMediaSourceLink = { type: "url" as const, value: url };
+        cancelSignal.register(() => {
+          URL.revokeObjectURL(url);
+        });
+      }
 
-    sendMessage(
-      {
-        type: WorkerMessageType.AttachMediaSource,
-        contentId,
-        value: sentMediaSourceLink,
-        mediaSourceId: mediaSource.id,
-      },
-      [handle.value as unknown as Transferable],
-    );
+      sendMessage(
+        {
+          type: WorkerMessageType.AttachMediaSource,
+          contentId,
+          value: sentMediaSourceLink,
+          mediaSourceId: mediaSource.id,
+        },
+        [handle.value as unknown as Transferable],
+      );
+    }
   } else {
     mediaSource = new WorkerMediaSourceInterface(
       generateMediaSourceId(),

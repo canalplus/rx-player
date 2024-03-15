@@ -17,7 +17,6 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import { MediaError } from "../../../errors";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
@@ -26,16 +25,13 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
  * @param {Object} cancelSignal
  */
 export default function listenToMediaError(
-  mediaElementRef: IReadOnlySharedReference<IMediaElement>,
+  mediaElement : IMediaElement,
   onError: (error: MediaError) => void,
   cancelSignal: CancellationSignal,
 ): void {
   if (cancelSignal.isCancelled()) {
     return;
   }
-
-  // XXX TODO
-  const mediaElement = mediaElementRef.getValue();
 
   mediaElement.addEventListener("error", onMediaError);
   cancelSignal.register(() => {

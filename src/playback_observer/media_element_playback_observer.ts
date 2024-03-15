@@ -68,7 +68,7 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS = [
  */
 export default class PlaybackObserver {
   /** HTMLMediaElement which we want to observe. */
-  private _mediaElement: IMediaElement;
+  private _mediaElement: IMediaElement | null;
 
   /** If `true`, a `MediaSource` object is linked to `_mediaElement`. */
   private _withMediaSource: boolean;
@@ -141,7 +141,7 @@ export default class PlaybackObserver {
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
-  constructor(mediaElement: IMediaElement, options: IPlaybackObserverOptions) {
+  constructor(mediaElement: IMediaElement | null, options: IPlaybackObserverOptions) {
     this._internalSeeksIncoming = [];
     this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
@@ -151,17 +151,19 @@ export default class PlaybackObserver {
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
 
-    const onLoadedMetadata = () => {
-      if (this._pendingSeek !== null) {
-        const positionToSeekTo = this._pendingSeek;
-        this._pendingSeek = null;
-        this._actuallySetCurrentTime(positionToSeekTo);
-      }
-    };
-    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-    this._canceller.signal.register(() => {
-      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
-    });
+    if (mediaElement !== null) {
+      const onLoadedMetadata = () => {
+        if (this._pendingSeek !== null) {
+          const positionToSeekTo = this._pendingSeek;
+          this._pendingSeek = null;
+          this._actuallySetCurrentTime(mediaElement, positionToSeekTo);
+        }
+      };
+      mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
+      this._canceller.signal.register(() => {
+        mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+      });
+    }
   }
 
   /**
@@ -182,16 +184,16 @@ export default class PlaybackObserver {
    * seconds.
    * @returns {number}
    */
-  public getCurrentTime(): number {
-    return this._mediaElement.currentTime;
+  public getCurrentTime(): number | undefined {
+    return this._mediaElement?.currentTime;
   }
 
   /**
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
    * @returns {number}
    */
-  public getPlaybackRate(): number {
-    return this._mediaElement.playbackRate;
+  public getPlaybackRate(): number | undefined {
+    return this._mediaElement?.playbackRate;
   }
 
   /**
@@ -201,8 +203,8 @@ export default class PlaybackObserver {
    * to be sure you're using the current value.
    * @returns {boolean}
    */
-  public getIsPaused(): boolean {
-    return this._mediaElement.paused;
+  public getIsPaused(): boolean | undefined {
+    return this._mediaElement?.paused;
   }
 
   /**
@@ -216,8 +218,8 @@ export default class PlaybackObserver {
    * @param {number} time
    */
   public setCurrentTime(time: number): void {
-    if (this._mediaElement.readyState >= 1) {
-      this._actuallySetCurrentTime(time);
+    if (this._mediaElement !== null && this._mediaElement.readyState >= 1) {
+      this._actuallySetCurrentTime(this._mediaElement, time);
     } else {
       this._internalSeeksIncoming = [];
       this._pendingSeek = time;
@@ -230,6 +232,10 @@ export default class PlaybackObserver {
    * @param {number} playbackRate
    */
   public setPlaybackRate(playbackRate: number): void {
+    if (this._mediaElement === null) {
+      // XXX TODO
+      return;
+    }
     this._mediaElement.playbackRate = playbackRate;
   }
 
@@ -237,8 +243,8 @@ export default class PlaybackObserver {
    * Returns the current `readyState` advertised by the `HTMLMediaElement`.
    * @returns {number}
    */
-  public getReadyState(): number {
-    return this._mediaElement.readyState;
+  public getReadyState(): number | undefined {
+    return this._mediaElement?.readyState;
   }
 
   /**
@@ -303,10 +309,10 @@ export default class PlaybackObserver {
     return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
-  private _actuallySetCurrentTime(time: number): void {
+  private _actuallySetCurrentTime(mediaElement: IMediaElement, time: number): void {
     log.info("API: Seeking internally", time);
     this._internalSeeksIncoming.push(time);
-    this._mediaElement.currentTime = time;
+    mediaElement.currentTime = time;
   }
 
   /**
@@ -348,10 +354,13 @@ export default class PlaybackObserver {
         this._generateObservationForEvent(eventName);
       };
 
-      this._mediaElement.addEventListener(eventName, onMediaEvent);
-      this._canceller.signal.register(() => {
-        this._mediaElement.removeEventListener(eventName, onMediaEvent);
-      });
+      if (this._mediaElement !== null) {
+        const mediaElement = this._mediaElement;
+        mediaElement.addEventListener(eventName, onMediaEvent);
+        this._canceller.signal.register(() => {
+          mediaElement.removeEventListener(eventName, onMediaEvent);
+        });
+      }
     });
     this._canceller.signal.register(() => {
       clearInterval(intervalId);
