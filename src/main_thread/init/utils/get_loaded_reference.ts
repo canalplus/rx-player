@@ -54,12 +54,7 @@ export default function getLoadedReference(
         return;
       }
 
-      if (
-        !shouldWaitForDataBeforeLoaded(
-          isDirectfile,
-          mediaElement.hasAttribute("playsinline"),
-        )
-      ) {
+      if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
         // The duration is NaN if no media data is available,
         // which means media is not loaded yet.
         if (isNaN(mediaElement.duration)) {
