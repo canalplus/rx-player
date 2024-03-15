@@ -185,6 +185,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     );
   }
 
+  public attachMediaElement(_mediaElement: IMediaElement): void {
+    throw new Error("Content preloading not yet loaded in a multithread mode");
+  }
+
   /**
    * Update URL of the Manifest.
    * @param {Array.<string>|undefined} urls - URLs to reach that Manifest from

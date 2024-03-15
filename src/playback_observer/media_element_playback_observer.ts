@@ -167,6 +167,45 @@ export default class PlaybackObserver {
     }
   }
 
+  public attachMediaElement(
+    mediaElement: IMediaElement
+  ): void {
+    if (this._mediaElement !== null) {
+      throw new Error("A media element was already attached to this PlaybackObserver");
+    }
+    this._mediaElement = mediaElement;
+    const onLoadedMetadata = () => {
+      if (this._pendingSeek !== null) {
+        const positionToSeekTo = this._pendingSeek;
+        this._pendingSeek = null;
+        this._actuallySetCurrentTime(mediaElement, positionToSeekTo);
+      }
+    };
+    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
+    this._canceller.signal.register(() => {
+      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+    });
+    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
+      const onMediaEvent = () => {
+        // XXX TODO
+        // restartInterval();
+        this._generateObservationForEvent(eventName);
+      };
+      mediaElement.addEventListener(eventName, onMediaEvent);
+      this._canceller.signal.register(() => {
+        mediaElement.removeEventListener(eventName, onMediaEvent);
+      });
+    });
+    // XXX TODO
+    // function restartInterval() {
+    //   clearInterval(intervalId);
+    //   intervalId = setInterval(onInterval, interval);
+    // }
+    if (mediaElement.readyState >= 1) {
+      onLoadedMetadata();
+    }
+  }
+
   /**
    * Stop the `PlaybackObserver` from emitting playback observations and free all
    * resources reserved to emitting them such as event listeners and intervals.

@@ -184,6 +184,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     );
   }
 
+  public attachMediaElement(_mediaElement: IMediaElement): void {
+    throw new Error("Content preloading not loaded in directfile mode");
+  }
+
   /**
    * Update URL this `ContentIntializer` depends on.
    * @param {Array.<string>|undefined} _urls

@@ -43,12 +43,12 @@ import type { IMediaSourceInterface } from "../../mse";
 import type { IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
 import FakeMediaSourceInterface from "../../mse/fake_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
+import type PlaybackObserver from "../../playback_observer/media_element_playback_observer";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
-import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
@@ -64,7 +64,7 @@ import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
-import createMediaSource from "./utils/create_media_source";
+import createMediaSource, { createFakeMediaSource } from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
@@ -107,6 +107,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _preloadInfo: {
     segmentSinksStore: SegmentSinksStore;
     mediaSourceInterface: FakeMediaSourceInterface;
+    playbackObserver: PlaybackObserver;
     protectionRef: SharedReference<IContentProtection | null>;
     initialTime: number;
     autoPlay: boolean;
@@ -169,19 +170,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {Object|null} mediaElement
+   * @param {Object|null} initialMediaElement
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: IMediaElement | null,
+    initialMediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     this.prepare(); // Load Manifest if not already done
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    if (mediaElement !== null) {
+    if (initialMediaElement !== null) {
       listenToMediaError(
-        mediaElement,
+        initialMediaElement,
         (error: MediaError) => this._onFatalError(error),
         this._initCanceller.signal,
       );
@@ -194,10 +195,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
+    this._initializeMediaSourceAndDecryption(initialMediaElement, protectionRef)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
-          mediaElement,
+          initialMediaElement,
           initResult.mediaSource,
           playbackObserver,
           initResult.drmSystemId,
@@ -215,6 +216,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       throw new Error("No content previously preloaded on that ContentInitializer");
     }
     const preloadInfo = this._preloadInfo;
+
+    // XXX TODO should probably be moved to the API-side?
+    preloadInfo.playbackObserver.attachMediaElement(mediaElement);
     listenToMediaError(
       mediaElement,
       (error: MediaError) => this._onFatalError(error),
@@ -316,12 +320,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const mediaSourceCanceller = new TaskCanceller();
           mediaSourceCanceller.linkToSignal(initCanceller.signal);
           if (mediaElement === null) {
-            // XXX TODO
-            const mediaSource = new FakeMediaSourceInterface(idGenerator()());
-            mediaSourceCanceller.signal.register(() => {
-              // XXX TODO NO!
-              // mediaSource.dispose();
-            });
+            const mediaSource = createFakeMediaSource();
             resolve({
               mediaSource,
               drmSystemId: undefined,
@@ -553,11 +552,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         preload: IFakeMediaSourceInterfaceInMemoryData | null,
       ) => {
         if (reloadOrder.mediaElement === null) {
-          const newMediaSource = new FakeMediaSourceInterface(idGenerator()());
-          newCanceller.signal.register(() => {
-            // XXX TODO NO!
-            // newMediaSource.dispose();
-          });
+          const newMediaSource = createFakeMediaSource();
           const newSettings: IBufferingMediaSettings = {
             ...settings,
             mediaElement: reloadOrder.mediaElement,
@@ -595,11 +590,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       } else {
         const storedData = this._preloadInfo.mediaSourceInterface.getStoredData();
         createMediaSourceAndLoad(storedData);
-        // XXX TODO
-        // // TODO for now text is not enabled when preloading
-        // this._preloadInfo.segmentSinksStore.disposeSegmentSink("text");
-        // updateMediaSource(mediaSourceInterface)
-        // .catch(reCreateMediaSourceAndLoad);
       }
     };
 
@@ -816,7 +806,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     autoPlayResult
       .then(() => {
-        // XXX TODO
         if (mediaElement === null) {
           return;
         }
@@ -853,6 +842,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (mediaSource instanceof FakeMediaSourceInterface) {
       this._preloadInfo = {
         segmentSinksStore,
+        playbackObserver,
         mediaSourceInterface: mediaSource,
         protectionRef,
         initialTime,

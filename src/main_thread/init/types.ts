@@ -88,6 +88,8 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
     playbackObserver: IMediaElementPlaybackObserver,
   ): void;
 
+  public abstract attachMediaElement(mediaElement: IMediaElement): void;
+
   /**
    * Update URL of the content currently being played (e.g. DASH's MPD).
    * @param {Array.<string>|undefined} urls - URLs to reach that content /
