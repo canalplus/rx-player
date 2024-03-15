@@ -186,7 +186,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   public attachMediaElement(_mediaElement: IMediaElement): void {
-    throw new Error("Content preloading not yet loaded in a multithread mode");
+    throw new Error("Content preloading not yet added in a multithread mode");
   }
 
   /**

@@ -132,6 +132,8 @@ export default class PlaybackObserver {
    */
   private _expectedSeekingPosition: number | null;
 
+  private _observationIntervalId: number | null;
+
   /**
    * Create a new `PlaybackObserver`, which allows to produce new "playback
    * observations" on various media events and intervals.
@@ -151,58 +153,26 @@ export default class PlaybackObserver {
     this._observationRef = this._createSharedReference();
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
-
+    this._observationIntervalId = null;
     if (mediaElement !== null) {
-      const onLoadedMetadata = () => {
-        if (this._pendingSeek !== null) {
-          const positionToSeekTo = this._pendingSeek;
-          this._pendingSeek = null;
-          this._actuallySetCurrentTime(mediaElement, positionToSeekTo);
-        }
-      };
-      mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-      this._canceller.signal.register(() => {
-        mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
-      });
+      this._registerLoadedMetadataEvent(mediaElement);
     }
   }
 
-  public attachMediaElement(
-    mediaElement: IMediaElement
-  ): void {
+  public attachMediaElement(mediaElement: IMediaElement): void {
     if (this._mediaElement !== null) {
       throw new Error("A media element was already attached to this PlaybackObserver");
     }
     this._mediaElement = mediaElement;
-    const onLoadedMetadata = () => {
-      if (this._pendingSeek !== null) {
-        const positionToSeekTo = this._pendingSeek;
-        this._pendingSeek = null;
-        this._actuallySetCurrentTime(mediaElement, positionToSeekTo);
-      }
-    };
-    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
-    this._canceller.signal.register(() => {
-      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
-    });
-    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
-      const onMediaEvent = () => {
-        // XXX TODO
-        // restartInterval();
-        this._generateObservationForEvent(eventName);
-      };
-      mediaElement.addEventListener(eventName, onMediaEvent);
-      this._canceller.signal.register(() => {
-        mediaElement.removeEventListener(eventName, onMediaEvent);
-      });
-    });
-    // XXX TODO
-    // function restartInterval() {
-    //   clearInterval(intervalId);
-    //   intervalId = setInterval(onInterval, interval);
-    // }
+    this._registerLoadedMetadataEvent(mediaElement);
+    this._restartInterval();
+    this._registerMediaElementEvents(mediaElement);
+    this._generateObservationForEvent("init");
+    if (this._canceller.isUsed()) {
+      return;
+    }
     if (mediaElement.readyState >= 1) {
-      onLoadedMetadata();
+      this._onLoadedMetadataEvent();
     }
   }
 
@@ -273,7 +243,6 @@ export default class PlaybackObserver {
    */
   public setPlaybackRate(playbackRate: number): void {
     if (this._mediaElement === null) {
-      // XXX TODO
       return;
     }
     this._mediaElement.playbackRate = playbackRate;
@@ -364,54 +333,24 @@ export default class PlaybackObserver {
     if (this._observationRef !== undefined) {
       return this._observationRef;
     }
-
-    const {
-      SAMPLING_INTERVAL_MEDIASOURCE,
-      SAMPLING_INTERVAL_LOW_LATENCY,
-      SAMPLING_INTERVAL_NO_MEDIASOURCE,
-    } = config.getCurrent();
     const returnedSharedReference = new SharedReference(
       this._getCurrentObservation("init"),
       this._canceller.signal,
     );
 
-    let interval: number;
-    if (this._lowLatencyMode) {
-      interval = SAMPLING_INTERVAL_LOW_LATENCY;
-    } else if (this._withMediaSource) {
-      interval = SAMPLING_INTERVAL_MEDIASOURCE;
-    } else {
-      interval = SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    this._restartInterval();
+
+    if (this._mediaElement !== null) {
+      this._registerMediaElementEvents(this._mediaElement);
     }
 
-    const onInterval = () => {
-      this._generateObservationForEvent("timeupdate");
-    };
-    let intervalId = setInterval(onInterval, interval);
-    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
-      const onMediaEvent = () => {
-        restartInterval();
-        this._generateObservationForEvent(eventName);
-      };
-
-      if (this._mediaElement !== null) {
-        const mediaElement = this._mediaElement;
-        mediaElement.addEventListener(eventName, onMediaEvent);
-        this._canceller.signal.register(() => {
-          mediaElement.removeEventListener(eventName, onMediaEvent);
-        });
-      }
-    });
     this._canceller.signal.register(() => {
-      clearInterval(intervalId);
+      if (this._observationIntervalId !== null) {
+        clearInterval(this._observationIntervalId);
+      }
       returnedSharedReference.finish();
     });
     return returnedSharedReference;
-
-    function restartInterval() {
-      clearInterval(intervalId);
-      intervalId = setInterval(onInterval, interval);
-    }
   }
 
   private _getCurrentObservation(
@@ -598,6 +537,59 @@ export default class PlaybackObserver {
       );
     }
     this._observationRef.setValue(newObservation);
+  }
+
+  private _restartInterval() {
+    const {
+      SAMPLING_INTERVAL_MEDIASOURCE,
+      SAMPLING_INTERVAL_LOW_LATENCY,
+      SAMPLING_INTERVAL_NO_MEDIASOURCE,
+    } = config.getCurrent();
+    let interval: number;
+    if (this._lowLatencyMode) {
+      interval = SAMPLING_INTERVAL_LOW_LATENCY;
+    } else if (this._withMediaSource) {
+      interval = SAMPLING_INTERVAL_MEDIASOURCE;
+    } else {
+      interval = SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    }
+    if (this._observationIntervalId !== null) {
+      clearInterval(this._observationIntervalId);
+    }
+    this._observationIntervalId = setInterval(() => this._onInterval(), interval);
+  }
+
+  private _registerMediaElementEvents(mediaElement: IMediaElement): void {
+    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
+      const onMediaEvent = () => {
+        this._restartInterval();
+        this._generateObservationForEvent(eventName);
+      };
+      mediaElement.addEventListener(eventName, onMediaEvent);
+      this._canceller.signal.register(() => {
+        mediaElement.removeEventListener(eventName, onMediaEvent);
+      });
+    });
+  }
+
+  private _registerLoadedMetadataEvent(mediaElement: IMediaElement): void {
+    const loadedmetadataCb = this._onLoadedMetadataEvent.bind(this);
+    mediaElement.addEventListener("loadedmetadata", loadedmetadataCb);
+    this._canceller.signal.register(() => {
+      mediaElement.removeEventListener("loadedmetadata", loadedmetadataCb);
+    });
+  }
+
+  private _onInterval() {
+    this._generateObservationForEvent("timeupdate");
+  }
+
+  private _onLoadedMetadataEvent(): void {
+    if (this._mediaElement !== null && this._pendingSeek !== null) {
+      const positionToSeekTo = this._pendingSeek;
+      this._pendingSeek = null;
+      this._actuallySetCurrentTime(this._mediaElement, positionToSeekTo);
+    }
   }
 }
 

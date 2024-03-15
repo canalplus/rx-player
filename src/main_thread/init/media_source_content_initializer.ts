@@ -104,20 +104,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
-  private _preloadInfo: {
-    segmentSinksStore: SegmentSinksStore;
-    mediaSourceInterface: FakeMediaSourceInterface;
-    playbackObserver: PlaybackObserver;
-    protectionRef: SharedReference<IContentProtection | null>;
-    initialTime: number;
-    autoPlay: boolean;
-    onReloadOrder: (reloadOrder: {
-      position: number;
-      autoPlay: boolean;
-      mediaElement: IMediaElement | null;
-      softReload: boolean;
-    }) => void;
-  } | null;
+  private _contentPreparationState:
+    | IPreparingContentState
+    | IPreloadedContentState
+    | null;
 
   private _textDisplayer: ITextDisplayer | null;
 
@@ -137,7 +127,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       settings.transport,
       settings.manifestRequestSettings,
     );
-    this._preloadInfo = null;
+    this._contentPreparationState = null;
     this._textDisplayer = null;
   }
 
@@ -146,9 +136,23 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * For now, this mainly mean loading the Manifest document.
    */
   public prepare(): void {
-    if (this._manifest !== null) {
+    if (this._manifest !== null || this._contentPreparationState !== null) {
       return;
     }
+
+    let resolve: (x?: unknown) => void = noop;
+    let reject = noop;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    this._contentPreparationState = {
+      type: "preparing",
+      promise,
+      resolve,
+      reject,
+    };
+
     this._manifest = SyncOrAsync.createAsync(
       createCancellablePromise(this._initCanceller.signal, (res, rej) => {
         this._manifestFetcher.addEventListener("warning", (err: IPlayerError) =>
@@ -179,8 +183,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   ): void {
     this.prepare(); // Load Manifest if not already done
 
-    /** Translate errors coming from the media element into RxPlayer errors. */
     if (initialMediaElement !== null) {
+      if (this._contentPreparationState?.type === "preparing") {
+        this._contentPreparationState.resolve();
+      }
+      this._contentPreparationState = null;
+      /** Translate errors coming from the media element into RxPlayer errors. */
       listenToMediaError(
         initialMediaElement,
         (error: MediaError) => this._onFatalError(error),
@@ -212,24 +220,38 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   public attachMediaElement(mediaElement: IMediaElement): void {
-    if (this._preloadInfo === null) {
+    if (this._contentPreparationState === null) {
       throw new Error("No content previously preloaded on that ContentInitializer");
     }
-    const preloadInfo = this._preloadInfo;
+    const currentState = this._contentPreparationState;
 
-    // XXX TODO should probably be moved to the API-side?
-    preloadInfo.playbackObserver.attachMediaElement(mediaElement);
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      this._initCanceller.signal,
-    );
-    preloadInfo.onReloadOrder({
-      position: preloadInfo.initialTime,
-      autoPlay: preloadInfo.autoPlay,
-      mediaElement,
-      softReload: true,
-    });
+    if (currentState.type === "preparing") {
+      currentState.promise.then(
+        () => {
+          if (this._initCanceller.isUsed()) {
+            return;
+          }
+          this.attachMediaElement(mediaElement);
+        },
+        (err) => {
+          this._onFatalError(err);
+        },
+      );
+    } else {
+      // TODO should be moved to the API-side?
+      currentState.playbackObserver.attachMediaElement(mediaElement);
+      listenToMediaError(
+        mediaElement,
+        (error: MediaError) => this._onFatalError(error),
+        this._initCanceller.signal,
+      );
+      currentState.onReloadOrder({
+        position: currentState.initialTime,
+        autoPlay: currentState.autoPlay,
+        mediaElement,
+        softReload: true,
+      });
+    }
   }
 
   /**
@@ -244,6 +266,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   public dispose(): void {
+    if (this._contentPreparationState?.type === "preparing") {
+      this._contentPreparationState.reject(new Error("The content has been disposed"));
+    }
+    this._contentPreparationState = null;
     this._initCanceller.cancel();
   }
 
@@ -509,33 +535,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       throw new Error("Loading on MediaSource before a Manifest is fetched");
     }
 
-    /**
-     * Function to call when you want to "reload" the MediaSource: basically
-     * restarting playback on a new MediaSource for the same content (it may
-     * be for varied reasons, such as ensuring data buffers are empty, or
-     * restarting after some kind of fatal error).
-     * @param {Object} reloadOrder
-     * @param {number} reloadOrder.position - Position in seconds at which we
-     * should restart from when playback restarts.
-     * @param {boolean} reloadOrder.autoPlay - If `true` we will directly play
-     * once enough data is re-loaded.
-     * @param {Object|null} reloadOrder.mediaElement - The HTMLMediaElement on
-     *: reloadOrder.mediaElement which playback should play.
-     * If `null`, data will only be preloaded but not pushed to any real
-     * buffer. You can then trigger a "soft-reload" (@see `softReload`) with
-     * a given `HTMLMediaElement` to allow that pre-buffered data to be
-     * actually pushed to a media element in the future. This is how the
-     * "preloading" feature is implemented.
-     * @param {boolean} reloadOrder.softReload - If `true`, and if the current
-     * implementation permits it, we will try to keep the loaded data from the
-     * previous load iteration.
-     */
-    const onReloadMediaSource = (reloadOrder: {
-      position: number;
-      autoPlay: boolean;
-      mediaElement: IMediaElement | null;
-      softReload: boolean;
-    }): void => {
+    const onReloadMediaSource: IReloadMediaSourceCallback = (reloadOrder): void => {
       currentCanceller.cancel();
       if (this._initCanceller.isUsed()) {
         return;
@@ -583,12 +583,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           });
       };
 
-      if (!reloadOrder.softReload || this._preloadInfo === null) {
+      if (!reloadOrder.softReload || this._contentPreparationState === null) {
         this._textDisplayer?.reset();
         settings.segmentSinksStore.disposeAll();
         createMediaSourceAndLoad(null);
+      } else if (this._contentPreparationState.type === "preparing") {
+        this._contentPreparationState.promise.then(
+          () => {
+            if (this._initCanceller.isUsed()) {
+              return;
+            }
+            this._recursivelyLoadOnMediaSource(settings, currentCanceller);
+          },
+          (err) => {
+            this._onFatalError(err);
+          },
+        );
       } else {
-        const storedData = this._preloadInfo.mediaSourceInterface.getStoredData();
+        const storedData = this._contentPreparationState.mediaSourceInterface.getStoredData();
         createMediaSourceAndLoad(storedData);
       }
     };
@@ -608,12 +620,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _startBufferingOnMediaSource(
     args: IBufferingMediaSettings,
-    onReloadOrder: (reloadOrder: {
-      position: number;
-      autoPlay: boolean;
-      mediaElement: IMediaElement | null;
-      softReload: boolean;
-    }) => void,
+    onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
   ): void {
     const {
@@ -840,7 +847,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     );
 
     if (mediaSource instanceof FakeMediaSourceInterface) {
-      this._preloadInfo = {
+      if (this._contentPreparationState?.type === "preparing") {
+        this._contentPreparationState.resolve();
+      }
+      this._contentPreparationState = {
+        type: "preloaded",
         segmentSinksStore,
         playbackObserver,
         mediaSourceInterface: mediaSource,
@@ -1003,7 +1014,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         needsDecipherabilityFlush() {
           if (mediaElement === null) {
-            // XXX TODO
             return;
           }
           const keySystem = getKeySystemConfiguration(mediaElement);
@@ -1315,4 +1325,50 @@ function blackListProtectionDataOnManifest(
     }
     return rep.decipherable;
   });
+}
+
+/**
+ * Function to call when you want to "reload" the MediaSource: basically
+ * restarting playback on a new MediaSource for the same content (it may
+ * be for varied reasons, such as ensuring data buffers are empty, or
+ * restarting after some kind of fatal error).
+ * @param {Object} reloadOrder
+ * @param {number} reloadOrder.position - Position in seconds at which we
+ * should restart from when playback restarts.
+ * @param {boolean} reloadOrder.autoPlay - If `true` we will directly play
+ * once enough data is re-loaded.
+ * @param {Object|null} reloadOrder.mediaElement - The HTMLMediaElement on
+ *: reloadOrder.mediaElement which playback should play.
+ * If `null`, data will only be preloaded but not pushed to any real
+ * buffer. You can then trigger a "soft-reload" (@see `softReload`) with
+ * a given `HTMLMediaElement` to allow that pre-buffered data to be
+ * actually pushed to a media element in the future. This is how the
+ * "preparing" feature is implemented.
+ * @param {boolean} reloadOrder.softReload - If `true`, and if the current
+ * implementation permits it, we will try to keep the loaded data from the
+ * previous load iteration.
+ */
+type IReloadMediaSourceCallback = (reloadOrder: {
+  position: number;
+  autoPlay: boolean;
+  mediaElement: IMediaElement | null;
+  softReload: boolean;
+}) => void;
+
+interface IPreparingContentState {
+  type: "preparing";
+  promise: Promise<unknown>;
+  resolve: (x?: unknown) => void;
+  reject: (err: Error) => void;
+}
+
+interface IPreloadedContentState {
+  type: "preloaded";
+  segmentSinksStore: SegmentSinksStore;
+  mediaSourceInterface: FakeMediaSourceInterface;
+  playbackObserver: PlaybackObserver;
+  protectionRef: SharedReference<IContentProtection | null>;
+  initialTime: number;
+  autoPlay: boolean;
+  onReloadOrder: IReloadMediaSourceCallback;
 }

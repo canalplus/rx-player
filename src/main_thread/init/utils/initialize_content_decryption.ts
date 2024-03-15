@@ -54,7 +54,7 @@ export default function initializeContentDecryption(
   } else if (features.decrypt === null) {
     return createEmeDisabledReference("EME feature not activated.");
   } else if (mediaElement === null) {
-    // XXX TODO store instead?
+    // XXX TODO store through `protectionRef` instead?
     return createEmeDisabledReference("Preloading does not allow DRM for now");
   }
 
