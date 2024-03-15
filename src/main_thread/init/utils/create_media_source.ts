@@ -64,21 +64,20 @@ export function resetMediaElement(
  *
  * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
  * SourceBuffers are aborted and some minor cleaning is done.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLMediaElement|null} mediaElement
  * @param {Object} unlinkSignal
  * @returns {MediaSource}
  */
 function createMediaSource(
-  mediaElement: IMediaElement,
+  mediaElement: IMediaElement | null,
   unlinkSignal: CancellationSignal,
 ): MainMediaSourceInterface {
-  // make sure the media has been correctly reset
-  const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
-  resetMediaElement(mediaElement, oldSrc);
-  const mediaSource = new MainMediaSourceInterface(
-    generateMediaSourceId(),
-    "FORCED_MEDIA_SOURCE" in mediaElement ? mediaElement.FORCED_MEDIA_SOURCE : undefined,
-  );
+  if (mediaElement !== null) {
+    // make sure the media has been correctly reset
+    const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
+    resetMediaElement(mediaElement, oldSrc);
+  }
+  const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
   unlinkSignal.register(() => {
     mediaSource.dispose();
   });
@@ -91,16 +90,19 @@ function createMediaSource(
  *
  * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
  * SourceBuffers are aborted and some minor cleaning is done.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLMediaElement|null} mediaElement
  * @param {Object} unlinkSignal
  * @returns {Promise}
  */
 export default function openMediaSource(
-  mediaElement: IMediaElement,
+  mediaElement: IMediaElement | null,
   unlinkSignal: CancellationSignal,
 ): Promise<MainMediaSourceInterface> {
   return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
+    if (mediaElement === null) {
+      return Promise.resolve(mediaSource);
+    }
     mediaSource.addEventListener(
       "mediaSourceOpen",
       () => {

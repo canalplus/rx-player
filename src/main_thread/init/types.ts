@@ -85,7 +85,7 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * intervals.
    */
   public abstract start(
-    mediaElement: IReadOnlySharedReference<IMediaElement>,
+    mediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void;
 

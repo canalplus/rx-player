@@ -99,6 +99,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
+  private _preloadInfo: {
+    mediaSourceInterface: MainMediaSourceInterface;
+    protectionRef: SharedReference<IContentProtection | null>;
+    playbackObserver: IMediaElementPlaybackObserver;
+    currentMediaSourceCanceller: TaskCanceller;
+    canceller: TaskCanceller;
+  } | null;
+
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
    * settings.
@@ -115,146 +123,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       settings.transport,
       settings.manifestRequestSettings,
     );
+    this._preloadInfo = null;
   }
-
-  // public transfer(
-  //   mediaElement: IMediaElement,
-  //   playbackObserver: IMediaElementPlaybackObserver,
-  // ): void {
-  //   this.prepare(); // Load Manifest if not already done
-
-  //   /** Translate errors coming from the media element into RxPlayer errors. */
-  //   listenToMediaError(
-  //     mediaElement,
-  //     (error: MediaError) => this._onFatalError(error),
-  //     this._initCanceller.signal,
-  //   );
-
-  //   /** Send content protection initialization data to the decryption logic. */
-  //   const protectionRef = new SharedReference<IContentProtection | null>(
-  //     null,
-  //     this._initCanceller.signal,
-  //   );
-
-  //   this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
-  //     .then(({ mediaSource, drmSystemId, unlinkMediaSource }) => {
-  //       const {
-  //         adaptiveOptions,
-  //         autoPlay,
-  //         bufferOptions,
-  //         // lowLatencyMode,
-  //         segmentRequestOptions,
-  //         speed,
-  //         // startAt,
-  //         textTrackOptions,
-  //         transport,
-  //       } = this._settings;
-  //       const initCanceller = this._initCanceller;
-  //       assert(this._manifest !== null);
-
-  //       log.debug("Init: Calculating initial time");
-  //       // XXX TODO
-  //       const initialTime = 0;
-  //       // const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
-  //       log.debug("Init: Initial time calculated:", initialTime);
-
-  //       /** Choose the right "Representation" for a given "Adaptation". */
-  //       const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
-  //       const subBufferOptions = objectAssign(
-  //         { textTrackOptions, drmSystemId },
-  //         bufferOptions,
-  //       );
-
-  //       const segmentFetcherCreator = new SegmentFetcherCreator(
-  //         transport,
-  //         segmentRequestOptions,
-  //         initCanceller.signal,
-  //       );
-
-  //       if (initCanceller.isUsed()) {
-  //         return;
-  //       }
-
-  //       const bufferOnMediaSource = this._startBufferingOnMediaSource.bind(this);
-  //       const triggerEvent = this.trigger.bind(this);
-  //       const onFatalError = this._onFatalError.bind(this);
-
-  //       // handle initial load and reloads
-  //       recursivelyLoadOnMediaSource(
-  //         initialMediaSource,
-  //         initialTime,
-  //         autoPlay,
-  //         initialMediaSourceCanceller,
-  //       );
-
-  //       /**
-  //        * Load the content defined by the Manifest in the mediaSource given at the
-  //        * given position and playing status.
-  //        * This function recursively re-call itself when a MediaSource reload is
-  //        * wanted.
-  //        * @param {MediaSource} mediaSource
-  //        * @param {number} startingPos
-  //        * @param {Object} currentCanceller
-  //        * @param {boolean} shouldPlay
-  //        */
-  //       function recursivelyLoadOnMediaSource(
-  //         mediaSource: MainMediaSourceInterface,
-  //         startingPos: number,
-  //         shouldPlay: boolean,
-  //         currentCanceller: TaskCanceller,
-  //       ): void {
-  //         const opts = {
-  //           mediaElement,
-  //           playbackObserver,
-  //           mediaSource,
-  //           initialTime: startingPos,
-  //           autoPlay: shouldPlay,
-  //           manifest,
-  //           representationEstimator,
-  //           segmentFetcherCreator,
-  //           speed,
-  //           protectionRef,
-  //           bufferOptions: subBufferOptions,
-  //         };
-  //         bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
-
-  //         function onReloadMediaSource(reloadOrder: {
-  //           position: number;
-  //           autoPlay: boolean;
-  //         }): void {
-  //           currentCanceller.cancel();
-  //           if (initCanceller.isUsed()) {
-  //             return;
-  //           }
-  //           triggerEvent("reloadingMediaSource", reloadOrder);
-  //           if (initCanceller.isUsed()) {
-  //             return;
-  //           }
-
-  //           const newCanceller = new TaskCanceller();
-  //           newCanceller.linkToSignal(initCanceller.signal);
-  //           createMediaSource(mediaElement, newCanceller.signal)
-  //             .then((newMediaSource) => {
-  //               recursivelyLoadOnMediaSource(
-  //                 newMediaSource,
-  //                 reloadOrder.position,
-  //                 reloadOrder.autoPlay,
-  //                 newCanceller,
-  //               );
-  //             })
-  //             .catch((err) => {
-  //               if (newCanceller.isUsed()) {
-  //                 return;
-  //               }
-  //               onFatalError(err);
-  //             });
-  //         }
-  //       }
-  //     })
-  //     .catch((err) => {
-  //       this._onFatalError(err);
-  //     });
-  // }
 
   /**
    * Perform non-destructive preparation steps, to prepare a future content.
@@ -284,33 +154,143 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
   }
 
+  public attachMediaElement(mediaElement: IMediaElement) {
+    if (this._preloadInfo === null || this._manifest === null) {
+      throw new Error("This ContentInitializer was not preloading a content");
+    }
+    const preloadInfo = this._preloadInfo;
+    this._preloadInfo = null;
+    const { playbackObserver } = preloadInfo
+    const cancelSignal = preloadInfo.currentMediaSourceCanceller.signal;
+    preloadInfo.canceller.cancel();
+    listenToMediaError(
+      mediaElement,
+      (error: MediaError) => this._onFatalError(error),
+      this._initCanceller.signal,
+    );
+
+
+    // XXX TODO what if the "transfer" period is started **BEFORE** the
+    // preload's initial setup (i.e. creation of submodules like the
+    // `StreamOrchestrator` and so on) has finished?
+    //
+    // Maybe we should await for some loaded-type event in here?
+
+
+    Promise.all([
+      this._initializeMediaSourceAndDecryption(mediaElement, preloadInfo.protectionRef),
+      this._manifest.getValueAsAsync(),
+    ])
+      .then(([initResult, manifest]) => {
+        // XXX TODO transfer here?
+        log.warn(initResult.drmSystemId);
+
+        log.debug("Init: Calculating initial time");
+        const initialTime = getInitialTime(
+          manifest,
+          this._settings.lowLatencyMode,
+          this._settings.startAt,
+        );
+        log.debug("Init: Initial time calculated:", initialTime);
+
+        const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
+          {
+            mediaElement,
+            playbackObserver,
+            startTime: initialTime,
+            mustAutoPlay: this._settings.autoPlay,
+            onWarning: (err) => {
+              this.trigger("warning", err);
+            },
+            isDirectfile: false,
+          },
+          cancelSignal
+        );
+        initialPlayPerformed.onUpdate(
+          (isPerformed, stopListening) => {
+            if (isPerformed) {
+              stopListening();
+              if (mediaElement === null) {
+                return;
+              }
+              const streamEventsEmitter = new StreamEventsEmitter(
+                manifest,
+                mediaElement,
+                playbackObserver,
+              );
+              manifest.addEventListener(
+                "manifestUpdate",
+                () => {
+                  streamEventsEmitter.onManifestUpdate(manifest);
+                },
+                cancelSignal,
+              );
+              streamEventsEmitter.addEventListener(
+                "event",
+                (payload) => {
+                  this.trigger("streamEvent", payload);
+                },
+                cancelSignal,
+              );
+              streamEventsEmitter.addEventListener(
+                "eventSkip",
+                (payload) => {
+                  this.trigger("streamEventSkip", payload);
+                },
+                cancelSignal,
+              );
+              streamEventsEmitter.start();
+              cancelSignal.register(() => {
+                streamEventsEmitter.stop();
+              });
+            }
+          },
+          { clearSignal: cancelSignal, emitCurrentValue: true },
+        );
+        // this._onInitialMediaSourceReady(
+        //   mediaElement,
+        //   preloadInfo.mediaSourceInterface,
+        //   preloadInfo.playbackObserver,
+        //   initResult.drmSystemId,
+        //   preloadInfo.protectionRef,
+        //   initResult.unlinkMediaSource,
+        // );
+      })
+      .catch((err) => {
+        this._onFatalError(err);
+      });
+  }
+
   /**
-   * @param {Object} mediaElementRef
+   * @param {Object|null} mediaElement
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
+    mediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     this.prepare(); // Load Manifest if not already done
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElementRef,
-      (error: MediaError) => this._onFatalError(error),
-      this._initCanceller.signal,
-    );
+    if (mediaElement !== null) {
+      listenToMediaError(
+        mediaElement,
+        (error: MediaError) => this._onFatalError(error),
+        this._initCanceller.signal,
+      );
+    }
 
     /** Send content protection initialization data to the decryption logic. */
+    // HAS TO BE RE_DONE
     const protectionRef = new SharedReference<IContentProtection | null>(
       null,
       this._initCanceller.signal,
     );
 
-    this._initializeMediaSourceAndDecryption(mediaElementRef, protectionRef)
+    this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
-          mediaElementRef,
+          mediaElement,
           initResult.mediaSource,
           playbackObserver,
           initResult.drmSystemId,
@@ -346,8 +326,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this.trigger("error", err);
   }
 
+  /**
+   * @param {HTMLMediaElement|null} mediaElement
+   * @param {Object} protectionRef
+   */
   private _initializeMediaSourceAndDecryption(
-    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
+    mediaElement: IMediaElement | null,
     protectionRef: IReadOnlySharedReference<IContentProtection | null>,
   ): Promise<{
     mediaSource: MainMediaSourceInterface;
@@ -357,9 +341,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const initCanceller = this._initCanceller;
     return createCancellablePromise(initCanceller.signal, (resolve) => {
       const { keySystems } = this._settings;
-
-      // XXX TODO
-      const mediaElement = mediaElementRef.getValue();
 
       /** Initialize decryption capabilities. */
       const drmInitRef = initializeContentDecryption(
@@ -450,7 +431,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private async _onInitialMediaSourceReady(
-    mediaElementRef: IReadOnlySharedReference<IMediaElement>,
+    mediaElement: IMediaElement | null,
     initialMediaSource: MainMediaSourceInterface,
     playbackObserver: IMediaElementPlaybackObserver,
     drmSystemId: string | undefined,
@@ -544,7 +525,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       currentCanceller: TaskCanceller,
     ): void {
       const opts = {
-        mediaElement: mediaElementRef,
+        mediaElement,
         playbackObserver,
         mediaSource,
         initialTime: startingPos,
@@ -573,8 +554,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         const newCanceller = new TaskCanceller();
         newCanceller.linkToSignal(initCanceller.signal);
-        // XXX TODO
-        const mediaElement = mediaElementRef.getValue();
         createMediaSource(mediaElement, newCanceller.signal)
           .then((newMediaSource) => {
             recursivelyLoadOnMediaSource(
@@ -635,14 +614,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._settings.textTrackOptions.textTrackMode === "html" &&
       features.htmlTextDisplayer !== null
     ) {
-      textDisplayer = new features.htmlTextDisplayer(
-        // XXX TODO
-        mediaElement.getValue(),
-        this._settings.textTrackOptions.textTrackElement,
-      );
+      // XXX TODO
+      if (mediaElement !== null) {
+        textDisplayer = new features.htmlTextDisplayer(
+          mediaElement,
+          this._settings.textTrackOptions.textTrackElement,
+        );
+      }
     } else if (features.nativeTextDisplayer !== null) {
       // XXX TODO
-      textDisplayer = new features.nativeTextDisplayer(mediaElement.getValue());
+      if (mediaElement !== null) {
+        textDisplayer = new features.nativeTextDisplayer(mediaElement);
+      }
     }
     if (textDisplayer !== null) {
       const sender = new MainThreadTextDisplayerInterface(textDisplayer);
@@ -656,28 +639,32 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     /** Interface to create media buffers. */
     const segmentSinksStore = new SegmentSinksStore(
       mediaSource,
-      // XXX TODO
-      mediaElement.getValue().nodeName === "VIDEO",
+      mediaElement === null || mediaElement.nodeName === "VIDEO",
       textDisplayerInterface,
     );
     cancelSignal.register(() => {
       segmentSinksStore.disposeAll();
     });
 
-    const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
-      {
-        // XXX TODO
-        mediaElement: mediaElement.getValue(),
-        playbackObserver,
-        startTime: initialTime,
-        mustAutoPlay: autoPlay,
-        onWarning: (err) => {
-          this.trigger("warning", err);
-        },
-        isDirectfile: false,
-      },
-      cancelSignal,
-    );
+    const { autoPlayResult, initialPlayPerformed } =
+      mediaElement !== null
+        ? performInitialSeekAndPlay(
+            {
+              mediaElement,
+              playbackObserver,
+              startTime: initialTime,
+              mustAutoPlay: autoPlay,
+              onWarning: (err) => {
+                this.trigger("warning", err);
+              },
+              isDirectfile: false,
+            },
+            cancelSignal,
+          )
+        : {
+            autoPlayResult: Promise.resolve(true),
+            initialPlayPerformed: new SharedReference(true),
+          };
 
     if (cancelSignal.isCancelled()) {
       return;
@@ -687,10 +674,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       (isPerformed, stopListening) => {
         if (isPerformed) {
           stopListening();
+          if (mediaElement === null) {
+            return;
+          }
           const streamEventsEmitter = new StreamEventsEmitter(
             manifest,
-            // XXX TODO
-            mediaElement.getValue(),
+            mediaElement,
             playbackObserver,
           );
           manifest.addEventListener(
@@ -754,11 +743,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (lastObservation.position.isAwaitingFuturePosition()) {
             position = lastObservation.position.getWanted();
           } else {
-            position = playbackObserver.getCurrentTime();
+            position =
+              playbackObserver.getCurrentTime() ??
+              playbackObserver.getReference().getValue().position.getPolled();
           }
 
           const autoplay = initialPlayPerformed.getValue()
-            ? !playbackObserver.getIsPaused()
+            ? !(playbackObserver.getIsPaused() ?? !autoPlay)
             : autoPlay;
           onReloadOrder({ position, autoPlay: autoplay });
         }
@@ -802,7 +793,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     autoPlayResult
       .then(() => {
         // XXX TODO
-        getLoadedReference(playbackObserver, mediaElement.getValue(), false, cancelSignal).onUpdate(
+        if (mediaElement === null) {
+          return;
+        }
+        getLoadedReference(playbackObserver, mediaElement, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
@@ -841,7 +835,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return {
         needsBufferFlush: (payload?: INeedsBufferFlushPayload) => {
           let wantedSeekingTime: number;
-          const currentTime = playbackObserver.getCurrentTime();
+          const currentTime =
+            playbackObserver.getCurrentTime() ??
+            playbackObserver.getReference().getValue().position.getPolled();
           const relativeResumingPosition = payload?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(payload?.relativePosHasBeenDefaulted);
 
@@ -990,8 +986,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         },
 
         needsDecipherabilityFlush() {
-          // XXX TODO
-          const keySystem = getKeySystemConfiguration(mediaElement.getValue());
+          if (mediaElement === null) {
+            // XXX TODO
+            return;
+          }
+          const keySystem = getKeySystemConfiguration(mediaElement);
           if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
             const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition()
@@ -1009,9 +1008,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
             // simple seek close to the current position
             // to flush the buffers
-            if (position + 0.001 < lastObservation.duration) {
-              // XXX TODO
-              playbackObserver.setCurrentTime(mediaElement.getValue().currentTime + 0.001);
+            if (mediaElement !== null && position + 0.001 < lastObservation.duration) {
+              playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
             } else {
               playbackObserver.setCurrentTime(position);
             }
@@ -1144,7 +1142,7 @@ interface IBufferingMediaSettings {
   /* Manifest of the content we want to play. */
   manifest: IManifest;
   /** Media Element on which the content will be played. */
-  mediaElement: IReadOnlySharedReference<IMediaElement>;
+  mediaElement: IMediaElement | null;
   /** Emit playback conditions regularly. */
   playbackObserver: IMediaElementPlaybackObserver;
   /** Estimate the right Representation. */

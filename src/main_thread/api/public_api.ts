@@ -177,8 +177,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   public videoElement: IMediaElement | null; // null on dispose
 
-  private _videoElementRef: SharedReference<IMediaElement | null>;
-
   /** Logger the RxPlayer uses.  */
   public readonly log: Logger;
 
@@ -395,7 +393,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.state = "STOPPED";
     this.videoElement = videoElement;
     Player._priv_registerVideoElement(videoElement);
-    this._videoElementRef = new SharedReference<IMediaElement | null>(videoElement);
     const destroyCanceller = new TaskCanceller();
     this._destroyCanceller = destroyCanceller;
 
@@ -530,7 +527,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           sendBackLogs: isDebugModeEnabled(),
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
-          hasVideo: this._videoElementRef.getValue()?.nodeName.toLowerCase() === "video",
+          hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
           hasMseInWorker,
         },
       });
@@ -612,7 +609,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // free resources linked to the loaded content
     this.stop();
 
-    const mediaElement = this._videoElementRef.getValue();
+    const mediaElement = this.videoElement;
     if (mediaElement !== null) {
       Player._priv_deregisterVideoElement(mediaElement);
       // free resources used for decryption management
@@ -629,7 +626,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // un-attach video element
     this.videoElement = null;
-    this._videoElementRef.setValue(null);
 
     if (this._priv_worker !== null) {
       this._priv_worker.terminate();
@@ -749,7 +745,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       url,
     } = options;
 
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
 
     // Perform multiple checks on the given options
     if (videoElement === null) {
@@ -1228,7 +1224,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           // start playback!
           // XXX TODO
           initializer.start(
-            this._videoElementRef as SharedReference<IMediaElement>,
+            this.videoElement,
             playbackObserver,
           );
         }
@@ -1255,7 +1251,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   /* eslint-disable @typescript-eslint/ban-types */
   getVideoElement(): HTMLMediaElement | null {
-    return this._videoElementRef.getValue() as HTMLMediaElement | null;
+    return this.videoElement as HTMLMediaElement | null;
   }
   /* eslint-enable @typescript-eslint/ban-types */
 
@@ -1293,7 +1289,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * `false` otherwise.
    */
   isPaused(): boolean {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement) {
       if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
         return !this._priv_lastAutoPlay;
@@ -1376,7 +1372,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getMediaDuration(): number {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1390,7 +1386,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getCurrentBufferGap(): number {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1419,7 +1415,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getWallClockTime(): number {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1453,7 +1449,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getPosition(): number {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1592,7 +1588,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Promise}
    */
   play(): Promise<void> {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1616,7 +1612,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Pause the current video.
    */
   pause(): void {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1635,7 +1631,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       | { position: number }
       | { wallClockTime: number },
   ): number {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1699,7 +1695,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Number}
    */
   getVolume(): number {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1711,7 +1707,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Number} volume
    */
   setVolume(volume: number): void {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1726,14 +1722,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Boolean}
    */
   isMute(): boolean {
-    return this._videoElementRef.getValue()?.muted === true;
+    return this.videoElement?.muted === true;
   }
 
   /**
    * Mute audio.
    */
   mute(): void {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1746,7 +1742,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Unmute audio.
    */
   unMute(): void {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -1844,7 +1840,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {Object|null}
    */
   getKeySystemConfiguration(): IKeySystemConfigurationOutput | null {
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (videoElement === null) {
       throw new Error("Disposed player");
     }
@@ -2322,7 +2318,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
 
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (isDirectFile) {
       if (videoElement === null) {
         throw new Error("Disposed player");
@@ -2439,14 +2435,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     // DRM-related clean-up
     const freeUpContentLock = () => {
-      if (this._videoElementRef.getValue() !== null) {
+      if (this.videoElement !== null) {
         // If not disposed
         log.debug("Unlocking `contentLock`. Next content can begin.");
         this._priv_contentLock.setValue(false);
       }
     };
 
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (!isNullOrUndefined(videoElement)) {
       clearOnStop(videoElement).then(
         () => {
@@ -2999,7 +2995,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           : observation.bufferGap,
     };
 
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     if (manifest !== null && manifest.isLive && observation.position.getPolled() > 0) {
       const ast = manifest.availabilityStartTime ?? 0;
       positionData.wallClockTime = observation.position.getPolled() + ast;
@@ -3042,7 +3038,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       features.directfile !== null,
       "Initializing `MediaElementTracksStore` without Directfile feature",
     );
-    const videoElement = this._videoElementRef.getValue();
+    const videoElement = this.videoElement;
     assert(
       videoElement !== null,
       "Initializing `MediaElementTracksStore` on a disposed RxPlayer",

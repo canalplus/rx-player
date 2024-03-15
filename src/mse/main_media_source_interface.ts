@@ -45,13 +45,13 @@ export default class MainMediaSourceInterface
    * Note: A `MainMediaSourceInterface`'s handle is never `undefined`.
    * It can thus always be relied on when linking it to an `HTMLMediaElement`.
    */
-  public handle: IMediaSourceHandle;
+  public handle: IMediaSourceHandle | undefined;
   /** @see IMediaSourceInterface */
   public sourceBuffers: MainSourceBufferInterface[];
   /** @see IMediaSourceInterface */
   public readyState: "open" | "closed" | "ended" | "transfer";
   /** The MSE `MediaSource` instance linked to that `IMediaSourceInterface`. */
-  private _mediaSource: IMediaSource;
+  private _mediaSource: IMediaSource | null;
   /**
    * Abstraction allowing to set and update the MediaSource's duration.
    */
@@ -79,30 +79,38 @@ export default class MainMediaSourceInterface
    *
    * You can then obtain a link to that `MediaSource`, for example to link it
    * to an `HTMLMediaElement`, through the `handle` property.
+   *
+   * @param {string} id
+   * @param {boolean} [noMediaSource=true]
    */
-  constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
+  constructor(id: string, noMediaSource: boolean = true) {
     super();
     this.id = id;
     this.sourceBuffers = [];
     this._currentMediaSourceCanceller = new TaskCanceller();
 
-    if (isNullOrUndefined(MediaSource_)) {
-      throw new MediaError(
-        "MEDIA_SOURCE_NOT_SUPPORTED",
-        "No MediaSource Object was found in the current browser.",
-      );
-    }
+    if (!noMediaSource) {
+      if (isNullOrUndefined(MediaSource_)) {
+        throw new MediaError(
+          "MEDIA_SOURCE_NOT_SUPPORTED",
+          "No MediaSource Object was found in the current browser.",
+        );
+      }
 
-    log.info("Init: Creating MediaSource");
-    const mediaSource =
-      forcedMediaSource !== undefined ? new forcedMediaSource() : new MediaSource_();
-    const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
-    this.handle = isNullOrUndefined(handle)
-      ? /* eslint-disable-next-line @typescript-eslint/ban-types */
+      log.info("Init: Creating MediaSource");
+      const mediaSource = new MediaSource_();
+      const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
+      this.handle = isNullOrUndefined(handle)
+        ? /* eslint-disable-next-line @typescript-eslint/ban-types */
         { type: "media-source", value: mediaSource as unknown as MediaSource }
-      : { type: "handle", value: handle };
-    this._mediaSource = mediaSource;
-    this.readyState = mediaSource.readyState;
+          : { type: "handle", value: handle };
+      this._mediaSource = mediaSource;
+      this.readyState = mediaSource.readyState;
+    } else {
+      this.handle = undefined;
+      this._mediaSource = null;
+      this.readyState = "closed";
+    }
     this._durationUpdater = new MediaSourceDurationUpdater(mediaSource);
     this._endOfStreamCanceller = null;
     this._lastDurationSetting = null;
