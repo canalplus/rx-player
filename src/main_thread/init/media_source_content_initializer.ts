@@ -113,10 +113,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     | ILoadedContentMetadata
     | null;
 
-  // XXX TODO less ugly way of storing those
-  private _textDisplayer: ITextDisplayer | null;
-  private _textDisplayerInterface: ITextDisplayerInterface | null;
-
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
    * settings.
@@ -129,8 +125,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
     this._contentMetadata = null;
-    this._textDisplayer = null;
-    this._textDisplayerInterface = null;
     const urls = settings.url === undefined ? undefined : [settings.url];
     this._manifestFetcher = new ManifestFetcher(
       urls,
@@ -503,42 +497,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
 
-    let textDisplayerInterface: ITextDisplayerInterface | null = null;
-    let textDisplayer: ITextDisplayer | null = null;
-    if (
-      this._initSettings.textTrackOptions.textTrackMode === "html" &&
-      features.htmlTextDisplayer !== null
-    ) {
-      // XXX TODO
-      if (mediaElement !== null) {
-        textDisplayer = new features.htmlTextDisplayer(
-          mediaElement,
-          this._initSettings.textTrackOptions.textTrackElement,
-        );
-      }
-    } else if (features.nativeTextDisplayer !== null) {
-      // XXX TODO
-      if (mediaElement !== null) {
-        textDisplayer = new features.nativeTextDisplayer(mediaElement);
-      }
-    }
-    if (textDisplayer !== null) {
-      const sender = new MainThreadTextDisplayerInterface(textDisplayer);
-      textDisplayerInterface = sender;
-      this._textDisplayerInterface = sender;
-      initCanceller.signal.register(() => {
-        sender.stop();
-        textDisplayer?.stop();
-      });
-    }
-
-    /** Interface to create media buffers. */
-    const segmentSinksStore = new SegmentSinksStore(
-      initialMediaSource,
-      mediaElement === null || mediaElement.nodeName === "VIDEO",
-      textDisplayerInterface,
-    );
-
     // handle initial load and reloads
     this._recursivelyLoadOnMediaSource(
       {
@@ -554,7 +512,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         protectionRef,
         bufferOptions: subBufferOptions,
       },
-      segmentSinksStore,
+      null,
       initialMediaSourceCanceller,
     );
   }
@@ -564,14 +522,50 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * given position and playing status.
    * This function recursively re-call itself when a MediaSource reload is
    * wanted.
-   * @param {options} settings
-   * @param {Object} currentCanceller
+   * @param {options} settings - General information needed to begin loading a
+   * content.
+   * @param {Object|null} reUsedModules - Optional modules to start with on next
+   * load. This is usually not needed when calling this method outside of it
+   * (this is mostly used in recursion use cases).
+   * @param {Object} currentCanceller - When that TaskCanceller is activated,
+   * any load operation performed by this method will be cancelled and its
+   * resources cleaned up.
    */
   private _recursivelyLoadOnMediaSource(
-    settings: IBufferingMediaSettings,
-    segmentSinksStore: SegmentSinksStore,
+    settings: Omit<IBufferingMediaSettings, "segmentSinksStore" | "textDisplayer">,
+    reUsedModules: {
+      segmentSinksStore: SegmentSinksStore;
+      textDisplayer: ITextDisplayer | null;
+    } | null,
     currentCanceller: TaskCanceller,
   ): void {
+    let textDisplayer: ITextDisplayer | null;
+    let segmentSinksStore: SegmentSinksStore;
+    if (reUsedModules !== null) {
+      segmentSinksStore = reUsedModules.segmentSinksStore;
+      textDisplayer = reUsedModules.textDisplayer;
+    } else {
+      let textDisplayerInterface: ITextDisplayerInterface | null = null;
+      textDisplayer = createTextDisplayer(
+        settings.mediaElement,
+        this._initSettings.textTrackOptions,
+      );
+      if (textDisplayer !== null) {
+        const sender = new MainThreadTextDisplayerInterface(textDisplayer);
+        textDisplayerInterface = sender;
+        // XXX TODO
+        this._initCanceller.signal.register(() => {
+          sender.stop();
+          textDisplayer?.stop();
+        });
+      }
+      segmentSinksStore = new SegmentSinksStore(
+        settings.mediaSource,
+        settings.mediaElement === null || settings.mediaElement.nodeName === "VIDEO",
+        textDisplayerInterface,
+      );
+    }
+
     const manifest = this._manifest?.syncValue;
     if (isNullOrUndefined(manifest)) {
       throw new Error("Loading on MediaSource before a Manifest is fetched");
@@ -597,33 +591,36 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
       mediaSourceCreation
         .then((newMediaSource) => {
-          const newSettings: IBufferingMediaSettings = {
+          const newSettings: Omit<
+            IBufferingMediaSettings,
+            "segmentSinksStore" | "textDisplayer"
+          > = {
             ...settings,
             mediaElement: reloadOrder.mediaElement,
             mediaSource: newMediaSource,
             initialTime: reloadOrder.position,
             autoPlay: reloadOrder.autoPlay,
           };
-          let newSegmentSinksStore;
-          if (reloadOrder.softReload && newMediaSource !== null) {
+
+          if (!reloadOrder.softReload || newMediaSource === null) {
+            segmentSinksStore.disposeAll();
+            this._recursivelyLoadOnMediaSource(newSettings, null, newCanceller);
+          } else {
+            if (textDisplayer !== null && settings.mediaElement !== null) {
+              textDisplayer?.attachMediaElement(settings.mediaElement);
+            }
             segmentSinksStore
               .attachMediaSource(newMediaSource)
               .catch((err) => this._onFatalError(err));
-            newSegmentSinksStore = segmentSinksStore;
-          } else {
-            segmentSinksStore.disposeAll();
-            newSegmentSinksStore = new SegmentSinksStore(
-              newMediaSource,
-              reloadOrder.mediaElement === null ||
-                reloadOrder.mediaElement.nodeName === "VIDEO",
-              this._textDisplayerInterface,
+            this._recursivelyLoadOnMediaSource(
+              newSettings,
+              {
+                segmentSinksStore,
+                textDisplayer,
+              },
+              newCanceller,
             );
           }
-          this._recursivelyLoadOnMediaSource(
-            newSettings,
-            newSegmentSinksStore,
-            newCanceller,
-          );
         })
         .catch((err) => {
           if (newCanceller.isUsed()) {
@@ -634,8 +631,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     };
 
     this._startBufferingOnMediaSource(
-      settings,
-      segmentSinksStore,
+      { ...settings, segmentSinksStore, textDisplayer },
       onReloadMediaSource,
       currentCanceller.signal,
     );
@@ -649,7 +645,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _startBufferingOnMediaSource(
     args: IBufferingMediaSettings,
-    segmentSinksStore: SegmentSinksStore,
     onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
   ): void {
@@ -664,7 +659,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       protectionRef,
       representationEstimator,
       segmentFetcherCreator,
+      segmentSinksStore,
       speed,
+      textDisplayer,
     } = args;
 
     const initialPeriod =
@@ -749,7 +746,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         autoPlay,
         manifest,
         mediaSource,
-        textDisplayer: this._textDisplayer,
+        textDisplayer,
         initialPlayPerformed,
         speed,
       },
@@ -1265,6 +1262,23 @@ interface IBufferingMediaSettings {
   initialTime: number;
   /** If `true` it should automatically play once enough data is loaded. */
   autoPlay: boolean;
+  segmentSinksStore: SegmentSinksStore;
+  textDisplayer: ITextDisplayer | null;
+}
+
+function createTextDisplayer(
+  mediaElement: IMediaElement | null,
+  textTrackOptions: ITextDisplayerOptions,
+): ITextDisplayer | null {
+  if (textTrackOptions.textTrackMode === "html" && features.htmlTextDisplayer !== null) {
+    return new features.htmlTextDisplayer(
+      mediaElement,
+      textTrackOptions.textTrackElement,
+    );
+  } else if (features.nativeTextDisplayer !== null) {
+    return new features.nativeTextDisplayer(mediaElement);
+  }
+  return null;
 }
 
 /**
@@ -1395,12 +1409,12 @@ interface IPreparingContentMetadata {
 
 interface IPreloadedContentMetadata {
   type: "preloaded";
-  segmentSinksStore: SegmentSinksStore;
+  autoPlay: boolean;
+  initialTime: number;
+  onReloadOrder: IReloadMediaSourceCallback;
   playbackObserver: PlaybackObserver;
   protectionRef: SharedReference<IContentProtection | null>;
-  initialTime: number;
-  autoPlay: boolean;
-  onReloadOrder: IReloadMediaSourceCallback;
+  segmentSinksStore: SegmentSinksStore;
 }
 
 interface ILoadedContentMetadata {

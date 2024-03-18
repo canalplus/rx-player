@@ -301,7 +301,7 @@ const PlayerModule = declareModule(
       loadPreload(preloadId: string) {
         player.startPreload(preloadId);
         const preloads = state.get("preloads");
-        const index = preloads.findIndex(p => p.id === preloadId);
+        const index = preloads.findIndex((p) => p.id === preloadId);
         if (index >= 0) {
           preloads.splice(index, 1);
         }
@@ -479,13 +479,15 @@ const PlayerModule = declareModule(
 
     function attachMultithread(player: RxPlayer) {
       hasAttachedMultithread = true;
-      player.attachWorker({
-        workerUrl: "./worker.js",
-        dashWasmUrl: "./mpd-parser.wasm",
-      }).catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error("Failed to initialize worker", err);
-      });
+      player
+        .attachWorker({
+          workerUrl: "./worker.js",
+          dashWasmUrl: "./mpd-parser.wasm",
+        })
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error("Failed to initialize worker", err);
+        });
     }
   },
 );

@@ -845,7 +845,7 @@ function ContentList({
             className="choice-input-button load-button"
             ariaLabel="Preload the selected content now"
             onClick={onClickPreload}
-            value={String.fromCharCode(0x2B07)}
+            value={String.fromCharCode(0x2b07)}
             disabled={false}
           />
         </div>

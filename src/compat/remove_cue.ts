@@ -15,6 +15,7 @@
  */
 
 import log from "../log";
+import type { ICompatVTTCue } from "./browser_compatibility_types";
 import { isFirefox } from "./browser_detection";
 
 /**
@@ -23,7 +24,7 @@ import { isFirefox } from "./browser_detection";
  * @param {TextTrackCue} cue
  * @returns {boolean}
  */
-function isActiveCue(track: TextTrack, cue: TextTrackCue): boolean {
+function isActiveCue(track: TextTrack, cue: TextTrackCue | ICompatVTTCue): boolean {
   const { activeCues } = track;
   if (activeCues === null) {
     return false;
@@ -41,7 +42,10 @@ function isActiveCue(track: TextTrack, cue: TextTrackCue): boolean {
  * @param {TextTrack} track
  * @param {TextTrackCue} cue
  */
-export default function removeCue(track: TextTrack, cue: TextTrackCue): void {
+export default function removeCue(
+  track: TextTrack,
+  cue: TextTrackCue | ICompatVTTCue,
+): void {
   // On Firefox, cue doesn't dissapear when it is removed from track. Track
   // should be hidden, and shown again after removing cue, in order to
   // definitely clean the cue.
@@ -49,7 +53,7 @@ export default function removeCue(track: TextTrack, cue: TextTrackCue): void {
     const trackMode = track.mode;
     track.mode = "hidden";
     try {
-      track.removeCue(cue);
+      track.removeCue(cue as TextTrackCue);
     } catch (err) {
       log.warn("Compat: Could not remove cue from text track.");
     }
@@ -57,7 +61,7 @@ export default function removeCue(track: TextTrack, cue: TextTrackCue): void {
     return;
   }
   try {
-    track.removeCue(cue);
+    track.removeCue(cue as TextTrackCue);
   } catch (err) {
     log.warn("Compat: Could not remove cue from text track.");
   }

@@ -22,7 +22,11 @@ import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IBufferType, SegmentSink } from "./implementations";
-import { AudioVideoSegmentSink, DummySegmentSink, SegmentSinkOperation } from "./implementations";
+import {
+  AudioVideoSegmentSink,
+  DummySegmentSink,
+  SegmentSinkOperation,
+} from "./implementations";
 import type { ITextDisplayerInterface } from "./implementations/text";
 import TextSegmentSink from "./implementations/text";
 
@@ -108,11 +112,11 @@ export default class SegmentSinksStore {
     this._onNativeBufferAddedOrDisabled = [];
   }
 
-  public attachMediaSource(
-    mediaSource: IMediaSourceInterface
-  ): Promise<unknown> {
+  public attachMediaSource(mediaSource: IMediaSourceInterface): Promise<unknown> {
     if (this._mediaSource !== null) {
-      return Promise.reject(new Error("mediaSourceInterface already attached to SegmentSinksStore"));
+      return Promise.reject(
+        new Error("mediaSourceInterface already attached to SegmentSinksStore"),
+      );
     }
     this._mediaSource = mediaSource;
 
@@ -135,19 +139,24 @@ export default class SegmentSinksStore {
       const data = prevSegmentSink.getStoredData();
       const segmentSink = this.createSegmentSink(segmentSinkType, data.codec ?? "");
       for (const initSegmentInfo of data.initSegments) {
-        segmentSink.declareInitSegment(initSegmentInfo.uniqueId, initSegmentInfo.initSegmentData);
+        segmentSink.declareInitSegment(
+          initSegmentInfo.uniqueId,
+          initSegmentInfo.initSegmentData,
+        );
       }
       for (const operation of data.operations) {
         switch (operation.type) {
           case SegmentSinkOperation.Push:
             proms.push(segmentSink.pushChunk(operation.value));
-             break;
+            break;
           case SegmentSinkOperation.Remove:
-            proms.push(segmentSink.removeBuffer(operation.value.start, operation.value.end));
-             break;
+            proms.push(
+              segmentSink.removeBuffer(operation.value.start, operation.value.end),
+            );
+            break;
           case SegmentSinkOperation.SignalSegmentComplete:
             proms.push(segmentSink.signalSegmentComplete(operation.value));
-             break;
+            break;
         }
       }
       prevSegmentSink.dispose();
