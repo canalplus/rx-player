@@ -203,8 +203,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   /**
    * Stop content and free all resources linked to this `ContentIntializer`.
    */
-  public dispose(): void {
+  public stop(): void {
     this._initCanceller.cancel();
+    this._initCanceller = new TaskCanceller();
     this.state = ContentInitializerState.Idle;
     this.trigger("stateChange", this.state);
   }

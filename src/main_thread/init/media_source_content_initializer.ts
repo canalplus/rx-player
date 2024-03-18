@@ -328,12 +328,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * Stop content and free all resources linked to this
    * `MediaSourceContentInitializer`.
    */
-  public dispose(): void {
+  public stop(): void {
     if (this._contentMetadata?.type === "preparing") {
       this._contentMetadata.reject(new Error("The content has been disposed"));
     }
     this._contentMetadata = null;
     this._initCanceller.cancel();
+    this._initCanceller = new TaskCanceller();
     this.state = ContentInitializerState.Idle;
     this.trigger("stateChange", this.state);
   }
