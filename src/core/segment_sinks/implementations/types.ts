@@ -114,7 +114,9 @@ export abstract class SegmentSink {
    * @param {Object} infos
    * @returns {Promise}
    */
-  public abstract pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[]>;
+  public abstract pushChunk(
+    infos: IPushChunkInfos<unknown>,
+  ): Promise<IRange[] | undefined>;
 
   /**
    * Remove buffered data.

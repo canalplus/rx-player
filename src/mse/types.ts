@@ -67,7 +67,7 @@ export interface ISourceBufferInterface {
   appendBuffer(
     data: BufferSource,
     params: ISourceBufferInterfaceAppendBufferParameters,
-  ): Promise<IRange[]>;
+  ): Promise<IRange[] | undefined>;
   /**
    * Remove media data present between the given start time in seconds and the
    * given end time in seconds.
@@ -88,7 +88,7 @@ export interface ISourceBufferInterface {
    * @param {number} end
    * @returns {Promise.<Array.<Object>>}
    */
-  remove(start: number, end: number): Promise<IRange[]>;
+  remove(start: number, end: number): Promise<IRange[] | undefined>;
   /** Abort all operations pending on the `SourceBuffer`. */
   abort(): void;
   /**
@@ -185,13 +185,21 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * /!\ May be known asynchronously after it is updated. You can rely on events
    * to be notified of its change.
    */
-  readyState: ReadyState;
+  readyState: "open" | "closed" | "ended";
   /**
    * Mean to link the underlying `MediaSource` to an `HTMLMediaElement`.
    *
-   * `undefined` if this `IMediaSourceInterface` cannot rely on MSE API
-   * directly to create a `MediaSource`, in which case it will have sent
-   * message by itself to the main thread for MediaSource creation.
+   * `undefined` if either:
+   *
+   *   - This `IMediaSourceInterface` cannot rely on MSE API directly to create
+   *     a `MediaSource`, in which case it will have sent message by itself to
+   *     the main thread for MediaSource creation.
+   *
+   *   - This `IMediaSourceInterface` does not rely for now on an actual
+   *     `MediaSource` instance as it is only preloading content.
+   *
+   * In both cases, data can still be buffered as usual on its underlying
+   * `SourceBufferInterface` instances.
    */
   handle: IMediaSourceHandle | undefined;
   /**

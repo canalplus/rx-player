@@ -78,12 +78,14 @@ const SyncOrAsync = {
    * @returns {Object}
    */
   createAsync<T>(val: Promise<T>): ISyncOrAsyncValue<T> {
-    let ret = null;
-    val.then((resolved) => {
+    let ret: T | null = null;
+    val.then((resolved: T) => {
       ret = resolved;
     }, noop);
     return {
-      syncValue: ret,
+      get syncValue(): T | null {
+        return ret;
+      },
       getValueAsAsync() {
         return val;
       },

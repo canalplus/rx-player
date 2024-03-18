@@ -52,7 +52,7 @@ import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
-import { ContentInitializer } from "./types";
+import { ContentInitializerState, ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import { resetMediaElement } from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
@@ -69,6 +69,8 @@ const generateContentId = idGenerator();
  * @class MultiThreadContentInitializer
  */
 export default class MultiThreadContentInitializer extends ContentInitializer {
+  public state: ContentInitializerState;
+
   /** Constructor settings associated to this `MultiThreadContentInitializer`. */
   private _settings: IInitializeArguments;
 
@@ -99,11 +101,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
+    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
+  }
+
+  public getState(): ContentInitializerState {
+    return this.state;
   }
 
   /**
@@ -183,6 +190,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
+
+    if (this.state === ContentInitializerState.Idle) {
+      this.state = ContentInitializerState.Preparing;
+      this.trigger("stateChange", this.state);
+    }
+  }
+
+  public attachMediaElement(_mediaElement: IMediaElement): void {
+    throw new Error("Content preloading not yet added in a multithread mode");
   }
 
   /**
@@ -204,13 +220,23 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {HTMLMediaElement} mediaElement
+   * @param {HTMLMediaElement|null} mediaElement
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: IMediaElement,
+    mediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
+    if (mediaElement === null) {
+      throw new Error(
+        "Cannot play or preload in multithread mode without a media element for now",
+      );
+    }
+    this.state = ContentInitializerState.Loading;
+    this.trigger("stateChange", this.state);
+    if (this._initCanceller.isUsed()) {
+      return;
+    }
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
       return;
@@ -1083,12 +1109,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
   }
 
-  public dispose(): void {
+  public stop(): void {
     this._initCanceller.cancel();
+    this._initCanceller = new TaskCanceller();
     if (this._currentContentInfo !== null) {
       this._currentContentInfo.mainThreadMediaSource?.dispose();
       this._currentContentInfo = null;
     }
+    this.state = ContentInitializerState.Idle;
+    this.trigger("stateChange", this.state);
   }
 
   private _onFatalError(err: unknown) {
