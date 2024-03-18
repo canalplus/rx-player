@@ -12,11 +12,6 @@ import type { IRange } from "../utils/ranges";
 import { convertToRanges } from "../utils/ranges";
 import TaskCanceller, { CancellationError } from "../utils/task_canceller";
 import type {
-  IFakeMediaSourceInterfaceInMemoryData,
-  IFakeSourceBufferBufferedOperation,
-} from "./fake_media_source_interface";
-import { FakeSourceBufferInterfaceOperationName } from "./fake_media_source_interface";
-import type {
   IMediaSourceHandle,
   IMediaSourceInterface,
   IMediaSourceInterfaceEvents,
@@ -118,15 +113,6 @@ export default class MainMediaSourceInterface
   private _onSourceClose(): void {
     this.readyState = this._mediaSource.readyState;
     this.trigger("mediaSourceClose", null);
-  }
-
-  public transferData(data: IFakeMediaSourceInterfaceInMemoryData): Promise<unknown> {
-    const proms: Array<Promise<unknown>> = [];
-    for (const sbData of data.sourceBuffers) {
-      const sourceBuffer = this.addSourceBuffer(sbData.type, sbData.codec);
-      proms.push(sourceBuffer.transfer(sbData.buffer));
-    }
-    return Promise.all(proms);
   }
 
   /** @see IMediaSourceInterface */
@@ -279,30 +265,6 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       }
     }
     this._performNextOperation();
-  }
-
-  public transfer(operations: IFakeSourceBufferBufferedOperation[]): Promise<unknown> {
-    if (this._isTransferring) {
-      throw new Error('SourceBufferInterface already "transfering"');
-    }
-
-    const proms: Array<Promise<unknown>> = [];
-    while (true) {
-      const operation = operations.shift();
-      if (operation === undefined) {
-        break;
-      }
-      if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
-        proms.push(this.appendBuffer(...operation.params));
-      } else {
-        proms.push(this.remove(...operation.params));
-      }
-    }
-
-    return Promise.all(proms).then(() => {
-      this._isTransferring = false;
-      this._onUpdateEnd();
-    });
   }
 
   /** @see ISourceBufferInterface */

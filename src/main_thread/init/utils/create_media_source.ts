@@ -17,7 +17,6 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import clearElementSrc from "../../../compat/clear_element_src";
 import log from "../../../log";
-import FakeMediaSourceInterface from "../../../mse/fake_media_source_interface";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import idGenerator from "../../../utils/id_generator";
@@ -81,10 +80,6 @@ function createMediaSource(
     mediaSource.dispose();
   });
   return mediaSource;
-}
-
-export function createFakeMediaSource(): FakeMediaSourceInterface {
-  return new FakeMediaSourceInterface(generateMediaSourceId());
 }
 
 /**

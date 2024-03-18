@@ -21,8 +21,6 @@ import type {
   ISourceBufferInterface,
   SourceBufferType,
 } from "../../../../mse";
-import type { IFakeSourceBufferBufferedOperation } from "../../../../mse/fake_media_source_interface";
-import { FakeSourceBufferInterfaceOperationName } from "../../../../mse/fake_media_source_interface";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
 import type {
@@ -106,38 +104,6 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     this._isTransferringData = false;
   }
 
-  /**
-   * @param {Object} previousSink
-   * @param {Array.<Object>} operations
-   * @returns {Promise}
-   */
-  public async transferSink(
-    previousSink: AudioVideoSegmentSink,
-    operations: IFakeSourceBufferBufferedOperation[],
-  ): Promise<void> {
-    this._segmentInventory = previousSink._segmentInventory;
-    this._isTransferringData = true;
-    const proms: Array<Promise<unknown>> = [];
-    while (true) {
-      const operation = operations.shift();
-      if (operation === undefined) {
-        break;
-      }
-      if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
-        proms.push(this._sourceBuffer.appendBuffer(...operation.params));
-      } else {
-        proms.push(this._sourceBuffer.remove(...operation.params));
-      }
-    }
-
-    try {
-      await Promise.all(proms);
-      this._isTransferringData = false;
-    } catch (err) {
-      this._isTransferringData = false;
-      throw err;
-    }
-  }
   public synchronizeInventory(ranges: IRange[]): void {
     if (!this._isTransferringData) {
       // The default implementation just use the SegmentInventory

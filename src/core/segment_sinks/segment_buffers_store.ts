@@ -18,12 +18,11 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaSourceInterface } from "../../mse";
 import { SourceBufferType } from "../../mse";
-import type { IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IBufferType, SegmentSink } from "./implementations";
-import { AudioVideoSegmentSink } from "./implementations";
+import { AudioVideoSegmentSink, DummySegmentSink, SegmentSinkOperation } from "./implementations";
 import type { ITextDisplayerInterface } from "./implementations/text";
 import TextSegmentSink from "./implementations/text";
 
@@ -68,7 +67,7 @@ export default class SegmentSinksStore {
   }
 
   /** MediaSource on which SourceBuffer objects will be attached. */
-  private _mediaSource: IMediaSourceInterface;
+  private _mediaSource: IMediaSourceInterface | null;
 
   /**
    * List of initialized and explicitely disabled SegmentSinks.
@@ -77,9 +76,9 @@ export default class SegmentSinksStore {
    * won't be needed when playing the current content.
    */
   private _initializedSegmentSinks: {
-    audio?: AudioVideoSegmentSink | undefined | null;
-    video?: AudioVideoSegmentSink | undefined | null;
-    text?: TextSegmentSink | null;
+    audio?: AudioVideoSegmentSink | DummySegmentSink | undefined | null;
+    video?: AudioVideoSegmentSink | DummySegmentSink | undefined | null;
+    text?: TextSegmentSink | DummySegmentSink | null;
   };
 
   /**
@@ -98,7 +97,7 @@ export default class SegmentSinksStore {
    * @constructor
    */
   constructor(
-    mediaSource: IMediaSourceInterface,
+    mediaSource: IMediaSourceInterface | null,
     hasVideo: boolean,
     textDisplayerInterface: ITextDisplayerInterface | null,
   ) {
@@ -109,35 +108,49 @@ export default class SegmentSinksStore {
     this._onNativeBufferAddedOrDisabled = [];
   }
 
-  /**
-   * Replace the `IMediaSourceInterface` instance linked to this
-   * `SegmentSinksStore` by a new one, while still keeping most of the current
-   * state.
-   *
-   * This is mainly useful when media content linked to this `SegmentSinksStore`
-   * has previously only been pre-loaded in-memory on a dummy MediaSource but is
-   * now playing on a real MediaSource.
-   *
-   * @param {Object} mediaSourceInterface
-   * @param {Object} sbInfo
-   * @returns {Promise}
-   */
-  public swapMediaSource(
-    mediaSourceInterface: IMediaSourceInterface,
-    sbInfo: IFakeMediaSourceInterfaceInMemoryData,
+  public attachMediaSource(
+    mediaSource: IMediaSourceInterface
   ): Promise<unknown> {
-    this._mediaSource = mediaSourceInterface;
-    const previousInitializedSb = this._initializedSegmentSinks;
-    this._initializedSegmentSinks = {};
-    const proms: Array<Promise<void>> = [];
+    if (this._mediaSource !== null) {
+      return Promise.reject(new Error("mediaSourceInterface already attached to SegmentSinksStore"));
+    }
+    this._mediaSource = mediaSource;
 
-    for (const sbData of sbInfo.sourceBuffers) {
-      const sbType = sbData.type === SourceBufferType.Audio ? "audio" : "video";
-      const prevSegmentSink = previousInitializedSb[sbType];
-      const segmentSink = this.createSegmentSink(sbType, sbData.codec);
-      if (!isNullOrUndefined(prevSegmentSink) && segmentSink instanceof AudioVideoSegmentSink) {
-        proms.push(segmentSink.transferSink(prevSegmentSink, sbData.buffer));
+    const initializedSegmentSinks: Array<[IBufferType, DummySegmentSink]> = [];
+    if (this._initializedSegmentSinks.video instanceof DummySegmentSink) {
+      initializedSegmentSinks.push(["video", this._initializedSegmentSinks.video]);
+    }
+    if (this._initializedSegmentSinks.audio instanceof DummySegmentSink) {
+      initializedSegmentSinks.push(["audio", this._initializedSegmentSinks.audio]);
+    }
+    if (this._initializedSegmentSinks.text instanceof DummySegmentSink) {
+      initializedSegmentSinks.push(["text", this._initializedSegmentSinks.text]);
+    }
+
+    this._initializedSegmentSinks = {};
+
+    const proms: Array<Promise<unknown>> = [];
+    for (const initializedItem of initializedSegmentSinks) {
+      const [segmentSinkType, prevSegmentSink] = initializedItem;
+      const data = prevSegmentSink.getStoredData();
+      const segmentSink = this.createSegmentSink(segmentSinkType, data.codec ?? "");
+      for (const initSegmentInfo of data.initSegments) {
+        segmentSink.declareInitSegment(initSegmentInfo.uniqueId, initSegmentInfo.initSegmentData);
       }
+      for (const operation of data.operations) {
+        switch (operation.type) {
+          case SegmentSinkOperation.Push:
+            proms.push(segmentSink.pushChunk(operation.value));
+             break;
+          case SegmentSinkOperation.Remove:
+            proms.push(segmentSink.removeBuffer(operation.value.start, operation.value.end));
+             break;
+          case SegmentSinkOperation.SignalSegmentComplete:
+            proms.push(segmentSink.signalSegmentComplete(operation.value));
+             break;
+        }
+      }
+      prevSegmentSink.dispose();
     }
     return Promise.all(proms);
   }
@@ -298,14 +311,21 @@ export default class SegmentSinksStore {
         }
         return memorizedSegmentSink;
       }
-      log.info("SB: Adding native SegmentSink with codec", codec);
-      const sourceBufferType =
-        bufferType === "audio" ? SourceBufferType.Audio : SourceBufferType.Video;
-      const nativeSegmentSink = new AudioVideoSegmentSink(
-        sourceBufferType,
-        codec,
-        this._mediaSource,
-      );
+
+      let nativeSegmentSink;
+      if (this._mediaSource === null) {
+        log.info("SB: Adding Dummy SegmentSink with codec", codec, bufferType);
+        nativeSegmentSink = new DummySegmentSink(bufferType, codec);
+      } else {
+        log.info("SB: Adding native SegmentSink with codec", codec, bufferType);
+        const sourceBufferType =
+          bufferType === "audio" ? SourceBufferType.Audio : SourceBufferType.Video;
+        nativeSegmentSink = new AudioVideoSegmentSink(
+          sourceBufferType,
+          codec,
+          this._mediaSource,
+        );
+      }
       this._initializedSegmentSinks[bufferType] = nativeSegmentSink;
       this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
       return nativeSegmentSink;
@@ -316,15 +336,20 @@ export default class SegmentSinksStore {
       return memorizedSegmentSink;
     }
 
-    let textSegmentSink: TextSegmentSink;
+    let textSegmentSink: TextSegmentSink | DummySegmentSink;
     if (bufferType === "text") {
-      log.info("SB: Creating a new text SegmentSink");
-      if (this._textInterface === null) {
-        throw new Error("HTML Text track feature not activated");
+      if (this._mediaSource === null) {
+        log.info("SB: Adding Dummy text SegmentSink", codec);
+        textSegmentSink = new DummySegmentSink(bufferType, codec);
+      } else {
+        log.info("SB: Creating a new text SegmentSink");
+        if (this._textInterface === null) {
+          throw new Error("HTML Text track feature not activated");
+        }
+        textSegmentSink = new TextSegmentSink(this._textInterface);
+        this._initializedSegmentSinks.text = textSegmentSink;
+        return textSegmentSink;
       }
-      textSegmentSink = new TextSegmentSink(this._textInterface);
-      this._initializedSegmentSinks.text = textSegmentSink;
-      return textSegmentSink;
     }
 
     log.error("SB: Unknown buffer type:", bufferType);
