@@ -25,7 +25,6 @@ import type { IFakeSourceBufferBufferedOperation } from "../../../../mse/fake_me
 import { FakeSourceBufferInterfaceOperationName } from "../../../../mse/fake_media_source_interface";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
-import type SegmentInventory from "../../inventory";
 import type {
   ICompleteSegmentInfo,
   IPushChunkInfos,
@@ -107,6 +106,11 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     this._isTransferringData = false;
   }
 
+  /**
+   * @param {Object} previousSink
+   * @param {Array.<Object>} operations
+   * @returns {Promise}
+   */
   public async transferSink(
     previousSink: AudioVideoSegmentSink,
     operations: IFakeSourceBufferBufferedOperation[],
@@ -140,27 +144,6 @@ export default class AudioVideoSegmentSink extends SegmentSink {
       this._segmentInventory.synchronizeBuffered(ranges);
     }
   }
-
-  // public transferData(
-  //   sourceBufferInterface: ISourceBufferInterface,
-  //   operations: IFakeSourceBufferBufferedOperation[]
-  // ): void {
-  //   this._sourceBuffer.dispose();
-  //   this._sourceBuffer = sourceBufferInterface;
-
-  //   const proms: Array<Promise<unknown>> = [];
-  //   while (true) {
-  //     const operation = operations.shift();
-  //     if (operation === undefined) {
-  //       break;
-  //     }
-  //     if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
-  //       proms.push(sourceBufferInterface.appendBuffer(...operation.params));
-  //     } else {
-  //       proms.push(sourceBufferInterface.remove(...operation.params));
-  //     }
-  //   }
-  // }
 
   /** @see SegmentSink */
   public declareInitSegment(uniqueId: string, initSegmentData: unknown): void {

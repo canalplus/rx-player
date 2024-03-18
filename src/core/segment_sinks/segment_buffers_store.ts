@@ -19,7 +19,6 @@ import log from "../../log";
 import type { IMediaSourceInterface } from "../../mse";
 import { SourceBufferType } from "../../mse";
 import type { IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
-// import { FakeSourceBufferInterfaceOperationName, IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -110,56 +109,38 @@ export default class SegmentSinksStore {
     this._onNativeBufferAddedOrDisabled = [];
   }
 
+  /**
+   * Replace the `IMediaSourceInterface` instance linked to this
+   * `SegmentSinksStore` by a new one, while still keeping most of the current
+   * state.
+   *
+   * This is mainly useful when media content linked to this `SegmentSinksStore`
+   * has previously only been pre-loaded in-memory on a dummy MediaSource but is
+   * now playing on a real MediaSource.
+   *
+   * @param {Object} mediaSourceInterface
+   * @param {Object} sbInfo
+   * @returns {Promise}
+   */
   public swapMediaSource(
-    mediaSource: IMediaSourceInterface,
-    data: IFakeMediaSourceInterfaceInMemoryData,
+    mediaSourceInterface: IMediaSourceInterface,
+    sbInfo: IFakeMediaSourceInterfaceInMemoryData,
   ): Promise<unknown> {
-    this._mediaSource = mediaSource;
+    this._mediaSource = mediaSourceInterface;
     const previousInitializedSb = this._initializedSegmentSinks;
     this._initializedSegmentSinks = {};
     const proms: Array<Promise<void>> = [];
 
-    for (const sbData of data.sourceBuffers) {
+    for (const sbData of sbInfo.sourceBuffers) {
       const sbType = sbData.type === SourceBufferType.Audio ? "audio" : "video";
       const prevSegmentSink = previousInitializedSb[sbType];
-      // const inventory =
-      //   isNullOrUndefined(prevSegmentSink) ? null : prevSegmentSink.segmentInventory;
       const segmentSink = this.createSegmentSink(sbType, sbData.codec);
       if (!isNullOrUndefined(prevSegmentSink) && segmentSink instanceof AudioVideoSegmentSink) {
         proms.push(segmentSink.transferSink(prevSegmentSink, sbData.buffer));
       }
-      // while (true) {
-      //   const operation = sbData.buffer.shift();
-      //   if (operation === undefined) {
-      //     break;
-      //   }
-      //   segmentSink.segmentInventory =
-      //     if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
-      //     proms.push(sourceBufferInterface.appendBuffer(...operation.params));
-      //   } else {
-      //     proms.push(sourceBufferInterface.remove(...operation.params));
-      //   }
-      // }
     }
     return Promise.all(proms);
   }
-
-  // public updateMediaSource(mediaSourceInterface: IMediaSourceInterface): void {
-  //   const videoSb = arrayFind(mediaSourceInterface.sourceBuffers, sbi => sbi.type === SourceBufferType.Video);
-  //   const audioSb = arrayFind(mediaSourceInterface.sourceBuffers, sbi => sbi.type === SourceBufferType.Audio);
-  //   if (videoSb !== undefined) {
-  //     this._initializedSegmentSinks.video?.updateSourceBuffer(videoSb);
-  //   } else {
-  //     this._initializedSegmentSinks.video?.dispose();
-  //     this._initializedSegmentSinks.video = undefined;
-  //   }
-  //   if (audioSb !== undefined) {
-  //     this._initializedSegmentSinks.audio?.updateSourceBuffer(audioSb);
-  //   } else {
-  //     this._initializedSegmentSinks.audio?.dispose();
-  //     this._initializedSegmentSinks.audio = undefined;
-  //   }
-  // }
 
   /**
    * Get all currently available buffer types.

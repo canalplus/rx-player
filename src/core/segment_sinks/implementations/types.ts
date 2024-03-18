@@ -15,8 +15,6 @@
  */
 
 import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
-// import type { ISourceBufferInterface } from "../../../mse";
-// import type { IFakeSourceBufferBufferedOperation } from "../../../mse/fake_media_source_interface";
 import type { IRange } from "../../../utils/ranges";
 import type {
   IBufferedChunk,
@@ -88,16 +86,6 @@ export abstract class SegmentSink {
   public abstract declareInitSegment(uniqueId: string, initSegmentData: unknown): void;
 
   public abstract freeInitSegment(uniqueId: string): void;
-
-  // public abstract transferData(
-  //   inventory: SegmentInventory,
-  //   operations: IFakeSourceBufferBufferedOperation[],
-  // ): void;
-  // public abstract transferInventory(inventory: SegmentInventory): void;
-  // public abstract transferData(
-  //   sourceBufferInterface: ISourceBufferInterface,
-  //   operations: IFakeSourceBufferBufferedOperation[]
-  // ): void;
 
   /**
    * Push a chunk of the media segment given to the attached buffer.

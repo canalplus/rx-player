@@ -399,7 +399,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               unlinkMediaSource: mediaSourceCanceller,
             });
           } else {
-            createMediaSource(mediaElement, null, mediaSourceCanceller.signal)
+            createMediaSource(mediaElement, mediaSourceCanceller.signal)
               .then((mediaSource) => {
                 const lastDrmStatus = drmInitRef.getValue();
                 if (lastDrmStatus.initializationState.type === "awaiting-media-link") {
@@ -594,7 +594,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       newCanceller.linkToSignal(this._initCanceller.signal);
 
       const createMediaSourceAndLoad = (
-        preload: IFakeMediaSourceInterfaceInMemoryData | null,
+        preloadedData: IFakeMediaSourceInterfaceInMemoryData | null,
       ) => {
         if (reloadOrder.mediaElement === null) {
           const newMediaSource = createFakeMediaSource();
@@ -620,7 +620,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           return;
         }
 
-        createMediaSource(reloadOrder.mediaElement, preload, newCanceller.signal)
+        createMediaSource(reloadOrder.mediaElement, newCanceller.signal)
           .then((newMediaSource) => {
             const newSettings: IBufferingMediaSettings = {
               ...settings,
@@ -630,10 +630,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               autoPlay: reloadOrder.autoPlay,
             };
             let newSegmentSinksStore;
-            if (preload !== null) {
-              newSegmentSinksStore = segmentSinksStore;
-              newSegmentSinksStore.swapMediaSource(newMediaSource, preload)
+            if (preloadedData !== null) {
+              segmentSinksStore.swapMediaSource(newMediaSource, preloadedData)
                 .catch(err => this._onFatalError(err));
+              newSegmentSinksStore = segmentSinksStore;
             } else {
               segmentSinksStore.disposeAll();
               newSegmentSinksStore = new SegmentSinksStore(

@@ -17,7 +17,6 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import clearElementSrc from "../../../compat/clear_element_src";
 import log from "../../../log";
-import type { IFakeMediaSourceInterfaceInMemoryData } from "../../../mse/fake_media_source_interface";
 import FakeMediaSourceInterface from "../../../mse/fake_media_source_interface";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
@@ -95,26 +94,20 @@ export function createFakeMediaSource(): FakeMediaSourceInterface {
  * When the given `unlinkSignal` emits, mediaElement.src is cleaned, MediaSource
  * SourceBuffers are aborted and some minor cleaning is done.
  * @param {HTMLMediaElement} mediaElement
- * @param {Array.<Object>} preloadData
  * @param {Object} unlinkSignal
  * @returns {Promise}
  */
 export default function openMediaSource(
   mediaElement: IMediaElement,
-  preloadData: IFakeMediaSourceInterfaceInMemoryData | null,
   unlinkSignal: CancellationSignal,
 ): Promise<MainMediaSourceInterface> {
-  return createCancellablePromise(unlinkSignal, (resolve, reject) => {
+  return createCancellablePromise(unlinkSignal, (resolve) => {
     const mediaSource = createMediaSource(mediaElement, unlinkSignal);
     mediaSource.addEventListener(
       "mediaSourceOpen",
       () => {
         log.info("Init: MediaSource opened");
-        if (preloadData !== null) {
-          mediaSource.transferData(preloadData).then(() => resolve(mediaSource), reject);
-        } else {
-          resolve(mediaSource);
-        }
+        resolve(mediaSource);
       },
       unlinkSignal,
     );
