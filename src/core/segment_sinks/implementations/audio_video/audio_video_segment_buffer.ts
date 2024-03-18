@@ -45,7 +45,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   public readonly bufferType: "audio" | "video";
 
   /** SourceBuffer implementation. */
-  private _sourceBuffer: ISourceBufferInterface;
+  private readonly _sourceBuffer: ISourceBufferInterface;
 
   /**
    * Queue of awaited buffer "operations".
@@ -78,8 +78,6 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    */
   private _initSegmentsMap: Map<string, BufferSource>;
 
-  private _isTransferringData: boolean;
-
   /**
    * @constructor
    * @param {string} bufferType
@@ -101,14 +99,6 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     this.codec = codec;
     this._initSegmentsMap = new Map();
     this._pendingOperations = [];
-    this._isTransferringData = false;
-  }
-
-  public synchronizeInventory(ranges: IRange[]): void {
-    if (!this._isTransferringData) {
-      // The default implementation just use the SegmentInventory
-      this._segmentInventory.synchronizeBuffered(ranges);
-    }
   }
 
   /** @see SegmentSink */
