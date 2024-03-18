@@ -62,7 +62,7 @@ import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
 import { getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
-import { ContentInitializer } from "./types";
+import { ContentInitializerState, ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import createMediaSource, { createFakeMediaSource } from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
@@ -87,8 +87,13 @@ import listenToMediaError from "./utils/throw_on_media_error";
  * @class MediaSourceContentInitializer
  */
 export default class MediaSourceContentInitializer extends ContentInitializer {
+  /**
+   * "State" in which the `ContentInitializer` is currently in.
+   * @see ContentInitializerState
+   */
+  public state: ContentInitializerState;
   /** Constructor settings associated to this `MediaSourceContentInitializer`. */
-  private _settings: IInitializeArguments;
+  private _initSettings: IInitializeArguments;
   /**
    * `TaskCanceller` allowing to abort everything that the
    * `MediaSourceContentInitializer` is doing.
@@ -103,13 +108,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    *   - `null` if the load task has not started yet.
    */
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
-
-  private _contentPreparationState:
-    | IPreparingContentState
-    | IPreloadedContentState
+  /** Metadata associated to the currently-loaded content, when available. */
+  private _contentMetadata:
+    | IPreparingContentMetadata
+    | IPreloadedContentMetadata
+    | ILoadedContentMetadata
     | null;
 
+  // XXX TODO less ugly way of storing those
   private _textDisplayer: ITextDisplayer | null;
+  private _textDisplayerInterface: ITextDisplayerInterface | null;
 
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
@@ -118,17 +126,28 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
-    this._settings = settings;
+    this.state = ContentInitializerState.Idle;
+    this._initSettings = settings;
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
+    this._contentMetadata = null;
+    this._textDisplayer = null;
+    this._textDisplayerInterface = null;
     const urls = settings.url === undefined ? undefined : [settings.url];
     this._manifestFetcher = new ManifestFetcher(
       urls,
       settings.transport,
       settings.manifestRequestSettings,
     );
-    this._contentPreparationState = null;
-    this._textDisplayer = null;
+  }
+
+  /**
+   * Returns the current state the `MediaSourceContentInitializer` is in.
+   * @see ContentInitializerState
+   * @returns {number}
+   */
+  public getState(): ContentInitializerState {
+    return this.state;
   }
 
   /**
@@ -136,7 +155,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * For now, this mainly mean loading the Manifest document.
    */
   public prepare(): void {
-    if (this._manifest !== null || this._contentPreparationState !== null) {
+    if (this._manifest !== null || this._contentMetadata !== null) {
       return;
     }
 
@@ -146,7 +165,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       resolve = res;
       reject = rej;
     });
-    this._contentPreparationState = {
+    this._contentMetadata = {
       type: "preparing",
       promise,
       resolve,
@@ -171,6 +190,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._initCanceller.signal.register(() => {
       this._manifestFetcher.dispose();
     });
+    if (this.state === ContentInitializerState.Idle) {
+      this.state = ContentInitializerState.Preparing;
+      this.trigger("stateChange", this.state);
+    }
   }
 
   /**
@@ -181,13 +204,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     initialMediaElement: IMediaElement | null,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
+    this.state =
+      initialMediaElement === null
+        ? ContentInitializerState.Preloading
+        : ContentInitializerState.Loading;
+    this.trigger("stateChange", this.state);
+    if (this._initCanceller.isUsed()) {
+      return;
+    }
+
     this.prepare(); // Load Manifest if not already done
 
     if (initialMediaElement !== null) {
-      if (this._contentPreparationState?.type === "preparing") {
-        this._contentPreparationState.resolve();
-      }
-      this._contentPreparationState = null;
       /** Translate errors coming from the media element into RxPlayer errors. */
       listenToMediaError(
         initialMediaElement,
@@ -219,14 +247,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       });
   }
 
+  /**
+   * In cases where it hasn't been provided to the `start` API (probably because
+   * you only wanted to pre-load the content), this API allows to "attach" the
+   * media element on which the content is played (and thus starting playback).
+   *
+   * @param {HTMLMediaElement} mediaElement
+   */
   public attachMediaElement(mediaElement: IMediaElement): void {
-    if (this._contentPreparationState === null) {
+    if (this._contentMetadata === null || this._contentMetadata.type === "loaded") {
       throw new Error("No content previously preloaded on that ContentInitializer");
     }
-    const currentState = this._contentPreparationState;
-
-    if (currentState.type === "preparing") {
-      currentState.promise.then(
+    const preparationMd = this._contentMetadata;
+    if (preparationMd.type === "preparing") {
+      preparationMd.promise.then(
         () => {
           if (this._initCanceller.isUsed()) {
             return;
@@ -239,15 +273,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       );
     } else {
       // TODO should be moved to the API-side?
-      currentState.playbackObserver.attachMediaElement(mediaElement);
+      preparationMd.playbackObserver.attachMediaElement(mediaElement);
       listenToMediaError(
         mediaElement,
         (error: MediaError) => this._onFatalError(error),
         this._initCanceller.signal,
       );
-      currentState.onReloadOrder({
-        position: currentState.initialTime,
-        autoPlay: currentState.autoPlay,
+      preparationMd.onReloadOrder({
+        position: preparationMd.initialTime,
+        autoPlay: preparationMd.autoPlay,
         mediaElement,
         softReload: true,
       });
@@ -265,14 +299,23 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._manifestFetcher.updateContentUrls(urls, refreshNow);
   }
 
+  /**
+   * Removes all resources taken by this `MediaSourceContentInitializer`.
+   */
   public dispose(): void {
-    if (this._contentPreparationState?.type === "preparing") {
-      this._contentPreparationState.reject(new Error("The content has been disposed"));
+    if (this._contentMetadata?.type === "preparing") {
+      this._contentMetadata.reject(new Error("The content has been disposed"));
     }
-    this._contentPreparationState = null;
+    this._contentMetadata = null;
     this._initCanceller.cancel();
+    this.state = ContentInitializerState.Idle;
+    this.trigger("stateChange", this.state);
   }
 
+  /**
+   * Callback called when an error interrupting playback arised.
+   * @param {*} err
+   */
   private _onFatalError(err: unknown) {
     if (this._initCanceller.isUsed()) {
       return;
@@ -282,8 +325,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
+   * Initialize decryption mechanisms if needed and begin creating and relying
+   * on the initial `MediaSourceInterface` for this content.
    * @param {HTMLMediaElement|null} mediaElement
    * @param {Object} protectionRef
+   * @returns {Promise.<Object>}
    */
   private _initializeMediaSourceAndDecryption(
     mediaElement: IMediaElement | null,
@@ -295,7 +341,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }> {
     const initCanceller = this._initCanceller;
     return createCancellablePromise(initCanceller.signal, (resolve) => {
-      const { keySystems } = this._settings;
+      const { keySystems } = this._initSettings;
 
       /** Initialize decryption capabilities. */
       const drmInitRef = initializeContentDecryption(
@@ -412,7 +458,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       startAt,
       textTrackOptions,
       transport,
-    } = this._settings;
+    } = this._initSettings;
     const initCanceller = this._initCanceller;
     assert(this._manifest !== null);
     let manifest: IManifest;
@@ -463,14 +509,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     let textDisplayerInterface: ITextDisplayerInterface | null = null;
     let textDisplayer: ITextDisplayer | null = null;
     if (
-      this._settings.textTrackOptions.textTrackMode === "html" &&
+      this._initSettings.textTrackOptions.textTrackMode === "html" &&
       features.htmlTextDisplayer !== null
     ) {
       // XXX TODO
       if (mediaElement !== null) {
         textDisplayer = new features.htmlTextDisplayer(
           mediaElement,
-          this._settings.textTrackOptions.textTrackElement,
+          this._initSettings.textTrackOptions.textTrackElement,
         );
       }
     } else if (features.nativeTextDisplayer !== null) {
@@ -482,6 +528,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (textDisplayer !== null) {
       const sender = new MainThreadTextDisplayerInterface(textDisplayer);
       textDisplayerInterface = sender;
+      this._textDisplayerInterface = sender;
       initCanceller.signal.register(() => {
         sender.stop();
         textDisplayer?.stop();
@@ -494,9 +541,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaElement === null || mediaElement.nodeName === "VIDEO",
       textDisplayerInterface,
     );
-    initCanceller.signal.register(() => {
-      segmentSinksStore.disposeAll();
-    });
 
     // handle initial load and reloads
     this._recursivelyLoadOnMediaSource(
@@ -512,8 +556,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         speed,
         protectionRef,
         bufferOptions: subBufferOptions,
-        segmentSinksStore,
       },
+      segmentSinksStore,
       initialMediaSourceCanceller,
     );
   }
@@ -528,6 +572,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _recursivelyLoadOnMediaSource(
     settings: IBufferingMediaSettings,
+    segmentSinksStore: SegmentSinksStore,
     currentCanceller: TaskCanceller,
   ): void {
     const manifest = this._manifest?.syncValue;
@@ -560,7 +605,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             initialTime: reloadOrder.position,
             autoPlay: reloadOrder.autoPlay,
           };
-          this._recursivelyLoadOnMediaSource(newSettings, newCanceller);
+
+          segmentSinksStore.disposeAll();
+          const newSegmentSinksStore = new SegmentSinksStore(
+            newMediaSource,
+            true,
+            this._textDisplayerInterface,
+          );
+          this._recursivelyLoadOnMediaSource(
+            newSettings,
+            newSegmentSinksStore,
+            newCanceller,
+          );
           return;
         }
 
@@ -573,7 +629,25 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               initialTime: reloadOrder.position,
               autoPlay: reloadOrder.autoPlay,
             };
-            this._recursivelyLoadOnMediaSource(newSettings, newCanceller);
+            let newSegmentSinksStore;
+            if (preload !== null) {
+              newSegmentSinksStore = segmentSinksStore;
+              newSegmentSinksStore.swapMediaSource(newMediaSource, preload)
+                .catch(err => this._onFatalError(err));
+            } else {
+              segmentSinksStore.disposeAll();
+              newSegmentSinksStore = new SegmentSinksStore(
+                newMediaSource,
+                reloadOrder.mediaElement === null ||
+                  reloadOrder.mediaElement.nodeName === "VIDEO",
+                this._textDisplayerInterface,
+              );
+            }
+            this._recursivelyLoadOnMediaSource(
+              newSettings,
+              newSegmentSinksStore,
+              newCanceller,
+            );
           })
           .catch((err) => {
             if (newCanceller.isUsed()) {
@@ -583,30 +657,44 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           });
       };
 
-      if (!reloadOrder.softReload || this._contentPreparationState === null) {
+      if (
+        !reloadOrder.softReload ||
+        this._contentMetadata === null ||
+        this._contentMetadata.type === "loaded"
+      ) {
         this._textDisplayer?.reset();
-        settings.segmentSinksStore.disposeAll();
+        if (this._contentMetadata?.type === "loaded") {
+          this._contentMetadata.value.segmentSinksStore.disposeAll();
+        }
         createMediaSourceAndLoad(null);
-      } else if (this._contentPreparationState.type === "preparing") {
-        this._contentPreparationState.promise.then(
+      } else if (this._contentMetadata.type === "preparing") {
+        this._contentMetadata.promise.then(
           () => {
             if (this._initCanceller.isUsed()) {
               return;
             }
-            this._recursivelyLoadOnMediaSource(settings, currentCanceller);
+            segmentSinksStore.disposeAll();
+            const newSegmentSinksStore = new SegmentSinksStore(
+              settings.mediaSource,
+              reloadOrder.mediaElement === null ||
+                reloadOrder.mediaElement.nodeName === "VIDEO",
+              this._textDisplayerInterface,
+            );
+            this._recursivelyLoadOnMediaSource(settings, newSegmentSinksStore, currentCanceller);
           },
           (err) => {
             this._onFatalError(err);
           },
         );
       } else {
-        const storedData = this._contentPreparationState.mediaSourceInterface.getStoredData();
+        const storedData = this._contentMetadata.mediaSourceInterface.getStoredData();
         createMediaSourceAndLoad(storedData);
       }
     };
 
     this._startBufferingOnMediaSource(
       settings,
+      segmentSinksStore,
       onReloadMediaSource,
       currentCanceller.signal,
     );
@@ -620,6 +708,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _startBufferingOnMediaSource(
     args: IBufferingMediaSettings,
+    segmentSinksStore: SegmentSinksStore,
     onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
   ): void {
@@ -634,7 +723,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       protectionRef,
       representationEstimator,
       segmentFetcherCreator,
-      segmentSinksStore,
       speed,
     } = args;
 
@@ -846,11 +934,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       cancelSignal,
     );
 
+    if (this._contentMetadata?.type === "preparing") {
+      this._contentMetadata.resolve();
+    }
     if (mediaSource instanceof FakeMediaSourceInterface) {
-      if (this._contentPreparationState?.type === "preparing") {
-        this._contentPreparationState.resolve();
-      }
-      this._contentPreparationState = {
+      this._contentMetadata = {
         type: "preloaded",
         segmentSinksStore,
         playbackObserver,
@@ -859,6 +947,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         initialTime,
         autoPlay,
         onReloadOrder,
+      };
+    } else {
+      this._contentMetadata = {
+        type: "loaded",
+        value: {
+          segmentSinksStore,
+        },
       };
     }
 
@@ -1228,8 +1323,6 @@ interface IBufferingMediaSettings {
   protectionRef: SharedReference<IContentProtection | null>;
   /** Abstraction over the `MediaSource` element on which the media will be buffered. */
   mediaSource: IMediaSourceInterface;
-  /** Abstraction allowing to push to the buffers and inspect the buffers' content. */
-  segmentSinksStore: SegmentSinksStore;
   /** The initial position to seek to in media time, in seconds. */
   initialTime: number;
   /** If `true` it should automatically play once enough data is loaded. */
@@ -1355,14 +1448,14 @@ type IReloadMediaSourceCallback = (reloadOrder: {
   softReload: boolean;
 }) => void;
 
-interface IPreparingContentState {
+interface IPreparingContentMetadata {
   type: "preparing";
   promise: Promise<unknown>;
   resolve: (x?: unknown) => void;
   reject: (err: Error) => void;
 }
 
-interface IPreloadedContentState {
+interface IPreloadedContentMetadata {
   type: "preloaded";
   segmentSinksStore: SegmentSinksStore;
   mediaSourceInterface: FakeMediaSourceInterface;
@@ -1371,4 +1464,11 @@ interface IPreloadedContentState {
   initialTime: number;
   autoPlay: boolean;
   onReloadOrder: IReloadMediaSourceCallback;
+}
+
+interface ILoadedContentMetadata {
+  type: "loaded";
+  value: {
+    segmentSinksStore: SegmentSinksStore;
+  };
 }

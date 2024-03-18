@@ -18,6 +18,8 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaSourceInterface } from "../../mse";
 import { SourceBufferType } from "../../mse";
+import type { IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
+// import { FakeSourceBufferInterfaceOperationName, IFakeMediaSourceInterfaceInMemoryData } from "../../mse/fake_media_source_interface";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -67,7 +69,7 @@ export default class SegmentSinksStore {
   }
 
   /** MediaSource on which SourceBuffer objects will be attached. */
-  private readonly _mediaSource: IMediaSourceInterface;
+  private _mediaSource: IMediaSourceInterface;
 
   /**
    * List of initialized and explicitely disabled SegmentSinks.
@@ -75,7 +77,11 @@ export default class SegmentSinksStore {
    * disabled. This means that the corresponding type (e.g. audio, video etc.)
    * won't be needed when playing the current content.
    */
-  private _initializedSegmentSinks: Partial<Record<IBufferType, SegmentSink | null>>;
+  private _initializedSegmentSinks: {
+    audio?: AudioVideoSegmentSink | undefined | null;
+    video?: AudioVideoSegmentSink | undefined | null;
+    text?: TextSegmentSink | null;
+  };
 
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
@@ -103,6 +109,57 @@ export default class SegmentSinksStore {
     this._initializedSegmentSinks = {};
     this._onNativeBufferAddedOrDisabled = [];
   }
+
+  public swapMediaSource(
+    mediaSource: IMediaSourceInterface,
+    data: IFakeMediaSourceInterfaceInMemoryData,
+  ): Promise<unknown> {
+    this._mediaSource = mediaSource;
+    const previousInitializedSb = this._initializedSegmentSinks;
+    this._initializedSegmentSinks = {};
+    const proms: Array<Promise<void>> = [];
+
+    for (const sbData of data.sourceBuffers) {
+      const sbType = sbData.type === SourceBufferType.Audio ? "audio" : "video";
+      const prevSegmentSink = previousInitializedSb[sbType];
+      // const inventory =
+      //   isNullOrUndefined(prevSegmentSink) ? null : prevSegmentSink.segmentInventory;
+      const segmentSink = this.createSegmentSink(sbType, sbData.codec);
+      if (!isNullOrUndefined(prevSegmentSink) && segmentSink instanceof AudioVideoSegmentSink) {
+        proms.push(segmentSink.transferSink(prevSegmentSink, sbData.buffer));
+      }
+      // while (true) {
+      //   const operation = sbData.buffer.shift();
+      //   if (operation === undefined) {
+      //     break;
+      //   }
+      //   segmentSink.segmentInventory =
+      //     if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
+      //     proms.push(sourceBufferInterface.appendBuffer(...operation.params));
+      //   } else {
+      //     proms.push(sourceBufferInterface.remove(...operation.params));
+      //   }
+      // }
+    }
+    return Promise.all(proms);
+  }
+
+  // public updateMediaSource(mediaSourceInterface: IMediaSourceInterface): void {
+  //   const videoSb = arrayFind(mediaSourceInterface.sourceBuffers, sbi => sbi.type === SourceBufferType.Video);
+  //   const audioSb = arrayFind(mediaSourceInterface.sourceBuffers, sbi => sbi.type === SourceBufferType.Audio);
+  //   if (videoSb !== undefined) {
+  //     this._initializedSegmentSinks.video?.updateSourceBuffer(videoSb);
+  //   } else {
+  //     this._initializedSegmentSinks.video?.dispose();
+  //     this._initializedSegmentSinks.video = undefined;
+  //   }
+  //   if (audioSb !== undefined) {
+  //     this._initializedSegmentSinks.audio?.updateSourceBuffer(audioSb);
+  //   } else {
+  //     this._initializedSegmentSinks.audio?.dispose();
+  //     this._initializedSegmentSinks.audio = undefined;
+  //   }
+  // }
 
   /**
    * Get all currently available buffer types.
@@ -278,15 +335,15 @@ export default class SegmentSinksStore {
       return memorizedSegmentSink;
     }
 
-    let segmentSink: SegmentSink;
+    let textSegmentSink: TextSegmentSink;
     if (bufferType === "text") {
       log.info("SB: Creating a new text SegmentSink");
       if (this._textInterface === null) {
         throw new Error("HTML Text track feature not activated");
       }
-      segmentSink = new TextSegmentSink(this._textInterface);
-      this._initializedSegmentSinks.text = segmentSink;
-      return segmentSink;
+      textSegmentSink = new TextSegmentSink(this._textInterface);
+      this._initializedSegmentSinks.text = textSegmentSink;
+      return textSegmentSink;
     }
 
     log.error("SB: Unknown buffer type:", bufferType);

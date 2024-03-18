@@ -32,6 +32,10 @@ export default class TextSegmentSink extends SegmentSink {
     this._sender.reset();
   }
 
+  public transferData(): void {
+    throw new Error("XXX TODO");
+  }
+
   /**
    * @param {string} uniqueId
    */

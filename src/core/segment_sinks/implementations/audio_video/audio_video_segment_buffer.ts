@@ -21,8 +21,11 @@ import type {
   ISourceBufferInterface,
   SourceBufferType,
 } from "../../../../mse";
+import type { IFakeSourceBufferBufferedOperation } from "../../../../mse/fake_media_source_interface";
+import { FakeSourceBufferInterfaceOperationName } from "../../../../mse/fake_media_source_interface";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
+import type SegmentInventory from "../../inventory";
 import type {
   ICompleteSegmentInfo,
   IPushChunkInfos,
@@ -45,7 +48,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   public readonly bufferType: "audio" | "video";
 
   /** SourceBuffer implementation. */
-  private readonly _sourceBuffer: ISourceBufferInterface;
+  private _sourceBuffer: ISourceBufferInterface;
 
   /**
    * Queue of awaited buffer "operations".
@@ -78,6 +81,8 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    */
   private _initSegmentsMap: Map<string, BufferSource>;
 
+  private _isTransferringData: boolean;
+
   /**
    * @constructor
    * @param {string} bufferType
@@ -99,7 +104,63 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     this.codec = codec;
     this._initSegmentsMap = new Map();
     this._pendingOperations = [];
+    this._isTransferringData = false;
   }
+
+  public async transferSink(
+    previousSink: AudioVideoSegmentSink,
+    operations: IFakeSourceBufferBufferedOperation[],
+  ): Promise<void> {
+    this._segmentInventory = previousSink._segmentInventory;
+    this._isTransferringData = true;
+    const proms: Array<Promise<unknown>> = [];
+    while (true) {
+      const operation = operations.shift();
+      if (operation === undefined) {
+        break;
+      }
+      if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
+        proms.push(this._sourceBuffer.appendBuffer(...operation.params));
+      } else {
+        proms.push(this._sourceBuffer.remove(...operation.params));
+      }
+    }
+
+    try {
+      await Promise.all(proms);
+      this._isTransferringData = false;
+    } catch (err) {
+      this._isTransferringData = false;
+      throw err;
+    }
+  }
+  public synchronizeInventory(ranges: IRange[]): void {
+    if (!this._isTransferringData) {
+      // The default implementation just use the SegmentInventory
+      this._segmentInventory.synchronizeBuffered(ranges);
+    }
+  }
+
+  // public transferData(
+  //   sourceBufferInterface: ISourceBufferInterface,
+  //   operations: IFakeSourceBufferBufferedOperation[]
+  // ): void {
+  //   this._sourceBuffer.dispose();
+  //   this._sourceBuffer = sourceBufferInterface;
+
+  //   const proms: Array<Promise<unknown>> = [];
+  //   while (true) {
+  //     const operation = operations.shift();
+  //     if (operation === undefined) {
+  //       break;
+  //     }
+  //     if (operation.operationName === FakeSourceBufferInterfaceOperationName.Push) {
+  //       proms.push(sourceBufferInterface.appendBuffer(...operation.params));
+  //     } else {
+  //       proms.push(sourceBufferInterface.remove(...operation.params));
+  //     }
+  //   }
+  // }
 
   /** @see SegmentSink */
   public declareInitSegment(uniqueId: string, initSegmentData: unknown): void {

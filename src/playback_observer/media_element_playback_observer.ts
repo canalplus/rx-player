@@ -150,13 +150,13 @@ export default class PlaybackObserver {
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
     this._canceller = new TaskCanceller();
-    this._observationRef = this._createSharedReference();
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
     this._observationIntervalId = null;
     if (mediaElement !== null) {
       this._registerLoadedMetadataEvent(mediaElement);
     }
+    this._observationRef = this._createSharedReference();
   }
 
   public attachMediaElement(mediaElement: IMediaElement): void {
@@ -556,7 +556,10 @@ export default class PlaybackObserver {
     if (this._observationIntervalId !== null) {
       clearInterval(this._observationIntervalId);
     }
-    this._observationIntervalId = setInterval(() => this._onInterval(), interval);
+    this._observationIntervalId = setInterval(
+      () => this._generateObservationForEvent("timeupdate"),
+      interval,
+    );
   }
 
   private _registerMediaElementEvents(mediaElement: IMediaElement): void {
@@ -578,10 +581,6 @@ export default class PlaybackObserver {
     this._canceller.signal.register(() => {
       mediaElement.removeEventListener("loadedmetadata", loadedmetadataCb);
     });
-  }
-
-  private _onInterval() {
-    this._generateObservationForEvent("timeupdate");
   }
 
   private _onLoadedMetadataEvent(): void {
