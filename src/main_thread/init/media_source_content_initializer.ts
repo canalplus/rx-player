@@ -83,7 +83,7 @@ import listenToMediaError from "./utils/throw_on_media_error";
  */
 export default class MediaSourceContentInitializer extends ContentInitializer {
   /** Constructor settings associated to this `MediaSourceContentInitializer`. */
-  private _settings: IInitializeArguments;
+  private _initSettings: IInitializeArguments;
   /**
    * `TaskCanceller` allowing to abort everything that the
    * `MediaSourceContentInitializer` is doing.
@@ -106,7 +106,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
-    this._settings = settings;
+    this._initSettings = settings;
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
     const urls = settings.url === undefined ? undefined : [settings.url];
@@ -217,7 +217,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }> {
     const initCanceller = this._initCanceller;
     return createCancellablePromise(initCanceller.signal, (resolve) => {
-      const { keySystems } = this._settings;
+      const { keySystems } = this._initSettings;
 
       /** Initialize decryption capabilities. */
       const drmInitRef = initializeContentDecryption(
@@ -325,7 +325,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       startAt,
       textTrackOptions,
       transport,
-    } = this._settings;
+    } = this._initSettings;
     const initCanceller = this._initCanceller;
     assert(this._manifest !== null);
     let manifest: IManifest;
@@ -488,12 +488,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     let textDisplayerInterface: ITextDisplayerInterface | null = null;
     let textDisplayer: ITextDisplayer | null = null;
     if (
-      this._settings.textTrackOptions.textTrackMode === "html" &&
+      this._initSettings.textTrackOptions.textTrackMode === "html" &&
       features.htmlTextDisplayer !== null
     ) {
       textDisplayer = new features.htmlTextDisplayer(
         mediaElement,
-        this._settings.textTrackOptions.textTrackElement,
+        this._initSettings.textTrackOptions.textTrackElement,
       );
     } else if (features.nativeTextDisplayer !== null) {
       textDisplayer = new features.nativeTextDisplayer(mediaElement);
