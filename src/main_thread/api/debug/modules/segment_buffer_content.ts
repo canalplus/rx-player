@@ -1,4 +1,4 @@
-import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_sinks_store";
 import type { IBufferType } from "../../../../core/types";
 import type {
   IAdaptationMetadata,
