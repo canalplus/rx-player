@@ -257,6 +257,9 @@ export default function AdaptationStream<T>(
       inbandEvent: callbacks.inbandEvent,
       warning: callbacks.warning,
       error(err : unknown) {
+        if (TaskCanceller.isCancellationError(err) && adapStreamCanceller.isUsed()) {
+          return;
+        }
         adapStreamCanceller.cancel();
         callbacks.error(err);
       },
