@@ -101,7 +101,11 @@ export default class SegmentSinksStore {
    * disabled. This means that the corresponding type (e.g. audio, video etc.)
    * won't be needed when playing the current content.
    */
-  private _initializedSegmentSinks: Partial<Record<IBufferType, SegmentSink | null>>;
+  private _initializedSegmentSinks: {
+    audio?: AudioVideoSegmentSink | undefined | null;
+    video?: AudioVideoSegmentSink | undefined | null;
+    text?: TextSegmentSink | null;
+  };
 
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
@@ -304,7 +308,7 @@ export default class SegmentSinksStore {
       return memorizedSegmentSink;
     }
 
-    let segmentSink: SegmentSink;
+    let segmentSink: TextSegmentSink;
     if (bufferType === "text") {
       log.info("SB: Creating a new text SegmentSink");
       if (this._textInterface === null) {
