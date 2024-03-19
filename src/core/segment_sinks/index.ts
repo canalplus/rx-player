@@ -38,7 +38,7 @@ import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
 } from "./inventory";
-import SegmentSinksStore from "./segment_buffers_store";
+import SegmentSinksStore from "./segment_sinks_store";
 
 export default SegmentSinksStore;
 export type {
