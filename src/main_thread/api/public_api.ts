@@ -32,7 +32,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
-import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,

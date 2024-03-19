@@ -4,7 +4,7 @@
  * multithread situation.
  */
 
-import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_sinks_store";
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
