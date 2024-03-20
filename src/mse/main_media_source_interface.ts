@@ -212,52 +212,8 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._operationQueue = [];
     this._currentOperations = [];
 
-    const onError = (evt: Event) => {
-      let error: Error;
-      if ((evt as unknown as Error) instanceof Error) {
-        error = evt as unknown as Error;
-      } else if ((evt as unknown as { error: Error }).error instanceof Error) {
-        error = (evt as unknown as { error: Error }).error;
-      } else {
-        error = new Error("Unknown SourceBuffer Error");
-      }
-      const currentOps = this._currentOperations;
-      this._currentOperations = [];
-      if (currentOps.length === 0) {
-        log.error("SBI: error for an unknown operation", error);
-      } else {
-        const rejected = new SourceBufferError(
-          error.name,
-          error.message,
-          error.name === "QuotaExceededError",
-        );
-        for (const op of currentOps) {
-          op.reject(rejected);
-        }
-      }
-    };
-    const onUpdateEnd = () => {
-      const currentOps = this._currentOperations;
-      this._currentOperations = [];
-      try {
-        for (const op of currentOps) {
-          op.resolve(convertToRanges(this._sourceBuffer.buffered));
-        }
-      } catch (err) {
-        for (const op of currentOps) {
-          if (err instanceof Error && err.name === "InvalidStateError") {
-            // Most likely the SourceBuffer just has been removed from the
-            // `MediaSource`.
-            // Just return an empty buffered range.
-            op.resolve([]);
-          } else {
-            op.reject(err);
-          }
-        }
-      }
-      this._performNextOperation();
-    };
-
+    const onError = this._onError.bind(this);
+    const onUpdateEnd = this._onUpdateEnd.bind(this);
     sourceBuffer.addEventListener("updateend", onUpdateEnd);
     sourceBuffer.addEventListener("error", onError);
     this._canceller.signal.register(() => {
@@ -323,6 +279,53 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // we don't care
     }
     this._emptyCurrentQueue();
+  }
+
+  private _onError(evt: Event) {
+    let error: Error;
+    if ((evt as unknown as Error) instanceof Error) {
+      error = evt as unknown as Error;
+    } else if ((evt as unknown as { error: Error }).error instanceof Error) {
+      error = (evt as unknown as { error: Error }).error;
+    } else {
+      error = new Error("Unknown SourceBuffer Error");
+    }
+    const currentOps = this._currentOperations;
+    this._currentOperations = [];
+    if (currentOps.length === 0) {
+      log.error("SBI: error for an unknown operation", error);
+    } else {
+      const rejected = new SourceBufferError(
+        error.name,
+        error.message,
+        error.name === "QuotaExceededError",
+      );
+      for (const op of currentOps) {
+        op.reject(rejected);
+      }
+    }
+  }
+
+  private _onUpdateEnd() {
+    const currentOps = this._currentOperations;
+    this._currentOperations = [];
+    try {
+      for (const op of currentOps) {
+        op.resolve(convertToRanges(this._sourceBuffer.buffered));
+      }
+    } catch (err) {
+      for (const op of currentOps) {
+        if (err instanceof Error && err.name === "InvalidStateError") {
+          // Most likely the SourceBuffer just has been removed from the
+          // `MediaSource`.
+          // Just return an empty buffered range.
+          op.resolve([]);
+        } else {
+          op.reject(err);
+        }
+      }
+    }
+    this._performNextOperation();
   }
 
   private _emptyCurrentQueue(): void {
