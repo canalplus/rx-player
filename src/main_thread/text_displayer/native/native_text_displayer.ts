@@ -158,24 +158,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   public reset(): void {
     log.debug("NTD: Aborting NativeTextDisplayer");
     this._removeData(0, Infinity);
-    const { _trackElement, _videoElement } = this;
-
-    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
-      try {
-        _videoElement.removeChild(_trackElement);
-      } catch (_e) {
-        log.warn("NTD: Can't remove track element from the video");
-      }
-    }
-
-    // Ugly trick to work-around browser bugs by refreshing its mode
-    const oldMode = this._track.mode;
-    this._track.mode = "disabled";
-    this._track.mode = oldMode;
-
-    if (this._trackElement !== undefined) {
-      this._trackElement.innerHTML = "";
-    }
+    this._clearTrackElement();
   }
 
   public stop(): void {
@@ -212,6 +195,27 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       }
     }
     this._buffered.remove(start, end);
+  }
+
+  private _clearTrackElement(): void {
+    const { _trackElement, _videoElement } = this;
+
+    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
+      try {
+        _videoElement.removeChild(_trackElement);
+      } catch (_e) {
+        log.warn("NTD: Can't remove track element from the video");
+      }
+    }
+
+    // Ugly trick to work-around browser bugs by refreshing its mode
+    const oldMode = this._track.mode;
+    this._track.mode = "disabled";
+    this._track.mode = oldMode;
+
+    if (this._trackElement !== undefined) {
+      this._trackElement.innerHTML = "";
+    }
   }
 }
 
