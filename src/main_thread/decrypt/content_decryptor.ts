@@ -877,6 +877,72 @@ function canCreatePersistentSession(
 }
 
 /**
+ * Return the list of key IDs present in the `expectedKeyIds` array
+ * but that are not present in `actualKeyIds`.
+ * @param {Uint8Array[]} expectedKeyIds - Array of key IDs expected to be found.
+ * @param {Uint8Array[]} actualKeyIds - Array of key IDs to test.
+ * @returns {Uint8Array[]} An array of key IDs that are missing from `actualKeyIds`.
+ */
+export function getMissingKeyIds(
+  expectedKeyIds: Uint8Array[],
+  actualKeyIds: Uint8Array[],
+): Uint8Array[] {
+  return expectedKeyIds.filter((expected) => {
+    return !actualKeyIds.some((actual) => areArraysOfNumbersEqual(actual, expected));
+  });
+}
+
+/**
+ * Returns an array of all key IDs that are known by the `KeySessionRecord`
+ * but are missing in the provided array of key IDs `newKeyIds`.
+ * @param {KeySessionRecord} keySessionRecord - The KeySessionRecord containing known key IDs.
+ * @param {Uint8Array[]} newKeyIds - Array of key IDs.
+ * @returns {Uint8Array[]} An array of key IDs that are known by the `keySessionRecord`
+ *                          but are missing in the license.
+ */
+export function getMissingKnownKeyIds(
+  keySessionRecord: KeySessionRecord,
+  newKeyIds: Uint8Array[],
+): Uint8Array[] {
+  const allKnownKeyIds = keySessionRecord.getAssociatedKeyIds();
+  const missingKeyIds = getMissingKeyIds(allKnownKeyIds, newKeyIds);
+  if (missingKeyIds.length > 0 && log.hasLevel("DEBUG")) {
+    log.debug(
+      "DRM: KeySessionRecord's keys missing in the license, blacklisting them",
+      missingKeyIds.map((m) => bytesToHex(m)).join(", "),
+    );
+  }
+  return missingKeyIds;
+}
+
+/**
+ * Returns an array of all key IDs that are present in InitData
+ * but are missing in the provided array of key IDs `newKeyIds`.
+ * @param {IProcessedProtectionData} initializationData - The initialization data containing key IDs.
+ * @param {Uint8Array[]} newKeyIds - Array of key IDs.
+ * @returns {Uint8Array[]} An array of key IDs that are present in initializationData
+ *                          but are missing in the license.
+ */
+export function getMissingInitDataKeyIds(
+  initializationData: IProcessedProtectionData,
+  newKeyIds: Uint8Array[],
+): Uint8Array[] {
+  let missingKeyIds: Uint8Array[] = [];
+  const { keyIds: expectedKeyIds } = initializationData;
+  if (expectedKeyIds !== undefined) {
+    missingKeyIds = getMissingKeyIds(expectedKeyIds, newKeyIds);
+  }
+
+  if (missingKeyIds.length > 0 && log.hasLevel("DEBUG")) {
+    log.debug(
+      "DRM: init data keys missing in the license, blacklisting them",
+      missingKeyIds.map((m) => bytesToHex(m)).join(", "),
+    );
+  }
+  return missingKeyIds;
+}
+
+/**
  * Returns set of all usable and unusable keys - explicit or implicit - that are
  * linked to a `MediaKeySession`.
  *
@@ -924,22 +990,10 @@ function getKeyIdsLinkedToSession(
    * Every key id associated with the MediaKeySession, starting with
    * whitelisted ones.
    */
-  const associatedKeyIds = [...usableKeyIds, ...unusableKeyIds];
+  const keyIdsInLicense = [...usableKeyIds, ...unusableKeyIds];
 
-  // Add all key ids associated to the `KeySessionRecord` yet not in
-  // `usableKeyIds` nor in `unusableKeyIds`
-  const allKnownKeyIds = keySessionRecord.getAssociatedKeyIds();
-  for (const kid of allKnownKeyIds) {
-    if (!associatedKeyIds.some((ak) => areArraysOfNumbersEqual(ak, kid))) {
-      if (log.hasLevel("DEBUG")) {
-        log.debug(
-          "DRM: KeySessionRecord's key missing in the license, blacklisting it",
-          bytesToHex(kid),
-        );
-      }
-      associatedKeyIds.push(kid);
-    }
-  }
+  const missingKnownKeyIds = getMissingKnownKeyIds(keySessionRecord, keyIdsInLicense);
+  const associatedKeyIds = keyIdsInLicense.concat(missingKnownKeyIds);
 
   if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
     // We want to add the current key ids in the blacklist if it is
@@ -955,22 +1009,13 @@ function getKeyIdsLinkedToSession(
     //      sure yet. Because in any other `singleLicensePer`, we
     //      need a good implementation anyway, it doesn't matter
     //      there.
-    const { keyIds: expectedKeyIds, content } = initializationData;
-    if (expectedKeyIds !== undefined) {
-      const missingKeyIds = expectedKeyIds.filter((expected) => {
-        return !associatedKeyIds.some((k) => areArraysOfNumbersEqual(k, expected));
-      });
-      if (missingKeyIds.length > 0) {
-        if (log.hasLevel("DEBUG")) {
-          log.debug(
-            "DRM: init data keys missing in the license, blacklisting them",
-            missingKeyIds.map((m) => bytesToHex(m)).join(", "),
-          );
-        }
-        associatedKeyIds.push(...missingKeyIds);
-      }
-    }
+    const missingInitDataKeyIds = getMissingInitDataKeyIds(
+      initializationData,
+      associatedKeyIds,
+    );
+    associatedKeyIds.push(...missingInitDataKeyIds);
 
+    const { content } = initializationData;
     if (isCurrentLicense && content !== undefined) {
       if (singleLicensePer === "content") {
         // Put it in a Set to automatically filter out duplicates (by ref)
