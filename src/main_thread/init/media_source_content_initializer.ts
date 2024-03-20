@@ -204,7 +204,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    this._initializeMediaSourceAndDecryption(mediaElement)
+    this._setupInitialMediaSourceAndDecryption(mediaElement)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
@@ -230,6 +230,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._manifestFetcher.updateContentUrls(urls, refreshNow);
   }
 
+  /**
+   * Stop content and free all resources linked to this
+   * `MediaSourceContentInitializer`.
+   */
   public dispose(): void {
     this._initCanceller.cancel();
   }
@@ -252,7 +256,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {HTMLMediaElement|null} mediaElement
    * @returns {Promise.<Object>}
    */
-  private _initializeMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
+  private _setupInitialMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
     unlinkMediaSource: TaskCanceller;
@@ -452,80 +456,76 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
 
-    const bufferOnMediaSource = this._startBufferingOnMediaSource.bind(this);
-    const triggerEvent = this.trigger.bind(this);
-    const onFatalError = this._onFatalError.bind(this);
-
     // handle initial load and reloads
-    recursivelyLoadOnMediaSource(
-      initialMediaSource,
-      initialTime,
-      autoPlay,
-      initialMediaSourceCanceller,
-    );
-
-    /**
-     * Load the content defined by the Manifest in the mediaSource given at the
-     * given position and playing status.
-     * This function recursively re-call itself when a MediaSource reload is
-     * wanted.
-     * @param {MediaSource} mediaSource
-     * @param {number} startingPos
-     * @param {Object} currentCanceller
-     * @param {boolean} shouldPlay
-     */
-    function recursivelyLoadOnMediaSource(
-      mediaSource: MainMediaSourceInterface,
-      startingPos: number,
-      shouldPlay: boolean,
-      currentCanceller: TaskCanceller,
-    ): void {
-      const opts = {
+    this._setupContentWithNewMediaSource(
+      {
         mediaElement,
         playbackObserver,
-        mediaSource,
-        initialTime: startingPos,
-        autoPlay: shouldPlay,
+        mediaSource: initialMediaSource,
+        initialTime,
+        autoPlay,
         manifest,
         representationEstimator,
         segmentFetcherCreator,
         speed,
         bufferOptions: subBufferOptions,
-      };
-      bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
+      },
+      initialMediaSourceCanceller,
+    );
+  }
 
-      function onReloadMediaSource(reloadOrder: {
-        position: number;
-        autoPlay: boolean;
-      }): void {
-        currentCanceller.cancel();
-        if (initCanceller.isUsed()) {
-          return;
-        }
-        triggerEvent("reloadingMediaSource", reloadOrder);
-        if (initCanceller.isUsed()) {
-          return;
-        }
-
-        const newCanceller = new TaskCanceller();
-        newCanceller.linkToSignal(initCanceller.signal);
-        createMediaSource(mediaElement, newCanceller.signal)
-          .then((newMediaSource) => {
-            recursivelyLoadOnMediaSource(
-              newMediaSource,
-              reloadOrder.position,
-              reloadOrder.autoPlay,
-              newCanceller,
-            );
-          })
-          .catch((err) => {
-            if (newCanceller.isUsed()) {
-              return;
-            }
-            onFatalError(err);
-          });
+  /**
+   * Load the content defined by the Manifest in the mediaSource given at the
+   * given position and playing status.
+   * This function recursively re-call itself when a MediaSource reload is
+   * wanted.
+   * @param {Object} args
+   * @param {Object} currentCanceller
+   */
+  private _setupContentWithNewMediaSource(
+    args: IBufferingMediaSettings,
+    currentCanceller: TaskCanceller,
+  ): void {
+    const initCanceller = this._initCanceller;
+    const onReloadMediaSource: IReloadMediaSourceCallback = (reloadOrder: {
+      position: number;
+      autoPlay: boolean;
+    }): void => {
+      currentCanceller.cancel();
+      if (initCanceller.isUsed()) {
+        return;
       }
-    }
+      this.trigger("reloadingMediaSource", reloadOrder);
+      if (initCanceller.isUsed()) {
+        return;
+      }
+
+      const newCanceller = new TaskCanceller();
+      newCanceller.linkToSignal(initCanceller.signal);
+      createMediaSource(args.mediaElement, newCanceller.signal)
+        .then((newMediaSource) => {
+          this._setupContentWithNewMediaSource(
+            {
+              ...args,
+              mediaSource: newMediaSource,
+              initialTime: reloadOrder.position,
+              autoPlay: reloadOrder.autoPlay,
+            },
+            newCanceller,
+          );
+        })
+        .catch((err) => {
+          if (newCanceller.isUsed()) {
+            return;
+          }
+          this._onFatalError(err);
+        });
+    };
+    this._startLoadingContentOnMediaSource(
+      args,
+      onReloadMediaSource,
+      currentCanceller.signal,
+    );
   }
 
   /**
@@ -534,7 +534,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {function} onReloadOrder
    * @param {Object} cancelSignal
    */
-  private _startBufferingOnMediaSource(
+  private _startLoadingContentOnMediaSource(
     args: IBufferingMediaSettings,
     onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
