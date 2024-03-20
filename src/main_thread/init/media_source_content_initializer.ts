@@ -199,6 +199,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._initCanceller.cancel();
   }
 
+  /**
+   * Callback called when an error interrupting playback arised.
+   * @param {*} err
+   */
   private _onFatalError(err: unknown) {
     if (this._initCanceller.isUsed()) {
       return;
@@ -207,6 +211,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this.trigger("error", err);
   }
 
+  /**
+   * Initialize decryption mechanisms if needed and begin creating and relying
+   * on the initial `MediaSourceInterface` for this content.
+   * @param {HTMLMediaElement|null} mediaElement
+   * @param {Object} protectionRef
+   * @returns {Promise.<Object>}
+   */
   private _initializeMediaSourceAndDecryption(
     mediaElement: HTMLMediaElement,
     protectionRef: IReadOnlySharedReference<IContentProtection | null>,
@@ -458,7 +469,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _startBufferingOnMediaSource(
     args: IBufferingMediaSettings,
-    onReloadOrder: (reloadOrder: { position: number; autoPlay: boolean }) => void,
+    onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
   ): void {
     const {
@@ -486,18 +497,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }
 
     let textDisplayerInterface: ITextDisplayerInterface | null = null;
-    let textDisplayer: ITextDisplayer | null = null;
-    if (
-      this._initSettings.textTrackOptions.textTrackMode === "html" &&
-      features.htmlTextDisplayer !== null
-    ) {
-      textDisplayer = new features.htmlTextDisplayer(
-        mediaElement,
-        this._initSettings.textTrackOptions.textTrackElement,
-      );
-    } else if (features.nativeTextDisplayer !== null) {
-      textDisplayer = new features.nativeTextDisplayer(mediaElement);
-    }
+    const textDisplayer = createTextDisplayer(
+      mediaElement,
+      this._initSettings.textTrackOptions,
+    );
     if (textDisplayer !== null) {
       const sender = new MainThreadTextDisplayerInterface(textDisplayer);
       textDisplayerInterface = sender;
@@ -959,6 +962,21 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 }
 
+function createTextDisplayer(
+  mediaElement: HTMLMediaElement,
+  textTrackOptions: ITextDisplayerOptions,
+): ITextDisplayer | null {
+  if (textTrackOptions.textTrackMode === "html" && features.htmlTextDisplayer !== null) {
+    return new features.htmlTextDisplayer(
+      mediaElement,
+      textTrackOptions.textTrackElement,
+    );
+  } else if (features.nativeTextDisplayer !== null) {
+    return new features.nativeTextDisplayer(mediaElement);
+  }
+  return null;
+}
+
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
   /** Options concerning the ABR logic. */
@@ -1138,3 +1156,19 @@ function blackListProtectionDataOnManifest(
     return rep.decipherable;
   });
 }
+
+/**
+ * Function to call when you want to "reload" the MediaSource: basically
+ * restarting playback on a new MediaSource for the same content (it may
+ * be for varied reasons, such as ensuring data buffers are empty, or
+ * restarting after some kind of fatal error).
+ * @param {Object} reloadOrder
+ * @param {number} reloadOrder.position - Position in seconds at which we
+ * should restart from when playback restarts.
+ * @param {boolean} reloadOrder.autoPlay - If `true` we will directly play
+ * once enough data is re-loaded.
+ */
+type IReloadMediaSourceCallback = (reloadOrder: {
+  position: number;
+  autoPlay: boolean;
+}) => void;
