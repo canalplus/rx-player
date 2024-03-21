@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../compat/browser_compatibility_types";
 import type { SegmentSink } from "../core/segment_sinks";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
@@ -46,7 +47,7 @@ import type { CancellationSignal } from "../utils/task_canceller";
  * @returns {Object} - `SegmentSink` implementation.
  */
 export type IHTMLTextTracksBuffer = new (
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   textTrackElement: HTMLElement,
 ) => SegmentSink;
 
@@ -59,7 +60,7 @@ export type IHTMLTextTracksBuffer = new (
  * tracks will be displayed will also be linked to this `HTMLMediaElement`.
  * @returns {Object} - `SegmentSink` implementation.
  */
-export type INativeTextTracksBuffer = new (mediaElement: HTMLMediaElement) => SegmentSink;
+export type INativeTextTracksBuffer = new (mediaElement: IMediaElement) => SegmentSink;
 
 export type IDashNativeParser = (
   dom: Document,

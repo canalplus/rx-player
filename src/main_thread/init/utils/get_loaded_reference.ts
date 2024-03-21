@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded";
 import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data";
@@ -37,7 +38,7 @@ import TaskCanceller from "../../../utils/task_canceller";
  */
 export default function getLoadedReference(
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   isDirectfile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {

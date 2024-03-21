@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import { MediaError } from "../../../errors";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../../utils/task_canceller";
@@ -24,7 +25,7 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
  * @param {Object} cancelSignal
  */
 export default function listenToMediaError(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   onError: (error: MediaError) => void,
   cancelSignal: CancellationSignal,
 ): void {
@@ -33,7 +34,6 @@ export default function listenToMediaError(
   }
 
   mediaElement.addEventListener("error", onMediaError);
-
   cancelSignal.register(() => {
     mediaElement.removeEventListener("error", onMediaError);
   });

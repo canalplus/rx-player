@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import config from "../../config";
 import type {
   IPlaybackObservation,
@@ -40,7 +41,7 @@ import type { ContentInitializer, IStallingSituation } from "../init";
  * remove all listeners this function has registered.
  */
 export function emitSeekEvents(
-  mediaElement: HTMLMediaElement | null,
+  mediaElement: IMediaElement | null,
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   onSeeking: () => void,
   onSeeked: () => void,
@@ -82,7 +83,7 @@ export function emitSeekEvents(
  * remove all listeners this function has registered.
  */
 export function emitPlayPauseEvents(
-  mediaElement: HTMLMediaElement | null,
+  mediaElement: IMediaElement | null,
   onPlay: () => void,
   onPause: () => void,
   cancelSignal: CancellationSignal,
@@ -114,7 +115,7 @@ export const enum PLAYER_STATES {
 
 export function constructPlayerStateReference(
   initializer: ContentInitializer,
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<IPlayerState> {
@@ -212,7 +213,7 @@ export function constructPlayerStateReference(
  * @returns {string}
  */
 export function getLoadedContentState(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   stalledStatus: IStallingSituation | null,
 ): IPlayerState {
   const { FORCED_ENDED_THRESHOLD } = config.getCurrent();

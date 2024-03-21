@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../compat/browser_compatibility_types";
 import isSeekingApproximate from "../compat/is_seeking_approximate";
 import config from "../config";
 import log from "../log";
@@ -40,9 +41,8 @@ import ObservationPosition from "./utils/observation_position";
 /**
  * HTMLMediaElement Events for which playback observations are calculated and
  * emitted.
- * @type {Array.<string>}
  */
-const SCANNED_MEDIA_ELEMENTS_EVENTS: IPlaybackObserverEventType[] = [
+const SCANNED_MEDIA_ELEMENTS_EVENTS = [
   "canplay",
   "ended",
   "play",
@@ -51,7 +51,7 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS: IPlaybackObserverEventType[] = [
   "seeked",
   "loadedmetadata",
   "ratechange",
-];
+] as const;
 
 /**
  * Class allowing to "observe" current playback conditions so the RxPlayer is
@@ -68,7 +68,7 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS: IPlaybackObserverEventType[] = [
  */
 export default class PlaybackObserver {
   /** HTMLMediaElement which we want to observe. */
-  private _mediaElement: HTMLMediaElement;
+  private _mediaElement: IMediaElement;
 
   /** If `true`, a `MediaSource` object is linked to `_mediaElement`. */
   private _withMediaSource: boolean;
@@ -141,7 +141,7 @@ export default class PlaybackObserver {
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
-  constructor(mediaElement: HTMLMediaElement, options: IPlaybackObserverOptions) {
+  constructor(mediaElement: IMediaElement, options: IPlaybackObserverOptions) {
     this._internalSeeksIncoming = [];
     this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
@@ -342,19 +342,19 @@ export default class PlaybackObserver {
       this._generateObservationForEvent("timeupdate");
     };
     let intervalId = setInterval(onInterval, interval);
-    const removeEventListeners = SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
+    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
       const onMediaEvent = () => {
         restartInterval();
         this._generateObservationForEvent(eventName);
       };
+
       this._mediaElement.addEventListener(eventName, onMediaEvent);
-      return () => {
+      this._canceller.signal.register(() => {
         this._mediaElement.removeEventListener(eventName, onMediaEvent);
-      };
+      });
     });
     this._canceller.signal.register(() => {
       clearInterval(intervalId);
-      removeEventListeners.forEach((cb) => cb());
       returnedSharedReference.finish();
     });
     return returnedSharedReference;
@@ -610,7 +610,7 @@ function hasLoadedUntilTheEnd(
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-function getMediaInfos(mediaElement: HTMLMediaElement): IMediaInfos {
+function getMediaInfos(mediaElement: IMediaElement): IMediaInfos {
   const {
     buffered,
     currentTime,
@@ -933,7 +933,7 @@ function prettyPrintBuffered(buffered: TimeRanges, currentTime: number): string 
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-function getInitialObservation(mediaElement: HTMLMediaElement): IPlaybackObservation {
+function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservation {
   const mediaTimings = getMediaInfos(mediaElement);
   return objectAssign(mediaTimings, {
     rebuffering: null,

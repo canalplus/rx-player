@@ -22,10 +22,10 @@
 import type {
   ICompatAudioTrack,
   ICompatAudioTrackList,
-  ICompatHTMLMediaElement,
   ICompatTextTrackList,
   ICompatVideoTrack,
   ICompatVideoTrackList,
+  IMediaElement,
 } from "../../compat/browser_compatibility_types";
 import enableAudioTrack from "../../compat/enable_audio_track";
 import type { IRepresentation } from "../../manifest";
@@ -236,13 +236,13 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    */
   private _videoTrackLockedOn: ICompatVideoTrack | undefined | null;
 
-  constructor(mediaElement: HTMLMediaElement) {
+  constructor(mediaElement: IMediaElement) {
     super();
     // TODO In practice, the audio/video/text tracks API are not always implemented on
     // the media element, although Typescript HTMLMediaElement types tend to mean
     // that can't be undefined.
-    this._nativeAudioTracks = (mediaElement as ICompatHTMLMediaElement).audioTracks;
-    this._nativeVideoTracks = (mediaElement as ICompatHTMLMediaElement).videoTracks;
+    this._nativeAudioTracks = mediaElement.audioTracks;
+    this._nativeVideoTracks = mediaElement.videoTracks;
     this._nativeTextTracks = mediaElement.textTracks as ICompatTextTrackList | undefined;
 
     this._audioTracks =
