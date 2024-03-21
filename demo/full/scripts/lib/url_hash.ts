@@ -1,3 +1,12 @@
+import {
+  IAudioRepresentationsSwitchingMode,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../../src/public_types";
+import type {
+  ILoadVideoSettings,
+  IConstructorSettings,
+} from "../lib/defaultOptionsValues";
+
 /**
  * Parse possible information given through the "hash" part of the URL (what
  * comes after the "#" character).
@@ -59,10 +68,9 @@
  *   foobar: true
  * }
  * ```
-
  * If any invalid data is encountered, this function returns null.
  * @param {string} hashStr
- * @return {Object|null}
+ * @returns {Object|null}
  */
 export function parseHashInURL(
   hashStr: string,
@@ -121,26 +129,44 @@ export function parseHashInURL(
   }
   return parsed;
 }
-
 /**
  * Generate URL with hash-string which can be used to reload the page with the
  * current non-stored custom content. This can be used for example to share some
  * content with other people.
- * Returns null if it could not generate an URL for the current content.
- * @param {Object} state - The current ContentList state.
- * @returns {string|null}
+ * Takes an array of {value, key} object, depending if the value is a boolean or
+ * a string, it will add it like that:
+ * Boolean: http//hostname.com#!key
+ * String: http//hostname.com#!key_5=value (where 5 represent the length of
+ * the string value in base 36)
+ * @param {Array<{value: string | boolean | undefined, key: string}>} params
+ * Array of {key, value} params that will be added in the URL.
+ * @returns {string}
  */
-export function generateLinkForCustomContent({
-  chosenDRMType, // DRM Choice
-  customKeySystem, // key system of a custom DRM if one
-  fallbackKeyError, // `true` if the corresponding switch is enabled
-  fallbackLicenseRequest, // `true` if the corresponding switch is enabled
-  licenseServerUrl,
-  lowLatency, // True if the low-latency switch is enabled
-  manifestURL,
-  serverCertificateUrl,
-  transport, // Choice for the transport protocol
-}: {
+function generateURL(
+  params: Array<{ value: string | boolean | undefined; key: string }>,
+) {
+  let urlString =
+    location.protocol +
+    "//" +
+    location.hostname +
+    (location.port ? ":" + location.port : "") +
+    location.pathname +
+    (location.search ? location.search : "") +
+    "#";
+
+  for (const param of params) {
+    if (param.value) {
+      if (typeof param.value === "boolean") {
+        urlString += `!${param.key}`;
+      } else if (typeof param.value === "string") {
+        urlString += `!${param.key}_${param.value.length.toString(36)}=${param.value}`;
+      }
+    }
+  }
+  return urlString;
+}
+
+export interface ContentConfig {
   chosenDRMType?: string | undefined;
   customKeySystem?: string | undefined;
   fallbackKeyError?: boolean | undefined;
@@ -150,58 +176,76 @@ export function generateLinkForCustomContent({
   manifestURL?: string | undefined;
   serverCertificateUrl?: string | undefined;
   transport?: string | undefined;
-}): string | null {
-  let urlString = "";
-  let transportString = "";
-  let licenseServerUrlString = "";
-  let serverCertificateUrlString = "";
-  let drmTypeString = "";
-  let customKeySystemString = "";
-  if (manifestURL) {
-    urlString = "!manifest_" + manifestURL.length.toString(36) + "=" + manifestURL;
-  }
-  if (transport) {
-    transportString = "!tech_" + transport.length.toString(36) + "=" + transport;
-  }
-  if (chosenDRMType) {
-    drmTypeString = "!drm_" + chosenDRMType.length.toString(36) + "=" + chosenDRMType;
-  }
-  if (customKeySystem) {
-    customKeySystemString =
-      "!customKeySystem_" + customKeySystem.length.toString(36) + "=" + customKeySystem;
-  }
-  if (licenseServerUrl) {
-    licenseServerUrlString =
-      "!licenseServ_" + licenseServerUrl.length.toString(36) + "=" + licenseServerUrl;
-  }
-  if (serverCertificateUrl) {
-    serverCertificateUrlString =
-      "!certServ_" +
-      serverCertificateUrl.length.toString(36) +
-      "=" +
-      serverCertificateUrl;
-  }
+}
 
-  if (!transportString) {
+/**
+ * Generate the URL for the given state of the player.
+ * Returns null if it could not generate an URL for the current content.
+ * @param {Object} state - The current ContentList state.
+ * @returns {string|null}
+ */
+export function generateURLForConfig({
+  contentConfig: {
+    chosenDRMType, // DRM Choice
+    customKeySystem, // key system of a custom DRM if one
+    fallbackKeyError, // `true` if the corresponding switch is enabled
+    fallbackLicenseRequest, // `true` if the corresponding switch is enabled
+    licenseServerUrl,
+    lowLatency, // True if the low-latency switch is enabled
+    manifestURL,
+    serverCertificateUrl,
+    transport, // Choice for the transport protocol
+  },
+  loadVideoConfig,
+  playerConfig,
+  demoConfig: {
+    reactiveURL, // update reactively the URL when player options changes
+  },
+  relyOnWorker,
+  defaultVideoRepresentationsSwitchingMode,
+  defaultAudioRepresentationsSwitchingMode,
+}: {
+  contentConfig: ContentConfig;
+  loadVideoConfig: ILoadVideoSettings;
+  playerConfig: IConstructorSettings;
+  demoConfig: { reactiveURL: boolean };
+  relyOnWorker: boolean;
+  defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
+  defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
+}): string | null {
+  if (!transport) {
     return null;
   }
 
-  return (
-    location.protocol +
-    "//" +
-    location.hostname +
-    (location.port ? ":" + location.port : "") +
-    location.pathname +
-    (location.search ? location.search : "") +
-    "#" +
-    (lowLatency ? "!lowLatency" : "") +
-    (fallbackKeyError ? "!fallbackKeyError" : "") +
-    (fallbackLicenseRequest ? "!fallbackLicenseRequest" : "") +
-    transportString +
-    urlString +
-    drmTypeString +
-    customKeySystemString +
-    licenseServerUrlString +
-    serverCertificateUrlString
-  );
+  // create a copy that transform Infinity to the string "__INFINITY__"
+  // so it can be stringified. Once it's parsed again, the value
+  // __INFINITY__ can be parsed to Infinity.
+  const stringifiablePlayerConfig: Record<string, any> = {};
+  for (const [key, value] of Object.entries(playerConfig)) {
+    stringifiablePlayerConfig[key] = value === Infinity ? "__INFINITY__" : value;
+  }
+
+  return generateURL([
+    { value: lowLatency, key: "lowLatency" },
+    { value: fallbackKeyError, key: "fallbackKeyError" },
+    { value: fallbackLicenseRequest, key: "fallbackLicenseRequest" },
+    { value: transport, key: "tech" },
+    { value: manifestURL, key: "manifest" },
+    { value: chosenDRMType, key: "drm" },
+    { value: customKeySystem, key: "customKeySystem" },
+    { value: licenseServerUrl, key: "licenseServ" },
+    { value: serverCertificateUrl, key: "certServ" },
+    { value: JSON.stringify(loadVideoConfig), key: "loadVideoConfig" },
+    { value: JSON.stringify(stringifiablePlayerConfig), key: "playerConfig" },
+    { value: reactiveURL, key: "reactiveURL" },
+    { value: relyOnWorker, key: "relyOnWorker" },
+    {
+      value: defaultVideoRepresentationsSwitchingMode,
+      key: "defaultVideoRepresentationsSwitchingMode",
+    },
+    {
+      value: defaultAudioRepresentationsSwitchingMode,
+      key: "defaultAudioRepresentationsSwitchingMode",
+    },
+  ]);
 }
