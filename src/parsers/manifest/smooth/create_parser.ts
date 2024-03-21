@@ -669,6 +669,7 @@ function createSmoothStreamingParser(
       availabilityStartTime:
         availabilityStartTime === undefined ? 0 : availabilityStartTime,
       clockOffset: serverTimeOffset,
+      contentSteering: null,
       isLive,
       isDynamic: isLive,
       isLastPeriodKnown: true,

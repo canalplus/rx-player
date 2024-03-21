@@ -108,6 +108,9 @@ export const enum TagName {
 
   /// Indicate a <SegmentURL> node
   SegmentUrl = 20,
+
+  /// Indicate a <ContentSteering> node
+  ContentSteering = 21,
 }
 
 /**

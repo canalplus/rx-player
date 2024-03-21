@@ -20,6 +20,10 @@ import generateManifestLoader from "../utils/generate_manifest_loader";
 import generateManifestParser from "./manifest_parser";
 import generateSegmentLoader from "./segment_loader";
 import generateAudioVideoSegmentParser from "./segment_parser";
+import {
+  loadSteeringManifest,
+  parseSteeringManifest,
+} from "./steering_manifest_pipeline";
 import generateTextTrackLoader from "./text_loader";
 import generateTextTrackParser from "./text_parser";
 
@@ -52,6 +56,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
       parseSegment: audioVideoSegmentParser,
     },
     text: { loadSegment: textTrackLoader, parseSegment: textTrackParser },
+    steeringManifest: { loadSteeringManifest, parseSteeringManifest },
   };
 }
 

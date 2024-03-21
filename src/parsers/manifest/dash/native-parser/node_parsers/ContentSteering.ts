@@ -14,29 +14,47 @@
  * limitations under the License.
  */
 
-import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
+import type { IContentSteeringIntermediateRepresentation } from "../../node_parser_types";
+import { parseBoolean, ValueParser } from "./utils";
 
 /**
- * Parse an BaseURL element into an BaseURL intermediate
+ * Parse an ContentSteering element into an ContentSteering intermediate
  * representation.
- * @param {Element} root - The BaseURL root element.
+ * @param {Element} root - The ContentSteering root element.
  * @returns {Array.<Object|undefined>}
  */
-export default function parseBaseURL(
+export default function parseContentSteering(
   root: Element,
-): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const attributes: { serviceLocation?: string } = {};
+): [IContentSteeringIntermediateRepresentation | undefined, Error[]] {
+  const attributes: {
+    defaultServiceLocation?: string;
+    queryBeforeStart?: boolean;
+    proxyServerUrl?: string;
+  } = {};
   const value = root.textContent;
   const warnings: Error[] = [];
   if (value === null || value.length === 0) {
     return [undefined, warnings];
   }
+  const parseValue = ValueParser(attributes, warnings);
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
     switch (attribute.name) {
-      case "serviceLocation":
-        attributes.serviceLocation = attribute.value;
+      case "defaultServiceLocation":
+        attributes.defaultServiceLocation = attribute.value;
+        break;
+
+      case "queryBeforeStart":
+        parseValue(attribute.value, {
+          asKey: "queryBeforeStart",
+          parser: parseBoolean,
+          dashName: "queryBeforeStart",
+        });
+        break;
+
+      case "proxyServerUrl":
+        attributes.proxyServerUrl = attribute.value;
         break;
     }
   }

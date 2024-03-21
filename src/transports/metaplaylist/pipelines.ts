@@ -396,5 +396,6 @@ export default function (options: ITransportOptions): ITransportPipelines {
     audio: audioPipeline,
     video: videoPipeline,
     text: textTrackPipeline,
+    steeringManifest: null,
   };
 }

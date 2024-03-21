@@ -16,7 +16,7 @@
 
 import { MediaError } from "../../errors";
 import log from "../../log";
-import type { IParsedManifest } from "../../parsers/manifest";
+import type { IContentSteeringMetadata, IParsedManifest } from "../../parsers/manifest";
 import type { ITrackType, IRepresentationFilter, IPlayerError } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import EventEmitter from "../../utils/event_emitter";
@@ -208,6 +208,8 @@ export default class Manifest
    */
   public clockOffset: number | undefined;
 
+  public contentSteering: IContentSteeringMetadata | null;
+
   /**
    * Data allowing to calculate the minimum and maximum seekable positions at
    * any given time.
@@ -364,6 +366,7 @@ export default class Manifest
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
+    this.contentSteering = parsedManifest.contentSteering;
   }
 
   /**
@@ -627,6 +630,7 @@ export default class Manifest
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
+    this.contentSteering = newManifest.contentSteering;
 
     let updatedPeriodsResult;
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
