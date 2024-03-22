@@ -83,7 +83,7 @@ import listenToMediaError from "./utils/throw_on_media_error";
  */
 export default class MediaSourceContentInitializer extends ContentInitializer {
   /** Constructor settings associated to this `MediaSourceContentInitializer`. */
-  private _settings: IInitializeArguments;
+  private _initSettings: IInitializeArguments;
   /**
    * `TaskCanceller` allowing to abort everything that the
    * `MediaSourceContentInitializer` is doing.
@@ -106,7 +106,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
-    this._settings = settings;
+    this._initSettings = settings;
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
     const urls = settings.url === undefined ? undefined : [settings.url];
@@ -168,7 +168,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
+    this._setupInitialMediaSourceAndDecryption(mediaElement, protectionRef)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
@@ -195,10 +195,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._manifestFetcher.updateContentUrls(urls, refreshNow);
   }
 
+  /**
+   * Stop content and free all resources linked to this
+   * `MediaSourceContentInitializer`.
+   */
   public dispose(): void {
     this._initCanceller.cancel();
   }
 
+  /**
+   * Callback called when an error interrupting playback arised.
+   * @param {*} err
+   */
   private _onFatalError(err: unknown) {
     if (this._initCanceller.isUsed()) {
       return;
@@ -207,7 +215,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this.trigger("error", err);
   }
 
-  private _initializeMediaSourceAndDecryption(
+  /**
+   * Initialize decryption mechanisms if needed and begin creating and relying
+   * on the initial `MediaSourceInterface` for this content.
+   * @param {HTMLMediaElement|null} mediaElement
+   * @param {Object} protectionRef
+   * @returns {Promise.<Object>}
+   */
+  private _setupInitialMediaSourceAndDecryption(
     mediaElement: HTMLMediaElement,
     protectionRef: IReadOnlySharedReference<IContentProtection | null>,
   ): Promise<{
@@ -217,7 +232,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }> {
     const initCanceller = this._initCanceller;
     return createCancellablePromise(initCanceller.signal, (resolve) => {
-      const { keySystems } = this._settings;
+      const { keySystems } = this._initSettings;
 
       /** Initialize decryption capabilities. */
       const drmInitRef = initializeContentDecryption(
@@ -325,7 +340,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       startAt,
       textTrackOptions,
       transport,
-    } = this._settings;
+    } = this._initSettings;
     const initCanceller = this._initCanceller;
     assert(this._manifest !== null);
     let manifest: IManifest;
@@ -373,81 +388,77 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
 
-    const bufferOnMediaSource = this._startBufferingOnMediaSource.bind(this);
-    const triggerEvent = this.trigger.bind(this);
-    const onFatalError = this._onFatalError.bind(this);
-
     // handle initial load and reloads
-    recursivelyLoadOnMediaSource(
-      initialMediaSource,
-      initialTime,
-      autoPlay,
-      initialMediaSourceCanceller,
-    );
-
-    /**
-     * Load the content defined by the Manifest in the mediaSource given at the
-     * given position and playing status.
-     * This function recursively re-call itself when a MediaSource reload is
-     * wanted.
-     * @param {MediaSource} mediaSource
-     * @param {number} startingPos
-     * @param {Object} currentCanceller
-     * @param {boolean} shouldPlay
-     */
-    function recursivelyLoadOnMediaSource(
-      mediaSource: MainMediaSourceInterface,
-      startingPos: number,
-      shouldPlay: boolean,
-      currentCanceller: TaskCanceller,
-    ): void {
-      const opts = {
+    this._setupContentWithNewMediaSource(
+      {
         mediaElement,
         playbackObserver,
-        mediaSource,
-        initialTime: startingPos,
-        autoPlay: shouldPlay,
+        mediaSource: initialMediaSource,
+        initialTime,
+        autoPlay,
         manifest,
         representationEstimator,
         segmentFetcherCreator,
         speed,
         protectionRef,
         bufferOptions: subBufferOptions,
-      };
-      bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
+      },
+      initialMediaSourceCanceller,
+    );
+  }
 
-      function onReloadMediaSource(reloadOrder: {
-        position: number;
-        autoPlay: boolean;
-      }): void {
-        currentCanceller.cancel();
-        if (initCanceller.isUsed()) {
-          return;
-        }
-        triggerEvent("reloadingMediaSource", reloadOrder);
-        if (initCanceller.isUsed()) {
-          return;
-        }
-
-        const newCanceller = new TaskCanceller();
-        newCanceller.linkToSignal(initCanceller.signal);
-        createMediaSource(mediaElement, newCanceller.signal)
-          .then((newMediaSource) => {
-            recursivelyLoadOnMediaSource(
-              newMediaSource,
-              reloadOrder.position,
-              reloadOrder.autoPlay,
-              newCanceller,
-            );
-          })
-          .catch((err) => {
-            if (newCanceller.isUsed()) {
-              return;
-            }
-            onFatalError(err);
-          });
+  /**
+   * Load the content defined by the Manifest in the mediaSource given at the
+   * given position and playing status.
+   * This function recursively re-call itself when a MediaSource reload is
+   * wanted.
+   * @param {Object} args
+   * @param {Object} currentCanceller
+   */
+  private _setupContentWithNewMediaSource(
+    args: IBufferingMediaSettings,
+    currentCanceller: TaskCanceller,
+  ): void {
+    const initCanceller = this._initCanceller;
+    const onReloadMediaSource: IReloadMediaSourceCallback = (reloadOrder: {
+      position: number;
+      autoPlay: boolean;
+    }): void => {
+      currentCanceller.cancel();
+      if (initCanceller.isUsed()) {
+        return;
       }
-    }
+      this.trigger("reloadingMediaSource", reloadOrder);
+      if (initCanceller.isUsed()) {
+        return;
+      }
+
+      const newCanceller = new TaskCanceller();
+      newCanceller.linkToSignal(initCanceller.signal);
+      createMediaSource(args.mediaElement, newCanceller.signal)
+        .then((newMediaSource) => {
+          this._setupContentWithNewMediaSource(
+            {
+              ...args,
+              mediaSource: newMediaSource,
+              initialTime: reloadOrder.position,
+              autoPlay: reloadOrder.autoPlay,
+            },
+            newCanceller,
+          );
+        })
+        .catch((err) => {
+          if (newCanceller.isUsed()) {
+            return;
+          }
+          this._onFatalError(err);
+        });
+    };
+    this._startLoadingContentOnMediaSource(
+      args,
+      onReloadMediaSource,
+      currentCanceller.signal,
+    );
   }
 
   /**
@@ -456,9 +467,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {function} onReloadOrder
    * @param {Object} cancelSignal
    */
-  private _startBufferingOnMediaSource(
+  private _startLoadingContentOnMediaSource(
     args: IBufferingMediaSettings,
-    onReloadOrder: (reloadOrder: { position: number; autoPlay: boolean }) => void,
+    onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
   ): void {
     const {
@@ -486,18 +497,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }
 
     let textDisplayerInterface: ITextDisplayerInterface | null = null;
-    let textDisplayer: ITextDisplayer | null = null;
-    if (
-      this._settings.textTrackOptions.textTrackMode === "html" &&
-      features.htmlTextDisplayer !== null
-    ) {
-      textDisplayer = new features.htmlTextDisplayer(
-        mediaElement,
-        this._settings.textTrackOptions.textTrackElement,
-      );
-    } else if (features.nativeTextDisplayer !== null) {
-      textDisplayer = new features.nativeTextDisplayer(mediaElement);
-    }
+    const textDisplayer = createTextDisplayer(
+      mediaElement,
+      this._initSettings.textTrackOptions,
+    );
     if (textDisplayer !== null) {
       const sender = new MainThreadTextDisplayerInterface(textDisplayer);
       textDisplayerInterface = sender;
@@ -959,6 +962,21 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 }
 
+function createTextDisplayer(
+  mediaElement: HTMLMediaElement,
+  textTrackOptions: ITextDisplayerOptions,
+): ITextDisplayer | null {
+  if (textTrackOptions.textTrackMode === "html" && features.htmlTextDisplayer !== null) {
+    return new features.htmlTextDisplayer(
+      mediaElement,
+      textTrackOptions.textTrackElement,
+    );
+  } else if (features.nativeTextDisplayer !== null) {
+    return new features.nativeTextDisplayer(mediaElement);
+  }
+  return null;
+}
+
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
   /** Options concerning the ABR logic. */
@@ -1138,3 +1156,19 @@ function blackListProtectionDataOnManifest(
     return rep.decipherable;
   });
 }
+
+/**
+ * Function to call when you want to "reload" the MediaSource: basically
+ * restarting playback on a new MediaSource for the same content (it may
+ * be for varied reasons, such as ensuring data buffers are empty, or
+ * restarting after some kind of fatal error).
+ * @param {Object} reloadOrder
+ * @param {number} reloadOrder.position - Position in seconds at which we
+ * should restart from when playback restarts.
+ * @param {boolean} reloadOrder.autoPlay - If `true` we will directly play
+ * once enough data is re-loaded.
+ */
+type IReloadMediaSourceCallback = (reloadOrder: {
+  position: number;
+  autoPlay: boolean;
+}) => void;
