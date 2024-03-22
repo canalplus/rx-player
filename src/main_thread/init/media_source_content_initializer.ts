@@ -58,7 +58,7 @@ import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
-import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
+import type { IContent, IContentProtection, IProcessedProtectionData } from "../decrypt";
 import { getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
@@ -134,6 +134,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (this._manifest !== null) {
       return;
     }
+
     this._manifest = SyncOrAsync.createAsync(
       createCancellablePromise(this._initCanceller.signal, (res, rej) => {
         this._manifestFetcher.addEventListener("warning", (err: IPlayerError) =>
@@ -484,6 +485,38 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentFetcherCreator,
       speed,
     } = args;
+
+
+    if (bufferOptions.drmSystemId !== undefined) {
+      
+      // not sure if we should take first period, but rather current period
+      const currentPeriod = manifest.periods[0];
+      const allAdaptations  = currentPeriod.getAdaptations();
+
+      const arr2hex = function(array: Uint8Array) { 
+        return [...array]
+            .map(x => x.toString(16).padStart(2, "0"))
+            .join("");
+      }
+
+      for (const adaptation of allAdaptations) {
+        for (const representation of adaptation.representations) {
+          const encryptionDatas = representation.getEncryptionData(bufferOptions.drmSystemId);
+          for (const encryptionData of encryptionDatas) {
+            const content: IContent = { period: currentPeriod, adaptation, representation, manifest }
+            const contentProtection: IContentProtection = { ...encryptionData, content}
+            const keyIds = contentProtection.keyIds;
+
+            if (keyIds !== undefined) {
+              for (const keyId of keyIds) {                
+                console.log("DEBUG: adding new keyID ", arr2hex(keyId));
+              }
+            }
+            protectionRef.setValue(contentProtection);
+          }
+        }
+      }
+    }
 
     const initialPeriod =
       manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
