@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist/es2017",
     "declaration": true,
+    "declarationMap": true,
     "target": "es2017",
     "lib": ["es2017", "dom"],
     "types": ["jest"],
