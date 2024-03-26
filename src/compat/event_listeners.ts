@@ -26,8 +26,9 @@ import SharedReference from "../utils/reference";
 import type { CancellationSignal } from "../utils/task_canceller";
 import type {
   ICompatDocument,
-  ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
+  IEventTarget,
+  IMediaElement,
 } from "./browser_compatibility_types";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
@@ -228,15 +229,14 @@ export interface IPictureInPictureEvent {
 
 /**
  * Emit when video enters and leaves Picture-In-Picture mode.
- * @param {HTMLMediaElement} elt
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} stopListening
  * @returns {Object}
  */
 function getPictureOnPictureStateRef(
-  elt: HTMLMediaElement,
+  mediaElement: IMediaElement,
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<IPictureInPictureEvent> {
-  const mediaElement = elt as ICompatHTMLMediaElement;
   if (
     mediaElement.webkitSupportsPresentationMode === true &&
     typeof mediaElement.webkitSetPresentationMode === "function"
@@ -263,7 +263,7 @@ function getPictureOnPictureStateRef(
   }
 
   const isPIPEnabled =
-    (document as ICompatDocument).pictureInPictureElement === mediaElement;
+    document.pictureInPictureElement === (mediaElement as unknown as HTMLElement);
   const ref = new SharedReference<IPictureInPictureEvent>(
     { isEnabled: isPIPEnabled, pipWindow: null },
     stopListening,
@@ -392,7 +392,7 @@ function getScreenResolutionRef(
  * @returns {Object}
  */
 function getElementResolutionRef(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   pipStatusRef: IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<{
@@ -596,7 +596,7 @@ const onEnded = createCompatibleEventListener(["ended"]);
  * emits
  */
 function addEventListener(
-  elt: IEventEmitterLike,
+  elt: IEventEmitterLike | IEventTarget<Record<string, Event>>,
   evt: string,
   listener: (x?: unknown) => void,
   stopListening: CancellationSignal,

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import { setMediaKeys } from "../../compat/eme/set_media_keys";
 import log from "../../log";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
@@ -24,7 +25,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @returns {Promise}
  */
 export default async function disposeDecryptionResources(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
 ): Promise<unknown> {
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   if (currentState === null) {
