@@ -19,6 +19,7 @@
  */
 
 import { MediaError } from "../../../../errors";
+import sleep from "../../../../utils/sleep";
 import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
 import { IReadOnlyPlaybackObserver } from "../../../api";
 import {
@@ -64,6 +65,11 @@ export default async function appendSegmentToBuffer<T>(
     const currentPos = position.pending ?? position.last;
     try {
       await forceGarbageCollection(currentPos, segmentBuffer, cancellationSignal);
+      await sleep(200);
+      if (cancellationSignal.cancellationError !== null) {
+        throw cancellationSignal.cancellationError;
+      }
+
       await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
     } catch (err2) {
       const reason = err2 instanceof Error ? err2.toString() :
