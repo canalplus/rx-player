@@ -245,7 +245,7 @@ export default class TextTrackCuesStore {
 
     for (let cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
       let cuesInfos = cuesBuffer[cueIdx];
-      if (start + DELTA_CUES_GROUP < cuesInfos.end) {
+      if (start < cuesInfos.end) {
         if (areCuesStartNearlyEqual(cuesInfosToInsert, cuesInfos)) {
           if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             // exact same segment
