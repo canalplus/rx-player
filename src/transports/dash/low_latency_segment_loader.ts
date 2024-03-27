@@ -62,13 +62,9 @@ export default function lowLatencySegmentLoader(
     const completeChunks = res[0];
     partialChunk = res[1];
     if (completeChunks !== null) {
-      if (content.type === "text") {
-        completeChunks.forEach((completedChunk) => {
-          callbacks.onNewChunk(completedChunk);
-        });
-      } else {
-        callbacks.onNewChunk(concat(...completeChunks));
-      }
+      completeChunks.forEach((completedChunk) => {
+        callbacks.onNewChunk(completedChunk);
+      });
       if (cancelSignal.isCancelled()) {
         return;
       }
