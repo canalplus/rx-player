@@ -74,11 +74,11 @@ export function areNearlyEqual(
   return Math.abs(a - b) <= Math.min(delta, MAX_DELTA_BUFFER_TIME);
 }
 
-const EPSILON = 5e-2;  // 5%
+const EPSILON = 5e-2; // 5%
 /**
  * Check if two cues start are almost the same.
  * It should depend on there relative length:
- * 
+ *
  * [0, 2] and [2, 4] start are NOT equals
  * [0, 2] and [0, 4]  start are equals
  * [0, 0.1] and [0.101, 2] start are NOT equals
@@ -96,8 +96,12 @@ export function areCuesStartNearlyEqual(
   const firstCueDuration = Math.abs(firstCue.end - firstCue.start);
   const secondCueDuration = Math.abs(secondCue.end - secondCue.start);
   const diffBetweenStart = Math.abs(firstCue.start - secondCue.start);
-  const minDuration = Math.min(firstCueDuration, secondCueDuration, MAX_DELTA_BUFFER_TIME);
-  return (diffBetweenStart / minDuration) <= EPSILON; // ratio diff/ minduration is bellow 5% 
+  const minDuration = Math.min(
+    firstCueDuration,
+    secondCueDuration,
+    MAX_DELTA_BUFFER_TIME,
+  );
+  return diffBetweenStart / minDuration <= EPSILON; // ratio diff/ minduration is bellow 5%
 }
 
 /**
