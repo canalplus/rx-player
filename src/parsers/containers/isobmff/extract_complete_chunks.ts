@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { be4toi, concat } from "../../../utils/byte_parsing";
+import { be4toi } from "../../../utils/byte_parsing";
 import findCompleteBox from "./find_complete_box";
 
 /**
@@ -27,7 +27,7 @@ import findCompleteBox from "./find_complete_box";
  */
 export default function extractCompleteChunks(
   buffer: Uint8Array,
-): [Uint8Array | null, Uint8Array | null] {
+): [Uint8Array[] | null, Uint8Array | null] {
   let _position = 0;
   const chunks: Uint8Array[] = [];
   let currentBuffer = null;
@@ -70,5 +70,5 @@ export default function extractCompleteChunks(
   if (chunks.length === 0) {
     return [null, currentBuffer];
   }
-  return [concat(...chunks), currentBuffer];
+  return [chunks, currentBuffer];
 }
