@@ -78,6 +78,7 @@ export default function SessionEventsListener(
   onKeyStatusesChange(
     session,
     () => {
+      log.info("DRM: keystatuseschange event received", session.sessionId);
       try {
         checkAndHandleCurrentKeyStatuses();
       } catch (error) {
@@ -152,6 +153,7 @@ export default function SessionEventsListener(
     manualCanceller.signal,
   );
 
+  log.info("DRM: transmitting current keystatuses", session.sessionId);
   checkAndHandleCurrentKeyStatuses();
   return;
   /**
@@ -161,8 +163,6 @@ export default function SessionEventsListener(
    *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
    */
   function checkAndHandleCurrentKeyStatuses(): void {
-    log.info("DRM: keystatuseschange event received", session.sessionId);
-
     if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
       return;
     }
