@@ -29,7 +29,7 @@ import {
   IBufferedHistoryEntry,
   IChunkContext,
 } from "../../../segment_buffers/inventory";
-
+import { ChunkStatus } from "../../../segment_buffers/inventory/segment_inventory";
 
 interface IContentContext {
   adaptation: Adaptation;
@@ -229,7 +229,7 @@ export default function getNeededSegments({
       // periods, we should consider a segment as already downloaded if
       // it is from same period (but can be from different adaptation or
       // representation)
-      if (areFromSamePeriod) {
+      if (completeSeg.status === ChunkStatus.Complete && areFromSamePeriod) {
         const completeSegInfos = completeSeg.infos.segment;
         if (time - completeSegInfos.time > -ROUNDING_ERROR &&
             completeSegInfos.end - end > -ROUNDING_ERROR)
