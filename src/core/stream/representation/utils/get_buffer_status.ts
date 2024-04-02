@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import config from "../../../../config";
 import type {
   IManifest,
   IAdaptation,
@@ -24,14 +23,10 @@ import type {
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
-  IBufferedChunk,
   ISignalCompleteSegmentOperation,
   SegmentSink,
 } from "../../../segment_sinks";
-import SegmentSinksStore, {
-  ChunkStatus,
-  SegmentSinkOperation,
-} from "../../../segment_sinks";
+import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks";
 import type {
   IBufferDiscontinuity,
   IRepresentationStreamPlaybackObservation,
@@ -140,10 +135,7 @@ export default function getBufferStatus(
     .map((operation) => operation.value);
 
   /** Data on every segments buffered around `neededRange`. */
-  const bufferedSegments = getPlayableBufferedSegments(
-    { start: Math.max(neededRange.start - 0.5, 0), end: neededRange.end + 0.5 },
-    segmentSink.getLastKnownInventory(),
-  );
+  const bufferedSegments = segmentSink.getLastKnownInventory();
   let currentPlaybackTime = playbackObserver.getCurrentTime();
   if (currentPlaybackTime === undefined) {
     // We're in a WebWorker, just consider the last known position
@@ -312,47 +304,4 @@ function isPeriodTheCurrentAndLastOne(
     manifest.isLastPeriodKnown &&
     period.id === manifest.periods[manifest.periods.length - 1]?.id
   );
-}
-
-/**
- * From the given SegmentInventory, filters the "playable" (in a supported codec
- * and not known to be undecipherable) buffered Segment Objects which overlap
- * with the given range.
- * @param {Object} neededRange
- * @param {Array.<Object>} segmentInventory
- * @returns {Array.<Object>}
- */
-function getPlayableBufferedSegments(
-  neededRange: { start: number; end: number },
-  segmentInventory: IBufferedChunk[],
-): IBufferedChunk[] {
-  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
-  const segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
-  const minEnd = neededRange.start + segmentRoundingError;
-  const maxStart = neededRange.end - segmentRoundingError;
-
-  const overlappingChunks: IBufferedChunk[] = [];
-  for (let i = segmentInventory.length - 1; i >= 0; i--) {
-    const eltInventory = segmentInventory[i];
-
-    const { representation } = eltInventory.infos;
-    if (
-      eltInventory.status === ChunkStatus.Complete &&
-      representation.decipherable !== false &&
-      representation.isSupported !== false
-    ) {
-      const inventorySegment = eltInventory.infos.segment;
-      const eltInventoryStart = inventorySegment.time / inventorySegment.timescale;
-      const eltInventoryEnd = !inventorySegment.complete
-        ? eltInventory.end
-        : eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
-      if (
-        (eltInventoryEnd > minEnd && eltInventoryStart < maxStart) ||
-        (eltInventory.end > minEnd && eltInventory.start < maxStart)
-      ) {
-        overlappingChunks.unshift(eltInventory);
-      }
-    }
-  }
-  return overlappingChunks;
 }
