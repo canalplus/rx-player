@@ -387,25 +387,14 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-
-    // destructuring to please TypeScript
-    const { segmentUrlTemplate,
-            startNumber,
-            endNumber,
-            timeline,
-            timescale,
-            indexTimeOffset } = this._index;
-    return getSegmentsFromTimeline({ segmentUrlTemplate,
-                                     startNumber,
-                                     endNumber,
-                                     timeline,
-                                     timescale,
-                                     indexTimeOffset },
-                                   from,
-                                   duration,
-                                   this._manifestBoundsCalculator,
-                                   this._scaledPeriodEnd,
-                                   this._isEMSGWhitelisted);
+    return getSegmentsFromTimeline(
+      this._index as typeof this._index & { timeline: IIndexSegment[] },
+      from,
+      duration,
+      this._manifestBoundsCalculator,
+      this._scaledPeriodEnd,
+      this._isEMSGWhitelisted
+    );
   }
 
   /**

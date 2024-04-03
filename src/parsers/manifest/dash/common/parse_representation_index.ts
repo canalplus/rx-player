@@ -114,10 +114,19 @@ export default function parseRepresentationIndex(
         (context.availabilityTimeOffset ?? 0);
     }
 
-    representationIndex = TimelineRepresentationIndex
-      .isTimelineIndexArgument(segmentTemplate) ?
-        new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt) :
-        new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
+    if (
+      segmentTemplate.availabilityTimeComplete !== undefined ||
+      context.availabilityTimeComplete !== undefined
+    ) {
+      reprIndexCtxt.availabilityTimeComplete =
+        segmentTemplate.availabilityTimeComplete ?? context.availabilityTimeComplete;
+    }
+
+    representationIndex = TimelineRepresentationIndex.isTimelineIndexArgument(
+      segmentTemplate
+    )
+      ? new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt)
+      : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
   } else {
     const adaptationChildren = context.adaptation.children;
     if (adaptationChildren.segmentBase !== undefined) {
