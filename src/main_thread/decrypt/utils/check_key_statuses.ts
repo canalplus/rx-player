@@ -50,12 +50,6 @@ export class DecommissionedSessionError extends Error {
   }
 }
 
-const KEY_STATUSES = {
-  EXPIRED: "expired",
-  INTERNAL_ERROR: "internal-error",
-  OUTPUT_RESTRICTED: "output-restricted",
-};
-
 export type IKeyStatusesCheckingOptions = Pick<
   IKeySystemOption,
   "onKeyOutputRestricted" | "onKeyInternalError" | "onKeyExpiration"
@@ -76,6 +70,7 @@ type IKeyStatusesForEach = (
  * appropriate warnings, whitelisted and blacklisted key ids.
  *
  * Throws if one of the keyID is on an error.
+ * @see  https://w3c.github.io/encrypted-media/#dom-mediakeystatus
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
  * @param {Object} options
@@ -116,40 +111,38 @@ export default function checkKeyStatuses(
       }
 
       switch (keyStatus) {
-        case KEY_STATUSES.EXPIRED: {
+        case "expired": {
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
             `A decryption key expired (${bytesToHex(keyId)})`,
             { keyStatuses: [keyStatusObj, ...badKeyStatuses] },
           );
 
-          if (onKeyExpiration === "error" || onKeyExpiration === undefined) {
-            throw error;
-          }
-
           switch (onKeyExpiration) {
+            case undefined:
+            case "error":
+              throw error;
             case "close-session":
               throw new DecommissionedSessionError(error);
             case "fallback":
               blacklistedKeyIds.push(keyId);
               break;
+            case "continue":
+              whitelistedKeyIds.push(keyId);
+              break;
             default:
               // I weirdly stopped relying on switch-cases here due to some TypeScript
               // issue, not checking properly `case undefined` (bug?)
-              if (onKeyExpiration === "continue" || onKeyExpiration === undefined) {
-                whitelistedKeyIds.push(keyId);
-              } else {
-                // Compile-time check throwing when not all possible cases are handled
+              if (onKeyExpiration !== undefined) {
                 assertUnreachable(onKeyExpiration);
               }
               break;
           }
-
           badKeyStatuses.push(keyStatusObj);
           break;
         }
 
-        case KEY_STATUSES.INTERNAL_ERROR: {
+        case "internal-error": {
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
             `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
@@ -181,7 +174,7 @@ export default function checkKeyStatuses(
           break;
         }
 
-        case KEY_STATUSES.OUTPUT_RESTRICTED: {
+        case "output-restricted": {
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
             `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
@@ -211,9 +204,35 @@ export default function checkKeyStatuses(
           break;
         }
 
-        default:
+        case "usable-in-future": {
+          // those key are not usable now
+          blacklistedKeyIds.push(keyId);
+          break;
+        }
+
+        case "usable": {
           whitelistedKeyIds.push(keyId);
           break;
+        }
+
+        case "status-pending": {
+          // keys are not whitelisted nor blacklisted
+          // because we don't know yet if they are usable.
+          break;
+        }
+
+        case "output-downscaled":
+        case "released": {
+          const error = new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
+            { keyStatuses: [keyStatusObj, ...badKeyStatuses] },
+          );
+          throw error;
+        }
+
+        default:
+          assertUnreachable(keyStatus);
       }
     },
   );
