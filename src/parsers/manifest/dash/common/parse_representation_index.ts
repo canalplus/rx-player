@@ -118,6 +118,14 @@ export default function parseRepresentationIndex(
         (context.availabilityTimeOffset ?? 0);
     }
 
+    if (
+      segmentTemplate.availabilityTimeComplete !== undefined ||
+      context.availabilityTimeComplete !== undefined
+    ) {
+      reprIndexCtxt.availabilityTimeComplete =
+        segmentTemplate.availabilityTimeComplete ?? context.availabilityTimeComplete;
+    }
+
     representationIndex = TimelineRepresentationIndex.isTimelineIndexArgument(
       segmentTemplate,
     )
