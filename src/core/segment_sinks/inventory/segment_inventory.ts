@@ -221,6 +221,14 @@ export default class SegmentInventory {
     /** Type of buffer considered, used for logs */
     const bufferType: string | undefined = thisSegment?.infos.adaptation.type;
 
+    if (log.hasLevel("DEBUG")) {
+      const prettyPrintedRanges = ranges.map((r) => `${r.start}-${r.end}`).join(",");
+      log.debug(
+        `SI: synchronizing ${bufferType ?? "unknown"} buffered ranges:`,
+        prettyPrintedRanges,
+      );
+    }
+
     const rangesLength = ranges.length;
     for (let i = 0; i < rangesLength; i++) {
       if (thisSegment === undefined) {
@@ -312,12 +320,28 @@ export default class SegmentInventory {
         let thisSegmentStart = thisSegment.bufferedStart ?? thisSegment.start;
         let thisSegmentEnd = thisSegment.bufferedEnd ?? thisSegment.end;
         const nextRangeStart = i < rangesLength - 1 ? ranges[i + 1].start : undefined;
-        while (
-          thisSegment !== undefined &&
-          rangeEnd - thisSegmentStart >= MINIMUM_SEGMENT_SIZE &&
-          (nextRangeStart === undefined ||
-            rangeEnd - thisSegmentStart >= thisSegmentEnd - nextRangeStart)
-        ) {
+        while (thisSegment !== undefined) {
+          if (rangeEnd < thisSegmentStart) {
+            // `thisSegment` is part of the next range
+            break;
+          }
+          if (
+            rangeEnd - thisSegmentStart < MINIMUM_SEGMENT_SIZE &&
+            thisSegmentEnd - rangeEnd >= MINIMUM_SEGMENT_SIZE
+          ) {
+            // Ambiguous, but `thisSegment` seems more to come after the current
+            // range than during it.
+            break;
+          }
+          if (
+            nextRangeStart !== undefined &&
+            rangeEnd - thisSegmentStart >= thisSegmentEnd - nextRangeStart
+          ) {
+            // Ambiguous, but `thisSegment` has more chance to be part of the
+            // next range than the current one
+            break;
+          }
+
           const prevSegment = inventory[inventoryIndex - 1];
 
           // those segments are contiguous, we have no way to infer their real
@@ -361,20 +385,25 @@ export default class SegmentInventory {
     // if we still have segments left, they are not affiliated to any range.
     // They might have been garbage collected, delete them from here.
     if (!isNullOrUndefined(thisSegment)) {
-      log.debug(
-        "SI: last segments have been GCed",
-        bufferType,
-        inventoryIndex,
-        inventory.length,
-      );
-      const removed = inventory.splice(inventoryIndex, inventory.length - inventoryIndex);
-      for (const seg of removed) {
-        if (
-          seg.bufferedStart === undefined &&
-          seg.bufferedEnd === undefined &&
-          seg.status !== ChunkStatus.Failed
-        ) {
-          this._bufferedHistory.addBufferedSegment(seg.infos, null);
+      const { SEGMENT_SYNCHRONIZATION_DELAY } = config.getCurrent();
+      const now = getMonotonicTimeStamp();
+      for (let i = inventoryIndex; i < inventory.length; i++) {
+        const segmentInfo = inventory[i];
+        if (now - segmentInfo.insertionTs >= SEGMENT_SYNCHRONIZATION_DELAY) {
+          log.debug(
+            "SI: A segment at the end has been completely GCed",
+            bufferType,
+            `${segmentInfo.start}-${segmentInfo.end}`,
+          );
+          if (
+            segmentInfo.bufferedStart === undefined &&
+            segmentInfo.bufferedEnd === undefined &&
+            segmentInfo.status !== ChunkStatus.Failed
+          ) {
+            this._bufferedHistory.addBufferedSegment(segmentInfo.infos, null);
+          }
+          inventory.splice(i, 1);
+          i--;
         }
       }
     }
