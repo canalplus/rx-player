@@ -24,7 +24,7 @@ import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
-import buildWorker, { buildWorkerEs5 } from "./bundle_worker.mjs";
+import buildWorker from "./bundle_worker.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -84,12 +84,7 @@ async function generateBuild(options = {}) {
         minify: !devMode,
         production: !devMode,
         silent: true,
-      }),
-      buildWorkerEs5({
-        watch: false,
-        minify: !devMode,
-        production: !devMode,
-        silent: true,
+        es5: true,
       }),
     ]);
 
