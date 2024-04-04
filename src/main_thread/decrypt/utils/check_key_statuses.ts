@@ -131,8 +131,8 @@ export default function checkKeyStatuses(
               whitelistedKeyIds.push(keyId);
               break;
             default:
-              // I weirdly stopped relying on switch-cases here due to some TypeScript
-              // issue, not checking properly `case undefined` (bug?)
+              // typescript don't know that the value cannot be undefined here
+              // https://github.com/microsoft/TypeScript/issues/57999
               if (onKeyExpiration !== undefined) {
                 assertUnreachable(onKeyExpiration);
               }
@@ -161,8 +161,8 @@ export default function checkKeyStatuses(
               whitelistedKeyIds.push(keyId);
               break;
             default:
-              // Weirdly enough, TypeScript is not checking properly
-              // `case undefined` (bug?)
+              // typescript don't know that the value cannot be undefined here
+              // https://github.com/microsoft/TypeScript/issues/57999
               if (onKeyInternalError !== undefined) {
                 assertUnreachable(onKeyInternalError);
               } else {
@@ -191,8 +191,8 @@ export default function checkKeyStatuses(
               whitelistedKeyIds.push(keyId);
               break;
             default:
-              // Weirdly enough, TypeScript is not checking properly
-              // `case undefined` (bug?)
+              // typescript don't know that the value cannot be undefined here
+              // https://github.com/microsoft/TypeScript/issues/57999
               if (onKeyOutputRestricted !== undefined) {
                 assertUnreachable(onKeyOutputRestricted);
               } else {
@@ -205,12 +205,20 @@ export default function checkKeyStatuses(
         }
 
         case "usable-in-future": {
-          // those key are not usable now
+          // those keys are not usable now
           blacklistedKeyIds.push(keyId);
           break;
         }
 
         case "usable": {
+          whitelistedKeyIds.push(keyId);
+          break;
+        }
+
+        case "output-downscaled": {
+          // the video content has been downscaled, probably because the platform
+          // is insufficiently protected and has
+          // does not met the security policy to play the content.
           whitelistedKeyIds.push(keyId);
           break;
         }
@@ -221,7 +229,6 @@ export default function checkKeyStatuses(
           break;
         }
 
-        case "output-downscaled":
         case "released": {
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
