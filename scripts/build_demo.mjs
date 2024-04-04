@@ -16,8 +16,9 @@ import { pathToFileURL } from "url";
 import esbuild from "esbuild";
 import rootDirectory from "./utils/project_root_directory.mjs";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
-import buildWorker from "./bundle_worker.mjs";
+import runBundler from "./run_bundler.mjs";
 
+const WORKER_IN_FILE = join(rootDirectory, "src/worker_entry_point.ts");
 const DEMO_OUT_FILE = join(rootDirectory, "demo/full/bundle.js");
 const WORKER_OUT_FILE = join(rootDirectory, "demo/full/worker.js");
 const WASM_FILE_DEPENDENCY = join(rootDirectory, "dist/mpd-parser.wasm");
@@ -73,7 +74,7 @@ export default function buildDemo(options) {
     }
   });
 
-  buildWorker({
+  runBundler(WORKER_IN_FILE, {
     watch,
     minify,
     production: !isDevMode,
@@ -128,6 +129,7 @@ export default function buildDemo(options) {
       __LOGGER_LEVEL__: JSON.stringify({
         CURRENT_LEVEL: "INFO",
       }),
+      __GLOBAL_SCOPE__: JSON.stringify(true),
     },
   })
     .then((context) => {
