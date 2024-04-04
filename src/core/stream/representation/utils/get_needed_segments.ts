@@ -128,51 +128,24 @@ export default function getNeededSegments({
     neededRange.end - neededRange.start,
   );
 
-  // Remove from `bufferedSegments` any segments we would prefer to replace:
-  //   - segments in the wrong track / bad quality
-  //   - garbage-collected segments
-  const segmentsToKeep = bufferedSegments
-    .filter(
-      (bufferedSegment) =>
-        !shouldContentBeReplaced(
-          bufferedSegment.infos,
-          content,
-          currentPlaybackTime,
-          fastSwitchThreshold,
-        ),
-    )
-    .filter((currentSeg, i, consideredSegments) => {
-      const prevSeg = i === 0 ? null : consideredSegments[i - 1];
-      const nextSeg =
-        i >= consideredSegments.length - 1 ? null : consideredSegments[i + 1];
+  // Remove from `bufferedSegments` any segments in the wrong track / bad quality
+  const segmentsToKeep = bufferedSegments.filter(
+    (bufferedSegment) =>
+      !shouldContentBeReplaced(
+        bufferedSegment.infos,
+        content,
+        currentPlaybackTime,
+        fastSwitchThreshold,
+      ),
+  );
 
-      let lazySegmentHistory: IBufferedHistoryEntry[] | null = null;
-      if (doesStartSeemGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
-        lazySegmentHistory = getBufferedHistory(currentSeg.infos);
-        if (
-          shouldReloadSegmentGCedAtTheStart(lazySegmentHistory, currentSeg.bufferedStart)
-        ) {
-          return false;
-        }
-        log.debug(
-          "Stream: skipping segment gc-ed at the start",
-          currentSeg.start,
-          currentSeg.bufferedStart,
-        );
-      }
-      if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
-        lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory, currentSeg.bufferedEnd)) {
-          return false;
-        }
-        log.debug(
-          "Stream: skipping segment gc-ed at the end",
-          currentSeg.end,
-          currentSeg.bufferedEnd,
-        );
-      }
-      return true;
-    });
+  // Remove any segments that are not usable because they are garbage collected
+  const reusableSegments = getReusableSegments(
+    segmentsToKeep,
+    neededRange,
+    getBufferedHistory,
+  );
+
   const { MINIMUM_SEGMENT_SIZE, MIN_BUFFER_AHEAD } = config.getCurrent();
   let shouldStopLoadingSegments = false;
   /**
@@ -242,8 +215,8 @@ export default function getNeededSegments({
     }
 
     // check if the segment is already downloaded
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
+    for (let i = 0; i < reusableSegments.length; i++) {
+      const completeSeg = reusableSegments[i];
       const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
       // Check if content are from same period, as there can't be overlapping
       // periods, we should consider a segment as already downloaded if
@@ -299,15 +272,15 @@ export default function getNeededSegments({
     }
 
     // check if there is an hole in place of the segment currently
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
+    for (let i = 0; i < reusableSegments.length; i++) {
+      const completeSeg = reusableSegments[i];
 
       // For the first already-loaded segment, take the first one ending after
       // this one' s start
       if (completeSeg.end + ROUNDING_ERROR > time) {
         const shouldLoad =
           completeSeg.start > time + ROUNDING_ERROR ||
-          getLastContiguousSegment(segmentsToKeep, i).end < end - ROUNDING_ERROR;
+          getLastContiguousSegment(reusableSegments, i).end < end - ROUNDING_ERROR;
         if (shouldLoad) {
           availableBufferSize -= estimatedSegmentSize;
         }
@@ -650,4 +623,52 @@ function shouldReloadSegmentGCedAtTheEnd(
   // This is very unlikely and might be linked to either a content or browser
   // issue. In that case, don't try to reload.
   return Math.abs(prevBufferedEnd - lastBufferedEnd) > 0.01;
+}
+
+/**
+ * Get the list of segments that are reusable and that does not need to be
+ * downloaded again.
+ * It includes the segments that have not been garbage collected, and those
+ * which have been garbage collected but does not need to be reloaded.
+ * @param {IBufferedChunk[]} segments - The segments list to filter.
+ * @param {Object} neededRange - The segment information for the segment in
+ * @param getBufferedHistory - Callback allowing to retrieve a segment's history in the buffer
+ * @returns The segments list including only reusable segments.
+ */
+function getReusableSegments(
+  segments: IBufferedChunk[],
+  neededRange: { start: number; end: number },
+  getBufferedHistory: (context: IChunkContext) => IBufferedHistoryEntry[],
+): IBufferedChunk[] {
+  return segments.filter((currentSeg, i, consideredSegments) => {
+    const prevSeg = i === 0 ? null : consideredSegments[i - 1];
+    const nextSeg = i >= consideredSegments.length - 1 ? null : consideredSegments[i + 1];
+
+    let lazySegmentHistory: IBufferedHistoryEntry[] | null = null;
+    if (doesStartSeemGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
+      lazySegmentHistory = getBufferedHistory(currentSeg.infos);
+      if (
+        shouldReloadSegmentGCedAtTheStart(lazySegmentHistory, currentSeg.bufferedStart)
+      ) {
+        return false;
+      }
+      log.debug(
+        "Stream: skipping segment gc-ed at the start",
+        currentSeg.start,
+        currentSeg.bufferedStart,
+      );
+    }
+    if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
+      lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
+      if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory, currentSeg.bufferedEnd)) {
+        return false;
+      }
+      log.debug(
+        "Stream: skipping segment gc-ed at the end",
+        currentSeg.end,
+        currentSeg.bufferedEnd,
+      );
+    }
+    return true;
+  });
 }
