@@ -205,7 +205,9 @@ export default function checkKeyStatuses(
         }
 
         case "usable-in-future": {
-          // those keys are not usable now
+          /**
+           * The key is not yet usable for decryption because the start time is in the future.
+           */
           blacklistedKeyIds.push(keyId);
           break;
         }
@@ -216,16 +218,22 @@ export default function checkKeyStatuses(
         }
 
         case "output-downscaled": {
-          // the video content has been downscaled, probably because the platform
-          // is insufficiently protected and has
-          // does not met the security policy to play the content.
+          /**
+           * The video content has been downscaled, probably because the device is
+           * insufficiently protected and does not met the security policy to play
+           * the content with the original quality (resolution).
+           * The key is usable to play the downscaled content.
+           * */
           whitelistedKeyIds.push(keyId);
           break;
         }
 
         case "status-pending": {
-          // keys are not whitelisted nor blacklisted
-          // because we don't know yet if they are usable.
+          /**
+           * The status of the key is not yet known.
+           * It should not be blacklisted nor whitelisted until the actual status
+           * is determined.
+           * */
           break;
         }
 
