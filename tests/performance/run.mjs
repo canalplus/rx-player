@@ -751,6 +751,7 @@ function createBundle(options) {
           __LOGGER_LEVEL__: JSON.stringify({
             CURRENT_LEVEL: "INFO",
           }),
+          __GLOBAL_SCOPE__: JSON.stringify(false),
         },
       })
       .then(

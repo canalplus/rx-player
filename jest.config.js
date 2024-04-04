@@ -25,5 +25,6 @@ module.exports = {
     __LOGGER_LEVEL__: {
       CURRENT_LEVEL: '"NONE"',
     },
+    __GLOBAL_SCOPE__: false,
   },
 };
