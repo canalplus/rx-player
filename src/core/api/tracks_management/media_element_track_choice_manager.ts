@@ -91,24 +91,28 @@ function createAudioTracks(
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < audioTracks.length; i++) {
     const audioTrack = audioTracks[i];
-    const language = audioTrack.language === "" ? "nolang" :
-                                                  audioTrack.language;
+    /**
+     * "und" is a special value in ISO 639-3 that stands for "undetermined language".
+     * If a track is announced in the manifest with lang "und", Safari will
+     * incorrectly set `audioTrack.language` with an empty string instead of "und".
+     * To patch this, check if the label is "und".
+     */
+    const language = audioTrack.language || (audioTrack.label === "und" ? "und" : "");
     const occurences = languagesOccurences[language] ?? 1;
-    const id = "gen_audio_" +
-               language +
-               "_" +
-               occurences.toString();
+    const id = "gen_audio_" + (language || "nolang") + "_" + occurences.toString();
     languagesOccurences[language] = occurences + 1;
-    const track = { language: audioTrack.language,
-                    id,
-                    normalized: normalizeLanguage(audioTrack.language),
-                    audioDescription: audioTrack.kind === "descriptions" ||
-                      // Safari seem to prefer the non-standard singular
-                      // version, funnily enough
-                      audioTrack.kind === "description",
-                    representations: [] as Representation[] };
-    newAudioTracks.push({ track,
-                          nativeTrack: audioTrack });
+    const track = {
+      language,
+      id,
+      normalized: normalizeLanguage(language),
+      audioDescription:
+        audioTrack.kind === "descriptions" ||
+        // Safari seem to prefer the non-standard singular
+        // version, funnily enough
+        audioTrack.kind === "description",
+      representations: [] as Representation[],
+    };
+    newAudioTracks.push({ track, nativeTrack: audioTrack });
   }
   return newAudioTracks;
 }
@@ -126,30 +130,31 @@ function createTextTracks(
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < textTracks.length; i++) {
     const textTrack = textTracks[i];
-    const language = textTrack.language === "" ? "nolang" :
-                                                 textTrack.language;
+    /**
+     * "und" is a special value in ISO 639-3 that stands for "undetermined language".
+     * If a track is announced in the manifest with lang "und", Safari will
+     * incorrectly set `textTrack.language` with an empty string instead of "und".
+     * To patch this, check if the label is "und".
+     */
+    const language = textTrack.language || (textTrack.label === "und" ? "und" : "");
     const occurences = languagesOccurences[language] ?? 1;
-    const id = "gen_text_" +
-               language +
-               "_" +
-               occurences.toString();
+    const id = "gen_text_" + (language || "nolang") + "_" + occurences.toString();
     languagesOccurences[language] = occurences + 1;
 
     // Safari seems to be indicating that the subtitles track is a forced
     // subtitles track by setting the `kind` attribute to `"forced"`.
     // As of now (2023-04-04), this is not standard.
     // @see https://github.com/whatwg/html/issues/4472
-    const forced = (textTrack.kind as string) === "forced" ?
-      true :
-      undefined;
-    const track = { language: textTrack.language,
-                    forced,
-                    label: textTrack.label,
-                    id,
-                    normalized: normalizeLanguage(textTrack.language),
-                    closedCaption: textTrack.kind === "captions" };
-    newTextTracks.push({ track,
-                         nativeTrack: textTrack });
+    const forced = (textTrack.kind as string) === "forced" ? true : undefined;
+    const track = {
+      language,
+      forced,
+      label: textTrack.label,
+      id,
+      normalized: normalizeLanguage(language),
+      closedCaption: textTrack.kind === "captions",
+    };
+    newTextTracks.push({ track, nativeTrack: textTrack });
   }
   return newTextTracks;
 }
@@ -168,13 +173,15 @@ function createVideoTracks(
   const languagesOccurences: Partial<Record<string, number>> = {};
   for (let i = 0; i < videoTracks.length; i++) {
     const videoTrack = videoTracks[i];
-    const language = videoTrack.language === "" ? "nolang" :
-                                                  videoTrack.language;
+    /**
+     * "und" is a special value in ISO 639-3 that stands for "undetermined language".
+     * If a track is announced in the manifest with lang "und", Safari will
+     * incorrectly set `videoTrack.language` with an empty string instead of "und".
+     * To patch this, check if the label is "und".
+     */
+    const language = videoTrack.language || (videoTrack.label === "und" ? "und" : "");
     const occurences = languagesOccurences[language] ?? 1;
-    const id = "gen_video_" +
-               language +
-               "_" +
-               occurences.toString();
+    const id = "gen_video_" + (language || "nolang") + "_" + occurences.toString();
     languagesOccurences[language] = occurences + 1;
     newVideoTracks.push({ track: { id,
                                    representations: [] as Representation[] },
