@@ -652,7 +652,7 @@ const DEFAULT_CONFIG = {
    * this logic could lead to bugs with the current code.
    * @type {Number}
    */
-  MINIMUM_SEGMENT_SIZE: 0.005,
+  MINIMUM_SEGMENT_SIZE: 0.001,
 
   /**
    * Append windows allow to filter media data from segments if they are outside
