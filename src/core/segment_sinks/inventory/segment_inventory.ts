@@ -33,11 +33,11 @@ export const enum ChunkStatus {
    * fully-loaded and pushed.
    *
    * Once and if the corresponding segment is fully-pushed, its `ChunkStatus`
-   * switches to `Complete`.
+   * switches to `FullyLoaded`.
    */
   PartiallyPushed = 0,
   /** This chunk corresponds to a fully-loaded segment. */
-  Complete = 1,
+  FullyLoaded = 1,
   /**
    * This chunk's push operation failed, in this scenario there is no certitude
    * about the presence of that chunk in the buffer: it may not be present,
@@ -323,9 +323,17 @@ export default class SegmentInventory {
           // those segments are contiguous, we have no way to infer their real
           // end
           if (prevSegment.bufferedEnd === undefined) {
-            prevSegment.bufferedEnd = thisSegment.precizeStart
-              ? thisSegment.start
-              : prevSegment.end;
+            if (thisSegment.precizeStart) {
+              prevSegment.bufferedEnd = thisSegment.start;
+            } else if (prevSegment.infos.segment.complete) {
+              prevSegment.bufferedEnd = prevSegment.end;
+            } else {
+              // We cannot truly trust the anounced end here as the segment was
+              // potentially not complete at its time of announce.
+              // Just assume the next's segment announced start is right - as
+              // `start` is in that scenario more "trustable" than `end`.
+              prevSegment.bufferedEnd = thisSegment.start;
+            }
             log.debug(
               "SI: calculating buffered end of contiguous segment",
               bufferType,
@@ -836,7 +844,8 @@ export default class SegmentInventory {
   }
 
   /**
-   * Indicate that inserted chunks can now be considered as a complete segment.
+   * Indicate that inserted chunks can now be considered as a fully-loaded
+   * segment.
    * Take in argument the same content than what was given to `insertChunk` for
    * the corresponding chunks.
    * @param {Object} content
@@ -890,7 +899,7 @@ export default class SegmentInventory {
           i -= length;
         }
         if (this._inventory[firstI].status === ChunkStatus.PartiallyPushed) {
-          this._inventory[firstI].status = ChunkStatus.Complete;
+          this._inventory[firstI].status = ChunkStatus.FullyLoaded;
         }
         this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
@@ -966,7 +975,7 @@ export default class SegmentInventory {
 function bufferedStartLooksCoherent(thisSegment: IBufferedChunk): boolean {
   if (
     thisSegment.bufferedStart === undefined ||
-    thisSegment.status !== ChunkStatus.Complete
+    thisSegment.status !== ChunkStatus.FullyLoaded
   ) {
     return false;
   }
@@ -995,7 +1004,8 @@ function bufferedStartLooksCoherent(thisSegment: IBufferedChunk): boolean {
 function bufferedEndLooksCoherent(thisSegment: IBufferedChunk): boolean {
   if (
     thisSegment.bufferedEnd === undefined ||
-    thisSegment.status !== ChunkStatus.Complete
+    !thisSegment.infos.segment.complete ||
+    thisSegment.status !== ChunkStatus.FullyLoaded
   ) {
     return false;
   }
@@ -1177,8 +1187,8 @@ function guessBufferedEndFromRangeEnd(
     log.debug("SI: buffered end is precize end", bufferType, lastSegmentInRange.end);
     lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
   } else if (
-    rangeEnd - lastSegmentInRange.end <=
-    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE
+    rangeEnd - lastSegmentInRange.end <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE ||
+    !lastSegmentInRange.infos.segment.complete
   ) {
     const now = getMonotonicTimeStamp();
     if (
