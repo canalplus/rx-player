@@ -388,4 +388,13 @@ describe("HTML areCuesStartNearlyEqual", () => {
     const cueInfo2 = { start: 2, end: 200, cues };
     expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(false);
   });
+
+  it("Case 6: should be true", () => {
+    // * [0, 4] and [0.01, 3.99]  start should be equals
+    const element = document.createElement("div");
+    const cues = [{ start: 0, end: 4, element }];
+    const cueInfo1 = { start: 0, end: 4, cues };
+    const cueInfo2 = { start: 0.01, end: 3.99, cues };
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(true);
+  });
 });

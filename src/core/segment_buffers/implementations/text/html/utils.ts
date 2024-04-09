@@ -100,8 +100,8 @@ export function areCuesStartNearlyEqual(
   firstCue: ICuesGroup,
   secondCue: ICuesGroup,
 ): boolean {
-  const firstCueDuration = Math.abs(firstCue.end - firstCue.start);
-  const secondCueDuration = Math.abs(secondCue.end - secondCue.start);
+  const firstCueDuration = firstCue.end - firstCue.start;
+  const secondCueDuration = secondCue.end - secondCue.start;
   const diffBetweenStart = Math.abs(firstCue.start - secondCue.start);
   const minDuration = Math.min(
     firstCueDuration,
