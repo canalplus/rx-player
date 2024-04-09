@@ -17,8 +17,8 @@
 import normalizeLanguage, { normalizeAudioTrack, normalizeTextTrack } from "../normalize";
 
 describe("utils - normalizeLanguage", () => {
-  it("should translate an empty string to an empty string", () => {
-    expect(normalizeLanguage("")).toBe("");
+  it("should translate an empty string to an undertemined code", () => {
+    expect(normalizeLanguage("")).toBe("und");
   });
 
   it("should translate ISO639-1 to ISO639-3", () => {
@@ -58,7 +58,7 @@ describe("utils - normalizeAudioTrack", () => {
     expect(normalizeAudioTrack("")).toEqual({
       language: "",
       audioDescription: false,
-      normalized: "",
+      normalized: "und",
     });
   });
 
@@ -217,7 +217,7 @@ describe("utils - normalizeTextTrack", () => {
     expect(normalizeTextTrack("")).toEqual({
       language: "",
       closedCaption: false,
-      normalized: "",
+      normalized: "und",
     });
   });
 
