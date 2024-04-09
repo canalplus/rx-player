@@ -51,7 +51,10 @@ interface INormalizedTextTrackObject extends IMinimalTextTrackObject {
  */
 function normalizeLanguage(_language: string): string {
   if (isNullOrUndefined(_language) || _language === "") {
-    return "";
+    /**
+     * "und" is a special value in ISO 639-3 that stands for "undetermined language".
+     */
+    return "und";
   }
   const fields = ("" + _language).toLowerCase().split("-");
   const base = fields[0];
