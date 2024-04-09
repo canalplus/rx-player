@@ -335,7 +335,7 @@ export default class SegmentInventory {
           }
           if (
             nextRangeStart !== undefined &&
-            rangeEnd - thisSegmentStart >= thisSegmentEnd - nextRangeStart
+            rangeEnd - thisSegmentStart < thisSegmentEnd - nextRangeStart
           ) {
             // Ambiguous, but `thisSegment` has more chance to be part of the
             // next range than the current one
