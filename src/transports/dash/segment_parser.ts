@@ -20,6 +20,7 @@ import {
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
+  fakeEncryptionDataInInitSegment,
   getKeyIdFromInitSegment,
   parseEmsgBoxes,
 } from "../../parsers/containers/isobmff/utils";
@@ -80,7 +81,7 @@ export default function generateAudioVideoSegmentParser({
       };
     }
 
-    const chunkData = data instanceof Uint8Array ? data : new Uint8Array(data);
+    let chunkData = data instanceof Uint8Array ? data : new Uint8Array(data);
 
     const containerType = inferSegmentContainer(context.type, context.mimeType);
 
@@ -191,6 +192,10 @@ export default function generateAudioVideoSegmentParser({
     }
 
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined : timescale;
+
+    if (segment.isInit) {
+      chunkData = fakeEncryptionDataInInitSegment(chunkData);
+    }
 
     return {
       segmentType: "init",
