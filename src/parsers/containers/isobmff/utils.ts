@@ -37,9 +37,9 @@ import { getEMSG, getMDIA, getTRAF, getTRAFs } from "./read";
 
 const AVC1_BOX_NAME = 0x61766331;
 const AVC3_BOX_NAME = 0x61766333;
-const AC3_BOX_NAME = 0x61632D33;
-const EC3_BOX_NAME = 0x65632D33;
-const MP4A_BOX_NAME = 0x6D703461;
+const AC3_BOX_NAME = 0x61632d33;
+const EC3_BOX_NAME = 0x65632d33;
+const MP4A_BOX_NAME = 0x6d703461;
 
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {
@@ -55,45 +55,105 @@ export interface IISOBMFFPSSHInfo {
  * @see fakeEncryptionDataInInitSegment
  */
 const FAKE_SINF_BOX = new Uint8Array([
-  0x00, 0x00, 0x00, 0x50, // Length
-  0x73, 0x69, 0x6e, 0x66, // `sinf`
+  0x00,
+  0x00,
+  0x00,
+  0x50, // Length
+  0x73,
+  0x69,
+  0x6e,
+  0x66, // `sinf`
 
   // -- Start of `frma`
 
-  0x00, 0x00, 0x00, 0x0c, // Length of `frma` box
-  0x66, 0x72, 0x6d, 0x61, // `frma`
-  0x00, 0x00, 0x00, 0x00, // format in `frma` (empty for now, but will be dynamically
-                          // updated)
+  0x00,
+  0x00,
+  0x00,
+  0x0c, // Length of `frma` box
+  0x66,
+  0x72,
+  0x6d,
+  0x61, // `frma`
+  0x00,
+  0x00,
+  0x00,
+  0x00, // format in `frma` (empty for now, but will be dynamically
+  // updated)
 
   // -- End of `frma`
 
   // -- Start of `schm`
 
-  0x00, 0x00, 0x00, 0x14, // Length of `schm` box
-  0x73, 0x63, 0x68, 0x6d, // `schm`
-  0x00, 0x00, 0x00, 0x00, // This is a ISOBMFF "FullBox" so, there are versions
-                          // and flags we can just set all of it to `0` here.
-  0x63, 0x65, 0x6e, 0x63, // Scheme. Here `cenc`
-  0x00, 0x01, 0x00, 0x00, // Version of scheme Here 1.0
+  0x00,
+  0x00,
+  0x00,
+  0x14, // Length of `schm` box
+  0x73,
+  0x63,
+  0x68,
+  0x6d, // `schm`
+  0x00,
+  0x00,
+  0x00,
+  0x00, // This is a ISOBMFF "FullBox" so, there are versions
+  // and flags we can just set all of it to `0` here.
+  0x63,
+  0x65,
+  0x6e,
+  0x63, // Scheme. Here `cenc`
+  0x00,
+  0x01,
+  0x00,
+  0x00, // Version of scheme Here 1.0
 
   // -- End of `schm`
 
   // -- Start of `schi`
 
-  0x00, 0x00, 0x00, 0x28, // Length of the `schi` box
-  0x73, 0x63, 0x68, 0x69, // `schi`
+  0x00,
+  0x00,
+  0x00,
+  0x28, // Length of the `schi` box
+  0x73,
+  0x63,
+  0x68,
+  0x69, // `schi`
 
   // -- Start of `tenc`
 
-  0x00, 0x00, 0x00, 0x20, // Length of the `tenc` box
-  0x74, 0x65, 0x6e, 0x63, // `tenc`
-  0x00, 0x00, 0x00, 0x00, // This is a ISOBMFF "FullBox" so, there are versions
-                          // and flags we can just set all of it to `0` here.
-  0x00, 0x00,             // Reserved bits we can just set to `0`
-  0x01,                   // Default protected
-  0x08,                   // Default per-sample IV size
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Key id. As we just want to create
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // a fake one, we just set all 0s.
+  0x00,
+  0x00,
+  0x00,
+  0x20, // Length of the `tenc` box
+  0x74,
+  0x65,
+  0x6e,
+  0x63, // `tenc`
+  0x00,
+  0x00,
+  0x00,
+  0x00, // This is a ISOBMFF "FullBox" so, there are versions
+  // and flags we can just set all of it to `0` here.
+  0x00,
+  0x00, // Reserved bits we can just set to `0`
+  0x01, // Default protected
+  0x08, // Default per-sample IV size
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00, // Key id. As we just want to create
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00, // a fake one, we just set all 0s.
 
   // -- End of `tenc`, `schi` and the whole `sinf`
 ]);
@@ -113,17 +173,12 @@ const FAKE_SINF_BOX = new Uint8Array([
  * shaka-player's code (google's own DASH player) while investigating this issue.
  * So kudos and thanks to them I guess!
  *
- * @param {BufferSource} segment
+ * @param {Uint8Array} buf
  * @returns {Uint8Array}
  */
 export function fakeEncryptionDataInInitSegment(
-  segment : BufferSource
-) : Uint8Array {
-  // Format it into an Uint8Array
-  const buf = segment instanceof Uint8Array ?  segment :
-              segment instanceof ArrayBuffer ? new Uint8Array(segment) :
-                                               new Uint8Array(segment.buffer);
-
+  buf: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
   /**
    * Contains offsets of all encountered boxes that should be the parents of the
    * box we want to modify. Will be needed later to update their length.
@@ -132,12 +187,10 @@ export function fakeEncryptionDataInInitSegment(
 
   // Recuperate those offsets:
   {
-    const parentBoxes = [ 0x6D6F6F76 /* moov */,
-                          0x7472616B /* trak */,
-                          0x6D646961 /* mdia */,
-                          0x6D696E66 /* minf */,
-                          0x7374626C /* stbl */,
-                          0x73747364 /* stsd */];
+    const parentBoxes = [
+      0x6d6f6f76 /* moov */, 0x7472616b /* trak */, 0x6d646961 /* mdia */,
+      0x6d696e66 /* minf */, 0x7374626c /* stbl */, 0x73747364 /* stsd */,
+    ];
     let currBox = buf;
     let relativeOffset = 0;
     for (const parentBoxName of parentBoxes) {
@@ -146,7 +199,7 @@ export function fakeEncryptionDataInInitSegment(
         return buf;
       }
       currBox = currBox.subarray(offsets[1], offsets[2]);
-      parentBoxesOffsets.push(offsets.map(offset => offset + relativeOffset));
+      parentBoxesOffsets.push(offsets.map((offset) => offset + relativeOffset));
       relativeOffset += offsets[1];
     }
   }
@@ -154,8 +207,8 @@ export function fakeEncryptionDataInInitSegment(
   const stsdOffsets = parentBoxesOffsets[parentBoxesOffsets.length - 1];
   const stsdSubBoxesStart = stsdOffsets[1] + 8;
   const stsdSubBoxes = buf.subarray(stsdSubBoxesStart, stsdOffsets[2]);
-  const encv = getBoxContent(stsdSubBoxes, 0x656E6376 /* encv */);
-  const enca = getBoxContent(stsdSubBoxes, 0x656E6361 /* enca */);
+  const encv = getBoxContent(stsdSubBoxes, 0x656e6376 /* encv */);
+  const enca = getBoxContent(stsdSubBoxes, 0x656e6361 /* enca */);
   if (encv !== null || enca !== null) {
     // There's already encryption data here
     return buf;
@@ -180,25 +233,35 @@ export function fakeEncryptionDataInInitSegment(
   }
 
   /** Information about every boxes we need to add encryption metadata to. */
-  const boxesToUpdate : ISampleEntryBoxInfo[] = [
-    { type: "video" as const,
+  const boxesToUpdate: ISampleEntryBoxInfo[] = [
+    {
+      type: "video" as const,
       name: AVC1_BOX_NAME,
-      relativeOffsets: getBoxOffsets(stsdSubBoxes, AVC1_BOX_NAME) },
-    { type: "video" as const,
+      relativeOffsets: getBoxOffsets(stsdSubBoxes, AVC1_BOX_NAME),
+    },
+    {
+      type: "video" as const,
       name: AVC3_BOX_NAME,
-      relativeOffsets: getBoxOffsets(stsdSubBoxes, AVC3_BOX_NAME) },
-    { type: "audio" as const,
+      relativeOffsets: getBoxOffsets(stsdSubBoxes, AVC3_BOX_NAME),
+    },
+    {
+      type: "audio" as const,
       name: AC3_BOX_NAME,
-      relativeOffsets: getBoxOffsets(stsdSubBoxes, AC3_BOX_NAME) },
-    { type: "audio" as const,
+      relativeOffsets: getBoxOffsets(stsdSubBoxes, AC3_BOX_NAME),
+    },
+    {
+      type: "audio" as const,
       name: EC3_BOX_NAME,
-      relativeOffsets: getBoxOffsets(stsdSubBoxes, EC3_BOX_NAME) },
-    { type: "audio" as const,
+      relativeOffsets: getBoxOffsets(stsdSubBoxes, EC3_BOX_NAME),
+    },
+    {
+      type: "audio" as const,
       name: MP4A_BOX_NAME,
-      relativeOffsets: getBoxOffsets(stsdSubBoxes, MP4A_BOX_NAME) },
+      relativeOffsets: getBoxOffsets(stsdSubBoxes, MP4A_BOX_NAME),
+    },
     // TODO Does that also covers hvc segments and other rarer codecs?
     // If it doesn't, it needs to be added there.
-  ].filter((b) : b is ISampleEntryBoxInfo => b.relativeOffsets !== null);
+  ].filter((b): b is ISampleEntryBoxInfo => b.relativeOffsets !== null);
 
   // Sort from last to first to simplify length updates
   boxesToUpdate.sort((a, b) => b.relativeOffsets[0] - a.relativeOffsets[0]);
@@ -213,8 +276,10 @@ export function fakeEncryptionDataInInitSegment(
 
     // We put the content of `box` at the beginning. We will replace this box name
     // later, as described in the ISOBMFF spec for encryption metadata.
-    const boxContent = stsdSubBoxes.subarray(box.relativeOffsets[0],
-                                             box.relativeOffsets[2]);
+    const boxContent = stsdSubBoxes.subarray(
+      box.relativeOffsets[0],
+      box.relativeOffsets[2],
+    );
     newBox.set(boxContent, 0);
 
     /**
@@ -227,24 +292,25 @@ export function fakeEncryptionDataInInitSegment(
     if (box.type === "audio") {
       // Put "enca" in place of original box name, as indicated by
       // `8.12 Support for Protected Streams` of ISO/IEC 14496-12
-      newBox.set(itobe4(0x656E6361), titleOffsetForBox);
+      newBox.set(itobe4(0x656e6361), titleOffsetForBox);
     } else {
       // Put "encv" in place of original box name, as indicated by
       // `8.12 Support for Protected Streams` of ISO/IEC 14496-12
-      newBox.set(itobe4(0x656E6376), titleOffsetForBox);
+      newBox.set(itobe4(0x656e6376), titleOffsetForBox);
     }
     newBox.set(FAKE_SINF_BOX, boxLen); // Put our fake box after
 
-    const sinfOffsets = getBoxOffsets(newBox, 0x73696E66 /* sinf */);
+    const sinfOffsets = getBoxOffsets(newBox, 0x73696e66 /* sinf */);
     if (sinfOffsets === null) {
-      log.warn("ISOBMFF: sinf not found, this should not be possible.");
+      log.warn("utils", "sinf not found, this should not be possible.");
       return buf;
     }
     const sinfContent = newBox.subarray(sinfOffsets[1], sinfOffsets[2]);
-    const frmaOffsets = getBoxOffsets(sinfContent, 0x66726D61 /* frma */)
-      ?.map(val => val + sinfOffsets[1]);
+    const frmaOffsets = getBoxOffsets(sinfContent, 0x66726d61 /* frma */)?.map(
+      (val) => val + sinfOffsets[1],
+    );
     if (frmaOffsets === undefined) {
-      log.warn("ISOBMFF: frma not found in sinf, this should not be possible.");
+      log.warn("utils", "frma not found in sinf, this should not be possible.");
       return buf;
     }
 
@@ -280,8 +346,10 @@ export function fakeEncryptionDataInInitSegment(
 
     // Move everything from end of `box` to the end of the bigger segment, so
     // the new box can be put before
-    updatedSeg.set(previousUpdatedSeg.subarray(absoluteBoxEnd),
-                   absoluteBoxEnd + newBox.length);
+    updatedSeg.set(
+      previousUpdatedSeg.subarray(absoluteBoxEnd),
+      absoluteBoxEnd + newBox.length,
+    );
 
     // and put the new box in between
     updatedSeg.set(newBox, absoluteBoxEnd);
@@ -290,8 +358,10 @@ export function fakeEncryptionDataInInitSegment(
     // sizes adjusted to account for the added box. These offsets should not be
     // changed, because they should all be within the first section we copy.
     for (const parentBoxesOffset of parentBoxesOffsets) {
-      const parentBox = updatedSeg.subarray(parentBoxesOffset[0],
-                                            parentBoxesOffset[2] + newBox.length);
+      const parentBox = updatedSeg.subarray(
+        parentBoxesOffset[0],
+        parentBoxesOffset[2] + newBox.length,
+      );
 
       // TODO This will break if `updateBoxLength` actually needs to create a
       // new box, for example because it might have to create an enlarged length
