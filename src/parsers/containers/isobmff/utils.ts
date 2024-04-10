@@ -195,6 +195,46 @@ function getTrackFragmentDecodeTime(buffer: Uint8Array): number | undefined {
 }
 
 /**
+ * Update track Fragment Decode Time of a segment, if found.
+ * Returns `true` if it could have been updated and `false` if not.
+ * @param {Uint8Array} buffer
+ * @param {number} time
+ * @returns {boolean}
+ */
+function setTrackFragmentDecodeTime(buffer: Uint8Array, time: number): boolean {
+  const traf = getTRAF(buffer);
+  if (traf === null) {
+    return false;
+  }
+  const tfdt = getBoxContent(traf, 0x74666474 /* tfdt */);
+  if (tfdt === null) {
+    return false;
+  }
+  const version = tfdt[0];
+  if (version === 1) {
+    const newTfdt = itobe8(time);
+    tfdt[4] = newTfdt[0];
+    tfdt[5] = newTfdt[1];
+    tfdt[6] = newTfdt[2];
+    tfdt[7] = newTfdt[3];
+    tfdt[8] = newTfdt[4];
+    tfdt[9] = newTfdt[5];
+    tfdt[10] = newTfdt[6];
+    tfdt[11] = newTfdt[7];
+    return true;
+  }
+  if (version === 0) {
+    const newTfdt = itobe4(time);
+    tfdt[4] = newTfdt[0];
+    tfdt[5] = newTfdt[1];
+    tfdt[6] = newTfdt[2];
+    tfdt[7] = newTfdt[3];
+    return true;
+  }
+  return false;
+}
+
+/**
  * Returns the "default sample duration" which is the default value for duration
  * of samples found in a "traf" ISOBMFF box.
  *
@@ -568,6 +608,7 @@ export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,
+  setTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
   patchPssh,

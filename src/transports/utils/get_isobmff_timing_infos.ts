@@ -20,6 +20,7 @@ import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
 } from "../../parsers/containers/isobmff";
+import { setTrackFragmentDecodeTime } from "../../parsers/containers/isobmff/utils";
 import type { IChunkTimeInfo } from "../types";
 
 /**
@@ -39,7 +40,14 @@ export default function getISOBMFFTimingInfos(
   segment: ISegment,
   initTimescale?: number,
 ): IChunkTimeInfo | null {
+  if (initTimescale !== undefined) {
+    console.warn("DOING IT !!!!!!", segment.time, segment.time * initTimescale);
+    const trueTime = segment.time * initTimescale;
+    segment.timestampOffset = 0;
+    setTrackFragmentDecodeTime(buffer, trueTime);
+  }
   const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
+  console.warn("RESULT !!!!!!", baseDecodeTime);
   if (baseDecodeTime === undefined || initTimescale === undefined) {
     return null;
   }
