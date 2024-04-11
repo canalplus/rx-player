@@ -17,7 +17,7 @@
 import normalizeLanguage, { normalizeAudioTrack, normalizeTextTrack } from "../normalize";
 
 describe("utils - normalizeLanguage", () => {
-  it("should translate an empty string to an undertemined code", () => {
+  it("should translate an empty string to an undetermined code", () => {
     expect(normalizeLanguage("")).toBe("und");
   });
 
