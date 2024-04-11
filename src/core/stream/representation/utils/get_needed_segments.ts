@@ -139,8 +139,8 @@ export default function getNeededSegments({
       ),
   );
 
-  // Remove any segments that are not usable because they are garbage collected
-  const reusableSegments = getReusableSegments(
+  // Remove any segments that are not usable because they have been garbage collected
+  const reusableSegments = filterOutGCedSegments(
     segmentsToKeep,
     neededRange,
     getBufferedHistory,
@@ -626,16 +626,13 @@ function shouldReloadSegmentGCedAtTheEnd(
 }
 
 /**
- * Get the list of segments that are reusable and that does not need to be
- * downloaded again.
- * It includes the segments that have not been garbage collected, and those
- * which have been garbage collected but does not need to be reloaded.
+ * Returns the list of segments, minus those that have been garbage collected.
  * @param {IBufferedChunk[]} segments - The segments list to filter.
- * @param {Object} neededRange - The segment information for the segment in
+ * @param {Object} neededRange - The range we want to fill with segments.
  * @param getBufferedHistory - Callback allowing to retrieve a segment's history in the buffer
  * @returns The segments list including only reusable segments.
  */
-function getReusableSegments(
+function filterOutGCedSegments(
   segments: IBufferedChunk[],
   neededRange: { start: number; end: number },
   getBufferedHistory: (context: IChunkContext) => IBufferedHistoryEntry[],
