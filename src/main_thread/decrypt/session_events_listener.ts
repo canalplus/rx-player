@@ -105,6 +105,10 @@ export default function SessionEventsListener(
         : "license-request";
 
       log.info(`DRM: Received message event, type ${messageType}`, session.sessionId);
+      if(message.byteLength <= 4) {
+        log.warn(`DRM: License challenge seems anormaly short, length is: ${message.byteLength}.
+        MediaKeySession should probably have added a certificate with "setServerCertificate".`)
+      }
 
       const backoffOptions = getLicenseBackoffOptions(getLicenseConfig.retry);
       retryPromiseWithBackoff(
