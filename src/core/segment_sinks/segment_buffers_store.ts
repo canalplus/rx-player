@@ -347,6 +347,40 @@ export default class SegmentSinksStore {
     }
     return true;
   }
+
+  public toSerialized() {
+    const serializedSegmentSinksStore = {
+      _mediaSource: null,
+      _initializedSegmentSinks: {
+        audio: { 
+          bufferType: "audio",
+          codec: this._initializedSegmentSinks.audio?.codec,
+          _segmentInventory: {
+            _inventory: [{
+              insertionTs: 0,
+              chunkSize: 0,
+              bufferedEnd: 0,
+              bufferedStart: 0,
+              end: 0,
+              precizeEnd: false,
+              precizeStart: false,
+              infos: undefined,
+              status: undefined,
+              splitted: false,
+              start: 0,
+            }],
+            _bufferedHistory: undefined
+          }
+        },
+        video: [],
+        text: [],
+      },
+      _onNativeBufferAddedOrDisabled: null,
+      _textInterface: null,
+      _hasVideo: true,
+  }
+
+  return serializedSegmentSinksStore
 }
 
 /**

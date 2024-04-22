@@ -1465,7 +1465,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
-              this.trigger("loaded", { segmentSinksStore: null });
+              this.trigger("loaded", { segmentSinksStore: "hello" });
             }
           },
           { emitCurrentValue: true, clearSignal: cancelSignal },

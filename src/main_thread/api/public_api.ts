@@ -1039,6 +1039,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     );
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentSinksStore = evt.segmentSinksStore;
+      console.log(
+        "DEBUG: loaded and set segmentSinksStore",
+        contentInfos.segmentSinksStore,
+      );
+      window.a = contentInfos.segmentSinksStore;
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -1159,6 +1164,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
 
     this._priv_currentError = null;
+    console.log("DEBUG: setting _priv_contentInfos");
+
     this._priv_contentInfos = contentInfos;
 
     /**

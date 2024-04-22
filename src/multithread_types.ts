@@ -902,6 +902,12 @@ export interface IDiscontinuityTimeInfo {
   end: number | null;
 }
 
+export interface ISegmentSinkStoreUpdateMessage {
+  type: WorkerMessageType.SegmentSinkStoreUpdate;
+  contentId: string;
+  value: any;
+}
+
 export const enum WorkerMessageType {
   AbortSourceBuffer = "abort-source-buffer",
   ActivePeriodChanged = "active-period-changed",
@@ -939,6 +945,7 @@ export const enum WorkerMessageType {
   UpdateMediaSourceDuration = "update-media-source-duration",
   UpdatePlaybackRate = "update-playback-rate",
   Warning = "warning",
+  SegmentSinkStoreUpdate = "segment-sink-store-update",
 }
 
 export type IWorkerMessage =
@@ -977,4 +984,5 @@ export type IWorkerMessage =
   | IStopTextDisplayerWorkerMessage
   | IUpdateMediaSourceDurationWorkerMessage
   | IUpdatePlaybackRateWorkerMessage
-  | IWarningWorkerMessage;
+  | IWarningWorkerMessage
+  | ISegmentSinkStoreUpdateMessage;

@@ -528,6 +528,26 @@ function loadOrReloadPreparedContent(
     });
   });
 
+  function emitSegmentSinksStoreUpdate() {
+    sendMessage({
+      type: WorkerMessageType.SegmentSinkStoreUpdate,
+      contentId,
+      value: "toto",
+    });
+    const serializedSegmentSinksStore = {
+      _mediaSource: null,
+      _initializedSegmentSinks: {
+        audio: segmentSinksStore.,
+        video: [],
+        text: [],
+      },
+      _onNativeBufferAddedOrDisabled: null,
+      _textInterface: null,
+      _hasVideo: true,
+    }
+    segmentSinksStore.
+  }
+
   const initialPeriod =
     manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
   if (initialPeriod === undefined) {
