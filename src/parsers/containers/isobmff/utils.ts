@@ -30,6 +30,7 @@ import { hexToBytes, readNullTerminatedString } from "../../../utils/string_pars
 import { MAX_32_BIT_INT } from "./constants";
 import { createBox } from "./create_box";
 import { getPlayReadyKIDFromPrivateData } from "./drm";
+import findCompleteBox from "./find_complete_box";
 import { getBoxContent, getBoxOffsets, getChildBox } from "./get_box";
 import { getEMSG, getMDIA, getTRAF, getTRAFs } from "./read";
 
@@ -192,6 +193,46 @@ function getTrackFragmentDecodeTime(buffer: Uint8Array): number | undefined {
     return be4toi(tfdt, 4);
   }
   return undefined;
+}
+
+/**
+ * Update track Fragment Decode Time of a segment, if found.
+ * Returns `true` if it could have been updated and `false` if not.
+ * @param {Uint8Array} buffer
+ * @param {number} time
+ * @returns {boolean}
+ */
+function setTrackFragmentDecodeTime(buffer: Uint8Array, time: number): boolean {
+  const traf = getTRAF(buffer);
+  if (traf === null) {
+    return false;
+  }
+  const tfdt = getBoxContent(traf, 0x74666474 /* tfdt */);
+  if (tfdt === null) {
+    return false;
+  }
+  const version = tfdt[0];
+  if (version === 1) {
+    const newTfdt = itobe8(time);
+    tfdt[4] = newTfdt[0];
+    tfdt[5] = newTfdt[1];
+    tfdt[6] = newTfdt[2];
+    tfdt[7] = newTfdt[3];
+    tfdt[8] = newTfdt[4];
+    tfdt[9] = newTfdt[5];
+    tfdt[10] = newTfdt[6];
+    tfdt[11] = newTfdt[7];
+    return true;
+  }
+  if (version === 0) {
+    const newTfdt = itobe4(time);
+    tfdt[4] = newTfdt[0];
+    tfdt[5] = newTfdt[1];
+    tfdt[6] = newTfdt[2];
+    tfdt[7] = newTfdt[3];
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -563,6 +604,26 @@ function getKeyIdFromInitSegment(segment: Uint8Array): Uint8Array | null {
   return keyId.every((b) => b === 0) ? null : keyId;
 }
 
+/**
+ * Returns `true` if the given `buffer` probably contains an initialization
+ * segment in the ISOBMFF format.
+ * Returns `false` otherwise.
+ *
+ * @param {Uint8Array} buffer
+ * @returns {boolean}
+ */
+function hasInitSegment(buffer: Uint8Array): boolean {
+  const ftypIndex = findCompleteBox(buffer, 0x66747970 /* ftyp */);
+  if (ftypIndex < 0) {
+    return false;
+  }
+  const moovIndex = findCompleteBox(buffer, 0x6d6f6f76 /* moov */);
+  if (moovIndex < 0) {
+    return false;
+  }
+  return true;
+}
+
 export {
   getKeyIdFromInitSegment,
   getMDHDTimescale,
@@ -570,7 +631,9 @@ export {
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
+  hasInitSegment,
   patchPssh,
+  setTrackFragmentDecodeTime,
   updateBoxLength,
   parseEmsgBoxes,
 };
