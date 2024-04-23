@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -194,6 +195,7 @@ export default function generateAudioVideoSegmentParser({
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined : timescale;
 
     if (segment.isInit) {
+      log.warn("DASH: !!!!!!!!!!!! FAKE ENCRYPTION");
       chunkData = fakeEncryptionDataInInitSegment(chunkData);
     }
 
