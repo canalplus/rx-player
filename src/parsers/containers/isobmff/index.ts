@@ -33,6 +33,7 @@ export {
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
+  hasInitSegment,
   IEMSG,
   ISidxSegment,
   patchPssh,

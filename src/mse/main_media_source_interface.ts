@@ -1,3 +1,4 @@
+import appendBufferWithOffset from "../compat/append_buffer_with_offset";
 import { MediaSource_ } from "../compat/browser_compatibility_types";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
@@ -500,20 +501,6 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       }
     }
 
-    if (
-      timestampOffset !== undefined &&
-      sourceBuffer.timestampOffset !== timestampOffset
-    ) {
-      const newTimestampOffset = timestampOffset;
-      log.debug(
-        "SBI: updating timestampOffset",
-        codec,
-        sourceBuffer.timestampOffset,
-        newTimestampOffset,
-      );
-      sourceBuffer.timestampOffset = newTimestampOffset;
-    }
-
     if (appendWindow[0] === undefined) {
       if (sourceBuffer.appendWindowStart > 0) {
         log.debug("SBI: re-setting `appendWindowStart` to `0`");
@@ -539,7 +526,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       sourceBuffer.appendWindowEnd = appendWindow[1];
     }
     log.debug("SBI: pushing segment", this.type);
-    sourceBuffer.appendBuffer(data);
+    appendBufferWithOffset(sourceBuffer, data, timestampOffset);
   }
 }
 
