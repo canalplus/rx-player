@@ -34,6 +34,7 @@ export {
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
+  hasInitSegment,
   patchPssh,
   updateBoxLength,
 } from "./utils";
