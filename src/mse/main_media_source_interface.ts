@@ -1,9 +1,15 @@
-import appendBufferWithOffset from "../compat/append_buffer_with_offset";
 import { MediaSource_ } from "../compat/browser_compatibility_types";
+import canRelyOnMseTimestampOffset from "../compat/can_rely_on_mse_timestamp_offset";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
 import { MediaError, SourceBufferError } from "../errors";
 import log from "../log";
+import {
+  getMDHDTimescale,
+  getTrackFragmentDecodeTime,
+  hasInitSegment,
+} from "../parsers/containers/isobmff";
+import { setTrackFragmentDecodeTime } from "../parsers/containers/isobmff/utils";
 import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
@@ -196,6 +202,8 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
 
+  private _initTimescale: number | undefined;
+
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
    * instance.
@@ -210,6 +218,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
+    this._initTimescale = undefined;
 
     const onError = (evt: Event) => {
       let error: Error;
@@ -305,6 +314,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
   /** @see ISourceBufferInterface */
   public abort(): void {
+    this._initTimescale = undefined;
     try {
       this._sourceBuffer.abort();
     } catch (err) {
@@ -315,6 +325,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
   /** @see ISourceBufferInterface */
   public dispose(): void {
+    this._initTimescale = undefined;
     try {
       this._sourceBuffer.abort();
     } catch (_) {
@@ -526,7 +537,90 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       sourceBuffer.appendWindowEnd = appendWindow[1];
     }
     log.debug("SBI: pushing segment", this.type);
-    appendBufferWithOffset(sourceBuffer, data, timestampOffset);
+
+    if (canRelyOnMseTimestampOffset) {
+      this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
+    } else {
+      this._appendBufferWithoutTimestampOffsetCapabilities(data, timestampOffset);
+    }
+  }
+
+  /**
+   * Append media or initialization segment (represented by `data`) to the given
+   * SourceBuffer (represented by `sourceBuffer`), with the given
+   * `timestampOffset` in seconds for devices where the MSE `timestampOffset`
+   * attribute **CAN** be used.
+   *
+   * @param {BufferSource} data
+   * @param {number|undefined} timestampOffset
+   */
+  private _appendBufferWithTimestampOffsetCapabilities(
+    data: BufferSource,
+    timestampOffset: number | undefined,
+  ): void {
+    if (
+      timestampOffset !== undefined &&
+      this._sourceBuffer.timestampOffset !== timestampOffset
+    ) {
+      const newTimestampOffset = timestampOffset;
+      log.debug(
+        "SBI: updating timestampOffset",
+        this._sourceBuffer.timestampOffset,
+        newTimestampOffset,
+      );
+      this._sourceBuffer.timestampOffset = newTimestampOffset;
+    }
+
+    this._sourceBuffer.appendBuffer(data);
+  }
+
+  /**
+   * Append media or initialization segment (represented by `data`) to the given
+   * SourceBuffer (represented by `sourceBuffer`), with the given
+   * `timestampOffset` in seconds for devices where the MSE `timestampOffset`
+   * attribute **CANNOT** be used.
+   *
+   * @param {BufferSource} data
+   * @param {number|undefined} timestampOffset
+   */
+  private _appendBufferWithoutTimestampOffsetCapabilities(
+    data: BufferSource,
+    timestampOffset: number | undefined,
+  ): void {
+    const dataU8 = toUint8Array(data);
+
+    // TODO also for WebM
+    const isMp4InitSegment = hasInitSegment(dataU8);
+    if (isMp4InitSegment) {
+      const mdhdTimeScale = getMDHDTimescale(dataU8);
+      this._initTimescale = mdhdTimeScale;
+    }
+
+    if (timestampOffset !== 0 && timestampOffset !== undefined) {
+      const initTimescale = this._initTimescale;
+      if (initTimescale === undefined) {
+        log.warn("Compat: not able to mutate decode time due to unknown timescale");
+        return this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
+      }
+      const oldTrackFragmentDecodeTime = getTrackFragmentDecodeTime(dataU8);
+      if (oldTrackFragmentDecodeTime === undefined) {
+        log.warn("Compat: not able to mutate decode time due to not found tfdt");
+        return this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
+      }
+
+      const timescaledOffset = initTimescale * timestampOffset;
+      const newTrackFragmentDecodeTime = oldTrackFragmentDecodeTime + timescaledOffset;
+      log.debug(
+        "Compat: Trying to update decode time",
+        oldTrackFragmentDecodeTime,
+        newTrackFragmentDecodeTime,
+      );
+      if (!setTrackFragmentDecodeTime(dataU8, newTrackFragmentDecodeTime)) {
+        log.warn("Compat: not able to mutate decode time due to another reason");
+        return this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
+      }
+    }
+    this._sourceBuffer.appendBuffer(dataU8);
   }
 }
 
@@ -553,6 +647,21 @@ function resetMediaSource(mediaSource: MediaSource): void {
     if (sourceBuffers.length > 0) {
       log.info("Init: Not all SourceBuffers could have been removed.");
     }
+  }
+}
+
+/**
+ * Convert unknown BufferSource type value into an Uint8Array.
+ * @param {BufferSource} data
+ * @returns {Uint8Array}
+ */
+function toUint8Array(data: BufferSource): Uint8Array {
+  if (data instanceof Uint8Array) {
+    return data;
+  } else if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  } else {
+    return new Uint8Array(data.buffer);
   }
 }
 
