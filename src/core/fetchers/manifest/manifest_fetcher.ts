@@ -33,6 +33,7 @@ import type {
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
+import { utf8ToStr } from "../../../utils/string_parsing";
 import TaskCanceller from "../../../utils/task_canceller";
 import type CmcdDataBuilder from "../../cmcd";
 import errorSelector from "../utils/error_selector";
@@ -313,6 +314,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       previousManifest: parserOptions.previousManifest,
       originalUrl,
     };
+
+    const lastManifest = loaded.responseData;
     try {
       const res = this._pipelines.parseManifest(
         loaded,
@@ -332,6 +335,21 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         defaultCode: "PIPELINE_PARSE_ERROR",
         defaultReason: "Unknown error when parsing the Manifest",
       });
+      const splittedManifest: string[] = [];
+      try {
+        const manString = getManifestAsString(lastManifest);
+        for (let i = 0; i < manString.length; i += 200) {
+          splittedManifest.push(manString.substring(i, i + 200));
+        }
+      } catch (_err) {
+        // noop
+      }
+      log.warn("!!!!! PIPELINE ERROR BEGIN", formattedError);
+      splittedManifest.forEach((subMan: string) => {
+        log.warn(subMan);
+      });
+      log.warn("!!!!! PIPELINE ERROR END", formattedError);
+
       throw formattedError;
     }
 
@@ -712,6 +730,26 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     }
     this.trigger("error", err);
     this.dispose();
+  }
+}
+
+/**
+ * Try to convert a Manifest from an unknown format to an array of nodes as
+ * parsed by our XML DOM parser.
+ *
+ * Throws if the format cannot be converted.
+ * @param {*} manifestSrc
+ * @returns {Array.<Object | string>}
+ */
+function getManifestAsString(manifestSrc: unknown): string {
+  if (manifestSrc instanceof ArrayBuffer) {
+    return utf8ToStr(new Uint8Array(manifestSrc));
+  } else if (typeof manifestSrc === "string") {
+    return manifestSrc;
+  } else if (manifestSrc instanceof Document) {
+    return manifestSrc.documentElement.outerHTML;
+  } else {
+    throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
   }
 }
 
