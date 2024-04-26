@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
@@ -376,10 +377,7 @@ export default function getMediaKeySystemAccess(
     );
 
     try {
-      const keySystemAccess = await eme.requestMediaKeySystemAccess(
-        keyType,
-        keySystemConfigurations,
-      );
+      const keySystemAccess = await testOneKeySystem(keyType, keySystemConfigurations);
       log.info("DRM: Found compatible keysystem", keyType, index + 1);
       return {
         type: "create-media-key-system-access" as const,
@@ -396,4 +394,41 @@ export default function getMediaKeySystemAccess(
       return recursivelyTestKeySystems(index + 1);
     }
   }
+}
+/**
+ * Test a key system configuration, resolves with the MediaKeySystemAccess
+ * or reject if the key system is unsupported.
+ * @param {string} keyType - The KeySystem string to test (ex: com.microsoft.playready.recommendation)
+ * @param {Array.<MediaKeySystemMediaCapability>} keySystemConfigurations - Configurations for this keySystem
+ * @returns Promise resolving with the MediaKeySystemAccess. Rejects if unsupported.
+ */
+export async function testOneKeySystem(
+  keyType: string,
+  keySystemConfigurations: MediaKeySystemConfiguration[],
+) {
+  const keySystemAccess = await eme.requestMediaKeySystemAccess(
+    keyType,
+    keySystemConfigurations,
+  );
+  // const shouldTestEMEWorkflow = true;
+
+  if (!canRelyOnRequestMediaKeySystemAccess()) {
+    try {
+      const mediaKeys = await keySystemAccess.createMediaKeys();
+      const session = mediaKeys.createSession();
+      // this is an example initData.
+      const initData = new Uint8Array([
+        0, 0, 0, 96, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74,
+        206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 64, 8, 1, 18, 16, 152, 28, 134,
+        221, 177, 134, 78, 139, 186, 110, 143, 92, 30, 232, 180, 46, 26, 8, 87, 105, 100,
+        101, 118, 105, 110, 101, 34, 26, 48, 49, 72, 84, 83, 57, 52, 84, 75, 55, 70, 68,
+        66, 86, 75, 82, 57, 69, 88, 48, 89, 83, 88, 88, 82, 51, 72, 227, 220, 149, 155, 6,
+      ]);
+      await session.generateRequest("cenc", initData);
+    } catch (err) {
+      log.debug("DRM: KeySystemAccess was granted but it is not usable");
+      throw err;
+    }
+  }
+  return keySystemAccess;
 }
