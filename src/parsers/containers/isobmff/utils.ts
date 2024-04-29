@@ -200,39 +200,128 @@ function getTrackFragmentDecodeTime(buffer: Uint8Array): number | undefined {
  * Returns `true` if it could have been updated and `false` if not.
  * @param {Uint8Array} buffer
  * @param {number} time
- * @returns {boolean}
+ * @returns {Uint8Array}
  */
-function setTrackFragmentDecodeTime(buffer: Uint8Array, time: number): boolean {
-  const traf = getTRAF(buffer);
-  if (traf === null) {
-    return false;
+function setTrackFragmentDecodeTime(buffer: Uint8Array, time: number): Uint8Array | null {
+  const moofOffsets = getBoxOffsets(buffer, 0x6d6f6f66 /* moof */);
+  if (moofOffsets === null) {
+    return null; // no "moof" found
   }
-  const tfdt = getBoxContent(traf, 0x74666474 /* tfdt */);
-  if (tfdt === null) {
-    return false;
+
+  const trafOffsets = getBoxOffsets(
+    buffer.subarray(moofOffsets[1], moofOffsets[2]),
+    0x74726166 /* traf */,
+  );
+  if (trafOffsets === null) {
+    return null; // no "traf" found in "moof"
   }
-  const version = tfdt[0];
+
+  /**
+   * Start and end of the content (after length and name) of the "traf" box in
+   * `buffer`
+   */
+  const trafContentBounds = [
+    moofOffsets[1] + trafOffsets[1],
+    moofOffsets[1] + trafOffsets[2],
+  ];
+  const tfdtOffsets = getBoxOffsets(
+    buffer.subarray(trafContentBounds[0], trafContentBounds[2]),
+    0x74666474 /* tfdt */,
+  );
+  if (tfdtOffsets === null) {
+    return null;
+  }
+
+  /** Offset of the first byte for the content of the tfdt box. */
+  const tfdtContentBaseOffset = trafContentBounds[0] + tfdtOffsets[1];
+  const version = buffer[tfdtContentBaseOffset];
   if (version === 1) {
     const newTfdt = itobe8(time);
-    tfdt[4] = newTfdt[0];
-    tfdt[5] = newTfdt[1];
-    tfdt[6] = newTfdt[2];
-    tfdt[7] = newTfdt[3];
-    tfdt[8] = newTfdt[4];
-    tfdt[9] = newTfdt[5];
-    tfdt[10] = newTfdt[6];
-    tfdt[11] = newTfdt[7];
-    return true;
+    buffer[tfdtContentBaseOffset + 4] = newTfdt[0];
+    buffer[tfdtContentBaseOffset + 5] = newTfdt[1];
+    buffer[tfdtContentBaseOffset + 6] = newTfdt[2];
+    buffer[tfdtContentBaseOffset + 7] = newTfdt[3];
+    buffer[tfdtContentBaseOffset + 8] = newTfdt[4];
+    buffer[tfdtContentBaseOffset + 9] = newTfdt[5];
+    buffer[tfdtContentBaseOffset + 10] = newTfdt[6];
+    buffer[tfdtContentBaseOffset + 11] = newTfdt[7];
+    return buffer;
   }
+
   if (version === 0) {
-    const newTfdt = itobe4(time);
-    tfdt[4] = newTfdt[0];
-    tfdt[5] = newTfdt[1];
-    tfdt[6] = newTfdt[2];
-    tfdt[7] = newTfdt[3];
-    return true;
+    // Max integer on 4 bytes. I include it because sometimes all-ones are
+    // special values and other times such edge cases are poorly handled.
+    // Switching to a tfdt v1 should have no risk beside poor support,
+    // performance and memory considerations (see? no risk at all!).
+    if (time >= 4_294_967_295) {
+      /** Offset for the actual box, not just its content. */
+      const tfdtBaseOffset = trafContentBounds[0] + tfdtOffsets[0];
+
+      // We have to create an ISOBMFF with a v1 tfdt here
+      const newSeg = new Uint8Array(buffer.length + 4);
+
+      // Set until the tfdt length + box
+      newSeg.set(buffer.subarray(0, tfdtContentBaseOffset), 0);
+
+      // Set length of tfdt v1
+      const tfdtV1Length =
+        4 /* Box length */ +
+        4 /* Box name */ +
+        4 /* Version and flags */ +
+        8; /* Actual tfdt on 8 bytes */
+      const lenBytes = itobe4(tfdtV1Length);
+      newSeg[tfdtBaseOffset] = lenBytes[0];
+      newSeg[tfdtBaseOffset + 1] = lenBytes[1];
+      newSeg[tfdtBaseOffset + 2] = lenBytes[2];
+      newSeg[tfdtBaseOffset + 3] = lenBytes[3];
+
+      // re-set length for "traf"
+      const newTrafLength = trafOffsets[2] - trafOffsets[0] + 4;
+      const trafLenBytes = itobe4(newTrafLength);
+      newSeg[trafOffsets[0]] = trafLenBytes[0];
+      newSeg[trafOffsets[0] + 1] = trafLenBytes[1];
+      newSeg[trafOffsets[0] + 2] = trafLenBytes[2];
+      newSeg[trafOffsets[0] + 3] = trafLenBytes[3];
+
+      // re-set length for "moof"
+      const newMoofLength = moofOffsets[2] - moofOffsets[0] + 4;
+      const moofLenBytes = itobe4(newMoofLength);
+      newSeg[moofOffsets[0]] = moofLenBytes[0];
+      newSeg[moofOffsets[0] + 1] = moofLenBytes[1];
+      newSeg[moofOffsets[0] + 2] = moofLenBytes[2];
+      newSeg[moofOffsets[0] + 3] = moofLenBytes[3];
+
+      // new version
+      newSeg[tfdtContentBaseOffset] = 1;
+
+      // new tfdt value
+      const newTfdt = itobe8(time);
+      newSeg[tfdtContentBaseOffset + 4] = newTfdt[0];
+      newSeg[tfdtContentBaseOffset + 5] = newTfdt[1];
+      newSeg[tfdtContentBaseOffset + 6] = newTfdt[2];
+      newSeg[tfdtContentBaseOffset + 7] = newTfdt[3];
+      newSeg[tfdtContentBaseOffset + 8] = newTfdt[4];
+      newSeg[tfdtContentBaseOffset + 9] = newTfdt[5];
+      newSeg[tfdtContentBaseOffset + 10] = newTfdt[6];
+      newSeg[tfdtContentBaseOffset + 11] = newTfdt[7];
+
+      // Remaining of the segments is everything after the old tfdt
+      const offsetAfterTfdtInBuffer = trafContentBounds[0] + tfdtOffsets[2];
+      newSeg.set(
+        buffer.subarray(offsetAfterTfdtInBuffer, buffer.length),
+        tfdtContentBaseOffset + 12,
+      );
+      return newSeg;
+    } else {
+      const newTfdt = itobe4(time);
+      buffer[4] = newTfdt[0];
+      buffer[5] = newTfdt[1];
+      buffer[6] = newTfdt[2];
+      buffer[7] = newTfdt[3];
+      return buffer;
+    }
   }
-  return false;
+  return null;
 }
 
 /**

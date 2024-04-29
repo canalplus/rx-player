@@ -362,7 +362,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
-    log.debug("Init: Initial time calculated:", initialTime);
+    console.debug("Init: Initial time calculated:", initialTime);
 
     /** Choose the right "Representation" for a given "Adaptation". */
     const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
