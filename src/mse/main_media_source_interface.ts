@@ -1,5 +1,5 @@
 import { MediaSource_ } from "../compat/browser_compatibility_types";
-import canRelyOnMseTimestampOffset from "../compat/can_rely_on_mse_timestamp_offset";
+// import canRelyOnMseTimestampOffset from "../compat/can_rely_on_mse_timestamp_offset";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
 import { MediaError, SourceBufferError } from "../errors";
@@ -538,11 +538,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     }
     log.debug("SBI: pushing segment", this.type);
 
-    if (canRelyOnMseTimestampOffset) {
-      this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
-    } else {
-      this._appendBufferWithoutTimestampOffsetCapabilities(data, timestampOffset);
-    }
+    // if (canRelyOnMseTimestampOffset) {
+    //   this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
+    // } else {
+    this._appendBufferWithoutTimestampOffsetCapabilities(data, timestampOffset);
+    // }
   }
 
   /**
@@ -562,13 +562,12 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       timestampOffset !== undefined &&
       this._sourceBuffer.timestampOffset !== timestampOffset
     ) {
-      const newTimestampOffset = timestampOffset;
       log.debug(
         "SBI: updating timestampOffset",
         this._sourceBuffer.timestampOffset,
-        newTimestampOffset,
+        timestampOffset,
       );
-      this._sourceBuffer.timestampOffset = newTimestampOffset;
+      // this._sourceBuffer.timestampOffset = timestampOffset;
     }
 
     this._sourceBuffer.appendBuffer(data);
@@ -587,40 +586,53 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     data: BufferSource,
     timestampOffset: number | undefined,
   ): void {
-    const dataU8 = toUint8Array(data);
+    let dataU8 = toUint8Array(data);
 
     // TODO also for WebM
     const isMp4InitSegment = hasInitSegment(dataU8);
     if (isMp4InitSegment) {
       const mdhdTimeScale = getMDHDTimescale(dataU8);
+      console.warn("SBI: Parsed MDHD timescale:", mdhdTimeScale);
       this._initTimescale = mdhdTimeScale;
     }
 
     if (timestampOffset !== 0 && timestampOffset !== undefined) {
       const initTimescale = this._initTimescale;
       if (initTimescale === undefined) {
-        log.warn("Compat: not able to mutate decode time due to unknown timescale");
+        console.warn("SBI: not able to mutate decode time due to unknown timescale");
         return this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
       }
       const oldTrackFragmentDecodeTime = getTrackFragmentDecodeTime(dataU8);
       if (oldTrackFragmentDecodeTime === undefined) {
-        log.warn("Compat: not able to mutate decode time due to not found tfdt");
+        console.warn("SBI: not able to mutate decode time due to not found tfdt");
         return this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
       }
 
       const timescaledOffset = initTimescale * timestampOffset;
       const newTrackFragmentDecodeTime = oldTrackFragmentDecodeTime + timescaledOffset;
-      log.debug(
-        "Compat: Trying to update decode time",
+      console.debug(
+        "SBI: Trying to update decode time",
         oldTrackFragmentDecodeTime,
+        "->",
         newTrackFragmentDecodeTime,
       );
-      if (!setTrackFragmentDecodeTime(dataU8, newTrackFragmentDecodeTime)) {
-        log.warn("Compat: not able to mutate decode time due to another reason");
+      console.debug(
+        "!!!!!!!!!!!!!!!!!!!!!!!!!",
+        oldTrackFragmentDecodeTime / initTimescale,
+        "->",
+        newTrackFragmentDecodeTime / initTimescale,
+      );
+      const updated = setTrackFragmentDecodeTime(dataU8, newTrackFragmentDecodeTime);
+      if (updated === null) {
+        console.warn("SBI: not able to mutate decode time due to another reason");
         return this._appendBufferWithTimestampOffsetCapabilities(data, timestampOffset);
       }
+      dataU8 = updated;
     }
-    this._sourceBuffer.appendBuffer(dataU8);
+    const newNewTrackFragmentDecodeTime = getTrackFragmentDecodeTime(new Uint8Array(dataU8.buffer));
+    console.warn("!!!! NEW NEW TFDT", newNewTrackFragmentDecodeTime);
+    this._sourceBuffer.timestampOffset = 0;
+    this._sourceBuffer.appendBuffer(dataU8.buffer);
   }
 }
 
