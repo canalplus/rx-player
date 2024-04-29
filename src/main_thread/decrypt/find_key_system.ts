@@ -24,6 +24,7 @@ import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
+import { generatePlayReadyInitData } from "../../utils/generate_init_data";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
@@ -410,20 +411,15 @@ export async function testOneKeySystem(
     keyType,
     keySystemConfigurations,
   );
-  // const shouldTestEMEWorkflow = true;
 
-  if (!canRelyOnRequestMediaKeySystemAccess()) {
+  if (!canRelyOnRequestMediaKeySystemAccess(keyType)) {
     try {
       const mediaKeys = await keySystemAccess.createMediaKeys();
       const session = mediaKeys.createSession();
-      // this is an example initData.
-      const initData = new Uint8Array([
-        0, 0, 0, 96, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74,
-        206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 64, 8, 1, 18, 16, 152, 28, 134,
-        221, 177, 134, 78, 139, 186, 110, 143, 92, 30, 232, 180, 46, 26, 8, 87, 105, 100,
-        101, 118, 105, 110, 101, 34, 26, 48, 49, 72, 84, 83, 57, 52, 84, 75, 55, 70, 68,
-        66, 86, 75, 82, 57, 69, 88, 48, 89, 83, 88, 88, 82, 51, 72, 227, 220, 149, 155, 6,
-      ]);
+      // this is just and an example initData to test if the CDM is capable of generating a request
+      const playReadyHeader =
+        '<WRMHEADER xmlns="http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader" version="4.0.0.0"><DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>ckB07BNLskeUq0qd83fTbA==</KID><LA_URL>http://drm.canal-plus.com/</LA_URL><LUI_URL>http://drm.canal-plus.com/</LUI_URL><DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID><CUSTOMATTRIBUTES xmlns=""><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES><CHECKSUM>U/tsUYRgMzw=</CHECKSUM></DATA></WRMHEADER>';
+      const initData = generatePlayReadyInitData(playReadyHeader);
       await session.generateRequest("cenc", initData);
     } catch (err) {
       log.debug("DRM: KeySystemAccess was granted but it is not usable");
