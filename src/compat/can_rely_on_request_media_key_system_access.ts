@@ -31,12 +31,12 @@ import { isEdgeChromium } from "./browser_detection";
  *   'generateRequest' on 'MediaKeySession': Failed to create MF PR CdmSession".
  *   In this particular case, the work-around was to consider recommendation.3000 as not supported
  *   and try another keySystem.
- *
+ * @param keySystem - The key system in use.
  * @returns {boolean}
  */
-export function canRelyOnRequestMediaKeySystemAccess(keySystem): boolean {
-  if (!isEdgeChromium && ) {
-    return true;
+export function canRelyOnRequestMediaKeySystemAccess(keySystem: string): boolean {
+  if (isEdgeChromium && keySystem.indexOf("playready") !== -1) {
+    return false;
   }
-  return false;
+  return true;
 }
