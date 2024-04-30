@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
+import {
+  canRelyOnRequestMediaKeySystemAccess,
+  PLAY_READY_HEADER_EXAMPLE,
+} from "../../compat/can_rely_on_request_media_key_system_access";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
@@ -378,7 +381,7 @@ export default function getMediaKeySystemAccess(
     );
 
     try {
-      const keySystemAccess = await testOneKeySystem(keyType, keySystemConfigurations);
+      const keySystemAccess = await testKeySystem(keyType, keySystemConfigurations);
       log.info("DRM: Found compatible keysystem", keyType, index + 1);
       return {
         type: "create-media-key-system-access" as const,
@@ -403,7 +406,7 @@ export default function getMediaKeySystemAccess(
  * @param {Array.<MediaKeySystemMediaCapability>} keySystemConfigurations - Configurations for this keySystem
  * @returns Promise resolving with the MediaKeySystemAccess. Rejects if unsupported.
  */
-export async function testOneKeySystem(
+export async function testKeySystem(
   keyType: string,
   keySystemConfigurations: MediaKeySystemConfiguration[],
 ) {
@@ -416,10 +419,7 @@ export async function testOneKeySystem(
     try {
       const mediaKeys = await keySystemAccess.createMediaKeys();
       const session = mediaKeys.createSession();
-      // this is just and an example initData to test if the CDM is capable of generating a request
-      const playReadyHeader =
-        '<WRMHEADER xmlns="http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader" version="4.0.0.0"><DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>ckB07BNLskeUq0qd83fTbA==</KID><LA_URL>http://drm.canal-plus.com/</LA_URL><LUI_URL>http://drm.canal-plus.com/</LUI_URL><DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID><CUSTOMATTRIBUTES xmlns=""><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES><CHECKSUM>U/tsUYRgMzw=</CHECKSUM></DATA></WRMHEADER>';
-      const initData = generatePlayReadyInitData(playReadyHeader);
+      const initData = generatePlayReadyInitData(PLAY_READY_HEADER_EXAMPLE);
       await session.generateRequest("cenc", initData);
     } catch (err) {
       log.debug("DRM: KeySystemAccess was granted but it is not usable");

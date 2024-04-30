@@ -16,7 +16,7 @@
 
 import * as compat from "../../../../compat/can_rely_on_request_media_key_system_access";
 import eme from "../../../../compat/eme";
-import { testOneKeySystem } from "../../find_key_system";
+import { testKeySystem } from "../../find_key_system";
 
 describe("find_key_systems - ", () => {
   let requestMediaKeySystemAccessMock: jest.SpyInstance;
@@ -40,7 +40,7 @@ describe("find_key_systems - ", () => {
         }),
       }),
     }));
-    await expect(testOneKeySystem(keySystem, [])).resolves.toBeTruthy();
+    await expect(testKeySystem(keySystem, [])).resolves.toBeTruthy();
     expect(requestMediaKeySystemAccessMock).toHaveBeenCalledTimes(1);
   });
 
@@ -49,7 +49,7 @@ describe("find_key_systems - ", () => {
     requestMediaKeySystemAccessMock.mockImplementation(() => {
       throw new Error();
     });
-    await expect(testOneKeySystem(keySystem, [])).rejects.toThrow();
+    await expect(testKeySystem(keySystem, [])).rejects.toThrow();
     expect(requestMediaKeySystemAccessMock).toHaveBeenCalledTimes(1);
   });
 
@@ -68,7 +68,7 @@ describe("find_key_systems - ", () => {
         }),
       }),
     }));
-    await expect(testOneKeySystem(keySystem, [])).rejects.toThrow();
+    await expect(testKeySystem(keySystem, [])).rejects.toThrow();
     expect(requestMediaKeySystemAccessMock).toHaveBeenCalledTimes(1);
   });
 });
