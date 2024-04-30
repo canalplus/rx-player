@@ -20,6 +20,7 @@ import {
 } from "../../compat/can_rely_on_request_media_key_system_access";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
+import { generatePlayReadyInitData } from "../../compat/generate_init_data";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
@@ -27,7 +28,6 @@ import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
-import { generatePlayReadyInitData } from "../../utils/generate_init_data";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
