@@ -1,5 +1,5 @@
+import { utf16LEToStr } from "../../utils/string_parsing";
 import { generatePlayReadyInitData } from "../generate_init_data";
-import { utf16LEToStr } from "../string_parsing";
 
 describe("utils - generatePlayReadyInitData", () => {
   const playReadyHeader =

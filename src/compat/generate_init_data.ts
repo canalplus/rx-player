@@ -1,5 +1,5 @@
-import { itole4, itobe4, itole2, concat } from "./byte_parsing";
-import { strToUtf8, strToUtf16LE, hexToBytes } from "./string_parsing";
+import { itole4, itobe4, itole2, concat } from "../utils/byte_parsing";
+import { strToUtf8, strToUtf16LE, hexToBytes } from "../utils/string_parsing";
 
 /**
  * Generate the "cenc" init data for playready from the PlayreadyHeader string.
