@@ -16,7 +16,6 @@ import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBacko
 describe("DASH non-linear multi-periods content (SegmentTemplate)", function () {
   launchTestsForContent(manifestInfos);
   launchTestsForContent(manifestInfos, { multithread: true });
-  launchTestsForContent(manifestInfos, { multithread: true, es5Worker: true });
 });
 
 describe("DASH multi-Period with different choices", function () {

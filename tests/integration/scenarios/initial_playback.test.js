@@ -19,7 +19,6 @@ import { MULTI_THREAD } from "../../../src/experimental/features";
 import {
   EMBEDDED_WORKER,
   EMBEDDED_DASH_WASM,
-  EMBEDDED_WORKER_ES5,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
@@ -31,7 +30,6 @@ import { describe, beforeEach, afterEach, it, expect } from "vitest";
 
 runInitialPlaybackTests();
 runInitialPlaybackTests({ multithread: true });
-runInitialPlaybackTests({ multithread: true, es5Worker: true });
 
 /**
  * Test various cases of errors linked to starting playback.
@@ -39,10 +37,8 @@ runInitialPlaybackTests({ multithread: true, es5Worker: true });
  * @param {Boolean} [options.multithread] - If `true`, those tests will be run
  * if the RxPlayer runs in multithread mode.
  * In any other cases, tests will run in monothread mode.
- * @param {Boolean} [options.es5Worker] - If `true`, multithread tests will be
- * run in the ES5 version of the WebWorker file.
  */
-function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
+function runInitialPlaybackTests({ multithread } = {}) {
   let title = "basic playback use cases: non-linear DASH SegmentTimeline";
   if (multithread === true) {
     RxPlayer.addFeatures([MULTI_THREAD]);
@@ -56,7 +52,7 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
       player = new RxPlayer();
       if (multithread === true) {
         player.attachWorker({
-          workerUrl: es5Worker ? EMBEDDED_WORKER_ES5 : EMBEDDED_WORKER,
+          workerUrl: EMBEDDED_WORKER,
           dashWasmUrl: EMBEDDED_DASH_WASM,
         });
       }

@@ -383,29 +383,13 @@ if (currentModeInfo === null) {
 
 ## Note about ES5 Environment
 
-By default, the Worker file will use es2017 features which should be compatible to a
-majority of devices.
+The Worker file will use es2017 features which should be compatible to a majority of
+devices.
 
-However, some older devices might not be compatible with it yet still compatible to the
-WebWorker API (and thus the `MULTI_THREAD` feature), yet not with ES2017. For those
-platforms, the RxPlayer also provide an ES5 variant of the Worker file:
+However, some older devices might not be compatible with ES2017 yet still compatible to
+the WebWorker API (and thus could theoretically be compatible with the `MULTI_THREAD`
+feature).
 
-- The easiest way is to just import in your application its "embedded" version, exported
-  through the `"rx-player/experimental/features/embeds"` path:
-
-  ```js
-  import { EMBEDDED_WORKER_ES5 } from "rx-player/experimental/features/embeds";
-  ```
-
-  This allows to bypass the need to store and serve separately that file.
-
-  If you would prefer more control and a smaller bundle size, you may instead consider the
-  other following ways to it as a separate file.
-
-- With every release note published on GitHub as `worker.es5.js` (you should only use the
-  file linked to the RxPlayer's version you're using),
-
-- It is also available as `dist/worker.es5.js` from the root directory of the project
-  published on npm. As such, it might already be found in your project's directory, for
-  example in the `node_modules` directory (most probably in `node_modules/rx-player/dist/`
-  depending on your project).
+If you need to provide support for the `MULTI_THREAD` feature on those platforms, we
+recommend that you use a transpiler tool on that worker file to make it compatible to ES5.
+Examples of transpiler tools are [babel](https://babeljs.io/) and [swc](https://swc.rs/).
