@@ -300,30 +300,30 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
 // @ts-expect-error unused function, just used for compile-time typechecking
 function testMediaElement(x: HTMLMediaElement) {
-  assetCompatibleIMediaElement(x);
+  assertCompatibleIMediaElement(x);
 }
-function assetCompatibleIMediaElement(_x: IMediaElement) {
+function assertCompatibleIMediaElement(_x: IMediaElement) {
   // Noop
 }
 // @ts-expect-error unused function, just used for compile-time typechecking
 function testMediaSource(x: MediaSource) {
-  assetCompatibleIMediaSource(x);
+  assertCompatibleIMediaSource(x);
 }
-function assetCompatibleIMediaSource(_x: IMediaSource) {
+function assertCompatibleIMediaSource(_x: IMediaSource) {
   // Noop
 }
 // @ts-expect-error unused function, just used for compile-time typechecking
 function testSourceBuffer(x: SourceBuffer) {
-  assetCompatibleISourceBuffer(x);
+  assertCompatibleISourceBuffer(x);
 }
-function assetCompatibleISourceBuffer(_x: ISourceBuffer) {
+function assertCompatibleISourceBuffer(_x: ISourceBuffer) {
   // Noop
 }
 // @ts-expect-error unused function, just used for compile-time typechecking
 function testSourceBufferList(x: SourceBufferList) {
-  assetCompatibleISourceBufferList(x);
+  assertCompatibleISourceBufferList(x);
 }
-function assetCompatibleISourceBufferList(_x: ISourceBufferList) {
+function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
   // Noop
 }
 /* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
