@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  canRelyOnRequestMediaKeySystemAccess,
-  PLAY_READY_HEADER_EXAMPLE,
-} from "../../compat/can_rely_on_request_media_key_system_access";
+import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
-import { generatePlayReadyInitData } from "../../compat/generate_init_data";
+import {
+  generatePlayReadyInitData,
+  DUMMY_PLAY_READY_HEADER,
+} from "../../compat/generate_init_data";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
@@ -419,7 +419,7 @@ export async function testKeySystem(
     try {
       const mediaKeys = await keySystemAccess.createMediaKeys();
       const session = mediaKeys.createSession();
-      const initData = generatePlayReadyInitData(PLAY_READY_HEADER_EXAMPLE);
+      const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
       await session.generateRequest("cenc", initData);
     } catch (err) {
       log.debug("DRM: KeySystemAccess was granted but it is not usable");
