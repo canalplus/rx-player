@@ -242,7 +242,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   nodeName: string;
   paused: boolean;
   playbackRate: number;
-  preload: string;
+  preload: "none" | "metadata" | "auto" | "";
   readyState: number;
   seekable: TimeRanges;
   seeking: boolean;
