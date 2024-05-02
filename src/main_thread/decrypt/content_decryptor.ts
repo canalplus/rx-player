@@ -998,7 +998,7 @@ export function getMissingInitDataKeyIds(
  *   - `blacklisted`: Array of key ids for keys that are considered unusable.
  *     The qualities linked to those keys should not be played.
  */
-function getKeyIdsLinkedToSession(
+export function getKeyIdsLinkedToSession(
   initializationData: IProcessedProtectionData,
   keySessionRecord: KeySessionRecord,
   singleLicensePer: undefined | "init-data" | "content" | "periods",
