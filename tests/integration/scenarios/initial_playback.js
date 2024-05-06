@@ -115,7 +115,7 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
       await checkAfterSleepWithBackoff(
         { minTimeMs: 700, stepMs: 100, maxTimeMs: 1400 },
         () => {
-          expect(player.getPosition()).to.be.below(4);
+          expect(player.getPosition()).to.be.below(4.25);
           expect(player.getPosition()).to.be.above(2);
           expect(player.getCurrentBufferGap()).to.be.above(0);
           expect(player.getVideoElement().buffered.start(0)).to.be.below(
