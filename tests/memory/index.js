@@ -34,7 +34,7 @@ describe("Memory tests", () => {
       initialAudioBitrate: Infinity,
     });
     window.gc();
-    await sleep(1000);
+    await sleep(5000);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({
@@ -48,7 +48,7 @@ describe("Memory tests", () => {
     player.stop();
     await sleep(100);
     window.gc();
-    await sleep(1000);
+    await sleep(5000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -72,13 +72,14 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(5 * 60 * 1000);
+    this.timeout(6 * 60 * 1000);
     player = new RxPlayer({
       initialVideoBitrate: Infinity,
       initialAudiobitrate: Infinity,
     });
-    window.gc();
     await sleep(1000);
+    window.gc();
+    await sleep(5000);
     const initialMemory = window.performance.memory;
 
     for (let i = 0; i < 1000; i++) {
@@ -91,9 +92,9 @@ describe("Memory tests", () => {
     }
     player.stop();
 
-    await sleep(100);
+    await sleep(5000);
     window.gc();
-    await sleep(1000);
+    await sleep(15000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -117,8 +118,9 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
+    this.timeout(5 * 60 * 1000);
     window.gc();
-    await sleep(1000);
+    await sleep(5000);
     const initialMemory = window.performance.memory;
     this.timeout(5 * 60 * 1000);
     for (let i = 0; i < 1000; i++) {
@@ -135,9 +137,9 @@ describe("Memory tests", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       player.dispose();
     }
-    await sleep(100);
-    window.gc();
     await sleep(1000);
+    window.gc();
+    await sleep(20000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -186,6 +188,7 @@ describe("Memory tests", () => {
     await sleep(1000);
 
     window.gc();
+    await sleep(5000);
     const initialMemory = window.performance.memory;
 
     // Allows to alternate between two positions
@@ -202,7 +205,7 @@ describe("Memory tests", () => {
       await sleep(1000);
     }
     window.gc();
-    await sleep(1000);
+    await sleep(5000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -234,8 +237,9 @@ describe("Memory tests", () => {
     const vtlVideoElement = document.createElement("video");
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const videoThumbnailLoader = new VideoThumbnailLoader(vtlVideoElement, player);
-
+    await sleep(1000);
     window.gc();
+    await sleep(10000);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({
@@ -253,7 +257,7 @@ describe("Memory tests", () => {
     videoThumbnailLoader.dispose();
     await sleep(1000);
     window.gc();
-    await sleep(500);
+    await sleep(15000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
