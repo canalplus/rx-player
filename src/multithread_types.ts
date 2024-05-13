@@ -4,6 +4,7 @@
  * multithread situation.
  */
 
+import type { SerializedSegmentSinksStore } from "./core/segment_sinks/segment_buffers_store";
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
@@ -905,7 +906,7 @@ export interface IDiscontinuityTimeInfo {
 export interface ISegmentSinkStoreUpdateMessage {
   type: WorkerMessageType.SegmentSinkStoreUpdate;
   contentId: string;
-  value: any;
+  value: SerializedSegmentSinksStore;
 }
 
 export const enum WorkerMessageType {

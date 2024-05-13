@@ -524,28 +524,18 @@ function loadOrReloadPreparedContent(
       const segmentSinkStatus = segmentSinksStore.getStatus(tType);
       if (segmentSinkStatus.type === "initialized") {
         segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
+        emitSegmentSinksStoreUpdate();
       }
     });
   });
 
   function emitSegmentSinksStoreUpdate() {
+    const serializedSegmentSinksStore = segmentSinksStore.toSerialized();
     sendMessage({
       type: WorkerMessageType.SegmentSinkStoreUpdate,
       contentId,
-      value: "toto",
+      value: serializedSegmentSinksStore,
     });
-    const serializedSegmentSinksStore = {
-      _mediaSource: null,
-      _initializedSegmentSinks: {
-        audio: segmentSinksStore.,
-        video: [],
-        text: [],
-      },
-      _onNativeBufferAddedOrDisabled: null,
-      _textInterface: null,
-      _hasVideo: true,
-    }
-    segmentSinksStore.
   }
 
   const initialPeriod =

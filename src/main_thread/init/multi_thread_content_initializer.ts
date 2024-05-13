@@ -1,6 +1,8 @@
 import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
+import SegmentSinksStore from "../../core/segment_sinks";
+import type { SerializedSegmentSinksStore } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
@@ -1071,6 +1073,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           // Should already be handled by the API
           break;
 
+        case WorkerMessageType.SegmentSinkStoreUpdate:
+          this._onSegmentSinkStoreUpdate(msgData.value);
+          break;
         default:
           assertUnreachable(msgData);
       }
@@ -1464,8 +1469,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         getLoadedReference(playbackObserver, mediaElement, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
+              this._segmentSinkStore = new SegmentSinksStore(
+                this._currentContentInfo?.mainThreadMediaSource ??
+                  new MainMediaSourceInterface("id"),
+                true,
+                null,
+              );
               stopListening();
-              this.trigger("loaded", { segmentSinksStore: "hello" });
+              this.trigger("loaded", {
+                segmentSinksStore: this._segmentSinkStore,
+              });
             }
           },
           { emitCurrentValue: true, clearSignal: cancelSignal },
@@ -1650,6 +1663,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     }
   }
+
+  private _onSegmentSinkStoreUpdate(data: SerializedSegmentSinksStore) {
+    if (this._segmentSinkStore) {
+      this._segmentSinkStore.updateWithSerializedData(data);
+    }
+  }
+
+  private _segmentSinkStore?: SegmentSinksStore;
 }
 
 export interface IMultiThreadContentInitializerContentInfos {

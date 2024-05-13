@@ -977,6 +977,9 @@ export default class SegmentInventory {
     return this._inventory;
   }
 
+  public setInventory(inventory: IBufferedChunk[]) {
+    this._inventory = inventory;
+  }
   /**
    * Returns a recent history of registered operations performed and event
    * received linked to the segment given in argument.
