@@ -28,7 +28,7 @@ export interface ISegmentSinkGrapUpdateData {
 
 export default class SegmentSinkGraph {
   /** Link buffered Representation to their corresponding color. */
-  private readonly _colorMap: WeakMap<IRepresentation, string>;
+  private readonly _colorMap: Map<string, string>;
 
   /** Current amount of colors chosen to represent the various Representation. */
   private _currNbColors: number;
@@ -39,7 +39,7 @@ export default class SegmentSinkGraph {
   private readonly _canvasCtxt: CanvasRenderingContext2D | null;
 
   constructor(canvasElt: HTMLCanvasElement) {
-    this._colorMap = new WeakMap();
+    this._colorMap = new Map();
     this._currNbColors = 0;
     this._canvasElt = canvasElt;
     this._canvasCtxt = this._canvasElt.getContext("2d");
@@ -150,13 +150,14 @@ export default class SegmentSinkGraph {
   }
 
   private _getColorForRepresentation(representation: IRepresentation): string {
-    const color = this._colorMap.get(representation);
+    const serializableRepresentation = JSON.stringify(representation);
+    const color = this._colorMap.get(serializableRepresentation);
     if (color !== undefined) {
       return color;
     }
     const newColor = COLORS[this._currNbColors % COLORS.length];
     this._currNbColors++;
-    this._colorMap.set(representation, newColor);
+    this._colorMap.set(serializableRepresentation, newColor);
     return newColor;
   }
 }
