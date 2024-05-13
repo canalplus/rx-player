@@ -63,7 +63,14 @@ export default function triggerEndOfStream(
 
   if (updatingSourceBuffers.length === 0) {
     log.info("Init: Triggering end of stream");
-    mediaSource.endOfStream();
+    try {
+      mediaSource.endOfStream();
+    } catch (err) {
+      log.error(
+        "Unable to call endOfStream",
+        err instanceof Error ? err : new Error("Unknown error"),
+      );
+    }
     return;
   }
 
