@@ -47,6 +47,8 @@ import {
 } from "./globals";
 import sendMessage, { formatErrorForSender } from "./send_message";
 
+let shouldMonitorSegmentStoreUpdates = false;
+
 export default function initializeWorkerMain() {
   /**
    * `true` once the worker has been initialized.
@@ -398,6 +400,11 @@ export default function initializeWorkerMain() {
         break;
       }
 
+      case MainThreadMessageType.MonitorSegmentSinkStoreUpdate: {
+        shouldMonitorSegmentStoreUpdates = msg.value;
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }
@@ -530,6 +537,9 @@ function loadOrReloadPreparedContent(
   });
 
   function emitSegmentSinksStoreUpdate() {
+    if (!shouldMonitorSegmentStoreUpdates) {
+      return;
+    }
     const serializedSegmentSinksStore = segmentSinksStore.toSerialized();
     sendMessage({
       type: WorkerMessageType.SegmentSinkStoreUpdate,

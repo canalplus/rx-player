@@ -93,6 +93,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
+  private _segmentSinkStore?: SegmentSinksStore;
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -184,6 +185,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
+    this.trackDebugElementChanges();
   }
 
   /**
@@ -1670,7 +1672,25 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
   }
 
-  private _segmentSinkStore?: SegmentSinksStore;
+  private trackDebugElementChanges() {
+    if (features.createDebugElement === null) {
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    if (isNullOrUndefined(features.createDebugElement.__IS_USED)) {
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const isUsedRef = features.createDebugElement.__IS_USED as SharedReference<boolean>;
+    isUsedRef.onUpdate((val) => {
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.MonitorSegmentSinkStoreUpdate,
+        value: val,
+      });
+    });
+  }
 }
 
 export interface IMultiThreadContentInitializerContentInfos {

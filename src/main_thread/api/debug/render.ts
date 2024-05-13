@@ -1,3 +1,4 @@
+import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type RxPlayer from "../public_api";
 import constructDebugGeneralInfo from "./modules/general_info";
@@ -5,11 +6,14 @@ import createSegmentSinkGraph from "./modules/segment_buffer_content";
 import createSegmentSinkSizeGraph from "./modules/segment_buffer_size";
 import { createCompositeElement, createElement } from "./utils";
 
+const isUsed = new SharedReference<boolean>(false);
+
 export default function renderDebugElement(
   parentElt: HTMLElement,
   instance: RxPlayer,
   cancelSignal: CancellationSignal,
 ): void {
+  isUsed.setValue(true);
   const debugElementTitleElt = createElement("div", {
     textContent: "RxPlayer Debug Information",
   });
@@ -35,6 +39,9 @@ export default function renderDebugElement(
   debugWrapperElt.style.bottom = "0px";
   parentElt.appendChild(debugWrapperElt);
   cancelSignal.register(() => {
+    isUsed.setValue(false);
     parentElt.removeChild(debugWrapperElt);
   });
 }
+
+renderDebugElement.__IS_USED = isUsed;
