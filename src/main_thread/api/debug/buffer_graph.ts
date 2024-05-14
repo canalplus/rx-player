@@ -150,14 +150,13 @@ export default class SegmentSinkGraph {
   }
 
   private _getColorForRepresentation(representation: IRepresentation): string {
-    const serializableRepresentation = JSON.stringify(representation);
-    const color = this._colorMap.get(serializableRepresentation);
+    const color = this._colorMap.get(representation.uniqueId);
     if (color !== undefined) {
       return color;
     }
     const newColor = COLORS[this._currNbColors % COLORS.length];
     this._currNbColors++;
-    this._colorMap.set(serializableRepresentation, newColor);
+    this._colorMap.set(representation.uniqueId, newColor);
     return newColor;
   }
 }
