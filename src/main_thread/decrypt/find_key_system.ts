@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
+import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
+import {
+  generatePlayReadyInitData,
+  DUMMY_PLAY_READY_HEADER,
+} from "../../compat/generate_init_data";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
@@ -376,10 +381,7 @@ export default function getMediaKeySystemAccess(
     );
 
     try {
-      const keySystemAccess = await eme.requestMediaKeySystemAccess(
-        keyType,
-        keySystemConfigurations,
-      );
+      const keySystemAccess = await testKeySystem(keyType, keySystemConfigurations);
       log.info("DRM: Found compatible keysystem", keyType, index + 1);
       return {
         type: "create-media-key-system-access" as const,
@@ -396,4 +398,33 @@ export default function getMediaKeySystemAccess(
       return recursivelyTestKeySystems(index + 1);
     }
   }
+}
+/**
+ * Test a key system configuration, resolves with the MediaKeySystemAccess
+ * or reject if the key system is unsupported.
+ * @param {string} keyType - The KeySystem string to test (ex: com.microsoft.playready.recommendation)
+ * @param {Array.<MediaKeySystemMediaCapability>} keySystemConfigurations - Configurations for this keySystem
+ * @returns Promise resolving with the MediaKeySystemAccess. Rejects if unsupported.
+ */
+export async function testKeySystem(
+  keyType: string,
+  keySystemConfigurations: MediaKeySystemConfiguration[],
+) {
+  const keySystemAccess = await eme.requestMediaKeySystemAccess(
+    keyType,
+    keySystemConfigurations,
+  );
+
+  if (!canRelyOnRequestMediaKeySystemAccess(keyType)) {
+    try {
+      const mediaKeys = await keySystemAccess.createMediaKeys();
+      const session = mediaKeys.createSession();
+      const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+      await session.generateRequest("cenc", initData);
+    } catch (err) {
+      log.debug("DRM: KeySystemAccess was granted but it is not usable");
+      throw err;
+    }
+  }
+  return keySystemAccess;
 }
