@@ -20,6 +20,7 @@ import type { ITNode } from "../../../../../utils/xml-parser";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IBaseUrlIntermediateRepresentation,
+  IContentProtectionIntermediateRepresentation,
   IEventStreamIntermediateRepresentation,
   IPeriodAttributes,
   IPeriodChildren,
@@ -28,6 +29,7 @@ import type {
 } from "../../node_parser_types";
 import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet";
 import parseBaseURL from "./BaseURL";
+import parseContentProtection from "./ContentProtection";
 import { createEventStreamIntermediateRepresentation } from "./EventStream";
 import parseSegmentTemplate from "./SegmentTemplate";
 import { parseBoolean, parseDuration, ValueParser } from "./utils";
@@ -44,6 +46,7 @@ function parsePeriodChildren(
   const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
   const adaptations: IAdaptationSetIntermediateRepresentation[] = [];
   let segmentTemplate: ISegmentTemplateIntermediateRepresentation | undefined;
+  const contentProtections: IContentProtectionIntermediateRepresentation[] = [];
 
   let warnings: Error[] = [];
   const eventStreams: IEventStreamIntermediateRepresentation[] = [];
@@ -83,10 +86,24 @@ function parsePeriodChildren(
           warnings = warnings.concat(segmentTemplateWarnings);
         }
         break;
+
+      case "ContentProtection":
+        const [contentProtection, contentProtectionWarnings] =
+          parseContentProtection(currentElement);
+        if (contentProtectionWarnings.length > 0) {
+          warnings = warnings.concat(contentProtectionWarnings);
+        }
+        if (contentProtection !== undefined) {
+          contentProtections.push(contentProtection);
+        }
+        break;
     }
   }
 
-  return [{ baseURLs, adaptations, eventStreams, segmentTemplate }, warnings];
+  return [
+    { baseURLs, adaptations, eventStreams, segmentTemplate, contentProtections },
+    warnings,
+  ];
 }
 
 /**

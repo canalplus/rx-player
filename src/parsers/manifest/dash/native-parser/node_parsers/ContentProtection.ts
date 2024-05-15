@@ -78,7 +78,6 @@ function parseContentProtectionAttributes(root: Element): IContentProtectionAttr
       case "refId":
         ret.refId = attribute.value;
         break;
-
     }
   }
 

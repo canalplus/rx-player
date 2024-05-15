@@ -26,6 +26,7 @@ import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IParsedAdaptation, IParsedAdaptations } from "../../types";
 import type {
   IAdaptationSetIntermediateRepresentation,
+  IContentProtectionIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
 } from "../node_parser_types";
 import attachTrickModeTrack from "./attach_trickmode_track";
@@ -320,10 +321,15 @@ export default function parseAdaptationSets(
       parentSegmentTemplates.push(adaptation.children.segmentTemplate);
     }
 
+    const contentProtections = [
+      ...context.contentProtections,
+      ...(adaptationChildren.contentProtections ?? []),
+    ];
     const reprCtxt: IRepresentationContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
+      contentProtections,
       contentProtectionParser: context.contentProtectionParser,
       manifestBoundsCalculator: context.manifestBoundsCalculator,
       end: context.end,
@@ -559,6 +565,8 @@ export interface IAdaptationSetContext extends IInheritedRepresentationContext {
    * Use with moderation.
    */
   unsafelyBaseOnPreviousPeriod: IPeriod | null;
+  /** ContentProtection elements on parent nodes. */
+  contentProtections: IContentProtectionIntermediateRepresentation[];
   /** Parses contentProtection elements. */
   contentProtectionParser: ContentProtectionParser;
 }

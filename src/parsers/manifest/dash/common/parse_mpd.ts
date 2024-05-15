@@ -272,6 +272,7 @@ function parseCompleteIntermediateRepresentation(
     availabilityStartTime,
     baseURLs: mpdBaseUrls,
     clockOffset,
+    contentProtections: rootChildren.contentProtections ?? [],
     contentProtectionParser,
     duration: rootAttributes.duration,
     isDynamic,

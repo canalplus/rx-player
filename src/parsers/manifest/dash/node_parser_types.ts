@@ -65,6 +65,8 @@ export interface IMPDChildren {
    * node, from the first encountered to the last encountered.
    */
   utcTimings: IScheme[];
+  /** Encryption-related metadata. */
+  contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
 }
 
 /* Intermediate representation for the root's attributes. */
@@ -140,6 +142,8 @@ export interface IPeriodChildren {
    * node, from the first encountered to the last encountered.
    */
   eventStreams: IEventStreamIntermediateRepresentation[];
+  /** Encryption-related metadata. */
+  contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
 }
 
 /* Intermediate representation for A Period node's attributes. */
@@ -191,6 +195,7 @@ export interface IAdaptationSetChildren {
   // optional
   accessibilities?: IScheme[] | undefined;
   contentComponent?: IContentComponentAttributes | undefined;
+  /** Encryption-related metadata. */
   contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
   essentialProperties?: IScheme[] | undefined;
   inbandEventStreams?: IScheme[] | undefined;
@@ -249,6 +254,7 @@ export interface IRepresentationChildren {
   baseURLs: IBaseUrlIntermediateRepresentation[];
 
   // optional
+  /** Encryption-related metadata. */
   contentProtections?: IContentProtectionIntermediateRepresentation[];
   inbandEventStreams?: IScheme[];
   segmentBase?: ISegmentBaseIntermediateRepresentation;
