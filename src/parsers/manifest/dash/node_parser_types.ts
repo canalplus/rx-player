@@ -340,6 +340,8 @@ export interface IContentProtectionAttributes {
   schemeIdUri?: string;
   value?: string;
   keyId?: Uint8Array;
+  refId?: string;
+  ref?: string;
 }
 
 export interface ISegmentTemplateIntermediateRepresentation {

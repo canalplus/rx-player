@@ -27,6 +27,7 @@ import type {
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
 import type { IResponseData } from "../parsers_types";
+import ContentProtectionParser from "./content_protection_parser";
 import getClockOffset from "./get_clock_offset";
 import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
 import getMinimumAndMaximumPositions from "./get_minimum_and_maximum_positions";
@@ -266,10 +267,12 @@ function parseCompleteIntermediateRepresentation(
     timeShiftBufferDepth,
     serverTimestampOffset: externalClockOffset,
   });
+  const contentProtectionParser = new ContentProtectionParser();
   const manifestInfos = {
     availabilityStartTime,
     baseURLs: mpdBaseUrls,
     clockOffset,
+    contentProtectionParser,
     duration: rootAttributes.duration,
     isDynamic,
     manifestBoundsCalculator,
@@ -281,6 +284,7 @@ function parseCompleteIntermediateRepresentation(
     xmlNamespaces: mpdIR.attributes.namespaces,
   };
   const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
+  contentProtectionParser.finalize();
   const mediaPresentationDuration = rootAttributes.duration;
 
   let lifetime: number | undefined;
