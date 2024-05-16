@@ -7,18 +7,31 @@ import type { IContentProtectionIntermediateRepresentation } from "../node_parse
  * Class whose purpose is to parse `<ContentProtection>` elements in a DASH MPD.
  *
  * This element has to be particularly considered because a ContentProtection
- * can inherit another ContentProtection element coming before it or even after
- * it in the MPD through a system of "reference IDs".
+ * element can inherit another ContentProtection element coming before it yet
+ * even after it in the MPD, through a system of "reference IDs".
  *
- * To simplify the inheritance logic, the idea is that the main MPD parsing
- * logic just needs to signal to this class when a `ContentProtection` element
- * is encountered and in which object to push the result, and this class will
- * then parse as soon as it has all referenced ContentProtection elements.
+ * The idea here is that the main MPD parsing logic just needs to signal to this
+ * class when a `ContentProtection` element is encountered - and to which
+ * `Representation` it is associated, and this class will then perform the
+ * ContentProtection-parsing operation as soon as it has all referenced
+ * ContentProtection elements.
  *
  * @class ContentProtectionParser
  */
 export default class ContentProtectionParser {
+  /**
+   * Stores `ContentProtection` elements that can be referenced, identified by
+   * their `refId` attribute.
+   */
   private _refs: Map<string, IContentProtectionIntermediateRepresentation>;
+  /**
+   * Storage of `ContentProtection` elements that could not yet have been parsed
+   * due to not-yet resolved references.
+   *
+   * This is only possible if a `ContentProtection` element performs a
+   * "forward-reference" to a later `ContentProtection` element that is not yet
+   * known by this `ContentProtectionParser`.
+   */
   private _stored: Array<
     [IParsedRepresentation, IContentProtectionIntermediateRepresentation]
   >;
