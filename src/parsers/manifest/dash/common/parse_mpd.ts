@@ -268,11 +268,11 @@ function parseCompleteIntermediateRepresentation(
     serverTimestampOffset: externalClockOffset,
   });
   const contentProtectionParser = new ContentProtectionParser();
+  contentProtectionParser.addReferences(rootChildren.contentProtections ?? []);
   const manifestInfos = {
     availabilityStartTime,
     baseURLs: mpdBaseUrls,
     clockOffset,
-    contentProtections: rootChildren.contentProtections ?? [],
     contentProtectionParser,
     duration: rootAttributes.duration,
     isDynamic,

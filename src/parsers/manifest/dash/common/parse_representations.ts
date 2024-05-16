@@ -22,7 +22,6 @@ import objectAssign from "../../../../utils/object_assign";
 import type { IParsedRepresentation } from "../../types";
 import type {
   IAdaptationSetIntermediateRepresentation,
-  IContentProtectionIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   IScheme,
 } from "../node_parser_types";
@@ -258,7 +257,7 @@ export default function parseRepresentations(
     // Content Protection parsing
     {
       const contentProtIrArr = [
-        ...(context.contentProtections ?? []),
+        ...(adaptation.children.contentProtections ?? []),
         ...(representation.children.contentProtections ?? []),
       ];
       for (const contentProtIr of contentProtIrArr) {
@@ -423,8 +422,6 @@ export interface IRepresentationContext extends IInheritedRepresentationIndexCon
    * Use with moderation.
    */
   unsafelyBaseOnPreviousAdaptation: IAdaptation | null;
-  /** ContentProtection elements on parent nodes. */
-  contentProtections: IContentProtectionIntermediateRepresentation[];
   /** Parses contentProtection elements. */
   contentProtectionParser: ContentProtectionParser;
 }

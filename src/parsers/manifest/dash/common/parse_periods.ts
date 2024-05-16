@@ -30,7 +30,6 @@ import type {
   IParsedPeriod,
 } from "../../types";
 import type {
-  IContentProtectionIntermediateRepresentation,
   IEventStreamIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
@@ -111,15 +110,11 @@ export default function parsePeriods(
     const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset;
     const { manifestProfiles, contentProtectionParser } = context;
     const { segmentTemplate } = periodIR.children;
-    const contentProtections = [
-      ...context.contentProtections,
-      ...(periodIR.children.contentProtections ?? []),
-    ];
+    contentProtectionParser.addReferences(periodIR.children.contentProtections ?? []);
     const adapCtxt: IAdaptationSetContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: periodBaseURLs,
-      contentProtections,
       contentProtectionParser,
       manifestBoundsCalculator,
       end: periodEnd,
@@ -378,8 +373,6 @@ export interface IPeriodContext extends IInheritedAdaptationContext {
    * Document form.
    */
   xmlNamespaces?: Array<{ key: string; value: string }> | undefined;
-  /** ContentProtection elements on parent nodes. */
-  contentProtections: IContentProtectionIntermediateRepresentation[];
   /** Parses contentProtection elements. */
   contentProtectionParser: ContentProtectionParser;
 }
