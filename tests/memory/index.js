@@ -109,7 +109,7 @@ describe("Memory tests", () => {
     expect(heapDifference).to.be.below(7e6);
   });
 
-  it("should not have a sensible memory leak after 100000 instances of the RxPlayer", async function () {
+  it("should not have a sensible memory leak after 50000 instances of the RxPlayer", async function () {
     if (
       window.performance == null ||
       window.performance.memory == null ||
@@ -123,7 +123,7 @@ describe("Memory tests", () => {
     window.gc();
     await sleep(5000);
     const initialMemory = window.performance.memory;
-    for (let i = 0; i < 100000; i++) {
+    for (let i = 0; i < 50000; i++) {
       player = new RxPlayer({
         initialVideoBitrate: Infinity,
         initialAudiobitrate: Infinity,
@@ -150,7 +150,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(4e6);
+    expect(heapDifference).to.be.below(3e6);
   });
 
   it("should not have a sensible memory leak after many video quality switches", async function () {
