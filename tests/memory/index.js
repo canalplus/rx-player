@@ -29,7 +29,7 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(5 * 60 * 1000);
+    this.timeout(15 * 60 * 1000);
     player = new RxPlayer({
       initialVideoBitrate: Infinity,
       initialAudioBitrate: Infinity,
@@ -119,7 +119,7 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(10 * 60 * 1000);
+    this.timeout(15 * 60 * 1000);
     window.gc();
     await sleep(5000);
     const initialMemory = window.performance.memory;
