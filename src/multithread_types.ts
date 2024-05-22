@@ -516,9 +516,9 @@ export type IReferenceUpdateMessage =
   | IReferenceUpdate<"limitVideoResolution", IResolutionInfo>
   | IReferenceUpdate<"throttleVideoBitrate", number>;
 
-export interface IMonitorSegmentSinkStoreUpdate {
-  type: MainThreadMessageType.MonitorSegmentSinkStoreUpdate;
-  value: boolean;
+export interface IPullSegmentSinkStoreInfos {
+  type: MainThreadMessageType.PullSegmentSinkStoreInfos;
+  value: null;
 }
 
 export const enum MainThreadMessageType {
@@ -541,7 +541,7 @@ export const enum MainThreadMessageType {
   StartPreparedContent = "start",
   StopContent = "stop",
   TrackUpdate = "track-update",
-  MonitorSegmentSinkStoreUpdate = "monitor-segment-sink-store-update",
+  PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
 }
 
 export type IMainThreadMessage =
@@ -564,7 +564,7 @@ export type IMainThreadMessage =
   | IPushTextDataErrorMessage
   | IRemoveTextDataErrorMessage
   | IMediaSourceReadyStateChangeMainMessage
-  | IMonitorSegmentSinkStoreUpdate;
+  | IPullSegmentSinkStoreInfos;
 
 export type ISentError =
   | ISerializedNetworkError

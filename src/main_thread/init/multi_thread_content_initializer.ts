@@ -93,7 +93,17 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
+  /**
+   * TO DO: add description
+   */
   private _segmentSinkStore?: SegmentSinksStore;
+  /**
+   * Boolean storing the information if the segmentSinks metrics should
+   * be send from the WebWorker to the main thread.
+   * This is used to display metrics with the debug element.
+   */
+  private _shouldTrackSegmentStoreMetrics: boolean;
+
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -106,6 +116,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
+    this._shouldTrackSegmentStoreMetrics = false;
   }
 
   /**
@@ -186,6 +197,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
     this.trackDebugElementChanges();
+
+    setInterval(() => {
+      if (this._shouldTrackSegmentStoreMetrics) {
+        sendMessage(this._settings.worker, {
+          type: MainThreadMessageType.PullSegmentSinkStoreInfos,
+          value: null,
+        });
+      }
+    }, 1000);
   }
 
   /**
@@ -1685,10 +1705,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     // @ts-ignore
     const isUsedRef = features.createDebugElement.__IS_USED as SharedReference<boolean>;
     isUsedRef.onUpdate((val) => {
-      sendMessage(this._settings.worker, {
-        type: MainThreadMessageType.MonitorSegmentSinkStoreUpdate,
-        value: val,
-      });
+      this._shouldTrackSegmentStoreMetrics = val;
     });
   }
 }

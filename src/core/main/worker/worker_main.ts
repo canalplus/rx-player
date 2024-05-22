@@ -400,8 +400,8 @@ export default function initializeWorkerMain() {
         break;
       }
 
-      case MainThreadMessageType.MonitorSegmentSinkStoreUpdate: {
-        shouldMonitorSegmentStoreUpdates = msg.value;
+      case MainThreadMessageType.PullSegmentSinkStoreInfos: {
+        sendSegmentSinksStoreInfos(contentPreparer);
         break;
       }
 
@@ -531,22 +531,9 @@ function loadOrReloadPreparedContent(
       const segmentSinkStatus = segmentSinksStore.getStatus(tType);
       if (segmentSinkStatus.type === "initialized") {
         segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
-        emitSegmentSinksStoreUpdate();
       }
     });
   });
-
-  function emitSegmentSinksStoreUpdate() {
-    if (!shouldMonitorSegmentStoreUpdates) {
-      return;
-    }
-    const serializedSegmentSinksStore = segmentSinksStore.toSerialized();
-    sendMessage({
-      type: WorkerMessageType.SegmentSinkStoreUpdate,
-      contentId,
-      value: serializedSegmentSinksStore,
-    });
-  }
 
   const initialPeriod =
     manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
@@ -919,4 +906,23 @@ function updateLoggerLevel(logLevel: ILoggerLevel, sendBackLogs: boolean): void 
       });
     });
   }
+}
+
+/**
+ * Send a message `SegmentSinkStoreUpdate` to the main thread with
+ * a serialized object that represents the segmentSinksStore state.
+ * @param {ContentPreparer} contentPreparer
+ * @returns {void}
+ */
+function sendSegmentSinksStoreInfos(contentPreparer: ContentPreparer) {
+  const currentContent = contentPreparer.getCurrentContent();
+  if (currentContent === null) {
+    return;
+  }
+  const serializedSegmentSinksStore = currentContent.segmentSinksStore.toSerialized();
+  sendMessage({
+    type: WorkerMessageType.SegmentSinkStoreUpdate,
+    contentId: currentContent.contentId,
+    value: serializedSegmentSinksStore,
+  });
 }
