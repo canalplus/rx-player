@@ -33,38 +33,17 @@ const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text"];
 /** Types of "native" media buffers (i.e. which rely on a SourceBuffer) */
 type INativeMediaBufferType = "audio" | "video";
 
-export interface SerializedSegmentSinksStore {
-  _mediaSource: null;
-  _initializedSegmentSinks: {
-    audio: {
+export interface SegmentSinkMetrics {
+  segmentSinks: Record<
+    "audio" | "video" | "text",
+    {
       bufferType: IBufferType;
       codec: string | undefined;
-      _segmentInventory: {
-        _inventory: IBufferedChunk[];
-        _bufferedHistory: unknown;
-      };
-    };
-    video: {
-      bufferType: IBufferType;
-      codec: string | undefined;
-      _segmentInventory: {
-        _inventory: IBufferedChunk[];
-        _bufferedHistory: unknown;
-      };
-    };
-    text: {
-      bufferType: IBufferType;
-      codec: string | undefined;
-      _segmentInventory: {
-        _inventory: IBufferedChunk[];
-        _bufferedHistory: unknown;
-      };
-    };
-  };
-  _onNativeBufferAddedOrDisabled: unknown;
-  _textInterface: unknown;
-  _hasVideo: boolean;
+      segmentInventory: IBufferedChunk[];
+    }
+  >;
 }
+
 /**
  * Allows to easily create and dispose SegmentSinks, which are interfaces to
  * push and remove segments.
@@ -382,87 +361,29 @@ export default class SegmentSinksStore {
     return true;
   }
 
-  public toSerialized() {
-    const serializedSegmentSinksStore: SerializedSegmentSinksStore = {
-      _mediaSource: null,
-      _initializedSegmentSinks: {
+  public getSegmentSinksMetrics(): SegmentSinkMetrics {
+    return {
+      segmentSinks: {
         audio: {
           bufferType: "audio",
           codec: this._initializedSegmentSinks.audio?.codec,
-          _segmentInventory: {
-            _inventory: JSON.parse(
-              JSON.stringify(
-                this._initializedSegmentSinks.audio?.getLastKnownInventory() ?? [],
-              ),
-            ) as IBufferedChunk[],
-            _bufferedHistory: undefined,
-          },
+          segmentInventory:
+            this._initializedSegmentSinks.audio?.getLastKnownInventory() ?? [],
         },
         video: {
           bufferType: "video",
           codec: this._initializedSegmentSinks.video?.codec,
-          _segmentInventory: {
-            _inventory: JSON.parse(
-              JSON.stringify(
-                this._initializedSegmentSinks.video?.getLastKnownInventory() ?? [],
-              ),
-            ) as IBufferedChunk[],
-            _bufferedHistory: undefined,
-          },
+          segmentInventory:
+            this._initializedSegmentSinks.video?.getLastKnownInventory() ?? [],
         },
         text: {
           bufferType: "text",
           codec: this._initializedSegmentSinks.text?.codec,
-          _segmentInventory: {
-            _inventory: JSON.parse(
-              JSON.stringify(
-                this._initializedSegmentSinks.text?.getLastKnownInventory() ?? [],
-              ),
-            ) as IBufferedChunk[],
-            _bufferedHistory: undefined,
-          },
+          segmentInventory:
+            this._initializedSegmentSinks.text?.getLastKnownInventory() ?? [],
         },
       },
-      _onNativeBufferAddedOrDisabled: null,
-      _textInterface: null,
-      _hasVideo: true,
     };
-    return serializedSegmentSinksStore;
-  }
-
-  public updateWithSerializedData(data: SerializedSegmentSinksStore) {
-    this._initializedSegmentSinks.audio = new DummySegmentSink(
-      "audio",
-      data._initializedSegmentSinks.audio.codec ?? "",
-    );
-
-    this._initializedSegmentSinks.video = new DummySegmentSink(
-      "video",
-      data._initializedSegmentSinks.video.codec ?? "",
-    );
-
-    this._initializedSegmentSinks.text = new DummySegmentSink(
-      "text",
-      data._initializedSegmentSinks.text.codec ?? "",
-    );
-
-    if (this._initializedSegmentSinks.audio !== null) {
-      this._initializedSegmentSinks.audio.setSegmentHistory(
-        data._initializedSegmentSinks.audio._segmentInventory._inventory,
-      );
-    }
-
-    if (this._initializedSegmentSinks.video !== null) {
-      this._initializedSegmentSinks.video.setSegmentHistory(
-        data._initializedSegmentSinks.video._segmentInventory._inventory,
-      );
-    }
-
-    if (this._initializedSegmentSinks.text !== null) {
-      this._initializedSegmentSinks.text.setSegmentHistory(
-        data._initializedSegmentSinks.text._segmentInventory._inventory,
-      );
-    }
   }
 }
 

@@ -28,6 +28,7 @@ import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
+import SegmentSinksStore from "../../segment_sinks";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
@@ -46,8 +47,6 @@ import {
   wantedBufferAhead,
 } from "./globals";
 import sendMessage, { formatErrorForSender } from "./send_message";
-
-let shouldMonitorSegmentStoreUpdates = false;
 
 export default function initializeWorkerMain() {
   /**
@@ -919,10 +918,15 @@ function sendSegmentSinksStoreInfos(contentPreparer: ContentPreparer) {
   if (currentContent === null) {
     return;
   }
-  const serializedSegmentSinksStore = currentContent.segmentSinksStore.toSerialized();
+  const serializedSegmentSinksStore =
+    currentContent.segmentSinksStore.getSegmentSinksMetrics();
   sendMessage({
     type: WorkerMessageType.SegmentSinkStoreUpdate,
     contentId: currentContent.contentId,
     value: serializedSegmentSinksStore,
   });
+}
+
+function generatePlaybackMetrics(segmentSinkStore: SegmentSinksStore) {
+  // segmentSinkStore.
 }
