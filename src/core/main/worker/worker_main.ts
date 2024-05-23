@@ -28,7 +28,6 @@ import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
-import SegmentSinksStore from "../../segment_sinks";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
@@ -925,8 +924,4 @@ function sendSegmentSinksStoreInfos(contentPreparer: ContentPreparer) {
     contentId: currentContent.contentId,
     value: serializedSegmentSinksStore,
   });
-}
-
-function generatePlaybackMetrics(segmentSinkStore: SegmentSinksStore) {
-  // segmentSinkStore.
 }

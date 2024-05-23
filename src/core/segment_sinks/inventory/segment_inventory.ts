@@ -23,7 +23,7 @@ import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../utils/ranges";
 import type { IBufferedHistoryEntry } from "./buffered_history";
 import BufferedHistory from "./buffered_history";
-import type { IChunkContext } from "./types";
+import type { IChunkContext, IChunkContextSnapchot } from "./types";
 
 /** Categorization of a given chunk in the `SegmentInventory`. */
 export const enum ChunkStatus {
@@ -133,6 +133,10 @@ export interface IBufferedChunk {
    * fully-pushed.
    */
   start: number; // Supposed start the segment should start from, in seconds
+}
+
+export interface IBufferedChunkSnapshot extends Omit<IBufferedChunk, "infos"> {
+  infos: IChunkContextSnapchot;
 }
 
 /** information to provide when "inserting" a new chunk into the SegmentInventory. */

@@ -1,5 +1,5 @@
-import type { IBufferedChunk } from "../../../core/types";
-import type { IRepresentation } from "../../../manifest";
+import type { IBufferedChunkSnapshot } from "../../../core/segment_sinks/inventory/segment_inventory";
+import type { IRepresentationMetadata } from "../../../manifest";
 
 const BUFFER_WIDTH_IN_SECONDS = 30 * 60;
 
@@ -19,7 +19,7 @@ const COLORS = [
 
 export interface ISegmentSinkGrapUpdateData {
   currentTime: number;
-  inventory: IBufferedChunk[];
+  inventory: IBufferedChunkSnapshot[];
   width: number;
   height: number;
   minimumPosition: number | undefined;
@@ -149,7 +149,7 @@ export default class SegmentSinkGraph {
     this._canvasCtxt.fillRect(Math.ceil(startX), 0, Math.ceil(endX - startX), height);
   }
 
-  private _getColorForRepresentation(representation: IRepresentation): string {
+  private _getColorForRepresentation(representation: IRepresentationMetadata): string {
     const color = this._colorMap.get(representation.uniqueId);
     if (color !== undefined) {
       return color;
@@ -203,7 +203,7 @@ function paintCurrentPosition(
  * @returns {Array.<Object>}
  */
 function scaleSegments(
-  bufferedData: IBufferedChunk[],
+  bufferedData: IBufferedChunkSnapshot[],
   minimumPosition: number,
   maximumPosition: number,
 ): IScaledChunk[] {
@@ -227,5 +227,5 @@ function scaleSegments(
 interface IScaledChunk {
   scaledStart: number;
   scaledEnd: number;
-  info: IBufferedChunk;
+  info: IBufferedChunkSnapshot;
 }

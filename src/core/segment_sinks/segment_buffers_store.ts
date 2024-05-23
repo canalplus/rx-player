@@ -23,10 +23,10 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IBufferType, SegmentSink } from "./implementations";
 import { AudioVideoSegmentSink } from "./implementations";
-import DummySegmentSink from "./implementations/audio_video/dummy_segment_buffer";
 import type { ITextDisplayerInterface } from "./implementations/text";
 import TextSegmentSink from "./implementations/text";
-import type { IBufferedChunk } from "./inventory/segment_inventory";
+import type { IBufferedChunkSnapshot } from "./inventory/segment_inventory";
+import type { IChunkContext, IChunkContextSnapchot } from "./inventory/types";
 
 const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text"];
 
@@ -39,7 +39,7 @@ export interface SegmentSinkMetrics {
     {
       bufferType: IBufferType;
       codec: string | undefined;
-      segmentInventory: IBufferedChunk[];
+      segmentInventory: IBufferedChunkSnapshot[];
     }
   >;
 }
@@ -367,20 +367,32 @@ export default class SegmentSinksStore {
         audio: {
           bufferType: "audio",
           codec: this._initializedSegmentSinks.audio?.codec,
-          segmentInventory:
-            this._initializedSegmentSinks.audio?.getLastKnownInventory() ?? [],
+          segmentInventory: (
+            this._initializedSegmentSinks.audio?.getLastKnownInventory() ?? []
+          ).map((chunk) => ({
+            ...chunk,
+            infos: getChunkContextSnapshot(chunk.infos),
+          })),
         },
         video: {
           bufferType: "video",
           codec: this._initializedSegmentSinks.video?.codec,
-          segmentInventory:
-            this._initializedSegmentSinks.video?.getLastKnownInventory() ?? [],
+          segmentInventory: (
+            this._initializedSegmentSinks.video?.getLastKnownInventory() ?? []
+          ).map((chunk) => ({
+            ...chunk,
+            infos: getChunkContextSnapshot(chunk.infos),
+          })),
         },
         text: {
           bufferType: "text",
           codec: this._initializedSegmentSinks.text?.codec,
-          segmentInventory:
-            this._initializedSegmentSinks.text?.getLastKnownInventory() ?? [],
+          segmentInventory: (
+            this._initializedSegmentSinks.text?.getLastKnownInventory() ?? []
+          ).map((chunk) => ({
+            ...chunk,
+            infos: getChunkContextSnapshot(chunk.infos),
+          })),
         },
       },
     };
@@ -398,4 +410,13 @@ function shouldHaveNativeBuffer(
   bufferType: string,
 ): bufferType is INativeMediaBufferType {
   return bufferType === "audio" || bufferType === "video";
+}
+
+function getChunkContextSnapshot(context: IChunkContext): IChunkContextSnapchot {
+  return {
+    adaptation: context.adaptation.getMetadataSnapshot(),
+    period: context.period.getMetadataSnapshot(),
+    representation: context.representation.getMetadataSnapshot(),
+    segment: undefined,
+  };
 }

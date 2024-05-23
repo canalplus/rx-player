@@ -31,6 +31,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
+import { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
@@ -123,6 +124,8 @@ import {
 import type { ContentInitializer } from "../init";
 import type { IMediaElementTracksStore, ITSPeriodObject } from "../tracks_store";
 import TracksStore from "../tracks_store";
+import type { MetricsControllerEvents } from "./metricsController";
+import { MetricsController } from "./metricsController";
 import type { IParsedLoadVideoOptions, IParsedStartAtOption } from "./option_utils";
 import {
   checkReloadOptions,
@@ -263,6 +266,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     [P in keyof IPublicAPIEvent]?: IPublicAPIEvent[P];
   };
 
+  private _priv_metricsController: MetricsController | null;
   /**
    * Information that can be relied on once `reload` is called.
    * It should refer to the last content being played.
@@ -442,6 +446,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_lastAutoPlay = false;
 
     this._priv_worker = null;
+
+    this._priv_metricsController = null;
 
     const onVolumeChange = () => {
       this.trigger("volumeChange", {
@@ -752,6 +758,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     /** Emit to stop the current content. */
     const currentContentCanceller = new TaskCanceller();
 
+    this._priv_metricsController = new MetricsController();
+
     const videoElement = this.videoElement;
 
     let initializer: ContentInitializer;
@@ -937,6 +945,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           worker: this._priv_worker,
           url,
+          metricsController: this._priv_metricsController,
         });
       }
     } else {
@@ -2341,6 +2350,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return segmentSinkStatus.value.getLastKnownInventory();
     }
     return null;
+  }
+  /**
+   * Used for the display of segmentSink metrics for the debug element
+   * @param fn
+   * @param cancellationSignal
+   * @returns
+   */
+  _priv_subscribeToSegmentSinkMetrics(
+    fn: IListener<MetricsControllerEvents, "metrics">,
+    cancellationSignal?: CancellationSignal,
+  ): void {
+    if (this._priv_metricsController === null) {
+      return;
+    }
+    this._priv_metricsController.subscribe(fn, cancellationSignal);
   }
 
   /**

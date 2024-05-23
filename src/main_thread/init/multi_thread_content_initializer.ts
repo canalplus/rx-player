@@ -1,8 +1,7 @@
 import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
-import SegmentSinksStore from "../../core/segment_sinks";
-import type { SerializedSegmentSinksStore } from "../../core/segment_sinks/segment_buffers_store";
+import type { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
@@ -48,6 +47,8 @@ import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
+import { DEFAULT_REFRESH_INTERVAL } from "../api/debug/constants";
+import type { MetricsController } from "../api/metricsController";
 import type { IContentProtection } from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
@@ -94,15 +95,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _currentMediaSourceCanceller: TaskCanceller;
 
   /**
-   * TO DO: add description
-   */
-  private _segmentSinkStore?: SegmentSinksStore;
-  /**
+   * TO DO: update description
    * Boolean storing the information if the segmentSinks metrics should
    * be send from the WebWorker to the main thread.
    * This is used to display metrics with the debug element.
    */
-  private _shouldTrackSegmentStoreMetrics: boolean;
+  private _metricsController: MetricsController;
 
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
@@ -116,7 +114,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
-    this._shouldTrackSegmentStoreMetrics = false;
+    this._metricsController = settings.metricsController;
   }
 
   /**
@@ -196,16 +194,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
-    this.trackDebugElementChanges();
 
     setInterval(() => {
-      if (this._shouldTrackSegmentStoreMetrics) {
+      if (this._metricsController.metricListeners.length > 0) {
         sendMessage(this._settings.worker, {
           type: MainThreadMessageType.PullSegmentSinkStoreInfos,
           value: null,
         });
       }
-    }, 1000);
+    }, DEFAULT_REFRESH_INTERVAL);
   }
 
   /**
@@ -1491,15 +1488,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         getLoadedReference(playbackObserver, mediaElement, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
-              this._segmentSinkStore = new SegmentSinksStore(
-                this._currentContentInfo?.mainThreadMediaSource ??
-                  new MainMediaSourceInterface("id"),
-                true,
-                null,
-              );
               stopListening();
               this.trigger("loaded", {
-                segmentSinksStore: this._segmentSinkStore,
+                segmentSinksStore: null,
               });
             }
           },
@@ -1686,27 +1677,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
   }
 
-  private _onSegmentSinkStoreUpdate(data: SerializedSegmentSinksStore) {
-    if (this._segmentSinkStore) {
-      this._segmentSinkStore.updateWithSerializedData(data);
-    }
-  }
-
-  private trackDebugElementChanges() {
-    if (features.createDebugElement === null) {
-      return;
-    }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    if (isNullOrUndefined(features.createDebugElement.__IS_USED)) {
-      return;
-    }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const isUsedRef = features.createDebugElement.__IS_USED as SharedReference<boolean>;
-    isUsedRef.onUpdate((val) => {
-      this._shouldTrackSegmentStoreMetrics = val;
-    });
+  private _onSegmentSinkStoreUpdate(metrics: SegmentSinkMetrics) {
+    this._metricsController.dispatchMetricsEvent(metrics);
   }
 }
 
@@ -1832,6 +1804,7 @@ export interface IInitializeArguments {
   textTrackOptions: ITextDisplayerOptions;
   /** URL of the Manifest. `undefined` if unknown or not pertinent. */
   url: string | undefined;
+  metricsController: MetricsController;
 }
 
 function bindNumberReferencesToWorker(
