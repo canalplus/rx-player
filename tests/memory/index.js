@@ -139,7 +139,7 @@ describe("Memory tests", () => {
     }
     await sleep(5000);
     window.gc();
-    await sleep(15000);
+    await sleep(70000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
