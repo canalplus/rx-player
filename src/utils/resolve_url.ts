@@ -73,17 +73,22 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
       base = part;
     }
     else {
-      // trim if begins with "/"
-      if (part[0] === "/") {
-        part = part.substring(1);
-      }
+      try {
+        // try use window.URL first
+        base = new URL(part, base).toString();
+      } catch {
+        // trim if begins with "/"
+        if (part[0] === "/") {
+          part = part.substring(1);
+        }
 
-      // trim if ends with "/"
-      if (base[base.length - 1] === "/") {
-        base = base.substring(0, base.length - 1);
-      }
+        // trim if ends with "/"
+        if (base[base.length - 1] === "/") {
+          base = base.substring(0, base.length - 1);
+        }
 
-      base = base + "/" + part;
+        base = base + "/" + part;
+      }
     }
   }
 

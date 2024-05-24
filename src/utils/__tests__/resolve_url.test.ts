@@ -27,19 +27,19 @@ describe("utils - resolveURL", () => {
     expect(resolveURL("http://toto.com/a"))
       .toBe("http://toto.com/a");
     expect(resolveURL("http://toto.com/a", "b/c/d/", "g.a"))
-      .toBe("http://toto.com/a/b/c/d/g.a");
+      .toBe("http://toto.com/b/c/d/g.a");
   });
 
   it("should ignore empty strings when concatenating multiple URLs", () => {
     expect(resolveURL("", "http://toto.com/a", ""))
       .toBe("http://toto.com/a");
     expect(resolveURL("http://toto.com/a", "b/c/d/", "", "g.a"))
-      .toBe("http://toto.com/a/b/c/d/g.a");
+      .toBe("http://toto.com/b/c/d/g.a");
   });
 
   it("should remove a leading slash if one", () => {
     expect(resolveURL("http://toto.com/a", "/b/c/d/", "/", "/g.a"))
-      .toBe("http://toto.com/a/b/c/d/g.a");
+      .toBe("http://toto.com/g.a");
   });
 
   it("should reset the concatenation if a given string contains a scheme", () => {
@@ -49,20 +49,20 @@ describe("utils - resolveURL", () => {
 
   it("should have a - fairly simple - algorithm to simplify parent directories", () => {
     expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "../a"))
-      .toBe("torrent://g.a/b/c/a");
+      .toBe("torrent://g.a/b/a");
     expect(
       resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "../c/../../a")
-    ).toBe("torrent://g.a/b/a");
+    ).toBe("torrent://g.a/a");
   });
 
   /* eslint-disable max-len */
   it("should have a - fairly simple - algorithm to simplify the current directory", () => {
   /* eslint-enable max-len */
     expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "./a"))
-      .toBe("torrent://g.a/b/c/d/a");
+      .toBe("torrent://g.a/b/c/a");
     expect(
       resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a/b/c/d", "../c/.././a")
-    ).toBe("torrent://g.a/b/c/a");
+    ).toBe("torrent://g.a/b/a");
   });
 });
 
