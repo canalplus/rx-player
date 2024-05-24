@@ -39,7 +39,7 @@ export default function createSegmentSinkGraph(
   let bufferMetrics: SegmentSinkMetrics | null = null;
   instance._priv_subscribeToSegmentSinkMetrics((metrics) => {
     bufferMetrics = metrics;
-  });
+  }, cancelSignal);
 
   bufferGraphWrapper.appendChild(bufferTitle);
   bufferGraphWrapper.appendChild(canvasElt);
@@ -59,7 +59,10 @@ export default function createSegmentSinkGraph(
     }
     const showAllInfo = isExtendedMode(parentElt);
 
-    if (bufferMetrics === null) {
+    if (
+      bufferMetrics === null ||
+      bufferMetrics.segmentSinks[bufferType].segmentInventory.length === 0
+    ) {
       bufferGraphWrapper.style.display = "none";
       currentRangeRepInfoElt.innerHTML = "";
       loadingRangeRepInfoElt.innerHTML = "";

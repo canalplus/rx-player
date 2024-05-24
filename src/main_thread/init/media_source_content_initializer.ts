@@ -53,6 +53,7 @@ import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
+import type { MetricsCollector } from "../api/metricsCollector";
 import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
 import { getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
@@ -99,6 +100,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
+  private _metricsCollector: MetricsCollector;
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
    * settings.
@@ -115,6 +117,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       settings.transport,
       settings.manifestRequestSettings,
     );
+    this._metricsCollector = settings.metricsCollector;
   }
 
   /**
@@ -513,6 +516,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaElement.nodeName === "VIDEO",
       textDisplayerInterface,
     );
+
+    this._metricsCollector.setCollectFn(() => segmentSinksStore.getSegmentSinksMetrics());
+    this._metricsCollector.startCollectingMetrics(cancelSignal);
+
     cancelSignal.register(() => {
       segmentSinksStore.disposeAll();
     });
@@ -1017,6 +1024,8 @@ export interface IInitializeArguments {
   textTrackOptions: ITextDisplayerOptions;
   /** URL of the Manifest. `undefined` if unknown or not pertinent. */
   url: string | undefined;
+
+  metricsCollector: MetricsCollector;
 }
 
 /** Arguments needed when starting to buffer media on a specific MediaSource. */
