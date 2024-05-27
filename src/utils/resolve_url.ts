@@ -14,8 +14,26 @@
  * limitations under the License.
  */
 
+import startsWith from "./starts_with";
+
 // Scheme part of an url (e.g. "http://").
 const schemeRe = /^(?:[a-z]+:)?\/\//i;
+
+/**
+ * Match the different components of an URL.
+ *
+ *     foo://example.com:8042/over/there?name=ferret#nose
+       \_/   \______________/\_________/ \_________/ \__/
+        |           |            |            |        |
+      scheme     authority       path        query   fragment
+ * 1st match is the scheme: (e.g. "foo://")
+ * 2nd match is the authority (e.g "example.com:8042")
+ * 3rd match is the path (e.g "/over/there")
+ * 4th match is the query params (e.g "name=ferret")
+ * 5th match is the fragment (e.g "nose")
+ * */
+const urlComponentRegex =
+  /^(?:([^:\/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/;
 
 // Captures "/../" or "/./".
 const selfDirRe = /\/\.{1,2}\//;
@@ -49,6 +67,31 @@ function _normalizeUrl(url : string) : string {
 }
 
 /**
+ * Simple algorithm that uses WhatWC `new URL`.
+ * Fails on some rare edge case, see unit test.
+ * @param args
+ * @returns
+ */
+export const resolveURLWhatWcURL = (...args: Array<string | undefined>): string => {
+  const filteredArgs = args.filter((val) => val !== "");
+  const len = filteredArgs.length;
+  if (len === 0) {
+    return "";
+  }
+
+  const base = filteredArgs[0] ?? "";
+  const relative = filteredArgs[1] ?? "";
+
+  const output = new URL(relative, base);
+  if (filteredArgs.length <= 2) {
+    return output.toString();
+  } else {
+    const remainingArgs = filteredArgs.slice(2);
+    return resolveURL(output.toString(), ...remainingArgs);
+  }
+};
+
+/**
  * Construct an url from the arguments given.
  * Basically:
  *   - The last arguments that contains a scheme (e.g. "http://") is the base
@@ -57,7 +100,7 @@ function _normalizeUrl(url : string) : string {
  * @param {...string|undefined} args
  * @returns {string}
  */
-export default function resolveURL(...args : Array<string|undefined>) : string {
+export const resolveURLegacy = (...args: Array<string | undefined>): string => {
   const len = args.length;
   if (len === 0) {
     return "";
@@ -88,7 +131,7 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
   }
 
   return _normalizeUrl(base);
-}
+};
 
 /**
  * In a given URL, find the index at which the filename begins.
@@ -123,4 +166,192 @@ function getFilenameIndexInUrl(url : string) : number {
   return indexOfLastSlash + 1;
 }
 
+/**
+ * Resolve the output URL from the baseURL and the relative reference as
+ * specified by RFC 3986 section 5.
+ * @param base
+ * @param relative
+ * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5
+ * @example base: http://example.com | relative: /b/c | output: http://example.com/b/c
+ * @returns the resolved url
+ */
+const _resolveURL = (base: string, relative: string) => {
+  const baseParts = parseURL(base);
+  const relativeParts = parseURL(relative);
+
+  if (relativeParts.scheme) {
+    return formatURL(relativeParts);
+  }
+
+  const target: ParsedURL = {
+    scheme: baseParts.scheme,
+    authority: baseParts.authority,
+    path: "",
+    query: relativeParts.query,
+    fragment: relativeParts.fragment,
+  };
+
+  if (relativeParts.authority) {
+    target.authority = relativeParts.authority;
+    target.path = removeDotSegment(relativeParts.path);
+    return formatURL(target);
+  }
+
+  if (relativeParts.path === "") {
+    target.path = baseParts.path;
+    if (!relativeParts.query) {
+      target.query = baseParts.query;
+    }
+  } else {
+    if (startsWith(relativeParts.path, "/")) {
+      // path is absolute
+      target.path = removeDotSegment(relativeParts.path);
+    } else {
+      // path is relative
+      target.path = removeDotSegment(mergePaths(baseParts, relativeParts.path));
+    }
+  }
+  return formatURL(target);
+};
+
+interface ParsedURL {
+  scheme: string;
+  authority: string;
+  path: string;
+  query: string;
+  fragment: string;
+}
+/**
+ * Parses a URL into its components.
+ * @param {string} url - The URL to parse.
+ * @returns {ParsedURL} The parsed URL components.
+ */
+function parseURL(url: string): ParsedURL {
+  const matches = url.match(urlComponentRegex);
+  if (matches === null) {
+    return {
+      scheme: "",
+      authority: "",
+      path: "",
+      query: "",
+      fragment: "",
+    };
+  }
+
+  return {
+    scheme: matches[1] ?? "",
+    authority: matches[2] ?? "",
+    path: matches[3] ?? "",
+    query: matches[4] ?? "",
+    fragment: matches[5] ?? "",
+  };
+}
+/**
+ * Formats a parsed URL into a string.
+ * @param {ParsedURL} parts - The parsed URL components.
+ * @returns {string} The formatted URL string.
+ */
+function formatURL(parts: ParsedURL): string {
+  let url = "";
+  if (parts.scheme) {
+    url += parts.scheme + ":";
+  }
+
+  if (parts.authority) {
+    url += "//" + parts.authority;
+  }
+  url += parts.path;
+
+  if (parts.query) {
+    url += "?" + parts.query;
+  }
+
+  if (parts.fragment) {
+    url += "#" + parts.fragment;
+  }
+  return url;
+}
+
+/**
+ * Removes "." and ".." from the URL path, as described by the algorithm
+ * in RFC 3986 Section 5.2.4.  Remove Dot Segments
+ * @param {string} path - The URL path
+ * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.4
+ * @returns The path with dot segments removed.
+ */
+function removeDotSegment(path: string): string {
+  const segments = path.split(/(?=\/)/);
+  const output: string[] = [];
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    if (segment === ".." || segment === "." || segment === "") {
+      continue;
+    }
+
+    if (segment === "/..") {
+      output.pop();
+      // if it's last segment push a trailing "/"
+      if (i === segments.length - 1) {
+        output.push("/");
+      }
+      continue;
+    }
+    if (segment === "/.") {
+      // if it's last segment push a trailing "/"
+      if (i === segments.length - 1) {
+        output.push("/");
+      }
+      continue;
+    }
+    output.push(segment);
+  }
+  return output.join("");
+}
+
+/**
+ * Merges a base URL path with a relative URL path, as described by
+ * the algorithm merge paths in RFC 3986 Section 5.2.3. Merge Paths
+ * @param {ParsedURL} baseParts - The parsed base URL components.
+ * @param {string} relativePath - The relative URL path.
+ * @returns {string} The merged URL path.
+ * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3
+ */
+function mergePaths(baseParts: ParsedURL, relativePath: string): string {
+  if (baseParts.authority && baseParts.path === "") {
+    return "/" + relativePath;
+  }
+  const basePath = baseParts.path;
+  return basePath.substring(0, basePath.lastIndexOf("/") + 1) + relativePath;
+}
+/**
+ * Resolves multiple URL segments using the RFC 3986 URL resolution algorithm.
+ *
+ * This function takes a variable number of URL segments and resolves them
+ * sequentially according to the RFC 3986 URL resolution algorithm.
+ * First argument is the base URL.
+ * Empty string arguments are ignored.
+ *
+ * @param {...(string|undefined)} args - The URL segments to resolve.
+ * @returns {string} The resolved URL as a string.
+ */
+export const resolveURLwithRFC3689Algo = (...args: Array<string | undefined>): string => {
+  const filteredArgs = args.filter((val) => val !== "");
+  const len = filteredArgs.length;
+  if (len === 0) {
+    return "";
+  }
+  if (len === 1) {
+    return filteredArgs[0] ?? "";
+  } else {
+    const basePart = filteredArgs[0] ?? "";
+    const relativeParts = filteredArgs[1] ?? "";
+    const resolvedURL = _resolveURL(basePart, relativeParts);
+    const remainingArgs = filteredArgs.slice(2);
+    return resolveURLwithRFC3689Algo(resolvedURL, ...remainingArgs);
+  }
+};
+
+const resolveURL = resolveURLwithRFC3689Algo;
 export { getFilenameIndexInUrl };
+export default resolveURL;
