@@ -75,6 +75,16 @@ export default function resolveURL(...args : Array<string|undefined>) : string {
     else {
       try {
         // try use window.URL first
+        if (base) {
+          const baseUrl = new URL(base);
+
+          if (!baseUrl.pathname.endsWith("/")) {
+            baseUrl.pathname += "/";
+          }
+
+          base = baseUrl.toString();
+        }
+
         base = new URL(part, base).toString();
       } catch {
         // trim if begins with "/"
