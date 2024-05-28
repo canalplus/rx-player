@@ -274,10 +274,11 @@ function formatURL(parts: ParsedURL): string {
 
 /**
  * Removes "." and ".." from the URL path, as described by the algorithm
- * in RFC 3986 Section 5.2.4.  Remove Dot Segments
+ * in RFC 3986 Section 5.2.4. Remove Dot Segments
  * @param {string} path - The URL path
  * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.4
  * @returns The path with dot segments removed.
+ * @example "/baz/booz/../biz" => "/baz/biz"
  */
 function removeDotSegment(path: string): string {
   const segments = path.split(/(?=\/)/);
