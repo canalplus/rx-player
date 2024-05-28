@@ -35,104 +35,6 @@ const schemeRe = /^(?:[a-z]+:)?\/\//i;
 const urlComponentRegex =
   /^(?:([^:\/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/;
 
-// Captures "/../" or "/./".
-const selfDirRe = /\/\.{1,2}\//;
-
-/**
- * Resolve self directory and previous directory references to obtain a
- * "normalized" url.
- * @example "https://foo.bar/baz/booz/../biz" => "https://foo.bar/baz/biz"
- * @param {string} url
- * @returns {string}
- */
-function _normalizeUrl(url : string) : string {
-  // fast path if no ./ or ../ are present in the url
-  if (!selfDirRe.test(url)) {
-    return url;
-  }
-
-  const newUrl : string[] = [];
-  const oldUrl = url.split("/");
-  for (let i = 0, l = oldUrl.length; i < l; i++) {
-    if (oldUrl[i] === "..") {
-      newUrl.pop();
-    } else if (oldUrl[i] === ".") {
-      continue;
-    } else {
-      newUrl.push(oldUrl[i]);
-    }
-  }
-
-  return newUrl.join("/");
-}
-
-/**
- * Simple algorithm that uses WhatWC `new URL`.
- * Fails on some rare edge case, see unit test.
- * @param args
- * @returns
- */
-export const resolveURLWhatWcURL = (...args: Array<string | undefined>): string => {
-  const filteredArgs = args.filter((val) => val !== "");
-  const len = filteredArgs.length;
-  if (len === 0) {
-    return "";
-  }
-
-  const base = filteredArgs[0] ?? "";
-  const relative = filteredArgs[1] ?? "";
-
-  const output = new URL(relative, base);
-  if (filteredArgs.length <= 2) {
-    return output.toString();
-  } else {
-    const remainingArgs = filteredArgs.slice(2);
-    return resolveURL(output.toString(), ...remainingArgs);
-  }
-};
-
-/**
- * Construct an url from the arguments given.
- * Basically:
- *   - The last arguments that contains a scheme (e.g. "http://") is the base
- *     of the url.
- *   - every subsequent string arguments are concatened to it.
- * @param {...string|undefined} args
- * @returns {string}
- */
-export const resolveURLegacy = (...args: Array<string | undefined>): string => {
-  const len = args.length;
-  if (len === 0) {
-    return "";
-  }
-
-  let base = "";
-  for (let i = 0; i < len; i++) {
-    let part = args[i];
-    if (typeof part !== "string" || part === "") {
-      continue;
-    }
-    if (schemeRe.test(part)) {
-      base = part;
-    }
-    else {
-      // trim if begins with "/"
-      if (part[0] === "/") {
-        part = part.substring(1);
-      }
-
-      // trim if ends with "/"
-      if (base[base.length - 1] === "/") {
-        base = base.substring(0, base.length - 1);
-      }
-
-      base = base + "/" + part;
-    }
-  }
-
-  return _normalizeUrl(base);
-};
-
 /**
  * In a given URL, find the index at which the filename begins.
  * That is, this function finds the index of the last `/` character and returns
@@ -175,7 +77,7 @@ function getFilenameIndexInUrl(url : string) : number {
  * @example base: http://example.com | relative: /b/c | output: http://example.com/b/c
  * @returns the resolved url
  */
-const _resolveURL = (base: string, relative: string) => {
+function _resolveURL(base: string, relative: string) {
   const baseParts = parseURL(base);
   const relativeParts = parseURL(relative);
 
@@ -212,7 +114,7 @@ const _resolveURL = (base: string, relative: string) => {
     }
   }
   return formatURL(target);
-};
+}
 
 interface ParsedURL {
   scheme: string;
@@ -336,7 +238,7 @@ function mergePaths(baseParts: ParsedURL, relativePath: string): string {
  * @param {...(string|undefined)} args - The URL segments to resolve.
  * @returns {string} The resolved URL as a string.
  */
-export const resolveURLwithRFC3689Algo = (...args: Array<string | undefined>): string => {
+export function resolveURL(...args: Array<string | undefined>): string {
   const filteredArgs = args.filter((val) => val !== "");
   const len = filteredArgs.length;
   if (len === 0) {
@@ -349,10 +251,9 @@ export const resolveURLwithRFC3689Algo = (...args: Array<string | undefined>): s
     const relativeParts = filteredArgs[1] ?? "";
     const resolvedURL = _resolveURL(basePart, relativeParts);
     const remainingArgs = filteredArgs.slice(2);
-    return resolveURLwithRFC3689Algo(resolvedURL, ...remainingArgs);
+    return resolveURL(resolvedURL, ...remainingArgs);
   }
-};
+}
 
-const resolveURL = resolveURLwithRFC3689Algo;
 export { getFilenameIndexInUrl };
 export default resolveURL;
