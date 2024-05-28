@@ -104,32 +104,32 @@ describe(`utils - resolveURL ${resolveURL.name}`, () => {
       expect(resolveURL(baseURL, example.input)).toBe(example.output);
     });
   });
-});
-const abnormalExamples = [
-  { input: "../../../g", output: "http://a/g" },
-  { input: "../../../../g", output: "http://a/g" },
-  { input: "/./g", output: "http://a/g" },
-  { input: "/../g", output: "http://a/g" },
-  { input: "g.", output: "http://a/b/c/g." },
-  { input: ".g", output: "http://a/b/c/.g" },
-  { input: "g..", output: "http://a/b/c/g.." },
-  { input: "..g", output: "http://a/b/c/..g" },
-  { input: "./../g", output: "http://a/b/g" },
-  { input: "./g/.", output: "http://a/b/c/g/" },
-  { input: "g/./h", output: "http://a/b/c/g/h" },
-  { input: "g/../h", output: "http://a/b/c/h" },
-  { input: "g;x=1/./y", output: "http://a/b/c/g;x=1/y" },
-  { input: "g;x=1/../y", output: "http://a/b/c/y" },
-  { input: "g?y/./x", output: "http://a/b/c/g?y/./x" },
-  { input: "g?y/../x", output: "http://a/b/c/g?y/../x" },
-  { input: "g#s/./x", output: "http://a/b/c/g#s/./x" },
-  { input: "g#s/../x", output: "http://a/b/c/g#s/../x" },
-];
-abnormalExamples.forEach((example) => {
-  it("should conform to RFC 3986 abnormal examples - case: " + example.input, () => {
-    // https://datatracker.ietf.org/doc/html/rfc3986#section-5.4.2
-    const baseURL: string = "http://a/b/c/d;p?q";
-    expect(resolveURL(baseURL, example.input)).toBe(example.output);
+  const abnormalExamples = [
+    { input: "../../../g", output: "http://a/g" },
+    { input: "../../../../g", output: "http://a/g" },
+    { input: "/./g", output: "http://a/g" },
+    { input: "/../g", output: "http://a/g" },
+    { input: "g.", output: "http://a/b/c/g." },
+    { input: ".g", output: "http://a/b/c/.g" },
+    { input: "g..", output: "http://a/b/c/g.." },
+    { input: "..g", output: "http://a/b/c/..g" },
+    { input: "./../g", output: "http://a/b/g" },
+    { input: "./g/.", output: "http://a/b/c/g/" },
+    { input: "g/./h", output: "http://a/b/c/g/h" },
+    { input: "g/../h", output: "http://a/b/c/h" },
+    { input: "g;x=1/./y", output: "http://a/b/c/g;x=1/y" },
+    { input: "g;x=1/../y", output: "http://a/b/c/y" },
+    { input: "g?y/./x", output: "http://a/b/c/g?y/./x" },
+    { input: "g?y/../x", output: "http://a/b/c/g?y/../x" },
+    { input: "g#s/./x", output: "http://a/b/c/g#s/./x" },
+    { input: "g#s/../x", output: "http://a/b/c/g#s/../x" },
+  ];
+  abnormalExamples.forEach((example) => {
+    it("should conform to RFC 3986 abnormal examples - case: " + example.input, () => {
+      // https://datatracker.ietf.org/doc/html/rfc3986#section-5.4.2
+      const baseURL: string = "http://a/b/c/d;p?q";
+      expect(resolveURL(baseURL, example.input)).toBe(example.output);
+    });
   });
 });
 
