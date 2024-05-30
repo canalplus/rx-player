@@ -15,8 +15,8 @@ const config = defineConfig({
   test: {
     globals: false,
     include: [
-      // "**/scenarios/**/*.?(c|m)[jt]s?(x)",
-      "tests/integration/scenarios/end_number.js",
+      "**/scenarios/**/*.?(c|m)[jt]s?(x)",
+      // "tests/integration/scenarios/initial_playback.js",
     ],
     browser: {
       enabled: true,
