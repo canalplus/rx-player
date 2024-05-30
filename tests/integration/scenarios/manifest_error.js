@@ -126,7 +126,6 @@ describe("manifest error management", function () {
   });
 
   it("should parse the manifest if it works the third time", async () => {
-    this.timeout(10000);
     const clock = sinon.useFakeTimers();
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return xhr.respond(500);
@@ -159,7 +158,7 @@ describe("manifest error management", function () {
 
     await sleep(1000);
     expect(player.getError()).to.equal(null);
-  });
+  }, 10000);
 
   it("should parse the manifest if it works the fourth time", async () => {
     const clock = sinon.useFakeTimers();

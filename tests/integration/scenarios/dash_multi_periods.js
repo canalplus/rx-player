@@ -133,7 +133,6 @@ describe("DASH multi-Period with different choices", function () {
   });
 
   it("should send the right events when playing into a new Period", async function () {
-    this.timeout(7000);
     const availableAudioTracksChange = [];
     const availableVideoTracksChange = [];
     const videoTrackChangeEvents = [];
@@ -208,7 +207,7 @@ describe("DASH multi-Period with different choices", function () {
       expect(periodChangeEvents).to.have.length(2);
     });
   });
-});
+}, 7000);
 
 describe("DASH multi-Period with same choices", function () {
   let player;
@@ -323,7 +322,6 @@ describe("DASH multi-Period with same choices", function () {
   });
 
   it("should send the right events when playing into a new Period", async function () {
-    this.timeout(7000);
     const availableAudioTracksChange = [];
     const availableVideoTracksChange = [];
     const videoTrackChangeEvents = [];
@@ -380,22 +378,28 @@ describe("DASH multi-Period with same choices", function () {
     expect(videoTrackChangeEvents).to.have.length(1);
     expect(periodChangeEvents).to.have.length(1);
 
-    await checkAfterSleepWithBackoff({}, () => {
-      expect(player.getPosition()).to.be.at.least(102);
+    await checkAfterSleepWithBackoff(
+      {},
+      () => {
+        expect(player.getPosition()).to.be.at.least(102);
 
-      expect(availableAudioTracksChange).to.have.length(2);
-      expect(availableAudioTracksChange[1]).to.have.length(8);
+        expect(availableAudioTracksChange).to.have.length(2);
+        expect(availableAudioTracksChange[1]).to.have.length(8);
 
-      expect(availableVideoTracksChange).to.have.length(2);
-      expect(availableVideoTracksChange[1]).to.have.length(4);
+        expect(availableVideoTracksChange).to.have.length(2);
+        expect(availableVideoTracksChange[1]).to.have.length(4);
 
-      expect(audioTrackChangeEvents).to.have.length(2);
-      expect(audioTrackChangeEvents[1].id).to.equal("audio-de-audio-mp4a.40.2-audio/mp4");
+        expect(audioTrackChangeEvents).to.have.length(2);
+        expect(audioTrackChangeEvents[1].id).to.equal(
+          "audio-de-audio-mp4a.40.2-audio/mp4",
+        );
 
-      expect(videoTrackChangeEvents).to.have.length(2);
-      expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
+        expect(videoTrackChangeEvents).to.have.length(2);
+        expect(videoTrackChangeEvents[1].id).to.equal("video-video-video/mp4-dup");
 
-      expect(periodChangeEvents).to.have.length(2);
-    });
+        expect(periodChangeEvents).to.have.length(2);
+      },
+      7000,
+    );
   });
 });

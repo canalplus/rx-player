@@ -181,99 +181,102 @@ describe("DASH content CENC wrong version in MPD", function () {
 });
 
 describe('DASH non-linear content with a "broken" sidx', function () {
-  it("should fix the broken byte-range of the last segment with the right option", async function () {
-    this.timeout(20 * 1000);
-
-    function isBrokenVideoSegment(url) {
-      const segmentExpectedUrlEnd = "v-0144p-0100k-libx264_broken_sidx.mp4";
-      return (
-        typeof url === "string" &&
-        url.substring(url.length - segmentExpectedUrlEnd.length) === segmentExpectedUrlEnd
-      );
-    }
-
-    const player = new RxPlayer();
-
-    const requestedManifests = [];
-    const requestedSegments = [];
-    const manifestLoader = (man, callbacks) => {
-      requestedManifests.push(man.url);
-      callbacks.fallback();
-    };
-    const segmentLoader = (info, callbacks) => {
-      requestedSegments.push(info);
-      callbacks.fallback();
-    };
-
-    player.setWantedBufferAhead(1);
-
-    // Play a first time without the option
-    player.loadVideo({
-      url: brokenSidxManifestInfos.url,
-      transport: brokenSidxManifestInfos.transport,
-      checkMediaSegmentIntegrity: true,
-      autoPlay: false,
-      manifestLoader,
-      segmentLoader,
-    });
-    await waitForPlayerState(player, "LOADED");
-
-    requestedSegments.length = 0;
-    player.seekTo(player.getMaximumPosition() - 1);
-    await sleep(10);
-    player.setWantedBufferAhead(30);
-    await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
-      expect(requestedSegments.length).to.be.at.least(2);
-      const foundTruncatedVideoSegment = requestedSegments.some((seg) => {
+  it(
+    "should fix the broken byte-range of the last segment with the right option",
+    async function () {
+      function isBrokenVideoSegment(url) {
+        const segmentExpectedUrlEnd = "v-0144p-0100k-libx264_broken_sidx.mp4";
         return (
-          isBrokenVideoSegment(seg.url) &&
-          seg.byteRanges.some(
-            (byteRange) => byteRange[0] === 696053 && byteRange[1] === 746228,
-          )
+          typeof url === "string" &&
+          url.substring(url.length - segmentExpectedUrlEnd.length) ===
+            segmentExpectedUrlEnd
         );
+      }
+
+      const player = new RxPlayer();
+
+      const requestedManifests = [];
+      const requestedSegments = [];
+      const manifestLoader = (man, callbacks) => {
+        requestedManifests.push(man.url);
+        callbacks.fallback();
+      };
+      const segmentLoader = (info, callbacks) => {
+        requestedSegments.push(info);
+        callbacks.fallback();
+      };
+
+      player.setWantedBufferAhead(1);
+
+      // Play a first time without the option
+      player.loadVideo({
+        url: brokenSidxManifestInfos.url,
+        transport: brokenSidxManifestInfos.transport,
+        checkMediaSegmentIntegrity: true,
+        autoPlay: false,
+        manifestLoader,
+        segmentLoader,
       });
-      expect(foundTruncatedVideoSegment).to.equal(
-        true,
-        "should have requested the video segment with a bad range initially",
-      );
-    });
+      await waitForPlayerState(player, "LOADED");
 
-    player.setWantedBufferAhead(1);
-
-    // Play a second time with the option
-    player.loadVideo({
-      url: brokenSidxManifestInfos.url,
-      transport: brokenSidxManifestInfos.transport,
-      checkMediaSegmentIntegrity: true,
-      __priv_patchLastSegmentInSidx: true,
-      autoPlay: false,
-      manifestLoader,
-      segmentLoader,
-    });
-    await waitForPlayerState(player, "LOADED");
-
-    requestedSegments.length = 0;
-    player.seekTo(player.getMaximumPosition() - 1);
-    await sleep(10);
-    player.setWantedBufferAhead(30);
-    await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
-      expect(requestedSegments.length).to.be.at.least(2);
-      const foundFixedVideoSegment = requestedSegments.some((seg) => {
-        return (
-          isBrokenVideoSegment(seg.url) &&
-          seg.byteRanges.some(
-            (byteRange) => byteRange[0] === 696053 && byteRange[1] === Infinity,
-          )
+      requestedSegments.length = 0;
+      player.seekTo(player.getMaximumPosition() - 1);
+      await sleep(10);
+      player.setWantedBufferAhead(30);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+        expect(requestedSegments.length).to.be.at.least(2);
+        const foundTruncatedVideoSegment = requestedSegments.some((seg) => {
+          return (
+            isBrokenVideoSegment(seg.url) &&
+            seg.byteRanges.some(
+              (byteRange) => byteRange[0] === 696053 && byteRange[1] === 746228,
+            )
+          );
+        });
+        expect(foundTruncatedVideoSegment).to.equal(
+          true,
+          "should have requested the video segment with a bad range initially",
         );
       });
 
-      expect(foundFixedVideoSegment).to.equal(
-        true,
-        "should have fixed the video segment with a bad range",
-      );
-    });
-    player.dispose();
-  });
+      player.setWantedBufferAhead(1);
+
+      // Play a second time with the option
+      player.loadVideo({
+        url: brokenSidxManifestInfos.url,
+        transport: brokenSidxManifestInfos.transport,
+        checkMediaSegmentIntegrity: true,
+        __priv_patchLastSegmentInSidx: true,
+        autoPlay: false,
+        manifestLoader,
+        segmentLoader,
+      });
+      await waitForPlayerState(player, "LOADED");
+
+      requestedSegments.length = 0;
+      player.seekTo(player.getMaximumPosition() - 1);
+      await sleep(10);
+      player.setWantedBufferAhead(30);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+        expect(requestedSegments.length).to.be.at.least(2);
+        const foundFixedVideoSegment = requestedSegments.some((seg) => {
+          return (
+            isBrokenVideoSegment(seg.url) &&
+            seg.byteRanges.some(
+              (byteRange) => byteRange[0] === 696053 && byteRange[1] === Infinity,
+            )
+          );
+        });
+
+        expect(foundFixedVideoSegment).to.equal(
+          true,
+          "should have fixed the video segment with a bad range",
+        );
+      });
+      player.dispose();
+    },
+    20 * 1000,
+  );
 });
 
 describe("DASH non-linear content with number-based SegmentTimeline", function () {

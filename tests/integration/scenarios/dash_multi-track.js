@@ -277,7 +277,6 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   }
 
   it("should properly load the content with the right default tracks", async function () {
-    this.timeout(3000);
     let manifestLoaderCalledTimes = 0;
     const requestedSegments = [];
     const manifestLoader = (man, callbacks) => {
@@ -311,7 +310,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
-  });
+  }, 3000);
 
   it("should allow setting tracks BEFORE loading segments", async function () {
     const requestedSegments = [];
