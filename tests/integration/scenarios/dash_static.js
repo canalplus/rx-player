@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { stub } from "sinon";
+import { describe, beforeEach, afterEach, it } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import launchTestsForContent from "../utils/launch_tests_for_content.js";
 import sleep from "../../utils/sleep.js";

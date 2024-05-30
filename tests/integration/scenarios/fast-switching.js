@@ -1,6 +1,7 @@
 import { expect } from "chai";
-import RxPlayer from "../../../dist/es2017";
+import { describe, beforeEach, afterEach, it } from "vitest";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import RxPlayer from "../../../dist/es2017";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import { lockHighestBitrates, lockLowestBitrates } from "../../utils/bitrates";

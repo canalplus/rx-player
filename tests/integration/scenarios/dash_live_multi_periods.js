@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { describe, beforeEach, afterEach, it } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTemplate_Multi_Periods";
 import sinon from "sinon";

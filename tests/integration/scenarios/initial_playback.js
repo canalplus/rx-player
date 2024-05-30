@@ -28,6 +28,7 @@ import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
+import { describe, beforeEach, afterEach, it } from "vitest";
 
 runInitialPlaybackTests();
 runInitialPlaybackTests({ multithread: true });

@@ -5,6 +5,7 @@ import sinon from "sinon";
 import RxPlayer from "../../../dist/es2017";
 
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
+import { describe, beforeEach, afterEach, it } from "vitest";
 
 const MANIFEST_URL_INFOS = manifestInfos.url;
 

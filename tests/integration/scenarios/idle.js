@@ -6,6 +6,7 @@ import {
   EMBEDDED_WORKER_ES5,
   EMBEDDED_DASH_WASM,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import { describe, it } from "vitest";
 
 runIdleTests();
 runIdleTests({ multithread: true });

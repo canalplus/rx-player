@@ -8,6 +8,7 @@ import {
   trickModeInfos,
 } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep";
+import { describe, beforeEach, afterEach, it } from "vitest";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff";
 
