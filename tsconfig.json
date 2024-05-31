@@ -7,7 +7,6 @@
     "lib": ["es2017", "dom"],
     "types": [
       "jest",
-      "@vitest/browser/providers/webdriverio",
     ],
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
