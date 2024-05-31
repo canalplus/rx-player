@@ -1,5 +1,4 @@
-import { expect } from "chai";
-import { describe, beforeEach, afterEach, it } from "vitest";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";

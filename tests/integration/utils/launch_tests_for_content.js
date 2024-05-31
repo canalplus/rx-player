@@ -1,5 +1,4 @@
-import { expect } from "chai";
-import { describe, afterEach, beforeEach, it } from "vitest";
+import { describe, afterEach, beforeEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
 import {

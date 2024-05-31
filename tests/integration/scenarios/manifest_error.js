@@ -1,11 +1,10 @@
-import { expect } from "chai";
 import sleep from "../../utils/sleep.js";
 import sinon from "sinon";
 
 import RxPlayer from "../../../dist/es2017";
 
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
-import { describe, beforeEach, afterEach, it } from "vitest";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 
 const MANIFEST_URL_INFOS = manifestInfos.url;
 

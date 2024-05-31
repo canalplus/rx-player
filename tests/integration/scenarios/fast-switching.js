@@ -1,5 +1,4 @@
-import { expect } from "chai";
-import { describe, beforeEach, afterEach, it } from "vitest";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../dist/es2017";
 import sleep from "../../utils/sleep.js";

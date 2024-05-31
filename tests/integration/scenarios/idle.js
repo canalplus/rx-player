@@ -1,4 +1,3 @@
-import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
 import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
 import {
@@ -6,7 +5,7 @@ import {
   EMBEDDED_WORKER_ES5,
   EMBEDDED_DASH_WASM,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
-import { describe, it } from "vitest";
+import { describe, it, expect } from "vitest";
 
 runIdleTests();
 runIdleTests({ multithread: true });

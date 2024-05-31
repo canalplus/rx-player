@@ -1,4 +1,3 @@
-import { expect } from "chai";
 import RxPlayer from "../../../dist/es2017";
 import VideoThumbnailLoader, {
   DASH_LOADER,
@@ -8,7 +7,7 @@ import {
   trickModeInfos,
 } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep";
-import { describe, beforeEach, afterEach, it } from "vitest";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff";
 

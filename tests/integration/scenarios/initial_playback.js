@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import { expect } from "chai";
-import RxPlayer from "../../../dist/es2017";
-import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
+import RxPlayer from "../../../src/index.ts";
+import { MULTI_THREAD } from "../../../src/experimental/features";
 import {
   EMBEDDED_WORKER,
   EMBEDDED_DASH_WASM,
@@ -28,7 +27,7 @@ import waitForState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
-import { describe, beforeEach, afterEach, it } from "vitest";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 
 runInitialPlaybackTests();
 runInitialPlaybackTests({ multithread: true });
