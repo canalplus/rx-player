@@ -362,9 +362,11 @@ function Player(): JSX.Element {
           if (isShapeOfLoadVideoConfig(parsedLoadVideoConfig)) {
             setLoadVideoOpts(parsedLoadVideoConfig);
           } else {
+            // eslint-disable-next-line no-console
             console.warn("Demo: Config is not of the shape LoadVideoConfig");
           }
         } catch {
+          // eslint-disable-next-line no-console
           console.warn("Demo: LoadVideoConfig is not a valid JSON string");
         }
       }
