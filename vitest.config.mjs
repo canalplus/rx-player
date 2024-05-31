@@ -38,10 +38,7 @@ export default defineConfig({
   },
   test: {
     globals: false,
-    include: [
-      "**/scenarios/**/*.?(c|m)[jt]s?(x)",
-      // "tests/integration/**/*",
-    ],
+    include: ["**/*.test.[jt]s?(x)"],
     globalSetup: "tests/integration/globalSetup.js",
     browser: {
       enabled: true,
