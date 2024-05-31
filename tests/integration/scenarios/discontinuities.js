@@ -25,7 +25,6 @@ describe("discontinuities handling", () => {
   describe("discontinuities between periods", () => {
     const { url, transport } = discontinuitiesBetweenPeriodsInfos;
     it("should seek over discontinuities between periods", async function () {
-      this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -46,10 +45,9 @@ describe("discontinuities handling", () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    });
+    }, 7000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
-      this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -67,10 +65,9 @@ describe("discontinuities handling", () => {
       expect(player.getPosition()).to.be.at.least(131);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(discontinuitiesWarningReceived).to.equal(1);
-    });
+    }, 4000);
 
     it("should seek to next Period when seeking in discontinuity", async function () {
-      this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -86,13 +83,12 @@ describe("discontinuities handling", () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    });
+    }, 4000);
   });
 
   describe("discontinuities between periods with different types", () => {
     const { url, transport } = differentTypesDiscontinuitiesInfos;
     it("should seek over discontinuities between periods", async function () {
-      this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -113,10 +109,9 @@ describe("discontinuities handling", () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    });
+    }, 7000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
-      this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -134,10 +129,9 @@ describe("discontinuities handling", () => {
       expect(player.getPosition()).to.be.at.least(131);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(discontinuitiesWarningReceived).to.equal(1);
-    });
+    }, 4000);
 
     it("should seek to next Period when seeking in discontinuity", async function () {
-      this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -157,13 +151,12 @@ describe("discontinuities handling", () => {
         // RxPlayer's code?
         expect(discontinuitiesWarningReceived).to.be.at.most(2);
       });
-    });
+    }, 4000);
   });
 
   describe("discontinuities in Period announced in Manifest", () => {
     const { url, transport } = discontinuityInfos;
     it("should seek over discontinuities in a Period", async function () {
-      this.timeout(8000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -184,10 +177,9 @@ describe("discontinuities handling", () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    });
+    }, 8000);
 
     it("should seek over discontinuity when loading on one", async function () {
-      this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -205,10 +197,9 @@ describe("discontinuities handling", () => {
       expect(player.getPosition()).to.be.at.least(28);
       expect(player.getPlayerState()).to.equal("PLAYING");
       expect(discontinuitiesWarningReceived).to.equal(1);
-    });
+    }, 4000);
 
     it("should seek over discontinuity when seeking in one", async function () {
-      this.timeout(6000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -228,13 +219,12 @@ describe("discontinuities handling", () => {
         // be seeked in two parts in it
         expect(discontinuitiesWarningReceived).to.be.at.most(2);
       });
-    });
+    }, 6000);
   });
 
   describe("Content not starting at 0", () => {
     const { url, transport } = notStartingAt0ManifestInfos;
     it("should seek over discontinuity when loading in it", async function () {
-      this.timeout(7000);
       player.loadVideo({
         url,
         transport,
@@ -246,6 +236,6 @@ describe("discontinuities handling", () => {
         expect(player.getPosition()).to.be.above(12);
         expect(player.getPlayerState()).to.equal("PLAYING");
       });
-    });
+    }, 7000);
   });
 });

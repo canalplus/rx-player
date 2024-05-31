@@ -619,7 +619,6 @@ export default function launchTestsForContent(
       });
 
       it("should go to PLAYING when play is called", async function () {
-        this.timeout(5000);
         expect(player.getPlayerState()).to.equal("STOPPED");
 
         player.loadVideo({
@@ -632,7 +631,7 @@ export default function launchTestsForContent(
         await checkAfterSleepWithBackoff({ maxTimeMs: 1000 }, () => {
           expect(player.getPlayerState()).to.equal("PLAYING");
         });
-      });
+      }, 5000);
 
       it("should go to LOADING then to PLAYING immediately when autoPlay is set", async () => {
         expect(player.getPlayerState()).to.equal("STOPPED");
@@ -770,8 +769,6 @@ export default function launchTestsForContent(
     describe("getCurrentBufferGap", () => {
       // TODO handle live contents
       it("should return the buffer gap of the current range", async function () {
-        this.timeout(20000);
-
         lockLowestBitrates(player);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
@@ -822,7 +819,7 @@ export default function launchTestsForContent(
             player.getMaximumPosition() - minimumPosition - (10 + 30) + 10,
           );
         });
-      });
+      }, 20000);
     });
 
     // TODO handle live contents
@@ -955,7 +952,6 @@ export default function launchTestsForContent(
     describe("setPlaybackRate", () => {
       // TODO handle live contents
       it("should update the speed accordingly", async function () {
-        this.timeout(15000);
         player.loadVideo({
           url: manifestInfos.url,
           transport,
@@ -977,7 +973,7 @@ export default function launchTestsForContent(
         const duration2 = (performance.now() - before2) / 1000;
         const secondPosition = player.getPosition();
         expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 3, 2);
-      });
+      }, 15000);
     });
 
     describe("getVideoRepresentation", () => {
@@ -1659,7 +1655,6 @@ export default function launchTestsForContent(
     describe("setWantedBufferAhead", () => {
       // TODO handle live contents
       it("should download until a set wanted buffer ahead", async function () {
-        this.timeout(20000);
         lockLowestBitrates(player);
         player.setWantedBufferAhead(10);
         expect(player.getWantedBufferAhead()).to.equal(10);
@@ -1731,7 +1726,7 @@ export default function launchTestsForContent(
           expect(endOfCurrentRange).to.be.at.least(player.getMaximumPosition() - 2);
           expect(endOfCurrentRange).to.be.at.most(player.getMaximumPosition() + 10);
         });
-      });
+      }, 20000);
     });
   });
 }

@@ -5,7 +5,7 @@ import {
   EMBEDDED_WORKER_ES5,
   EMBEDDED_DASH_WASM,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterAll } from "vitest";
 
 runIdleTests();
 runIdleTests({ multithread: true });
@@ -73,7 +73,7 @@ function runIdleTests({ multithread, es5Worker } = {}) {
     describe("initial state", () => {
       const player = new RxPlayer();
 
-      after(() => player.dispose());
+      afterAll(() => player.dispose());
 
       describe("getError", () => {
         it("should have no error by default", () => {
