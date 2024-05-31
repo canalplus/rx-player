@@ -1,4 +1,5 @@
-import TextSegmentSink, { ITextDisplayerInterface } from "./text_segment_buffer";
+import type { ITextDisplayerInterface } from "./text_segment_buffer";
+import TextSegmentSink from "./text_segment_buffer";
 
 export default TextSegmentSink;
-export { ITextDisplayerInterface };
+export type { ITextDisplayerInterface };

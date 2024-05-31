@@ -20,14 +20,15 @@ import {
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
 } from "./indexes";
-import parseMpdIr, {
+import type {
   IIrParserResponse,
   ILoadedXlinkData,
   IMPDParserArguments,
 } from "./parse_mpd";
+import parseMpdIr from "./parse_mpd";
 
 export default parseMpdIr;
-export { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments };
+export type { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments };
 export {
   BaseRepresentationIndex,
   ListRepresentationIndex,

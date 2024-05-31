@@ -16,9 +16,9 @@ import type { IManifest, ITaggedTrack } from "./manifest";
 import type { ILocalManifest } from "./parsers/manifest/local";
 import type { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
 
-export { ITaggedTrack as IMediaErrorTrackContext };
+export type { ITaggedTrack as IMediaErrorTrackContext };
 
-export { IPreferredEmeApiType };
+export type { IPreferredEmeApiType };
 
 /** `mode` option for the `loadVideo` method */
 export type IRxPlayerMode = "auto" | "main" | "multithread";

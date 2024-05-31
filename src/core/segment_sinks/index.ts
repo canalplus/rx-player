@@ -15,7 +15,7 @@
  */
 
 import BufferGarbageCollector from "./garbage_collector";
-import {
+import type {
   IBufferType,
   ICompleteSegmentInfo,
   ISignalCompleteSegmentOperation,
@@ -25,25 +25,23 @@ import {
   IRemoveOperation,
   ISBOperation,
   ITextDisplayerInterface,
-  SegmentSink,
-  SegmentSinkOperation,
 } from "./implementations";
-import {
-  ChunkStatus,
+import { SegmentSink, SegmentSinkOperation } from "./implementations";
+import type {
   IBufferedHistoryEntry,
   IBufferedChunk,
   IChunkContext,
   IInsertedChunkInfos,
+} from "./inventory";
+import {
+  ChunkStatus,
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
 } from "./inventory";
 import SegmentSinksStore from "./segment_buffers_store";
 
 export default SegmentSinksStore;
-export {
-  BufferGarbageCollector,
-  ChunkStatus,
-  SegmentSink,
+export type {
   IBufferType,
   IBufferedChunk,
   IBufferedHistoryEntry,
@@ -52,12 +50,17 @@ export {
   IPushChunkInfos,
   IPushedChunkData,
   ICompleteSegmentInfo,
-  SegmentSinkOperation,
   ISBOperation,
   ISignalCompleteSegmentOperation,
   IPushOperation,
   IRemoveOperation,
+  ITextDisplayerInterface,
+};
+export {
+  BufferGarbageCollector,
+  ChunkStatus,
+  SegmentSink,
+  SegmentSinkOperation,
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  ITextDisplayerInterface,
 };

@@ -200,7 +200,7 @@ export interface ICompatTextTrackList extends TextTrackList {
   onchange: (() => void) | null;
 }
 
-export {
+export type {
   ICompatDocument,
   ICompatHTMLMediaElement,
   ICompatAudioTrackList,
@@ -211,6 +211,5 @@ export {
   ICompatTextTrack,
   ICompatVTTCue,
   ICompatVTTCueConstructor,
-  MediaSource_,
-  READY_STATES,
 };
+export { MediaSource_, READY_STATES };

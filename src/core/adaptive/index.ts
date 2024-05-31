@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import AdaptiveRepresentationSelector, {
+import type {
   IABREstimate,
   IAdaptiveRepresentationSelectorArguments,
   IAddedSegmentCallbackPayload,
@@ -28,9 +28,10 @@ import AdaptiveRepresentationSelector, {
   IRequestProgressCallbackPayload,
   IResolutionInfo,
 } from "./adaptive_representation_selector";
+import AdaptiveRepresentationSelector from "./adaptive_representation_selector";
 
 export default AdaptiveRepresentationSelector;
-export {
+export type {
   IAdaptiveRepresentationSelectorArguments,
   IABRThrottlers,
   IRepresentationEstimator,

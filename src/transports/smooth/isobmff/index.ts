@@ -16,14 +16,15 @@
 
 import createAudioInitSegment from "./create_audio_init_segment";
 import createVideoInitSegment from "./create_video_init_segment";
-import parseTfrf, { IISOBMFFBasicSegment } from "./parse_tfrf";
+import type { IISOBMFFBasicSegment } from "./parse_tfrf";
+import parseTfrf from "./parse_tfrf";
 import parseTfxd from "./parse_tfxd";
 import patchSegment from "./patch_segment";
 
+export type { IISOBMFFBasicSegment };
 export {
   createAudioInitSegment,
   createVideoInitSegment,
-  IISOBMFFBasicSegment,
   parseTfrf,
   parseTfxd,
   patchSegment,

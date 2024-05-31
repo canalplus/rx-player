@@ -15,35 +15,25 @@
  */
 
 import Adaptation from "./adaptation";
-import Manifest, {
-  IDecipherabilityUpdateElement,
-  IManifestParsingOptions,
-} from "./manifest";
+import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
+import Manifest from "./manifest";
 import Period from "./period";
-import Representation, { ICodecSupportList } from "./representation";
-import {
+import type { ICodecSupportList } from "./representation";
+import Representation from "./representation";
+import type {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  StaticRepresentationIndex,
 } from "./representation_index";
-import { areSameContent, getLoggableSegmentId, IBufferedChunkInfos } from "./utils";
+import { StaticRepresentationIndex } from "./representation_index";
+import type { IBufferedChunkInfos } from "./utils";
+import { areSameContent, getLoggableSegmentId } from "./utils";
 
 export default Manifest;
 export * from "./types";
-export { IPeriodsUpdateResult } from "./update_periods";
-export {
-  // utils
-  areSameContent,
-  getLoggableSegmentId,
-
-  // classes
-  Period,
-  Adaptation,
-  Representation,
-
-  // types
+export type { IPeriodsUpdateResult } from "./update_periods";
+export type {
   IBufferedChunkInfos,
   ICodecSupportList,
   IDecipherabilityUpdateElement,
@@ -52,5 +42,12 @@ export {
   IRepresentationIndex,
   IPrivateInfos,
   ISegment,
+};
+export {
+  areSameContent,
+  getLoggableSegmentId,
+  Period,
+  Adaptation,
+  Representation,
   StaticRepresentationIndex,
 };

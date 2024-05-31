@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-import SegmentInventory, {
-  ChunkStatus,
-  IBufferedChunk,
-  IInsertedChunkInfos,
-} from "./segment_inventory";
+import type { IBufferedChunk, IInsertedChunkInfos } from "./segment_inventory";
+import SegmentInventory, { ChunkStatus } from "./segment_inventory";
 
 export default SegmentInventory;
-export { ChunkStatus, IBufferedChunk, IInsertedChunkInfos };
-export { IBufferedHistoryEntry } from "./buffered_history";
-export { IChunkContext } from "./types";
+export type { IBufferedChunk, IInsertedChunkInfos };
+export { ChunkStatus };
+export type { IBufferedHistoryEntry } from "./buffered_history";
+export type { IChunkContext } from "./types";
 export { getFirstSegmentAfterPeriod, getLastSegmentBeforePeriod } from "./utils";

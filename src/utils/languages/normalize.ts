@@ -151,9 +151,5 @@ function normalizeAudioTrack(
 }
 
 export default normalizeLanguage;
-export {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-  INormalizedTextTrackObject,
-  INormalizedAudioTrackObject,
-};
+export type { INormalizedTextTrackObject, INormalizedAudioTrackObject };
+export { normalizeAudioTrack, normalizeTextTrack };

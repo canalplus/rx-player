@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import ManifestFetcher, {
+import type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
 } from "./manifest_fetcher";
+import ManifestFetcher from "./manifest_fetcher";
 
-export { IManifestFetcherSettings, IManifestFetcherEvent, IManifestRefreshSettings };
+export type { IManifestFetcherSettings, IManifestFetcherEvent, IManifestRefreshSettings };
 export default ManifestFetcher;

@@ -35,11 +35,11 @@ export type {
   IPrivateInfos,
 };
 export { areSameContent, getLoggableSegmentId };
-export {
-  ManifestMetadataFormat,
+export type {
   IManifestMetadata,
   IPeriodMetadata,
   IAdaptationMetadata,
   IRepresentationMetadata,
 } from "./types";
+export { ManifestMetadataFormat } from "./types";
 export * from "./utils";

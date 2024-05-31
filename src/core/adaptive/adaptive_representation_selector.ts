@@ -41,7 +41,8 @@ import GuessBasedChooser from "./guess_based_chooser";
 import NetworkAnalyzer from "./network_analyzer";
 import BandwidthEstimator from "./utils/bandwidth_estimator";
 import filterByBitrate from "./utils/filter_by_bitrate";
-import filterByResolution, { IResolutionInfo } from "./utils/filter_by_resolution";
+import filterByResolution from "./utils/filter_by_resolution";
+import type { IResolutionInfo } from "./utils/filter_by_resolution";
 import LastEstimateStorage, { ABRAlgorithmType } from "./utils/last_estimate_storage";
 import type {
   IPendingRequestStoreBegin,
@@ -846,4 +847,4 @@ export interface IRepresentationEstimatorThrottlers {
   throttleBitrate: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
 }
 
-export { IResolutionInfo };
+export type { IResolutionInfo };

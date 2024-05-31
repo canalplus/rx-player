@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-import ManifestFetcher, {
+import type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
 } from "./manifest";
-import SegmentFetcherCreator, {
+import ManifestFetcher from "./manifest";
+import type {
   IPrioritizedSegmentFetcher,
   ISegmentFetcherCreatorBackoffOptions,
 } from "./segment";
+import SegmentFetcherCreator from "./segment";
 
-export {
-  ManifestFetcher,
-  SegmentFetcherCreator,
+export type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
   IPrioritizedSegmentFetcher,
   ISegmentFetcherCreatorBackoffOptions,
 };
+export { ManifestFetcher, SegmentFetcherCreator };

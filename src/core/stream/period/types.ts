@@ -20,7 +20,7 @@ import type {
 } from "../adaptation";
 import type { IPausedPlaybackObservation } from "../representation";
 
-export { IPausedPlaybackObservation };
+export type { IPausedPlaybackObservation };
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends IAdaptationStreamCallbacks {
@@ -121,4 +121,4 @@ export type IPeriodStreamOptions = IAdaptationStreamOptions & {
   onCodecSwitch: "continue" | "reload";
 };
 
-export { IAudioTrackSwitchingMode } from "../../../public_types";
+export type { IAudioTrackSwitchingMode } from "../../../public_types";

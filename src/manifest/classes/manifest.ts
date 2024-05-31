@@ -704,4 +704,4 @@ function updateDeciperability(
   return updates;
 }
 
-export { IManifestParsingOptions };
+export type { IManifestParsingOptions };

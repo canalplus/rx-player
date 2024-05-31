@@ -27,15 +27,6 @@ export {
   getUuidContent,
 } from "./get_box";
 export { getMDAT, getMDIA, getTRAF } from "./read";
-export {
-  getMDHDTimescale,
-  getPlayReadyKIDFromPrivateData,
-  getTrackFragmentDecodeTime,
-  getDurationFromTrun,
-  getSegmentsFromSidx,
-  IEMSG,
-  ISidxSegment,
-  patchPssh,
-  updateBoxLength,
-} from "./utils";
+export type { IEMSG, ISidxSegment } from "./utils";
+export { getMDHDTimescale, getPlayReadyKIDFromPrivateData, getTrackFragmentDecodeTime, getDurationFromTrun, getSegmentsFromSidx, patchPssh, updateBoxLength } from "./utils";
 export { extractCompleteChunks, findCompleteBox, getPsshSystemID, takePSSHOut };

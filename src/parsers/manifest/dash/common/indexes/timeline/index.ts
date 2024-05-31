@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import TimelineRepresentationIndex, {
+import type {
   ITimelineIndexContextArgument,
 } from "./timeline_representation_index";
+import TimelineRepresentationIndex from "./timeline_representation_index";
 export default TimelineRepresentationIndex;
-export { ITimelineIndexContextArgument };
+export type { ITimelineIndexContextArgument };
