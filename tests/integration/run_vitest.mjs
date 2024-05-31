@@ -7,9 +7,18 @@ const CONTENT_SERVER_PORT = 3000;
 
 const config = defineConfig({
   define: {
+    // global variables
     __TEST_CONTENT_SERVER__: {
       URL: "127.0.0.1",
       PORT: 3000,
+    },
+    __ENVIRONMENT__: {
+      PRODUCTION: 0,
+      DEV: 1,
+      CURRENT_ENV: 1,
+    },
+    __LOGGER_LEVEL__: {
+      CURRENT_LEVEL: '"NONE"',
     },
   },
   test: {
