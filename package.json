@@ -244,10 +244,10 @@
     "ts-jest": "29.1.1",
     "ts-loader": "9.5.1",
     "typescript": "5.3.3",
-    "webpack": "^5.90.3",
-    "webpack-cli": "^5.1.4",
     "vitest": "^1.2.1",
-    "webdriverio": "^8.27.2"
+    "webdriverio": "^8.38.0",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
   },
   "scripts-list": {
     "Build a demo page (e.g. to test a code change)": {
