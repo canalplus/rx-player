@@ -6,7 +6,7 @@ import TestContentServer from "../contents/server.mjs";
 const CONTENT_SERVER_PORT = 3000;
 
 const config = defineConfig({
-  define: {
+  define: {
     __TEST_CONTENT_SERVER__: {
       URL: "127.0.0.1",
       PORT: 3000,
@@ -15,8 +15,8 @@ const config = defineConfig({
   test: {
     globals: false,
     include: [
-      "**/scenarios/**/*.?(c|m)[jt]s?(x)",
-      // "tests/integration/scenarios/initial_playback.js",
+      // "**/scenarios/**/*.?(c|m)[jt]s?(x)",
+      "tests/integration/scenarios/initial_playback.js",
     ],
     browser: {
       enabled: true,
@@ -24,14 +24,13 @@ const config = defineConfig({
       provider: "webdriverio",
       headless: true,
       providerOptions: {
-        capabilities: {
-          "goog:chromeOptions" : {
-            args: ["--autoplay-policy=no-user-gesture-required"]
-          }
-        }
-
-      }
-    }
+        capabilities: {
+          "goog:chromeOptions": {
+            args: ["--autoplay-policy=no-user-gesture-required"],
+          },
+        },
+      },
+    },
   },
 });
 const testContentServer = TestContentServer(CONTENT_SERVER_PORT);

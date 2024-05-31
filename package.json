@@ -175,6 +175,7 @@
     "standalone": "node ./scripts/run_standalone_demo.mjs",
     "start": "node ./scripts/start_demo_web_server.mjs",
     "start:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
+    "test:vitest": "node ./tests/integration/run_vitest.mjs",
     "test:integration": "node tests/integration/run.mjs --bchromehl --bfirefoxhl",
     "test:integration:chrome": "node tests/integration/run.mjs --bchrome",
     "test:integration:chrome:watch": "node tests/integration/run.mjs --bchrome --watch",
