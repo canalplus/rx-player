@@ -146,7 +146,7 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
 
     // TODO This often breaks, presumably due to the badly-encoded content.
     // To check
-    xit("should end if seeking to the end when loaded", async function () {
+    it.skip("should end if seeking to the end when loaded", async function () {
       player.loadVideo({
         transport: manifestInfos.transport,
         url: manifestInfos.url,
@@ -166,7 +166,7 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
 
     // TODO This often breaks, presumably due to the badly-encoded content.
     // To check
-    xit("should end if seeking to the end when playing", async function () {
+    it.skip("should end if seeking to the end when playing", async function () {
       player.loadVideo({
         transport: manifestInfos.transport,
         url: manifestInfos.url,
