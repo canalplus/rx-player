@@ -44,7 +44,7 @@ export default defineConfig({
     ],
     globalSetup: "tests/integration/globalSetup.js",
     browser: {
-      enabled: false,
+      enabled: true,
       name: "chrome",
       provider: "webdriverio",
       headless: true,
