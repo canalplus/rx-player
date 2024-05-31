@@ -378,7 +378,6 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
     });
 
     it("may switch to SEEKING state when seeking to a buffered part when playing", async function () {
-      this.timeout(5000);
       player.setWantedBufferAhead(30);
       player.loadVideo({
         transport: manifestInfos.transport,
@@ -398,10 +397,9 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
         expect(player.getCurrentBufferGap()).to.be.above(10);
         expect(player.getPlayerState()).to.equal("PLAYING");
       });
-    });
+    }, 5000);
 
     it("may switch to SEEKING state when seeking to a buffered part when paused", async function () {
-      this.timeout(5000);
       player.setWantedBufferAhead(30);
       player.loadVideo({
         transport: manifestInfos.transport,
@@ -419,7 +417,7 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
       await sleep(1000);
       expect(player.getCurrentBufferGap()).to.be.above(10);
       expect(player.getPlayerState()).to.equal("PAUSED");
-    });
+    }, 5000);
 
     it("should be in SEEKING state when seeking to a non-buffered part when playing", async function () {
       player.setWantedBufferAhead(4);
@@ -442,8 +440,6 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
     });
 
     it("should respect a set max buffer size", async function () {
-      this.timeout(4000);
-
       // Force a given video Representation
       let hasLockedRepresentation = false;
       const chosenVideoRepresentation =
@@ -477,7 +473,7 @@ function runInitialPlaybackTests({ multithread, es5Worker } = {}) {
       // we round it up to 9sec
       expect(player.getCurrentBufferGap()).to.be.below(6 * 3);
       expect(player.getCurrentBufferGap()).to.be.above(6 * 1);
-    });
+    }, 4000);
 
     it("should remove behind if buffer full", async function () {
       // Force a given video Representation
