@@ -545,4 +545,27 @@ function isTimeInTimeRanges(ranges: TimeRanges, time: number): boolean {
 }
 
 export type { IRange };
-export { convertToRanges, excludeFromRanges, getInnerAndOuterRangesFromBufferedTimeRanges, getInnerAndOuterRanges, getLeftSizeOfRange, getNextBufferedTimeRangeGap, getSizeOfBufferedTimeRange, getPlayedSizeOfBufferedTimeRange, getLeftSizeOfBufferedTimeRange, getPlayedSizeOfRange, getBufferedTimeRange, getRange, getSizeOfRange, insertInto, isAfter, isBefore, isTimeInTimeRanges, isTimeInRange, isTimeInRanges, keepRangeIntersection, mergeContiguousRanges, removeEmptyRanges };
+export {
+  convertToRanges,
+  excludeFromRanges,
+  getInnerAndOuterRangesFromBufferedTimeRanges,
+  getInnerAndOuterRanges,
+  getLeftSizeOfRange,
+  getNextBufferedTimeRangeGap,
+  getSizeOfBufferedTimeRange,
+  getPlayedSizeOfBufferedTimeRange,
+  getLeftSizeOfBufferedTimeRange,
+  getPlayedSizeOfRange,
+  getBufferedTimeRange,
+  getRange,
+  getSizeOfRange,
+  insertInto,
+  isAfter,
+  isBefore,
+  isTimeInTimeRanges,
+  isTimeInRange,
+  isTimeInRanges,
+  keepRangeIntersection,
+  mergeContiguousRanges,
+  removeEmptyRanges,
+};

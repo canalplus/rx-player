@@ -16,11 +16,9 @@
 
 import type {
   INormalizedAudioTrackObject,
-  INormalizedTextTrackObject} from "./normalize";
-import normalizeLanguage, {
-  normalizeAudioTrack,
-  normalizeTextTrack,
+  INormalizedTextTrackObject,
 } from "./normalize";
+import normalizeLanguage, { normalizeAudioTrack, normalizeTextTrack } from "./normalize";
 export default normalizeLanguage;
 export type { INormalizedAudioTrackObject, INormalizedTextTrackObject };
 export { normalizeAudioTrack, normalizeTextTrack };

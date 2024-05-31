@@ -23,5 +23,15 @@ import TemplateRepresentationIndex from "./template";
 import type { ITimelineIndexContextArgument } from "./timeline";
 import TimelineRepresentationIndex from "./timeline";
 
-export type { IBaseIndexContextArgument, IListIndexContextArgument, ITemplateIndexContextArgument, ITimelineIndexContextArgument };
-export { BaseRepresentationIndex, ListRepresentationIndex, TemplateRepresentationIndex, TimelineRepresentationIndex };
+export type {
+  IBaseIndexContextArgument,
+  IListIndexContextArgument,
+  ITemplateIndexContextArgument,
+  ITimelineIndexContextArgument,
+};
+export {
+  BaseRepresentationIndex,
+  ListRepresentationIndex,
+  TemplateRepresentationIndex,
+  TimelineRepresentationIndex,
+};
