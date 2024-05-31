@@ -25,7 +25,7 @@ const config = defineConfig({
     globals: false,
     include: [
       // "**/scenarios/**/*.?(c|m)[jt]s?(x)",
-      "tests/integration/scenarios/initial_playback.js",
+      "tests/memory/index.js",
     ],
     browser: {
       enabled: true,
@@ -35,13 +35,36 @@ const config = defineConfig({
       providerOptions: {
         capabilities: {
           "goog:chromeOptions": {
-            args: ["--autoplay-policy=no-user-gesture-required"],
+            args: [
+              "--autoplay-policy=no-user-gesture-required",
+              "--enable-precise-memory-info",
+              "--js-flags=--expose-gc",
+            ],
           },
         },
       },
     },
   },
 });
+
+// customLaunchers: {
+//   ChromeMemory: {
+//     base: "Chrome",
+//     flags: [
+//       "--autoplay-policy=no-user-gesture-required",
+//     ,
+//     ],
+//   },
+//   ChromeHeadlessMemory: {
+//     base: "ChromeHeadless",
+//     flags: [
+//       "--autoplay-policy=no-user-gesture-required",
+//       "--enable-precise-memory-info",
+//       '--js-flags="--expose-gc"',
+//     ],
+//   },
+// },
+
 const testContentServer = TestContentServer(CONTENT_SERVER_PORT);
 
 startVitest("test", undefined, undefined, config);

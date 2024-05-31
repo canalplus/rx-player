@@ -181,7 +181,7 @@
     "test:integration:chrome:watch": "node tests/integration/run.mjs --bchrome --watch",
     "test:integration:firefox": "node tests/integration/run.mjs --bfirefox",
     "test:integration:firefox:watch": "node tests/integration/run.mjs --bfirefox --watch",
-    "test:memory": "node tests/memory/run.mjs --bchromehl",
+    "test:memory": "node tests/integration/run_vitest.mjs",
     "test:memory:chrome:watch": "node tests/memory/run.mjs --bchrome --watch",
     "test:unit": "jest --maxWorkers=5",
     "test:unit:coverage": "jest --coverage",
