@@ -93,7 +93,7 @@ jobs:
       - run: npm run build
       # Firefox seems to have issue with integration tests on GitHub actions only
       # TODO to check
-      - run: node tests/integration/run.mjs --bchromehl
+      - run: npm run test:integration
 
   memory_linux:
     runs-on: ubuntu-latest
