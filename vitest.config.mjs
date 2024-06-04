@@ -18,6 +18,56 @@ function vitePluginArraybuffer() {
   };
 }
 
+function getBrowserConfig(browser) {
+  switch (browser) {
+    case "chrome":
+      return {
+        enabled: true,
+        name: "chrome",
+        provider: "webdriverio",
+        headless: true,
+        providerOptions: {
+          capabilities: {
+            "goog:chromeOptions": {
+              args: [
+                "--autoplay-policy=no-user-gesture-required",
+                "--enable-precise-memory-info",
+                "--js-flags=--expose-gc",
+              ],
+            },
+          },
+        },
+      };
+
+    case "firefox":
+      return {
+        enabled: true,
+        name: "firefox",
+        provider: "webdriverio",
+        headless: true,
+        providerOptions: {
+          capabilities: {
+            "moz:firefoxOptions": {
+              prefs: {
+                "media.autoplay.default": 0,
+                "media.autoplay.enabled.user-gestures-needed": false,
+                "media.autoplay.block-webaudio": false,
+                "media.autoplay.ask-permission": false,
+                "media.autoplay.block-event.enabled": false,
+                "media.block-autoplay-until-in-foreground": false,
+              },
+            },
+          },
+        },
+      };
+
+    default:
+      return {
+        enabled: false,
+      };
+  }
+}
+
 export default defineConfig({
   plugins: [vitePluginArraybuffer()],
   // assetsInclude: ["**/*.bif?arraybuffer"],
@@ -38,24 +88,9 @@ export default defineConfig({
   },
   test: {
     globals: false,
-    include: ["**/*.test.[jt]s?(x)"],
+    watch: false,
+    include: ["tests/**/*.test.[jt]s?(x)"],
     globalSetup: "tests/integration/globalSetup.js",
-    browser: {
-      enabled: true,
-      name: "chrome",
-      provider: "webdriverio",
-      headless: true,
-      providerOptions: {
-        capabilities: {
-          "goog:chromeOptions": {
-            args: [
-              "--autoplay-policy=no-user-gesture-required",
-              "--enable-precise-memory-info",
-              "--js-flags=--expose-gc",
-            ],
-          },
-        },
-      },
-    },
+    browser: getBrowserConfig(process.env.BROWSER_CONFIG),
   },
 });
