@@ -85,7 +85,7 @@ function _resolveURL(base: string, relative: string) {
     return formatURL(relativeParts);
   }
 
-  const target: ParsedURL = {
+  const target: IParsedURL = {
     scheme: baseParts.scheme,
     authority: baseParts.authority,
     path: "",
@@ -116,7 +116,7 @@ function _resolveURL(base: string, relative: string) {
   return formatURL(target);
 }
 
-interface ParsedURL {
+interface IParsedURL {
   scheme: string;
   authority: string;
   path: string;
@@ -126,9 +126,9 @@ interface ParsedURL {
 /**
  * Parses a URL into its components.
  * @param {string} url - The URL to parse.
- * @returns {ParsedURL} The parsed URL components.
+ * @returns {IParsedURL} The parsed URL components.
  */
-function parseURL(url: string): ParsedURL {
+function parseURL(url: string): IParsedURL {
   const matches = url.match(urlComponentRegex);
   if (matches === null) {
     return {
@@ -150,10 +150,10 @@ function parseURL(url: string): ParsedURL {
 }
 /**
  * Formats a parsed URL into a string.
- * @param {ParsedURL} parts - The parsed URL components.
+ * @param {IParsedURL} parts - The parsed URL components.
  * @returns {string} The formatted URL string.
  */
-function formatURL(parts: ParsedURL): string {
+function formatURL(parts: IParsedURL): string {
   let url = "";
   if (parts.scheme) {
     url += parts.scheme + ":";
@@ -215,12 +215,12 @@ function removeDotSegment(path: string): string {
 /**
  * Merges a base URL path with a relative URL path, as described by
  * the algorithm merge paths in RFC 3986 Section 5.2.3. Merge Paths
- * @param {ParsedURL} baseParts - The parsed base URL components.
+ * @param {IParsedURL} baseParts - The parsed base URL components.
  * @param {string} relativePath - The relative URL path.
  * @returns {string} The merged URL path.
  * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3
  */
-function mergePaths(baseParts: ParsedURL, relativePath: string): string {
+function mergePaths(baseParts: IParsedURL, relativePath: string): string {
   if (baseParts.authority && baseParts.path === "") {
     return "/" + relativePath;
   }
