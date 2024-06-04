@@ -1,27 +1,11 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
 import globalScope from "../global_scope";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** Every chars defined in base64. */
 const CHARS = [
@@ -92,24 +76,25 @@ const CHARS = [
 ];
 
 describe("base64ToBytes", () => {
-  const logWarn = jest.fn();
+  const logWarn = vi.fn();
   beforeEach(() => {
-    jest.resetModules();
-    logWarn.mockReset();
-    jest.mock("../../log", () => ({
+    vi.doMock("../../log", () => ({
       default: { warn: logWarn },
-      __esModule: true as const,
     }));
   });
+  afterEach(() => {
+    vi.resetModules();
+    logWarn.mockReset();
+  });
 
-  it("should return an empty Uint8Array for an empty string", () => {
-    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
+  it("should return an empty Uint8Array for an empty string", async () => {
+    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
     expect(base64ToBytes("")).toEqual(new Uint8Array([]));
     expect(logWarn).not.toHaveBeenCalled();
   });
 
-  it("should convert a base64 to an Uint8Array", () => {
-    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
+  it("should convert a base64 to an Uint8Array", async () => {
+    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
     expect(base64ToBytes("woDCge+/vg==")).toEqual(
       new Uint8Array([194, 128, 194, 129, 239, 191, 190]),
     );
@@ -127,7 +112,7 @@ describe("base64ToBytes", () => {
     );
     expect(logWarn).not.toHaveBeenCalled();
 
-    const bytesToBase64 = jest.requireActual("../base64").bytesToBase64;
+    const bytesToBase64 = ((await vi.importActual("../base64")) as any).bytesToBase64;
 
     for (let i = 0; i < CHARS.length; i++) {
       const char1 = CHARS[i];
@@ -145,8 +130,8 @@ describe("base64ToBytes", () => {
     }
   });
 
-  it("should convert a non-padded base64 to an Uint8Array", () => {
-    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
+  it("should convert a non-padded base64 to an Uint8Array", async () => {
+    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
     expect(base64ToBytes("woDCge+/vg")).toEqual(
       new Uint8Array([194, 128, 194, 129, 239, 191, 190]),
     );
@@ -165,8 +150,8 @@ describe("base64ToBytes", () => {
     );
   });
 
-  it("should fail on invalid data", () => {
-    const base64ToBytes = jest.requireActual("../base64").base64ToBytes;
+  it("should fail on invalid data", async () => {
+    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
     expect(() => base64ToBytes("woD=Cge+/vg=")).toThrowError(
       "Unable to parse base64 string.",
     );
@@ -180,24 +165,23 @@ describe("base64ToBytes", () => {
 });
 
 describe("bytesToBase64", () => {
-  const logWarn = jest.fn();
+  const logWarn = vi.fn();
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     logWarn.mockReset();
-    jest.mock("../../log", () => ({
+    vi.doMock("../../log", () => ({
       default: { warn: logWarn },
-      __esModule: true as const,
     }));
   });
 
-  it("should return an empty string for an empty Uint8Array", () => {
-    const bytesToBase64 = jest.requireActual("../base64").bytesToBase64;
+  it("should return an empty string for an empty Uint8Array", async () => {
+    const bytesToBase64 = ((await vi.importActual("../base64")) as any).bytesToBase64;
     expect(bytesToBase64(new Uint8Array([]))).toEqual("");
     expect(logWarn).not.toHaveBeenCalled();
   });
 
-  it("should convert a base64 to an Uint8Array", () => {
-    const bytesToBase64 = jest.requireActual("../base64").bytesToBase64;
+  it("should convert a base64 to an Uint8Array", async () => {
+    const bytesToBase64 = ((await vi.importActual("../base64")) as any).bytesToBase64;
     expect(bytesToBase64(new Uint8Array([194, 128, 194, 129, 239, 191, 190]))).toEqual(
       "woDCge+/vg==",
     );

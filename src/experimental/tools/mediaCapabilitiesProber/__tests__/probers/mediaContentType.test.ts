@@ -1,39 +1,23 @@
-/**
- * Copyright 2017 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
+import { ProberStatus } from "../../types";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-
-import { ProberStatus } from "../../types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should throw if no compatible MediaSource API", () => {
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should throw if no compatible MediaSource API", async () => {
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: null,
     }));
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaContentType({})).rejects.toThrowError(
@@ -42,14 +26,14 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
-  it("should throw if no compatible isTypeSupported API", () => {
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should throw if no compatible isTypeSupported API", async () => {
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: false,
       },
     }));
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
     /* eslint-disable @typescript-eslint/no-floating-promises */
     expect(probeMediaContentType({})).rejects.toThrowError(
@@ -58,9 +42,9 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
-  it("should throw if no specified contentType in config", (done) => {
-    const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should throw if no specified contentType in config", async () => {
+    const mockIsTypeSupported = vi.fn(() => true);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -68,27 +52,22 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     const config = {
       type: "media-source",
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(1);
-    probeMediaContentType(config)
-      .then(() => {
-        done();
-      })
-      .catch(({ message }: { message: string }) => {
-        expect(message).toBe(
-          "MediaCapabilitiesProber >>> API_CALL: " +
-            "Not enough arguments for calling isTypeSupported.",
-        );
-        done();
-      });
+    await probeMediaContentType(config).catch(({ message }: { message: string }) => {
+      expect(message).toBe(
+        "MediaCapabilitiesProber >>> API_CALL: " +
+          "Not enough arguments for calling isTypeSupported.",
+      );
+    });
   });
 
-  it("should resolve with `Supported` when video contentType is supported", (done) => {
-    const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should resolve with `Supported` when video contentType is supported", async () => {
+    const mockIsTypeSupported = vi.fn(() => true);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -99,25 +78,24 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "video/mp5",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 
-  it("should resolve with `Supported` when audio contentType is supported", (done) => {
-    const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should resolve with `Supported` when audio contentType is supported", async () => {
+    const mockIsTypeSupported = vi.fn(() => true);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -128,25 +106,24 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 
-  it("should resolve with `Supported` when both contentTypes are supported", (done) => {
-    const mockIsTypeSupported = jest.fn(() => true);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should resolve with `Supported` when both contentTypes are supported", async () => {
+    const mockIsTypeSupported = vi.fn(() => true);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -160,25 +137,24 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "video/mp5",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.Supported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 
-  it("should return `NotSupported` when audio contentType is not supported", (done) => {
-    const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should return `NotSupported` when audio contentType is not supported", async () => {
+    const mockIsTypeSupported = vi.fn(() => false);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -189,25 +165,24 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 
-  it("should return `NotSupported` when video contentType is not supported", (done) => {
-    const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should return `NotSupported` when video contentType is not supported", async () => {
+    const mockIsTypeSupported = vi.fn(() => false);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -218,25 +193,24 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "video/mp5",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 
-  it("should resolve with `NotSupported` when contentTypes are not supported", (done) => {
-    const mockIsTypeSupported = jest.fn(() => false);
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+  it("should resolve with `NotSupported` when contentTypes are not supported", async () => {
+    const mockIsTypeSupported = vi.fn(() => false);
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -250,27 +224,26 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 
-  it("should return `NotSupported` when one contentType is not supported", (done) => {
-    const mockIsTypeSupported = jest.fn((type: string) => {
+  it("should return `NotSupported` when one contentType is not supported", async () => {
+    const mockIsTypeSupported = vi.fn((type: string) => {
       return type === "video/mp5";
     });
-    jest.mock("../../../../../compat/browser_compatibility_types", () => ({
+    vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
         isTypeSupported: mockIsTypeSupported,
       },
@@ -284,19 +257,18 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         contentType: "audio/wma",
       },
     };
-    const probeMediaContentType = jest.requireActual(
-      "../../probers/mediaContentType",
+    const probeMediaContentType = (
+      (await vi.importActual("../../probers/mediaContentType")) as any
     ).default;
 
     expect.assertions(2);
-    probeMediaContentType(config)
+    await probeMediaContentType(config)
       .then(([res]: [unknown]) => {
         expect(res).toEqual(ProberStatus.NotSupported);
         expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
-        done();
       })
       .catch(() => {
-        done();
+        // noop
       });
   });
 });

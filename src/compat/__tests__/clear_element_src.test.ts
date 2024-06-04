@@ -1,66 +1,52 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import arrayFindIndex from "../../utils/array_find_index";
 
 describe("Compat - clearElementSrc", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should empty the src and remove the Attribute for a given Element", () => {
+  it("should empty the src and remove the Attribute for a given Element", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
         return null;
       },
     };
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    clearElementSrc(fakeElement);
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    clearElementSrc.default(fakeElement);
     expect(fakeElement.src).toBe("");
     expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
     expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
   });
 
-  it("should throw if failed to remove the Attribute for a given Element", () => {
+  it("should throw if failed to remove the Attribute for a given Element", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
         throw new Error("Oups, can't remove attribute.");
       },
     };
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
 
-    expect(() => clearElementSrc(fakeElement)).toThrowError(
+    expect(() => clearElementSrc.default(fakeElement)).toThrowError(
       "Oups, can't remove attribute.",
     );
     expect(fakeElement.src).toBe("");
     expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
   });
 
-  it("should disable text tracks and remove childs", () => {
+  it("should disable text tracks and remove childs", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
@@ -76,13 +62,13 @@ describe("Compat - clearElementSrc", () => {
       },
     };
 
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
-    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc(fakeElement);
+    clearElementSrc.default(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.textTracks[0].mode).toBe("disabled");
@@ -95,7 +81,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track" });
   });
 
-  it("should log when failed to remove text track child node", () => {
+  it("should log when failed to remove text track child node", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
@@ -109,18 +95,17 @@ describe("Compat - clearElementSrc", () => {
       },
     };
 
-    const mockLogWarn = jest.fn((message) => message);
-    jest.mock("../../log", () => ({
-      __esModule: true as const,
+    const mockLogWarn = vi.fn((message) => message);
+    vi.doMock("../../log", () => ({
       default: { warn: mockLogWarn },
     }));
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
-    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc(fakeElement);
+    clearElementSrc.default(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.textTracks[0].mode).toBe("disabled");
@@ -140,7 +125,7 @@ describe("Compat - clearElementSrc", () => {
     );
   });
 
-  it("should not remove audio child node if on firefox and no text tracks", () => {
+  it("should not remove audio child node if on firefox and no text tracks", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
@@ -152,13 +137,13 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
-    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc(fakeElement);
+    clearElementSrc.default(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([{ nodeName: "audio" }]);
@@ -168,7 +153,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 
-  it("should not handle text tracks nodes is has no child nodes", () => {
+  it("should not handle text tracks nodes is has no child nodes", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
@@ -180,13 +165,13 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
-    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc(fakeElement);
+    clearElementSrc.default(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([]);
@@ -196,7 +181,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 
-  it("should not throw if the textTracks attribute is `null`", () => {
+  it("should not throw if the textTracks attribute is `null`", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
@@ -208,13 +193,13 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
-    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc(fakeElement);
+    clearElementSrc.default(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([]);
@@ -224,7 +209,7 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).not.toHaveBeenCalled();
   });
 
-  it("should not throw if the textTracks attribute is `undefined`", () => {
+  it("should not throw if the textTracks attribute is `undefined`", async () => {
     const fakeElement = {
       src: "foo",
       removeAttribute() {
@@ -236,13 +221,13 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => null,
     };
 
-    const clearElementSrc = jest.requireActual("../clear_element_src").default;
+    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
 
-    const spyRemoveAttribute = jest.spyOn(fakeElement, "removeAttribute");
-    const spyHasChildNodes = jest.spyOn(fakeElement, "hasChildNodes");
-    const spyRemoveChild = jest.spyOn(fakeElement, "removeChild");
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc(fakeElement);
+    clearElementSrc.default(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([]);

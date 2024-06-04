@@ -1,49 +1,32 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIE OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("Features - addFeatures", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should do nothing if an empty array is given", () => {
+  it("should do nothing if an empty array is given", async () => {
     const feat = {};
-    jest.mock("../features_object", () => ({
-      __esModule: true as const,
+    vi.doMock("../features_object", () => ({
       default: feat,
     }));
-    const addFeatures = jest.requireActual("../add_features").default;
+    const addFeatures = ((await vi.importActual("../add_features")) as any).default;
 
     expect(() => addFeatures([])).not.toThrow();
   });
 
-  it("should throw if something different than a function is given", () => {
+  it("should throw if something different than a function is given", async () => {
     const feat = {};
-    jest.mock("../features_object", () => ({
-      __esModule: true as const,
+    vi.doMock("../features_object", () => ({
       default: feat,
     }));
-    const addFeatures = jest.requireActual("../add_features").default;
+    const addFeatures = ((await vi.importActual("../add_features")) as any).default;
 
     expect(() => addFeatures([5])).toThrow(new Error("Unrecognized feature"));
     expect(() =>
@@ -56,16 +39,15 @@ describe("Features - addFeatures", () => {
     ).toThrow(new Error("Unrecognized feature"));
   });
 
-  it("should call the given functions with the features object in argument", () => {
+  it("should call the given functions with the features object in argument", async () => {
     const feat = { a: 412 };
-    jest.mock("../features_object", () => ({
-      __esModule: true as const,
+    vi.doMock("../features_object", () => ({
       default: feat,
     }));
-    const addFeatures = jest.requireActual("../add_features").default;
+    const addFeatures = ((await vi.importActual("../add_features")) as any).default;
 
-    const fakeFeat1 = jest.fn();
-    const fakeFeat2 = jest.fn();
+    const fakeFeat1 = vi.fn();
+    const fakeFeat2 = vi.fn();
     addFeatures([fakeFeat1, fakeFeat2]);
     expect(fakeFeat1).toHaveBeenCalledTimes(1);
     expect(fakeFeat1).toHaveBeenCalledWith(feat);

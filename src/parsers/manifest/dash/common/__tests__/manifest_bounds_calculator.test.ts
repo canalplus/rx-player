@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect, vi } from "vitest";
 import ManifestBoundsCalculator from "../manifest_bounds_calculator";
 
 describe("DASH parsers - ManifestBoundsCalculator", () => {
@@ -90,9 +75,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("should return how much time has elapsed through `getEstimatedMinimumSegmentTime` since the last position was set for a dynamic content", () => {
     let performanceNow = 5000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -109,9 +94,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("should prefer relying on the live edge for `getEstimatedMinimumSegmentTime` if it was set", () => {
     let performanceNow = 5000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 3,
@@ -136,9 +121,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("should authorize and handle multiple `setLastPositionOffset` calls for dynamic contents", () => {
     let performanceNow = 5000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -156,9 +141,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("`getEstimatedMaximumPosition` should be based on the last position on on-dynamic manifest", () => {
     let performanceNow = 5000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator1 = new ManifestBoundsCalculator({
       isDynamic: false,
       timeShiftBufferDepth: 5,
@@ -188,9 +173,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("`getEstimatedMaximumPosition` should evolve based on the last position on dynamic manifest without `serverTimestampOffset`", () => {
     let performanceNow = 5000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -231,9 +216,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("should rely on `serverTimestampOffset` to produce live edge if set", () => {
     let performanceNow = 3000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 5,
@@ -250,9 +235,9 @@ describe("DASH parsers - ManifestBoundsCalculator", () => {
 
   it("`getEstimatedMaximumPosition` should evolve based on the live edge position on dynamic manifest with `serverTimestampOffset`", () => {
     let performanceNow = 5000;
-    const mockPerformanceNow = jest
+    const mockPerformanceNow = vi
       .spyOn(performance, "now")
-      .mockImplementation(jest.fn(() => performanceNow));
+      .mockImplementation(vi.fn(() => performanceNow));
     const manifestBoundsCalculator = new ManifestBoundsCalculator({
       isDynamic: true,
       timeShiftBufferDepth: 3,

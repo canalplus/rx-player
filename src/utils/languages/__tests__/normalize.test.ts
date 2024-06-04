@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 /**
  * Copyright 2015 CANAL+ Group
  *

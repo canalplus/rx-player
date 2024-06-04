@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from "vitest";
 import TextTrackCuesStore from "../text_track_cues_store";
 import type { ICuesGroup } from "../utils";
 
@@ -8,9 +9,9 @@ import type { ICuesGroup } from "../utils";
  * @returns
  */
 function mockCreateElementFn() {
-  jest
-    .spyOn(document, "createElement")
-    .mockImplementation((n: string) => ({ innerText: n }) as HTMLElement);
+  vi.spyOn(document, "createElement").mockImplementation(
+    (n: string) => ({ innerText: n }) as HTMLElement,
+  );
 
   return (text: string) => document.createElement(text);
 }

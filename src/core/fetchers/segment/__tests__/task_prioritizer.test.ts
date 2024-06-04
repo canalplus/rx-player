@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from "vitest";
 import type {
   CancellationError,
   CancellationSignal,
@@ -35,15 +36,15 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     }).not.toThrow();
   });
 
-  it("should run task right away", (done) => {
-    const task = jest.fn(generateTaskFunction(0));
+  it("should run task right away", () => {
+    const task = vi.fn(generateTaskFunction(0));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
     let wasInterrupted = 0;
     let wasEnded = false;
     const taskCanceller = new TaskCanceller();
-    prioritizer
+    const prom = prioritizer
       .create(
         task,
         99,
@@ -62,9 +63,9 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(wasInterrupted).toEqual(0);
         expect(wasEnded).toEqual(true);
         expect(task).toHaveBeenCalledTimes(1);
-        done();
       });
     expect(task).toHaveBeenCalledTimes(1);
+    return prom;
   });
 
   it("should throw if the given high priority is a higher (or equal) number than the given low priority", () => {
@@ -75,10 +76,10 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     ).not.toThrow();
   });
 
-  it("should run multiple tasks of same priority right away", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should run multiple tasks of same priority right away", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -138,7 +139,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task3).toHaveBeenCalledTimes(1);
       });
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task3,
         99,
@@ -163,17 +164,17 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task1).toHaveBeenCalledTimes(1);
         expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).toHaveBeenCalledTimes(1);
-        done();
       });
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(1);
+    return prom;
   });
 
-  it("should not wait when tasks are run from lowest priority to highest", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should not wait when tasks are run from lowest priority to highest", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -233,7 +234,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task3).toHaveBeenCalledTimes(1);
       });
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task3,
         10,
@@ -258,17 +259,17 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task1).toHaveBeenCalledTimes(1);
         expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).toHaveBeenCalledTimes(1);
-        done();
       });
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(1);
+    return prom;
   });
 
-  it("should wait for higher-priority tasks", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should wait for higher-priority tasks", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -328,7 +329,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(was2Ended).toEqual(true);
       });
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task3,
         20,
@@ -353,17 +354,17 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(was2Ended).toEqual(true);
         expect(was3Interrupted).toEqual(0);
         expect(was3Ended).toEqual(true);
-        done();
       });
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(0);
     expect(task3).toHaveBeenCalledTimes(0);
+    return prom;
   });
 
-  it("should interrupt low-priority tasks when high-priority ones are created", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should interrupt low-priority tasks when high-priority ones are created", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -375,7 +376,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was3Ended = false;
     const taskCanceller = new TaskCanceller();
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task1,
         25,
@@ -403,7 +404,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(1);
         expect(was1Ended).toEqual(true);
-        done();
       });
 
     prioritizer
@@ -462,12 +462,13 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(0);
+    return prom;
   });
 
-  it("should be able to update a priority", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should be able to update a priority", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -479,7 +480,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was3Ended = false;
     const taskCanceller = new TaskCanceller();
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task1,
         25,
@@ -507,7 +508,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(1);
         expect(was1Ended).toEqual(true);
-        done();
       });
 
     prioritizer
@@ -572,12 +572,13 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(1);
+    return prom;
   });
 
-  it("should restart interrupted task if given the right priority", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should restart interrupted task if given the right priority", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -589,7 +590,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was3Ended = false;
     const taskCanceller = new TaskCanceller();
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task1,
         25,
@@ -615,7 +616,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(1);
         expect(was1Ended).toEqual(true);
-        done();
       });
 
     prioritizer
@@ -674,12 +674,13 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     expect(task1).toHaveBeenCalledTimes(2);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(0);
+    return prom;
   });
 
-  it("should be able to update the priority of pending tasks", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
-    const task3 = jest.fn(generateTaskFunction(3));
+  it("should be able to update the priority of pending tasks", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
+    const task3 = vi.fn(generateTaskFunction(3));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -691,7 +692,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was3Ended = false;
     const taskCanceller = new TaskCanceller();
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task1,
         25,
@@ -718,7 +719,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(1);
         expect(was1Ended).toEqual(true);
-        done();
       });
 
     prioritizer
@@ -789,11 +789,12 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     expect(was1Interrupted).toEqual(1);
     expect(was2Interrupted).toEqual(1);
     expect(was3Interrupted).toEqual(0);
+    return prom;
   });
 
-  it("should be able to interrupt a task after a priority update on a pending task", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
+  it("should be able to interrupt a task after a priority update on a pending task", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -803,7 +804,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     const taskCanceller = new TaskCanceller();
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task1,
         25,
@@ -826,7 +827,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(1);
         expect(was1Ended).toEqual(true);
-        done();
       });
 
     prioritizer
@@ -863,11 +863,12 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     expect(task2).toHaveBeenCalledTimes(1);
     expect(was1Interrupted).toEqual(1);
     expect(was2Interrupted).toEqual(0);
+    return prom;
   });
 
-  it("should not start right away an updated task which has still not the priority", (done) => {
-    const task1 = jest.fn(generateTaskFunction(1));
-    const task2 = jest.fn(generateTaskFunction(2));
+  it("should not start right away an updated task which has still not the priority", () => {
+    const task1 = vi.fn(generateTaskFunction(1));
+    const task2 = vi.fn(generateTaskFunction(2));
     const prioritizer = new TaskPrioritizer({
       prioritySteps: { high: 5, low: 20 },
     });
@@ -902,7 +903,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(was1Ended).toEqual(true);
       });
 
-    prioritizer
+    const prom = prioritizer
       .create(
         task2,
         19,
@@ -925,7 +926,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(2);
         expect(was2Interrupted).toEqual(0);
         expect(was2Ended).toEqual(true);
-        done();
       });
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(0);
@@ -937,5 +937,6 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     expect(task2).toHaveBeenCalledTimes(0);
     expect(was1Interrupted).toEqual(0);
     expect(was2Interrupted).toEqual(0);
+    return prom;
   });
 });

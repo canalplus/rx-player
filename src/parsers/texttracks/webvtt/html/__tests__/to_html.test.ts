@@ -1,42 +1,25 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
+import type { IStyleElements } from "../parse_style_block";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-
-import type { IStyleElements } from "../parse_style_block";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should include payload HTML", () => {
-    jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true as const,
+  it("should include payload HTML", async () => {
+    vi.doMock("../convert_payload_to_html", () => ({
       default: () => {
         return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
-    const toHTML = jest.requireActual("../to_html").default;
+    const toHTML = ((await vi.importActual("../to_html")) as any).default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -67,15 +50,14 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should include payload HTML and apply correclty style class element", () => {
-    jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true as const,
+  it("should include payload HTML and apply correclty style class element", async () => {
+    vi.doMock("../convert_payload_to_html", () => ({
       default: () => {
         return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
-    const toHTML = jest.requireActual("../to_html").default;
+    const toHTML = ((await vi.importActual("../to_html")) as any).default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -108,15 +90,14 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should include payload HTML and apply correctly global style element", () => {
-    jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true as const,
+  it("should include payload HTML and apply correctly global style element", async () => {
+    vi.doMock("../convert_payload_to_html", () => ({
       default: () => {
         return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
-    const toHTML = jest.requireActual("../to_html").default;
+    const toHTML = ((await vi.importActual("../to_html")) as any).default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -148,15 +129,14 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should apply both the global style element and a given class", () => {
-    jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true as const,
+  it("should apply both the global style element and a given class", async () => {
+    vi.doMock("../convert_payload_to_html", () => ({
       default: () => {
         return [document.createElement("b"), document.createTextNode("Hello")];
       },
     }));
 
-    const toHTML = jest.requireActual("../to_html").default;
+    const toHTML = ((await vi.importActual("../to_html")) as any).default;
     const cueObject = {
       start: 0,
       end: 100,
@@ -189,15 +169,14 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should return default element if no payload", () => {
-    jest.mock("../convert_payload_to_html", () => ({
-      __esModule: true as const,
+  it("should return default element if no payload", async () => {
+    vi.doMock("../convert_payload_to_html", () => ({
       default: () => {
         return [];
       },
     }));
 
-    const toHTML = jest.requireActual("../to_html").default;
+    const toHTML = ((await vi.importActual("../to_html")) as any).default;
     const cueObject = {
       start: 0,
       end: 100,

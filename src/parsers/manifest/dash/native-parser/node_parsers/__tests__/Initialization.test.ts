@@ -1,37 +1,23 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("DASH Node Parsers - Initialization", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should correctly parse an element with no known attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with no known attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = jest.requireActual("../Initialization").default;
+    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
+      .default;
     const element1 = new DOMParser().parseFromString("<Foo />", "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([{}, []]);
@@ -44,12 +30,13 @@ describe("DASH Node Parsers - Initialization", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with a well-formed `range` attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with a well-formed `range` attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = jest.requireActual("../Initialization").default;
+    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
+      .default;
     const element1 = new DOMParser().parseFromString('<Foo range="0-1" />', "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([{ range: [0, 1] }, []]);
@@ -64,13 +51,14 @@ describe("DASH Node Parsers - Initialization", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with an incorrect `range` attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
+  it("should correctly parse an element with an incorrect `range` attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
 
-    const parseInitialization = jest.requireActual("../Initialization").default;
-    const MPDError = jest.requireActual("../utils").MPDError;
+    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
+      .default;
+    const MPDError = ((await vi.importActual("../utils")) as any).MPDError;
     const element1 = new DOMParser().parseFromString('<Foo range="a" />', "text/xml")
       .childNodes[0] as Element;
     const error1 = new MPDError('`range` property has an unrecognized format "a"');
@@ -90,12 +78,13 @@ describe("DASH Node Parsers - Initialization", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with a sourceURL attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with a sourceURL attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = jest.requireActual("../Initialization").default;
+    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
+      .default;
     const element1 = new DOMParser().parseFromString('<Foo sourceURL="a" />', "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([{ media: "a" }, []]);
@@ -108,12 +97,13 @@ describe("DASH Node Parsers - Initialization", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with both a sourceURL and range attributes", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with both a sourceURL and range attributes", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = jest.requireActual("../Initialization").default;
+    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
+      .default;
     const element1 = new DOMParser().parseFromString(
       '<Foo sourceURL="a" range="4-10" />',
       "text/xml",

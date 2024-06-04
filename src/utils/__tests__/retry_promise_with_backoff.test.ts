@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { getRetryDelay } from "../retry_promise_with_backoff";
 
 describe("utils - RetryPromiseWithBackoff", () => {

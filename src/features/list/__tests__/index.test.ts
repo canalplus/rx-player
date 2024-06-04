@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { DASH as DASH_FEATURE } from "../dash";
 import { DASH_WASM as DASH_WASM_FEATURE } from "../dash_wasm";
 import { DEBUG_ELEMENT as DEBUG_ELEMENT_FEATURE } from "../debug_element";

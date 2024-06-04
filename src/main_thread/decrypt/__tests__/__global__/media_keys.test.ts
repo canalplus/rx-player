@@ -1,20 +1,5 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -31,7 +16,7 @@ import {
 
 describe("decrypt - global tests - media key system access", () => {
   /** Used to implement every functions that should never be called. */
-  const neverCalledFn = jest.fn();
+  const neverCalledFn = vi.fn();
 
   /** Default video element used in our tests. */
   const videoElt = document.createElement("video");
@@ -40,10 +25,9 @@ describe("decrypt - global tests - media key system access", () => {
   const ksConfig = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
 
   beforeEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
-    jest.mock("../../set_server_certificate", () => ({
-      __esModule: true as const,
+    vi.resetModules();
+    vi.restoreAllMocks();
+    vi.doMock("../../set_server_certificate", () => ({
       default: neverCalledFn,
     }));
   });
@@ -69,11 +53,12 @@ describe("decrypt - global tests - media key system access", () => {
       });
     }
     mockCompat({
-      requestMediaKeySystemAccess: jest.fn(requestMediaKeySystemAccessBadMediaKeys),
+      requestMediaKeySystemAccess: vi.fn(requestMediaKeySystemAccessBadMediaKeys),
     });
 
     // == test ==
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const error: any = await testContentDecryptorError(
       ContentDecryptor,
       videoElt,
@@ -98,11 +83,12 @@ describe("decrypt - global tests - media key system access", () => {
       });
     }
     mockCompat({
-      requestMediaKeySystemAccess: jest.fn(requestMediaKeySystemAccessRejMediaKeys),
+      requestMediaKeySystemAccess: vi.fn(requestMediaKeySystemAccessRejMediaKeys),
     });
 
     // == test ==
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const error: any = await testContentDecryptorError(
       ContentDecryptor,
       videoElt,
@@ -114,15 +100,16 @@ describe("decrypt - global tests - media key system access", () => {
     expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
   });
 
-  it("should go into the WaitingForAttachment state if createMediaKeys resolves", () => {
+  it("should go into the WaitingForAttachment state if createMediaKeys resolves", async () => {
+    mockCompat();
+    const mockCreateMediaKeys = vi.spyOn(
+      MediaKeySystemAccessImpl.prototype,
+      "createMediaKeys",
+    );
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      mockCompat();
-      const mockCreateMediaKeys = jest.spyOn(
-        MediaKeySystemAccessImpl.prototype,
-        "createMediaKeys",
-      );
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange = 0;
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
@@ -149,16 +136,16 @@ describe("decrypt - global tests - media key system access", () => {
     });
   });
 
-  it("should not call createMediaKeys again if previous one is compatible", () => {
+  it("should not call createMediaKeys again if previous one is compatible", async () => {
+    mockCompat();
+    const mockCreateMediaKeys = vi.spyOn(
+      MediaKeySystemAccessImpl.prototype,
+      "createMediaKeys",
+    );
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      mockCompat();
-      const mockCreateMediaKeys = jest.spyOn(
-        MediaKeySystemAccessImpl.prototype,
-        "createMediaKeys",
-      );
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
-
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
@@ -213,18 +200,18 @@ describe("decrypt - global tests - media key system access", () => {
     });
   });
 
-  it("should call createMediaKeys again if the platform needs re-creation of the MediaKeys", () => {
+  it("should call createMediaKeys again if the platform needs re-creation of the MediaKeys", async () => {
+    mockCompat({
+      canReuseMediaKeys: vi.fn(() => false),
+    });
+    const mockCreateMediaKeys = vi.spyOn(
+      MediaKeySystemAccessImpl.prototype,
+      "createMediaKeys",
+    );
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      mockCompat({
-        canReuseMediaKeys: jest.fn(() => false),
-      });
-      const mockCreateMediaKeys = jest.spyOn(
-        MediaKeySystemAccessImpl.prototype,
-        "createMediaKeys",
-      );
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
-
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
@@ -279,18 +266,19 @@ describe("decrypt - global tests - media key system access", () => {
     });
   });
 
-  it("should not call createMediaKeys again if the platform needs MediaKeySystemAccess renewal", () => {
-    return new Promise<void>((res, rej) => {
-      mockCompat({
-        shouldRenewMediaKeySystemAccess: jest.fn(() => true),
-      });
-      const mockCreateMediaKeys = jest.spyOn(
-        MediaKeySystemAccessImpl.prototype,
-        "createMediaKeys",
-      );
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+  it("should not call createMediaKeys again if the platform needs MediaKeySystemAccess renewal", async () => {
+    mockCompat({
+      shouldRenewMediaKeySystemAccess: vi.fn(() => true),
+    });
+    const mockCreateMediaKeys = vi.spyOn(
+      MediaKeySystemAccessImpl.prototype,
+      "createMediaKeys",
+    );
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
 
+    return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
@@ -345,27 +333,30 @@ describe("decrypt - global tests - media key system access", () => {
     });
   });
 
-  it("should not create any session if no encrypted event was received", (done) => {
+  it("should not create any session if no encrypted event was received", async () => {
     // == mocks ==
-    const mockSetMediaKeys = jest.fn(() => Promise.resolve());
+    const mockSetMediaKeys = vi.fn(() => Promise.resolve());
     mockCompat({ setMediaKeys: mockSetMediaKeys });
-    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
 
     // == test ==
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-    contentDecryptor.addEventListener("stateChange", (newState: any) => {
-      if (newState === ContentDecryptorState.WaitingForAttachment) {
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-        setTimeout(() => {
-          expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-          expect(mockSetMediaKeys).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          done();
-        }, 5);
-      }
+    return new Promise<void>((res) => {
+      contentDecryptor.addEventListener("stateChange", (newState: any) => {
+        if (newState === ContentDecryptorState.WaitingForAttachment) {
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+          setTimeout(() => {
+            expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+            expect(mockSetMediaKeys).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
+            expect(mockCreateSession).not.toHaveBeenCalled();
+            res();
+          }, 5);
+        }
+      });
     });
   });
 });

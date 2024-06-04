@@ -1,49 +1,34 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("parsers - webvtt - parseStyleBlock", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should correctly handle empty style blocks", () => {
+  it("should correctly handle empty style blocks", async () => {
     const webvttStyle = [["STYLE"], []];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",
     });
   });
 
-  it("should parse global style", () => {
+  it("should parse global style", async () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -54,14 +39,14 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global:
@@ -70,17 +55,17 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should parse class style", () => {
+  it("should parse class style", async () => {
     const webvttStyle = [["STYLE", "::cue(b) {", "  color: peachpuff;", "}"]];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;",
@@ -89,7 +74,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should parse both global and class style", () => {
+  it("should parse both global and class style", async () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -101,14 +86,14 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       global:
         "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
@@ -119,20 +104,20 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should not parse unformed styles", () => {
+  it("should not parse unformed styles", async () => {
     const webvttStyle = [
       ["BAD STYLE"],
       ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;",
@@ -141,20 +126,20 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should not override styles if class if declared several times", () => {
+  it("should not override styles if class if declared several times", async () => {
     const webvttStyle = [
       ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
       ["STYLE", "::cue(b) {", "  background-color: dark;", "}"],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;  background-color: dark;",
@@ -163,7 +148,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should take into account all cues declared in one style block", () => {
+  it("should take into account all cues declared in one style block", async () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -176,14 +161,14 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;",
@@ -192,7 +177,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should consider a cue declared in multi-cue and mono-cue style blocks", () => {
+  it("should consider a cue declared in multi-cue and mono-cue style blocks", async () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -206,14 +191,14 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ["STYLE", "::cue(b) {", "  color: salmon;", "}"],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;  color: salmon;",
@@ -221,7 +206,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       global: "  color: peachpuff;",
     });
   });
-  it("should consider a cue declared in multi-cue and mono-cue style blocks", () => {
+  it("should consider a cue declared in multi-cue and mono-cue style blocks", async () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -235,14 +220,14 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ["STYLE", "::cue(b) {", "  color: salmon;", "}"],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;  color: salmon;",
@@ -251,20 +236,20 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should consider multiple class declaration for one stylesheet", () => {
+  it("should consider multiple class declaration for one stylesheet", async () => {
     const webvttStyle = [
       ["STYLE", "::cue(c),", "::cue(d),", "::cue(b) {", "  background-color: dark;", "}"],
       ["STYLE", "::cue(c) {", "  color: salmon;", "}"],
     ];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;",
@@ -275,17 +260,17 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should return empty style if no style block", () => {
+  it("should return empty style if no style block", async () => {
     const webvttStyle: string[][] = [];
 
-    const mockCreateDefaultStyleElements = jest.fn(() => ({}));
-    jest.mock("../create_default_style_elements", () => ({
-      __esModule: true as const,
+    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
+    vi.doMock("../create_default_style_elements", () => ({
       default: () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = jest.requireActual("../parse_style_block").default;
+    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
+      .default;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",

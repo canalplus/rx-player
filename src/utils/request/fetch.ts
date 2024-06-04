@@ -143,7 +143,7 @@ export default function fetchRequest(
     abortController.abort();
   }
 
-  let timeoutId: number | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   if (options.timeout !== undefined) {
     timeoutId = setTimeout(() => {
       isTimedOut = true;
@@ -154,7 +154,7 @@ export default function fetchRequest(
     }, options.timeout);
   }
 
-  let connectionTimeoutId: number | undefined;
+  let connectionTimeoutId: ReturnType<typeof setTimeout> | undefined;
   if (options.connectionTimeout !== undefined) {
     connectionTimeoutId = setTimeout(() => {
       isConnectionTimedOut = true;

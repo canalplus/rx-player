@@ -56,7 +56,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
      * `metadata` array which is used considerably more than the `timeouts`
      * array.
      */
-    timeouts: number[];
+    timeouts: Array<ReturnType<typeof setTimeout>>;
   };
 
   /**

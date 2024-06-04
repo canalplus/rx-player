@@ -1,42 +1,34 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import type { MockInstance } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import type { IIndexSegment } from "../index_helpers";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-
-import type { IIndexSegment } from "../index_helpers";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("Manifest Parsers utils - updateSegmentTimeline", () => {
-  let mockLogWarn: jest.MockInstance<void, unknown[]> | undefined;
+  let mockLogWarn: MockInstance<unknown[], void> | undefined;
   let updateSegmentTimeline:
     | ((a: IIndexSegment[], b: IIndexSegment[]) => boolean)
     | undefined;
-  beforeEach(() => {
-    jest.resetModules();
+  beforeEach(async () => {
+    vi.resetModules();
 
-    mockLogWarn = jest.spyOn(jest.requireActual("../../../../log").default, "warn");
-    updateSegmentTimeline = jest.requireActual("../update_segment_timeline").default;
+    mockLogWarn = vi.fn();
+    vi.doMock("../../../../log", () => ({
+      default: {
+        warn: mockLogWarn,
+      },
+    }));
+    updateSegmentTimeline = ((await vi.importActual("../update_segment_timeline")) as any)
+      .default;
   });
 
   afterEach(() => {
-    mockLogWarn?.mockRestore();
+    vi.resetModules();
+    vi.resetAllMocks();
   });
 
   it("should just replace with the new timeline if the old was empty", () => {
@@ -96,7 +88,7 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ];
     const oldTimeline1Cloned = oldTimeline1.slice();
 
-    let err = null;
+    let err: unknown = null;
     try {
       expect(updateSegmentTimeline?.(oldTimeline1, newTimeline1)).not.toHaveReturned();
     } catch (e) {

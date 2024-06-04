@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { convertSupplementalCodecsToRFC6381 } from "../convert_supplemental_codecs";
 
 describe("parseSupplementalCodec", () => {
@@ -24,7 +25,7 @@ describe("parseSupplementalCodec", () => {
     );
   });
 
-  it(`should return comma-separated value if input is mix of comma and 
+  it(`should return comma-separated value if input is mix of comma and
     whitespace separated list`, () => {
     expect(
       convertSupplementalCodecsToRFC6381("avc1.4d400d avc1.4d4015, avc1.4d401f"),

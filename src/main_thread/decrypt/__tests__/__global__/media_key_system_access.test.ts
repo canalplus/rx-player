@@ -1,22 +1,6 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -67,7 +51,8 @@ async function checkIncompatibleKeySystemsErrorMessage(
   keySystemsConfigs: unknown[],
 ): Promise<void> {
   const mediaElement = document.createElement("video");
-  const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+  const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+    .default;
 
   const error: any = await testContentDecryptorError(
     ContentDecryptor,
@@ -82,13 +67,12 @@ async function checkIncompatibleKeySystemsErrorMessage(
 
 describe("decrypt - global tests - media key system access", () => {
   // Used to implement every functions that should never be called.
-  const neverCalledFn = jest.fn();
+  const neverCalledFn = vi.fn();
 
   beforeEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
-    jest.mock("../../set_server_certificate", () => ({
-      __esModule: true as const,
+    vi.resetModules();
+    vi.restoreAllMocks();
+    vi.doMock("../../set_server_certificate", () => ({
       default: neverCalledFn,
     }));
   });
@@ -103,7 +87,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should throw if given a single incompatible keySystemsConfigs", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -116,7 +102,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should throw if given multiple incompatible keySystemsConfigs", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -145,7 +133,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should throw if given a single incompatible keySystemsConfigs", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -157,7 +147,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set persistentState value if persistentState is set to "required"', async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -173,7 +165,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set persistentState value if persistentState is set to "not-allowed"', async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -193,7 +187,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set persistentState value if persistentState is set to "optional"', async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -209,7 +205,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set distinctiveIdentifier value if distinctiveIdentifier is set to "required"', async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -229,7 +227,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set distinctiveIdentifier value if distinctiveIdentifier is set to "not-allowed"', async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -249,7 +249,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set distinctiveIdentifier value if distinctiveIdentifier is set to "optional"', async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -269,7 +271,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should want persistent sessions if persistentLicenseConfig is set", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -297,7 +301,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should do nothing if persistentLicenseConfig is set to null", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -309,7 +315,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should do nothing if persistentLicenseConfig is set to undefined", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -325,7 +333,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `clearkey` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -346,7 +356,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `widevine` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -361,7 +373,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `playready` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -392,7 +406,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `fairplay` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -407,7 +423,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a multiple keySystems at the same time", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -449,7 +467,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a multiple keySystems at the same time with different configs", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -525,7 +545,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should set widevine robustnesses for a `com.widevine.alpha` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -559,7 +581,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should set playready robustnesses for a `playready` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -633,7 +657,9 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should set playready robustnesses for a `com.microsoft.playready.recommendation` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
@@ -667,17 +693,20 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
-    return new Promise<void>((res, rej) => {
-      const mockRequestMediaKeySystemAccess = jest.fn((keyType, conf) => {
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation((keyType, conf) => {
         return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
       });
-      mockCompat({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-      });
+    mockCompat({
+      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
+    });
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       const config = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
       contentDecryptor.addEventListener("error", (error: any) => {
         rej(error);
@@ -694,24 +723,27 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
-    return new Promise<void>((res, rej) => {
-      let callNb = 0;
-      const mockRequestMediaKeySystemAccess = jest.fn((keyType, conf) => {
+    let callNb = 0;
+    const mockRequestMediaKeySystemAccess = vi
+      .fn()
+      .mockImplementation((keyType, conf) => {
         if (++callNb === 2) {
           return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
         }
         return Promise.reject("nope");
       });
-      mockCompat({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-      });
+    mockCompat({
+      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
+    });
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       const config = [
         { type: "com.widevine.alpha", getLicense: neverCalledFn },
         { type: "some-other-working-key-system", getLicense: neverCalledFn },
       ];
 
       const mediaElement = document.createElement("video");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
       contentDecryptor.addEventListener("error", (error: any) => {
         rej(error);
@@ -733,22 +765,23 @@ describe("decrypt - global tests - media key system access", () => {
     });
   });
 
-  it("should not continue to check if the ContentDecryptor is disposed from", () => {
+  it("should not continue to check if the ContentDecryptor is disposed from", async () => {
+    let contentDecryptor: any = null;
+    let rmksHasBeenCalled = false;
+    const mockRequestMediaKeySystemAccess = vi.fn().mockImplementation(() => {
+      return Promise.resolve().then(() => {
+        rmksHasBeenCalled = true;
+        contentDecryptor.dispose();
+        return Promise.reject("nope");
+      });
+    });
+    mockCompat({
+      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
+    });
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      let contentDecryptor: any = null;
-      let rmksHasBeenCalled = false;
-      const mockRequestMediaKeySystemAccess = jest.fn(() => {
-        return Promise.resolve().then(() => {
-          rmksHasBeenCalled = true;
-          contentDecryptor.dispose();
-          return Promise.reject("nope");
-        });
-      });
-      mockCompat({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-      });
       const mediaElement = document.createElement("video");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
 
       const config = [
         { type: "foo", getLicense: neverCalledFn },
@@ -772,18 +805,19 @@ describe("decrypt - global tests - media key system access", () => {
     });
   });
 
-  it("should trigger error even if requestMediaKeySystemAccess throws", () => {
+  it("should trigger error even if requestMediaKeySystemAccess throws", async () => {
+    let rmksHasBeenCalled = false;
+    const mockRequestMediaKeySystemAccess = vi.fn().mockImplementation(() => {
+      rmksHasBeenCalled = true;
+      throw new Error("nope");
+    });
+    mockCompat({
+      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
+    });
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      let rmksHasBeenCalled = false;
-      const mockRequestMediaKeySystemAccess = jest.fn(() => {
-        rmksHasBeenCalled = true;
-        throw new Error("nope");
-      });
-      mockCompat({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-      });
       const mediaElement = document.createElement("video");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
 
       const config = [{ type: "foo", getLicense: neverCalledFn }];
       const contentDecryptor = new ContentDecryptor(mediaElement, config);

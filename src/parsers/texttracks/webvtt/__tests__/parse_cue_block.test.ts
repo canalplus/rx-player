@@ -1,25 +1,10 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const cueBlock1 = [
   "112",
@@ -56,11 +41,11 @@ const notCueBlock7 = ["00:18:31.080 --> bb:18:32.200", "TOTO", "TATA"];
 
 describe("parsers - srt - parseCueBlocks", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should correctly parse regular cue blocks", () => {
-    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
+  it("should correctly parse regular cue blocks", async () => {
+    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
     expect(parseCueBlock(cueBlock1, 0)).toEqual({
       start: 31.08,
       end: 452.2,
@@ -106,8 +91,8 @@ describe("parsers - srt - parseCueBlocks", () => {
     });
   });
 
-  it("should add timeOffset in seconds", () => {
-    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
+  it("should add timeOffset in seconds", async () => {
+    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
     expect(parseCueBlock(cueBlock1, 10.1)).toEqual({
       start: 41.18,
       end: 462.3,
@@ -164,8 +149,8 @@ describe("parsers - srt - parseCueBlocks", () => {
     });
   });
 
-  it("should return null for invalid cue blocks", () => {
-    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
+  it("should return null for invalid cue blocks", async () => {
+    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
     expect(parseCueBlock(notCueBlock1, 0)).toEqual(null);
     expect(parseCueBlock(notCueBlock1, 5)).toEqual(null);
     expect(parseCueBlock(notCueBlock2, 0)).toEqual(null);
@@ -178,25 +163,23 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(notCueBlock7, 0)).toEqual(null);
   });
 
-  it("should return null if parseTimestamp returns undefined either for the starting timestamp", () => {
-    const parseTimestamp = jest.fn((arg) => (arg === "00:00:31.080" ? undefined : 10));
-    jest.mock("../parse_timestamp", () => ({
-      __esModule: true as const,
+  it("should return null if parseTimestamp returns undefined either for the starting timestamp", async () => {
+    const parseTimestamp = vi.fn((arg) => (arg === "00:00:31.080" ? undefined : 10));
+    vi.doMock("../parse_timestamp", () => ({
       default: parseTimestamp,
     }));
-    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
+    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
     expect(parseTimestamp).toHaveBeenCalledTimes(2);
   });
 
-  it("should return null if parseTimestamp returns undefined either for the ending timestamp", () => {
-    const parseTimestamp = jest.fn((arg) => (arg === "00:07:32.200" ? undefined : 10));
-    jest.mock("../parse_timestamp", () => ({
-      __esModule: true as const,
+  it("should return null if parseTimestamp returns undefined either for the ending timestamp", async () => {
+    const parseTimestamp = vi.fn((arg) => (arg === "00:07:32.200" ? undefined : 10));
+    vi.doMock("../parse_timestamp", () => ({
       default: parseTimestamp,
     }));
-    const parseCueBlock = jest.requireActual("../parse_cue_block").default;
+    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
     expect(parseTimestamp).toHaveBeenCalledTimes(2);

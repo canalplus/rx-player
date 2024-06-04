@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import type { IFeaturesObject } from "../../../features/types";
 import createDebugElement from "../../../main_thread/api/debug";
 import addDebugElementFeature from "../debug_element";

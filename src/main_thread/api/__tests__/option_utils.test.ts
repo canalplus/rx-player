@@ -1,51 +1,39 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import type { MockInstance } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import config from "../../../config";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import config from "../../../config";
-import log from "../../../log";
-import warnOnce from "../../../utils/warn_once";
-import {
-  checkReloadOptions,
-  parseConstructorOptions,
-  parseLoadVideoOptions,
-} from "../option_utils";
-
-jest.mock("../../../log");
-jest.mock("../../../utils/languages");
-jest.mock("../../../utils/warn_once");
-const warnOnceMock = warnOnce as jest.Mock<ReturnType<typeof warnOnce>>;
-const logWarnMock = log.warn as jest.Mock<ReturnType<typeof log.warn>>;
+let warnOnceMock: MockInstance;
+let logWarnMock: MockInstance;
 
 describe("API - parseConstructorOptions", () => {
-  beforeEach(() => {
-    jest.resetModules();
+  let parseConstructorOptions: any;
+  beforeEach(async () => {
+    warnOnceMock = vi.fn();
+    logWarnMock = vi.fn();
+    vi.doMock("../../../log", () => {
+      return {
+        default: {
+          warn: logWarnMock,
+        },
+      };
+    });
+    vi.doMock("../../../utils/languages");
+    vi.doMock("../../../utils/warn_once", () => {
+      return { default: warnOnceMock };
+    });
+    const imports = (await vi.importActual("../option_utils")) as any;
+    parseConstructorOptions = imports.parseConstructorOptions;
   });
 
   afterEach(() => {
-    warnOnceMock.mockReset();
-    logWarnMock.mockReset();
+    vi.resetModules();
   });
 
   const videoElement = document.createElement("video");
@@ -223,12 +211,27 @@ describe("API - parseConstructorOptions", () => {
 });
 
 describe("API - parseLoadVideoOptions", () => {
-  beforeEach(() => {
-    jest.resetModules();
+  let parseLoadVideoOptions: any;
+  beforeEach(async () => {
+    warnOnceMock = vi.fn();
+    logWarnMock = vi.fn();
+    vi.doMock("../../../log", () => {
+      return {
+        default: {
+          warn: logWarnMock,
+        },
+      };
+    });
+    vi.doMock("../../../utils/languages");
+    vi.doMock("../../../utils/warn_once", () => {
+      return { default: warnOnceMock };
+    });
+    const imports = (await vi.importActual("../option_utils")) as any;
+    parseLoadVideoOptions = imports.parseLoadVideoOptions;
   });
 
   afterEach(() => {
-    warnOnceMock.mockReset();
+    vi.resetModules();
   });
 
   const defaultLoadVideoOptions = {
@@ -259,7 +262,7 @@ describe("API - parseLoadVideoOptions", () => {
     let err;
     let opt;
     try {
-      opt = (parseLoadVideoOptions as any)();
+      opt = parseLoadVideoOptions();
     } catch (e) {
       err = e;
     }
@@ -279,12 +282,12 @@ describe("API - parseLoadVideoOptions", () => {
     let err2;
     let opt2;
     try {
-      opt1 = (parseLoadVideoOptions as any)({});
+      opt1 = parseLoadVideoOptions({});
     } catch (e) {
       err1 = e;
     }
     try {
-      opt2 = (parseLoadVideoOptions as any)({ transport: "dash" });
+      opt2 = parseLoadVideoOptions({ transport: "dash" });
     } catch (e) {
       err2 = e;
     }
@@ -320,7 +323,7 @@ describe("API - parseLoadVideoOptions", () => {
     let err;
     let opt;
     try {
-      opt = (parseLoadVideoOptions as any)({ url: "foo" });
+      opt = parseLoadVideoOptions({ url: "foo" });
     } catch (e) {
       err = e;
     }
@@ -874,7 +877,7 @@ If badly set, continue will be used as default`,
   });
 
   it("should authorize setting a `segmentLoader` option", () => {
-    const func = jest.fn();
+    const func = vi.fn();
     expect(
       parseLoadVideoOptions({
         segmentLoader: func,
@@ -1025,6 +1028,11 @@ If badly set, continue will be used as default`,
 });
 
 describe("API - checkReloadOptions", () => {
+  let checkReloadOptions: any;
+  beforeEach(async () => {
+    const imports = (await vi.importActual("../option_utils")) as any;
+    checkReloadOptions = imports.checkReloadOptions;
+  });
   it("Should valid undefined options", () => {
     const options = undefined;
     expect(() => checkReloadOptions(options)).not.toThrow();

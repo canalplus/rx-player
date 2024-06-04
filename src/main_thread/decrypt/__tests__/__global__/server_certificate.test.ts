@@ -1,20 +1,5 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -26,7 +11,7 @@
 import { MediaKeysImpl, MediaKeySystemAccessImpl, mockCompat } from "./utils";
 
 describe("decrypt - global tests - server certificate", () => {
-  const mockGetLicense = jest.fn(() => {
+  const mockGetLicense = vi.fn(() => {
     return new Promise(() => {
       /* noop */
     });
@@ -47,19 +32,19 @@ describe("decrypt - global tests - server certificate", () => {
   ];
 
   beforeEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
+    vi.resetModules();
+    vi.restoreAllMocks();
   });
 
-  it("should set the serverCertificate only after the MediaKeys is attached", (done) => {
+  it("should set the serverCertificate only after the MediaKeys is attached", async () => {
     const { mockSetMediaKeys } = mockCompat();
     mockSetMediaKeys.mockImplementation(() => {
       expect(mockCreateSession).not.toHaveBeenCalled();
       expect(mockSetServerCertificate).not.toHaveBeenCalled();
       return Promise.resolve();
     });
-    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate = jest
+    const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockSetServerCertificate = vi
       .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
       .mockImplementation((_serverCertificate: BufferSource) => {
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
@@ -67,39 +52,42 @@ describe("decrypt - global tests - server certificate", () => {
         return Promise.resolve(true);
       });
 
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state: any) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
-        contentDecryptor.removeEventListener("stateChange");
-        setTimeout(() => {
-          expect(mockSetMediaKeys).not.toHaveBeenCalled();
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          expect(mockSetServerCertificate).not.toHaveBeenCalled();
-          contentDecryptor.attach();
-        }, 5);
-        setTimeout(() => {
-          contentDecryptor.dispose();
-          expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-          expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          done();
-        }, 10);
-      }
+    return new Promise<void>((res) => {
+      contentDecryptor.addEventListener("stateChange", (state: any) => {
+        if (state === ContentDecryptorState.WaitingForAttachment) {
+          contentDecryptor.removeEventListener("stateChange");
+          setTimeout(() => {
+            expect(mockSetMediaKeys).not.toHaveBeenCalled();
+            expect(mockCreateSession).not.toHaveBeenCalled();
+            expect(mockSetServerCertificate).not.toHaveBeenCalled();
+            contentDecryptor.attach();
+          }, 5);
+          setTimeout(() => {
+            contentDecryptor.dispose();
+            expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+            expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
+            expect(mockCreateSession).not.toHaveBeenCalled();
+            res();
+          }, 10);
+        }
+      });
     });
   });
 
-  it("should not call serverCertificate multiple times on init data", (done) => {
+  it("should not call serverCertificate multiple times on init data", async () => {
     const { mockSetMediaKeys } = mockCompat();
     mockSetMediaKeys.mockImplementation(() => {
       expect(mockCreateSession).not.toHaveBeenCalled();
       expect(mockSetServerCertificate).not.toHaveBeenCalled();
       return Promise.resolve();
     });
-    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate = jest
+    const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockSetServerCertificate = vi
       .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
       .mockImplementation((_serverCertificate: BufferSource) => {
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
@@ -107,8 +95,9 @@ describe("decrypt - global tests - server certificate", () => {
         return Promise.resolve(true);
       });
 
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
@@ -127,26 +116,29 @@ describe("decrypt - global tests - server certificate", () => {
         }, 5);
       }
     });
-    setTimeout(() => {
-      contentDecryptor.dispose();
-      expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-      expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
-      expect(mockCreateSession).toHaveBeenCalledTimes(1);
-      done();
-    }, 100);
+    return new Promise<void>((res) => {
+      setTimeout(() => {
+        contentDecryptor.dispose();
+        expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
+        expect(mockCreateSession).toHaveBeenCalledTimes(1);
+        res();
+      }, 100);
+    });
   });
 
-  it("should emit warning if serverCertificate call rejects but still continue", (done) => {
+  it("should emit warning if serverCertificate call rejects but still continue", async () => {
     const { mockSetMediaKeys } = mockCompat();
-    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate = jest
+    const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockSetServerCertificate = vi
       .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
       .mockImplementation((_serverCertificate: BufferSource) => {
         throw new Error("some error");
       });
 
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
@@ -162,27 +154,30 @@ describe("decrypt - global tests - server certificate", () => {
       expect(w.type).toEqual("ENCRYPTED_MEDIA_ERROR");
       warningsReceived++;
     });
-    setTimeout(() => {
-      contentDecryptor.dispose();
-      expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-      expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
-      expect(mockCreateSession).not.toHaveBeenCalled();
-      expect(warningsReceived).toEqual(1);
-      done();
-    }, 10);
+    return new Promise<void>((res) => {
+      setTimeout(() => {
+        contentDecryptor.dispose();
+        expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
+        expect(mockCreateSession).not.toHaveBeenCalled();
+        expect(warningsReceived).toEqual(1);
+        res();
+      }, 10);
+    });
   });
 
-  it("should emit warning if serverCertificate call throws but still continue", (done) => {
+  it("should emit warning if serverCertificate call throws but still continue", async () => {
     const { mockSetMediaKeys } = mockCompat();
-    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate = jest
+    const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockSetServerCertificate = vi
       .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
       .mockImplementation((_serverCertificate: BufferSource) => {
         return Promise.reject(new Error("some error"));
       });
 
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
@@ -198,38 +193,41 @@ describe("decrypt - global tests - server certificate", () => {
       expect(w.type).toEqual("ENCRYPTED_MEDIA_ERROR");
       warningsReceived++;
     });
-    setTimeout(() => {
-      contentDecryptor.dispose();
-      expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-      expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
-      expect(mockCreateSession).not.toHaveBeenCalled();
-      expect(warningsReceived).toEqual(1);
-      done();
-    }, 10);
+    return new Promise<void>((res) => {
+      setTimeout(() => {
+        contentDecryptor.dispose();
+        expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
+        expect(mockCreateSession).not.toHaveBeenCalled();
+        expect(warningsReceived).toEqual(1);
+        res();
+      }, 10);
+    });
   });
 
-  it("should just continue if setServerCertificate is undefined", (done) => {
+  it("should just continue if setServerCertificate is undefined", async () => {
     const { mockSetMediaKeys } = mockCompat();
-    jest
-      .spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys")
-      .mockImplementation(() => {
+    vi.spyOn(MediaKeySystemAccessImpl.prototype, "createMediaKeys").mockImplementation(
+      () => {
         const mediaKeys = new MediaKeysImpl();
         (mediaKeys as { setServerCertificate?: unknown }).setServerCertificate =
           undefined;
         return Promise.resolve(mediaKeys);
-      });
+      },
+    );
     mockSetMediaKeys.mockImplementation(() => {
       expect(mockCreateSession).not.toHaveBeenCalled();
       expect(mockSetServerCertificate).not.toHaveBeenCalled();
       return Promise.resolve();
     });
-    const mockCreateSession = jest.spyOn(MediaKeysImpl.prototype, "createSession");
-    const mockSetServerCertificate = jest.spyOn(
+    const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
+    const mockSetServerCertificate = vi.spyOn(
       MediaKeysImpl.prototype,
       "setServerCertificate",
     );
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
@@ -249,12 +247,14 @@ describe("decrypt - global tests - server certificate", () => {
         }, 5);
       }
     });
-    setTimeout(() => {
-      contentDecryptor.dispose();
-      expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-      expect(mockSetServerCertificate).not.toHaveBeenCalled();
-      expect(mockCreateSession).toHaveBeenCalledTimes(1);
-      done();
-    }, 10);
+    return new Promise<void>((res) => {
+      setTimeout(() => {
+        contentDecryptor.dispose();
+        expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockSetServerCertificate).not.toHaveBeenCalled();
+        expect(mockCreateSession).toHaveBeenCalledTimes(1);
+        res();
+      }, 10);
+    });
   });
 });

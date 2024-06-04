@@ -1,42 +1,25 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import type Adaptation from "../adaptation";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("Manifest - Period", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should throw if no adaptation is given", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if no adaptation is given", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const args = { id: "12", adaptations: {}, start: 0 };
     let period = null;
     let errorReceived: unknown = null;
@@ -62,15 +45,14 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).not.toHaveBeenCalled();
   });
 
-  it("should throw if no audio nor video adaptation is given", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if no audio nor video adaptation is given", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const fooAda1 = {
       type: "foo",
       id: "54",
@@ -113,15 +95,14 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).toHaveBeenNthCalledWith(2, fooAda2, {});
   });
 
-  it("should throw if only empty audio and/or video adaptations is given", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if only empty audio and/or video adaptations is given", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const args = { id: "12", adaptations: { video: [], audio: [] }, start: 0 };
     let period = null;
     let errorReceived: unknown = null;
@@ -149,15 +130,14 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).toHaveBeenCalledTimes(0);
   });
 
-  it("should throw if we are left with no audio representation", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if we are left with no audio representation", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -233,15 +213,14 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
 
-  it("should throw if no audio Adaptation is supported", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if no audio Adaptation is supported", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -319,15 +298,14 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain("No supported audio adaptations");
   });
 
-  it("should throw if we are left with no video representation", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if we are left with no video representation", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -403,15 +381,14 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
 
-  it("should throw if no video adaptation is supported", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should throw if no video adaptation is supported", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -487,17 +464,16 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain("No supported video adaptation");
   });
 
-  it("should set a parsing error if an unsupported adaptation is given", () => {
-    const mockAdaptation = jest.fn((arg) => {
+  it("should set a parsing error if an unsupported adaptation is given", async () => {
+    const mockAdaptation = vi.fn((arg) => {
       return { ...arg };
     });
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
 
     const videoAda1 = {
       type: "video",
@@ -535,15 +511,14 @@ describe("Manifest - Period", () => {
     expect((adap as { isSupported: boolean }).isSupported).toBe(false);
   });
 
-  it("should not set a parsing error if an empty unsupported adaptation is given", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should not set a parsing error if an empty unsupported adaptation is given", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
 
     const videoAda1 = {
       type: "video",
@@ -568,16 +543,15 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, {});
   });
 
-  it("should give a representationFilter to the adaptation", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    const representationFilter = jest.fn();
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should give a representationFilter to the adaptation", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    const representationFilter = vi.fn();
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -614,15 +588,14 @@ describe("Manifest - Period", () => {
     expect(representationFilter).not.toHaveBeenCalled();
   });
 
-  it("should report if Adaptations are not supported", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should report if Adaptations are not supported", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -659,15 +632,14 @@ describe("Manifest - Period", () => {
     expect((adap2 as { id: string }).id).toBe("12");
   });
 
-  it("should not report if an Adaptation has no Representation", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should not report if an Adaptation has no Representation", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -700,15 +672,14 @@ describe("Manifest - Period", () => {
     expect(unsupportedAdaptations).toHaveLength(0);
   });
 
-  it("should set the given start", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should set the given start", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -737,15 +708,14 @@ describe("Manifest - Period", () => {
     expect(period.end).toEqual(undefined);
   });
 
-  it("should set a given duration", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should set a given duration", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -774,15 +744,14 @@ describe("Manifest - Period", () => {
     expect(period.end).toEqual(12);
   });
 
-  it("should infer the end from the start and the duration", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should infer the end from the start and the duration", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -811,15 +780,14 @@ describe("Manifest - Period", () => {
     expect(period.end).toEqual(62);
   });
 
-  it("should return every Adaptations combined with `getAdaptations`", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should return every Adaptations combined with `getAdaptations`", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -866,15 +834,14 @@ describe("Manifest - Period", () => {
     expect(period.getAdaptations()).toContain(period.adaptations.audio[0]);
   });
 
-  it("should return every Adaptations from a given type with `getAdaptationsForType`", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should return every Adaptations from a given type with `getAdaptationsForType`", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -928,15 +895,14 @@ describe("Manifest - Period", () => {
     expect(period.getAdaptationsForType("text")).toHaveLength(0);
   });
 
-  it("should return the first Adaptations with a given Id when calling `getAdaptation`", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+  it("should return the first Adaptations with a given Id when calling `getAdaptation`", async () => {
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = jest.requireActual("../period").default;
+    const Period = ((await vi.importActual("../period")) as any).default;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -992,9 +958,8 @@ describe("Manifest - Period", () => {
   });
 
   it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
-    const mockAdaptation = jest.fn((arg) => ({ ...arg }));
-    jest.mock("../adaptation", () => ({
-      __esModule: true as const,
+    const mockAdaptation = vi.fn((arg) => ({ ...arg }));
+    vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));

@@ -1,40 +1,24 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { ITNode } from "../../../../../../utils/xml-parser";
 import { parseXml } from "../../../../../../utils/xml-parser";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("DASH Node Parsers - SegmentURL", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should correctly parse an element with no known attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with no known attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
     const element1 = parseXml("<Foo />")[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{}, []]);
 
@@ -45,12 +29,12 @@ describe("DASH Node Parsers - SegmentURL", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with a well-formed `mediaRange` attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with a well-formed `mediaRange` attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
     const element1 = parseXml('<Foo mediaRange="10-100" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ mediaRange: [10, 100] }, []]);
 
@@ -61,13 +45,13 @@ describe("DASH Node Parsers - SegmentURL", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with an incorrect `mediaRange` attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
+  it("should correctly parse an element with an incorrect `mediaRange` attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
-    const MPDError = jest.requireActual("../utils").MPDError;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const MPDError = ((await vi.importActual("../utils")) as any).MPDError;
     const element1 = parseXml('<Foo mediaRange="a" />')[0] as ITNode;
     const error1 = new MPDError('`mediaRange` property has an unrecognized format "a"');
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
@@ -85,15 +69,14 @@ describe("DASH Node Parsers - SegmentURL", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with a well-formed `indexRange` attribute", () => {
+  it("should correctly parse an element with a well-formed `indexRange` attribute", async () => {
     const log = {
-      __esModule: true as const,
       default: { warn: () => null },
     };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
     const element1 = parseXml('<Foo indexRange="0-100" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ indexRange: [0, 100] }, []]);
 
@@ -104,13 +87,13 @@ describe("DASH Node Parsers - SegmentURL", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with an incorrect `indexRange` attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn").mockImplementation(jest.fn());
+  it("should correctly parse an element with an incorrect `indexRange` attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
-    const MPDError = jest.requireActual("../utils").MPDError;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const MPDError = ((await vi.importActual("../utils")) as any).MPDError;
     const element1 = parseXml('<Foo indexRange="a" />')[0] as ITNode;
     const error1 = new MPDError('`indexRange` property has an unrecognized format "a"');
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
@@ -128,12 +111,12 @@ describe("DASH Node Parsers - SegmentURL", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with a media attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with a media attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
     const element1 = parseXml('<Foo media="a" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ media: "a" }, []]);
 
@@ -144,12 +127,12 @@ describe("DASH Node Parsers - SegmentURL", () => {
     mockLog.mockRestore();
   });
 
-  it("should correctly parse an element with a index attribute", () => {
-    const log = { __esModule: true as const, default: { warn: () => null } };
-    jest.mock("../../../../../../log", () => log);
-    const mockLog = jest.spyOn(log.default, "warn");
+  it("should correctly parse an element with a index attribute", async () => {
+    const log = { default: { warn: () => null } };
+    vi.doMock("../../../../../../log", () => log);
+    const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = jest.requireActual("../SegmentURL").default;
+    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
     const element1 = parseXml('<Foo index="a" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ index: "a" }, []]);
 
