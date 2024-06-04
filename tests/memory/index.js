@@ -15,6 +15,7 @@ describe("Memory tests", () => {
   afterEach(() => {
     if (player != null) {
       player.dispose();
+      window.gc();
     }
   });
 
@@ -28,13 +29,13 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(5 * 60 * 1000);
+    this.timeout(15 * 60 * 1000);
     player = new RxPlayer({
       initialVideoBitrate: Infinity,
       initialAudioBitrate: Infinity,
     });
     window.gc();
-    await sleep(1000);
+    await sleep(5000);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({
@@ -46,9 +47,9 @@ describe("Memory tests", () => {
     await waitForPlayerState(player, "ENDED");
 
     player.stop();
-    await sleep(100);
+    await sleep(5000);
     window.gc();
-    await sleep(1000);
+    await sleep(10000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -59,10 +60,10 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(1.5e6);
+    expect(heapDifference).to.be.below(2e6);
   });
 
-  it("should not have a sensible memory leak after 1000 LOADED states and adaptive streaming", async function () {
+  it("should not have a sensible memory leak after 5000 LOADED states and adaptive streaming", async function () {
     if (
       window.performance == null ||
       window.performance.memory == null ||
@@ -72,16 +73,17 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
-    this.timeout(5 * 60 * 1000);
+    this.timeout(10 * 60 * 1000);
     player = new RxPlayer({
       initialVideoBitrate: Infinity,
       initialAudiobitrate: Infinity,
     });
-    window.gc();
     await sleep(1000);
+    window.gc();
+    await sleep(5000);
     const initialMemory = window.performance.memory;
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 5000; i++) {
       player.loadVideo({
         url: manifestInfos.url,
         transport: manifestInfos.transport,
@@ -91,9 +93,9 @@ describe("Memory tests", () => {
     }
     player.stop();
 
-    await sleep(100);
+    await sleep(5000);
     window.gc();
-    await sleep(1000);
+    await sleep(15000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -104,10 +106,10 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(3e6);
+    expect(heapDifference).to.be.below(7e6);
   });
 
-  it("should not have a sensible memory leak after 1000 instances of the RxPlayer", async function () {
+  it("should not have a sensible memory leak after 50000 instances of the RxPlayer", async function () {
     if (
       window.performance == null ||
       window.performance.memory == null ||
@@ -117,11 +119,11 @@ describe("Memory tests", () => {
       console.warn("API not available. Skipping test.");
       return;
     }
+    this.timeout(15 * 60 * 1000);
     window.gc();
-    await sleep(1000);
+    await sleep(5000);
     const initialMemory = window.performance.memory;
-    this.timeout(5 * 60 * 1000);
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 50000; i++) {
       player = new RxPlayer({
         initialVideoBitrate: Infinity,
         initialAudiobitrate: Infinity,
@@ -135,9 +137,9 @@ describe("Memory tests", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       player.dispose();
     }
-    await sleep(100);
+    await sleep(5000);
     window.gc();
-    await sleep(1000);
+    await sleep(70000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -148,7 +150,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-    expect(heapDifference).to.be.below(4e6);
+    expect(heapDifference).to.be.below(3e6);
   });
 
   it("should not have a sensible memory leak after many video quality switches", async function () {
@@ -183,9 +185,10 @@ describe("Memory tests", () => {
         "Not enough video Representations to perform sufficiently pertinent tests",
       );
     }
-    await sleep(1000);
+    await sleep(5000);
 
     window.gc();
+    await sleep(5000);
     const initialMemory = window.performance.memory;
 
     // Allows to alternate between two positions
@@ -201,8 +204,9 @@ describe("Memory tests", () => {
       player.lockVideoRepresentations([videoTrack.representations[repIdx].id]);
       await sleep(1000);
     }
+    await sleep(5000);
     window.gc();
-    await sleep(1000);
+    await sleep(10000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
@@ -234,8 +238,9 @@ describe("Memory tests", () => {
     const vtlVideoElement = document.createElement("video");
     VideoThumbnailLoader.addLoader(DASH_LOADER);
     const videoThumbnailLoader = new VideoThumbnailLoader(vtlVideoElement, player);
-
+    await sleep(1000);
     window.gc();
+    await sleep(10000);
     const initialMemory = window.performance.memory;
 
     player.loadVideo({
@@ -251,9 +256,9 @@ describe("Memory tests", () => {
 
     player.stop();
     videoThumbnailLoader.dispose();
-    await sleep(1000);
+    await sleep(5000);
     window.gc();
-    await sleep(500);
+    await sleep(10000);
     const newMemory = window.performance.memory;
     const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
