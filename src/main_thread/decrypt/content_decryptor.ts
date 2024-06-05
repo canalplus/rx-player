@@ -373,6 +373,14 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     initializationData: IProcessedProtectionData,
     mediaKeysData: IAttachedMediaKeysData,
   ): Promise<void> {
+    if (log.hasLevel("DEBUG")) {
+      log.debug(
+        "DRM: processing init data",
+        initializationData.content?.adaptation.type,
+        initializationData.content?.representation.bitrate,
+        (initializationData.keyIds ?? []).map((k) => bytesToHex(k)).join(", "),
+      );
+    }
     const { mediaKeySystemAccess, stores, options } = mediaKeysData;
 
     if (
@@ -398,13 +406,18 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           if (initializationData.content === undefined) {
             log.warn("DRM: Unable to fallback from a non-decipherable quality.");
           } else {
+            log.debug(
+              "DRM: Blacklisting new init data (due to singleLicensePer content policy)",
+            );
             this.trigger("blackListProtectionData", initializationData);
           }
           return;
         }
 
         firstCreatedSession.record.associateKeyIds(keyIds);
-        if (initializationData.content !== undefined) {
+        if (initializationData.content === undefined) {
+          log.warn("DRM: Unable to fallback from a non-decipherable quality.");
+        } else {
           if (log.hasLevel("DEBUG")) {
             const hexKids = keyIds.reduce((acc, kid) => `${acc}, ${bytesToHex(kid)}`, "");
             log.debug("DRM: Blacklisting new key ids", hexKids);
@@ -447,6 +460,13 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
               ) {
                 createdSess.keyStatuses.blacklisted.push(innerKid);
               }
+            }
+            if (log.hasLevel("DEBUG")) {
+              log.debug(
+                "DRM: Session already created for",
+                bytesToHex(kid),
+                'under singleLicensePer "periods" policy',
+              );
             }
             this.trigger("keyIdsCompatibilityUpdate", {
               whitelistedKeyIds: createdSess.keyStatuses.whitelisted,
