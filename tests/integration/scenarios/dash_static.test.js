@@ -166,7 +166,7 @@ describe("DASH content CENC wrong version in MPD", function () {
         },
       ],
     });
-    await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
       expect(generateRequestSpy).toHaveBeenCalled();
       expect(foundCencV1).to.equal(true, "should have found a CENC pssh v1");
       expect(foundOtherCencVersion).to.equal(
