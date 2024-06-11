@@ -29,8 +29,8 @@ import { isEdgeChromium } from "./browser_detection";
  *   "com.microsoft.playready.recommendation.3000", generating a request with
  *   `generateRequest` throws an error: "NotSupportedError: Failed to execute
  *   'generateRequest' on 'MediaKeySession': Failed to create MF PR CdmSession".
- *   In this particular case, the work-around was to consider recommendation.3000 as not supported
- *   and try another keySystem.
+ *   In this particular case, the work-around was to consider
+ *   recommendation.3000 as not supported and try another keySystem.
  * @param keySystem - The key system in use.
  * @returns {boolean}
  */
