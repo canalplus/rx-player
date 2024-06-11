@@ -229,7 +229,7 @@ New integration tests are not required when a new code is added. Just make sure 
 those tests pass before doing a pull request by running: `npm run test:integration`.
 
 It you want to improve our integration tests, you are welcome to do so. Those are wrote in
-`tests/integration` with the help of the Mocha, Chai and Sinon libraries.
+`tests/integration` with the help of the `vitest` library.
 
 We also use a homemade library and server to serve media contents to our tests. If you
 want to know how it works, we invite you to rely on the already created tests and to read
@@ -240,7 +240,7 @@ the corresponding files.
 Memory tests replicate simple scenarios and try to detect memory leaks.
 
 You can also help us improving our memory tests. Those are written in `test/memory`. The
-testing stack used is Mocha, Chai and Sinon.
+testing library used is `vitest`.
 
 ## Documentation
 
