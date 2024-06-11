@@ -127,7 +127,7 @@ interface IParsedURL {
 /**
  * Cache to store already parsed URLs to avoid unnecessary computation when parsing the same URL again.
  */
-const parsedUrlCache = new Map<string, IParsedURL>()
+const parsedUrlCache = new Map<string, IParsedURL>();
 
 /**
  * Sets the maximum number of entries allowed in the parsedUrlCache map.
@@ -152,7 +152,7 @@ function parseURL(url: string): IParsedURL {
       authority: "",
       path: "",
       query: "",
-        fragment: "",
+      fragment: "",
     };
   } else {
     parsed = {
@@ -160,13 +160,13 @@ function parseURL(url: string): IParsedURL {
       authority: matches[2] ?? "",
       path: matches[3] ?? "",
       query: matches[4] ?? "",
-       fragment: matches[5] ?? "",
+      fragment: matches[5] ?? "",
     };
   }
   if (parsedUrlCache.size >= MAX_URL_CACHE_ENTRIES) {
     parsedUrlCache.clear();
   }
-  parsedUrlCache.set(url, parsed)
+  parsedUrlCache.set(url, parsed);
   return parsed;
 }
 /**

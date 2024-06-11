@@ -177,14 +177,16 @@ resolveURLImplementation.forEach((resolveURL) => {
   it("should work with URL with a port number in the URL", () => {
     const baseURL = "http://example.com:8090/foo/";
     const relative = "bar";
-    expect(resolveURL(baseURL, relative)).toBe("http://example.com:8090/foo/bar")
-  })
+    expect(resolveURL(baseURL, relative)).toBe("http://example.com:8090/foo/bar");
+  });
 
   it("should work with credentials in the URL", () => {
     const baseURL = "http://username:password@example.com/";
     const relative = "bar";
-    expect(resolveURL(baseURL, relative)).toBe("http://username:password@example.com/bar")
-  })
+    expect(resolveURL(baseURL, relative)).toBe(
+      "http://username:password@example.com/bar",
+    );
+  });
 });
 
 describe("utils - getFilenameIndexInUrl", () => {
