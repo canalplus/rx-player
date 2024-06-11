@@ -125,7 +125,8 @@ interface IParsedURL {
 }
 
 /**
- * Cache to store already parsed URLs to avoid unnecessary computation when parsing the same URL again.
+ * Cache to store already parsed URLs to avoid unnecessary computation when
+ * parsing the same URL again.
  */
 const parsedUrlCache = new Map<string, IParsedURL>();
 
