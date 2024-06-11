@@ -123,30 +123,51 @@ interface IParsedURL {
   query: string;
   fragment: string;
 }
+
+/**
+ * Cache to store already parsed URLs to avoid unnecessary computation when parsing the same URL again.
+ */
+const parsedUrlCache = new Map<string, IParsedURL>()
+
+/**
+ * Sets the maximum number of entries allowed in the parsedUrlCache map.
+ * This limit helps prevent excessive memory usage. The value is arbitrary.
+ */
+const MAX_URL_CACHE_ENTRIES = 200;
+
 /**
  * Parses a URL into its components.
  * @param {string} url - The URL to parse.
  * @returns {IParsedURL} The parsed URL components.
  */
 function parseURL(url: string): IParsedURL {
+  if (parsedUrlCache.has(url)) {
+    return parsedUrlCache.get(url) as IParsedURL;
+  }
   const matches = url.match(urlComponentRegex);
+  let parsed: IParsedURL;
   if (matches === null) {
-    return {
+    parsed = {
       scheme: "",
       authority: "",
       path: "",
       query: "",
-      fragment: "",
+        fragment: "",
+    };
+  } else {
+    parsed = {
+      scheme: matches[1] ?? "",
+      authority: matches[2] ?? "",
+      path: matches[3] ?? "",
+      query: matches[4] ?? "",
+       fragment: matches[5] ?? "",
     };
   }
-
-  return {
-    scheme: matches[1] ?? "",
-    authority: matches[2] ?? "",
-    path: matches[3] ?? "",
-    query: matches[4] ?? "",
-    fragment: matches[5] ?? "",
-  };
+  if (parsedUrlCache.size >= MAX_URL_CACHE_ENTRIES) {
+    parsedUrlCache.clear();
+  }
+  parsedUrlCache.set(url, parsed)
+  return parsed;
 }
 /**
  * Formats a parsed URL into a string.
