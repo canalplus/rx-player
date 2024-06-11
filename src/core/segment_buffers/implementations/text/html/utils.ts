@@ -98,7 +98,7 @@ const EPSILON = 5e-2; // 5%
  */
 export function areCuesStartNearlyEqual(
   firstCue: ICuesGroup,
-  secondCue: ICuesGroup,
+  secondCue: ICuesGroup
 ): boolean {
   const firstCueDuration = firstCue.end - firstCue.start;
   const secondCueDuration = secondCue.end - secondCue.start;
@@ -106,9 +106,10 @@ export function areCuesStartNearlyEqual(
   const minDuration = Math.min(
     firstCueDuration,
     secondCueDuration,
-    MAX_DELTA_BUFFER_TIME,
+    MAX_DELTA_BUFFER_TIME
   );
-  return diffBetweenStart / minDuration <= EPSILON; // ratio diff/ minduration is bellow 5%
+  // ratio diff/ minduration is bellow 5%
+  return diffBetweenStart / minDuration <= EPSILON;
 }
 
 /**
