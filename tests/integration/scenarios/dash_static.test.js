@@ -102,45 +102,44 @@ describe("DASH content CENC wrong version in MPD", function () {
     let foundCencV1 = false;
     let foundOtherCencVersion = false;
     player = new RxPlayer();
-    const generateRequestSpy = vi.spyOn(
-      window.MediaKeySession.prototype,
-      "generateRequest",
-    ).mockImplementation((_initDataType, initData) => {
-      let offset = 0;
-      while (offset < initData.length) {
-        const size = be4toi(initData, offset);
-        if (be4toi(initData, offset + 4) === 0x70737368) {
-          // CENC system id
-          if (
-            initData[offset + 12] === 0x10 &&
-            initData[offset + 13] === 0x77 &&
-            initData[offset + 14] === 0xef &&
-            initData[offset + 15] === 0xec &&
-            initData[offset + 16] === 0xc0 &&
-            initData[offset + 17] === 0xb2 &&
-            initData[offset + 18] === 0x4d &&
-            initData[offset + 19] === 0x02 &&
-            initData[offset + 20] === 0xac &&
-            initData[offset + 21] === 0xe3 &&
-            initData[offset + 22] === 0x3c &&
-            initData[offset + 23] === 0x1e &&
-            initData[offset + 24] === 0x52 &&
-            initData[offset + 25] === 0xe2 &&
-            initData[offset + 26] === 0xfb &&
-            initData[offset + 27] === 0x4b
-          ) {
-            const version = initData[offset + 8];
-            if (version === 1) {
-              foundCencV1 = true;
-            } else {
-              foundOtherCencVersion = true;
+    const generateRequestSpy = vi
+      .spyOn(window.MediaKeySession.prototype, "generateRequest")
+      .mockImplementation((_initDataType, initData) => {
+        let offset = 0;
+        while (offset < initData.length) {
+          const size = be4toi(initData, offset);
+          if (be4toi(initData, offset + 4) === 0x70737368) {
+            // CENC system id
+            if (
+              initData[offset + 12] === 0x10 &&
+              initData[offset + 13] === 0x77 &&
+              initData[offset + 14] === 0xef &&
+              initData[offset + 15] === 0xec &&
+              initData[offset + 16] === 0xc0 &&
+              initData[offset + 17] === 0xb2 &&
+              initData[offset + 18] === 0x4d &&
+              initData[offset + 19] === 0x02 &&
+              initData[offset + 20] === 0xac &&
+              initData[offset + 21] === 0xe3 &&
+              initData[offset + 22] === 0x3c &&
+              initData[offset + 23] === 0x1e &&
+              initData[offset + 24] === 0x52 &&
+              initData[offset + 25] === 0xe2 &&
+              initData[offset + 26] === 0xfb &&
+              initData[offset + 27] === 0x4b
+            ) {
+              const version = initData[offset + 8];
+              if (version === 1) {
+                foundCencV1 = true;
+              } else {
+                foundOtherCencVersion = true;
+              }
             }
           }
+          offset += size;
         }
-        offset += size;
-      }
-      return Promise.resolve();
-    });
+        return Promise.resolve();
+      });
     spies.push(generateRequestSpy);
 
     player.loadVideo({
