@@ -1,4 +1,4 @@
-import type { IBufferedChunkSnapshot } from "../../../core/segment_sinks/inventory/segment_inventory";
+import type { IBufferedChunkSnapshot } from "../../../core/segment_sinks/segment_buffers_store";
 import type { IRepresentationMetadata } from "../../../manifest";
 
 const BUFFER_WIDTH_IN_SECONDS = 30 * 60;

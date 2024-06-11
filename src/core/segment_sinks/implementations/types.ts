@@ -191,10 +191,6 @@ export abstract class SegmentSink {
     return this._segmentInventory.getHistoryFor(context);
   }
 
-  public setSegmentHistory(inventory: IBufferedChunk[]) {
-    this._segmentInventory.setInventory(inventory);
-  }
-
   /**
    * Dispose of the resources used by this SegmentSink.
    * /!\ You won't be able to use the SegmentSink after calling this

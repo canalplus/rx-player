@@ -25,14 +25,28 @@ import type { IBufferType, SegmentSink } from "./implementations";
 import { AudioVideoSegmentSink } from "./implementations";
 import type { ITextDisplayerInterface } from "./implementations/text";
 import TextSegmentSink from "./implementations/text";
-import type { IBufferedChunkSnapshot } from "./inventory/segment_inventory";
-import type { IChunkContext, IChunkContextSnapchot } from "./inventory/types";
+import type { IBufferedChunk } from "./inventory/segment_inventory";
+import type { IChunkContext, IChunkContextSnapshot } from "./inventory/types";
 
 const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text"];
 
 /** Types of "native" media buffers (i.e. which rely on a SourceBuffer) */
 type INativeMediaBufferType = "audio" | "video";
 
+/**
+ * Interface containing metadata of a buffered chunk. 
+ * The metadata is serializable and does not contain references to JS objects
+ * that are not serializable, such as Map or class instances.
+ */
+export interface IBufferedChunkSnapshot extends Omit<IBufferedChunk, "infos"> {
+  infos: IChunkContextSnapshot;
+}
+
+/**
+ * Interface representing metrics for segment sinks.
+ * The metrics include information on the buffer type, codec, and segment inventory,
+ * and are categorized by segment type (audio, video, text).
+ */
 export interface SegmentSinkMetrics {
   segmentSinks: Record<
     "audio" | "video" | "text",
@@ -412,7 +426,7 @@ function shouldHaveNativeBuffer(
   return bufferType === "audio" || bufferType === "video";
 }
 
-function getChunkContextSnapshot(context: IChunkContext): IChunkContextSnapchot {
+function getChunkContextSnapshot(context: IChunkContext): IChunkContextSnapshot {
   return {
     adaptation: context.adaptation.getMetadataSnapshot(),
     period: context.period.getMetadataSnapshot(),

@@ -36,7 +36,7 @@ export interface IChunkContext {
   segment: ISegment;
 }
 
-export interface IChunkContextSnapchot {
+export interface IChunkContextSnapshot {
   adaptation: IAdaptationMetadata;
   period: IPeriodMetadata;
   representation: IRepresentationMetadata;
