@@ -1,5 +1,4 @@
-import { stub } from "sinon";
-import { describe, beforeEach, afterEach, it, expect } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import launchTestsForContent from "../utils/launch_tests_for_content.js";
 import sleep from "../../utils/sleep.js";
@@ -81,15 +80,15 @@ describe("DASH content CENC wrong version in MPD", function () {
     );
   }
   let player;
-  let stubs = [];
+  let spies = [];
   beforeEach(() => {});
   afterEach(() => {
     if (player !== undefined) {
       player.dispose();
       player = undefined;
     }
-    stubs.forEach((declaredStub) => declaredStub.restore());
-    stubs = [];
+    spies.forEach((declaredSpy) => declaredSpy.mockRestore());
+    spies = [];
   });
   it("should filter out CENC pssh with a wrong version", async function () {
     if (window.MediaKeySession === undefined || window.MediaKeySession === null) {
@@ -103,10 +102,10 @@ describe("DASH content CENC wrong version in MPD", function () {
     let foundCencV1 = false;
     let foundOtherCencVersion = false;
     player = new RxPlayer();
-    const generateRequestStub = stub(
+    const generateRequestSpy = vi.spyOn(
       window.MediaKeySession.prototype,
       "generateRequest",
-    ).callsFake((_initDataType, initData) => {
+    ).mockImplementation((_initDataType, initData) => {
       let offset = 0;
       while (offset < initData.length) {
         const size = be4toi(initData, offset);
@@ -142,7 +141,7 @@ describe("DASH content CENC wrong version in MPD", function () {
       }
       return Promise.resolve();
     });
-    stubs.push(generateRequestStub);
+    spies.push(generateRequestSpy);
 
     player.loadVideo({
       transport: brokenCencManifestInfos.transport,
@@ -169,7 +168,7 @@ describe("DASH content CENC wrong version in MPD", function () {
       ],
     });
     await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
-      expect(generateRequestStub.called).to.equal(true, "generateRequest was not called");
+      expect(generateRequestSpy).toHaveBeenCalled();
       expect(foundCencV1).to.equal(true, "should have found a CENC pssh v1");
       expect(foundOtherCencVersion).to.equal(
         false,

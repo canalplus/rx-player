@@ -4,20 +4,20 @@ import sinon from "sinon";
 import RxPlayer from "../../../dist/es2017";
 
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
-import { describe, beforeEach, afterEach, it, expect } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 
 const MANIFEST_URL_INFOS = manifestInfos.url;
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
- *  sinon fakeTimers.
+ *  vitest fakeTimers.
  *  Here, the environment's setTimeout function is stored before being stubed
- *  by sinon, allowing to sleep the wanted time without waiting sinon's clock
+ *  by vitest, allowing to sleep the wanted time without waiting vitest's clock
  *  to tick.
  *  @param {Number} [ms=0]
  *  @returns {Promise}
  */
-const sleepWithoutSinonStub = (function () {
+const sleepWithoutFakeTimer = (function () {
   const timeoutFn = window.setTimeout;
   return function _nextTick(ms = 0) {
     return new Promise((res) => {
@@ -44,7 +44,7 @@ describe("manifest error management", function () {
   });
 
   it("should retry to download the manifest 5 times", async () => {
-    const clock = sinon.useFakeTimers();
+    vi.useFakeTimers();
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (res) => res.respond(500));
 
     player.loadVideo({
@@ -54,39 +54,39 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
+    await sleepWithoutFakeTimer(0);
 
-    clock.restore();
+    vi.useRealTimers();
 
     await sleep(5);
     const error = player.getError();
@@ -96,7 +96,7 @@ describe("manifest error management", function () {
   });
 
   it("should parse the manifest if it works the second time", async () => {
-    const clock = sinon.useFakeTimers();
+    vi.useFakeTimers();
 
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return xhr.respond(500);
@@ -109,23 +109,23 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
+    await sleepWithoutFakeTimer(0);
     fakeServer.restore();
-    clock.tick(5000);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
 
-    clock.restore();
+    vi.useRealTimers();
 
     await sleep(50);
     expect(player.getError()).to.equal(null);
   });
 
   it("should parse the manifest if it works the third time", async () => {
-    const clock = sinon.useFakeTimers();
+    vi.useFakeTimers();
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return xhr.respond(500);
     });
@@ -137,30 +137,30 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
+    await sleepWithoutFakeTimer(0);
     fakeServer.restore();
-    clock.tick(5000);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
 
-    clock.restore();
+    vi.useRealTimers();
 
     await sleep(1000);
     expect(player.getError()).to.equal(null);
   }, 10000);
 
   it("should parse the manifest if it works the fourth time", async () => {
-    const clock = sinon.useFakeTimers();
+    vi.useFakeTimers();
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return xhr.respond(500);
     });
@@ -172,37 +172,37 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
+    await sleepWithoutFakeTimer(0);
     fakeServer.restore();
-    clock.tick(5000);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
 
-    clock.restore();
+    vi.useRealTimers();
 
     await sleep(5);
     expect(player.getError()).to.equal(null);
   });
 
   it("should parse the manifest if it works the fifth time", async () => {
-    const clock = sinon.useFakeTimers();
+    vi.useFakeTimers();
     fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
       return xhr.respond(500);
     });
@@ -214,35 +214,35 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
-    clock.tick(5000);
+    await sleepWithoutFakeTimer(0);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
     fakeServer.respond();
-    await sleepWithoutSinonStub(0);
+    await sleepWithoutFakeTimer(0);
     fakeServer.restore();
-    clock.tick(5000);
+    vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
 
-    clock.restore();
+    vi.useRealTimers();
 
     await sleep(5);
     expect(player.getError()).to.equal(null);

@@ -1,18 +1,17 @@
-import { describe, beforeEach, afterEach, it, expect } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTemplate_Multi_Periods";
-import sinon from "sinon";
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
- *  sinon fakeTimers.
+ *  vitest fakeTimers.
  *  Here, the environment's setTimeout function is stored before being stubed
- *  by sinon, allowing to sleep the wanted time without waiting sinon's clock
+ *  by vitest, allowing to sleep the wanted time without waiting vitest's clock
  *  to tick.
  *  @param {Number} [ms=0]
  *  @returns {Promise}
  */
-const sleepWithoutSinonStub = (function () {
+const sleepWithoutFakeTimer = (function () {
   const timeoutFn = window.setTimeout;
   return function _nextTick(ms = 0) {
     return new Promise((res) => {
@@ -23,16 +22,16 @@ const sleepWithoutSinonStub = (function () {
 
 describe("DASH live content multi-periods (SegmentTemplate)", function () {
   let player;
-  let clock;
 
   beforeEach(() => {
     player = new RxPlayer();
-    clock = sinon.useFakeTimers((1567781280 + 500) * 1000);
+    vi.useFakeTimers();
+    vi.setSystemTime((1567781280 + 500) * 1000);
   });
 
   afterEach(() => {
     player.dispose();
-    clock.restore();
+    vi.useRealTimers();
   });
 
   it("should return correct maximum and minimum positions", async () => {
@@ -52,7 +51,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function () {
       segmentLoader,
     });
 
-    await sleepWithoutSinonStub(50);
+    await sleepWithoutFakeTimer(50);
 
     const now = 1567781280 + 500;
     const maxPos = player.getMaximumPosition();
