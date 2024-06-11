@@ -162,12 +162,24 @@ describe("Global TTML HTML parsing tests", () => {
       return currTextNodes;
     }
     let nbTextNodes = 0;
-    const textNodes = findTextNodes(res[6].element);
-    for (let i = 0; i < textNodes.length; i++) {
-      const parentElement = textNodes[i].parentElement;
-      if (parentElement !== null) {
-        expect(globalScope.getComputedStyle(parentElement).color).toEqual("yellow");
-        nbTextNodes++;
+    {
+      const textNodes = findTextNodes(res[5].element);
+      for (let i = 0; i < textNodes.length; i++) {
+        const parentElement = textNodes[i].parentElement;
+        if (parentElement !== null) {
+          expect(globalScope.getComputedStyle(parentElement).color).toEqual("yellow");
+          nbTextNodes++;
+        }
+      }
+    }
+    {
+      const textNodes = findTextNodes(res[6].element);
+      for (let i = 0; i < textNodes.length; i++) {
+        const parentElement = textNodes[i].parentElement;
+        if (parentElement !== null) {
+          expect(globalScope.getComputedStyle(parentElement).color).toEqual("white");
+          nbTextNodes++;
+        }
       }
     }
     expect(nbTextNodes).toBeGreaterThanOrEqual(1);

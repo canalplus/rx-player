@@ -515,5 +515,11 @@ export function formatFakeChallengeFromInitData(
 ): Uint8Array {
   const initDataAB = initData instanceof ArrayBuffer ? initData : initData.buffer;
   const objChallenge = [initDataType, bytesToBase64(new Uint8Array(initDataAB))];
-  return strToUtf8(JSON.stringify(objChallenge));
+  let data = strToUtf8(JSON.stringify(objChallenge));
+  // Work-around some testing environment issue
+  // see https://github.com/vitest-dev/vitest/issues/4043
+  if (!(data instanceof Uint8Array)) {
+    data = new Uint8Array(data);
+  }
+  return data;
 }
