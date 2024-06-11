@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   test: {
-    watch: false,
+    watch: process.env.WATCH === "true",
     reporters: "dot",
     include: ["src/**/*.test.ts", "src/__tests__/**/*.ts"],
     environment: "jsdom",

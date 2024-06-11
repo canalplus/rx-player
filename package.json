@@ -81,45 +81,19 @@
   },
   "typesVersions": {
     "*": {
-      "experimental": [
-        "./dist/es2017/experimental/index.d.ts"
-      ],
-      "experimental/features": [
-        "./dist/es2017/experimental/features/index.d.ts"
-      ],
-      "experimental/features/embeds": [
-        "./dist/es2017/__GENERATED_CODE/index.d.ts"
-      ],
-      "experimental/features/*": [
-        "./dist/es2017/experimental/features/*.d.ts"
-      ],
-      "experimental/tools": [
-        "./dist/es2017/experimental/tools/index.d.ts"
-      ],
-      "experimental/tools/*": [
-        "./dist/es2017/experimental/tools/*/index.d.ts"
-      ],
-      "features": [
-        "./dist/es2017/features/list/index.d.ts"
-      ],
-      "features/*": [
-        "./dist/es2017/features/list/*.d.ts"
-      ],
-      "logger": [
-        "./dist/es2017/log.d.ts"
-      ],
-      "minimal": [
-        "./dist/es2017/minimal.d.ts"
-      ],
-      "tools": [
-        "./dist/es2017/tools/index.d.ts"
-      ],
-      "tools/*": [
-        "./dist/es2017/tools/*/index.d.ts"
-      ],
-      "types": [
-        "./dist/es2017/public_types.d.ts"
-      ]
+      "experimental": ["./dist/es2017/experimental/index.d.ts"],
+      "experimental/features": ["./dist/es2017/experimental/features/index.d.ts"],
+      "experimental/features/embeds": ["./dist/es2017/__GENERATED_CODE/index.d.ts"],
+      "experimental/features/*": ["./dist/es2017/experimental/features/*.d.ts"],
+      "experimental/tools": ["./dist/es2017/experimental/tools/index.d.ts"],
+      "experimental/tools/*": ["./dist/es2017/experimental/tools/*/index.d.ts"],
+      "features": ["./dist/es2017/features/list/index.d.ts"],
+      "features/*": ["./dist/es2017/features/list/*.d.ts"],
+      "logger": ["./dist/es2017/log.d.ts"],
+      "minimal": ["./dist/es2017/minimal.d.ts"],
+      "tools": ["./dist/es2017/tools/index.d.ts"],
+      "tools/*": ["./dist/es2017/tools/*/index.d.ts"],
+      "types": ["./dist/es2017/public_types.d.ts"]
     }
   },
   "keywords": [
@@ -184,6 +158,7 @@
     "test:memory": "cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
     "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:unit": "vitest --config vitest.config.unit.mjs",
+    "test:unit:watch": "cross-env WATCH=true vitest --config vitest.config.unit.mjs",
     "update-version": "npm run version --git-tag-version=false",
     "version": "./scripts/update-version",
     "wasm-strip": "node scripts/wasm-strip.mjs dist/mpd-parser.wasm"
@@ -268,7 +243,8 @@
         "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update"
       },
       "Unit tests (test particular functions)": {
-        "test:unit": "Launch unit tests"
+        "test:unit": "Launch unit tests",
+        "test:unit:watch": "Launch unit tests and restart them each one of its file changes"
       },
       "Memory tests (test memory usage to avoid memory leaks)": {
         "test:memory": "Launch memory tests",
