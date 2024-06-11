@@ -81,19 +81,45 @@
   },
   "typesVersions": {
     "*": {
-      "experimental": ["./dist/es2017/experimental/index.d.ts"],
-      "experimental/features": ["./dist/es2017/experimental/features/index.d.ts"],
-      "experimental/features/embeds": ["./dist/es2017/__GENERATED_CODE/index.d.ts"],
-      "experimental/features/*": ["./dist/es2017/experimental/features/*.d.ts"],
-      "experimental/tools": ["./dist/es2017/experimental/tools/index.d.ts"],
-      "experimental/tools/*": ["./dist/es2017/experimental/tools/*/index.d.ts"],
-      "features": ["./dist/es2017/features/list/index.d.ts"],
-      "features/*": ["./dist/es2017/features/list/*.d.ts"],
-      "logger": ["./dist/es2017/log.d.ts"],
-      "minimal": ["./dist/es2017/minimal.d.ts"],
-      "tools": ["./dist/es2017/tools/index.d.ts"],
-      "tools/*": ["./dist/es2017/tools/*/index.d.ts"],
-      "types": ["./dist/es2017/public_types.d.ts"]
+      "experimental": [
+        "./dist/es2017/experimental/index.d.ts"
+      ],
+      "experimental/features": [
+        "./dist/es2017/experimental/features/index.d.ts"
+      ],
+      "experimental/features/embeds": [
+        "./dist/es2017/__GENERATED_CODE/index.d.ts"
+      ],
+      "experimental/features/*": [
+        "./dist/es2017/experimental/features/*.d.ts"
+      ],
+      "experimental/tools": [
+        "./dist/es2017/experimental/tools/index.d.ts"
+      ],
+      "experimental/tools/*": [
+        "./dist/es2017/experimental/tools/*/index.d.ts"
+      ],
+      "features": [
+        "./dist/es2017/features/list/index.d.ts"
+      ],
+      "features/*": [
+        "./dist/es2017/features/list/*.d.ts"
+      ],
+      "logger": [
+        "./dist/es2017/log.d.ts"
+      ],
+      "minimal": [
+        "./dist/es2017/minimal.d.ts"
+      ],
+      "tools": [
+        "./dist/es2017/tools/index.d.ts"
+      ],
+      "tools/*": [
+        "./dist/es2017/tools/*/index.d.ts"
+      ],
+      "types": [
+        "./dist/es2017/public_types.d.ts"
+      ]
     }
   },
   "keywords": [
