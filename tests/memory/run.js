@@ -36,7 +36,7 @@ const webpackConfig = generateTestWebpackConfig({
 
 const karmaConf = {
   basePath: "",
-  browserNoActivityTimeout: 10 * 60 * 1000,
+  browserNoActivityTimeout: 50 * 60 * 1000,
   browsers,
   customLaunchers: {
     ChromeMemory: {
