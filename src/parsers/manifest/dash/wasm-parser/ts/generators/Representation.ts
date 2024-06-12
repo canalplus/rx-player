@@ -48,7 +48,7 @@ export function generateRepresentationChildrenParser(
   linearMemory : WebAssembly.Memory,
   parsersStack : ParsersStack
 )  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
 
       case TagName.BaseURL: {
@@ -148,7 +148,11 @@ export function generateRepresentationAttrParser(
   linearMemory : WebAssembly.Memory
 )  : IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onRepresentationAttribute(attr : number, ptr : number, len : number) {
+  return function onRepresentationAttribute(
+    attr : AttributeName,
+    ptr : number,
+    len : number
+  ) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.Id:

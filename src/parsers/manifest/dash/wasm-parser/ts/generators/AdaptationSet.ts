@@ -56,7 +56,7 @@ export function generateAdaptationSetChildrenParser(
   linearMemory : WebAssembly.Memory,
   parsersStack : ParsersStack
 )  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
 
       case TagName.Accessibility: {
@@ -221,7 +221,11 @@ export function generateAdaptationSetAttrParser(
   linearMemory : WebAssembly.Memory
 )  : IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onAdaptationSetAttribute(attr : number, ptr : number, len : number) {
+  return function onAdaptationSetAttribute(
+    attr : AttributeName,
+    ptr : number,
+    len : number
+  ) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.Id:

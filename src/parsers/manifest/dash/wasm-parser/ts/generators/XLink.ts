@@ -39,7 +39,7 @@ export function generateXLinkChildrenParser(
   parsersStack : ParsersStack,
   fullMpd : ArrayBuffer
 )  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
       case TagName.Period: {
         const period = { children: { adaptations: [],

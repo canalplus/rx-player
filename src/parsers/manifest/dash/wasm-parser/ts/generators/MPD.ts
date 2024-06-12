@@ -49,7 +49,7 @@ export function generateMPDChildrenParser(
   parsersStack : ParsersStack,
   fullMpd : ArrayBuffer
 )  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
 
       case TagName.BaseURL: {
@@ -103,7 +103,11 @@ export function generateMPDAttrParser(
 )  : IAttributeParser {
   let dataView;
   const textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr : number, ptr : number, len : number) {
+  return function onMPDAttribute(
+    attr : AttributeName,
+    ptr : number,
+    len : number
+  ) {
     switch (attr) {
       case AttributeName.Id:
         mpdAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);

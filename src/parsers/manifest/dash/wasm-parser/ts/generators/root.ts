@@ -38,7 +38,7 @@ export function generateRootChildrenParser(
   parsersStack : ParsersStack,
   fullMpd : ArrayBuffer
 )  : (nodeId : number) => void {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
       case TagName.MPD:
         rootObj.mpd = { children: { baseURLs: [],

@@ -21,7 +21,7 @@ import { parseString } from "../utils";
 
 /**
  * Generate an "attribute parser" once inside a `BaseURL` node.
- * @param {Object} baseUrlAttrs
+ * @param {Object} ccAttrs
  * @param {WebAssembly.Memory} linearMemory
  * @returns {Function}
  */
@@ -30,7 +30,7 @@ export function generateContentComponentAttrParser(
   linearMemory : WebAssembly.Memory
 )  : IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr : number, ptr : number, len : number) {
+  return function onMPDAttribute(attr : AttributeName, ptr : number, len : number) {
     switch (attr) {
       case AttributeName.Id:
         ccAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);

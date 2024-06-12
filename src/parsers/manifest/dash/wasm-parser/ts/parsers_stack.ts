@@ -15,6 +15,7 @@
  */
 
 import noop from "../../../../../utils/noop";
+import { AttributeName } from "./types";
 
 /** Type of the function called when a Node opening is encountered. */
 export type IChildrenParser =
@@ -22,7 +23,7 @@ export type IChildrenParser =
 
 /** Type of the function called when an attribute is encountered. */
 export type IAttributeParser =
-  (attr : number, ptr : number, len : number) => void;
+  (attr : AttributeName, ptr : number, len : number) => void;
 
 /**
  * Maintains a stack of children and attributes parsers, to easily parse

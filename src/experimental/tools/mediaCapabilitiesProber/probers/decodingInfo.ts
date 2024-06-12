@@ -85,10 +85,6 @@ export default function probeDecodingInfos(
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     return (navigator as any).mediaCapabilities.decodingInfo(config)
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
       .then((result: IDecodingInfos) => {
         return [
           result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,
@@ -96,5 +92,9 @@ export default function probeDecodingInfos(
       }).catch(() => {
         return [ProberStatus.NotSupported];
       });
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-enable @typescript-eslint/no-unsafe-call */
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-enable @typescript-eslint/no-unsafe-return */
   });
 }

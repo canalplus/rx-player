@@ -24,7 +24,7 @@ import { AttributeName } from "../types";
 import { parseString } from "../utils";
 
 /**
- * @param {Object} cpAttrs
+ * @param {Object} cp
  * @param {WebAssembly.Memory} linearMemory
  * @returns {Function}
  */
@@ -36,7 +36,7 @@ export function generateContentProtectionAttrParser(
   const cpChildren = cp.children;
   const textDecoder = new TextDecoder();
   return function onContentProtectionAttribute(
-    attr : number,
+    attr : AttributeName,
     ptr : number,
     len : number
   ) {

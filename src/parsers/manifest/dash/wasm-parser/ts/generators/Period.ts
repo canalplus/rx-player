@@ -54,7 +54,7 @@ export function generatePeriodChildrenParser(
   parsersStack : ParsersStack,
   fullMpd : ArrayBuffer
 )  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
 
       case TagName.AdaptationSet: {

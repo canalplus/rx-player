@@ -38,7 +38,7 @@ export function generateSegmentListChildrenParser(
   linearMemory : WebAssembly.Memory,
   parsersStack : ParsersStack
 )  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  return function onRootChildren(nodeId : TagName) {
     switch (nodeId) {
       case TagName.SegmentUrl: {
         const segmentObj = {};
