@@ -1,11 +1,10 @@
 # Changelog
 
-## Unreleased
+## v3.33.3
 
 ### Bug fixes
 
--   DASH: support absolute path in URL resolution with RFC 3986 implementation [#1443,
-    #1446]
+-   DASH: support absolute path in URL resolution with RFC 3986 implementation [#1446]
 -   DASH: fix cases of blinking subtitles [#1447]
 -   Fix precision issues of the `maxVideoBufferSize` API [#1448]
 -   DASH: Prevent multiple loading of the same segment for some DASH low-latency contents
