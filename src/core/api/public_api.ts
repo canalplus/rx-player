@@ -155,6 +155,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   public readonly version : string;
 
   /**
+   * Store all video elements currently in use by an RxPlayer instance.
+   * This is used to check that a video element is not shared between multiple instances.
+   * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
+   */
+  private static _priv_currentlyUsedVideoElements = new WeakSet<HTMLMediaElement>();
+
+  /**
    * Media element attached to the RxPlayer.
    * Set to `null` when the RxPlayer is disposed.
    */
@@ -352,6 +359,40 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Register the video element to the set of elements currently in use.
+   * @param videoElement the video element to register.
+   * @throws Error - Throws if the element is already used by another player instance.
+   */
+  private static _priv_registerVideoElement(videoElement: HTMLMediaElement) {
+    if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
+      const errorMessage =
+        "The video element is already attached to another RxPlayer instance." +
+        "\nMake sure to dispose the previous instance with player.dispose() " +
+        "before creating a new player instance attaching that video element.";
+      // eslint-disable-next-line no-console
+      console.warn(errorMessage);
+      /*
+       * TODO: for next major version 5.0: this need to throw an error instead
+       * of just logging this was not done for minor version as it could be
+       * considerated a breaking change.
+       *
+       * throw new Error(errorMessage);
+       */
+    }
+    Player._priv_currentlyUsedVideoElements.add(videoElement);
+  }
+
+  /**
+   * Deregister the video element of the set of elements currently in use.
+   * @param videoElement the video element to deregister.
+   */
+  static _priv_deregisterVideoElement(videoElement: HTMLMediaElement) {
+    if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
+      Player._priv_currentlyUsedVideoElements.delete(videoElement);
+    }
+  }
+
+  /**
    * @constructor
    * @param {Object} options
    */
@@ -384,6 +425,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
+    Player._priv_registerVideoElement(this.videoElement);
 
     const destroyCanceller = new TaskCanceller();
     this._destroyCanceller = destroyCanceller;
@@ -542,6 +584,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.stop();
 
     if (this.videoElement !== null) {
+      Player._priv_deregisterVideoElement(this.videoElement);
+
       // free resources used for decryption management
       disposeDecryptionResources(this.videoElement)
         .catch((err : unknown) => {
