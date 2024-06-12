@@ -85,6 +85,7 @@ export default defineConfig({
     __LOGGER_LEVEL__: {
       CURRENT_LEVEL: '"NONE"',
     },
+    __BROWSER_NAME__: JSON.stringify(process.env.BROWSER_CONFIG),
   },
   test: {
     globals: false,
