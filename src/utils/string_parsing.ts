@@ -42,7 +42,7 @@ function strToUtf16LE(str: string): Uint8Array {
 
 /**
  * Convert a string to an Uint8Array containing the corresponding UTF-16 code
- * units in little-endian.
+ * units in big-endian.
  * @param {string} str
  * @returns {Uint8Array}
  */
