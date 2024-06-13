@@ -34,7 +34,13 @@ function Button({
   }
 
   return (
-    <button aria-label={ariaLabel} className={className} onClick={onClick} title={title}>
+    <button
+      aria-label={ariaLabel}
+      className={className}
+      tabIndex={0}
+      onClick={onClick}
+      title={title}
+    >
       {value}
     </button>
   );

@@ -86,16 +86,9 @@ function scaleSegments(
 ): IScaledBufferedData[] {
   const scaledSegments = [];
   const wholeDuration = maximumPosition - minimumPosition;
-  for (let i = 0; i < bufferedData.length; i++) {
-    const bufferedInfos = bufferedData[i];
-    const start =
-      bufferedInfos.bufferedStart === undefined
-        ? bufferedInfos.start
-        : bufferedInfos.bufferedStart;
-    const end =
-      bufferedInfos.bufferedEnd === undefined
-        ? bufferedInfos.end
-        : bufferedInfos.bufferedEnd;
+  for (const bufferedInfos of bufferedData) {
+    const start = bufferedInfos.bufferedStart ?? bufferedInfos.start;
+    const end = bufferedInfos.bufferedEnd ?? bufferedInfos.end;
     if (end > minimumPosition && start < maximumPosition) {
       const startPoint = Math.max(start - minimumPosition, 0);
       const endPoint = Math.min(end - minimumPosition, maximumPosition);
@@ -121,14 +114,14 @@ export default function BufferContentGraph({
   minimumPosition, // The minimum seekable position
   seek, // function allowing to seek in the content
   type, // The type of buffer (e.g. "audio", "video" or "text")
-}: {
+}: Readonly<{
   currentTime: number | undefined;
   data: IBufferedData[];
   minimumPosition: number | null | undefined;
   maximumPosition: number | null | undefined;
   seek: (pos: number) => void;
   type: "audio" | "video" | "text";
-}): JSX.Element {
+}>): JSX.Element {
   const randomColors = useMemo<string[]>(() => shuffleArray(COLORS), []);
   const [tipVisible, setTipVisible] = useState(false);
   const [tipPosition, setTipPosition] = useState(0);
@@ -188,8 +181,8 @@ export default function BufferContentGraph({
     ) {
       return;
     }
-    for (let i = 0; i < currentSegmentsScaled.length; i++) {
-      paintSegment(currentSegmentsScaled[i], ctx);
+    for (const scaledSegment of currentSegmentsScaled) {
+      paintSegment(scaledSegment, ctx);
     }
     paintCurrentPosition(currentTime, usedMinimum, usedMaximum, ctx);
   }, [usedMinimum, usedMaximum, currentSegmentsScaled]);
@@ -265,7 +258,7 @@ export default function BufferContentGraph({
               newTipText +=
                 `language: ${adaptation.language ?? "?"}` +
                 "\n" +
-                `audioDescription: ${String(adaptation.isAudioDescription) ?? false}` +
+                `audioDescription: ${String(adaptation.isAudioDescription)}` +
                 "\n" +
                 `codec: ${representation.codecs?.join("-") ?? "?"}` +
                 "\n" +
@@ -276,7 +269,7 @@ export default function BufferContentGraph({
               newTipText +=
                 `language: ${adaptation.language ?? "?"}` +
                 "\n" +
-                `closedCaption: ${String(adaptation.isClosedCaption) ?? "?"}` +
+                `closedCaption: ${String(adaptation.isClosedCaption)}` +
                 "\n";
               break;
           }

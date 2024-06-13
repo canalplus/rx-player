@@ -49,7 +49,19 @@ function VolumeBar({
   );
 
   return (
-    <div className="volume-bar-wrapper" ref={elementRef} onClick={onVolumeClick}>
+    <div
+      className="volume-bar-wrapper"
+      ref={elementRef}
+      tabIndex={0}
+      onKeyDown={(evt: React.KeyboardEvent<HTMLDivElement>): void => {
+        if (evt.keyCode === 39 || evt.code === "ArrowRight") {
+          player.actions.setVolume(Math.min(1, volume + 0.1));
+        } else if (evt.keyCode === 37 || evt.code === "ArrowLeft") {
+          player.actions.setVolume(Math.max(0, volume - 0.1));
+        }
+      }}
+      onClick={onVolumeClick}
+    >
       <div
         className="volume-bar-current"
         style={{ width: muted ? "0%" : `${volume * 100}%` }}
