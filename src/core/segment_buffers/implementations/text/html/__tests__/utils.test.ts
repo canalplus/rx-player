@@ -20,6 +20,7 @@ import {
   getCuesAfter,
   getCuesBefore,
   removeCuesInfosBetween,
+  areCuesStartNearlyEqual,
 } from "../utils";
 
 describe("HTML Text buffer utils - getCuesBefore", () => {
@@ -339,5 +340,61 @@ describe("HTML Text buffer utils - removeCuesInfosBetween", () => {
       { cues: [{ start: 1, end: 2, element }], start: 1, end: 2.5 },
       { cues: [{ start: 5, end: 6, element }], start: 4.5, end: 6 },
     ]);
+  });
+});
+
+describe("HTML areCuesStartNearlyEqual", () => {
+  it("Case 1: should be false", () => {
+    // * [0, 2] and [2, 4] start are NOT equals
+    const element = document.createElement("div");
+    const cues = [{ start: 1, end: 2, element }];
+    const cueInfo1 = { start: 0, end: 2, cues };
+    const cueInfo2 = { start: 2, end: 4, cues };
+
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(false);
+  });
+  it("Case 2: should be true", () => {
+    // * [0, 2] and [0, 4]  start are equals
+    const element = document.createElement("div");
+    const cues = [{ start: 1, end: 2, element }];
+    const cueInfo1 = { start: 0, end: 2, cues };
+    const cueInfo2 = { start: 0, end: 4, cues };
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(true);
+  });
+
+  it("Case 3: should be false", () => {
+    // * [0, 0.1] and [0.101, 2] start are NOT equals
+    const element = document.createElement("div");
+    const cues = [{ start: 1, end: 2, element }];
+    const cueInfo1 = { start: 0, end: 0.1, cues };
+    const cueInfo2 = { start: 0.101, end: 2, cues };
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(false);
+  });
+
+  it("Case 4: should be true", () => {
+    // * [0, 2] and [0.01, 4]  start are equals
+    const element = document.createElement("div");
+    const cues = [{ start: 1, end: 2, element }];
+    const cueInfo1 = { start: 0, end: 2, cues };
+    const cueInfo2 = { start: 0.01, end: 4, cues };
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(true);
+  });
+
+  it("Case 5: should be false", () => {
+    // * [0, 100] and [1, 200]  start are NOT equals
+    const element = document.createElement("div");
+    const cues = [{ start: 1, end: 2, element }];
+    const cueInfo1 = { start: 0, end: 100, cues };
+    const cueInfo2 = { start: 2, end: 200, cues };
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(false);
+  });
+
+  it("Case 6: should be true", () => {
+    // * [0, 4] and [0.01, 3.99]  start should be equals
+    const element = document.createElement("div");
+    const cues = [{ start: 0, end: 4, element }];
+    const cueInfo1 = { start: 0, end: 4, cues };
+    const cueInfo2 = { start: 0.01, end: 3.99, cues };
+    expect(areCuesStartNearlyEqual(cueInfo1, cueInfo2)).toBe(true);
   });
 });

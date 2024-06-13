@@ -63,8 +63,10 @@ export default function lowLatencySegmentLoader(
     const res = extractCompleteChunks(concatenated);
     const completeChunks = res[0];
     partialChunk = res[1];
-    for (let i = 0; i < completeChunks.length; i++) {
-      callbacks.onNewChunk(completeChunks[i]);
+    if (completeChunks !== null) {
+      completeChunks.forEach((completedChunk) => {
+        callbacks.onNewChunk(completedChunk);
+      });
       if (cancelSignal.isCancelled()) {
         return;
       }

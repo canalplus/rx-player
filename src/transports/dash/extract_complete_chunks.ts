@@ -27,11 +27,12 @@ import findCompleteBox from "../utils/find_complete_box";
  */
 export default function extractCompleteChunks(
   buffer: Uint8Array
-) : [Uint8Array[], Uint8Array | null] {
+): [Uint8Array[] | null, Uint8Array | null] {
   let _position = 0;
   const chunks : Uint8Array[] = [];
+  let currentBuffer = null;
   while (_position < buffer.length) {
-    const currentBuffer = buffer.subarray(_position, Infinity);
+    currentBuffer = buffer.subarray(_position, Infinity);
     const moofIndex = findCompleteBox(currentBuffer, 0x6D6F6F66 /* moof */);
     if (moofIndex < 0) {
       // no moof, not a segment.
@@ -62,5 +63,8 @@ export default function extractCompleteChunks(
 
     _position = maxEnd;
   }
-  return [ chunks, null ];
+  if (chunks.length === 0) {
+    return [null, currentBuffer];
+  }
+  return [chunks, currentBuffer];
 }

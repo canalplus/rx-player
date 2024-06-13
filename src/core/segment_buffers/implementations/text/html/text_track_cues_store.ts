@@ -24,6 +24,7 @@ import {
   getCuesAfter,
   getCuesBefore,
   removeCuesInfosBetween,
+  areCuesStartNearlyEqual,
 } from "./utils";
 
 /**
@@ -245,7 +246,7 @@ export default class TextTrackCuesStore {
     for (let cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
       let cuesInfos = cuesBuffer[cueIdx];
       if (start < cuesInfos.end) {
-        if (areNearlyEqual(start, cuesInfos.start, relativeDelta)) {
+        if (areCuesStartNearlyEqual(cuesInfosToInsert, cuesInfos)) {
           if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             // exact same segment
             //   ours:            |AAAAA|
