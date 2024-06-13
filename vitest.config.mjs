@@ -90,7 +90,7 @@ export default defineConfig({
   test: {
     globals: false,
     watch: false,
-    include: ["tests/**/*.test.[jt]s?(x)"],
+    include: ["tests/**/*.[jt]s?(x)"],
     globalSetup: "tests/contents/server.mjs",
     browser: getBrowserConfig(process.env.BROWSER_CONFIG),
   },

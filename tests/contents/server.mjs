@@ -142,7 +142,10 @@ function parseRangeHeader(rangeHeader, dataLength) {
   return [rangesNb[0], rangesNb[1]];
 }
 const DEFAULT_CONTENT_SERVER_PORT = 3000;
-
+/** Default export that returns a teardown function that is executed by
+ * Vitest on test run
+ * @see https://vitest.dev/config/#globalsetup
+ * */
 export default () => {
   createContentServer(DEFAULT_CONTENT_SERVER_PORT);
 };
