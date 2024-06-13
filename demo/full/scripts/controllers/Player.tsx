@@ -17,11 +17,59 @@ import type {
   ILoadVideoOptions,
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
+import { ContentConfig, generateURLForConfig, parseHashInURL } from "../lib/url_hash";
 
 const { useCallback, useEffect, useRef, useState } = React;
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
+
+const isShapeOfLoadVideoConfig = (arg: any): arg is ILoadVideoSettings => {
+  if (typeof arg !== "object" && arg !== null) {
+    return false;
+  }
+  if (typeof arg.autoPlay !== "boolean") {
+    return false;
+  }
+  if (typeof arg.defaultAudioTrackSwitchingMode !== "string") {
+    return false;
+  }
+  if (typeof arg.enableFastSwitching !== "boolean") {
+    return false;
+  }
+  if (typeof arg.requestConfig !== "object") {
+    return false;
+  }
+  if (typeof arg.onCodecSwitch !== "string") {
+    return false;
+  }
+  return true;
+};
+
+const isShapeOfPlayerConfig = (arg: any): arg is IConstructorSettings => {
+  if (typeof arg !== "object" && arg !== null) {
+    return false;
+  }
+  if (typeof arg.videoResolutionLimit !== "string") {
+    return false;
+  }
+  if (typeof arg.maxBufferAhead !== "number") {
+    return false;
+  }
+  if (typeof arg.maxBufferBehind !== "number") {
+    return false;
+  }
+  if (typeof arg.maxVideoBufferSize !== "number") {
+    return false;
+  }
+  if (typeof arg.throttleVideoBitrateWhenHidden !== "boolean") {
+    return false;
+  }
+  if (typeof arg.wantedBufferAhead !== "number") {
+    return false;
+  }
+  return true;
+};
 
 function Player(): JSX.Element {
   const [
@@ -52,6 +100,11 @@ function Player(): JSX.Element {
   const textTrackElementRef = useRef<HTMLDivElement>(null);
   const debugElementRef = useRef<HTMLDivElement>(null);
   const playerWrapperElementRef = useRef<HTMLDivElement>(null);
+  const [contentConfig, setContentConfig] = React.useState<null | ContentConfig>(null);
+  const [isReactiveURLEnabled, setIsReactiveURLEnabled] = useState<boolean>(false);
+  const onIsReactiveURLEnabledChange = useCallback((newVal: boolean) => {
+    setIsReactiveURLEnabled(newVal);
+  }, []);
 
   const onOptionToggle = useCallback(() => {
     setShowOptions((prevState) => !prevState);
@@ -257,13 +310,122 @@ function Player(): JSX.Element {
     [playerModule],
   );
 
+  const handleContentConfigChange = useCallback((contentConfigArg: ContentConfig) => {
+    setContentConfig(contentConfigArg);
+  }, []);
+
+  const generatedURL = React.useMemo<null | string>(() => {
+    if (contentConfig === null) {
+      return null;
+    }
+    return generateURLForConfig({
+      contentConfig,
+      loadVideoConfig: loadVideoOpts,
+      playerConfig: playerOpts,
+      relyOnWorker: relyOnWorker,
+      demoConfig: { reactiveURL: isReactiveURLEnabled },
+      defaultVideoRepresentationsSwitchingMode: defaultVideoRepresentationsSwitchingMode,
+      defaultAudioRepresentationsSwitchingMode: defaultAudioRepresentationsSwitchingMode,
+    });
+  }, [
+    contentConfig,
+    loadVideoOpts,
+    playerOpts,
+    isReactiveURLEnabled,
+    relyOnWorker,
+    defaultVideoRepresentationsSwitchingMode,
+    defaultAudioRepresentationsSwitchingMode,
+  ]);
+
+  React.useEffect(() => {
+    const parsedHash = parseHashInURL(decodeURI(location.hash));
+    const { reactiveURL } = parsedHash || {};
+
+    const shouldUpdateHref = isReactiveURLEnabled || reactiveURL;
+    if (generatedURL && shouldUpdateHref) {
+      window.location.href = encodeURI(generatedURL);
+    }
+  }, [generatedURL, isReactiveURLEnabled]);
+
+  React.useEffect(() => {
+    const parsedHash = parseHashInURL(decodeURI(location.hash));
+    if (parsedHash !== null) {
+      const {
+        loadVideoConfig,
+        playerConfig,
+        reactiveURL,
+        relyOnWorker,
+        defaultVideoRepresentationsSwitchingMode,
+        defaultAudioRepresentationsSwitchingMode,
+      } = parsedHash;
+
+      if (typeof loadVideoConfig === "string") {
+        try {
+          const parsedLoadVideoConfig = JSON.parse(loadVideoConfig);
+          if (isShapeOfLoadVideoConfig(parsedLoadVideoConfig)) {
+            setLoadVideoOpts(parsedLoadVideoConfig);
+          } else {
+            // eslint-disable-next-line no-console
+            console.warn("Demo: Config is not of the shape LoadVideoConfig");
+          }
+        } catch {
+          // eslint-disable-next-line no-console
+          console.warn("Demo: LoadVideoConfig is not a valid JSON string");
+        }
+      }
+
+      if (typeof playerConfig === "string") {
+        try {
+          // because `Infinity` is not stringifiable, `Infinity` has been transformed
+          // to the string "__INFINITY__" during stringification.
+          // Once we parse it, the value "__INFINITY__" must be parsed to Infinity.
+          const parsedPlayerConfig = JSON.parse(playerConfig, function (_key, value) {
+            return value === "__INFINITY__" ? Infinity : value;
+          });
+          if (isShapeOfPlayerConfig(parsedPlayerConfig)) {
+            setPlayerOpts(parsedPlayerConfig);
+          } else {
+            console.warn(
+              "Demo: Config is not of the shape PlayerConfig",
+              parsedPlayerConfig,
+            );
+          }
+        } catch {
+          console.warn("Demo: PlayerConfig is not a valid JSON string");
+        }
+      }
+
+      if (reactiveURL) {
+        setIsReactiveURLEnabled(true);
+      }
+
+      if (relyOnWorker) {
+        setRelyOnWorker(true);
+      }
+
+      if (defaultAudioRepresentationsSwitchingMode) {
+        setDefaultAudioRepresentationsSwitchingMode(
+          defaultAudioRepresentationsSwitchingMode as IAudioRepresentationsSwitchingMode,
+        );
+      }
+      if (defaultVideoRepresentationsSwitchingMode) {
+        setDefaultVideoRepresentationsSwitchingMode(
+          defaultVideoRepresentationsSwitchingMode as IVideoRepresentationsSwitchingMode,
+        );
+      }
+    }
+  }, []);
+
   return (
     <section className="video-player-section">
       <div className="video-player-content">
         <ContentList
           loadVideo={startContent}
+          onContentConfigChange={handleContentConfigChange}
           showOptions={showOptions}
           onOptionToggle={onOptionToggle}
+          isReactiveURLEnabled={isReactiveURLEnabled}
+          onIsReactiveURLEnabledChange={onIsReactiveURLEnabledChange}
         />
         <Settings
           playerOptions={playerOpts}

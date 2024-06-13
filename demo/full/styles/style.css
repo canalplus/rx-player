@@ -840,36 +840,24 @@ header .right {
   background-position: calc(100% - 8px) 50%;
 }
 
-.generated-url {
-  z-index: 1;
-  color: #3a3a3a;
-  font-size: 14px;
-  height: 21px;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 3px;
-  padding: 10px;
-  display: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.generated-url.enabled {
-  animation: grow-generated-url 0.6s;
-  display: flex;
+.enable-reactive-url {
+  margin-left: 8px;
   flex-direction: row;
+  display: flex;
   align-items: center;
+  font-size: 1.1em;
+  color: #2b2e2f;
+  border: dashed 1px #d1d1d1;
+  border-radius: 3px;
+  padding-right: 5px;
+  text-align: center;
+  text-wrap: nowrap;
+  height: 41px;
+  box-sizing: border-box;
 }
 
-.generated-url-link.none {
-  color: #222;
-  text-decoration: none;
-  font-style: italic;
-}
-.generated-url-link {
-  color: #ec3655;
-  text-decoration: none;
+.enable-reactive-url > label:first-child {
+  margin: 5px;
 }
 
 .knob-value > select {
