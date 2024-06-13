@@ -853,5 +853,60 @@ describe("API - Public API", () => {
         expect(player.getMinimumPosition()).toBe(null);
       });
     });
+
+
+    describe("Player instantiation", () => {
+      /* eslint-disable-next-line max-len */
+      it("should log a warning if creating two players attached to the same video element", () => {
+        const PublicAPI = jest.requireActual("../public_api").default;
+        const warn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+        const videoElement = document.createElement("video");
+        const player1 = new PublicAPI({ videoElement });
+        expect(player1.getVideoElement()).toBe(videoElement);
+
+        const errorMessage =
+          "The video element is already attached to another RxPlayer instance." +
+          "\nMake sure to dispose the previous instance with player.dispose() " +
+          "before creating a new player instance attaching that video element.";
+
+        new PublicAPI({ videoElement });
+        expect(warn).toHaveBeenCalledWith(errorMessage);
+        expect(warn).toHaveBeenCalledTimes(1);
+
+        warn.mockClear();
+        /*
+         * TODO: for next major version 5.0: this need to throw an error instead
+         * of just logging this was not done for minor version as it could be
+         * considerated a breaking change
+         *
+         * expect(() => {
+         *    new PublicAPI({ videoElement });
+         * }).toThrow(errorMessage);
+         */
+      });
+
+      it(`should not log a warning if creating a player attached to
+        the same video element after the previous one was disposed`, () => {
+        const PublicAPI = jest.requireActual("../public_api").default;
+        const warn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+        const videoElement = document.createElement("video");
+        const player1 = new PublicAPI({ videoElement });
+        expect(player1.getVideoElement()).toBe(videoElement);
+
+        player1.dispose();
+        expect(warn).not.toHaveBeenCalled();
+        /*
+         * TODO: for next major version 5.0: this need to throw an error
+         * instead of just logging this was not done for minor version as it
+         * could be considerated a breaking change.
+         *
+         * expect(() => {
+         *   new PublicAPI({ videoElement });
+         * }).not.toThrow();
+         *
+         */
+        warn.mockClear();
+      });
+    });
   });
 });
