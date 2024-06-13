@@ -208,7 +208,11 @@ export default function getNeededSegments({
         if ((oldSegment.time - ROUNDING_ERROR) > time) {
           return false;
         }
-        if ((oldSegment.end + ROUNDING_ERROR) < end) {
+        if (oldSegment.complete) {
+          if (oldSegment.end + ROUNDING_ERROR < end) {
+            return false;
+          }
+        } else if (Math.abs(time - oldSegment.time) > time) {
           return false;
         }
         return !shouldContentBeReplaced(pendingSegment,
@@ -229,12 +233,17 @@ export default function getNeededSegments({
       // periods, we should consider a segment as already downloaded if
       // it is from same period (but can be from different adaptation or
       // representation)
-      if (completeSeg.status === ChunkStatus.Complete && areFromSamePeriod) {
+      if (completeSeg.status === ChunkStatus.FullyLoaded && areFromSamePeriod) {
         const completeSegInfos = completeSeg.infos.segment;
-        if (time - completeSegInfos.time > -ROUNDING_ERROR &&
-            completeSegInfos.end - end > -ROUNDING_ERROR)
-        {
-          return false; // already downloaded
+        if (time - completeSegInfos.time > -ROUNDING_ERROR) {
+          if (completeSegInfos.complete) {
+            if (completeSegInfos.end - end > -ROUNDING_ERROR) {
+              return false; // Same segment's characteristics: already downloaded
+            }
+          } else if (Math.abs(time - completeSegInfos.time) < ROUNDING_ERROR) {
+            // same start (special case for non-complete segments): already downloaded
+            return false;
+          }
         }
       }
     }
@@ -433,10 +442,7 @@ function doesStartSeemGarbageCollected(
 ) {
   const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
   if (currentSeg.bufferedStart === undefined)  {
-    log.warn("Stream: Start of a segment unknown. " +
-             "Assuming it is garbage collected by default.",
-             currentSeg.start);
-    return true;
+    return false;
   }
 
   if (prevSeg !== null && prevSeg.bufferedEnd !== undefined &&
@@ -477,10 +483,7 @@ function doesEndSeemGarbageCollected(
 ) {
   const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
   if (currentSeg.bufferedEnd === undefined)  {
-    log.warn("Stream: End of a segment unknown. " +
-             "Assuming it is garbage collected by default.",
-             currentSeg.end);
-    return true;
+    return false;
   }
 
   if (nextSeg !== null && nextSeg.bufferedStart !== undefined &&
