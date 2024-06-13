@@ -58,16 +58,15 @@ export default function createSegmentSinkGraph(
       return;
     }
     const showAllInfo = isExtendedMode(parentElt);
-
+    const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory
     if (
       bufferMetrics === null ||
-      bufferMetrics.segmentSinks[bufferType].segmentInventory.length === 0
+      inventory === undefined
     ) {
       bufferGraphWrapper.style.display = "none";
       currentRangeRepInfoElt.innerHTML = "";
       loadingRangeRepInfoElt.innerHTML = "";
     } else {
-      const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory;
       bufferGraphWrapper.style.display = "block";
       const currentTime = instance.getPosition();
       const width = Math.min(parentElt.clientWidth - 150, 600);

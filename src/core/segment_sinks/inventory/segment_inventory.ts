@@ -23,7 +23,7 @@ import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../utils/ranges";
 import type { IBufferedHistoryEntry } from "./buffered_history";
 import BufferedHistory from "./buffered_history";
-import type { IChunkContext, IChunkContextSnapshot } from "./types";
+import type { IChunkContext } from "./types";
 
 /** Categorization of a given chunk in the `SegmentInventory`. */
 export const enum ChunkStatus {

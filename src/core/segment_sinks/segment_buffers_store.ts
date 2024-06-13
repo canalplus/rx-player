@@ -34,7 +34,7 @@ const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text"];
 type INativeMediaBufferType = "audio" | "video";
 
 /**
- * Interface containing metadata of a buffered chunk. 
+ * Interface containing metadata of a buffered chunk.
  * The metadata is serializable and does not contain references to JS objects
  * that are not serializable, such as Map or class instances.
  */
@@ -53,7 +53,7 @@ export interface SegmentSinkMetrics {
     {
       bufferType: IBufferType;
       codec: string | undefined;
-      segmentInventory: IBufferedChunkSnapshot[];
+      segmentInventory: IBufferedChunkSnapshot[] | undefined;
     }
   >;
 }
@@ -381,32 +381,33 @@ export default class SegmentSinksStore {
         audio: {
           bufferType: "audio",
           codec: this._initializedSegmentSinks.audio?.codec,
-          segmentInventory: (
-            this._initializedSegmentSinks.audio?.getLastKnownInventory() ?? []
-          ).map((chunk) => ({
-            ...chunk,
-            infos: getChunkContextSnapshot(chunk.infos),
-          })),
+          segmentInventory: this._initializedSegmentSinks.audio
+            ?.getLastKnownInventory()
+            .map((chunk) => ({
+              ...chunk,
+              infos: getChunkContextSnapshot(chunk.infos),
+            })),
         },
         video: {
           bufferType: "video",
           codec: this._initializedSegmentSinks.video?.codec,
-          segmentInventory: (
-            this._initializedSegmentSinks.video?.getLastKnownInventory() ?? []
-          ).map((chunk) => ({
-            ...chunk,
-            infos: getChunkContextSnapshot(chunk.infos),
-          })),
+          segmentInventory: this._initializedSegmentSinks.video
+            ?.getLastKnownInventory()
+            .map((chunk) => ({
+              ...chunk,
+              infos: getChunkContextSnapshot(chunk.infos),
+            })),
         },
         text: {
           bufferType: "text",
           codec: this._initializedSegmentSinks.text?.codec,
-          segmentInventory: (
-            this._initializedSegmentSinks.text?.getLastKnownInventory() ?? []
-          ).map((chunk) => ({
-            ...chunk,
-            infos: getChunkContextSnapshot(chunk.infos),
-          })),
+
+          segmentInventory: this._initializedSegmentSinks.text
+            ?.getLastKnownInventory()
+            .map((chunk) => ({
+              ...chunk,
+              infos: getChunkContextSnapshot(chunk.infos),
+            })),
         },
       },
     };
