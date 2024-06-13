@@ -214,6 +214,11 @@ function Player(): JSX.Element {
           <div className="video-screen-parent">
             <div
               className="video-screen"
+              onKeyDown={(evt: React.KeyboardEvent<HTMLDivElement>): void => {
+                if (evt.keyCode === 32 || evt.code === "Space") {
+                  onVideoClick();
+                }
+              }}
               onClick={() => onVideoClick()}
             >
               { playerModule ? <ErrorDisplayer player={playerModule} /> : null }

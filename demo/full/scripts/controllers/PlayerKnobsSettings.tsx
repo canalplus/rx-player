@@ -31,6 +31,11 @@ function PlayerKnobsSettings({
         <span className="player-knobs-title">Settings</span>
         <span
           className="player-knobs-close"
+          onKeyDown={(evt: React.KeyboardEvent<HTMLDivElement>): void => {
+            if (evt.keyCode === 13 || evt.code === "Enter") {
+              close();
+            }
+          }}
           onClick={close}
         >
           {String.fromCharCode(0xf00d)}
