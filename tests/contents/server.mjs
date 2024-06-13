@@ -17,7 +17,7 @@ const routeObj = urls.reduce((acc, elt) => {
  * @param {number} port
  * @returns {Object}
  */
-export default function createContentServer(port) {
+export function createContentServer(port) {
   const server = createServer(function (req, res) {
     if (routeObj[req.url] == null) {
       res.setHeader("Content-Type", "text/plain");
@@ -141,3 +141,8 @@ function parseRangeHeader(rangeHeader, dataLength) {
   }
   return [rangesNb[0], rangesNb[1]];
 }
+const DEFAULT_CONTENT_SERVER_PORT = 3000;
+
+export default () => {
+  createContentServer(DEFAULT_CONTENT_SERVER_PORT);
+};
