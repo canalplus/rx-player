@@ -31,6 +31,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
+import { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
@@ -266,6 +267,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   };
 
   private _priv_metricsCollector: MetricsCollector;
+  private _get_segmentSinkMetrics: null | (() => any) ;
+
   /**
    * Information that can be relied on once `reload` is called.
    * It should refer to the last content being played.
@@ -447,6 +450,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_worker = null;
 
     this._priv_metricsCollector = new MetricsCollector();
+    this._get_segmentSinkMetrics = null;
 
     const onVolumeChange = () => {
       this.trigger("volumeChange", {
@@ -1046,6 +1050,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     );
     initializer.addEventListener("loaded", (evt) => {
       contentInfos.segmentSinksStore = evt.segmentSinksStore;
+      this._get_segmentSinkMetrics = evt.getSegmentSinkMetrics;
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -2364,6 +2369,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     this._priv_metricsCollector.subscribe(fn, cancellationSignal);
   }
+
+    /**
+   * Used for the display of segmentSink metrics for the debug element
+   * @param fn
+   * @param cancellationSignal
+   * @returns
+   */
+    async _priv_getSegmentSinkMetrics(): Promise<undefined | SegmentSinkMetrics>{
+      if (this._get_segmentSinkMetrics === null) {
+        return undefined;
+      } else {
+        return this._get_segmentSinkMetrics()
+      }
+    }
+  
 
   /**
    * /!\ For tools use only! Do not touch!

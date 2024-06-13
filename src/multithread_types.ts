@@ -518,7 +518,7 @@ export type IReferenceUpdateMessage =
 
 export interface IPullSegmentSinkStoreInfos {
   type: MainThreadMessageType.PullSegmentSinkStoreInfos;
-  value: null;
+  value: { messageId: number };
 }
 
 export const enum MainThreadMessageType {
@@ -913,7 +913,10 @@ export interface IDiscontinuityTimeInfo {
 export interface ISegmentSinkStoreUpdateMessage {
   type: WorkerMessageType.SegmentSinkStoreUpdate;
   contentId: string;
-  value: SegmentSinkMetrics;
+  value: {
+    segmentSinkMetrics: SegmentSinkMetrics;
+    messageId: number
+  }
 }
 
 export const enum WorkerMessageType {

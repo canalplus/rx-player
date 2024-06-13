@@ -37,9 +37,11 @@ export default function createSegmentSinkGraph(
   });
 
   let bufferMetrics: SegmentSinkMetrics | null = null;
-  instance._priv_subscribeToSegmentSinkMetrics((metrics) => {
-    bufferMetrics = metrics;
-  }, cancelSignal);
+  instance._priv_getSegmentSinkMetrics().then((metrics) => 
+  {
+    bufferMetrics = metrics ?? null
+  })
+
 
   bufferGraphWrapper.appendChild(bufferTitle);
   bufferGraphWrapper.appendChild(canvasElt);
@@ -57,6 +59,12 @@ export default function createSegmentSinkGraph(
       clearInterval(intervalId);
       return;
     }
+
+    instance._priv_getSegmentSinkMetrics().then((metrics) => 
+    {
+      console.log("DEBUG METRICS: update metrics")
+      bufferMetrics = metrics ?? null
+    })
     const showAllInfo = isExtendedMode(parentElt);
     const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory
     if (

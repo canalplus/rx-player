@@ -194,10 +194,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
     this._metricsCollector.setCollectFn(() => {
-      sendMessage(this._settings.worker, {
-        type: MainThreadMessageType.PullSegmentSinkStoreInfos,
-        value: null,
-      });
+      // sendMessage(this._settings.worker, {
+      //   type: MainThreadMessageType.PullSegmentSinkStoreInfos,
+      //   value: null,
+      // });
     });
     this._metricsCollector.startCollectingMetrics(this._initCanceller.signal);
   }
@@ -1090,7 +1090,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
 
         case WorkerMessageType.SegmentSinkStoreUpdate:
-          this._onSegmentSinkStoreUpdate(msgData.value);
+          this._onSegmentSinkStoreUpdate(msgData.value.segmentSinkMetrics);
           break;
         default:
           assertUnreachable(msgData);
@@ -1475,6 +1475,40 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
 
+    let __messageId = 0
+    type ResolveFn = (value: SegmentSinkMetrics | undefined) => void;
+    let resolvers: Record<number,ResolveFn> = {};
+    const getSegmentSinkMetrics: () => Promise<SegmentSinkMetrics | undefined> = async () => {
+      __messageId++;
+      console.log("DEBUG METRICS: sending pull with msg ID", __messageId)
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.PullSegmentSinkStoreInfos,
+        value: { messageId: __messageId},
+      });
+      return new Promise((resolve, reject) => {
+        resolvers[__messageId] = resolve;
+      })
+    }
+
+    const onMessageHandler =  (message: MessageEvent) => {
+      const msgData = message.data as unknown as IWorkerMessage;
+      if(msgData.type === WorkerMessageType.SegmentSinkStoreUpdate) {
+        console.log("DEBUG METRICS: resolving pull with msg ID", msgData.value.messageId)
+        resolvers[msgData.value.messageId](msgData.value.segmentSinkMetrics);
+        delete resolvers[msgData.value.messageId];
+      }
+    }
+
+    this._settings.worker.addEventListener("message", onMessageHandler)
+
+    cancelSignal.register(() => {
+      resolvers = {};
+      __messageId = 0;
+      this._settings.worker.removeEventListener("message", onMessageHandler)
+    })
+
+
+    
     /**
      * Emit a "loaded" events once the initial play has been performed and the
      * media can begin playback.
@@ -1488,6 +1522,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               stopListening();
               this.trigger("loaded", {
                 segmentSinksStore: null,
+                getSegmentSinkMetrics,
               });
             }
           },
