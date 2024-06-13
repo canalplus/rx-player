@@ -47,7 +47,6 @@ import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
-import type { MetricsCollector } from "../api/metricsCollector";
 import type { IContentProtection } from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
@@ -93,13 +92,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  /**
-   * TO DO: update description
-   * Boolean storing the information if the segmentSinks metrics should
-   * be send from the WebWorker to the main thread.
-   * This is used to display metrics with the debug element.
-   */
-  private _metricsCollector: MetricsCollector;
 
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
@@ -113,7 +105,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
-    this._metricsCollector = settings.metricsCollector;
   }
 
   /**
@@ -193,13 +184,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
-    this._metricsCollector.setCollectFn(() => {
-      // sendMessage(this._settings.worker, {
-      //   type: MainThreadMessageType.PullSegmentSinkStoreInfos,
-      //   value: null,
-      // });
-    });
-    this._metricsCollector.startCollectingMetrics(this._initCanceller.signal);
   }
 
   /**
@@ -1090,7 +1074,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
 
         case WorkerMessageType.SegmentSinkStoreUpdate:
-          this._onSegmentSinkStoreUpdate(msgData.value.segmentSinkMetrics);
+          // this._onSegmentSinkStoreUpdate(msgData.value.segmentSinkMetrics);
           break;
         default:
           assertUnreachable(msgData);
@@ -1708,10 +1692,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     }
   }
-
-  private _onSegmentSinkStoreUpdate(metrics: SegmentSinkMetrics) {
-    this._metricsCollector.dispatchMetricsEvent(metrics);
-  }
 }
 
 export interface IMultiThreadContentInitializerContentInfos {
@@ -1836,7 +1816,6 @@ export interface IInitializeArguments {
   textTrackOptions: ITextDisplayerOptions;
   /** URL of the Manifest. `undefined` if unknown or not pertinent. */
   url: string | undefined;
-  metricsCollector: MetricsCollector;
 }
 
 function bindNumberReferencesToWorker(

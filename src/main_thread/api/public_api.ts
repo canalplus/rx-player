@@ -124,8 +124,6 @@ import {
 import type { ContentInitializer } from "../init";
 import type { IMediaElementTracksStore, ITSPeriodObject } from "../tracks_store";
 import TracksStore from "../tracks_store";
-import type { MetricsCollectorEvents } from "./metricsCollector";
-import { MetricsCollector } from "./metricsCollector";
 import type { IParsedLoadVideoOptions, IParsedStartAtOption } from "./option_utils";
 import {
   checkReloadOptions,
@@ -266,7 +264,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     [P in keyof IPublicAPIEvent]?: IPublicAPIEvent[P];
   };
 
-  private _priv_metricsCollector: MetricsCollector;
   private _get_segmentSinkMetrics: null | (() => any) ;
 
   /**
@@ -449,7 +446,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_worker = null;
 
-    this._priv_metricsCollector = new MetricsCollector();
     this._get_segmentSinkMetrics = null;
 
     const onVolumeChange = () => {
@@ -905,7 +901,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
-          metricsCollector: this._priv_metricsCollector,
         });
       } else {
         if (features.multithread === null) {
@@ -947,7 +942,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           worker: this._priv_worker,
           url,
-          metricsCollector: this._priv_metricsCollector,
         });
       }
     } else {
@@ -2353,21 +2347,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return segmentSinkStatus.value.getLastKnownInventory();
     }
     return null;
-  }
-  /**
-   * Used for the display of segmentSink metrics for the debug element
-   * @param fn
-   * @param cancellationSignal
-   * @returns
-   */
-  _priv_subscribeToSegmentSinkMetrics(
-    fn: IListener<MetricsCollectorEvents, "metrics">,
-    cancellationSignal?: CancellationSignal,
-  ): void {
-    if (this._priv_metricsCollector === null) {
-      return;
-    }
-    this._priv_metricsCollector.subscribe(fn, cancellationSignal);
   }
 
     /**
