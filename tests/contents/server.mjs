@@ -11,13 +11,15 @@ const routeObj = urls.reduce((acc, elt) => {
   return acc;
 }, {});
 
+const DEFAULT_CONTENT_SERVER_PORT = 3000;
+
 /**
  * Create simple HTTP server specifically designed to serve the contents defined
  * in this directory.
  * @param {number} port
  * @returns {Object}
  */
-export function createContentServer(port) {
+export function createContentServer(port = DEFAULT_CONTENT_SERVER_PORT) {
   const server = createServer(function (req, res) {
     if (routeObj[req.url] == null) {
       res.setHeader("Content-Type", "text/plain");
@@ -141,11 +143,10 @@ function parseRangeHeader(rangeHeader, dataLength) {
   }
   return [rangesNb[0], rangesNb[1]];
 }
-const DEFAULT_CONTENT_SERVER_PORT = 3000;
 /** Default export that returns a teardown function that is executed by
  * Vitest on test run
  * @see https://vitest.dev/config/#globalsetup
  * */
 export default () => {
-  createContentServer(DEFAULT_CONTENT_SERVER_PORT);
+  createContentServer();
 };
