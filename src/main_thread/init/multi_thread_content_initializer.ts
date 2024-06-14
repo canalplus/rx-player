@@ -1094,10 +1094,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          this._segmentMetrics.resolvers[msgData.value.messageId](
-            msgData.value.segmentSinkMetrics,
-          );
-          delete this._segmentMetrics.resolvers[msgData.value.messageId];
+          const resolveFn = this._segmentMetrics.resolvers[msgData.value.messageId];
+          if (resolveFn !== undefined) {
+            resolveFn(msgData.value.segmentSinkMetrics);
+            delete this._segmentMetrics.resolvers[msgData.value.messageId];
+          }
           break;
         }
         default:
