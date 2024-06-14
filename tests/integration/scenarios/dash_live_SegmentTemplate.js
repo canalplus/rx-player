@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import {
   manifestInfos,

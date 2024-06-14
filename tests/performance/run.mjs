@@ -10,7 +10,7 @@ import { rimraf } from "rimraf";
 import { fileURLToPath } from "url";
 import launchStaticServer from "../../scripts/launch_static_server.mjs";
 import getHumanReadableHours from "../../scripts/utils/get_human_readable_hours.mjs";
-import TestContentServer from "../contents/server.mjs";
+import { createContentServer } from "../contents/server.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -168,7 +168,7 @@ async function start() {
  * @returns {Promise} - Resolves when all servers are listening.
  */
 async function initServers() {
-  const contentServer = TestContentServer(CONTENT_SERVER_PORT);
+  const contentServer = createContentServer(CONTENT_SERVER_PORT);
   const staticServer = launchStaticServer(currentDirectory, {
     httpPort: PERF_TESTS_PORT,
   });

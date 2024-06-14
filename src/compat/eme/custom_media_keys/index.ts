@@ -5,10 +5,11 @@ import getMozMediaKeysCallbacks, {
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./old_webkit_media_keys";
-import { ICustomMediaKeys, ICustomMediaKeySession } from "./types";
+import type { ICustomMediaKeys, ICustomMediaKeySession } from "./types";
 import getWebKitMediaKeysCallbacks from "./webkit_media_keys";
 import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
+export type { ICustomMediaKeys, ICustomMediaKeySession };
 export {
   getIE11MediaKeysCallbacks,
   MSMediaKeysConstructor,
@@ -16,8 +17,6 @@ export {
   MozMediaKeysConstructor,
   getOldKitWebKitMediaKeyCallbacks,
   isOldWebkitMediaElement,
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
   getWebKitMediaKeysCallbacks,
   WebKitMediaKeysConstructor,
 };

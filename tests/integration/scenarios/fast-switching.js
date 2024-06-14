@@ -1,6 +1,6 @@
-import { expect } from "chai";
-import RxPlayer from "../../../dist/es2017";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import RxPlayer from "../../../dist/es2017";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import { lockHighestBitrates, lockLowestBitrates } from "../../utils/bitrates";
@@ -20,7 +20,6 @@ describe("Fast-switching", function () {
   const { url, transport } = manifestInfos;
 
   it("should enable fast-switching by default", async function () {
-    this.timeout(3000);
     lockLowestBitrates(player);
     player.setWantedBufferAhead(10);
     player.loadVideo({ url, transport, autoPlay: false });
@@ -48,7 +47,6 @@ describe("Fast-switching", function () {
   });
 
   it("should enable fast-switching if explicitely enabled", async function () {
-    this.timeout(3000);
     lockLowestBitrates(player);
     player.setWantedBufferAhead(10);
     player.loadVideo({
@@ -81,7 +79,6 @@ describe("Fast-switching", function () {
   });
 
   it("should disable fast-switching if explicitely disabled", async function () {
-    this.timeout(3000);
     lockLowestBitrates(player);
     player.setWantedBufferAhead(10);
     player.loadVideo({
@@ -110,5 +107,5 @@ describe("Fast-switching", function () {
     expect(videoSegmentBuffered[0].bitrate).to.equal(400000);
     expect(videoSegmentBuffered[1].bitrate).to.equal(400000);
     expect(videoSegmentBuffered[2].bitrate).to.equal(400000);
-  });
+  }, 3000);
 });

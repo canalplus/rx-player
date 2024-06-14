@@ -1,7 +1,7 @@
-export {
+export type {
   IMediaSourceInterface,
   ISourceBufferInterface,
   ISourceBufferInterfaceAppendBufferParameters,
   ICodecSupportProber,
-  SourceBufferType,
 } from "./types";
+export { SourceBufferType } from "./types";

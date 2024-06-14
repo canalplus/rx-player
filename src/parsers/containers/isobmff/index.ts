@@ -27,14 +27,13 @@ export {
   getUuidContent,
 } from "./get_box";
 export { getMDAT, getMDIA, getTRAF } from "./read";
+export type { IEMSG, ISidxSegment } from "./utils";
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
-  IEMSG,
-  ISidxSegment,
   patchPssh,
   updateBoxLength,
 } from "./utils";

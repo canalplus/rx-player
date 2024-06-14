@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import parseMetaPlaylist, {
+import type {
   IMetaPlaylist,
   IMetaPlaylistTextTrack,
   IParserResponse,
 } from "./metaplaylist_parser";
+import parseMetaPlaylist from "./metaplaylist_parser";
 
 export default parseMetaPlaylist;
-export { IMetaPlaylist, IMetaPlaylistTextTrack, IParserResponse };
+export type { IMetaPlaylist, IMetaPlaylistTextTrack, IParserResponse };

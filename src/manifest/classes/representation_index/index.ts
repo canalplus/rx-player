@@ -22,10 +22,5 @@ import type {
   ISegment,
 } from "./types";
 
-export {
-  IMetaPlaylistPrivateInfos,
-  IPrivateInfos,
-  IRepresentationIndex,
-  ISegment,
-  StaticRepresentationIndex,
-};
+export type { IMetaPlaylistPrivateInfos, IPrivateInfos, IRepresentationIndex, ISegment };
+export { StaticRepresentationIndex };

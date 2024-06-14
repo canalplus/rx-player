@@ -544,6 +544,7 @@ function isTimeInTimeRanges(ranges: TimeRanges, time: number): boolean {
   return false;
 }
 
+export type { IRange };
 export {
   convertToRanges,
   excludeFromRanges,
@@ -559,7 +560,6 @@ export {
   getRange,
   getSizeOfRange,
   insertInto,
-  IRange,
   isAfter,
   isBefore,
   isTimeInTimeRanges,

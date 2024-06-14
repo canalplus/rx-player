@@ -44,4 +44,5 @@ if (
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
-export { WebKitMediaKeysConstructor, IWebKitMediaKeys };
+export type { IWebKitMediaKeys };
+export { WebKitMediaKeysConstructor };

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
-import SegmentFetcherCreator, {
-  ISegmentFetcherCreatorBackoffOptions,
-} from "./segment_fetcher_creator";
+import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
+import type { ISegmentFetcherCreatorBackoffOptions } from "./segment_fetcher_creator";
+import SegmentFetcherCreator from "./segment_fetcher_creator";
 
 export default SegmentFetcherCreator;
-export { IPrioritizedSegmentFetcher, ISegmentFetcherCreatorBackoffOptions };
+export type { IPrioritizedSegmentFetcher, ISegmentFetcherCreatorBackoffOptions };

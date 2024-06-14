@@ -16,7 +16,7 @@
 
 import parseLocalManifest from "./parse_local_manifest";
 
-export {
+export type {
   ILocalIndexSegment,
   ILocalManifest,
   ILocalManifestInitSegmentLoader,

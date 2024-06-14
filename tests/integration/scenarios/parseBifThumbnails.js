@@ -1,6 +1,6 @@
-const canalBIF = require("arraybuffer-loader!../../contents/imagetracks/example.bif");
-import { expect } from "chai";
+import canalBIF from "../../contents/imagetracks/example.bif?arraybuffer";
 import { parseBifThumbnails } from "../../../dist/es2017/tools";
+import { describe, it, expect } from "vitest";
 
 describe("parseBifThumbnails", () => {
   it("should correctly parse given thumbnails", () => {

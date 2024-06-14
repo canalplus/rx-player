@@ -16,7 +16,7 @@
 
 import type { IParsedManifest } from "../types";
 
-export { IMPDParserArguments } from "./common";
+export type { IMPDParserArguments } from "./common";
 
 /** Response returned by a DASH MPD parser. */
 export type IDashParserResponse<T extends string | ArrayBuffer> =

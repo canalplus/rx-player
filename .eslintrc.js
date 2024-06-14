@@ -14,13 +14,7 @@ module.exports = {
     project: "tsconfig.eslint.json",
     sourceType: "module",
   },
-  plugins: [
-    "eslint-plugin-import",
-    "eslint-plugin-jsdoc",
-    "ban",
-    "@typescript-eslint",
-    "@typescript-eslint/tslint",
-  ],
+  plugins: ["eslint-plugin-import", "eslint-plugin-jsdoc", "ban", "@typescript-eslint"],
   rules: {
     "ban/ban": [
       2,
@@ -80,6 +74,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/consistent-type-exports": "error",
     "@typescript-eslint/naming-convention": [
       "error",
       {
@@ -309,27 +304,5 @@ module.exports = {
     "use-isnan": "error",
     "valid-typeof": "error",
     yoda: "error",
-    "@typescript-eslint/tslint/config": [
-      "error",
-      {
-        rules: {
-          encoding: true,
-          "import-spacing": true,
-          "prefer-while": true,
-          "return-undefined": true,
-          whitespace: [
-            true,
-            "check-branch",
-            "check-decl",
-            "check-operator",
-            "check-module",
-            "check-separator",
-            "check-type",
-            "check-typecast",
-            "check-preblock",
-          ],
-        },
-      },
-    ],
   },
 };

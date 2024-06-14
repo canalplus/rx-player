@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import { manifestInfosEndNumber as numberBasedManifestInfos } from "../../contents/DASH_static_number_based_SegmentTimeline";
 import { endNumberManifestInfos as templateManifestinfos } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
 import { segmentTimelineEndNumber as timeBasedManifestInfos } from "../../contents/DASH_static_SegmentTimeline";
@@ -21,7 +21,7 @@ describe("end number", function () {
   });
 
   it("should calculate the right duration according to endNumber on a number-based SegmentTemplate", async function () {
-    this.timeout(3000);
+    player = new RxPlayer({ stopAtEnd: false });
     lockLowestBitrates(player);
     player.setWantedBufferAhead(15);
     const { url, transport } = templateManifestinfos;
@@ -38,7 +38,6 @@ describe("end number", function () {
   });
 
   it("should not load segment later than the end number on a time-based SegmentTimeline", async function () {
-    this.timeout(15000);
     lockLowestBitrates(player);
     const { url, transport } = timeBasedManifestInfos;
 
@@ -72,10 +71,9 @@ describe("end number", function () {
     });
     await waitForState(player, "ENDED", ["BUFFERING", "RELOADING", "PLAYING"]);
     expect(player.getPosition()).to.be.closeTo(20, 1);
-  });
+  }, 20000);
 
   it("should calculate the right duration on a number-based SegmentTimeline", async function () {
-    this.timeout(10000);
     lockLowestBitrates(player);
     player.setWantedBufferAhead(15);
     const { url, transport } = numberBasedManifestInfos;
