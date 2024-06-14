@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   ISegmentSinksStore,
   IBufferType,
@@ -144,7 +144,10 @@ export interface IContentInitializerEvents {
    * Event sent just as the content is considered as "loaded".
    * From this point on, the user can reliably play/pause/resume the stream.
    */
-  loaded: { segmentSinksStore: ISegmentSinksStore | null, getSegmentSinkMetrics: () => Promise<SegmentSinkMetrics | undefined> };
+  loaded: {
+    segmentSinksStore: ISegmentSinksStore | null;
+    getSegmentSinkMetrics: null | (() => Promise<SegmentSinkMetrics | undefined>);
+  };
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
   streamEventSkip: IPublicStreamEvent | IPublicNonFiniteStreamEvent;

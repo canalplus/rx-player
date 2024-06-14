@@ -31,7 +31,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
-import { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
@@ -264,8 +264,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     [P in keyof IPublicAPIEvent]?: IPublicAPIEvent[P];
   };
 
-  private _get_segmentSinkMetrics: null | (() => any) ;
-
   /**
    * Information that can be relied on once `reload` is called.
    * It should refer to the last content being played.
@@ -369,6 +367,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       Player._priv_currentlyUsedVideoElements.delete(videoElement);
     }
   }
+
+  /**
+   * Function passed from the ContentInitializer that return segment sinks metrics.
+   * This is used for monitor and debugging.
+   */
+  private _get_segmentSinkMetrics: null | (() => Promise<SegmentSinkMetrics | undefined>);
 
   /**
    * @constructor
@@ -2349,20 +2353,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return null;
   }
 
-    /**
+  /**
    * Used for the display of segmentSink metrics for the debug element
    * @param fn
    * @param cancellationSignal
    * @returns
    */
-    async _priv_getSegmentSinkMetrics(): Promise<undefined | SegmentSinkMetrics>{
-      if (this._get_segmentSinkMetrics === null) {
-        return undefined;
-      } else {
-        return this._get_segmentSinkMetrics()
-      }
+  async _priv_getSegmentSinkMetrics(): Promise<undefined | SegmentSinkMetrics> {
+    if (this._get_segmentSinkMetrics === null) {
+      return undefined;
+    } else {
+      return this._get_segmentSinkMetrics();
     }
-  
+  }
 
   /**
    * /!\ For tools use only! Do not touch!

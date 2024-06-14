@@ -92,11 +92,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  /** 
+  /**
    * Stores the resolvers and the current messageId that is sent to the web worker to receive segment sink metrics.
    * The purpose of collecting metrics is for monitoring and debugging.
    */
-  private _segmentMetrics: { messageId: number, resolvers:  Record<number, (value: SegmentSinkMetrics | undefined) => void> }
+  private _segmentMetrics: {
+    messageId: number;
+    resolvers: Record<number, (value: SegmentSinkMetrics | undefined) => void>;
+  };
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -111,8 +114,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentContentInfo = null;
     this._segmentMetrics = {
       messageId: 0,
-      resolvers: {}
-    }
+      resolvers: {},
+    };
   }
 
   /**
@@ -161,9 +164,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._initCanceller.signal.register(() => {
       this._segmentMetrics = {
         messageId: 0,
-        resolvers: {}
-      }
-    })
+        resolvers: {},
+      };
+    });
     if (this._initCanceller.isUsed()) {
       return;
     }
@@ -1087,11 +1090,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           // Should already be handled by the API
           break;
 
-        case  WorkerMessageType.SegmentSinkStoreUpdate: {
+        case WorkerMessageType.SegmentSinkStoreUpdate: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          this._segmentMetrics.resolvers[msgData.value.messageId](msgData.value.segmentSinkMetrics);
+          this._segmentMetrics.resolvers[msgData.value.messageId](
+            msgData.value.segmentSinkMetrics,
+          );
           delete this._segmentMetrics.resolvers[msgData.value.messageId];
           break;
         }
@@ -1478,16 +1483,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
 
-    const _getSegmentSinkMetrics: () => Promise<SegmentSinkMetrics | undefined> = async () => {
+    const _getSegmentSinkMetrics: () => Promise<
+      SegmentSinkMetrics | undefined
+    > = async () => {
       const messageId = ++this._segmentMetrics.messageId;
       sendMessage(this._settings.worker, {
         type: MainThreadMessageType.PullSegmentSinkStoreInfos,
-        value: { messageId},
+        value: { messageId },
       });
       return new Promise((resolve) => {
         this._segmentMetrics.resolvers[messageId] = resolve;
-      })
-    }
+      });
+    };
     /**
      * Emit a "loaded" events once the initial play has been performed and the
      * media can begin playback.

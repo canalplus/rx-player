@@ -37,11 +37,14 @@ export default function createSegmentSinkGraph(
   });
 
   let bufferMetrics: SegmentSinkMetrics | null = null;
-  instance._priv_getSegmentSinkMetrics().then((metrics) => 
-  {
-    bufferMetrics = metrics ?? null
-  })
-
+  instance
+    ._priv_getSegmentSinkMetrics()
+    .then((metrics) => {
+      bufferMetrics = metrics ?? null;
+    })
+    .catch(() => {
+      // Do nothing
+    });
 
   bufferGraphWrapper.appendChild(bufferTitle);
   bufferGraphWrapper.appendChild(canvasElt);
@@ -59,18 +62,21 @@ export default function createSegmentSinkGraph(
       clearInterval(intervalId);
       return;
     }
+    instance
+      ._priv_getSegmentSinkMetrics()
+      .then((metrics) => {
+        bufferMetrics = metrics ?? null;
+        updateBufferMetrics();
+      })
+      .catch(() => {
+        // DO nothing
+      });
+  }
 
-    instance._priv_getSegmentSinkMetrics().then((metrics) => 
-    {
-      console.log("DEBUG METRICS: update metrics")
-      bufferMetrics = metrics ?? null
-    })
+  function updateBufferMetrics() {
     const showAllInfo = isExtendedMode(parentElt);
-    const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory
-    if (
-      bufferMetrics === null ||
-      inventory === undefined
-    ) {
+    const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory;
+    if (bufferMetrics === null || inventory === undefined) {
       bufferGraphWrapper.style.display = "none";
       currentRangeRepInfoElt.innerHTML = "";
       loadingRangeRepInfoElt.innerHTML = "";

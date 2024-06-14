@@ -912,17 +912,18 @@ function updateLoggerLevel(logLevel: ILoggerLevel, sendBackLogs: boolean): void 
  * @param {ContentPreparer} contentPreparer
  * @returns {void}
  */
-function sendSegmentSinksStoreInfos(contentPreparer: ContentPreparer, messageId: number): void {
+function sendSegmentSinksStoreInfos(
+  contentPreparer: ContentPreparer,
+  messageId: number,
+): void {
   const currentContent = contentPreparer.getCurrentContent();
   if (currentContent === null) {
     return;
   }
-  const segmentSinksMetrics =
-    currentContent.segmentSinksStore.getSegmentSinksMetrics();
+  const segmentSinksMetrics = currentContent.segmentSinksStore.getSegmentSinksMetrics();
   sendMessage({
     type: WorkerMessageType.SegmentSinkStoreUpdate,
     contentId: currentContent.contentId,
-    value: { segmentSinkMetrics: segmentSinksMetrics, 
-      messageId }
+    value: { segmentSinkMetrics: segmentSinksMetrics, messageId },
   });
 }

@@ -915,8 +915,8 @@ export interface ISegmentSinkStoreUpdateMessage {
   contentId: string;
   value: {
     segmentSinkMetrics: SegmentSinkMetrics;
-    messageId: number
-  }
+    messageId: number;
+  };
 }
 
 export const enum WorkerMessageType {

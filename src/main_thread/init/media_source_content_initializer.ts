@@ -670,10 +670,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
-              this.trigger("loaded", { segmentSinksStore,
+              this.trigger("loaded", {
+                segmentSinksStore,
                 getSegmentSinkMetrics: async () => {
-                  return new Promise((resolve) => resolve(segmentSinksStore.getSegmentSinksMetrics()));
-                }
+                  return new Promise((resolve) =>
+                    resolve(segmentSinksStore.getSegmentSinksMetrics()),
+                  );
+                },
               });
             }
           },
