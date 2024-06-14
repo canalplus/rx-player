@@ -923,6 +923,6 @@ function sendSegmentSinksStoreInfos(contentPreparer: ContentPreparer, messageId:
     type: WorkerMessageType.SegmentSinkStoreUpdate,
     contentId: currentContent.contentId,
     value: { segmentSinkMetrics: segmentSinksMetrics, 
-      messageId: messageId }
+      messageId }
   });
 }
