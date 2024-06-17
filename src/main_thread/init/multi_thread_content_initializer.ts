@@ -1495,8 +1495,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         type: MainThreadMessageType.PullSegmentSinkStoreInfos,
         value: { messageId },
       });
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         this._segmentMetrics.resolvers[messageId] = resolve;
+        this._initCanceller.signal.register(reject);
       });
     };
     /**
