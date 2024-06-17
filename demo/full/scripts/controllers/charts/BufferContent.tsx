@@ -8,7 +8,6 @@ export default function BufferContentChart({ player }: { player: IPlayerModule }
   const currentTime = useModuleState(player, "currentTime");
   const maximumPosition = useModuleState(player, "maximumPosition");
   const minimumPosition = useModuleState(player, "minimumPosition");
-  const useWorker = useModuleState(player, "useWorker");
 
   const seek = React.useCallback(
     (position: number): void => {
@@ -17,14 +16,6 @@ export default function BufferContentChart({ player }: { player: IPlayerModule }
     [player],
   );
 
-  if (useWorker) {
-    return (
-      <div className="buffer-content-no-content">
-        Unavailable information currently when running in "multithread" mode (in a
-        WebWorker).
-      </div>
-    );
-  }
   if (bufferedData === null || Object.keys(bufferedData).length === 0) {
     return <div className="buffer-content-no-content"> No content yet </div>;
   }
