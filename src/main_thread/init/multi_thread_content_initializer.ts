@@ -97,7 +97,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * The purpose of collecting metrics is for monitoring and debugging.
    */
   private _segmentMetrics: {
-    messageId: number;
+    lastMessageId: number;
     resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
   /**
@@ -113,7 +113,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
     this._segmentMetrics = {
-      messageId: 0,
+      lastMessageId: 0,
       resolvers: {},
     };
   }
@@ -163,7 +163,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
     this._initCanceller.signal.register(() => {
       this._segmentMetrics = {
-        messageId: 0,
+        lastMessageId: 0,
         resolvers: {},
       };
     });
@@ -1487,7 +1487,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const _getSegmentSinkMetrics: () => Promise<
       ISegmentSinkMetrics | undefined
     > = async () => {
-      const messageId = ++this._segmentMetrics.messageId;
+      this._segmentMetrics.lastMessageId++;
+      const messageId = this._segmentMetrics.lastMessageId;
       sendMessage(this._settings.worker, {
         type: MainThreadMessageType.PullSegmentSinkStoreInfos,
         value: { messageId },
