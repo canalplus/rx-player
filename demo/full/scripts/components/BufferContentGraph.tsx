@@ -1,7 +1,5 @@
 import * as React from "react";
-import type {
-  IVideoRepresentation,
-} from "../../../../src/public_types";
+import type { IVideoRepresentation } from "../../../../src/public_types";
 import capitalizeFirstLetter from "../lib/capitalizeFirstLetter";
 import shuffleArray from "../lib/shuffleArray";
 import ToolTip from "./ToolTip";
@@ -150,7 +148,9 @@ export default function BufferContentGraph({
   const paintSegment = React.useCallback(
     (scaledSegment: IScaledBufferedData, canvasCtx: CanvasRenderingContext2D): void => {
       const representation = scaledSegment.bufferedInfos.infos.representation;
-      let indexOfRepr = representationsIdEncountered.current.indexOf(representation.uniqueId);
+      let indexOfRepr = representationsIdEncountered.current.indexOf(
+        representation.uniqueId,
+      );
       if (indexOfRepr < 0) {
         representationsIdEncountered.current.push(representation.uniqueId);
         indexOfRepr = representationsIdEncountered.current.length - 1;
