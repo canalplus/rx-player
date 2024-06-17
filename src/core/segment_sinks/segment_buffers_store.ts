@@ -48,14 +48,13 @@ export interface IBufferedChunkSnapshot extends Omit<IBufferedChunk, "infos"> {
  * and are categorized by segment type (audio, video, text).
  */
 export interface ISegmentSinkMetrics {
-  segmentSinks: Record<
-    "audio" | "video" | "text",
-    {
-      bufferType: IBufferType;
-      codec: string | undefined;
-      segmentInventory: IBufferedChunkSnapshot[] | undefined;
-    }
-  >;
+  segmentSinks: Record<"audio" | "video" | "text", ISegmentSinkMetricForType>;
+}
+
+interface ISegmentSinkMetricForType {
+  bufferType: IBufferType;
+  codec: string | undefined;
+  segmentInventory: IBufferedChunkSnapshot[] | undefined;
 }
 
 /**
@@ -375,40 +374,27 @@ export default class SegmentSinksStore {
     return true;
   }
 
+  private createSegmentSinkMetricsForType(
+    bufferType: IBufferType,
+  ): ISegmentSinkMetricForType {
+    return {
+      bufferType,
+      codec: this._initializedSegmentSinks[bufferType]?.codec,
+      segmentInventory: this._initializedSegmentSinks[bufferType]
+        ?.getLastKnownInventory()
+        .map((chunk) => ({
+          ...chunk,
+          infos: getChunkContextSnapshot(chunk.infos),
+        })),
+    };
+  }
+
   public getSegmentSinksMetrics(): ISegmentSinkMetrics {
     return {
       segmentSinks: {
-        audio: {
-          bufferType: "audio",
-          codec: this._initializedSegmentSinks.audio?.codec,
-          segmentInventory: this._initializedSegmentSinks.audio
-            ?.getLastKnownInventory()
-            .map((chunk) => ({
-              ...chunk,
-              infos: getChunkContextSnapshot(chunk.infos),
-            })),
-        },
-        video: {
-          bufferType: "video",
-          codec: this._initializedSegmentSinks.video?.codec,
-          segmentInventory: this._initializedSegmentSinks.video
-            ?.getLastKnownInventory()
-            .map((chunk) => ({
-              ...chunk,
-              infos: getChunkContextSnapshot(chunk.infos),
-            })),
-        },
-        text: {
-          bufferType: "text",
-          codec: this._initializedSegmentSinks.text?.codec,
-
-          segmentInventory: this._initializedSegmentSinks.text
-            ?.getLastKnownInventory()
-            .map((chunk) => ({
-              ...chunk,
-              infos: getChunkContextSnapshot(chunk.infos),
-            })),
-        },
+        audio: this.createSegmentSinkMetricsForType("audio"),
+        video: this.createSegmentSinkMetricsForType("video"),
+        text: this.createSegmentSinkMetricsForType("text"),
       },
     };
   }
