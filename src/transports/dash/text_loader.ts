@@ -28,12 +28,13 @@ import type {
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
 } from "../types";
+import addQueryString from "../utils/add_query_string";
 import byteRange from "../utils/byte_range";
 import inferSegmentContainer from "../utils/infer_segment_container";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import constructSegmentUrl from "./construct_segment_url";
 import initSegmentLoader from "./init_segment_loader";
-import lowLatencySegmentLoader from "./low_latency_segment_loader";
+import loadChunkedSegmentData from "./load_chunked_segment_data";
 
 /**
  * Perform requests for "text" segments
@@ -59,7 +60,7 @@ export default function generateTextTrackLoader({
    * @param {Object} callbacks
    * @returns {Promise}
    */
-  function textTrackLoader(
+  async function textTrackLoader(
     wantedCdn: ICdnMetadata | null,
     context: ISegmentContext,
     options: ISegmentLoaderOptions,
@@ -71,10 +72,9 @@ export default function generateTextTrackLoader({
     | ISegmentLoaderResultChunkedComplete
   > {
     const { segment } = context;
-    const { range } = segment;
 
-    const url = constructSegmentUrl(wantedCdn, segment);
-    if (url === null) {
+    const initialUrl = constructSegmentUrl(wantedCdn, segment);
+    if (initialUrl === null) {
       return Promise.resolve({
         resultType: "segment-created",
         resultData: null,
@@ -82,14 +82,38 @@ export default function generateTextTrackLoader({
     }
 
     if (segment.isInit) {
-      return initSegmentLoader(url, segment, options, cancelSignal, callbacks);
+      return initSegmentLoader(initialUrl, segment, options, cancelSignal, callbacks);
+    }
+
+    const url =
+      options.queryString === undefined
+        ? initialUrl
+        : addQueryString(initialUrl, options.queryString);
+
+    let headers;
+    if (segment.range !== undefined) {
+      headers = {
+        ...options.headers,
+        Range: byteRange(segment.range),
+      };
+    } else if (options.headers !== undefined) {
+      headers = options.headers;
     }
 
     const containerType = inferSegmentContainer(context.type, context.mimeType);
     const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
     if (lowLatencyMode && seemsToBeMP4) {
       if (fetchIsSupported()) {
-        return lowLatencySegmentLoader(url, context, options, callbacks, cancelSignal);
+        return loadChunkedSegmentData(
+          url,
+          {
+            headers,
+            timeout: options.timeout,
+            connectionTimeout: options.connectionTimeout,
+          },
+          callbacks,
+          cancelSignal,
+        );
       } else {
         warnOnce(
           "DASH: Your browser does not have the fetch API. You will have " +
@@ -98,26 +122,28 @@ export default function generateTextTrackLoader({
       }
     }
 
+    let data;
     if (seemsToBeMP4) {
-      return request({
+      data = await request({
         url,
         responseType: "arraybuffer",
-        headers: Array.isArray(range) ? { Range: byteRange(range) } : null,
+        headers,
         timeout: options.timeout,
         connectionTimeout: options.connectionTimeout,
         onProgress: callbacks.onProgress,
         cancelSignal,
-      }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
+      });
+    } else {
+      data = await request({
+        url,
+        responseType: "text",
+        headers,
+        timeout: options.timeout,
+        connectionTimeout: options.connectionTimeout,
+        onProgress: callbacks.onProgress,
+        cancelSignal,
+      });
     }
-
-    return request({
-      url,
-      responseType: "text",
-      headers: Array.isArray(range) ? { Range: byteRange(range) } : null,
-      timeout: options.timeout,
-      connectionTimeout: options.connectionTimeout,
-      onProgress: callbacks.onProgress,
-      cancelSignal,
-    }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
+    return { resultType: "segment-loaded", resultData: data };
   }
 }

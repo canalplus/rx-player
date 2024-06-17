@@ -1,4 +1,5 @@
 import type {
+  ICmcdOptions,
   IConstructorOptions,
   ILoadVideoOptions,
 } from "../../../../src/public_types";
@@ -14,6 +15,7 @@ const defaultOptionsValues = {
   },
   loadVideo: {
     autoPlay: true,
+    cmcd: undefined as ICmcdOptions | undefined,
     defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
     requestConfig: {

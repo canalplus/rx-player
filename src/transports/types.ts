@@ -43,6 +43,9 @@ export type ITransportFunction = (options: ITransportOptions) => ITransportPipel
  * parse the Manifest or any segment.
  */
 export interface ITransportPipelines {
+  /** Name describing the current transport pipeline. */
+  transportName: ITransportName;
+
   /** Functions allowing to load an parse the Manifest for this transport. */
   manifest: ITransportManifestPipeline;
 
@@ -60,6 +63,9 @@ export interface ITransportPipelines {
   text: ISegmentPipeline<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
 }
 
+/** Name describing the transport pipeline. */
+export type ITransportName = "dash" | "smooth" | "local" | "metaplaylist";
+
 /** Functions allowing to load and parse the Manifest. */
 export interface ITransportManifestPipeline {
   /**
@@ -69,6 +75,7 @@ export interface ITransportManifestPipeline {
    * @param {string|undefined} url - URL of the Manifest we want to load.
    * `undefined` if the Manifest doesn't have an URL linked to it, in which case
    * the Manifest should be loaded through another mean.
+   * @param {Object} options - Various options linked to the manifest request
    * @param {CancellationSignal} cancellationSignal - Signal which will allow to
    * cancel the loading operation if the Manifest is not needed anymore (for
    * example, if the content has just been stopped).
@@ -173,6 +180,24 @@ export interface IManifestLoaderOptions {
    * Do not set or set to "undefined" to disable it.
    */
   connectionTimeout?: number | undefined;
+  /**
+   * Optional headers that should be added to the Manifest request if it
+   * involves HTTP(S).
+   *
+   * Note that a request itself might already necessitate headers, in which case
+   * they'll have priority if there's an header name conflict.
+   */
+  headers?: Record<string, string>;
+  /**
+   * Optional supplementary elements to add to the query string that should be
+   * added to the Manifest request if it involves HTTP(S).
+   *
+   * This is an array of all fields and corresponding values that should be
+   * added to the query string, the order should be kept.
+   *
+   * `null` indicates that the field has no value and should be added as is.
+   */
+  queryString?: Array<[string, string | null]>;
 }
 
 /** Functions allowing to load and parse segments of any type. */
@@ -225,6 +250,24 @@ export interface ISegmentLoaderOptions {
    * Do not set or set to "undefined" to disable it.
    */
   connectionTimeout?: number | undefined;
+  /**
+   * Optional headers that should be added to the Manifest request if it
+   * involves HTTP(S).
+   *
+   * Note that a request itself might already necessitate headers, in which case
+   * they'll have priority if there's an header name conflict.
+   */
+  headers?: Record<string, string>;
+  /**
+   * Optional supplementary elements to add to the query string that should be
+   * added to the Manifest request if it involves HTTP(S).
+   *
+   * This is an array of all fields and corresponding values that should be
+   * added to the query string, the order should be kept.
+   *
+   * `null` indicates that the field has no value and should be added as is.
+   */
+  queryString?: Array<[string, string | null]>;
 }
 
 /**

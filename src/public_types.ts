@@ -29,6 +29,26 @@ export interface IWorkerSettings {
   dashWasmUrl?: string | ArrayBuffer | undefined;
 }
 
+/** Object that defines Common Media Client Data (CMCD) options. */
+export interface ICmcdOptions {
+  /**
+   * Content ID delivered by CMCD metadata for that content.
+   * If not specified, a default one will be generated.
+   */
+  contentId?: string;
+  /**
+   * Session ID delivered by CMCD metadata.
+   * If not specified, a default one will be generated.
+   */
+  sessionId?: string;
+  /**
+   * Allow to force the way in which the CMCD payload should be communicated.
+   *
+   * If not set, the most appropriate type will be relied on.
+   */
+  communicationType?: "headers" | "query";
+}
+
 /** Every options that can be given to the RxPlayer's constructor. */
 export interface IConstructorOptions {
   maxBufferAhead?: number;
@@ -150,6 +170,11 @@ export interface ILoadVideoOptions {
    * in "multithread" mode) for that content.
    */
   mode?: IRxPlayerMode | undefined;
+
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */

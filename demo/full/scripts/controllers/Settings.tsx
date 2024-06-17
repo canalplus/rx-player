@@ -10,8 +10,9 @@ import type {
   IConstructorSettings,
   ILoadVideoSettings,
 } from "../lib/defaultOptionsValues";
-import {
+import type {
   IAudioRepresentationsSwitchingMode,
+  ICmcdOptions,
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
 
@@ -61,11 +62,13 @@ function Settings({
   } = playerOptions;
   const {
     autoPlay,
+    cmcd,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,
     requestConfig,
     onCodecSwitch,
   } = loadVideoOptions;
+  const cmcdCommunicationMethod = cmcd?.communicationType ?? "disabled";
   const { manifest: manifestRequestConfig, segment: segmentRequestConfig } =
     requestConfig;
   const { maxRetry: segmentRetry, timeout: segmentRequestTimeout } = segmentRequestConfig;
@@ -89,6 +92,33 @@ function Settings({
       updateTryRelyOnWorker(tryRelyOnWorker);
     },
     [updateTryRelyOnWorker],
+  );
+
+  const onCmcdChange = useCallback(
+    (value: string) => {
+      updateLoadVideoOptions((prevOptions) => {
+        let newCmcdType: ICmcdOptions["communicationType"] | undefined;
+        if (value === "query") {
+          newCmcdType = "query";
+        } else if (value === "headers") {
+          newCmcdType = "headers";
+        } else {
+          newCmcdType = undefined;
+        }
+        if (newCmcdType === prevOptions.cmcd?.communicationType) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          cmcd:
+            newCmcdType === undefined
+              ? undefined
+              : {
+                  communicationType: newCmcdType,
+                },
+        });
+      });
+    },
+    [updateLoadVideoOptions],
   );
 
   const onVideoResolutionLimitChange = useCallback(
@@ -346,10 +376,12 @@ function Settings({
             segmentRetry={segmentRetry}
             segmentRequestTimeout={segmentRequestTimeout}
             manifestRetry={manifestRetry}
+            cmcdCommunicationMethod={cmcdCommunicationMethod}
             onSegmentRetryChange={onSegmentRetryChange}
             onSegmentRequestTimeoutChange={onSegmentRequestTimeoutChange}
             onManifestRetryChange={onManifestRetryChange}
             onManifestRequestTimeoutChange={onManifestRequestTimeoutChange}
+            onCmcdChange={onCmcdChange}
           />
         </Option>
         <Option title="Track Switch Mode">

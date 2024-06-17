@@ -19,6 +19,7 @@ import { assertUnreachable } from "../../utils/assert";
 import request from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IManifestLoaderOptions, IRequestedData } from "../types";
+import addQueryString from "./add_query_string";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
 /**
@@ -29,18 +30,23 @@ import callCustomManifestLoader from "./call_custom_manifest_loader";
 function generateRegularManifestLoader(
   preferredType: "arraybuffer" | "text" | "document",
 ): (
-  url: string | undefined,
+  initialUrl: string | undefined,
   loaderOptions: IManifestLoaderOptions,
   cancelSignal: CancellationSignal,
 ) => Promise<IRequestedData<ILoadedManifestFormat>> {
   return function regularManifestLoader(
-    url: string | undefined,
+    initialUrl: string | undefined,
     loaderOptions: IManifestLoaderOptions,
     cancelSignal: CancellationSignal,
   ): Promise<IRequestedData<ILoadedManifestFormat>> {
-    if (url === undefined) {
+    if (initialUrl === undefined) {
       throw new Error("Cannot perform HTTP(s) request. URL not known");
     }
+
+    const url =
+      loaderOptions.queryString === undefined
+        ? initialUrl
+        : addQueryString(initialUrl, loaderOptions.queryString);
 
     // What follows could be written in a single line, but TypeScript wouldn't
     // shut up.
@@ -49,6 +55,7 @@ function generateRegularManifestLoader(
       case "arraybuffer":
         return request({
           url,
+          headers: loaderOptions.headers,
           responseType: "arraybuffer",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -57,6 +64,7 @@ function generateRegularManifestLoader(
       case "text":
         return request({
           url,
+          headers: loaderOptions.headers,
           responseType: "text",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -65,6 +73,7 @@ function generateRegularManifestLoader(
       case "document":
         return request({
           url,
+          headers: loaderOptions.headers,
           responseType: "document",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,

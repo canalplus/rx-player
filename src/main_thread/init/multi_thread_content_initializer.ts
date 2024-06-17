@@ -5,7 +5,6 @@ import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffe
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
-  IManifestFetcherSettings,
   IResolutionInfo,
 } from "../../core/types";
 import {
@@ -35,7 +34,13 @@ import type {
   IMediaElementPlaybackObserver,
 } from "../../playback_observer";
 import type { IWorkerPlaybackObservation } from "../../playback_observer/worker_playback_observer";
-import type { IKeySystemOption, IPlayerError, ITrackType } from "../../public_types";
+import type {
+  ICmcdOptions,
+  IInitialManifest,
+  IKeySystemOption,
+  IPlayerError,
+  ITrackType,
+} from "../../public_types";
 import type { ITransportOptions } from "../../transports";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
@@ -145,12 +150,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       type: MainThreadMessageType.PrepareContent,
       value: {
         contentId,
+        cmcd: this._settings.cmcd,
         url: this._settings.url,
         hasText: this._hasTextBufferFeature(),
         transportOptions,
         initialVideoBitrate,
         initialAudioBitrate,
-        manifestRetryOptions: this._settings.manifestRequestSettings,
+        manifestRetryOptions: {
+          ...this._settings.manifestRequestSettings,
+          lowLatencyMode: this._settings.lowLatencyMode,
+        },
         segmentRetryOptions: this._settings.segmentRequestOptions,
       },
     });
@@ -1775,6 +1784,10 @@ export interface IInitializeArguments {
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch: "continue" | "reload";
   };
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
@@ -1793,7 +1806,30 @@ export interface IInitializeArguments {
     representationFilter: string | undefined;
   };
   /** Settings linked to Manifest requests. */
-  manifestRequestSettings: IManifestFetcherSettings;
+  manifestRequestSettings: {
+    /** Maximum number of time a request on error will be retried. */
+    maxRetry: number | undefined;
+    /**
+     * Timeout after which request are aborted and, depending on other options,
+     * retried.
+     * To set to `-1` for no timeout.
+     * `undefined` will lead to a default, large, timeout being used.
+     */
+    requestTimeout: number | undefined;
+    /**
+     * Connection timeout, in milliseconds, after which the request is canceled
+     * if the responses headers has not being received.
+     * Do not set or set to "undefined" to disable it.
+     */
+    connectionTimeout: number | undefined;
+    /** Limit the frequency of Manifest updates. */
+    minimumManifestUpdateInterval: number;
+    /**
+     * Potential first Manifest to rely on, allowing to skip the initial Manifest
+     * request.
+     */
+    initialManifest: IInitialManifest | undefined;
+  };
   /** Configuration for the segment requesting logic. */
   segmentRequestOptions: {
     lowLatencyMode: boolean;

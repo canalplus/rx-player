@@ -20,12 +20,9 @@ import type { IFetchedDataObject } from "../../utils/request/fetch";
 import fetchRequest from "../../utils/request/fetch";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type {
-  ISegmentContext,
   ISegmentLoaderCallbacks,
-  ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
 } from "../types";
-import byteRange from "../utils/byte_range";
 
 /**
  * Load segments through a "chunk" mode (decodable chunk by decodable chunk).
@@ -33,22 +30,27 @@ import byteRange from "../utils/byte_range";
  * This method is particularly adapted to low-latency streams.
  *
  * @param {string} url - URL of the segment to download.
- * @param {Object} content - Context of the segment needed.
- * @param {Object} options
+ * @param {Object} requestOptions
+ * @param {Object|undefined} requestOptions.headers - Headers for the
+ * low-latency request
+ * @param {number|undefined} requestOptions.timeout - Request timeout for the
+ * low-latency request.
+ * @param {number|undefined} requestOptions.connectionTimeout - HTTP connection
+ * timeout for the low-latency request.
  * @param {Object} callbacks
  * @param {CancellationSignal} cancelSignal
  * @returns {Promise}
  */
-export default function lowLatencySegmentLoader(
+export default async function loadChunkedSegmentData(
   url: string,
-  content: ISegmentContext,
-  options: ISegmentLoaderOptions,
+  requestOptions: {
+    headers: Record<string, string> | undefined;
+    timeout: number | undefined;
+    connectionTimeout: number | undefined;
+  },
   callbacks: ISegmentLoaderCallbacks<Uint8Array>,
   cancelSignal: CancellationSignal,
 ): Promise<ISegmentLoaderResultChunkedComplete> {
-  const { segment } = content;
-  const headers =
-    segment.range !== undefined ? { Range: byteRange(segment.range) } : undefined;
   let partialChunk: Uint8Array | null = null;
 
   /**
@@ -79,14 +81,16 @@ export default function lowLatencySegmentLoader(
     }
   }
 
-  return fetchRequest({
+  const res = await fetchRequest({
     url,
-    headers,
+    headers: requestOptions.headers,
     onData,
-    timeout: options.timeout,
+    timeout: requestOptions.timeout,
+    connectionTimeout: requestOptions.connectionTimeout,
     cancelSignal,
-  }).then((res) => ({
+  });
+  return {
     resultType: "chunk-complete" as const,
     resultData: res,
-  }));
+  };
 }

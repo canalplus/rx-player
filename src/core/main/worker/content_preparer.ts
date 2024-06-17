@@ -21,6 +21,7 @@ import type {
 import TaskCanceller from "../../../utils/task_canceller";
 import type { IRepresentationEstimator } from "../../adaptive";
 import createAdaptiveRepresentationSelector from "../../adaptive";
+import CmcdDataBuilder from "../../cmcd";
 import type { IManifestRefreshSettings } from "../../fetchers";
 import { ManifestFetcher, SegmentFetcherCreator } from "../../fetchers";
 import SegmentSinksStore from "../../segment_sinks";
@@ -99,10 +100,16 @@ export default class ContentPreparer {
         ...transportOptions,
         representationFilter,
       });
+
+      const cmcdDataBuilder =
+        context.cmcd === undefined ? null : new CmcdDataBuilder(context.cmcd);
       const manifestFetcher = new ManifestFetcher(
         url === undefined ? undefined : [url],
         dashPipelines,
-        context.manifestRetryOptions,
+        {
+          cmcdDataBuilder,
+          ...context.manifestRetryOptions,
+        },
       );
       const representationEstimator = createAdaptiveRepresentationSelector({
         initialBitrates: {
@@ -124,6 +131,7 @@ export default class ContentPreparer {
 
       const segmentFetcherCreator = new SegmentFetcherCreator(
         dashPipelines,
+        cmcdDataBuilder,
         context.segmentRetryOptions,
         contentCanceller.signal,
       );
@@ -144,6 +152,7 @@ export default class ContentPreparer {
         segmentSinksStore,
       );
       this._currentContent = {
+        cmcdDataBuilder,
         contentId,
         decipherabilityFreezeDetector,
         mediaSource,
@@ -313,6 +322,12 @@ export interface IPreparedContentData {
    * Protects against all kind of race conditions or asynchronous issues.
    */
   contentId: string;
+  /**
+   * Perform data collection and retrieval for the "Common Media Client Data"
+   * scheme, which is a specification allowing to communicate about playback
+   * conditions with a CDN.
+   */
+  cmcdDataBuilder: CmcdDataBuilder | null;
   /**
    * Interface to the MediaSource implementation, allowing to buffer audio
    * and video media segments.

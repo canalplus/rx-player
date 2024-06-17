@@ -33,7 +33,7 @@ Here's a simplified architecture schema of the code in that directory:
    +--------------------------------------------------------------------------+
                                 |       ^
  Ask to get / create / remove   |       | Returns created SegmentSink or
- SegmentSink for a given type |       | wanted information
+ SegmentSink for a given type   |       | wanted information
  or get information about the   |       |
  available types                |       |
                                 |       |

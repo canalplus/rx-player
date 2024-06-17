@@ -33,6 +33,7 @@ import type {
   ISegmentLoader,
   IServerSyncInfos,
   IRxPlayerMode,
+  ICmcdOptions,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -84,6 +85,7 @@ interface IParsedLoadVideoOptionsBase {
   segmentLoader?: ISegmentLoader | undefined;
   serverSyncInfos?: IServerSyncInfos | undefined;
   mode: IRxPlayerMode;
+  cmcd: ICmcdOptions | undefined;
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
@@ -456,6 +458,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     transport,
     mode,
     url,
+    cmcd: options.cmcd,
   };
 }
 

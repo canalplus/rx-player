@@ -24,14 +24,17 @@ import type {
   IPlayerError,
 } from "../../../public_types";
 import type {
+  IManifestLoaderOptions,
   IRequestedData,
   ITransportManifestPipeline,
+  ITransportName,
   ITransportPipelines,
 } from "../../../transports";
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import TaskCanceller from "../../../utils/task_canceller";
+import type CmcdDataBuilder from "../../cmcd";
 import errorSelector from "../utils/error_selector";
 import type { IBackoffSettings } from "../utils/schedule_request";
 import { scheduleRequestPromise } from "../utils/schedule_request";
@@ -53,6 +56,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
   private _settings: IManifestFetcherSettings;
   /** URLs through which the Manifest may be reached, by order of priority. */
   private _manifestUrls: string[] | undefined;
+  /** Name of the current transport pipeline used. */
+  private _transportName: ITransportName;
   /**
    * Manifest loading and parsing pipelines linked to the current transport
    * protocol used.
@@ -101,6 +106,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     this.scheduleManualRefresh = noop;
     this._manifestUrls = urls;
     this._pipelines = pipelines.manifest;
+    this._transportName = pipelines.transportName;
     this._settings = settings;
     this._canceller = new TaskCanceller();
     this._isStarted = false;
@@ -195,6 +201,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
   ): Promise<IManifestFetcherResponse> {
     const cancelSignal = this._canceller.signal;
     const settings = this._settings;
+    const transportName = this._transportName;
     const pipelines = this._pipelines;
 
     // TODO Better handle multiple Manifest URLs
@@ -243,15 +250,19 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       if (connectionTimeout < 0) {
         connectionTimeout = undefined;
       }
-      const callLoader = () =>
-        loadManifest(
-          manifestUrl,
-          {
-            timeout: requestTimeout,
-            connectionTimeout,
-          },
-          cancelSignal,
-        );
+      const requestOptions: IManifestLoaderOptions = {
+        timeout: requestTimeout,
+        connectionTimeout,
+      };
+      const cmcdPayload = settings.cmcdDataBuilder?.getCmcdDataForManifest(transportName);
+      if (cmcdPayload !== undefined) {
+        if (cmcdPayload.type === "headers") {
+          requestOptions.headers = cmcdPayload.value;
+        } else if (cmcdPayload.type === "query") {
+          requestOptions.queryString = cmcdPayload.value;
+        }
+      }
+      const callLoader = () => loadManifest(manifestUrl, requestOptions, cancelSignal);
       return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
     }
   }
@@ -791,6 +802,11 @@ export interface IManifestFetcherSettings {
    * request.
    */
   initialManifest: IInitialManifest | undefined;
+  /**
+   * Optional module allowing to collect "Common Media Client Data" (a.k.a. CMCD)
+   * for the CDN.
+   */
+  cmcdDataBuilder: CmcdDataBuilder | null;
 }
 
 /** Event sent by the `ManifestFetcher`. */

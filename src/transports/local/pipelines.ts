@@ -88,6 +88,7 @@ export default function getLocalManifestPipelines(
   };
 
   return {
+    transportName: "local",
     manifest: manifestPipeline,
     audio: segmentPipeline,
     video: segmentPipeline,

@@ -17,6 +17,7 @@
 import config from "../../../config";
 import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
 import type { CancellationSignal } from "../../../utils/task_canceller";
+import type CmcdDataBuilder from "../../cmcd";
 import type { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
 import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
@@ -54,11 +55,14 @@ export default class SegmentFetcherCreator {
 
   private readonly _cdnPrioritizer: CdnPrioritizer;
 
+  private _cmcdDataBuilder: CmcdDataBuilder | null;
+
   /**
    * @param {Object} transport
    */
   constructor(
     transport: ITransportPipelines,
+    cmcdDataBuilder: CmcdDataBuilder | null,
     options: ISegmentFetcherCreatorBackoffOptions,
     cancelSignal: CancellationSignal,
   ) {
@@ -74,6 +78,7 @@ export default class SegmentFetcherCreator {
     });
     this._cdnPrioritizer = cdnPrioritizer;
     this._backoffOptions = options;
+    this._cmcdDataBuilder = cmcdDataBuilder;
   }
 
   /**
@@ -95,6 +100,7 @@ export default class SegmentFetcherCreator {
       bufferType,
       pipelines as ISegmentPipeline<unknown, unknown>,
       this._cdnPrioritizer,
+      this._cmcdDataBuilder,
       callbacks,
       backoffOptions,
     );
