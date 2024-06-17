@@ -22,7 +22,7 @@ import type {
   IRepresentationEstimator,
 } from "../../core/adaptive";
 import AdaptiveRepresentationSelector from "../../core/adaptive";
-import type { IManifestFetcherSettings } from "../../core/fetchers";
+import CmcdDataBuilder from "../../core/cmcd";
 import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
 import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
@@ -40,7 +40,12 @@ import log from "../../log";
 import type { IManifest, IPeriodMetadata } from "../../manifest";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
-import type { IKeySystemOption, IPlayerError } from "../../public_types";
+import type {
+  ICmcdOptions,
+  IInitialManifest,
+  IKeySystemOption,
+  IPlayerError,
+} from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
@@ -99,6 +104,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
+  private _cmcdDataBuilder: CmcdDataBuilder | null;
+
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
    * settings.
@@ -110,11 +117,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
     const urls = settings.url === undefined ? undefined : [settings.url];
-    this._manifestFetcher = new ManifestFetcher(
-      urls,
-      settings.transport,
-      settings.manifestRequestSettings,
-    );
+    this._cmcdDataBuilder =
+      settings.cmcd === undefined ? null : new CmcdDataBuilder(settings.cmcd);
+    this._manifestFetcher = new ManifestFetcher(urls, settings.transport, {
+      ...settings.manifestRequestSettings,
+      lowLatencyMode: settings.lowLatencyMode,
+      cmcdDataBuilder: this._cmcdDataBuilder,
+    });
   }
 
   /**
@@ -364,6 +373,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const segmentFetcherCreator = new SegmentFetcherCreator(
       transport,
+      this._cmcdDataBuilder,
       segmentRequestOptions,
       initCanceller.signal,
     );
@@ -587,6 +597,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       cancelSignal,
     );
+
+    this._cmcdDataBuilder?.startMonitoringPlayback(coreObserver);
+    cancelSignal.register(() => {
+      this._cmcdDataBuilder?.stopMonitoringPlayback();
+    });
 
     const rebufferingController = this._createRebufferingController(
       playbackObserver,
@@ -838,7 +853,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           self.trigger("periodStreamCleared", value);
         },
 
-        bitrateEstimateChange: (value) => self.trigger("bitrateEstimateChange", value),
+        bitrateEstimateChange: (value) => {
+          self._cmcdDataBuilder?.updateThroughput(value.type, value.bitrate);
+          self.trigger("bitrateEstimateChange", value);
+        },
 
         needsMediaSourceReload: (payload) => {
           reloadMediaSource(
@@ -990,12 +1008,39 @@ export interface IInitializeArguments {
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch: "continue" | "reload";
   };
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
   lowLatencyMode: boolean;
   /** Settings linked to Manifest requests. */
-  manifestRequestSettings: IManifestFetcherSettings;
+  manifestRequestSettings: {
+    /** Maximum number of time a request on error will be retried. */
+    maxRetry: number | undefined;
+    /**
+     * Timeout after which request are aborted and, depending on other options,
+     * retried.
+     * To set to `-1` for no timeout.
+     * `undefined` will lead to a default, large, timeout being used.
+     */
+    requestTimeout: number | undefined;
+    /**
+     * Connection timeout, in milliseconds, after which the request is canceled
+     * if the responses headers has not being received.
+     * Do not set or set to "undefined" to disable it.
+     */
+    connectionTimeout: number | undefined;
+    /** Limit the frequency of Manifest updates. */
+    minimumManifestUpdateInterval: number;
+    /**
+     * Potential first Manifest to rely on, allowing to skip the initial Manifest
+     * request.
+     */
+    initialManifest: IInitialManifest | undefined;
+  };
   /** Logic linked Manifest and segment loading and parsing. */
   transport: ITransportPipelines;
   /** Configuration for the segment requesting logic. */

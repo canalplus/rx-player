@@ -81,8 +81,8 @@ export interface IFetchOptions {
    * reject with the corresponding `CancellationError`.
    */
   cancelSignal: CancellationSignal;
-  /** Optional headers for the HTTP GET request perfomed by `fetchRequest`. */
-  headers?: { [header: string]: string } | undefined | null;
+  /** Dictionary of headers you want to set. `null` or `undefined` for no header. */
+  headers?: Record<string, string> | null | undefined;
   /**
    * Optional timeout for the HTTP GET request perfomed by `fetchRequest`.
    * This timeout is just enabled until the HTTP response from the server, even
@@ -108,7 +108,7 @@ const _AbortController: IAbortControllerConstructor | null =
 export default function fetchRequest(
   options: IFetchOptions,
 ): Promise<IFetchedStreamComplete> {
-  let headers: Headers | { [key: string]: string } | undefined;
+  let headers: Headers | Record<string, string> | undefined;
   if (!isNullOrUndefined(options.headers)) {
     if (isNullOrUndefined(_Headers)) {
       headers = options.headers;

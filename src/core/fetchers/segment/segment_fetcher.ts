@@ -29,7 +29,9 @@ import type { ICdnMetadata } from "../../../parsers/manifest";
 import type { IPlayerError } from "../../../public_types";
 import type {
   IChunkCompleteInformation,
+  ISegmentContext,
   ISegmentLoader,
+  ISegmentLoaderOptions,
   ISegmentLoadingProgressInformation,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
@@ -48,6 +50,7 @@ import type {
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
 } from "../../adaptive";
+import type CmcdDataBuilder from "../../cmcd";
 import type { IBufferType } from "../../segment_sinks";
 import type CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
@@ -73,6 +76,8 @@ const generateRequestID = idGenerator();
  *
  * Can be set to `null` in which case a minimal priorization logic will be used
  * instead.
+ * @param {Object|null} cmcdDataBuilder - Optional module allowing to collect
+ * "Common Media Client Data" (a.k.a. CMCD) for the CDN.
  * @param {Object} lifecycleCallbacks - Callbacks that can be registered to be
  * informed when new requests are made, ended, new metrics are available etc.
  * This should be mainly useful to implement an adaptive logic relying on those
@@ -85,6 +90,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   bufferType: IBufferType,
   pipeline: ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
   cdnPrioritizer: CdnPrioritizer | null,
+  cmcdDataBuilder: CmcdDataBuilder | null,
   lifecycleCallbacks: ISegmentFetcherLifecycleCallbacks,
   options: ISegmentFetcherOptions,
 ): ISegmentFetcher<TSegmentDataType> {
@@ -94,7 +100,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   } else {
     connectionTimeout = options.connectionTimeout;
   }
-  const requestOptions = {
+  const requestOptions: ISegmentLoaderOptions = {
     timeout: options.requestTimeout < 0 ? undefined : options.requestTimeout,
     connectionTimeout,
   };
@@ -160,7 +166,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     let metricsSent = false;
 
     /** Segment context given to the transport pipelines. */
-    const context = {
+    const context: ISegmentContext = {
       segment,
       type: adaptation.type,
       language: adaptation.language,
@@ -286,6 +292,14 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     function callLoaderWithUrl(
       cdnMetadata: ICdnMetadata | null,
     ): ReturnType<ISegmentLoader<TLoadedFormat>> {
+      const cmcdPayload = cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
+      if (cmcdPayload !== undefined) {
+        if (cmcdPayload.type === "headers") {
+          requestOptions.headers = cmcdPayload.value;
+        } else if (cmcdPayload.type === "query") {
+          requestOptions.queryString = cmcdPayload.value;
+        }
+      }
       return loadSegment(
         cdnMetadata,
         context,

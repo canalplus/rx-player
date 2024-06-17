@@ -184,6 +184,7 @@ export default class VideoThumbnailLoader {
         "video",
         loader.video,
         null,
+        null,
         // We don't care about the SegmentFetcher's lifecycle events
         {},
         {

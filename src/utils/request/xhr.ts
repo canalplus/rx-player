@@ -264,7 +264,7 @@ export interface IRequestOptions<ResponseType> {
   /** URL you want to request. */
   url: string;
   /** Dictionary of headers you want to set. `null` or `undefined` for no header. */
-  headers?: { [header: string]: string } | null | undefined;
+  headers?: Record<string, string> | null | undefined;
   /** Wanted format for the response */
   responseType?: ResponseType | undefined;
   /**

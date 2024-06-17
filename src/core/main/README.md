@@ -7,11 +7,11 @@
 
 [1] In a Multithreading mode, no file from that directory should ever be imported by
 external code but the `WorkerMain` to generate the worker bundle. In a monothreading mode,
-any files may be directly imported.
+any file may be directly imported.
 
 ## Overview
 
-The Core Main serves as the entry point of the `core` code, which may optionally runs in a
+The Core Main serves as the entry point of the `core` code, which may optionally run in a
 WebWorker.
 
 When in monothreading mode, files declared here may be imported directly to make the link

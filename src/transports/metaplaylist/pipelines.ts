@@ -392,6 +392,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
   };
 
   return {
+    transportName: "metaplaylist",
     manifest: manifestPipeline,
     audio: audioPipeline,
     video: videoPipeline,
