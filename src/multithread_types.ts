@@ -4,6 +4,7 @@
  * multithread situation.
  */
 
+import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_store";
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
@@ -515,6 +516,11 @@ export type IReferenceUpdateMessage =
   | IReferenceUpdate<"limitVideoResolution", IResolutionInfo>
   | IReferenceUpdate<"throttleVideoBitrate", number>;
 
+export interface IPullSegmentSinkStoreInfos {
+  type: MainThreadMessageType.PullSegmentSinkStoreInfos;
+  value: { messageId: number };
+}
+
 export const enum MainThreadMessageType {
   Init = "init",
   PushTextDataSuccess = "add-text-success",
@@ -535,6 +541,7 @@ export const enum MainThreadMessageType {
   StartPreparedContent = "start",
   StopContent = "stop",
   TrackUpdate = "track-update",
+  PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
 }
 
 export type IMainThreadMessage =
@@ -556,7 +563,8 @@ export type IMainThreadMessage =
   | IRemoveTextDataSuccessMessage
   | IPushTextDataErrorMessage
   | IRemoveTextDataErrorMessage
-  | IMediaSourceReadyStateChangeMainMessage;
+  | IMediaSourceReadyStateChangeMainMessage
+  | IPullSegmentSinkStoreInfos;
 
 export type ISentError =
   | ISerializedNetworkError
@@ -902,6 +910,15 @@ export interface IDiscontinuityTimeInfo {
   end: number | null;
 }
 
+export interface ISegmentSinkStoreUpdateMessage {
+  type: WorkerMessageType.SegmentSinkStoreUpdate;
+  contentId: string;
+  value: {
+    segmentSinkMetrics: ISegmentSinkMetrics;
+    messageId: number;
+  };
+}
+
 export const enum WorkerMessageType {
   AbortSourceBuffer = "abort-source-buffer",
   ActivePeriodChanged = "active-period-changed",
@@ -939,6 +956,7 @@ export const enum WorkerMessageType {
   UpdateMediaSourceDuration = "update-media-source-duration",
   UpdatePlaybackRate = "update-playback-rate",
   Warning = "warning",
+  SegmentSinkStoreUpdate = "segment-sink-store-update",
 }
 
 export type IWorkerMessage =
@@ -977,4 +995,5 @@ export type IWorkerMessage =
   | IStopTextDisplayerWorkerMessage
   | IUpdateMediaSourceDurationWorkerMessage
   | IUpdatePlaybackRateWorkerMessage
-  | IWarningWorkerMessage;
+  | IWarningWorkerMessage
+  | ISegmentSinkStoreUpdateMessage;

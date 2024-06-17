@@ -513,6 +513,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaElement.nodeName === "VIDEO",
       textDisplayerInterface,
     );
+
     cancelSignal.register(() => {
       segmentSinksStore.disposeAll();
     });
@@ -669,7 +670,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
-              this.trigger("loaded", { segmentSinksStore });
+              this.trigger("loaded", {
+                getSegmentSinkMetrics: async () => {
+                  return new Promise((resolve) =>
+                    resolve(segmentSinksStore.getSegmentSinksMetrics()),
+                  );
+                },
+              });
             }
           },
           { emitCurrentValue: true, clearSignal: cancelSignal },

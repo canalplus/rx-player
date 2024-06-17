@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
+import type {
+  IAdaptation,
+  ISegment,
+  IPeriod,
+  IRepresentation,
+  IAdaptationMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
+} from "../../../manifest";
 
 /** Content information for a single buffered chunk */
 export interface IChunkContext {
@@ -26,4 +34,10 @@ export interface IChunkContext {
   representation: IRepresentation;
   /** Segment this chunk is related to. */
   segment: ISegment;
+}
+
+export interface IChunkContextSnapshot {
+  adaptation: IAdaptationMetadata;
+  period: IPeriodMetadata;
+  representation: IRepresentationMetadata;
 }

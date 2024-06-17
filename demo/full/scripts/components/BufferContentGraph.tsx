@@ -1,14 +1,9 @@
 import * as React from "react";
-import type {
-  IAudioRepresentation,
-  IVideoRepresentation,
-} from "../../../../src/public_types";
+import type { IVideoRepresentation } from "../../../../src/public_types";
 import capitalizeFirstLetter from "../lib/capitalizeFirstLetter";
 import shuffleArray from "../lib/shuffleArray";
-import type { IBufferedData } from "../modules/player/index";
 import ToolTip from "./ToolTip";
-
-type IRepresentation = IAudioRepresentation | IVideoRepresentation;
+import { IBufferedChunkSnapshot } from "../../../../src/core/segment_sinks/segment_buffers_store";
 
 const { useEffect, useMemo, useRef, useState } = React;
 
@@ -73,7 +68,7 @@ function paintCurrentPosition(
 interface IScaledBufferedData {
   scaledStart: number;
   scaledEnd: number;
-  bufferedInfos: IBufferedData;
+  bufferedInfos: IBufferedChunkSnapshot;
 }
 
 /**
@@ -85,7 +80,7 @@ interface IScaledBufferedData {
  * @returns {Array.<Object>}
  */
 function scaleSegments(
-  bufferedData: IBufferedData[],
+  bufferedData: IBufferedChunkSnapshot[],
   minimumPosition: number,
   maximumPosition: number,
 ): IScaledBufferedData[] {
@@ -128,7 +123,7 @@ export default function BufferContentGraph({
   type, // The type of buffer (e.g. "audio", "video" or "text")
 }: {
   currentTime: number | undefined;
-  data: IBufferedData[];
+  data: IBufferedChunkSnapshot[];
   minimumPosition: number | null | undefined;
   maximumPosition: number | null | undefined;
   seek: (pos: number) => void;
@@ -139,7 +134,7 @@ export default function BufferContentGraph({
   const [tipPosition, setTipPosition] = useState(0);
   const [tipText, setTipText] = useState("");
   const canvasEl = useRef<HTMLCanvasElement>(null);
-  const representationsEncountered = useRef<IRepresentation[]>([]);
+  const representationsIdEncountered = useRef<string[]>([]);
   const usedMaximum = maximumPosition ?? 300;
   const usedMinimum = minimumPosition ?? 0;
   const duration = Math.max(usedMaximum - usedMinimum, 0);
@@ -153,10 +148,12 @@ export default function BufferContentGraph({
   const paintSegment = React.useCallback(
     (scaledSegment: IScaledBufferedData, canvasCtx: CanvasRenderingContext2D): void => {
       const representation = scaledSegment.bufferedInfos.infos.representation;
-      let indexOfRepr = representationsEncountered.current.indexOf(representation);
+      let indexOfRepr = representationsIdEncountered.current.indexOf(
+        representation.uniqueId,
+      );
       if (indexOfRepr < 0) {
-        representationsEncountered.current.push(representation);
-        indexOfRepr = representationsEncountered.current.length - 1;
+        representationsIdEncountered.current.push(representation.uniqueId);
+        indexOfRepr = representationsIdEncountered.current.length - 1;
       }
       const colorIndex = indexOfRepr % COLORS.length;
       const color = randomColors[colorIndex];
@@ -258,7 +255,7 @@ export default function BufferContentGraph({
                 "\n" +
                 `height: ${rep.height ?? "?"}` +
                 "\n" +
-                `codec: ${representation.codec ?? "?"}` +
+                `codec: ${representation.codecs ?? "?"}` +
                 "\n" +
                 `bitrate: ${representation.bitrate ?? "?"}` +
                 "\n";
@@ -270,7 +267,7 @@ export default function BufferContentGraph({
                 "\n" +
                 `audioDescription: ${String(adaptation.isAudioDescription) ?? false}` +
                 "\n" +
-                `codec: ${representation.codec ?? "?"}` +
+                `codec: ${representation.codecs ?? "?"}` +
                 "\n" +
                 `bitrate: ${representation.bitrate ?? "?"}` +
                 "\n";

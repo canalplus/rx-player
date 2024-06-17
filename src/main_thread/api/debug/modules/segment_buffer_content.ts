@@ -1,3 +1,4 @@
+import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_buffers_store";
 import type { IBufferType } from "../../../../core/types";
 import type {
   IAdaptationMetadata,
@@ -34,6 +35,17 @@ export default function createSegmentSinkGraph(
   cancelSignal.register(() => {
     clearInterval(intervalId);
   });
+
+  let bufferMetrics: ISegmentSinkMetrics | null = null;
+  instance
+    .__priv_getSegmentSinkMetrics()
+    .then((metrics) => {
+      bufferMetrics = metrics ?? null;
+    })
+    .catch(() => {
+      // Do nothing
+    });
+
   bufferGraphWrapper.appendChild(bufferTitle);
   bufferGraphWrapper.appendChild(canvasElt);
   bufferGraphWrapper.appendChild(currentRangeRepInfoElt);
@@ -50,9 +62,21 @@ export default function createSegmentSinkGraph(
       clearInterval(intervalId);
       return;
     }
+    instance
+      .__priv_getSegmentSinkMetrics()
+      .then((metrics) => {
+        bufferMetrics = metrics ?? null;
+        updateBufferMetrics();
+      })
+      .catch(() => {
+        // DO nothing
+      });
+  }
+
+  function updateBufferMetrics() {
     const showAllInfo = isExtendedMode(parentElt);
-    const inventory = instance.__priv_getSegmentSinkContent(bufferType);
-    if (inventory === null) {
+    const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory;
+    if (bufferMetrics === null || inventory === undefined) {
       bufferGraphWrapper.style.display = "none";
       currentRangeRepInfoElt.innerHTML = "";
       loadingRangeRepInfoElt.innerHTML = "";

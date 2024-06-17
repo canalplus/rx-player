@@ -398,6 +398,11 @@ export default function initializeWorkerMain() {
         break;
       }
 
+      case MainThreadMessageType.PullSegmentSinkStoreInfos: {
+        sendSegmentSinksStoreInfos(contentPreparer, msg.value.messageId);
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }
@@ -899,4 +904,26 @@ function updateLoggerLevel(logLevel: ILoggerLevel, sendBackLogs: boolean): void 
       });
     });
   }
+}
+
+/**
+ * Send a message `SegmentSinkStoreUpdate` to the main thread with
+ * a serialized object that represents the segmentSinksStore state.
+ * @param {ContentPreparer} contentPreparer
+ * @returns {void}
+ */
+function sendSegmentSinksStoreInfos(
+  contentPreparer: ContentPreparer,
+  messageId: number,
+): void {
+  const currentContent = contentPreparer.getCurrentContent();
+  if (currentContent === null) {
+    return;
+  }
+  const segmentSinksMetrics = currentContent.segmentSinksStore.getSegmentSinksMetrics();
+  sendMessage({
+    type: WorkerMessageType.SegmentSinkStoreUpdate,
+    contentId: currentContent.contentId,
+    value: { segmentSinkMetrics: segmentSinksMetrics, messageId },
+  });
 }

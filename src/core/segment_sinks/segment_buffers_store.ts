@@ -25,11 +25,37 @@ import type { IBufferType, SegmentSink } from "./implementations";
 import { AudioVideoSegmentSink } from "./implementations";
 import type { ITextDisplayerInterface } from "./implementations/text";
 import TextSegmentSink from "./implementations/text";
+import type { IBufferedChunk } from "./inventory/segment_inventory";
+import type { IChunkContext, IChunkContextSnapshot } from "./inventory/types";
 
 const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text"];
 
 /** Types of "native" media buffers (i.e. which rely on a SourceBuffer) */
 type INativeMediaBufferType = "audio" | "video";
+
+/**
+ * Interface containing metadata of a buffered chunk.
+ * The metadata is serializable and does not contain references to JS objects
+ * that are not serializable, such as Map or class instances.
+ */
+export interface IBufferedChunkSnapshot extends Omit<IBufferedChunk, "infos"> {
+  infos: IChunkContextSnapshot;
+}
+
+/**
+ * Interface representing metrics for segment sinks.
+ * The metrics include information on the buffer type, codec, and segment inventory,
+ * and are categorized by segment type (audio, video, text).
+ */
+export interface ISegmentSinkMetrics {
+  segmentSinks: Record<"audio" | "video" | "text", ISegmentSinkMetricForType>;
+}
+
+interface ISegmentSinkMetricForType {
+  bufferType: IBufferType;
+  codec: string | undefined;
+  segmentInventory: IBufferedChunkSnapshot[] | undefined;
+}
 
 /**
  * Allows to easily create and dispose SegmentSinks, which are interfaces to
@@ -347,6 +373,31 @@ export default class SegmentSinksStore {
     }
     return true;
   }
+
+  private createSegmentSinkMetricsForType(
+    bufferType: IBufferType,
+  ): ISegmentSinkMetricForType {
+    return {
+      bufferType,
+      codec: this._initializedSegmentSinks[bufferType]?.codec,
+      segmentInventory: this._initializedSegmentSinks[bufferType]
+        ?.getLastKnownInventory()
+        .map((chunk) => ({
+          ...chunk,
+          infos: getChunkContextSnapshot(chunk.infos),
+        })),
+    };
+  }
+
+  public getSegmentSinksMetrics(): ISegmentSinkMetrics {
+    return {
+      segmentSinks: {
+        audio: this.createSegmentSinkMetricsForType("audio"),
+        video: this.createSegmentSinkMetricsForType("video"),
+        text: this.createSegmentSinkMetricsForType("text"),
+      },
+    };
+  }
 }
 
 /**
@@ -360,4 +411,12 @@ function shouldHaveNativeBuffer(
   bufferType: string,
 ): bufferType is INativeMediaBufferType {
   return bufferType === "audio" || bufferType === "video";
+}
+
+function getChunkContextSnapshot(context: IChunkContext): IChunkContextSnapshot {
+  return {
+    adaptation: context.adaptation.getMetadataSnapshot(),
+    period: context.period.getMetadataSnapshot(),
+    representation: context.representation.getMetadataSnapshot(),
+  };
 }

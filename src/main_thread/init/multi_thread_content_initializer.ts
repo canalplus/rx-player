@@ -1,6 +1,7 @@
 import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
@@ -92,6 +93,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _currentMediaSourceCanceller: TaskCanceller;
 
   /**
+   * Stores the resolvers and the current messageId that is sent to the web worker to receive segment sink metrics.
+   * The purpose of collecting metrics is for monitoring and debugging.
+   */
+  private _segmentMetrics: {
+    lastMessageId: number;
+    resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
+  };
+  /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
    * @param {Object} settings
@@ -103,6 +112,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
+    this._segmentMetrics = {
+      lastMessageId: 0,
+      resolvers: {},
+    };
   }
 
   /**
@@ -1071,6 +1084,19 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           // Should already be handled by the API
           break;
 
+        case WorkerMessageType.SegmentSinkStoreUpdate: {
+          if (this._currentContentInfo?.contentId !== msgData.contentId) {
+            return;
+          }
+          const resolveFn = this._segmentMetrics.resolvers[msgData.value.messageId];
+          if (resolveFn !== undefined) {
+            resolveFn(msgData.value.segmentSinkMetrics);
+            delete this._segmentMetrics.resolvers[msgData.value.messageId];
+          } else {
+            log.error("MTCI: Failed to send segment sink store update");
+          }
+          break;
+        }
         default:
           assertUnreachable(msgData);
       }
@@ -1454,6 +1480,24 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
 
+    const _getSegmentSinkMetrics: () => Promise<
+      ISegmentSinkMetrics | undefined
+    > = async () => {
+      this._segmentMetrics.lastMessageId++;
+      const messageId = this._segmentMetrics.lastMessageId;
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.PullSegmentSinkStoreInfos,
+        value: { messageId },
+      });
+      return new Promise((resolve, reject) => {
+        this._segmentMetrics.resolvers[messageId] = resolve;
+        const rejectFn = (err: CancellationError) => {
+          delete this._segmentMetrics.resolvers[messageId];
+          return reject(err);
+        };
+        cancelSignal.register(rejectFn);
+      });
+    };
     /**
      * Emit a "loaded" events once the initial play has been performed and the
      * media can begin playback.
@@ -1465,7 +1509,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
-              this.trigger("loaded", { segmentSinksStore: null });
+              this.trigger("loaded", {
+                getSegmentSinkMetrics: _getSegmentSinkMetrics,
+              });
             }
           },
           { emitCurrentValue: true, clearSignal: cancelSignal },

@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import type {
-  ISegmentSinksStore,
-  IBufferType,
-  IAdaptationChoice,
-  IInbandEvent,
-} from "../../core/types";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
 import type {
   IPeriodsUpdateResult,
   IAdaptationMetadata,
@@ -143,7 +139,9 @@ export interface IContentInitializerEvents {
    * Event sent just as the content is considered as "loaded".
    * From this point on, the user can reliably play/pause/resume the stream.
    */
-  loaded: { segmentSinksStore: ISegmentSinksStore | null };
+  loaded: {
+    getSegmentSinkMetrics: null | (() => Promise<ISegmentSinkMetrics | undefined>);
+  };
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
   streamEventSkip: IPublicStreamEvent | IPublicNonFiniteStreamEvent;

@@ -30,16 +30,15 @@ describe("Fast-switching", function () {
 
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
-    await checkAfterSleepWithBackoff({}, () => {
-      const videoSegmentBuffered = player
-        .__priv_getSegmentSinkContent("video")
-        .map(({ infos }) => {
+    await checkAfterSleepWithBackoff({}, async () => {
+      const metrics = await player.__priv_getSegmentSinkMetrics();
+      const videoSegmentBuffered = metrics.segmentSinks.video.segmentInventory.map(
+        ({ infos }) => {
           return {
             bitrate: infos.representation.bitrate,
-            time: infos.segment.time,
-            end: infos.segment.end,
           };
-        });
+        },
+      );
       expect(videoSegmentBuffered.length).to.be.at.least(3);
       expect(videoSegmentBuffered[1].bitrate).to.equal(1996000);
       expect(videoSegmentBuffered[2].bitrate).to.equal(1996000);
@@ -62,16 +61,15 @@ describe("Fast-switching", function () {
 
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
-    await checkAfterSleepWithBackoff({}, () => {
-      const videoSegmentBuffered = player
-        .__priv_getSegmentSinkContent("video")
-        .map(({ infos }) => {
+    await checkAfterSleepWithBackoff({}, async () => {
+      const metrics = await player.__priv_getSegmentSinkMetrics();
+      const videoSegmentBuffered = metrics.segmentSinks.video.segmentInventory.map(
+        ({ infos }) => {
           return {
             bitrate: infos.representation.bitrate,
-            time: infos.segment.time,
-            end: infos.segment.end,
           };
-        });
+        },
+      );
       expect(videoSegmentBuffered.length).to.be.at.least(3);
       expect(videoSegmentBuffered[1].bitrate).to.equal(1996000);
       expect(videoSegmentBuffered[2].bitrate).to.equal(1996000);
@@ -94,15 +92,14 @@ describe("Fast-switching", function () {
     player.setWantedBufferAhead(30);
     lockHighestBitrates(player, "lazy");
     await sleep(1000);
-    const videoSegmentBuffered = player
-      .__priv_getSegmentSinkContent("video")
-      .map(({ infos }) => {
+    const metrics = await player.__priv_getSegmentSinkMetrics();
+    const videoSegmentBuffered = metrics.segmentSinks.video.segmentInventory.map(
+      ({ infos }) => {
         return {
           bitrate: infos.representation.bitrate,
-          time: infos.segment.time,
-          end: infos.segment.end,
         };
-      });
+      },
+    );
     expect(videoSegmentBuffered.length).to.be.at.least(3);
     expect(videoSegmentBuffered[0].bitrate).to.equal(400000);
     expect(videoSegmentBuffered[1].bitrate).to.equal(400000);

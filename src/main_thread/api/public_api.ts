@@ -31,12 +31,11 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
-  ISegmentSinksStore,
   IABRThrottlers,
-  IBufferedChunk,
   IBufferType,
 } from "../../core/types";
 import type { IErrorCode, IErrorType } from "../../errors";
@@ -368,6 +367,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Function passed from the ContentInitializer that return segment sinks metrics.
+   * This is used for monitor and debugging.
+   */
+  private _priv_segmentSinkMetricsCallback:
+    | null
+    | (() => Promise<ISegmentSinkMetrics | undefined>);
+
+  /**
    * @constructor
    * @param {Object} options
    */
@@ -442,6 +449,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_lastAutoPlay = false;
 
     this._priv_worker = null;
+
+    this._priv_segmentSinkMetricsCallback = null;
 
     const onVolumeChange = () => {
       this.trigger("volumeChange", {
@@ -972,7 +981,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       defaultAudioTrackSwitchingMode,
       initializer,
       isDirectFile,
-      segmentSinksStore: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
@@ -995,10 +1003,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("warning", formattedError);
     });
     initializer.addEventListener("reloadingMediaSource", (payload) => {
-      contentInfos.segmentSinksStore = null;
       if (contentInfos.tracksStore !== null) {
         contentInfos.tracksStore.resetPeriodObjects();
       }
+      this._priv_segmentSinkMetricsCallback = null;
       this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
@@ -1038,7 +1046,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
     initializer.addEventListener("loaded", (evt) => {
-      contentInfos.segmentSinksStore = evt.segmentSinksStore;
+      this._priv_segmentSinkMetricsCallback = evt.getSegmentSinkMetrics;
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -2321,26 +2329,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   // They should not be used by any external code.
 
   /**
-   * /!\ For demo use only! Do not touch!
-   *
-   * Returns every chunk buffered for a given buffer type.
-   * Returns `null` if no SegmentSink was created for this type of buffer.
-   * @param {string} bufferType
-   * @returns {Array.<Object>|null}
+   * Used for the display of segmentSink metrics for the debug element
+   * @param fn
+   * @param cancellationSignal
+   * @returns
    */
-  __priv_getSegmentSinkContent(bufferType: IBufferType): IBufferedChunk[] | null {
-    if (
-      this._priv_contentInfos === null ||
-      this._priv_contentInfos.segmentSinksStore === null
-    ) {
-      return null;
+  async __priv_getSegmentSinkMetrics(): Promise<undefined | ISegmentSinkMetrics> {
+    if (this._priv_segmentSinkMetricsCallback === null) {
+      return undefined;
+    } else {
+      return this._priv_segmentSinkMetricsCallback();
     }
-    const segmentSinkStatus =
-      this._priv_contentInfos.segmentSinksStore.getStatus(bufferType);
-    if (segmentSinkStatus.type === "initialized") {
-      return segmentSinkStatus.value.getLastKnownInventory();
-    }
-    return null;
   }
 
   /**
@@ -2408,6 +2407,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos?.tracksStore?.dispose();
     this._priv_contentInfos?.mediaElementTracksStore?.dispose();
     this._priv_contentInfos = null;
+    this._priv_segmentSinkMetricsCallback = null;
 
     this._priv_contentEventsMemory = {};
 
@@ -3273,8 +3273,6 @@ interface IPublicApiContentInfos {
   activeRepresentations: {
     [periodId: string]: Partial<Record<IBufferType, IRepresentationMetadata | null>>;
   } | null;
-  /** Keep information on the active SegmentSinks. */
-  segmentSinksStore: ISegmentSinksStore | null;
   /**
    * TracksStore instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
