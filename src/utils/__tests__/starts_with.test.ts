@@ -1,22 +1,7 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import startsWith from "../starts_with";
 
 /* eslint-disable no-restricted-properties */
-
-import startsWith from "../starts_with";
 
 /* eslint-disable @typescript-eslint/unbound-method */
 const initialStartsWith = String.prototype.startsWith;
@@ -50,7 +35,7 @@ describe("utils - starts-with", () => {
   if (typeof initialStartsWith === "function") {
     it("should call the original startsWith function if available", () => {
       String.prototype.startsWith = initialStartsWith;
-      const mockStartsWith = jest.spyOn(String.prototype, "startsWith");
+      const mockStartsWith = vi.spyOn(String.prototype, "startsWith");
       const str = "Street Halo";
       expect(startsWith(str, "Stree")).toBe(true);
       expect(startsWith(str, "Halo")).toBe(false);

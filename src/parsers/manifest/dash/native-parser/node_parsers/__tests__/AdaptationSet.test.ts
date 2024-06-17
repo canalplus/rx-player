@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect, vi } from "vitest";
 import log from "../../../../../../log";
 import { createAdaptationSetIntermediateRepresentation } from "../AdaptationSet";
 import { MPDError } from "../utils";
@@ -22,7 +7,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="true" />`,
       "text/xml",
@@ -52,7 +37,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
   });
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="foobar" />`,
       "text/xml",
@@ -94,7 +79,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="foobar" />`,
       "text/xml",
@@ -127,7 +112,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="12.4" />`,
       "text/xml",
@@ -169,7 +154,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
   });
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="toto" />`,
       "text/xml",
@@ -217,7 +202,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="012" />`,
       "text/xml",
@@ -259,7 +244,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
   });
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="toto" />`,
       "text/xml",
@@ -307,7 +292,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="012" />`,
       "text/xml",
@@ -349,7 +334,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
   });
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="toto" />`,
       "text/xml",
@@ -406,7 +391,7 @@ function testNumberOrBooleanAttribute(
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse an AdaptationSet element with a correct ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="012" />`,
       "text/xml",
@@ -448,7 +433,7 @@ function testNumberOrBooleanAttribute(
   });
 
   it(`should correctly parse an AdaptationSet element with an incorrect ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="toto" />`,
       "text/xml",
@@ -498,7 +483,7 @@ function testNumberOrBooleanAttribute(
   });
 
   it(`should correctly parse an AdaptationSet element with a boolean ${attributeName} attribute`, () => {
-    const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const spyLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
     const element1 = new DOMParser().parseFromString(
       `<AdaptationSet ${attributeName}="true" />`,
       "text/xml",

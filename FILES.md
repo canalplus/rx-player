@@ -183,9 +183,7 @@ The rx-player contains multiple type of tests:
 - unit tests: test specific parts of the code. The main goal here is to check the
   implementation of smaller units of code.
 
-  They are written alongside the code, in `__tests__` directories. All its configuration
-  can be found at the root of the project, in `jest.config.js` (we use the jest library
-  for unit tests).
+  They are written alongside the code, in `__tests__` directories.
 
 - memory tests: test the memory usage of the player.
 

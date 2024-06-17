@@ -198,9 +198,7 @@ module.exports = {
     "import/no-deprecated": "error",
     "import/no-extraneous-dependencies": [
       "error",
-      {
-        devDependencies: false,
-      },
+      { devDependencies: ["**/*.test.ts", "**/__tests__/**"] },
     ],
     "import/no-internal-modules": "off",
     "import/order": [

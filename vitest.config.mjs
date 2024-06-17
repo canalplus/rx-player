@@ -70,7 +70,6 @@ function getBrowserConfig(browser) {
 
 export default defineConfig({
   plugins: [vitePluginArraybuffer()],
-  // assetsInclude: ["**/*.bif?arraybuffer"],
   define: {
     // global variables
     __TEST_CONTENT_SERVER__: {
@@ -88,8 +87,9 @@ export default defineConfig({
     __BROWSER_NAME__: JSON.stringify(process.env.BROWSER_CONFIG),
   },
   test: {
-    globals: false,
     watch: false,
+    globals: false,
+    reporters: "dot",
     include: ["tests/**/*.[jt]s?(x)"],
     globalSetup: "tests/contents/server.mjs",
     browser: getBrowserConfig(process.env.BROWSER_CONFIG),

@@ -72,7 +72,7 @@ export default function request<T>(
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 
-    let timeoutId: undefined | number;
+    let timeoutId: undefined | ReturnType<typeof setTimeout>;
     if (timeout !== undefined) {
       xhr.timeout = timeout;
 
@@ -87,7 +87,7 @@ export default function request<T>(
         reject(new RequestError(url, xhr.status, RequestErrorTypes.TIMEOUT));
       }, timeout + 3000);
     }
-    let connectionTimeoutId: undefined | number;
+    let connectionTimeoutId: undefined | ReturnType<typeof setTimeout>;
     if (connectionTimeout !== undefined) {
       connectionTimeoutId = setTimeout(() => {
         clearCancellingProcess();

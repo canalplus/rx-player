@@ -1,20 +1,5 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -78,13 +63,12 @@ const emptyLoadedSessionsStore = {
  * Call `done` when done.
  * @param {Object} loadedSessionsStore
  * @param {number} limit
- * @param {Function} done
  */
 async function checkNothingHappen(
   loadedSessionsStore: LoadedSessionsStore,
   limit: number,
 ): Promise<void> {
-  const mockCloseSession = jest.spyOn(loadedSessionsStore, "closeSession");
+  const mockCloseSession = vi.spyOn(loadedSessionsStore, "closeSession");
   await cleanOldLoadedSessions(loadedSessionsStore, limit);
   expect(mockCloseSession).not.toHaveBeenCalled();
   mockCloseSession.mockRestore();
@@ -105,7 +89,7 @@ async function checkEntriesCleaned(
   limit: number,
   entries: Array<{ sessionId: string }>,
 ): Promise<void> {
-  const mockCloseSession = jest.spyOn(loadedSessionsStore, "closeSession");
+  const mockCloseSession = vi.spyOn(loadedSessionsStore, "closeSession");
   const prom = cleanOldLoadedSessions(loadedSessionsStore, limit).then(() => {
     expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
     mockCloseSession.mockRestore();

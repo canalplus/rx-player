@@ -1,20 +1,6 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import type { MockInstance } from "vitest";
+import { vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -313,117 +299,134 @@ class MockedDecryptorEventEmitter extends EventEmitter<{
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function mockCompat(
   presets: {
-    canReuseMediaKeys?: jest.Mock;
-    shouldRenewMediaKeySystemAccess?: jest.Mock;
-    onEncrypted?: jest.Mock;
-    requestMediaKeySystemAccess?: jest.Mock;
-    setMediaKeys?: jest.Mock;
+    canReuseMediaKeys?: MockInstance;
+    shouldRenewMediaKeySystemAccess?: MockInstance;
+    onEncrypted?: MockInstance;
+    requestMediaKeySystemAccess?: MockInstance;
+    setMediaKeys?: MockInstance;
   } = {},
 ) {
   const ee = new MockedDecryptorEventEmitter();
   const onEncrypted =
     presets.onEncrypted ??
-    jest.fn(
-      (elt: HTMLMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
-        elt.addEventListener("encrypted", fn);
-        signal.register(() => {
-          elt.removeEventListener("encrypted", fn);
-        });
-        ee.addEventListener(
-          "encrypted",
-          (evt) => {
-            if (evt.elt === elt) {
-              fn(evt.value);
-            }
-          },
-          signal,
-        );
-      },
-    );
-  const mockEvents: Record<string, jest.Mock> = {
-    onKeyMessage: jest.fn(
-      (
-        elt: MediaKeySessionImpl,
-        fn: (x: unknown) => void,
-        signal: CancellationSignal,
-      ) => {
-        elt.addEventListener("message", fn, signal);
-        ee.addEventListener(
-          "keymessage",
-          (evt) => {
-            if (evt.session === elt) {
-              fn(evt.value);
-            }
-          },
-          signal,
-        );
-      },
-    ),
-    onKeyError: jest.fn(
-      (
-        elt: MediaKeySessionImpl,
-        fn: (x: unknown) => void,
-        signal: CancellationSignal,
-      ) => {
-        elt.addEventListener("error", fn, signal);
-        ee.addEventListener(
-          "keyerror",
-          (evt) => {
-            if (evt.session === elt) {
-              fn(evt.value);
-            }
-          },
-          signal,
-        );
-      },
-    ),
-    onKeyStatusesChange: jest.fn(
-      (
-        elt: MediaKeySessionImpl,
-        fn: (x: unknown) => void,
-        signal: CancellationSignal,
-      ) => {
-        elt.addEventListener("keystatuseschange", fn, signal);
-        ee.addEventListener(
-          "keystatuseschange",
-          (evt) => {
-            if (evt.session === elt) {
-              fn(evt.value);
-            }
-          },
-          signal,
-        );
-      },
-    ),
+    vi
+      .fn()
+      .mockImplementation(
+        (elt: HTMLMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
+          elt.addEventListener("encrypted", fn);
+          signal.register(() => {
+            elt.removeEventListener("encrypted", fn);
+          });
+          ee.addEventListener(
+            "encrypted",
+            (evt) => {
+              if (evt.elt === elt) {
+                fn(evt.value);
+              }
+            },
+            signal,
+          );
+        },
+      );
+  const mockEvents: Record<string, MockInstance> = {
+    onKeyMessage: vi
+      .fn()
+      .mockImplementation(
+        (
+          elt: MediaKeySessionImpl,
+          fn: (x: unknown) => void,
+          signal: CancellationSignal,
+        ) => {
+          elt.addEventListener("message", fn, signal);
+          ee.addEventListener(
+            "keymessage",
+            (evt) => {
+              if (evt.session === elt) {
+                fn(evt.value);
+              }
+            },
+            signal,
+          );
+        },
+      ),
+    onKeyError: vi
+      .fn()
+      .mockImplementation(
+        (
+          elt: MediaKeySessionImpl,
+          fn: (x: unknown) => void,
+          signal: CancellationSignal,
+        ) => {
+          elt.addEventListener("error", fn, signal);
+          ee.addEventListener(
+            "keyerror",
+            (evt) => {
+              if (evt.session === elt) {
+                fn(evt.value);
+              }
+            },
+            signal,
+          );
+        },
+      ),
+    onKeyStatusesChange: vi
+      .fn()
+      .mockImplementation(
+        (
+          elt: MediaKeySessionImpl,
+          fn: (x: unknown) => void,
+          signal: CancellationSignal,
+        ) => {
+          elt.addEventListener("keystatuseschange", fn, signal);
+          ee.addEventListener(
+            "keystatuseschange",
+            (evt) => {
+              if (evt.session === elt) {
+                fn(evt.value);
+              }
+            },
+            signal,
+          );
+        },
+      ),
   };
 
   const mockRmksa =
-    presets.requestMediaKeySystemAccess ?? jest.fn(requestMediaKeySystemAccessImpl);
-  const mockSetMediaKeys = presets.setMediaKeys ?? jest.fn(() => Promise.resolve());
-  const mockGenerateKeyRequest = jest.fn(
-    (mks: MediaKeySessionImpl, initializationDataType, initializationData) => {
-      return mks.generateRequest(initializationDataType, initializationData);
-    },
-  );
+    presets.requestMediaKeySystemAccess ??
+    vi.fn().mockImplementation(requestMediaKeySystemAccessImpl);
+  const mockSetMediaKeys =
+    presets.setMediaKeys ?? vi.fn().mockImplementation(() => Promise.resolve());
+  const mockGenerateKeyRequest = vi
+    .fn()
+    .mockImplementation(
+      (mks: MediaKeySessionImpl, initializationDataType, initializationData) => {
+        return mks.generateRequest(initializationDataType, initializationData);
+      },
+    );
 
-  const mockGetInitData = jest.fn((encryptedEvent: IEncryptedEventData) => {
-    return encryptedEvent;
-  });
+  const mockGetInitData = vi
+    .fn()
+    .mockImplementation((encryptedEvent: IEncryptedEventData) => {
+      return encryptedEvent;
+    });
 
   if (presets.shouldRenewMediaKeySystemAccess === undefined) {
-    jest.mock("../../../../compat/should_renew_media_key_system_access", () =>
-      jest.fn(() => false),
-    );
+    vi.doMock("../../../../compat/should_renew_media_key_system_access", () => ({
+      default: vi.fn().mockImplementation(() => false),
+    }));
   } else {
-    jest.mock(
-      "../../../../compat/should_renew_media_key_system_access",
-      () => presets.shouldRenewMediaKeySystemAccess,
-    );
+    vi.doMock("../../../../compat/should_renew_media_key_system_access", () => ({
+      default: presets.shouldRenewMediaKeySystemAccess,
+    }));
   }
   if (presets.canReuseMediaKeys === undefined) {
-    jest.mock("../../../../compat/can_reuse_media_keys", () => jest.fn(() => true));
+    vi.doMock("../../../../compat/can_reuse_media_keys", () => ({
+      default: vi.fn().mockImplementation(() => true),
+    }));
   } else {
-    jest.mock("../../../../compat/can_reuse_media_keys", () => presets.canReuseMediaKeys);
+    vi.doMock("../../../../compat/can_reuse_media_keys", () => ({
+      default: presets.canReuseMediaKeys,
+    }));
   }
 
   const emeImplementation = {
@@ -432,8 +435,7 @@ export function mockCompat(
     setMediaKeys: mockSetMediaKeys,
   } as unknown as IEmeApiImplementation;
 
-  jest.mock("../../../../compat/eme", () => ({
-    __esModule: true as const,
+  vi.doMock("../../../../compat/eme", () => ({
     default: emeImplementation,
     getInitData: mockGetInitData,
     generateKeyRequest: mockGenerateKeyRequest,
@@ -513,5 +515,11 @@ export function formatFakeChallengeFromInitData(
 ): Uint8Array {
   const initDataAB = initData instanceof ArrayBuffer ? initData : initData.buffer;
   const objChallenge = [initDataType, bytesToBase64(new Uint8Array(initDataAB))];
-  return strToUtf8(JSON.stringify(objChallenge));
+  let data = strToUtf8(JSON.stringify(objChallenge));
+  // Work-around some testing environment issue
+  // see https://github.com/vitest-dev/vitest/issues/4043
+  if (!(data instanceof Uint8Array)) {
+    data = new Uint8Array(data);
+  }
+  return data;
 }

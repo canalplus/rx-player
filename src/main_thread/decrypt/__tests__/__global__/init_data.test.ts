@@ -1,20 +1,5 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, afterEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -36,7 +21,7 @@ describe("decrypt - global tests - init data", () => {
   /** Default video element used in our tests. */
   const videoElt = document.createElement("video");
 
-  const mockGetLicense = jest.fn(() => {
+  const mockGetLicense = vi.fn().mockImplementation(() => {
     return new Promise(() => {
       /* noop */
     });
@@ -45,27 +30,26 @@ describe("decrypt - global tests - init data", () => {
   /** Default keySystems configuration used in our tests. */
   const ksConfig = [{ type: "com.widevine.alpha", getLicense: mockGetLicense }];
 
-  beforeEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
-    mockGetLicense.mockReset();
+  afterEach(() => {
+    vi.resetAllMocks();
+    vi.resetModules();
   });
 
-  it("should create a session and generate a request when init data is sent through the arguments", () => {
+  it("should create a session and generate a request when init data is sent through the arguments", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest } = mockCompat();
+    const mediaKeySession = new MediaKeySessionImpl();
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockReturnValue(mediaKeySession);
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest } = mockCompat();
-      const mediaKeySession = new MediaKeySessionImpl();
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockReturnValue(mediaKeySession);
-
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -89,6 +73,8 @@ describe("decrypt - global tests - init data", () => {
             initData,
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(1);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenCalledWith(
             formatFakeChallengeFromInitData(initData, "cenc"),
             "license-request",
@@ -101,21 +87,21 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should ignore init data already sent through the argument", () => {
+  it("should ignore init data already sent through the argument", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest } = mockCompat();
+    const mediaKeySession = new MediaKeySessionImpl();
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockReturnValue(mediaKeySession);
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
     return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest } = mockCompat();
-      const mediaKeySession = new MediaKeySessionImpl();
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockReturnValue(mediaKeySession);
-
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -149,6 +135,8 @@ describe("decrypt - global tests - init data", () => {
             initData,
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(1);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenCalledWith(
             formatFakeChallengeFromInitData(initData, "cenc"),
             "license-request",
@@ -161,20 +149,23 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should create multiple sessions for multiple sent init data when unknown", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest } = mockCompat();
-      const mediaKeySessions = [
-        new MediaKeySessionImpl(),
-        new MediaKeySessionImpl(),
-        new MediaKeySessionImpl(),
-      ];
-      let createSessionCallIdx = 0;
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
+  it("should create multiple sessions for multiple sent init data when unknown", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest } = mockCompat();
+    const mediaKeySessions = [
+      new MediaKeySessionImpl(),
+      new MediaKeySessionImpl(),
+      new MediaKeySessionImpl(),
+    ];
+    let createSessionCallIdx = 0;
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
         new Uint8Array([54, 55, 75]),
@@ -183,8 +174,6 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -243,6 +232,8 @@ describe("decrypt - global tests - init data", () => {
             initDatas[2],
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(3);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             1,
             formatFakeChallengeFromInitData(initDatas[0], "cenc"),
@@ -266,22 +257,23 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should create multiple sessions for multiple sent init data types", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest } = mockCompat();
-      const mediaKeySessions = [new MediaKeySessionImpl(), new MediaKeySessionImpl()];
-      let createSessionCallIdx = 0;
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
+  it("should create multiple sessions for multiple sent init data types", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest } = mockCompat();
+    const mediaKeySessions = [new MediaKeySessionImpl(), new MediaKeySessionImpl()];
+    let createSessionCallIdx = 0;
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -317,6 +309,8 @@ describe("decrypt - global tests - init data", () => {
             initData,
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(2);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             1,
             formatFakeChallengeFromInitData(initData, "cenc"),
@@ -335,21 +329,22 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should create a session and generate a request when init data is received from the browser", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const mediaKeySession = new MediaKeySessionImpl();
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockReturnValue(mediaKeySession);
+  it("should create a session and generate a request when init data is received from the browser", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+    const mediaKeySession = new MediaKeySessionImpl();
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockReturnValue(mediaKeySession);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -376,6 +371,8 @@ describe("decrypt - global tests - init data", () => {
             initData,
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(1);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenCalledWith(
             formatFakeChallengeFromInitData(initData, "cenc"),
             "license-request",
@@ -388,21 +385,22 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should ignore init data already received through the browser", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const mediaKeySession = new MediaKeySessionImpl();
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockReturnValue(mediaKeySession);
+  it("should ignore init data already received through the browser", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+    const mediaKeySession = new MediaKeySessionImpl();
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockReturnValue(mediaKeySession);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -435,6 +433,8 @@ describe("decrypt - global tests - init data", () => {
             initData,
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(1);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenCalledWith(
             formatFakeChallengeFromInitData(initData, "cenc"),
             "license-request",
@@ -447,20 +447,23 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should create multiple sessions for multiple received init data when unknown", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const mediaKeySessions = [
-        new MediaKeySessionImpl(),
-        new MediaKeySessionImpl(),
-        new MediaKeySessionImpl(),
-      ];
-      let createSessionCallIdx = 0;
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
+  it("should create multiple sessions for multiple received init data when unknown", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+    const mediaKeySessions = [
+      new MediaKeySessionImpl(),
+      new MediaKeySessionImpl(),
+      new MediaKeySessionImpl(),
+    ];
+    let createSessionCallIdx = 0;
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
         new Uint8Array([54, 55, 75]),
@@ -476,8 +479,6 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -527,6 +528,8 @@ describe("decrypt - global tests - init data", () => {
             initDatas[2],
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(3);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             1,
             formatFakeChallengeFromInitData(initDatas[0], "cenc"),
@@ -550,16 +553,19 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should create multiple sessions for multiple received init data types", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const mediaKeySessions = [new MediaKeySessionImpl(), new MediaKeySessionImpl()];
-      let createSessionCallIdx = 0;
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
+  it("should create multiple sessions for multiple received init data types", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+    const mediaKeySessions = [new MediaKeySessionImpl(), new MediaKeySessionImpl()];
+    let createSessionCallIdx = 0;
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
       const initDataEvents = [
@@ -569,8 +575,6 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -603,6 +607,8 @@ describe("decrypt - global tests - init data", () => {
             initData,
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(2);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             1,
             formatFakeChallengeFromInitData(initData, "cenc"),
@@ -621,20 +627,23 @@ describe("decrypt - global tests - init data", () => {
     });
   });
 
-  it("should consider sent event through arguments and received events through the browser the same way", () => {
-    return new Promise<void>((res, rej) => {
-      // == mocks ==
-      const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
-      const mediaKeySessions = [
-        new MediaKeySessionImpl(),
-        new MediaKeySessionImpl(),
-        new MediaKeySessionImpl(),
-      ];
-      let createSessionCallIdx = 0;
-      const mockCreateSession = jest
-        .spyOn(MediaKeysImpl.prototype, "createSession")
-        .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
+  it("should consider sent event through arguments and received events through the browser the same way", async () => {
+    // == mocks ==
+    const { mockGenerateKeyRequest, eventTriggers, mockGetInitData } = mockCompat();
+    const mediaKeySessions = [
+      new MediaKeySessionImpl(),
+      new MediaKeySessionImpl(),
+      new MediaKeySessionImpl(),
+    ];
+    let createSessionCallIdx = 0;
+    const mockCreateSession = vi
+      .spyOn(MediaKeysImpl.prototype, "createSession")
+      .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
+    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+      .default;
+    return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
         new Uint8Array([54, 55, 75]),
@@ -650,8 +659,6 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const { ContentDecryptorState } = jest.requireActual("../../types");
-      const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
@@ -699,6 +706,8 @@ describe("decrypt - global tests - init data", () => {
             initDatas[2],
           );
           expect(mockGetLicense).toHaveBeenCalledTimes(3);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             1,
             formatFakeChallengeFromInitData(initDatas[0], "cenc"),

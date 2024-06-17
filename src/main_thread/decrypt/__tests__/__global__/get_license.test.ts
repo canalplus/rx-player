@@ -1,27 +1,12 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, afterEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-restricted-properties */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { IPlayerError } from "../../../../public_types";
 import { concat } from "../../../../utils/byte_parsing";
@@ -37,8 +22,8 @@ const videoElt = document.createElement("video");
 
 describe("decrypt - global tests - getLicense", () => {
   afterEach(() => {
-    jest.resetModules();
-    jest.restoreAllMocks();
+    vi.resetModules();
+    vi.restoreAllMocks();
   });
 
   it("should update the session after getLicense resolves with a license", async () => {
@@ -277,7 +262,7 @@ describe("decrypt - global tests - getLicense", () => {
  * HUGE function to check most getLicense scenarios.
  * @param {Object} opts
  */
-function checkGetLicense({
+async function checkGetLicense({
   isGetLicensePromiseBased,
   configuredRetries,
   configuredTimeout,
@@ -319,40 +304,48 @@ function checkGetLicense({
    */
   ignoreLicenseRequests: boolean;
 }): Promise<void> {
-  return new Promise((res, rej) => {
-    // == mocks ==
-    mockCompat();
-    const mediaKeySession = new MediaKeySessionImpl();
-    jest.spyOn(MediaKeysImpl.prototype, "createSession").mockReturnValue(mediaKeySession);
-    const mockUpdate = jest.spyOn(mediaKeySession, "update");
-    let remainingRetries = nbRetries;
-    const mockGetLicense = jest.fn(() => {
-      const callIdx = nbRetries - remainingRetries;
-      const timeout = getTimeout(callIdx);
-      if (remainingRetries === 0) {
-        const challengeU8 = new Uint8Array(challenge);
-        const result = ignoreLicenseRequests ? null : concat(challengeU8, challengeU8);
-        if (timeout !== undefined) {
-          return new Promise((resolve) => {
-            setTimeout(() => resolve(result), timeout);
-          });
-        }
-        return isGetLicensePromiseBased ? Promise.resolve(result) : result;
-      }
-      remainingRetries--;
+  const initData = new Uint8Array([54, 55, 75]);
+  const initDataEvent = {
+    type: "cenc",
+    values: [{ systemId: "15", data: initData }],
+  };
+  const challenge = formatFakeChallengeFromInitData(initData, "cenc");
+  // == mocks ==
+  const mediaKeySession = new MediaKeySessionImpl();
+  vi.spyOn(MediaKeysImpl.prototype, "createSession").mockReturnValue(mediaKeySession);
+  const mockUpdate = vi.spyOn(mediaKeySession, "update");
+  let remainingRetries = nbRetries;
+  const mockGetLicense = vi.fn(() => {
+    const callIdx = nbRetries - remainingRetries;
+    const timeout = getTimeout(callIdx);
+    if (remainingRetries === 0) {
+      const challengeU8 = new Uint8Array(challenge);
+      const result = ignoreLicenseRequests ? null : concat(challengeU8, challengeU8);
       if (timeout !== undefined) {
-        return new Promise((_, reject) => {
-          setTimeout(() => {
-            reject("AAAA");
-          }, timeout);
+        return new Promise((resolve) => {
+          setTimeout(() => resolve(result), timeout);
         });
       }
-      if (!isGetLicensePromiseBased) {
-        throw new Error("AAAA");
-      }
-      return Promise.reject(new Error("AAAA"));
-    });
-
+      return isGetLicensePromiseBased ? Promise.resolve(result) : result;
+    }
+    remainingRetries--;
+    if (timeout !== undefined) {
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          reject("AAAA");
+        }, timeout);
+      });
+    }
+    if (!isGetLicensePromiseBased) {
+      throw new Error("AAAA");
+    }
+    return Promise.reject(new Error("AAAA"));
+  });
+  mockCompat();
+  const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
+  const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
+    .default;
+  return new Promise((res, rej) => {
     // == vars ==
     /** Default keySystems configuration used in our tests. */
     const maxRetries = configuredRetries === undefined ? 2 : configuredRetries;
@@ -368,12 +361,6 @@ function checkGetLicense({
             : undefined,
       },
     ];
-    const initData = new Uint8Array([54, 55, 75]);
-    const initDataEvent = {
-      type: "cenc",
-      values: [{ systemId: "15", data: initData }],
-    };
-    const challenge = formatFakeChallengeFromInitData(initData, "cenc");
     function checkKeyLoadError(error: unknown) {
       try {
         expect(error).toBeInstanceOf(Error);
@@ -387,8 +374,6 @@ function checkGetLicense({
     }
 
     // == test ==
-    const { ContentDecryptorState } = jest.requireActual("../../types");
-    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
 
     contentDecryptor.addEventListener("stateChange", (newState: number) => {
@@ -405,6 +390,8 @@ function checkGetLicense({
           checkKeyLoadError(error);
           expect(mockGetLicense).toHaveBeenCalledTimes(maxRetries + 1);
           for (let i = 1; i <= maxRetries + 1; i++) {
+            // TODO there's seem to be an issue with how vitest check Uint8Array
+            // equality
             expect(mockGetLicense).toHaveBeenNthCalledWith(
               i,
               challenge,
@@ -427,6 +414,8 @@ function checkGetLicense({
           checkKeyLoadError(warning);
           const requestIdx = nbRetries - remainingRetries;
           expect(mockGetLicense).toHaveBeenCalledTimes(requestIdx);
+          // TODO there's seem to be an issue with how vitest check Uint8Array
+          // equality
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             requestIdx,
             challenge,
@@ -480,6 +469,8 @@ function checkGetLicense({
           }
           expect(mockGetLicense).toHaveBeenCalledTimes(nbRetries + 1);
           for (let i = 1; i <= nbRetries + 1; i++) {
+            // TODO there's seem to be an issue with how vitest check Uint8Array
+            // equality
             expect(mockGetLicense).toHaveBeenNthCalledWith(
               i,
               challenge,

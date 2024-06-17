@@ -1,19 +1,5 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import type { MockInstance } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import log from "../../../log";
 import type Period from "../period";
 import { MANIFEST_UPDATE_TYPE } from "../types";
@@ -183,108 +169,102 @@ function generateFakeAdaptation({
 }
 
 describe("Manifest - updatePeriodInPlace", () => {
-  let mockOldVideoRepresentation1Replace: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation2Replace: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation3Replace: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation4Replace: jest.MockInstance<void, []> | undefined;
-  let mockOldAudioRepresentationReplace: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation1Update: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation2Update: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation3Update: jest.MockInstance<void, []> | undefined;
-  let mockOldVideoRepresentation4Update: jest.MockInstance<void, []> | undefined;
-  let mockOldAudioRepresentationUpdate: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation1Replace: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation2Replace: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation3Replace: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation4Replace: jest.MockInstance<void, []> | undefined;
-  let mockNewAudioRepresentationReplace: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation1Update: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation2Update: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation3Update: jest.MockInstance<void, []> | undefined;
-  let mockNewVideoRepresentation4Update: jest.MockInstance<void, []> | undefined;
-  let mockNewAudioRepresentationUpdate: jest.MockInstance<void, []> | undefined;
+  let mockOldVideoRepresentation1Replace: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation2Replace: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation3Replace: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation4Replace: MockInstance<[], void> | undefined;
+  let mockOldAudioRepresentationReplace: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation1Update: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation2Update: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation3Update: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation4Update: MockInstance<[], void> | undefined;
+  let mockOldAudioRepresentationUpdate: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation1Replace: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation2Replace: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation3Replace: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation4Replace: MockInstance<[], void> | undefined;
+  let mockNewAudioRepresentationReplace: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation1Update: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation2Update: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation3Update: MockInstance<[], void> | undefined;
+  let mockNewVideoRepresentation4Update: MockInstance<[], void> | undefined;
+  let mockNewAudioRepresentationUpdate: MockInstance<[], void> | undefined;
 
   beforeEach(() => {
-    mockOldVideoRepresentation1Replace = jest.spyOn(
+    mockOldVideoRepresentation1Replace = vi.spyOn(
       oldVideoRepresentation1.index,
       "_replace",
     );
-    mockOldVideoRepresentation2Replace = jest.spyOn(
+    mockOldVideoRepresentation2Replace = vi.spyOn(
       oldVideoRepresentation2.index,
       "_replace",
     );
-    mockOldVideoRepresentation3Replace = jest.spyOn(
+    mockOldVideoRepresentation3Replace = vi.spyOn(
       oldVideoRepresentation3.index,
       "_replace",
     );
-    mockOldVideoRepresentation4Replace = jest.spyOn(
+    mockOldVideoRepresentation4Replace = vi.spyOn(
       oldVideoRepresentation4.index,
       "_replace",
     );
-    mockOldAudioRepresentationReplace = jest.spyOn(
+    mockOldAudioRepresentationReplace = vi.spyOn(
       oldAudioRepresentation.index,
       "_replace",
     );
-    mockOldVideoRepresentation1Update = jest.spyOn(
+    mockOldVideoRepresentation1Update = vi.spyOn(
       oldVideoRepresentation1.index,
       "_update",
     );
-    mockOldVideoRepresentation2Update = jest.spyOn(
+    mockOldVideoRepresentation2Update = vi.spyOn(
       oldVideoRepresentation2.index,
       "_update",
     );
-    mockOldVideoRepresentation3Update = jest.spyOn(
+    mockOldVideoRepresentation3Update = vi.spyOn(
       oldVideoRepresentation3.index,
       "_update",
     );
-    mockOldVideoRepresentation4Update = jest.spyOn(
+    mockOldVideoRepresentation4Update = vi.spyOn(
       oldVideoRepresentation4.index,
       "_update",
     );
-    mockOldAudioRepresentationUpdate = jest.spyOn(
-      oldAudioRepresentation.index,
-      "_update",
-    );
-    mockNewVideoRepresentation1Replace = jest.spyOn(
+    mockOldAudioRepresentationUpdate = vi.spyOn(oldAudioRepresentation.index, "_update");
+    mockNewVideoRepresentation1Replace = vi.spyOn(
       newVideoRepresentation1.index,
       "_replace",
     );
-    mockNewVideoRepresentation2Replace = jest.spyOn(
+    mockNewVideoRepresentation2Replace = vi.spyOn(
       newVideoRepresentation2.index,
       "_replace",
     );
-    mockNewVideoRepresentation3Replace = jest.spyOn(
+    mockNewVideoRepresentation3Replace = vi.spyOn(
       newVideoRepresentation3.index,
       "_replace",
     );
-    mockNewVideoRepresentation4Replace = jest.spyOn(
+    mockNewVideoRepresentation4Replace = vi.spyOn(
       newVideoRepresentation4.index,
       "_replace",
     );
-    mockNewAudioRepresentationReplace = jest.spyOn(
+    mockNewAudioRepresentationReplace = vi.spyOn(
       newAudioRepresentation.index,
       "_replace",
     );
-    mockNewVideoRepresentation1Update = jest.spyOn(
+    mockNewVideoRepresentation1Update = vi.spyOn(
       newVideoRepresentation1.index,
       "_update",
     );
-    mockNewVideoRepresentation2Update = jest.spyOn(
+    mockNewVideoRepresentation2Update = vi.spyOn(
       newVideoRepresentation2.index,
       "_update",
     );
-    mockNewVideoRepresentation3Update = jest.spyOn(
+    mockNewVideoRepresentation3Update = vi.spyOn(
       newVideoRepresentation3.index,
       "_update",
     );
-    mockNewVideoRepresentation4Update = jest.spyOn(
+    mockNewVideoRepresentation4Update = vi.spyOn(
       newVideoRepresentation4.index,
       "_update",
     );
-    mockNewAudioRepresentationUpdate = jest.spyOn(
-      newAudioRepresentation.index,
-      "_update",
-    );
+    mockNewAudioRepresentationUpdate = vi.spyOn(newAudioRepresentation.index, "_update");
   });
 
   afterEach(() => {
@@ -366,9 +346,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const oldPeriodAdaptations = jest.spyOn(oldPeriod, "getAdaptations");
-    const newPeriodAdaptations = jest.spyOn(newPeriod, "getAdaptations");
-    const mockLog = jest.spyOn(log, "warn");
+    const oldPeriodAdaptations = vi.spyOn(oldPeriod, "getAdaptations");
+    const newPeriodAdaptations = vi.spyOn(newPeriod, "getAdaptations");
+    const mockLog = vi.spyOn(log, "warn");
 
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
@@ -522,9 +502,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockOldPeriodGetAdaptations = jest.spyOn(oldPeriod, "getAdaptations");
-    const mockNewPeriodGetAdaptations = jest.spyOn(newPeriod, "getAdaptations");
-    const mockLog = jest.spyOn(log, "warn");
+    const mockOldPeriodGetAdaptations = vi.spyOn(oldPeriod, "getAdaptations");
+    const mockNewPeriodGetAdaptations = vi.spyOn(newPeriod, "getAdaptations");
+    const mockLog = vi.spyOn(log, "warn");
 
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
@@ -678,7 +658,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -770,7 +750,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -862,7 +842,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -959,7 +939,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -1052,7 +1032,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -1136,7 +1116,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -1219,7 +1199,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,
@@ -1302,7 +1282,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       },
     };
 
-    const mockLog = jest.spyOn(log, "warn");
+    const mockLog = vi.spyOn(log, "warn");
     const res = updatePeriodInPlace(
       oldPeriod as unknown as Period,
       newPeriod as unknown as Period,

@@ -1,29 +1,13 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IPlayerError } from "../../../public_types";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
 function generateParsedPeriod(id: string, start: number, end: number | undefined) {
@@ -43,29 +27,27 @@ function generateParsedRepresentation(id: string) {
 
 describe("Manifest - Manifest", () => {
   const fakeLogger = {
-    warn: jest.fn(() => undefined),
-    info: jest.fn(() => undefined),
+    warn: vi.fn(() => undefined),
+    info: vi.fn(() => undefined),
   };
-  const fakeGenerateNewId = jest.fn(() => "fakeId");
-  const fakeIdGenerator = jest.fn(() => fakeGenerateNewId);
+  const fakeGenerateNewId = vi.fn(() => "fakeId");
+  const fakeIdGenerator = vi.fn(() => fakeGenerateNewId);
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     fakeLogger.warn.mockClear();
     fakeLogger.info.mockClear();
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+    vi.doMock("../../../log", () => ({
       default: fakeLogger,
     }));
     fakeGenerateNewId.mockClear();
     fakeIdGenerator.mockClear();
-    jest.mock("../../../utils/id_generator", () => ({
-      __esModule: true as const,
+    vi.doMock("../../../utils/id_generator", () => ({
       default: fakeIdGenerator,
     }));
   });
 
-  it("should create a normalized Manifest structure", () => {
+  it("should create a normalized Manifest structure", async () => {
     const simpleFakeManifest = {
       id: "man",
       isDynamic: false,
@@ -83,7 +65,7 @@ describe("Manifest - Manifest", () => {
       periods: [],
     };
 
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
     const warnings: IPlayerError[] = [];
     const manifest = new Manifest(simpleFakeManifest, {}, warnings);
 
@@ -106,7 +88,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should create a Period for each manifest.periods given", () => {
+  it("should create a Period for each manifest.periods given", async () => {
     const period1 = generateParsedPeriod("0", 4, undefined);
     const period2 = generateParsedPeriod("1", 12, undefined);
     const simpleFakeManifest = {
@@ -126,15 +108,14 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = jest.fn((period) => {
+    const fakePeriod = vi.fn((period) => {
       return { id: `foo${period.id}`, adaptations: period.adaptations };
     });
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
 
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(period1, [], undefined);
@@ -152,7 +133,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should pass a `representationFilter` to the Period if given", () => {
+  it("should pass a `representationFilter` to the Period if given", async () => {
     const period1 = generateParsedPeriod("0", 4, undefined);
     const period2 = generateParsedPeriod("1", 12, undefined);
     const simpleFakeManifest = {
@@ -176,14 +157,13 @@ describe("Manifest - Manifest", () => {
       return false;
     };
 
-    const fakePeriod = jest.fn((period) => {
+    const fakePeriod = vi.fn((period) => {
       return { id: `foo${period.id}` };
     });
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
 
     /* eslint-disable @typescript-eslint/no-unused-expressions */
     new Manifest(simpleFakeManifest, { representationFilter }, []);
@@ -198,7 +178,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should expose the adaptations of the first period if set", () => {
+  it("should expose the adaptations of the first period if set", async () => {
     const adapP1 = {};
     const adapP2 = {};
     const period1 = { id: "0", start: 4, adaptations: adapP1 };
@@ -220,14 +200,13 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = jest.fn((period) => {
+    const fakePeriod = vi.fn((period) => {
       return { ...period, id: `foo${period.id}` };
     });
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
 
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
@@ -246,7 +225,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should push parsing errors if there are unsupported Adaptations", () => {
+  it("should push parsing errors if there are unsupported Adaptations", async () => {
     const period1 = generateParsedPeriod("0", 4, undefined);
     const period2 = generateParsedPeriod("1", 12, undefined);
     const simpleFakeManifest = {
@@ -266,7 +245,7 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
+    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations.push({
         type: "audio",
         language: "",
@@ -277,11 +256,10 @@ describe("Manifest - Manifest", () => {
       });
       return { ...period, id: `foo${period.id}` };
     });
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
 
     const warnings: IPlayerError[] = [];
     new Manifest(simpleFakeManifest, {}, warnings);
@@ -317,7 +295,7 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should correctly parse every manifest information given", () => {
+  it("should correctly parse every manifest information given", async () => {
     const oldPeriod1 = generateParsedPeriod("0", 4, undefined);
     const oldPeriod2 = generateParsedPeriod("1", 12, undefined);
     const time = getMonotonicTimeStamp();
@@ -338,7 +316,7 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
+    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations.push({
         id: period.adaptations.audio[0].id,
         type: "audio",
@@ -346,11 +324,10 @@ describe("Manifest - Manifest", () => {
       });
       return { ...period, id: `foo${period.id}` };
     });
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
     const warnings: IPlayerError[] = [];
     const manifest = new Manifest(oldManifestArgs, {}, warnings);
 
@@ -379,8 +356,8 @@ describe("Manifest - Manifest", () => {
     expect(fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should return all URLs given with `getContentUrls`", () => {
-    const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
+  it("should return all URLs given with `getContentUrls`", async () => {
+    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations.push({
         id: period.adaptations.audio[0].id,
         type: "audio",
@@ -388,11 +365,10 @@ describe("Manifest - Manifest", () => {
       });
       return { ...period, id: `foo${period.id}` };
     });
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
 
     const oldPeriod1 = generateParsedPeriod("0", 4, undefined);
     const oldPeriod2 = generateParsedPeriod("1", 12, undefined);
@@ -447,8 +423,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest2.getUrls()).toEqual([]);
   });
 
-  it("should replace with a new Manifest when calling `replace`", () => {
-    const fakePeriod = jest.fn((period, unsupportedAdaptations) => {
+  it("should replace with a new Manifest when calling `replace`", async () => {
+    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
       unsupportedAdaptations.push({
         id: period.adaptations.audio[0].id,
         type: "audio",
@@ -461,13 +437,11 @@ describe("Manifest - Manifest", () => {
       addedPeriods: [],
       removedPeriods: [],
     };
-    const fakeReplacePeriods = jest.fn(() => fakeReplacePeriodsRes);
-    jest.mock("../period", () => ({
-      __esModule: true as const,
+    const fakeReplacePeriods = vi.fn(() => fakeReplacePeriodsRes);
+    vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    jest.mock("../update_periods", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_periods", () => ({
       replacePeriods: fakeReplacePeriods,
     }));
 
@@ -494,10 +468,10 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const Manifest = jest.requireActual("../manifest").default;
+    const Manifest = ((await vi.importActual("../manifest")) as any).default;
     const manifest = new Manifest(oldManifestArgs, {}, []);
 
-    const mockTrigger = jest.spyOn(manifest, "trigger").mockImplementation(jest.fn());
+    const mockTrigger = vi.spyOn(manifest, "trigger").mockImplementation(vi.fn());
 
     const newAdaptations = {};
     const newPeriod1 = {

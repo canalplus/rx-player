@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { parseXml } from "../xml-parser";
 
 const exampleXml = `<?xml version="1.0" encoding="utf-8"?>

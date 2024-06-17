@@ -310,7 +310,7 @@ function getVideoVisibilityRef(
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
-  let currentTimeout: number | undefined;
+  let currentTimeout: ReturnType<typeof setTimeout> | undefined;
   const ref = new SharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);

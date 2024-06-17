@@ -1,39 +1,23 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("transports utils - checkISOBMFFIntegrity", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should check just ftyp and and moov integrity for init segments", () => {
-    const mockFindCompleteBox = jest.fn(() => 45);
-    jest.mock("../../../parsers/containers/isobmff", () => ({
-      __esModule: true as const,
+  it("should check just ftyp and and moov integrity for init segments", async () => {
+    const mockFindCompleteBox = vi.fn(() => 45);
+    vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const checkISOBMFFIntegrity = jest.requireActual(
-      "../check_isobmff_integrity",
+    const checkISOBMFFIntegrity = (
+      (await vi.importActual("../check_isobmff_integrity")) as any
     ).default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     expect(() => checkISOBMFFIntegrity(myUint8Array, true)).not.toThrow();
@@ -42,14 +26,13 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     expect(mockFindCompleteBox).toHaveBeenCalledWith(myUint8Array, 0x6d6f6f76);
   });
 
-  it("should check just moof and and mdat integrity for regular segments", () => {
-    const mockFindCompleteBox = jest.fn(() => 45);
-    jest.mock("../../../parsers/containers/isobmff", () => ({
-      __esModule: true as const,
+  it("should check just moof and and mdat integrity for regular segments", async () => {
+    const mockFindCompleteBox = vi.fn(() => 45);
+    vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const checkISOBMFFIntegrity = jest.requireActual(
-      "../check_isobmff_integrity",
+    const checkISOBMFFIntegrity = (
+      (await vi.importActual("../check_isobmff_integrity")) as any
     ).default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     expect(() => checkISOBMFFIntegrity(myUint8Array, false)).not.toThrow();
@@ -58,15 +41,14 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     expect(mockFindCompleteBox).toHaveBeenCalledWith(myUint8Array, 0x6d646174);
   });
 
-  it("should throw an other error if an init segment is missing a complete ftyp", () => {
-    const mockFindCompleteBox = jest.fn((_, box) => (box === 0x66747970 ? -1 : 45));
-    jest.mock("../../../parsers/containers/isobmff", () => ({
-      __esModule: true as const,
+  it("should throw an other error if an init segment is missing a complete ftyp", async () => {
+    const mockFindCompleteBox = vi.fn((_, box) => (box === 0x66747970 ? -1 : 45));
+    vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = jest.requireActual("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = jest.requireActual(
-      "../check_isobmff_integrity",
+    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
+    const checkISOBMFFIntegrity = (
+      (await vi.importActual("../check_isobmff_integrity")) as any
     ).default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
@@ -84,15 +66,14 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     );
   });
 
-  it("should throw an other error if an init segment is missing a complete moov", () => {
-    const mockFindCompleteBox = jest.fn((_, box) => (box === 0x6d6f6f76 ? -1 : 45));
-    jest.mock("../../../parsers/containers/isobmff", () => ({
-      __esModule: true as const,
+  it("should throw an other error if an init segment is missing a complete moov", async () => {
+    const mockFindCompleteBox = vi.fn((_, box) => (box === 0x6d6f6f76 ? -1 : 45));
+    vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = jest.requireActual("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = jest.requireActual(
-      "../check_isobmff_integrity",
+    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
+    const checkISOBMFFIntegrity = (
+      (await vi.importActual("../check_isobmff_integrity")) as any
     ).default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
@@ -110,15 +91,14 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     );
   });
 
-  it("should throw an other error if a regular segment is missing a complete moof", () => {
-    const mockFindCompleteBox = jest.fn((_, box) => (box === 0x6d6f6f66 ? -1 : 45));
-    jest.mock("../../../parsers/containers/isobmff", () => ({
-      __esModule: true as const,
+  it("should throw an other error if a regular segment is missing a complete moof", async () => {
+    const mockFindCompleteBox = vi.fn((_, box) => (box === 0x6d6f6f66 ? -1 : 45));
+    vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = jest.requireActual("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = jest.requireActual(
-      "../check_isobmff_integrity",
+    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
+    const checkISOBMFFIntegrity = (
+      (await vi.importActual("../check_isobmff_integrity")) as any
     ).default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
@@ -136,15 +116,14 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     );
   });
 
-  it("should throw an other error if a regular segment is missing a complete mdat", () => {
-    const mockFindCompleteBox = jest.fn((_, box) => (box === 0x6d646174 ? -1 : 45));
-    jest.mock("../../../parsers/containers/isobmff", () => ({
-      __esModule: true as const,
+  it("should throw an other error if a regular segment is missing a complete mdat", async () => {
+    const mockFindCompleteBox = vi.fn((_, box) => (box === 0x6d646174 ? -1 : 45));
+    vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = jest.requireActual("../../../errors").OtherError;
-    const checkISOBMFFIntegrity = jest.requireActual(
-      "../check_isobmff_integrity",
+    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
+    const checkISOBMFFIntegrity = (
+      (await vi.importActual("../check_isobmff_integrity")) as any
     ).default;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;

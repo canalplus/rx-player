@@ -1,50 +1,34 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
 // Needed for calling require (which itself is needed to mock properly) because
 // it is not type-checked:
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("compat - addTextTrack", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should re-use text track on IE / EDGE", () => {
+  it("should re-use text track on IE / EDGE", async () => {
     const fakeTextTrack = {
       id: "textTrack1",
       HIDDEN: "hidden",
       SHOWING: "showing",
     } as unknown as TextTrack;
-    const mockAddTextTrack = jest.fn(() => null);
+    const mockAddTextTrack = vi.fn(() => null);
     const fakeMediaElement = {
       textTracks: [fakeTextTrack],
       addTextTrack: mockAddTextTrack,
-    };
+    } as unknown as HTMLMediaElement;
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isIEOrEdge: true,
     }));
-
-    const addTextTrack = jest.requireActual("../add_text_track").default;
+    const { default: addTextTrack } = (await vi.importActual("../add_text_track")) as any;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -52,14 +36,14 @@ describe("compat - addTextTrack", () => {
     expect(mockAddTextTrack).not.toHaveBeenCalled();
   });
 
-  it("should add text track if no track on media element on IE / EDGE", () => {
+  it("should add text track if no track on media element on IE / EDGE", async () => {
     const fakeTextTrack = {
       id: "textTrack1",
       HIDDEN: "hidden",
       SHOWING: "showing",
     } as unknown as TextTrack;
     const fakeTextTracks: TextTrack[] = [];
-    const mockAddTextTrack = jest.fn(() => {
+    const mockAddTextTrack = vi.fn(() => {
       fakeTextTracks.push(fakeTextTrack);
       return fakeTextTrack;
     });
@@ -67,14 +51,13 @@ describe("compat - addTextTrack", () => {
     const fakeMediaElement = {
       textTracks: fakeTextTracks,
       addTextTrack: mockAddTextTrack,
-    };
+    } as unknown as HTMLMediaElement;
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isIEOrEdge: true,
     }));
 
-    const addTextTrack = jest.requireActual("../add_text_track").default;
+    const { default: addTextTrack } = (await vi.importActual("../add_text_track")) as any;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -84,11 +67,11 @@ describe("compat - addTextTrack", () => {
     expect(mockAddTextTrack).toHaveBeenCalledTimes(1);
   });
 
-  it("should create showing trackElement and set track on mediaElement", () => {
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+  it("should create showing trackElement and set track on mediaElement", async () => {
+    vi.doMock("../browser_detection", () => ({
       isIEOrEdge: false,
     }));
+    const { default: addTextTrack } = (await vi.importActual("../add_text_track")) as any;
 
     const fakeTextTrack = {
       id: "textTrack1",
@@ -103,7 +86,7 @@ describe("compat - addTextTrack", () => {
     const fakeTextTracks: TextTrack[] = [];
     const fakeChildNodes: ChildNode[] = [];
 
-    const mockAppendChild = jest.fn((_trackElement) => {
+    const mockAppendChild = vi.fn((_trackElement) => {
       fakeChildNodes.push(_trackElement);
       fakeTextTracks.push(_trackElement.track);
     });
@@ -112,13 +95,12 @@ describe("compat - addTextTrack", () => {
       textTracks: fakeTextTracks,
       appendChild: mockAppendChild,
       childNodes: fakeChildNodes,
-    };
+    } as unknown as HTMLMediaElement;
 
-    const spyOnCreateElement = jest
+    const spyOnCreateElement = vi
       .spyOn(document, "createElement")
       .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
-    const addTextTrack = jest.requireActual("../add_text_track").default;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("showing");

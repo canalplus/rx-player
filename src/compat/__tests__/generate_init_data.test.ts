@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { utf16LEToStr } from "../../utils/string_parsing";
 import { generatePlayReadyInitData } from "../generate_init_data";
 

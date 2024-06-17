@@ -1,25 +1,10 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { IRepresentationContext } from "../../../public_types";
 import type Representation from "../representation";
@@ -65,7 +50,7 @@ const minimalRepresentationIndex = {
     /* noop */
   },
 };
-const mockDefaultRepresentationImpl = jest.fn((arg) => {
+const mockDefaultRepresentationImpl = vi.fn((arg) => {
   return {
     bitrate: arg.bitrate,
     id: arg.id,
@@ -79,19 +64,18 @@ const mockDefaultRepresentationImpl = jest.fn((arg) => {
 
 describe("Manifest - Adaptation", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
   afterEach(() => {
     mockDefaultRepresentationImpl.mockClear();
   });
 
-  it("should be able to create a minimal Adaptation", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should be able to create a minimal Adaptation", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const args = { id: "12", representations: [], type: "video" };
     const adaptation = new Adaptation(args);
     expect(adaptation.id).toBe("12");
@@ -107,18 +91,16 @@ describe("Manifest - Adaptation", () => {
     expect(mockDefaultRepresentationImpl).not.toHaveBeenCalled();
   });
 
-  it("should normalize a given language", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should normalize a given language", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
-    const mockNormalize = jest.fn((lang: string) => lang + "foo");
-    jest.mock("../../../utils/languages", () => ({
-      __esModule: true as const,
+    const mockNormalize = vi.fn((lang: string) => lang + "foo");
+    vi.doMock("../../../utils/languages", () => ({
       default: mockNormalize,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const args1 = {
       id: "12",
       representations: [],
@@ -145,18 +127,16 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).toHaveBeenCalledWith("toto");
   });
 
-  it("should not call normalize if no language is given", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should not call normalize if no language is given", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
-    const mockNormalize = jest.fn((lang: string) => lang + "foo");
-    jest.mock("../../../utils/languages", () => ({
-      __esModule: true as const,
+    const mockNormalize = vi.fn((lang: string) => lang + "foo");
+    vi.doMock("../../../utils/languages", () => ({
       default: mockNormalize,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const args1 = { id: "12", representations: [], type: "video" };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
@@ -164,13 +144,12 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).not.toHaveBeenCalled();
   });
 
-  it("should create and sort the corresponding Representations", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should create and sort the corresponding Representations", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
     const rep2 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
     const rep3 = { bitrate: 20, id: "rep3", index: minimalRepresentationIndex };
@@ -192,8 +171,8 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep2").bitrate).toEqual(30);
   });
 
-  it("should execute the representationFilter if given", () => {
-    const mockRepresentation = jest.fn((arg) => {
+  it("should execute the representationFilter if given", async () => {
+    const mockRepresentation = vi.fn((arg) => {
       return {
         bitrate: arg.bitrate,
         id: arg.id,
@@ -205,12 +184,11 @@ describe("Manifest - Adaptation", () => {
       };
     });
 
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+    vi.doMock("../representation", () => ({
       default: mockRepresentation,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
     const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
     const rep3 = { bitrate: 30, id: "rep3", index: minimalRepresentationIndex };
@@ -219,7 +197,7 @@ describe("Manifest - Adaptation", () => {
     const rep6 = { bitrate: 60, id: "rep6", index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3, rep4, rep5, rep6];
 
-    const representationFilter = jest.fn(
+    const representationFilter = vi.fn(
       (representation: Representation, adaptationInfos: IRepresentationContext) => {
         if (adaptationInfos.language === "fr" && representation.bitrate < 40) {
           return false;
@@ -247,18 +225,16 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep4").id).toEqual("rep4");
   });
 
-  it("should set an isDub value if one", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should set an isDub value if one", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
-    const mockNormalize = jest.fn((lang: string) => lang + "foo");
-    jest.mock("../../../utils/languages", () => ({
-      __esModule: true as const,
+    const mockNormalize = vi.fn((lang: string) => lang + "foo");
+    vi.doMock("../../../utils/languages", () => ({
       default: mockNormalize,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
 
     const args1 = {
       id: "12",
@@ -280,18 +256,16 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).not.toHaveBeenCalled();
   });
 
-  it("should set an isClosedCaption value if one", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should set an isClosedCaption value if one", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
-    const mockNormalize = jest.fn((lang: string) => lang + "foo");
-    jest.mock("../../../utils/languages", () => ({
-      __esModule: true as const,
+    const mockNormalize = vi.fn((lang: string) => lang + "foo");
+    vi.doMock("../../../utils/languages", () => ({
       default: mockNormalize,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
 
     const args1 = {
       id: "12",
@@ -318,19 +292,17 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).not.toHaveBeenCalled();
   });
 
-  it("should set an isAudioDescription value if one", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should set an isAudioDescription value if one", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
-    const mockNormalize = jest.fn((lang: string) => lang + "foo");
+    const mockNormalize = vi.fn((lang: string) => lang + "foo");
 
-    jest.mock("../../../utils/languages", () => ({
-      __esModule: true as const,
+    vi.doMock("../../../utils/languages", () => ({
       default: mockNormalize,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
 
     const args1 = {
       id: "12",
@@ -357,18 +329,16 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).not.toHaveBeenCalled();
   });
 
-  it("should set a manuallyAdded value if one", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should set a manuallyAdded value if one", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
-    const mockNormalize = jest.fn((lang: string) => lang + "foo");
-    jest.mock("../../../utils/languages", () => ({
-      __esModule: true as const,
+    const mockNormalize = vi.fn((lang: string) => lang + "foo");
+    vi.doMock("../../../utils/languages", () => ({
       default: mockNormalize,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
 
     const args1 = { id: "12", representations: [], type: "video" };
     const adaptation1 = new Adaptation(args1, { isManuallyAdded: false });
@@ -385,13 +355,12 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).not.toHaveBeenCalled();
   });
 
-  it("should return the first Representation with the given Id with `getRepresentation`", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should return the first Representation with the given Id with `getRepresentation`", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
     const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
     const rep3 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
@@ -403,13 +372,12 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep2").bitrate).toEqual(20);
   });
 
-  it("should return undefined in `getRepresentation` if no representation is found with this Id", () => {
-    jest.mock("../representation", () => ({
-      __esModule: true as const,
+  it("should return undefined in `getRepresentation` if no representation is found with this Id", async () => {
+    vi.doMock("../representation", () => ({
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = jest.requireActual("../adaptation").default;
+    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
     const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
     const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
     const rep3 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };

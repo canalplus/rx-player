@@ -1,22 +1,6 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -80,19 +64,18 @@ function generateFakePeriod({
 
 describe("Manifest - replacePeriods", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
   // Case 1 :
   //
   // old periods : p1, p2
   // new periods : p2
-  it("should remove old period", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should remove old period", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -101,7 +84,8 @@ describe("Manifest - replacePeriods", () => {
     ];
     const initialPeriods = oldPeriods.slice();
     const newPeriods = [generateFakePeriod({ id: "p2" })];
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -134,12 +118,11 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p1
   // new periods : p1, p2
-  it("should add new period", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should add new period", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p2" })];
@@ -148,7 +131,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p2" }),
       generateFakePeriod({ id: "p3" }),
     ];
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
@@ -182,17 +166,17 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods: p1
   // new periods: p2
-  it("should replace period", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should replace period", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1" })];
     const newPeriods = [generateFakePeriod({ id: "p2" })];
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[0].getMetadataSnapshot()],
@@ -208,12 +192,11 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods: p0, p1, p2
   // new periods: p1, a, b, p2, p3
-  it("should handle more complex period replacement", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should handle more complex period replacement", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -229,7 +212,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p3" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -275,12 +259,11 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p2
   // new periods : p1, p2
-  it("should add new period before", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should add new period before", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p2" })];
@@ -289,7 +272,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p2" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[0].getMetadataSnapshot()],
@@ -317,12 +301,11 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p1, p2
   // new periods : No periods
-  it("should remove all periods", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should remove all periods", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -330,7 +313,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p2" }),
     ];
     const newPeriods = [] as any[];
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -348,12 +332,11 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : No periods
   // new periods : p1, p2
-  it("should add all periods to empty array", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should add all periods to empty array", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [] as any[];
@@ -361,7 +344,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const replacePeriods = jest.requireActual("../update_periods").replacePeriods;
+    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
+      .replacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -380,19 +364,18 @@ describe("Manifest - replacePeriods", () => {
 
 describe("Manifest - updatePeriods", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
   // Case 1 :
   //
   // old periods : p1, p2
   // new periods : p2
-  it("should not remove old period", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should not remove old period", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -402,7 +385,8 @@ describe("Manifest - updatePeriods", () => {
     const newPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
     const initialPeriods = oldPeriods.slice();
 
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -429,12 +413,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : p1
   // new periods : p1, p2
-  it("should add new period", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should add new period", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
@@ -443,7 +426,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
@@ -471,17 +455,17 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p1
   // new periods: p3
-  it("should throw when encountering two distant Periods", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should throw when encountering two distant Periods", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "p3", start: 70, end: 80 })];
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
 
     let error: unknown = null;
     try {
@@ -510,12 +494,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p0, p1, p2
   // new periods: p1, a, b, p2, p3
-  it("should handle more complex period replacement", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should handle more complex period replacement", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -532,7 +515,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -579,12 +563,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : p2
   // new periods : p1, p2
-  it("should throw when the first period is not encountered", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should throw when the first period is not encountered", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p2", start: 70 })];
@@ -593,7 +576,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p2", start: 70 }),
     ];
 
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
 
     let error: unknown = null;
     try {
@@ -622,12 +606,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : p1, p2
   // new periods : No periods
-  it("should keep old periods if no new Period is available", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should keep old periods if no new Period is available", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -635,7 +618,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p2" }),
     ];
     const newPeriods = [] as any[];
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -652,12 +636,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : No periods
   // new periods : p1, p2
-  it("should set only new Periods if none were available before", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should set only new Periods if none were available before", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [] as any[];
@@ -665,7 +648,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -685,15 +669,15 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : p0, p1
   // new periods : p4, p5
-  it("should throw if the new periods come strictly after", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should throw if the new periods come strictly after", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
@@ -728,17 +712,17 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p1
   // new periods: p2
-  it("should concatenate consecutive periods", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should concatenate consecutive periods", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "p2", start: 60, end: 80 })];
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
 
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
@@ -756,17 +740,17 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p1
   // new periods: px
-  it("should throw when encountering two completely different Periods with the same start", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should throw when encountering two completely different Periods with the same start", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "px", start: 50, end: 70 })];
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
 
     let error: unknown = null;
     try {
@@ -795,12 +779,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p0, p1, p2
   // new periods: p1, p2, p3
-  it("should handle more complex period replacement", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should handle more complex period replacement", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -814,7 +797,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[2].getMetadataSnapshot()],
@@ -855,12 +839,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p0, p1, p2, p3
   // new periods: p1, p3
-  it("should handle more complex period replacement", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should handle more complex period replacement", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -874,7 +857,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -914,12 +898,11 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p0, p1, p2, p3, p4
   // new periods: p1, p3
-  it("should remove periods not included in the new Periods", () => {
-    const fakeUpdatePeriodInPlace = jest.fn(() => {
+  it("should remove periods not included in the new Periods", async () => {
+    const fakeUpdatePeriodInPlace = vi.fn(() => {
       return fakeUpdatePeriodInPlaceRes;
     });
-    jest.mock("../update_period_in_place", () => ({
-      __esModule: true as const,
+    vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
@@ -934,7 +917,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
       generateFakePeriod({ id: "p3", start: 80, end: 90 }),
     ];
-    const updatePeriods = jest.requireActual("../update_periods").updatePeriods;
+    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
+      .updatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],

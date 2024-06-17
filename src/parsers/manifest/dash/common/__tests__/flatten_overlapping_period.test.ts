@@ -1,25 +1,10 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect, vi } from "vitest";
 import log from "../../../../../log";
 import flattenOverlappingPeriods from "../flatten_overlapping_periods";
 
 describe("flattenOverlappingPeriods", function () {
   it("should do nothing when no period is given", () => {
-    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     expect(flattenOverlappingPeriods([])).toEqual([]);
     expect(mockLog).not.toHaveBeenCalled();
@@ -29,7 +14,7 @@ describe("flattenOverlappingPeriods", function () {
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][ Period 3 ]
   //             [ Period 3 ]
   it("should replace a period with an other if same start and duration", function () {
-    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -54,7 +39,7 @@ describe("flattenOverlappingPeriods", function () {
   // [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][  2  ][ Period 3 ]
   //                  [ Period 3 ]
   it("should replace part of period if part of next one is overlapping it", function () {
-    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -82,7 +67,7 @@ describe("flattenOverlappingPeriods", function () {
   // [ Period 1 ][ Period 2 ]       ------>  [  1  ][      Period 3     ]
   //        [      Period 3     ]
   it("should erase period if a next period starts before and ends after it", function () {
-    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
       { id: "1", start: 0, duration: 60, adaptations: {} },
@@ -110,7 +95,7 @@ describe("flattenOverlappingPeriods", function () {
   //                  ...
   //             [   100    ]
   it("should keep last announced period from multiple periods with same start and end", function () {
-    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [{ id: "1", start: 0, duration: 60, adaptations: {} }];
 
@@ -139,7 +124,7 @@ describe("flattenOverlappingPeriods", function () {
   //      [ Period 1 ][ Period 2 ]       ------>  [  Period 3  ]
   //  [            Period 3           ]
   it("should handle when a Period overlaps all previous periods", () => {
-    const mockLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
+    const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
       { id: "1", start: 40, duration: 20, adaptations: {} },

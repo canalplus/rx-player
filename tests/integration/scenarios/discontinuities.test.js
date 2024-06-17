@@ -111,9 +111,9 @@ describe("discontinuities handling", () => {
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
-        expect(player.getPosition()).to.be.above(131);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
+        expect(player.getPosition()).to.be.above(131);
       });
     }, 7000);
 

@@ -1,31 +1,14 @@
-/**
- * Copyright 2017 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import probeDecodingInfos from "../../probers/decodingInfo";
+import type { IMediaConfiguration } from "../../types";
+import { ProberStatus } from "../../types";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import probeDecodingInfos from "../../probers/decodingInfo";
-import type { IMediaConfiguration } from "../../types";
-import { ProberStatus } from "../../types";
 
 const origDecodingInfo = (navigator as any).mediaCapabilities;
 const origMediaCapabilities = (navigator as any).mediaCapabilities;
@@ -36,7 +19,7 @@ const origMediaCapabilities = (navigator as any).mediaCapabilities;
  * @param {undefined|boolean} mustReject
  */
 function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
-  const decodingInfoStub = jest.fn(() => {
+  const decodingInfoStub = vi.fn(() => {
     if (mustReject === true) {
       return Promise.reject();
     } else {
@@ -63,23 +46,22 @@ function resetDecodingInfos(): void {
 
 describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
   afterEach(() => {
     (navigator as any).mediaCapabilities = origMediaCapabilities;
   });
 
-  it("should throw if no video and audio config", (done) => {
+  it("should throw if no video and audio config", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
       type: "media-source" as const,
     };
 
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(() => {
         resetDecodingInfos();
-        done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toEqual(
@@ -88,11 +70,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should throw if incomplete video config", (done) => {
+  it("should throw if incomplete video config", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
       type: "media-source" as const,
@@ -102,10 +83,9 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
 
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(() => {
         resetDecodingInfos();
-        done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toEqual(
@@ -114,11 +94,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should throw if incomplete audio config", (done) => {
+  it("should throw if incomplete audio config", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
       type: "media-source" as const,
@@ -128,10 +107,9 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
 
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(() => {
         resetDecodingInfos();
-        done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toEqual(
@@ -140,11 +118,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should throw if no type in config", (done) => {
+  it("should throw if no type in config", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {
       audio: {
@@ -152,10 +129,9 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       },
     };
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(() => {
         resetDecodingInfos();
-        done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toEqual(
@@ -164,19 +140,17 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should throw if empty config", (done) => {
+  it("should throw if empty config", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration = {};
 
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(() => {
         resetDecodingInfos();
-        done();
       })
       .catch(({ message }: { message: string }) => {
         expect(message).toEqual(
@@ -185,7 +159,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
         );
         expect(decodingInfoStub).not.toHaveBeenCalled();
         resetDecodingInfos();
-        done();
       });
   });
 
@@ -211,7 +184,7 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
-  it("should resolve with `Supported` if decodingInfo supports (video only)", (done) => {
+  it("should resolve with `Supported` if decodingInfo supports (video only)", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -225,20 +198,18 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
 
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.Supported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should resolve with `Supported` if decodingInfo supports (audio only)", (done) => {
+  it("should resolve with `Supported` if decodingInfo supports (audio only)", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -251,20 +222,18 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
 
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.Supported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should resolve with `Supported` if decodingInfo supports video + audio", (done) => {
+  it("should resolve with `Supported` if decodingInfo supports video + audio", () => {
     const decodingInfoStub = stubDecodingInfo(true);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -283,20 +252,18 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       },
     };
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.Supported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should return `NotSupported` if no decodingInfo support (video only)", (done) => {
+  it("should return `NotSupported` if no decodingInfo support (video only)", () => {
     const decodingInfoStub = stubDecodingInfo(false);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -309,20 +276,18 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       },
     };
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.NotSupported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should return `NotSupported` if no decodingInfo support (audio only)", (done) => {
+  it("should return `NotSupported` if no decodingInfo support (audio only)", () => {
     const decodingInfoStub = stubDecodingInfo(false);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -334,20 +299,18 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       },
     };
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.NotSupported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should return `NotSupported` if no decodingInfo support", (done) => {
+  it("should return `NotSupported` if no decodingInfo support", () => {
     const decodingInfoStub = stubDecodingInfo(false);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -366,20 +329,18 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       },
     };
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.NotSupported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 
-  it("should resolve with `NotSupported` if decodingInfo throws", (done) => {
+  it("should resolve with `NotSupported` if decodingInfo throws", () => {
     const decodingInfoStub = stubDecodingInfo(true, true);
     const configuration: IMediaConfiguration = {
       type: "media-source",
@@ -398,16 +359,14 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       },
     };
     expect.assertions(2);
-    probeDecodingInfos(configuration)
+    return probeDecodingInfos(configuration)
       .then(([res]) => {
         expect(res).toBe(ProberStatus.NotSupported);
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
-        done();
       })
       .catch(() => {
         resetDecodingInfos();
-        done();
       });
   });
 });

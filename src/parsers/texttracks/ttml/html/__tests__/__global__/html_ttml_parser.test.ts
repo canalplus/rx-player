@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect } from "vitest";
 import parseTTMLToDiv from "../../";
 import globalScope from "../../../../../../utils/global_scope";
 
@@ -162,7 +147,7 @@ describe("Global TTML HTML parsing tests", () => {
   });
 
   // TODO Is jsdom implementation in the wrong there?
-  xit("corresponding text should have the right color", () => {
+  it("corresponding text should have the right color", () => {
     function findTextNodes(elt: HTMLElement, currTextNodes: Text[] = []): Text[] {
       const children = elt.childNodes;
       for (let i = 0; i < children.length; i++) {
@@ -177,12 +162,24 @@ describe("Global TTML HTML parsing tests", () => {
       return currTextNodes;
     }
     let nbTextNodes = 0;
-    const textNodes = findTextNodes(res[6].element);
-    for (let i = 0; i < textNodes.length; i++) {
-      const parentElement = textNodes[i].parentElement;
-      if (parentElement !== null) {
-        expect(globalScope.getComputedStyle(parentElement).color).toEqual("yellow");
-        nbTextNodes++;
+    {
+      const textNodes = findTextNodes(res[5].element);
+      for (let i = 0; i < textNodes.length; i++) {
+        const parentElement = textNodes[i].parentElement;
+        if (parentElement !== null) {
+          expect(globalScope.getComputedStyle(parentElement).color).toEqual("yellow");
+          nbTextNodes++;
+        }
+      }
+    }
+    {
+      const textNodes = findTextNodes(res[6].element);
+      for (let i = 0; i < textNodes.length; i++) {
+        const parentElement = textNodes[i].parentElement;
+        if (parentElement !== null) {
+          expect(globalScope.getComputedStyle(parentElement).color).toEqual("white");
+          nbTextNodes++;
+        }
       }
     }
     expect(nbTextNodes).toBeGreaterThanOrEqual(1);

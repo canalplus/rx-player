@@ -1,40 +1,24 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("BufferBasedChooser", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should return the first bitrate if the current bitrate is undefined", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should return the first bitrate if the current bitrate is undefined", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([]);
     bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
@@ -90,13 +74,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(1);
   });
 
-  it("should log an error and return the first bitrate if the given bitrate does not exist", () => {
-    const logger = { debug: jest.fn(), info: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should log an error and return the first bitrate if the given bitrate does not exist", async () => {
+    const logger = { debug: vi.fn(), info: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     const bbc = new BufferBasedChooser([10, 20]);
     bbc.onAddedSegment({
@@ -112,13 +96,13 @@ describe("BufferBasedChooser", () => {
     );
   });
 
-  it("should not go to the next bitrate if we don't have a high enough maintainability score", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should not go to the next bitrate if we don't have a high enough maintainability score", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -175,13 +159,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -238,13 +222,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(40);
   });
 
-  it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -292,13 +276,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should stay at the current bitrate if we are currently at the maximum one", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should stay at the current bitrate if we are currently at the maximum one", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -325,13 +309,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(40);
   });
 
-  it("should stay at the current bitrate if the current one is not maintainable due to the speed", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should stay at the current bitrate if the current one is not maintainable due to the speed", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -379,13 +363,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should lower bitrate if the current one is not maintainable due to the speed", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should lower bitrate if the current one is not maintainable due to the speed", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -433,13 +417,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(10);
   });
 
-  it("should not lower bitrate if the current one is not maintainable due to the speed but confidence on the score is low", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should not lower bitrate if the current one is not maintainable due to the speed but confidence on the score is low", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -496,13 +480,13 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should not go to the next bitrate if we do not know if it is maintainable", () => {
-    const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({
-      __esModule: true as const,
+  it("should not go to the next bitrate if we do not know if it is maintainable", async () => {
+    const logger = { debug: vi.fn() };
+    vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
+    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
+      .default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({

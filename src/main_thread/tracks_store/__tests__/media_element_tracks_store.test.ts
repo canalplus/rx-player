@@ -1,18 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, it, expect } from "vitest";
 
 import MediaElementTracksStore from "../media_element_tracks_store";
 
@@ -93,88 +79,94 @@ describe("API - MediaElementTracksStore", () => {
       normalized: "eng",
     });
   });
-  it("should emit available tracks change when changing text contents", (done) => {
+  it("should emit available tracks change when changing text contents", () => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
-    trackManager.addEventListener("availableTextTracksChange", (tracks) => {
-      expect(tracks.length).toBe(5);
-      expect(tracks[0].id).toBe("gen_text_es_1");
-      expect(tracks[1].id).toBe("gen_text_en_1");
-      expect(tracks[2].id).toBe("gen_text_fr_1");
-      expect(tracks[3].id).toBe("gen_text_el_1");
-      expect(tracks[4].id).toBe("gen_text_pt-BR_1");
-      done();
-    });
+    return new Promise<void>((res) => {
+      trackManager.addEventListener("availableTextTracksChange", (tracks) => {
+        expect(tracks.length).toBe(5);
+        expect(tracks[0].id).toBe("gen_text_es_1");
+        expect(tracks[1].id).toBe("gen_text_en_1");
+        expect(tracks[2].id).toBe("gen_text_fr_1");
+        expect(tracks[3].id).toBe("gen_text_el_1");
+        expect(tracks[4].id).toBe("gen_text_pt-BR_1");
+        res();
+      });
 
-    // Fake browser behavior
-    (fakeMediaElement.textTracks as unknown as TextTrack[]).unshift({
-      language: "es",
-      mode: "hidden",
-    } as TextTrack);
-    fakeMediaElement.textTracks.onaddtrack?.({} as TrackEvent);
+      // Fake browser behavior
+      (fakeMediaElement.textTracks as unknown as TextTrack[]).unshift({
+        language: "es",
+        mode: "hidden",
+      } as TextTrack);
+      fakeMediaElement.textTracks.onaddtrack?.({} as TrackEvent);
+    });
   });
 
-  it("should emit available tracks change when changing video contents", (done) => {
+  it("should emit available tracks change when changing video contents", () => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
+    return new Promise<void>((res) => {
+      trackManager.addEventListener("availableVideoTracksChange", (tracks) => {
+        expect(tracks.length).toBe(2);
+        expect(tracks[0].id).toBe("gen_video_en_1");
+        expect(tracks[1].id).toBe("gen_video_nolang_1");
+        res();
+      });
 
-    trackManager.addEventListener("availableVideoTracksChange", (tracks) => {
-      expect(tracks.length).toBe(2);
-      expect(tracks[0].id).toBe("gen_video_en_1");
-      expect(tracks[1].id).toBe("gen_video_nolang_1");
-      done();
+      // Fake browser behavior
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const _elt = fakeMediaElement as any;
+      _elt.videoTracks.unshift({ language: "en", selected: false });
+      _elt.videoTracks.onaddtrack?.({} as TrackEvent);
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     });
-
-    // Fake browser behavior
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const _elt = fakeMediaElement as any;
-    _elt.videoTracks.unshift({ language: "en", selected: false });
-    _elt.videoTracks.onaddtrack?.({} as TrackEvent);
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   });
 
-  it("should emit available tracks change when changing audio contents", (done) => {
+  it("should emit available tracks change when changing audio contents", () => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
+    return new Promise<void>((res) => {
+      trackManager.addEventListener("availableAudioTracksChange", (tracks) => {
+        expect(tracks.length).toBe(5);
+        expect(tracks[0].id).toBe("gen_audio_en_1");
+        expect(tracks[1].id).toBe("gen_audio_en_2");
+        expect(tracks[2].id).toBe("gen_audio_fr_1");
+        expect(tracks[3].id).toBe("gen_audio_el_1");
+        expect(tracks[4].id).toBe("gen_audio_pt-BR_1");
+        res();
+      });
 
-    trackManager.addEventListener("availableAudioTracksChange", (tracks) => {
-      expect(tracks.length).toBe(5);
-      expect(tracks[0].id).toBe("gen_audio_en_1");
-      expect(tracks[1].id).toBe("gen_audio_en_2");
-      expect(tracks[2].id).toBe("gen_audio_fr_1");
-      expect(tracks[3].id).toBe("gen_audio_el_1");
-      expect(tracks[4].id).toBe("gen_audio_pt-BR_1");
-      done();
+      // Fake browser behavior
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const _elt = fakeMediaElement as any;
+      _elt.audioTracks.unshift({ language: "en", selected: false });
+      _elt.audioTracks.onaddtrack?.({} as TrackEvent);
+      /* eslint-enable @typescript-eslint/no-unsafe-call */
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     });
-
-    // Fake browser behavior
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const _elt = fakeMediaElement as any;
-    _elt.audioTracks.unshift({ language: "en", selected: false });
-    _elt.audioTracks.onaddtrack?.({} as TrackEvent);
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   });
 
-  it("should emit chosen track when changing text content", (done) => {
+  it("should emit chosen track when changing text content", () => {
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
-    trackManager.addEventListener("textTrackChange", (chosenTrack) => {
-      expect(chosenTrack?.id).toBe("gen_text_fr_1");
-      done();
+    return new Promise<void>((res) => {
+      trackManager.addEventListener("textTrackChange", (chosenTrack) => {
+        expect(chosenTrack?.id).toBe("gen_text_fr_1");
+        res();
+      });
+
+      trackManager.setTextTrackById("gen_text_fr_1");
+
+      // Fake browser behavior
+      fakeMediaElement.textTracks[0].mode = "hidden";
+      fakeMediaElement.textTracks?.onchange?.(undefined as unknown as Event);
     });
-
-    trackManager.setTextTrackById("gen_text_fr_1");
-
-    // Fake browser behavior
-    fakeMediaElement.textTracks[0].mode = "hidden";
-    fakeMediaElement.textTracks?.onchange?.(undefined as unknown as Event);
   });
 });
