@@ -94,24 +94,28 @@ function linkPlayerEventsToState(
     if (player.getPlayerState() === "STOPPED") {
       return;
     }
-    const metrics = await player.__priv_getSegmentSinkMetrics();
-    let audioContent = metrics?.segmentSinks.audio.segmentInventory ?? null;
-    if (Array.isArray(audioContent)) {
-      audioContent = audioContent.slice();
+    try {
+      const metrics = await player.__priv_getSegmentSinkMetrics();
+      let audioContent = metrics?.segmentSinks.audio.segmentInventory ?? null;
+      if (Array.isArray(audioContent)) {
+        audioContent = audioContent.slice();
+      }
+      let textContent = metrics?.segmentSinks.text.segmentInventory ?? null;
+      if (Array.isArray(textContent)) {
+        textContent = textContent.slice();
+      }
+      let videoContent = metrics?.segmentSinks.video.segmentInventory ?? null;
+      if (Array.isArray(videoContent)) {
+        videoContent = videoContent.slice();
+      }
+      state.update("bufferedData", {
+        audio: audioContent,
+        video: videoContent,
+        text: textContent,
+      });
+    } catch (err) {
+      // Do nothing
     }
-    let textContent = metrics?.segmentSinks.text.segmentInventory ?? null;
-    if (Array.isArray(textContent)) {
-      textContent = textContent.slice();
-    }
-    let videoContent = metrics?.segmentSinks.video.segmentInventory ?? null;
-    if (Array.isArray(videoContent)) {
-      videoContent = videoContent.slice();
-    }
-    state.update("bufferedData", {
-      audio: audioContent,
-      video: videoContent,
-      text: textContent,
-    });
   }
 
   const bufferedDataItv = setInterval(updateBufferedData, BUFFERED_DATA_UPDATES_INTERVAL);

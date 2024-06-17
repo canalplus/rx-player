@@ -1006,6 +1006,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (contentInfos.tracksStore !== null) {
         contentInfos.tracksStore.resetPeriodObjects();
       }
+      this._priv_segmentSinkMetricsCallback = null;
       this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
