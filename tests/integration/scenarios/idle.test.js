@@ -2,14 +2,12 @@ import RxPlayer from "../../../dist/es2017";
 import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
 import {
   EMBEDDED_WORKER,
-  EMBEDDED_WORKER_ES5,
   EMBEDDED_DASH_WASM,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import { describe, it, expect, afterAll } from "vitest";
 
 runIdleTests();
 runIdleTests({ multithread: true });
-runIdleTests({ multithread: true, es5Worker: true });
 
 /**
  * Test every methods at an initial, idle state.
@@ -20,10 +18,8 @@ runIdleTests({ multithread: true, es5Worker: true });
  * @param {Boolean} [options.multithread] - If `true`, those tests will be run
  * if the RxPlayer runs in multithread mode.
  * In any other cases, tests will run in monothread mode.
- * @param {Boolean} [options.es5Worker] - If `true`, multithread tests will be
- * run in the ES5 version of the WebWorker file.
  */
-function runIdleTests({ multithread, es5Worker } = {}) {
+function runIdleTests({ multithread } = {}) {
   let title = "initial idle state";
   if (multithread === true) {
     RxPlayer.addFeatures([MULTI_THREAD]);
@@ -36,7 +32,7 @@ function runIdleTests({ multithread, es5Worker } = {}) {
         const player = new RxPlayer();
         if (multithread === true) {
           player.attachWorker({
-            workerUrl: es5Worker ? EMBEDDED_WORKER_ES5 : EMBEDDED_WORKER,
+            workerUrl: EMBEDDED_WORKER,
             dashWasmUrl: EMBEDDED_DASH_WASM,
           });
         }

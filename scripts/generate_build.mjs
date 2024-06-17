@@ -24,7 +24,7 @@ import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
-import buildWorker, { buildWorkerEs5 } from "./bundle_worker.mjs";
+import runBundler from "./run_bundler.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,6 +34,9 @@ const BUILD_ARTEFACTS_TO_REMOVE = [
   "dist/es2017",
   "src/__GENERATED_CODE",
 ];
+
+const WORKER_IN_FILE = path.join(ROOT_DIR, "src/worker_entry_point.ts");
+const WORKER_OUT_FILE = path.join(ROOT_DIR, "dist/worker.js");
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -79,15 +82,10 @@ async function generateBuild(options = {}) {
 
     console.log(" 👷 Bundling worker files...");
     await Promise.all([
-      buildWorker({
+      runBundler(WORKER_IN_FILE, {
         watch: false,
         minify: !devMode,
-        production: !devMode,
-        silent: true,
-      }),
-      buildWorkerEs5({
-        watch: false,
-        minify: !devMode,
+        outfile: WORKER_OUT_FILE,
         production: !devMode,
         silent: true,
       }),

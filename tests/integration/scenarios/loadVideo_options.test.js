@@ -19,7 +19,6 @@ import RxPlayer from "../../../dist/es2017";
 import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
 import {
   EMBEDDED_WORKER,
-  EMBEDDED_WORKER_ES5,
   EMBEDDED_DASH_WASM,
 } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
@@ -38,10 +37,8 @@ runLoadVideoOptionsTests({ multithread: true });
  * @param {Boolean} [options.multithread] - If `true`, those tests will be run
  * if the RxPlayer runs in multithread mode.
  * In any other cases, tests will run in monothread mode.
- * @param {Boolean} [options.es5Worker] - If `true`, multithread tests will be
- * run in the ES5 version of the WebWorker file.
  */
-function runLoadVideoOptionsTests({ multithread, es5Worker } = {}) {
+function runLoadVideoOptionsTests({ multithread } = {}) {
   let title = "loadVideo options";
   if (multithread === true) {
     RxPlayer.addFeatures([MULTI_THREAD]);
@@ -55,7 +52,7 @@ function runLoadVideoOptionsTests({ multithread, es5Worker } = {}) {
       player = new RxPlayer();
       if (multithread === true) {
         player.attachWorker({
-          workerUrl: es5Worker ? EMBEDDED_WORKER_ES5 : EMBEDDED_WORKER,
+          workerUrl: EMBEDDED_WORKER,
           dashWasmUrl: EMBEDDED_DASH_WASM,
         });
       }
