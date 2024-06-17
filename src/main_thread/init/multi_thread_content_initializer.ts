@@ -161,12 +161,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         value: null,
       });
     });
-    this._initCanceller.signal.register(() => {
-      this._segmentMetrics = {
-        lastMessageId: 0,
-        resolvers: {},
-      };
-    });
     if (this._initCanceller.isUsed()) {
       return;
     }
@@ -1497,7 +1491,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       });
       return new Promise((resolve, reject) => {
         this._segmentMetrics.resolvers[messageId] = resolve;
-        this._initCanceller.signal.register(reject);
+        const rejectFn = (err: CancellationError) => {
+          delete this._segmentMetrics.resolvers[messageId];
+          return reject(err);
+        };
+        cancelSignal.register(rejectFn);
       });
     };
     /**
