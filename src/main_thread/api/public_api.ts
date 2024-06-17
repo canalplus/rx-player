@@ -1045,7 +1045,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
     initializer.addEventListener("loaded", (evt) => {
-      this._get_segmentSinkMetrics = evt.getSegmentSinkMetrics;
+      this._priv_segmentSinkMetricsCallback = evt.getSegmentSinkMetrics;
     });
 
     // Now, that most events are linked, prepare the next content.

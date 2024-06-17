@@ -15,12 +15,7 @@
  */
 
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
-import type {
-  ISegmentSinksStore,
-  IBufferType,
-  IAdaptationChoice,
-  IInbandEvent,
-} from "../../core/types";
+import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
 import type {
   IPeriodsUpdateResult,
   IAdaptationMetadata,

@@ -36,7 +36,10 @@ export async function checkAfterSleepWithBackoff(configuration, checks) {
   let sleepTime = minTimeMs ?? 0;
   try {
     await sleep(sleepTime);
-    checkFn();
+    const result = checkFn();
+    if (result instanceof Promise) {
+      await result;
+    }
   } catch (err) {
     onFailure();
     const usedMax = maxTimeMs ?? 4000;
