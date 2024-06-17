@@ -29,6 +29,7 @@ import {
   generateAdaptationSetChildrenParser,
 } from "./AdaptationSet";
 import { generateBaseUrlAttrParser } from "./BaseURL";
+import { generateContentProtectionAttrParser } from "./ContentProtection";
 import {
   generateEventStreamAttrParser,
   generateEventStreamChildrenParser,
@@ -107,6 +108,23 @@ export function generatePeriodChildrenParser(
           noop, // SegmentTimeline as treated like an attribute
           generateSegmentTemplateAttrParser(stObj, linearMemory),
         );
+        break;
+      }
+
+      case TagName.ContentProtection: {
+        const contentProtection = {
+          children: { cencPssh: [] },
+          attributes: {},
+        };
+        if (periodChildren.contentProtections === undefined) {
+          periodChildren.contentProtections = [];
+        }
+        periodChildren.contentProtections.push(contentProtection);
+        const contentProtAttrParser = generateContentProtectionAttrParser(
+          contentProtection,
+          linearMemory,
+        );
+        parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
         break;
       }
 

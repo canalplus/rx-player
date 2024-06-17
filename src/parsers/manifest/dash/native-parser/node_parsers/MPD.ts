@@ -16,6 +16,7 @@
 
 import type {
   IBaseUrlIntermediateRepresentation,
+  IContentProtectionIntermediateRepresentation,
   IMPDAttributes,
   IMPDChildren,
   IMPDIntermediateRepresentation,
@@ -23,6 +24,7 @@ import type {
   IScheme,
 } from "../../node_parser_types";
 import parseBaseURL from "./BaseURL";
+import parseContentProtection from "./ContentProtection";
 import { createPeriodIntermediateRepresentation } from "./Period";
 import { parseDateTime, parseDuration, parseScheme, ValueParser } from "./utils";
 
@@ -36,6 +38,7 @@ function parseMPDChildren(mpdChildren: NodeList): [IMPDChildren, Error[]] {
   const locations: string[] = [];
   const periods: IPeriodIntermediateRepresentation[] = [];
   const utcTimings: IScheme[] = [];
+  const contentProtections: IContentProtectionIntermediateRepresentation[] = [];
 
   let warnings: Error[] = [];
   for (let i = 0; i < mpdChildren.length; i++) {
@@ -65,11 +68,22 @@ function parseMPDChildren(mpdChildren: NodeList): [IMPDChildren, Error[]] {
           const utcTiming = parseScheme(currentNode);
           utcTimings.push(utcTiming);
           break;
+
+        case "ContentProtection":
+          const [contentProtection, contentProtectionWarnings] =
+            parseContentProtection(currentNode);
+          if (contentProtectionWarnings.length > 0) {
+            warnings = warnings.concat(contentProtectionWarnings);
+          }
+          if (contentProtection !== undefined) {
+            contentProtections.push(contentProtection);
+          }
+          break;
       }
     }
   }
 
-  return [{ baseURLs, locations, periods, utcTimings }, warnings];
+  return [{ baseURLs, locations, periods, utcTimings, contentProtections }, warnings];
 }
 
 /**

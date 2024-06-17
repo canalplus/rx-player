@@ -53,6 +53,12 @@ export function generateContentProtectionAttrParser(
           /* TODO log error? register as warning? */
         }
         break;
+      case AttributeName.ContentProtectionRef:
+        cpAttrs.ref = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        break;
+      case AttributeName.ContentProtectionRefId:
+        cpAttrs.refId = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        break;
     }
   };
 }

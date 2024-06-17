@@ -33,6 +33,7 @@ import type {
   IEventStreamIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types";
+import type ContentProtectionParser from "./content_protection_parser";
 import flattenOverlappingPeriods from "./flatten_overlapping_periods";
 import getPeriodsTimeInformation from "./get_periods_time_infos";
 import type { IAdaptationSetContext } from "./parse_adaptation_sets";
@@ -107,12 +108,14 @@ export default function parsePeriods(
 
     const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete;
     const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset;
-    const { manifestProfiles } = context;
+    const { manifestProfiles, contentProtectionParser } = context;
     const { segmentTemplate } = periodIR.children;
+    contentProtectionParser.addReferences(periodIR.children.contentProtections ?? []);
     const adapCtxt: IAdaptationSetContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: periodBaseURLs,
+      contentProtectionParser,
       manifestBoundsCalculator,
       end: periodEnd,
       isDynamic,
@@ -370,6 +373,8 @@ export interface IPeriodContext extends IInheritedAdaptationContext {
    * Document form.
    */
   xmlNamespaces?: Array<{ key: string; value: string }> | undefined;
+  /** Parses contentProtection elements. */
+  contentProtectionParser: ContentProtectionParser;
 }
 
 type IInheritedAdaptationContext = Omit<

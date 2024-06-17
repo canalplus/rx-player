@@ -21,6 +21,7 @@ import type ParsersStack from "../parsers_stack";
 import { AttributeName, TagName } from "../types";
 import { parseString } from "../utils";
 import { generateBaseUrlAttrParser } from "./BaseURL";
+import { generateContentProtectionAttrParser } from "./ContentProtection";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period";
 import { generateSchemeAttrParser } from "./Scheme";
 
@@ -74,6 +75,23 @@ export function generateMPDChildrenParser(
         const childrenParser = noop; // UTCTiming have no sub-element
         const attributeParser = generateSchemeAttrParser(utcTiming, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
+        break;
+      }
+
+      case TagName.ContentProtection: {
+        const contentProtection = {
+          children: { cencPssh: [] },
+          attributes: {},
+        };
+        if (mpdChildren.contentProtections === undefined) {
+          mpdChildren.contentProtections = [];
+        }
+        mpdChildren.contentProtections.push(contentProtection);
+        const contentProtAttrParser = generateContentProtectionAttrParser(
+          contentProtection,
+          linearMemory,
+        );
+        parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
         break;
       }
 

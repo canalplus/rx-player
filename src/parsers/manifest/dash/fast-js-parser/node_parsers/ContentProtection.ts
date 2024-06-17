@@ -73,6 +73,13 @@ function parseContentProtectionAttributes(root: ITNode): IContentProtectionAttri
         break;
       case "cenc:default_KID":
         ret.keyId = hexToBytes(attributeVal.replace(/-/g, ""));
+        break;
+      case "ref":
+        ret.ref = attributeVal;
+        break;
+      case "refId":
+        ret.refId = attributeVal;
+        break;
     }
   }
 

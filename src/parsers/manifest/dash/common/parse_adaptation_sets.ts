@@ -29,6 +29,7 @@ import type {
   ISegmentTemplateIntermediateRepresentation,
 } from "../node_parser_types";
 import attachTrickModeTrack from "./attach_trickmode_track";
+import type ContentProtectionParser from "./content_protection_parser";
 import inferAdaptationType from "./infer_adaptation_type";
 import type { IRepresentationContext } from "./parse_representations";
 import parseRepresentations from "./parse_representations";
@@ -323,6 +324,7 @@ export default function parseAdaptationSets(
       availabilityTimeComplete,
       availabilityTimeOffset,
       baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
+      contentProtectionParser: context.contentProtectionParser,
       manifestBoundsCalculator: context.manifestBoundsCalculator,
       end: context.end,
       isDynamic: context.isDynamic,
@@ -557,6 +559,8 @@ export interface IAdaptationSetContext extends IInheritedRepresentationContext {
    * Use with moderation.
    */
   unsafelyBaseOnPreviousPeriod: IPeriod | null;
+  /** Parses contentProtection elements. */
+  contentProtectionParser: ContentProtectionParser;
 }
 
 /**

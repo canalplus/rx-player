@@ -19,13 +19,13 @@ import type { IAdaptation } from "../../../../manifest";
 import type { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
-import type { IContentProtections, IParsedRepresentation } from "../../types";
+import type { IParsedRepresentation } from "../../types";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   IScheme,
-  IContentProtectionIntermediateRepresentation,
 } from "../node_parser_types";
+import type ContentProtectionParser from "./content_protection_parser";
 import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs";
 import { getWEBMHDRInformation } from "./get_hdr_information";
 import type { IRepresentationIndexContext } from "./parse_representation_index";
@@ -254,59 +254,14 @@ export default function parseRepresentations(
       parsedRepresentation.width = adaptation.attributes.width;
     }
 
-    const contentProtectionsIr: IContentProtectionIntermediateRepresentation[] =
-      adaptation.children.contentProtections !== undefined
-        ? adaptation.children.contentProtections
-        : [];
-    if (representation.children.contentProtections !== undefined) {
-      contentProtectionsIr.push(...representation.children.contentProtections);
-    }
-
-    if (contentProtectionsIr.length > 0) {
-      const contentProtections = contentProtectionsIr.reduce<IContentProtections>(
-        (acc, cp) => {
-          let systemId: string | undefined;
-          if (
-            cp.attributes.schemeIdUri !== undefined &&
-            cp.attributes.schemeIdUri.substring(0, 9) === "urn:uuid:"
-          ) {
-            systemId = cp.attributes.schemeIdUri
-              .substring(9)
-              .replace(/-/g, "")
-              .toLowerCase();
-          }
-          if (cp.attributes.keyId !== undefined && cp.attributes.keyId.length > 0) {
-            const kidObj = { keyId: cp.attributes.keyId, systemId };
-            if (acc.keyIds === undefined) {
-              acc.keyIds = [kidObj];
-            } else {
-              acc.keyIds.push(kidObj);
-            }
-          }
-          if (systemId !== undefined) {
-            const { cencPssh } = cp.children;
-            const values: Array<{ systemId: string; data: Uint8Array }> = [];
-            for (const data of cencPssh) {
-              values.push({ systemId, data });
-            }
-            if (values.length > 0) {
-              const cencInitData = arrayFind(acc.initData, (i) => i.type === "cenc");
-              if (cencInitData === undefined) {
-                acc.initData.push({ type: "cenc", values });
-              } else {
-                cencInitData.values.push(...values);
-              }
-            }
-          }
-          return acc;
-        },
-        { keyIds: undefined, initData: [] },
-      );
-      if (
-        Object.keys(contentProtections.initData).length > 0 ||
-        (contentProtections.keyIds !== undefined && contentProtections.keyIds.length > 0)
-      ) {
-        parsedRepresentation.contentProtections = contentProtections;
+    // Content Protection parsing
+    {
+      const contentProtIrArr = [
+        ...(adaptation.children.contentProtections ?? []),
+        ...(representation.children.contentProtections ?? []),
+      ];
+      for (const contentProtIr of contentProtIrArr) {
+        context.contentProtectionParser.add(parsedRepresentation, contentProtIr);
       }
     }
 
@@ -336,6 +291,8 @@ export interface IRepresentationContext extends IInheritedRepresentationIndexCon
    * Use with moderation.
    */
   unsafelyBaseOnPreviousAdaptation: IAdaptation | null;
+  /** Parses contentProtection elements. */
+  contentProtectionParser: ContentProtectionParser;
 }
 
 /**
