@@ -90,19 +90,20 @@ function linkPlayerEventsToState(
     player.removeEventListener("playerStateChange", onStateUpdate);
   });
 
-  function updateBufferedData(): void {
+  async function updateBufferedData(): Promise<void> {
     if (player.getPlayerState() === "STOPPED") {
       return;
     }
-    let audioContent = player.__priv_getSegmentSinkContent("audio");
+    const metrics = await player._priv_getSegmentSinkMetrics();
+    let audioContent = metrics?.segmentSinks.audio.segmentInventory ?? null;
     if (Array.isArray(audioContent)) {
       audioContent = audioContent.slice();
     }
-    let textContent = player.__priv_getSegmentSinkContent("text");
+    let textContent = metrics?.segmentSinks.text.segmentInventory ?? null;
     if (Array.isArray(textContent)) {
       textContent = textContent.slice();
     }
-    let videoContent = player.__priv_getSegmentSinkContent("video");
+    let videoContent = metrics?.segmentSinks.video.segmentInventory ?? null;
     if (Array.isArray(videoContent)) {
       videoContent = videoContent.slice();
     }

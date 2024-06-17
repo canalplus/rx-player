@@ -35,9 +35,7 @@ import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffe
 import type {
   IAdaptationChoice,
   IInbandEvent,
-  ISegmentSinksStore,
   IABRThrottlers,
-  IBufferedChunk,
   IBufferType,
 } from "../../core/types";
 import type { IErrorCode, IErrorType } from "../../errors";
@@ -983,7 +981,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       defaultAudioTrackSwitchingMode,
       initializer,
       isDirectFile,
-      segmentSinksStore: null,
       manifest: null,
       currentPeriod: null,
       activeAdaptations: null,
@@ -1006,7 +1003,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("warning", formattedError);
     });
     initializer.addEventListener("reloadingMediaSource", (payload) => {
-      contentInfos.segmentSinksStore = null;
       if (contentInfos.tracksStore !== null) {
         contentInfos.tracksStore.resetPeriodObjects();
       }
@@ -1049,7 +1045,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
     initializer.addEventListener("loaded", (evt) => {
-      contentInfos.segmentSinksStore = evt.segmentSinksStore;
       this._get_segmentSinkMetrics = evt.getSegmentSinkMetrics;
     });
 
@@ -2333,29 +2328,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   // They should not be used by any external code.
 
   /**
-   * /!\ For demo use only! Do not touch!
-   *
-   * Returns every chunk buffered for a given buffer type.
-   * Returns `null` if no SegmentSink was created for this type of buffer.
-   * @param {string} bufferType
-   * @returns {Array.<Object>|null}
-   */
-  __priv_getSegmentSinkContent(bufferType: IBufferType): IBufferedChunk[] | null {
-    if (
-      this._priv_contentInfos === null ||
-      this._priv_contentInfos.segmentSinksStore === null
-    ) {
-      return null;
-    }
-    const segmentSinkStatus =
-      this._priv_contentInfos.segmentSinksStore.getStatus(bufferType);
-    if (segmentSinkStatus.type === "initialized") {
-      return segmentSinkStatus.value.getLastKnownInventory();
-    }
-    return null;
-  }
-
-  /**
    * Used for the display of segmentSink metrics for the debug element
    * @param fn
    * @param cancellationSignal
@@ -3299,8 +3271,6 @@ interface IPublicApiContentInfos {
   activeRepresentations: {
     [periodId: string]: Partial<Record<IBufferType, IRepresentationMetadata | null>>;
   } | null;
-  /** Keep information on the active SegmentSinks. */
-  segmentSinksStore: ISegmentSinksStore | null;
   /**
    * TracksStore instance linked to the current content.
    * `null` if no content has been loaded or if the current content loaded
