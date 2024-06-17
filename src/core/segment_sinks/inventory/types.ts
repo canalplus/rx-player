@@ -40,5 +40,4 @@ export interface IChunkContextSnapshot {
   adaptation: IAdaptationMetadata;
   period: IPeriodMetadata;
   representation: IRepresentationMetadata;
-  segment: undefined; // is it needed ?
 }

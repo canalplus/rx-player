@@ -432,6 +432,5 @@ function getChunkContextSnapshot(context: IChunkContext): IChunkContextSnapshot 
     adaptation: context.adaptation.getMetadataSnapshot(),
     period: context.period.getMetadataSnapshot(),
     representation: context.representation.getMetadataSnapshot(),
-    segment: undefined,
   };
 }

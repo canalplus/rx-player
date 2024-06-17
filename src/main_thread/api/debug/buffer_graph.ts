@@ -27,7 +27,7 @@ export interface ISegmentSinkGrapUpdateData {
 }
 
 export default class SegmentSinkGraph {
-  /** Link buffered Representation to their corresponding color. */
+  /** Link buffered Representation's uniqueId to their corresponding color. */
   private readonly _colorMap: Map<string, string>;
 
   /** Current amount of colors chosen to represent the various Representation. */
