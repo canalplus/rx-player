@@ -1511,7 +1511,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             if (isLoaded) {
               stopListening();
               this.trigger("loaded", {
-                segmentSinksStore: null,
                 getSegmentSinkMetrics: _getSegmentSinkMetrics,
               });
             }

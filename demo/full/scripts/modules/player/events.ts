@@ -94,7 +94,7 @@ function linkPlayerEventsToState(
     if (player.getPlayerState() === "STOPPED") {
       return;
     }
-    const metrics = await player._priv_getSegmentSinkMetrics();
+    const metrics = await player.__priv_getSegmentSinkMetrics();
     let audioContent = metrics?.segmentSinks.audio.segmentInventory ?? null;
     if (Array.isArray(audioContent)) {
       audioContent = audioContent.slice();

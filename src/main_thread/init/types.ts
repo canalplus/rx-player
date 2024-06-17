@@ -145,7 +145,6 @@ export interface IContentInitializerEvents {
    * From this point on, the user can reliably play/pause/resume the stream.
    */
   loaded: {
-    segmentSinksStore: ISegmentSinksStore | null;
     getSegmentSinkMetrics: null | (() => Promise<ISegmentSinkMetrics | undefined>);
   };
   /** Event emitted when a stream event is encountered. */

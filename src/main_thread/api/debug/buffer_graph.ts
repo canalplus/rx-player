@@ -53,6 +53,19 @@ export default class SegmentSinkGraph {
   }
 
   public update(data: ISegmentSinkGrapUpdateData): void {
+    // Following logic clear the colorMap entries if they are not used anymore
+    // to prevent memory usage.
+    const representationStillInUse: Set<string> = new Set();
+    data.inventory.forEach((chunk) => {
+      representationStillInUse.add(chunk.infos.representation.uniqueId);
+    });
+
+    this._colorMap.forEach((representationId) => {
+      if (!representationStillInUse.has(representationId)) {
+        this._colorMap.delete(representationId);
+      }
+    });
+
     if (this._canvasCtxt === null) {
       return;
     }

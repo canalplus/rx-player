@@ -370,7 +370,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Function passed from the ContentInitializer that return segment sinks metrics.
    * This is used for monitor and debugging.
    */
-  private _get_segmentSinkMetrics:
+  private _priv_segmentSinkMetricsCallback:
     | null
     | (() => Promise<ISegmentSinkMetrics | undefined>);
 
@@ -450,7 +450,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_worker = null;
 
-    this._get_segmentSinkMetrics = null;
+    this._priv_segmentSinkMetricsCallback = null;
 
     const onVolumeChange = () => {
       this.trigger("volumeChange", {
@@ -2333,11 +2333,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param cancellationSignal
    * @returns
    */
-  async _priv_getSegmentSinkMetrics(): Promise<undefined | ISegmentSinkMetrics> {
-    if (this._get_segmentSinkMetrics === null) {
+  async __priv_getSegmentSinkMetrics(): Promise<undefined | ISegmentSinkMetrics> {
+    if (this._priv_segmentSinkMetricsCallback === null) {
       return undefined;
     } else {
-      return this._get_segmentSinkMetrics();
+      return this._priv_segmentSinkMetricsCallback();
     }
   }
 
@@ -2406,7 +2406,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos?.tracksStore?.dispose();
     this._priv_contentInfos?.mediaElementTracksStore?.dispose();
     this._priv_contentInfos = null;
-    this._get_segmentSinkMetrics = null;
+    this._priv_segmentSinkMetricsCallback = null;
 
     this._priv_contentEventsMemory = {};
 

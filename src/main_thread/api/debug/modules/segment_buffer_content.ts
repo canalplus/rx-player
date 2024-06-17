@@ -38,7 +38,7 @@ export default function createSegmentSinkGraph(
 
   let bufferMetrics: ISegmentSinkMetrics | null = null;
   instance
-    ._priv_getSegmentSinkMetrics()
+    .__priv_getSegmentSinkMetrics()
     .then((metrics) => {
       bufferMetrics = metrics ?? null;
     })
@@ -63,7 +63,7 @@ export default function createSegmentSinkGraph(
       return;
     }
     instance
-      ._priv_getSegmentSinkMetrics()
+      .__priv_getSegmentSinkMetrics()
       .then((metrics) => {
         bufferMetrics = metrics ?? null;
         updateBufferMetrics();

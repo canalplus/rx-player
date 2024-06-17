@@ -238,7 +238,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
             if (isLoaded) {
               stopListening();
               this.trigger("loaded", {
-                segmentSinksStore: null,
                 getSegmentSinkMetrics: null,
               });
             }
