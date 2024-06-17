@@ -1,4 +1,4 @@
-import type { SegmentSinkMetrics } from "../../../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_buffers_store";
 import type { IBufferType } from "../../../../core/types";
 import type {
   IAdaptationMetadata,
@@ -36,7 +36,7 @@ export default function createSegmentSinkGraph(
     clearInterval(intervalId);
   });
 
-  let bufferMetrics: SegmentSinkMetrics | null = null;
+  let bufferMetrics: ISegmentSinkMetrics | null = null;
   instance
     ._priv_getSegmentSinkMetrics()
     .then((metrics) => {

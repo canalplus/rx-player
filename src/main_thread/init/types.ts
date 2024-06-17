@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   ISegmentSinksStore,
   IBufferType,
@@ -146,7 +146,7 @@ export interface IContentInitializerEvents {
    */
   loaded: {
     segmentSinksStore: ISegmentSinksStore | null;
-    getSegmentSinkMetrics: null | (() => Promise<SegmentSinkMetrics | undefined>);
+    getSegmentSinkMetrics: null | (() => Promise<ISegmentSinkMetrics | undefined>);
   };
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent | IPublicNonFiniteStreamEvent;

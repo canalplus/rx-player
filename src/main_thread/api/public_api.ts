@@ -31,7 +31,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
-import type { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
@@ -372,7 +372,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Function passed from the ContentInitializer that return segment sinks metrics.
    * This is used for monitor and debugging.
    */
-  private _get_segmentSinkMetrics: null | (() => Promise<SegmentSinkMetrics | undefined>);
+  private _get_segmentSinkMetrics:
+    | null
+    | (() => Promise<ISegmentSinkMetrics | undefined>);
 
   /**
    * @constructor
@@ -2359,7 +2361,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param cancellationSignal
    * @returns
    */
-  async _priv_getSegmentSinkMetrics(): Promise<undefined | SegmentSinkMetrics> {
+  async _priv_getSegmentSinkMetrics(): Promise<undefined | ISegmentSinkMetrics> {
     if (this._get_segmentSinkMetrics === null) {
       return undefined;
     } else {

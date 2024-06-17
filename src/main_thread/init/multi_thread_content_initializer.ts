@@ -1,7 +1,7 @@
 import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
-import type { SegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
@@ -98,7 +98,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _segmentMetrics: {
     messageId: number;
-    resolvers: Record<number, (value: SegmentSinkMetrics | undefined) => void>;
+    resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
@@ -1485,7 +1485,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     );
 
     const _getSegmentSinkMetrics: () => Promise<
-      SegmentSinkMetrics | undefined
+      ISegmentSinkMetrics | undefined
     > = async () => {
       const messageId = ++this._segmentMetrics.messageId;
       sendMessage(this._settings.worker, {

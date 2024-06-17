@@ -4,7 +4,7 @@
  * multithread situation.
  */
 
-import type { SegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_store";
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
@@ -914,7 +914,7 @@ export interface ISegmentSinkStoreUpdateMessage {
   type: WorkerMessageType.SegmentSinkStoreUpdate;
   contentId: string;
   value: {
-    segmentSinkMetrics: SegmentSinkMetrics;
+    segmentSinkMetrics: ISegmentSinkMetrics;
     messageId: number;
   };
 }

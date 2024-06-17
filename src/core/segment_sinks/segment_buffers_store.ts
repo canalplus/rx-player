@@ -47,7 +47,7 @@ export interface IBufferedChunkSnapshot extends Omit<IBufferedChunk, "infos"> {
  * The metrics include information on the buffer type, codec, and segment inventory,
  * and are categorized by segment type (audio, video, text).
  */
-export interface SegmentSinkMetrics {
+export interface ISegmentSinkMetrics {
   segmentSinks: Record<
     "audio" | "video" | "text",
     {
@@ -375,7 +375,7 @@ export default class SegmentSinksStore {
     return true;
   }
 
-  public getSegmentSinksMetrics(): SegmentSinkMetrics {
+  public getSegmentSinksMetrics(): ISegmentSinkMetrics {
     return {
       segmentSinks: {
         audio: {
