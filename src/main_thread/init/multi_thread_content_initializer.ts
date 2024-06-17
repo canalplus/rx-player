@@ -1098,6 +1098,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (resolveFn !== undefined) {
             resolveFn(msgData.value.segmentSinkMetrics);
             delete this._segmentMetrics.resolvers[msgData.value.messageId];
+          } else {
+            log.error("MTCI: Failed to send segment sink store update");
           }
           break;
         }

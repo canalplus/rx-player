@@ -2406,6 +2406,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos?.tracksStore?.dispose();
     this._priv_contentInfos?.mediaElementTracksStore?.dispose();
     this._priv_contentInfos = null;
+    this._get_segmentSinkMetrics = null;
 
     this._priv_contentEventsMemory = {};
 
