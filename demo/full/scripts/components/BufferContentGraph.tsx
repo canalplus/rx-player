@@ -3,7 +3,7 @@ import type { IVideoRepresentation } from "../../../../src/public_types";
 import capitalizeFirstLetter from "../lib/capitalizeFirstLetter";
 import shuffleArray from "../lib/shuffleArray";
 import ToolTip from "./ToolTip";
-import { IBufferedChunkSnapshot } from "../../../../src/core/segment_sinks/segment_buffers_store";
+import { IBufferedData } from "../modules/player";
 
 const { useEffect, useMemo, useRef, useState } = React;
 
@@ -68,7 +68,7 @@ function paintCurrentPosition(
 interface IScaledBufferedData {
   scaledStart: number;
   scaledEnd: number;
-  bufferedInfos: IBufferedChunkSnapshot;
+  bufferedInfos: IBufferedData;
 }
 
 /**
@@ -80,7 +80,7 @@ interface IScaledBufferedData {
  * @returns {Array.<Object>}
  */
 function scaleSegments(
-  bufferedData: IBufferedChunkSnapshot[],
+  bufferedData: IBufferedData[],
   minimumPosition: number,
   maximumPosition: number,
 ): IScaledBufferedData[] {
@@ -123,7 +123,7 @@ export default function BufferContentGraph({
   type, // The type of buffer (e.g. "audio", "video" or "text")
 }: {
   currentTime: number | undefined;
-  data: IBufferedChunkSnapshot[];
+  data: IBufferedData[];
   minimumPosition: number | null | undefined;
   maximumPosition: number | null | undefined;
   seek: (pos: number) => void;
@@ -255,7 +255,7 @@ export default function BufferContentGraph({
                 "\n" +
                 `height: ${rep.height ?? "?"}` +
                 "\n" +
-                `codec: ${representation.codecs ?? "?"}` +
+                `codec: ${representation.codecs?.join("-") ?? "?"}` +
                 "\n" +
                 `bitrate: ${representation.bitrate ?? "?"}` +
                 "\n";
@@ -267,7 +267,7 @@ export default function BufferContentGraph({
                 "\n" +
                 `audioDescription: ${String(adaptation.isAudioDescription) ?? false}` +
                 "\n" +
-                `codec: ${representation.codecs ?? "?"}` +
+                `codec: ${representation.codecs?.join("-") ?? "?"}` +
                 "\n" +
                 `bitrate: ${representation.bitrate ?? "?"}` +
                 "\n";
