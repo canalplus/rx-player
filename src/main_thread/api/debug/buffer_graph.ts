@@ -129,8 +129,8 @@ export default class SegmentSinkGraph {
       maximumPosition,
     );
 
-    for (let i = 0; i < currentRangesScaled.length; i++) {
-      this._paintRange(currentRangesScaled[i], width, height);
+    for (const currentRange of currentRangesScaled) {
+      this._paintRange(currentRange, width, height);
     }
 
     if (currentTime !== undefined) {
@@ -222,10 +222,9 @@ function scaleSegments(
 ): IScaledChunk[] {
   const scaledSegments = [];
   const wholeDuration = maximumPosition - minimumPosition;
-  for (let i = 0; i < bufferedData.length; i++) {
-    const info = bufferedData[i];
-    const start = info.bufferedStart === undefined ? info.start : info.bufferedStart;
-    const end = info.bufferedEnd === undefined ? info.end : info.bufferedEnd;
+  for (const info of bufferedData) {
+    const start = info.bufferedStart ?? info.start;
+    const end = info.bufferedEnd ?? info.end;
     if (end > minimumPosition && start < maximumPosition) {
       const startPoint = Math.max(start - minimumPosition, 0);
       const endPoint = Math.min(end - minimumPosition, maximumPosition);

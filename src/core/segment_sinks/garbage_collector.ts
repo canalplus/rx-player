@@ -128,8 +128,7 @@ async function clearBuffer(
     }
 
     // begin from the oldest
-    for (let i = 0; i < outerRanges.length; i++) {
-      const outerRange = outerRanges[i];
+    for (const outerRange of outerRanges) {
       if (position - maxBufferBehind >= outerRange.end) {
         cleanedupRanges.push(outerRange);
       } else if (
@@ -159,8 +158,7 @@ async function clearBuffer(
     }
 
     // begin from the oldest
-    for (let i = 0; i < outerRanges.length; i++) {
-      const outerRange = outerRanges[i];
+    for (const outerRange of outerRanges) {
       if (position + maxBufferAhead <= outerRange.start) {
         cleanedupRanges.push(outerRange);
       } else if (

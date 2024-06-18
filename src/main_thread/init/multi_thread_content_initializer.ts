@@ -1987,8 +1987,7 @@ function updateManifestCodecSupport(manifest: IManifestMetadata): ICodecSupportL
         if (codecs.length === 0) {
           codecs = [""];
         }
-        for (let codecIdx = 0; codecIdx < codecs.length; codecIdx++) {
-          const codec = codecs[codecIdx];
+        for (const codec of codecs) {
           isSupported = checkCodecSupport(mimeType, codec);
           if (isSupported) {
             r.codecs = [codec];

@@ -357,8 +357,8 @@ function findSeekableDiscontinuity(
     return null;
   }
   let maxDiscontinuityEnd: number | null = null;
-  for (let i = 0; i < discontinuitiesStore.length; i++) {
-    const { period } = discontinuitiesStore[i];
+  for (const discontinuityInfo of discontinuitiesStore) {
+    const { period } = discontinuityInfo;
     if (period.start > stalledPosition) {
       return maxDiscontinuityEnd;
     }
@@ -366,7 +366,7 @@ function findSeekableDiscontinuity(
     let discontinuityEnd: number | undefined;
 
     if (period.end === undefined || period.end > stalledPosition) {
-      const { discontinuity, position } = discontinuitiesStore[i];
+      const { discontinuity, position } = discontinuityInfo;
       const { start, end } = discontinuity;
       const discontinuityLowerLimit = start ?? position;
       if (stalledPosition >= discontinuityLowerLimit - EPSILON) {

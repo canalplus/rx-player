@@ -100,8 +100,7 @@ export default function createSegmentSinkGraph(
       }
 
       currentRangeRepInfoElt.innerHTML = "";
-      for (let i = 0; i < inventory.length; i++) {
-        const rangeInfo = inventory[i];
+      for (const rangeInfo of inventory) {
         const { bufferedStart, bufferedEnd, infos } = rangeInfo;
         if (
           bufferedStart !== undefined &&

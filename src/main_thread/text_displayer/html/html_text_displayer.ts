@@ -251,8 +251,8 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
   private _disableCurrentCues(): void {
     this._sizeUpdateCanceller.cancel();
     if (this._currentCues.length > 0) {
-      for (let i = 0; i < this._currentCues.length; i++) {
-        safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
+      for (const cue of this._currentCues) {
+        safelyRemoveChild(this._textTrackElement, cue.element);
       }
       this._currentCues = [];
     }
@@ -275,13 +275,12 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     // TODO More intelligent handling
 
     this._sizeUpdateCanceller.cancel();
-    for (let i = 0; i < this._currentCues.length; i++) {
-      safelyRemoveChild(this._textTrackElement, this._currentCues[i].element);
+    for (const cue of this._currentCues) {
+      safelyRemoveChild(this._textTrackElement, cue.element);
     }
 
     this._currentCues = [];
-    for (let i = 0; i < elements.length; i++) {
-      const element = elements[i];
+    for (const element of elements) {
       const resolution = getElementResolution(element);
       this._currentCues.push({ element, resolution });
       this._textTrackElement.appendChild(element);
@@ -308,8 +307,8 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       );
       heightWidthRef.onUpdate(
         ({ height, width }) => {
-          for (let i = 0; i < proportionalCues.length; i++) {
-            const { resolution, element } = proportionalCues[i];
+          for (const cue of proportionalCues) {
+            const { resolution, element } = cue;
             updateProportionalElements(height, width, resolution, element);
           }
         },

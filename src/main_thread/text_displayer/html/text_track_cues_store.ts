@@ -70,9 +70,9 @@ export default class TextTrackCuesStore {
       const segment = cuesBuffer[cueIdx];
       if (time < segment.end && time >= segment.start) {
         const cues = segment.cues;
-        for (let j = 0; j < cues.length; j++) {
-          if (time >= cues[j].start && time < cues[j].end) {
-            ret.push(cues[j].element);
+        for (const cue of cues) {
+          if (time >= cue.start && time < cue.end) {
+            ret.push(cue.element);
           }
         }
         // first or last IHTMLCue in a group can have a slighlty different start
@@ -80,12 +80,12 @@ export default class TextTrackCuesStore {
         // approximation.
         // Add a tolerance of 1ms to fix this issue
         if (ret.length === 0 && cues.length > 0) {
-          for (let j = 0; j < cues.length; j++) {
+          for (const cue of cues) {
             if (
-              areNearlyEqual(time, cues[j].start, DELTA_CUES_GROUP) ||
-              areNearlyEqual(time, cues[j].end, DELTA_CUES_GROUP)
+              areNearlyEqual(time, cue.start, DELTA_CUES_GROUP) ||
+              areNearlyEqual(time, cue.end, DELTA_CUES_GROUP)
             ) {
-              ret.push(cues[j].element);
+              ret.push(cue.element);
             }
           }
         }
