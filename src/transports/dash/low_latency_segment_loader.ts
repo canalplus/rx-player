@@ -84,6 +84,7 @@ export default function lowLatencySegmentLoader(
     headers,
     onData,
     timeout: options.timeout,
+    connectionTimeout: options.connectionTimeout,
     cancelSignal,
   }).then((res) => ({
     resultType: "chunk-complete" as const,
