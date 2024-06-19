@@ -123,6 +123,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    */
   private _initDataQueue: IProtectionData[];
 
+  private _supportedCodecWhenEncrypted: string[];
+
   /**
    * `true` if the EME API are available on the current platform according to
    * the default EME implementation used.
@@ -162,6 +164,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: true,
       data: null,
     };
+    this._supportedCodecWhenEncrypted = [];
     this.error = null;
 
     eme.onEncrypted(
@@ -180,6 +183,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       .then((mediaKeysInfo) => {
         const { options, mediaKeySystemAccess } = mediaKeysInfo;
 
+        this.findSupportedCodecForMediaKeys(mediaKeysInfo);
         /**
          * String identifying the key system, allowing the rest of the code to
          * only advertise the required initialization data for license requests.
@@ -213,6 +217,27 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       .catch((err) => {
         this._onFatalError(err);
       });
+  }
+
+  /**
+   *
+   */
+  private findSupportedCodecForMediaKeys(mediaKeys: IMediaKeysInfos) {
+    const supportedConfiguration = mediaKeys.mediaKeySystemAccess.getConfiguration();
+
+    const videoCodecs = supportedConfiguration.videoCapabilities?.map(
+      (entry) => entry.contentType,
+    );
+    const audioCodecs = supportedConfiguration.audioCapabilities?.map(
+      (entry) => entry.contentType,
+    );
+
+    const supportedCodecs = [...(videoCodecs ?? []), ...(audioCodecs ?? [])].filter(
+      (contentType): contentType is string => contentType !== undefined,
+    );
+
+    console.log("FLO DEBUG: supported device in encrypted mode:", supportedCodecs);
+    this._supportedCodecWhenEncrypted = supportedCodecs;
   }
 
   /**
@@ -328,6 +353,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     };
     this._canceller.cancel();
     this.trigger("stateChange", this._stateData.state);
+  }
+
+  public getSupportedCodecs(): string[] {
+    return this._supportedCodecWhenEncrypted;
   }
 
   /**
@@ -712,6 +741,24 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         this.trigger("blackListProtectionData", initializationData);
         return true;
       }
+    }
+
+    const mimeType = initializationData.content?.representation.mimeType ?? "";
+    const representationCodecs =
+      initializationData.content?.representation.codecs?.map(
+        (codec) => `${mimeType};codecs=\"${codec}\"`,
+      ) ?? [];
+    console.log("FLO DEBUG: codec from representation", representationCodecs);
+    const isThereAnUnsupportedCodec = representationCodecs.some((codec) => {
+      return this._supportedCodecWhenEncrypted.indexOf(codec) === -1;
+    });
+
+    if (isThereAnUnsupportedCodec && initializationData.content !== undefined) {
+      console.log(
+        "FLO DEBUG: there is an unsupported codec, marking representation as unsupported",
+        initializationData.content.representation,
+      );
+      initializationData.content.representation.isSupported = false;
     }
 
     // Check if the current key id(s) has been blacklisted by this session
