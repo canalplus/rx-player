@@ -1015,26 +1015,15 @@ function getKeyIdsLinkedToSession(
   const missingKnownKeyIds = getMissingKnownKeyIds(keySessionRecord, keyIdsInLicense);
   const associatedKeyIds = keyIdsInLicense.concat(missingKnownKeyIds);
 
-  if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
-    // We want to add the current key ids in the blacklist if it is
-    // not already there.
-    //
-    // We only do that when `singleLicensePer` is set to something
-    // else than the default `"init-data"` because this logic:
-    //   1. might result in a quality fallback, which is a v3.x.x
-    //      breaking change if some APIs (like `singleLicensePer`)
-    //      aren't used.
-    //   2. Rely on the EME spec regarding key statuses being well
-    //      implemented on all supported devices, which we're not
-    //      sure yet. Because in any other `singleLicensePer`, we
-    //      need a good implementation anyway, it doesn't matter
-    //      there.
-    const missingInitDataKeyIds = getMissingInitDataKeyIds(
-      initializationData,
-      associatedKeyIds,
-    );
-    associatedKeyIds.push(...missingInitDataKeyIds);
+  // key that are missing from the license but present on the init data are
+  // considered as non-usable and are blacklisted.
+  const missingInitDataKeyIds = getMissingInitDataKeyIds(
+    initializationData,
+    associatedKeyIds,
+  );
+  associatedKeyIds.push(...missingInitDataKeyIds);
 
+  if (singleLicensePer !== undefined && singleLicensePer !== "init-data") {
     const { content } = initializationData;
     if (isCurrentLicense && content !== undefined) {
       if (singleLicensePer === "content") {
