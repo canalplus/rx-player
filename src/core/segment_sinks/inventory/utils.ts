@@ -50,9 +50,9 @@ export function getFirstSegmentAfterPeriod(
   inventory: IBufferedChunk[],
   period: IPeriod,
 ): IBufferedChunk | null {
-  for (let i = 0; i < inventory.length; i++) {
-    if (inventory[i].infos.period.start > period.start) {
-      return inventory[i];
+  for (const segment of inventory) {
+    if (segment.infos.period.start > period.start) {
+      return segment;
     }
   }
   return null;

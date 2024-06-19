@@ -291,8 +291,8 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
     }
     for (const period of streamInfo.activePeriods.toArray()) {
       let wasFoundInAllTypes = true;
-      for (let i = 1; i < this._allBufferTypes.length; i++) {
-        const streamInfo2 = this._activeStreams.get(this._allBufferTypes[i]);
+      for (const bufferType of this._allBufferTypes) {
+        const streamInfo2 = this._activeStreams.get(bufferType);
         if (streamInfo2 === undefined) {
           return;
         }
@@ -575,10 +575,10 @@ function getLastAvailablePositionFromAdaptation(
    * This variable allows to optimize the logic here when this is the case.
    */
   let lastIndex: IRepresentationIndex | undefined;
-  for (let i = 0; i < representations.length; i++) {
-    if (representations[i].index !== lastIndex) {
-      lastIndex = representations[i].index;
-      const lastPosition = representations[i].index.getLastAvailablePosition();
+  for (const representation of representations) {
+    if (representation.index !== lastIndex) {
+      lastIndex = representation.index;
+      const lastPosition = representation.index.getLastAvailablePosition();
       if (lastPosition === undefined) {
         // we cannot tell
         return undefined;

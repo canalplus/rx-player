@@ -125,8 +125,8 @@ export default class NativeTextDisplayer implements ITextDisplayer {
         }
       }
 
-      for (let i = 0; i < cues.length; i++) {
-        this._track.addCue(cues[i]);
+      for (const cue of cues) {
+        this._track.addCue(cue);
       }
     }
     this._buffered.insert(start, end);
