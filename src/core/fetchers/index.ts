@@ -21,16 +21,16 @@ import type {
 } from "./manifest";
 import ManifestFetcher from "./manifest";
 import type {
-  IPrioritizedSegmentFetcher,
-  ISegmentFetcherCreatorBackoffOptions,
+  SegmentQueue,
+  ISegmentQueueCreatorBackoffOptions,
 } from "./segment";
-import SegmentFetcherCreator from "./segment";
+import SegmentQueueCreator from "./segment";
 
 export type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
-  IPrioritizedSegmentFetcher,
-  ISegmentFetcherCreatorBackoffOptions,
+  ISegmentQueueCreatorBackoffOptions,
+  SegmentQueue,
 };
-export { ManifestFetcher, SegmentFetcherCreator };
+export { ManifestFetcher, SegmentQueueCreator };

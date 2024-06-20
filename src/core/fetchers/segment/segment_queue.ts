@@ -14,50 +14,51 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
+import log from "../../../log";
 import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../../manifest";
-import type { IPlayerError } from "../../../../public_types";
+} from "../../../manifest";
+import type { IPlayerError } from "../../../public_types";
 import type {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
-} from "../../../../transports";
-import assert from "../../../../utils/assert";
-import EventEmitter from "../../../../utils/event_emitter";
-import noop from "../../../../utils/noop";
-import objectAssign from "../../../../utils/object_assign";
-import type { IReadOnlySharedReference } from "../../../../utils/reference";
-import SharedReference from "../../../../utils/reference";
-import TaskCanceller from "../../../../utils/task_canceller";
-import type { IPrioritizedSegmentFetcher } from "../../../fetchers";
-import type { IQueuedSegment } from "../types";
+} from "../../../transports";
+import assert from "../../../utils/assert";
+import EventEmitter from "../../../utils/event_emitter";
+import noop from "../../../utils/noop";
+import objectAssign from "../../../utils/object_assign";
+import SharedReference from "../../../utils/reference";
+import TaskCanceller from "../../../utils/task_canceller";
+import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
+
+/** Information about a Segment waiting to be loaded by the Stream. */
+export interface IQueuedSegment {
+  /** Priority of the segment request (lower number = higher priority). */
+  priority: number;
+  /** Segment wanted. */
+  segment: ISegment;
+}
 
 /**
- * Class scheduling segment downloads for a single Representation.
- *
- * TODO The request scheduling abstractions might be simplified by integrating
- * the `DownloadingQueue` in the segment fetchers code, instead of having it as
- * an utilis of the `RepresentationStream` like here.
- * @class DownloadingQueue
+ * Class scheduling segment downloads as a FIFO queue.
  */
-export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueEvent<T>> {
-  /** Context of the Representation that will be loaded through this DownloadingQueue. */
-  private _content: IDownloadingQueueContext;
+export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>> {
+  /** Context of the Representation that will be loaded through this SegmentQueue. */
+  private _content: ISegmentQueueContext | null;
   /**
    * Current queue of segments scheduled for download.
    *
    * Segments whose request are still pending are still in that queue. Segments
    * are only removed from it once their request has succeeded.
    */
-  private _downloadQueue: IReadOnlySharedReference<IDownloadQueueItem>;
+  private _downloadQueue: SharedReference<ISegmentQueueItem> | null;
   /**
    * Allows to stop listening to queue updates and stop performing requests.
-   * Set to `null` if the DownloadingQueue is not started right now.
+   * Set to `null` if the SegmentQueue is not started right now.
    */
   private _currentCanceller: TaskCanceller | null;
   /**
@@ -74,10 +75,10 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
   private _segmentFetcher: IPrioritizedSegmentFetcher<T>;
   /**
    * Emit the timescale anounced in the initialization segment once parsed.
-   * `undefined` when this is not yet known.
-   * `null` when no initialization segment or timescale exists.
+   * Emit `undefined` when this is not yet known.
+   * Emit `null` when no initialization segment or timescale exists.
    */
-  private _initSegmentInfoRef: SharedReference<number | undefined | null>;
+  private _initSegmentInfoRef: SharedReference<number | undefined | null> | null;
   /**
    * Some media segment might have been loaded and are only awaiting for the
    * initialization segment to be parsed before being parsed themselves.
@@ -87,44 +88,21 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
   private _mediaSegmentAwaitingInitMetadata: string | null;
 
   /**
-   * Create a new `DownloadingQueue`.
+   * Create a new `SegmentQueue`.
    *
-   * @param {Object} content - The context of the Representation you want to
-   * load segments for.
-   * @param {Object} downloadQueue - Queue of segments you want to load.
    * @param {Object} segmentFetcher - Interface to facilitate the download of
    * segments.
-   * @param {boolean} hasInitSegment - Declare that an initialization segment
-   * will need to be downloaded.
-   *
-   * A `DownloadingQueue` ALWAYS wait for the initialization segment to be
-   * loaded and parsed before parsing a media segment.
-   *
-   * In cases where no initialization segment exist, this would lead to the
-   * `DownloadingQueue` waiting indefinitely for it.
-   *
-   * By setting that value to `false`, you anounce to the `DownloadingQueue`
-   * that it should not wait for an initialization segment before parsing a
-   * media segment.
    */
-  constructor(
-    content: IDownloadingQueueContext,
-    downloadQueue: IReadOnlySharedReference<IDownloadQueueItem>,
-    segmentFetcher: IPrioritizedSegmentFetcher<T>,
-    hasInitSegment: boolean,
-  ) {
+  constructor(segmentFetcher: IPrioritizedSegmentFetcher<T>) {
     super();
-    this._content = content;
+    this._content = null;
+    this._downloadQueue = null;
     this._currentCanceller = null;
-    this._downloadQueue = downloadQueue;
     this._initSegmentRequest = null;
     this._mediaSegmentRequest = null;
     this._segmentFetcher = segmentFetcher;
-    this._initSegmentInfoRef = new SharedReference<number | undefined | null>(undefined);
+    this._initSegmentInfoRef = null;
     this._mediaSegmentAwaitingInitMetadata = null;
-    if (!hasInitSegment) {
-      this._initSegmentInfoRef.setValue(null);
-    }
   }
 
   /**
@@ -146,12 +124,42 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
   }
 
   /**
-   * Start the current downloading queue, emitting events as it loads and parses
-   * initialization and media segments.
+   * Start the current downloading queue linking it to the given content.
+   *
+   * The `SegmentQueue` will emit events as it loads and parses initialization
+   * and media segments.
+   *
+   * @param {Object} content - The context of the Representation you want to
+   * load segments for.
+   * @param {boolean} hasInitSegment - Declare that an initialization segment
+   * will need to be downloaded.
+   *
+   * A `SegmentQueue` ALWAYS wait for the initialization segment to be
+   * loaded and parsed before parsing a media segment.
+   *
+   * In cases where no initialization segment exist, this would lead to the
+   * `SegmentQueue` waiting indefinitely for it.
+   *
+   * By setting that value to `false`, you anounce to the `SegmentQueue`
+   * that it should not wait for an initialization segment before parsing a
+   * media segment.
+   * @returns {Object} - XXX TODO
    */
-  public start(): void {
+  public resetForContent(
+    content: ISegmentQueueContext,
+    hasInitSegment: boolean,
+  ): SharedReference<ISegmentQueueItem> {
+    this._content = content;
+    this._initSegmentInfoRef = new SharedReference<number | undefined | null>(undefined);
+    this._downloadQueue = new SharedReference<ISegmentQueueItem>({
+      initSegment: null,
+      segmentQueue: [],
+    });
+    if (!hasInitSegment) {
+      this._initSegmentInfoRef.setValue(null);
+    }
     if (this._currentCanceller !== null) {
-      return;
+      this._currentCanceller.cancel();
     }
     this._currentCanceller = new TaskCanceller();
 
@@ -177,7 +185,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
           }
           log.debug(
             "Stream: no more media segment to request. Cancelling queue.",
-            this._content.adaptation.type,
+            content.adaptation.type,
           );
           this._restartMediaSegmentDownloadingQueue();
           return;
@@ -185,7 +193,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
           // There's no request although there are needed segments: start requests
           log.debug(
             "Stream: Media segments now need to be requested. Starting queue.",
-            this._content.adaptation.type,
+            content.adaptation.type,
             segmentQueue.length,
           );
           this._restartMediaSegmentDownloadingQueue();
@@ -196,7 +204,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
             // The most important request if for another segment, request it
             log.debug(
               "Stream: Next media segment changed, cancelling previous",
-              this._content.adaptation.type,
+              content.adaptation.type,
             );
             this._restartMediaSegmentDownloadingQueue();
             return;
@@ -205,7 +213,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
             // The priority of the most important request has changed, update it
             log.debug(
               "Stream: Priority of next media segment changed, updating",
-              this._content.adaptation.type,
+              content.adaptation.type,
               currentSegmentRequest.priority,
               nextItem.priority,
             );
@@ -238,16 +246,19 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
         if (next.initSegment === null) {
           log.debug(
             "Stream: no more init segment to request. Cancelling queue.",
-            this._content.adaptation.type,
+            content.adaptation.type,
           );
         }
         this._restartInitSegmentDownloadingQueue(next.initSegment);
       },
       { emitCurrentValue: true, clearSignal: this._currentCanceller.signal },
     );
+
+    return this._downloadQueue;
   }
 
   public stop() {
+    this._downloadQueue?.finish();
     this._currentCanceller?.cancel();
     this._currentCanceller = null;
   }
@@ -259,7 +270,16 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
     if (this._mediaSegmentRequest !== null) {
       this._mediaSegmentRequest.canceller.cancel();
     }
-    const { segmentQueue } = this._downloadQueue.getValue();
+
+    // XXX TODO same object?
+    const downloadQueue = this._downloadQueue;
+    const content = this._content;
+    const initSegmentInfoRef = this._initSegmentInfoRef;
+
+    if (downloadQueue === null || content === null || initSegmentInfoRef === null) {
+      return;
+    }
+    const { segmentQueue } = downloadQueue.getValue();
     const currentNeededSegment = segmentQueue[0];
     const recursivelyRequestSegments = (
       startingSegment: IQueuedSegment | undefined,
@@ -280,7 +300,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
           : canceller.linkToSignal(this._currentCanceller.signal);
 
       const { segment, priority } = startingSegment;
-      const context = objectAssign({ segment }, this._content);
+      const context = objectAssign({ segment }, content);
 
       /**
        * If `true` , the current task has either errored, finished, or was
@@ -313,7 +333,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
       };
 
       const continueToNextSegment = (): void => {
-        const lastQueue = this._downloadQueue.getValue().segmentQueue;
+        const lastQueue = downloadQueue.getValue().segmentQueue;
         if (lastQueue.length === 0) {
           isComplete = true;
           this.trigger("emptyQueue", null);
@@ -359,7 +379,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
               initTimescale: number | undefined,
             ) => ISegmentParserParsedInitChunk<T> | ISegmentParserParsedMediaChunk<T>,
           ): void => {
-            const initTimescale = this._initSegmentInfoRef.getValue();
+            const initTimescale = initSegmentInfoRef.getValue();
             if (initTimescale !== undefined) {
               emitChunk(parse(initTimescale ?? undefined));
             } else {
@@ -369,7 +389,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
               // but I found it globally clearer to segregate the two cases,
               // especially to always have a meaningful `isWaitingOnInitSegment`
               // boolean which is a very important variable.
-              this._initSegmentInfoRef.waitUntilDefined(
+              initSegmentInfoRef.waitUntilDefined(
                 (actualTimescale) => {
                   emitChunk(parse(actualTimescale ?? undefined));
                 },
@@ -384,7 +404,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
               this.trigger("fullyLoadedSegment", segment);
             } else {
               this._mediaSegmentAwaitingInitMetadata = segment.id;
-              this._initSegmentInfoRef.waitUntilDefined(
+              initSegmentInfoRef.waitUntilDefined(
                 () => {
                   this._mediaSegmentAwaitingInitMetadata = null;
                   isWaitingOnInitSegment = false;
@@ -404,7 +424,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
             this._mediaSegmentRequest = null;
 
             if (isWaitingOnInitSegment) {
-              this._initSegmentInfoRef.waitUntilDefined(continueToNextSegment, {
+              initSegmentInfoRef.waitUntilDefined(continueToNextSegment, {
                 clearSignal: canceller.signal,
               });
             } else {
@@ -439,6 +459,16 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
     if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
       return;
     }
+
+    // XXX TODO same object?
+    const downloadQueue = this._downloadQueue;
+    const content = this._content;
+    const initSegmentInfoRef = this._initSegmentInfoRef;
+
+    if (downloadQueue === null || content === null || initSegmentInfoRef === null) {
+      return;
+    }
+
     if (this._initSegmentRequest !== null) {
       this._initSegmentRequest.canceller.cancel();
     }
@@ -452,7 +482,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
         ? noop
         : canceller.linkToSignal(this._currentCanceller.signal);
     const { segment, priority } = queuedInitSegment;
-    const context = objectAssign({ segment }, this._content);
+    const context = objectAssign({ segment }, content);
 
     /**
      * If `true` , the current task has either errored, finished, or was
@@ -484,7 +514,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
           assert(parsed.segmentType === "init", "Should have loaded an init segment.");
           this.trigger("parsedInitSegment", objectAssign({}, parsed, { segment }));
           if (parsed.segmentType === "init") {
-            this._initSegmentInfoRef.setValue(parsed.initTimescale ?? null);
+            initSegmentInfoRef.setValue(parsed.initTimescale ?? null);
           }
         },
         onAllChunksReceived: (): void => {
@@ -516,19 +546,19 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
 }
 
 /**
- * Events sent by the `DownloadingQueue`.
+ * Events sent by the `SegmentQueue`.
  *
  * The key is the event's name and the value the format of the corresponding
  * event's payload.
  */
-export interface IDownloadingQueueEvent<T> {
+export interface ISegmentQueueEvent<T> {
   /**
    * Notify that the initialization segment has been fully loaded and parsed.
    *
    * You can now push that segment to its corresponding buffer and use its parsed
    * metadata.
    *
-   * Only sent if an initialization segment exists (when the `DownloadingQueue`'s
+   * Only sent if an initialization segment exists (when the `SegmentQueue`'s
    * `hasInitSegment` constructor option has been set to `true`).
    * In that case, an `IParsedInitSegmentEvent` will always be sent before any
    * `IParsedSegmentEvent` event is sent.
@@ -538,7 +568,7 @@ export interface IDownloadingQueueEvent<T> {
    * Notify that a media chunk (decodable sub-part of a media segment) has been
    * loaded and parsed.
    *
-   * If an initialization segment exists (when the `DownloadingQueue`'s
+   * If an initialization segment exists (when the `SegmentQueue`'s
    * `hasInitSegment` constructor option has been set to `true`), an
    * `IParsedSegmentEvent` will always be sent AFTER the `IParsedInitSegmentEvent`
    * event.
@@ -586,10 +616,10 @@ export interface IRequestRetryPayload {
 }
 
 /**
- * Structure of the object that has to be emitted through the `downloadQueue`
+ * Structure of the object that has to be emitted through the `SegmentQueue`
  * shared reference, to signal which segments are currently needed.
  */
-export interface IDownloadQueueItem {
+export interface ISegmentQueueItem {
   /**
    * A potential initialization segment that needs to be loaded and parsed.
    * It will generally be requested in parralel of the first media segments.
@@ -597,7 +627,7 @@ export interface IDownloadQueueItem {
    * Can be set to `null` if you don't need to load the initialization segment
    * for now.
    *
-   * If the `DownloadingQueue`'s `hasInitSegment` constructor option has been
+   * If the `SegmentQueue`'s `hasInitSegment` constructor option has been
    * set to `true`, no media segment will be parsed before the initialization
    * segment has been loaded and parsed.
    */
@@ -612,8 +642,8 @@ export interface IDownloadQueueItem {
    * Note that any media segments in the segment queue will only be parsed once
    * either of these is true:
    *   - An initialization segment has been loaded and parsed by this
-   *     `DownloadingQueue` instance.
-   *   - The `DownloadingQueue`'s `hasInitSegment` constructor option has been
+   *     `SegmentQueue` instance.
+   *   - The `SegmentQueue`'s `hasInitSegment` constructor option has been
    *     set to `false`.
    */
   segmentQueue: IQueuedSegment[];
@@ -631,8 +661,8 @@ interface ISegmentRequestObject {
   canceller: TaskCanceller;
 }
 
-/** Context for segments downloaded through the DownloadingQueue. */
-export interface IDownloadingQueueContext {
+/** Context for segments downloaded through the SegmentQueue. */
+export interface ISegmentQueueContext {
   /** Adaptation linked to the segments you want to load. */
   adaptation: IAdaptation;
   /** Manifest linked to the segments you want to load. */
