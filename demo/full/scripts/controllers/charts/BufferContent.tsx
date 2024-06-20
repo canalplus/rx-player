@@ -1,7 +1,7 @@
 import * as React from "react";
 import BufferContentGraph from "../../components/BufferContentGraph";
 import useModuleState from "../../lib/useModuleState";
-import type { IBufferedData, IPlayerModule } from "../../modules/player/index";
+import type { IPlayerModule, IBufferedData } from "../../modules/player/index";
 
 export default function BufferContentChart({ player }: { player: IPlayerModule }) {
   const bufferedData = useModuleState(player, "bufferedData");

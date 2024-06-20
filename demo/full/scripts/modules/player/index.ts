@@ -95,7 +95,7 @@ export interface IBufferedData {
       isAudioDescription?: boolean | undefined;
       isClosedCaption?: boolean | undefined;
     };
-    representation: IAudioRepresentation | IVideoRepresentation;
+    representation: { codecs?: string[]; uniqueId: string; bitrate: number; id: string };
   };
 }
 
@@ -445,10 +445,15 @@ const PlayerModule = declareModule(
 
     function attachMultithread(player: RxPlayer) {
       hasAttachedMultithread = true;
-      player.attachWorker({
-        workerUrl: "./worker.js",
-        dashWasmUrl: "./mpd-parser.wasm",
-      });
+      player
+        .attachWorker({
+          workerUrl: "./worker.js",
+          dashWasmUrl: "./mpd-parser.wasm",
+        })
+        .catch((err) => {
+          /* eslint-disable-next-line no-console */
+          console.error("Error when attaching worker:", err);
+        });
     }
   },
 );

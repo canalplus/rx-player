@@ -119,7 +119,9 @@ function linkPlayerEventsToState(
   }
 
   const bufferedDataItv = setInterval(updateBufferedData, BUFFERED_DATA_UPDATES_INTERVAL);
-  updateBufferedData();
+  updateBufferedData().catch(() => {
+    // do nothing
+  });
   abortSignal.addEventListener("abort", () => {
     clearInterval(bufferedDataItv);
   });
