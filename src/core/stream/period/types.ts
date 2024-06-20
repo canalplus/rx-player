@@ -10,7 +10,7 @@ import type SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type WeakMapMemory from "../../../utils/weak_map_memory";
 import type { IRepresentationEstimator } from "../../adaptive";
-import type { SegmentFetcherCreator } from "../../fetchers";
+import type { SegmentQueueCreator } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import type SegmentSinksStore from "../../segment_sinks";
 import type {
@@ -106,7 +106,7 @@ export interface IPeriodStreamArguments {
     SegmentSink,
     (cancelSignal: CancellationSignal) => void
   >;
-  segmentFetcherCreator: SegmentFetcherCreator;
+  segmentQueueCreator: SegmentQueueCreator;
   segmentSinksStore: SegmentSinksStore;
   playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
   options: IPeriodStreamOptions;

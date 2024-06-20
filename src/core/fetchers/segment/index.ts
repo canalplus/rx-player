@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
-import type { ISegmentFetcherCreatorBackoffOptions } from "./segment_fetcher_creator";
-import SegmentFetcherCreator from "./segment_fetcher_creator";
+import type SegmentQueue from "./segment_queue";
+import type { ISegmentQueueContext } from "./segment_queue";
+import type { ISegmentQueueCreatorBackoffOptions } from "./segment_queue_creator";
+import SegmentQueueCreator from "./segment_queue_creator";
 
-export default SegmentFetcherCreator;
-export type { IPrioritizedSegmentFetcher, ISegmentFetcherCreatorBackoffOptions };
+export default SegmentQueueCreator;
+export type { SegmentQueue, ISegmentQueueCreatorBackoffOptions, ISegmentQueueContext };

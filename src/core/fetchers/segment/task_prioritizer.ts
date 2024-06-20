@@ -4,6 +4,15 @@ import createCancellablePromise from "../../../utils/create_cancellable_promise"
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
 
+/**
+ * Utilitary class which allows to perform multiple tasks at once each with an
+ * associated priority.
+ *
+ * This class will then schedule the given tasks in the right order based on the
+ * priorities.
+ *
+ * @class TaskPrioritizer
+ */
 export default class TaskPrioritizer<T> {
   /**
    * Priority of the most prioritary task currently running.
