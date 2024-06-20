@@ -86,18 +86,21 @@ export default function generateTextTrackLoader({
     }
 
     const url =
-      options.queryString === undefined
-        ? initialUrl
-        : addQueryString(initialUrl, options.queryString);
+      options.cmcdPayload?.type === "query"
+        ? addQueryString(initialUrl, options.cmcdPayload.value)
+        : initialUrl;
+
+    const cmcdHeaders =
+      options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
 
     let headers;
     if (segment.range !== undefined) {
       headers = {
-        ...options.headers,
+        ...cmcdHeaders,
         Range: byteRange(segment.range),
       };
-    } else if (options.headers !== undefined) {
-      headers = options.headers;
+    } else if (cmcdHeaders !== undefined) {
+      headers = cmcdHeaders;
     }
 
     const containerType = inferSegmentContainer(context.type, context.mimeType);

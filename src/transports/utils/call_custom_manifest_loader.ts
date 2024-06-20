@@ -44,7 +44,7 @@ export default function callCustomManifestLoader(
 
       /**
        * Callback triggered when the custom manifest loader has a response.
-       * @param {Object} args
+       * @param {Object} _args
        */
       const resolve = (_args: {
         data: ILoadedManifestFormat;
@@ -120,7 +120,7 @@ export default function callCustomManifestLoader(
 
       const callbacks = { reject, resolve, fallback };
       const abort = customManifestLoader(
-        { url, timeout: loaderOptions.timeout },
+        { url, timeout: loaderOptions.timeout, cmcdPayload: loaderOptions.cmcdPayload },
         callbacks,
       );
 

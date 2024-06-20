@@ -11,7 +11,7 @@ import type {
   IRebufferingStatus,
   ObservationPosition,
 } from "../../playback_observer";
-import type { ICmcdOptions, ITrackType } from "../../public_types";
+import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types";
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IRange } from "../../utils/ranges";
@@ -45,49 +45,6 @@ export interface ICmcdSegmentInfo {
   /** Segment metadata linked to the wanted segment. */
   segment: ISegment;
 }
-
-/**
- * Payload to add to a request to provide CMCD metadata through HTTP request
- * headers.
- *
- * This is an object where keys are header names and values are header contents.
- */
-export type ICmcdHeadersData = Record<string, string>;
-
-/**
- * Payload to add to a request to provide CMCD metadata through an URL's query
- * string.
- *
- * This is an array of all fields and corresponding values that should be
- * added to the query string, the order should be kept.
- *
- * `null` indicates that the field has no value and should be added as is.
- */
-export type ICmcdQueryData = Array<[string, string | null]>;
-
-/**
- * `CmcdDataBuilder`'s return type when CMCD metadata should be added through
- * headers to the HTTP request for the corresponding resource.
- */
-export interface ICmcdHeadersPayload {
-  type: "headers";
-  value: ICmcdHeadersData;
-}
-
-/**
- * `CmcdDataBuilder`'s return type when CMCD metadata should be added through
- * the query string to the HTTP request for the corresponding resource.
- */
-export interface ICmcdQueryPayload {
-  type: "query";
-  value: ICmcdQueryData;
-}
-
-/**
- * `CmcdDataBuilder`'s return type to indicate that CMCD metadata should be
- * added to the HTTP request for the corresponding resource.
- */
-export type ICmcdPayload = ICmcdHeadersPayload | ICmcdQueryPayload;
 
 /**
  * Media playback observation's properties the `CmcdDataBuilder` wants to have

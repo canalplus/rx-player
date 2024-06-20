@@ -221,10 +221,13 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       if (!isMP4) {
         return request({
           url:
-            loaderOptions.queryString === undefined
-              ? url
-              : addQueryString(url, loaderOptions.queryString),
-          headers: loaderOptions.headers,
+            loaderOptions.cmcdPayload?.type === "query"
+              ? addQueryString(url, loaderOptions.cmcdPayload.value)
+              : url,
+          headers:
+            loaderOptions.cmcdPayload?.type === "headers"
+              ? loaderOptions.cmcdPayload.value
+              : undefined,
           responseType: "text",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -237,10 +240,13 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       } else {
         return request({
           url:
-            loaderOptions.queryString === undefined
-              ? url
-              : addQueryString(url, loaderOptions.queryString),
-          headers: loaderOptions.headers,
+            loaderOptions.cmcdPayload?.type === "query"
+              ? addQueryString(url, loaderOptions.cmcdPayload.value)
+              : url,
+          headers:
+            loaderOptions.cmcdPayload?.type === "headers"
+              ? loaderOptions.cmcdPayload.value
+              : undefined,
           responseType: "arraybuffer",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,

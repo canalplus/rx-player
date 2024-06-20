@@ -103,6 +103,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   const requestOptions: ISegmentLoaderOptions = {
     timeout: options.requestTimeout < 0 ? undefined : options.requestTimeout,
     connectionTimeout,
+    cmcdPayload: undefined,
   };
 
   /**
@@ -292,14 +293,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     function callLoaderWithUrl(
       cdnMetadata: ICdnMetadata | null,
     ): ReturnType<ISegmentLoader<TLoadedFormat>> {
-      const cmcdPayload = cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
-      if (cmcdPayload !== undefined) {
-        if (cmcdPayload.type === "headers") {
-          requestOptions.headers = cmcdPayload.value;
-        } else if (cmcdPayload.type === "query") {
-          requestOptions.queryString = cmcdPayload.value;
-        }
-      }
+      requestOptions.cmcdPayload = cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
       return loadSegment(
         cdnMetadata,
         context,

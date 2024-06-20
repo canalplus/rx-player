@@ -136,6 +136,24 @@ As you can see, this function takes two arguments:
    - _trackType_ (`string`): The concerned type of track. Can be `"video"`, `"audio"`,
      `"text"` (for subtitles)
 
+   - _cmcdPayload_ (`Object|undefined`): Optional object that describes the "Common Media
+     Client Data" (CMCD) that may be provided alongside the resource for this request.
+
+     When set, takes the form of an object with two fields: `type` (a `string`) and value,
+     whose format will depend on the value of `type`.
+
+     When `type` is set to `"query"`, then `value` represents a CMCD payload formatted to
+     be inserted in a query string. It is in this case an array of 2-tuples with the first
+     value being a field's name as a string and the second element being either that
+     field's value if set to a string or indicating that the field has no value.
+     For example a `value` set to `[["first", "val"], ["second", null],
+     ["third", "something"]]` could be translated into the query string
+     `?first=val&second&third=something`.
+
+     When `type` is set to `"headers"`, then `value` represents a CMCD payload formatted
+     to be inserted as headers. It is in this case an object where keys are header names
+     and values are the corresponding header values.
+
 2. **callbacks**: An object containing multiple callbacks to allow this `segmentLoader` to
    communicate various events to the RxPlayer.
 
@@ -287,6 +305,24 @@ As you can see, this function takes three arguments:
 
      This property is mainly indicative, you may or may not want to exploit this
      information depending on your use cases.
+
+   - _cmcdPayload_ (`Object|undefined`): Optional object that describes the "Common Media
+     Client Data" (CMCD) that may be provided alongside the resource for this request.
+
+     When set, takes the form of an object with two fields: `type` (a `string`) and value,
+     whose format will depend on the value of `type`.
+
+     When `type` is set to `"query"`, then `value` represents a CMCD payload formatted to
+     be inserted in a query string. It is in this case an array of 2-tuples with the first
+     value being a field's name as a string and the second element being either that
+     field's value if set to a string or indicating that the field has no value.
+     For example a `value` set to `[["first", "val"], ["second", null],
+     ["third", "something"]]` could be translated into the query string
+     `?first=val&second&third=something`.
+
+     When `type` is set to `"headers"`, then `value` represents a CMCD payload formatted
+     to be inserted as headers. It is in this case an object where keys are header names
+     and values are the corresponding header values.
 
 2. **callbacks**: An object containing multiple callbacks to allow this `manifestLoader`
    to communicate the loaded Manifest or an encountered error to the RxPlayer.

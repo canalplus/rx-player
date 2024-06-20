@@ -35,13 +35,18 @@ function regularManifestLoader(
   if (initialUrl === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
+
   const url =
-    loaderOptions.queryString === undefined
-      ? initialUrl
-      : addQueryString(initialUrl, loaderOptions.queryString);
+    loaderOptions.cmcdPayload?.type === "query"
+      ? addQueryString(initialUrl, loaderOptions.cmcdPayload.value)
+      : initialUrl;
+
   return request({
     url,
-    headers: loaderOptions.headers,
+    headers:
+      loaderOptions.cmcdPayload?.type === "headers"
+        ? loaderOptions.cmcdPayload.value
+        : undefined,
     responseType: "text",
     timeout: loaderOptions.timeout,
     connectionTimeout: loaderOptions.connectionTimeout,
