@@ -6,7 +6,7 @@ import type {
 } from "../../../public_types";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { IRepresentationEstimator } from "../../adaptive";
-import type { SegmentFetcherCreator } from "../../fetchers";
+import type { SegmentQueueCreator } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import type {
   IRepresentationsChoice,
@@ -141,7 +141,7 @@ export interface IAdaptationStreamArguments {
   /** SourceBuffer wrapper - needed to push media segments. */
   segmentSink: SegmentSink;
   /** Module used to fetch the wanted media segments. */
-  segmentFetcherCreator: SegmentFetcherCreator;
+  segmentQueueCreator: SegmentQueueCreator;
   /**
    * "Buffer goal" wanted, or the ideal amount of time ahead of the current
    * position in the current SegmentSink. When this amount has been reached

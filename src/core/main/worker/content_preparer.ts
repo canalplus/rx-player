@@ -23,7 +23,7 @@ import type { IRepresentationEstimator } from "../../adaptive";
 import createAdaptiveRepresentationSelector from "../../adaptive";
 import CmcdDataBuilder from "../../cmcd";
 import type { IManifestRefreshSettings } from "../../fetchers";
-import { ManifestFetcher, SegmentFetcherCreator } from "../../fetchers";
+import { ManifestFetcher, SegmentQueueCreator } from "../../fetchers";
 import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import DecipherabilityFreezeDetector from "../common/DecipherabilityFreezeDetector";
@@ -129,7 +129,7 @@ export default class ContentPreparer {
         },
       );
 
-      const segmentFetcherCreator = new SegmentFetcherCreator(
+      const segmentQueueCreator = new SegmentQueueCreator(
         dashPipelines,
         cmcdDataBuilder,
         context.segmentRetryOptions,
@@ -160,7 +160,7 @@ export default class ContentPreparer {
         manifestFetcher,
         representationEstimator,
         segmentSinksStore,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         workerTextSender,
         trackChoiceSetter,
       };
@@ -359,10 +359,10 @@ export interface IPreparedContentData {
   /** Allows to send timed text media data so it can be rendered. */
   workerTextSender: WorkerTextDisplayerInterface | null;
   /**
-   * Allows to create `SegmentFetcher` which simplifies complex media segment
+   * Allows to create `SegmentQueue` which simplifies complex media segment
    * fetching.
    */
-  segmentFetcherCreator: SegmentFetcherCreator;
+  segmentQueueCreator: SegmentQueueCreator;
   /**
    * Allows to store and update the wanted tracks and Representation inside that
    * track.

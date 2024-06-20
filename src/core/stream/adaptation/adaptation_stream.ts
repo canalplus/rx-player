@@ -58,7 +58,7 @@ export default function AdaptationStream(
     options,
     representationEstimator,
     segmentSink,
-    segmentFetcherCreator,
+    segmentQueueCreator,
     wantedBufferAhead,
     maxVideoBufferSize,
   }: IAdaptationStreamArguments,
@@ -117,7 +117,7 @@ export default function AdaptationStream(
   );
 
   /** Allows a `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
+  const segmentQueue = segmentQueueCreator.createSegmentQueue(
     adaptation.type,
     /* eslint-disable @typescript-eslint/unbound-method */
     {
@@ -435,7 +435,7 @@ export default function AdaptationStream(
         playbackObserver,
         content: { representation, adaptation, period, manifest },
         segmentSink,
-        segmentFetcher,
+        segmentQueue,
         terminate: terminateCurrentStream,
         options: {
           bufferGoal,

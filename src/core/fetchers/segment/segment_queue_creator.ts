@@ -20,26 +20,26 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
 import type CmcdDataBuilder from "../../cmcd";
 import type { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
-import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
 import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
 import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
 import createSegmentFetcher, { getSegmentFetcherRequestOptions } from "./segment_fetcher";
+import SegmentQueue from "./segment_queue";
 import TaskPrioritizer from "./task_prioritizer";
 
 /**
  * Interact with the transport pipelines to download segments with the right
  * priority.
  *
- * @class SegmentFetcherCreator
+ * @class SegmentQueueCreator
  */
-export default class SegmentFetcherCreator {
+export default class SegmentQueueCreator {
   /**
    * Transport pipelines of the currently choosen streaming protocol (e.g. DASH,
    * Smooth etc.).
    */
   private readonly _transport: ITransportPipelines;
   /**
-   * `TaskPrioritizer` linked to this SegmentFetcherCreator.
+   * `TaskPrioritizer` linked to this SegmentQueueCreator.
    *
    * Note: this is typed as `any` because segment loaders / parsers can use
    * different types depending on the type of buffer. We could maybe be smarter
@@ -48,22 +48,25 @@ export default class SegmentFetcherCreator {
    */
   private readonly _prioritizer: TaskPrioritizer<void>;
   /**
-   * Options used by the SegmentFetcherCreator, e.g. to allow configuration on
+   * Options used by the SegmentQueueCreator, e.g. to allow configuration on
    * segment retries (number of retries maximum, default delay and so on).
    */
-  private readonly _backoffOptions: ISegmentFetcherCreatorBackoffOptions;
+  private readonly _backoffOptions: ISegmentQueueCreatorBackoffOptions;
 
+  /** Class allowing to select a CDN when multiple are available for a given resource. */
   private readonly _cdnPrioritizer: CdnPrioritizer;
 
   private _cmcdDataBuilder: CmcdDataBuilder | null;
 
   /**
    * @param {Object} transport
+   * @param {Object} options
+   * @param {Object} cancelSignal
    */
   constructor(
     transport: ITransportPipelines,
     cmcdDataBuilder: CmcdDataBuilder | null,
-    options: ISegmentFetcherCreatorBackoffOptions,
+    options: ISegmentQueueCreatorBackoffOptions,
     cancelSignal: CancellationSignal,
   ) {
     const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
@@ -82,16 +85,18 @@ export default class SegmentFetcherCreator {
   }
 
   /**
-   * Create a segment fetcher, allowing to easily perform segment requests.
+   * Create a `SegmentQueue`, allowing to easily perform segment requests.
    * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
    * @param {Object} eventListeners
-   * @returns {Object}
+   * @returns {Object} - `SegmentQueue`, which is an abstraction allowing to
+   * perform a queue of segment requests for a given media type (here defined by
+   * `bufferType`) with associated priorities.
    */
-  createSegmentFetcher(
+  public createSegmentQueue(
     bufferType: IBufferType,
     eventListeners: ISegmentFetcherLifecycleCallbacks,
-  ): IPrioritizedSegmentFetcher<unknown> {
+  ): SegmentQueue<unknown> {
     const requestOptions = getSegmentFetcherRequestOptions(this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
@@ -104,12 +109,16 @@ export default class SegmentFetcherCreator {
       eventListeners,
       requestOptions,
     });
-    return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
+    const prioritizedSegmentFetcher = applyPrioritizerToSegmentFetcher(
+      this._prioritizer,
+      segmentFetcher,
+    );
+    return new SegmentQueue(prioritizedSegmentFetcher);
   }
 }
 
-/** Options used by the `SegmentFetcherCreator`. */
-export interface ISegmentFetcherCreatorBackoffOptions {
+/** Options used by the `SegmentQueueCreator`. */
+export interface ISegmentQueueCreatorBackoffOptions {
   /**
    * Whether the content is played in a low-latency mode.
    * This has an impact on default backoff delays.
@@ -124,5 +133,13 @@ export interface ISegmentFetcherCreatorBackoffOptions {
    * `undefined` will lead to a default, large, timeout being used.
    */
   requestTimeout: number | undefined;
+  /**
+   * Timeout for just the "connection" part of the request, before data is
+   * actually being transferred.
+   *
+   * Setting a lower `connectionTimeout` than a `requestTimeout` allows to
+   * fail faster without having to take into account a potentially low
+   * bandwidth.
+   */
   connectionTimeout: number | undefined;
 }
