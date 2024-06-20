@@ -558,7 +558,9 @@ function getKeyIdFromInitSegment(segment: Uint8Array): Uint8Array | null {
   if (tenc === null || tenc.byteLength < 24) {
     return null;
   }
-  return tenc.subarray(8, 24);
+  const keyId = tenc.subarray(8, 24);
+  // Zero-filled keyId should only be valid for unencrypted content
+  return keyId.every((b) => b !== 0) ? keyId : null;
 }
 
 export {
