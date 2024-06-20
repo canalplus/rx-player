@@ -429,10 +429,58 @@ export interface ISegmentLoaderContext {
   byteRanges?: Array<[number, number]> | undefined;
   /** Type of the corresponding track. */
   trackType: ITrackType;
+  /**
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
+   */
+  cmcdPayload?: ICmcdPayload | undefined;
 }
 
 /** Every possible value for the Adaptation's `type` property. */
 export type ITrackType = "video" | "audio" | "text";
+
+/**
+ * Payload to add to a request to provide CMCD metadata through HTTP request
+ * headers.
+ *
+ * This is an object where keys are header names and values are header contents.
+ */
+export type ICmcdHeadersData = Record<string, string>;
+
+/**
+ * Payload to add to a request to provide CMCD metadata through an URL's query
+ * string.
+ *
+ * This is an array of all fields and corresponding values that should be
+ * added to the query string, the order should be kept.
+ *
+ * `null` indicates that the field has no value and should be added as is.
+ */
+export type ICmcdQueryData = Array<[string, string | null]>;
+
+/**
+ * Type when CMCD metadata should be added through headers to the HTTP request
+ * for the corresponding resource.
+ */
+export interface ICmcdHeadersPayload {
+  type: "headers";
+  value: ICmcdHeadersData;
+}
+
+/**
+ * Type when CMCD metadata should be added through the query string to the HTTP
+ * request for the corresponding resource.
+ */
+export interface ICmcdQueryPayload {
+  type: "query";
+  value: ICmcdQueryData;
+}
+
+/**
+ * Type to indicate that CMCD metadata should be added to the request for the
+ * corresponding resource.
+ */
+export type ICmcdPayload = ICmcdHeadersPayload | ICmcdQueryPayload;
 
 export type ILoadedManifestFormat = IInitialManifest;
 
@@ -458,8 +506,14 @@ export type IManifestLoader = (
 (() => void) | void;
 
 export interface IManifestLoaderInfo {
+  /** URL at which the wanted Manifest can be accessed. */
   url: string | undefined;
   timeout: number | undefined;
+  /**
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
+   */
+  cmcdPayload: ICmcdPayload | undefined;
 }
 
 /** Options related to a single key system. */

@@ -253,15 +253,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       const requestOptions: IManifestLoaderOptions = {
         timeout: requestTimeout,
         connectionTimeout,
+        cmcdPayload: settings.cmcdDataBuilder?.getCmcdDataForManifest(transportName),
       };
-      const cmcdPayload = settings.cmcdDataBuilder?.getCmcdDataForManifest(transportName);
-      if (cmcdPayload !== undefined) {
-        if (cmcdPayload.type === "headers") {
-          requestOptions.headers = cmcdPayload.value;
-        } else if (cmcdPayload.type === "query") {
-          requestOptions.queryString = cmcdPayload.value;
-        }
-      }
       const callLoader = () => loadManifest(manifestUrl, requestOptions, cancelSignal);
       return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
     }

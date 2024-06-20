@@ -48,16 +48,17 @@ export default function initSegmentLoader(
   | ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array>
   | ISegmentLoaderResultChunkedComplete
 > {
-  const url =
-    options.queryString === undefined
-      ? initialUrl
-      : addQueryString(initialUrl, options.queryString);
-
+  let url = initialUrl;
+  if (options.cmcdPayload?.type === "query") {
+    url = addQueryString(url, options.cmcdPayload.value);
+  }
+  const cmcdHeaders =
+    options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
   if (segment.range === undefined) {
     return request({
       url,
       responseType: "arraybuffer",
-      headers: options.headers,
+      headers: cmcdHeaders,
       timeout: options.timeout,
       connectionTimeout: options.connectionTimeout,
       cancelSignal,
@@ -69,7 +70,7 @@ export default function initSegmentLoader(
     return request({
       url,
       headers: {
-        ...options.headers,
+        ...cmcdHeaders,
         Range: byteRange(segment.range),
       },
       responseType: "arraybuffer",
@@ -85,7 +86,7 @@ export default function initSegmentLoader(
     return request({
       url,
       headers: {
-        ...options.headers,
+        ...cmcdHeaders,
         Range: byteRange([segment.range[0], segment.indexRange[1]]),
       },
       responseType: "arraybuffer",
@@ -99,7 +100,7 @@ export default function initSegmentLoader(
   const rangeRequest$ = request({
     url,
     headers: {
-      ...options.headers,
+      ...cmcdHeaders,
       Range: byteRange(segment.range),
     },
     responseType: "arraybuffer",
@@ -111,7 +112,7 @@ export default function initSegmentLoader(
   const indexRequest$ = request({
     url,
     headers: {
-      ...options.headers,
+      ...cmcdHeaders,
       Range: byteRange(segment.indexRange),
     },
     responseType: "arraybuffer",

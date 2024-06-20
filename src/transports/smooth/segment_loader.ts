@@ -50,21 +50,26 @@ async function regularSegmentLoader(
   cancelSignal: CancellationSignal,
   checkMediaSegmentIntegrity?: boolean | undefined,
 ): Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
-  let headers;
+  const cmcdHeaders =
+    loaderOptions.cmcdPayload?.type === "headers"
+      ? loaderOptions.cmcdPayload.value
+      : undefined;
   const range = context.segment.range;
+
+  let headers;
   if (Array.isArray(range)) {
     headers = {
-      ...loaderOptions.headers,
+      ...cmcdHeaders,
       Range: byteRange(range),
     };
-  } else if (loaderOptions.headers !== undefined) {
-    headers = loaderOptions.headers;
+  } else if (cmcdHeaders !== undefined) {
+    headers = cmcdHeaders;
   }
 
   const url =
-    loaderOptions.queryString === undefined
-      ? initialUrl
-      : addQueryString(initialUrl, loaderOptions.queryString);
+    loaderOptions.cmcdPayload?.type === "query"
+      ? addQueryString(initialUrl, loaderOptions.cmcdPayload.value)
+      : initialUrl;
 
   const data = await request({
     url,
@@ -310,6 +315,7 @@ const generateSegmentLoader =
           byteRanges,
           trackType: context.type,
           url,
+          cmcdPayload: loaderOptions.cmcdPayload,
         };
         const abort = segmentLoader(args, customCallbacks);
 

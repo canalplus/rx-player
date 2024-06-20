@@ -4,13 +4,6 @@ import type {
   IResolutionInfo,
 } from "./adaptive";
 import type {
-  ICmcdHeadersData,
-  ICmcdQueryData,
-  ICmcdHeadersPayload,
-  ICmcdQueryPayload,
-  ICmcdPayload,
-} from "./cmcd";
-import type {
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
 } from "./fetchers";
@@ -57,11 +50,4 @@ export type {
   IStreamOrchestratorPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
-
-  // CMCD
-  ICmcdHeadersData,
-  ICmcdQueryData,
-  ICmcdHeadersPayload,
-  ICmcdQueryPayload,
-  ICmcdPayload,
 };

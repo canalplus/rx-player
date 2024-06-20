@@ -25,6 +25,7 @@ import type {
   ISegmentLoader as ICustomSegmentLoader,
   IServerSyncInfos,
   IPlayerError,
+  ICmcdPayload,
 } from "../public_types";
 import type { CancellationSignal } from "../utils/task_canceller";
 import type TaskCanceller from "../utils/task_canceller";
@@ -181,23 +182,10 @@ export interface IManifestLoaderOptions {
    */
   connectionTimeout?: number | undefined;
   /**
-   * Optional headers that should be added to the Manifest request if it
-   * involves HTTP(S).
-   *
-   * Note that a request itself might already necessitate headers, in which case
-   * they'll have priority if there's an header name conflict.
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
    */
-  headers?: Record<string, string>;
-  /**
-   * Optional supplementary elements to add to the query string that should be
-   * added to the Manifest request if it involves HTTP(S).
-   *
-   * This is an array of all fields and corresponding values that should be
-   * added to the query string, the order should be kept.
-   *
-   * `null` indicates that the field has no value and should be added as is.
-   */
-  queryString?: Array<[string, string | null]>;
+  cmcdPayload: ICmcdPayload | undefined;
 }
 
 /** Functions allowing to load and parse segments of any type. */
@@ -251,23 +239,10 @@ export interface ISegmentLoaderOptions {
    */
   connectionTimeout?: number | undefined;
   /**
-   * Optional headers that should be added to the Manifest request if it
-   * involves HTTP(S).
-   *
-   * Note that a request itself might already necessitate headers, in which case
-   * they'll have priority if there's an header name conflict.
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
    */
-  headers?: Record<string, string>;
-  /**
-   * Optional supplementary elements to add to the query string that should be
-   * added to the Manifest request if it involves HTTP(S).
-   *
-   * This is an array of all fields and corresponding values that should be
-   * added to the query string, the order should be kept.
-   *
-   * `null` indicates that the field has no value and should be added as is.
-   */
-  queryString?: Array<[string, string | null]>;
+  cmcdPayload: ICmcdPayload | undefined;
 }
 
 /**

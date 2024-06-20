@@ -44,9 +44,14 @@ function generateRegularManifestLoader(
     }
 
     const url =
-      loaderOptions.queryString === undefined
-        ? initialUrl
-        : addQueryString(initialUrl, loaderOptions.queryString);
+      loaderOptions.cmcdPayload?.type === "query"
+        ? addQueryString(initialUrl, loaderOptions.cmcdPayload.value)
+        : initialUrl;
+
+    const cmcdHeaders =
+      loaderOptions.cmcdPayload?.type === "headers"
+        ? loaderOptions.cmcdPayload.value
+        : undefined;
 
     // What follows could be written in a single line, but TypeScript wouldn't
     // shut up.
@@ -55,7 +60,7 @@ function generateRegularManifestLoader(
       case "arraybuffer":
         return request({
           url,
-          headers: loaderOptions.headers,
+          headers: cmcdHeaders,
           responseType: "arraybuffer",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -64,7 +69,7 @@ function generateRegularManifestLoader(
       case "text":
         return request({
           url,
-          headers: loaderOptions.headers,
+          headers: cmcdHeaders,
           responseType: "text",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -73,7 +78,7 @@ function generateRegularManifestLoader(
       case "document":
         return request({
           url,
-          headers: loaderOptions.headers,
+          headers: cmcdHeaders,
           responseType: "document",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,

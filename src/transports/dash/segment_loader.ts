@@ -71,19 +71,22 @@ export async function regularSegmentLoader(
   }
 
   const url =
-    options.queryString === undefined
-      ? initialUrl
-      : addQueryString(initialUrl, options.queryString);
+    options.cmcdPayload?.type === "query"
+      ? addQueryString(initialUrl, options.cmcdPayload.value)
+      : initialUrl;
+
+  const cmcdHeaders =
+    options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
 
   const { segment } = context;
   let headers;
   if (segment.range !== undefined) {
     headers = {
-      ...options.headers,
+      ...cmcdHeaders,
       Range: byteRange(segment.range),
     };
-  } else if (options.headers !== undefined) {
-    headers = options.headers;
+  } else if (cmcdHeaders !== undefined) {
+    headers = cmcdHeaders;
   }
 
   const containerType = inferSegmentContainer(context.type, context.mimeType);
@@ -281,6 +284,7 @@ export default function generateSegmentLoader({
         byteRanges,
         trackType: context.type,
         url,
+        cmcdPayload: options.cmcdPayload,
       };
       const abort = customSegmentLoader(args, customCallbacks);
 
