@@ -177,6 +177,20 @@ export default function fetchRequest(
     fetchOpts.headers = headers;
   }
   fetchOpts.signal = !isNullOrUndefined(abortController) ? abortController.signal : null;
+
+  if (log.hasLevel("DEBUG")) {
+    let logLine = "FETCH: Sending GET " + options.url;
+    if (options.timeout !== undefined) {
+      logLine += " to=" + String(options.timeout / 1000);
+    }
+    if (options.connectionTimeout !== undefined) {
+      logLine += " cto=" + String(options.connectionTimeout / 1000);
+    }
+    if (options.headers?.Range !== undefined) {
+      logLine += " Range=" + options.headers?.Range;
+    }
+    log.debug(logLine);
+  }
   return fetch(options.url, fetchOpts)
     .then((response: Response): Promise<IFetchedStreamComplete> => {
       if (connectionTimeoutId !== undefined) {

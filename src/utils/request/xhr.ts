@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log";
 import isNonEmptyString from "../is_non_empty_string";
 import isNullOrUndefined from "../is_null_or_undefined";
 import getMonotonicTimeStamp from "../monotonic_timestamp";
@@ -210,6 +211,22 @@ export default function request<T>(
       }
     };
 
+    if (log.hasLevel("DEBUG")) {
+      let logLine = "XHR: Sending GET " + url;
+      if (options.responseType !== undefined) {
+        logLine += " type=" + options.responseType;
+      }
+      if (timeout !== undefined) {
+        logLine += " to=" + String(timeout / 1000);
+      }
+      if (connectionTimeout !== undefined) {
+        logLine += " cto=" + String(connectionTimeout / 1000);
+      }
+      if (headers?.Range !== undefined) {
+        logLine += " Range=" + headers?.Range;
+      }
+      log.debug(logLine);
+    }
     xhr.send();
 
     /**
