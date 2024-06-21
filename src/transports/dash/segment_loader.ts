@@ -135,7 +135,6 @@ export default function generateSegmentLoader({
   segmentLoader?: ICustomSegmentLoader | undefined;
   checkMediaSegmentIntegrity?: boolean | undefined;
 }): ISegmentLoader<Uint8Array | ArrayBuffer | null> {
-  // XXX TODO what to do here?
   return checkMediaSegmentIntegrity !== true
     ? segmentLoader
     : addSegmentIntegrityChecks(segmentLoader);

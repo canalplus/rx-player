@@ -82,13 +82,13 @@ export default class SegmentQueueCreator {
   }
 
   /**
-   * Create a segment fetcher, allowing to easily perform segment requests.
+   * Create a `SegmentQueue`, allowing to easily perform segment requests.
    * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
    * @param {Object} callbacks
    * @returns {Object}
    */
-  createSegmentQueue(
+  public createSegmentQueue(
     bufferType: IBufferType,
     callbacks: ISegmentFetcherLifecycleCallbacks,
   ): SegmentQueue<unknown> {

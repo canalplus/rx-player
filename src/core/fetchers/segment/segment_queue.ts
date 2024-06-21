@@ -124,10 +124,13 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
   }
 
   /**
-   * Start the current downloading queue linking it to the given content.
-   *
+   * Return an object allowing to schedule segment requests linked to the given
+   * content.
    * The `SegmentQueue` will emit events as it loads and parses initialization
    * and media segments.
+   *
+   * Calling this method resets all previous queues that were previously started
+   * on the same instance.
    *
    * @param {Object} content - The context of the Representation you want to
    * load segments for.
@@ -143,7 +146,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
    * By setting that value to `false`, you anounce to the `SegmentQueue`
    * that it should not wait for an initialization segment before parsing a
    * media segment.
-   * @returns {Object} - XXX TODO
+   * @returns {Object} - `SharedReference` on which the queue of segment for
+   * that content can be communicated and updated. See type for more
+   * information.
    */
   public resetForContent(
     content: ISegmentQueueContext,
@@ -257,6 +262,11 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     return this._downloadQueue;
   }
 
+  /**
+   * Stop the currently-active `SegmentQueue`.
+   *
+   * Do nothing if no queue is active.
+   */
   public stop() {
     this._downloadQueue?.finish();
     this._currentCanceller?.cancel();
@@ -271,7 +281,6 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
       this._mediaSegmentRequest.canceller.cancel();
     }
 
-    // XXX TODO same object?
     const downloadQueue = this._downloadQueue;
     const content = this._content;
     const initSegmentInfoRef = this._initSegmentInfoRef;

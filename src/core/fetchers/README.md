@@ -18,8 +18,8 @@ This directory actually exports two completely isolated type of fetchers:
 
 - The **Manifest fetcher** is used to download and parse the manifest file.
 
-- The **SegmentQueueCreator** is used to create Segment fetchers, allowing to download
-  and parse media segments.
+- The **SegmentQueueCreator** is used to create `SegmentQueue` objects, allowing
+  to download and parse media segments.
 
 ## The Manifest fetcher
 

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import type SegmentQueue, { ISegmentQueueContext } from "./segment_queue";
+import type SegmentQueue from "./segment_queue";
+import type { ISegmentQueueContext } from "./segment_queue";
 import type { ISegmentQueueCreatorBackoffOptions } from "./segment_queue_creator";
 import SegmentQueueCreator from "./segment_queue_creator";
 

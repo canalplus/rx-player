@@ -23,7 +23,7 @@ import type {
 } from "../../core/adaptive";
 import AdaptiveRepresentationSelector from "../../core/adaptive";
 import CmcdDataBuilder from "../../core/cmcd";
-import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
+import { ManifestFetcher, SegmentQueueCreator } from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
 import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
 import SegmentSinksStore from "../../core/segment_sinks";
@@ -371,7 +371,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       bufferOptions,
     );
 
-    const segmentFetcherCreator = new SegmentFetcherCreator(
+    const segmentQueueCreator = new SegmentQueueCreator(
       transport,
       this._cmcdDataBuilder,
       segmentRequestOptions,
@@ -419,7 +419,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         autoPlay: shouldPlay,
         manifest,
         representationEstimator,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         speed,
         protectionRef,
         bufferOptions: subBufferOptions,
@@ -481,7 +481,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       playbackObserver,
       protectionRef,
       representationEstimator,
-      segmentFetcherCreator,
+      segmentQueueCreator,
       speed,
     } = args;
 
@@ -711,7 +711,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       coreObserver,
       representationEstimator,
       segmentSinksStore,
-      segmentFetcherCreator,
+      segmentQueueCreator,
       bufferOptions,
       handleStreamOrchestratorCallbacks(),
       cancelSignal,
@@ -1084,7 +1084,7 @@ interface IBufferingMediaSettings {
   /** Estimate the right Representation. */
   representationEstimator: IRepresentationEstimator;
   /** Module to facilitate segment fetching. */
-  segmentFetcherCreator: SegmentFetcherCreator;
+  segmentQueueCreator: SegmentQueueCreator;
   /** Last wanted playback rate. */
   speed: IReadOnlySharedReference<number>;
   /**
