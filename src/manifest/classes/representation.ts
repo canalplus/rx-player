@@ -17,7 +17,7 @@
 import features from "../../features";
 import log from "../../log";
 import type { IRepresentationMetadata } from "../../manifest";
-import cdmCodecSupportProber from "../../mse/eme_codec_support_prober";
+import cdmCodecSupportProber from "../../mse/cdm_codec_support_prober";
 import type {
   ICdnMetadata,
   IContentProtections,

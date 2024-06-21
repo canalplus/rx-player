@@ -1206,7 +1206,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         );
         // TO DO: this needs to be re-done if the keySystem changes.
         sendMessage(this._settings.worker, {
-          type: MainThreadMessageType.EMECodecSupportUpdate,
+          type: MainThreadMessageType.CdmCodecSupportUpdate,
           value: codecsSupportedByCDM,
         });
         contentDecryptor.removeEventListener("stateChange", handler);
