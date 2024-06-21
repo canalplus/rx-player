@@ -1197,6 +1197,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
     log.debug("MTCI: Creating ContentDecryptor");
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+
+    const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
+    console.log(
+      "DEBUG FLO: sending to emeProber codecs supported by the CDM",
+      codecsSupportedByCDM,
+    );
+    // TO DO: this needs to be re-done if the keySystem changes.
+    sendMessage(this._settings.worker, {
+      type: MainThreadMessageType.EMECodecSupportUpdate,
+      value: codecsSupportedByCDM,
+    });
+
     if (this._currentContentInfo !== null) {
       this._currentContentInfo.contentDecryptor = contentDecryptor;
     }

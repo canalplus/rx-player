@@ -22,7 +22,11 @@ import type {
 } from "./errors";
 import type { ISerializedSourceBufferError } from "./errors/source_buffer_error";
 import type { IContentProtection, ITextDisplayerData } from "./main_thread/types";
-import type { IManifestMetadata, IPeriodsUpdateResult } from "./manifest";
+import type {
+  ICodecSupportList,
+  IManifestMetadata,
+  IPeriodsUpdateResult,
+} from "./manifest";
 import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
@@ -249,6 +253,11 @@ export interface ICodecSupportUpdateMessage {
      */
     result: boolean;
   }>;
+}
+
+export interface IEMECodecSupportUpdateMessage {
+  type: MainThreadMessageType.EMECodecSupportUpdate;
+  value: ICodecSupportList;
 }
 
 /**
@@ -544,6 +553,7 @@ export const enum MainThreadMessageType {
   PushTextDataError = "push-text-error",
   RemoveTextDataError = "remove-text-error",
   CodecSupportUpdate = "codec-support-update",
+  EMECodecSupportUpdate = "eme-codec-support-update",
   ContentUrlsUpdate = "urls-update",
   DecipherabilityStatusUpdate = "decipherability-update",
   LogLevelUpdate = "log-level-update",
@@ -568,6 +578,7 @@ export type IMainThreadMessage =
   | IStartPreparedContentMessage
   | IReferenceUpdateMessage
   | ICodecSupportUpdateMessage
+  | IEMECodecSupportUpdateMessage
   | IPlaybackObservationMessage
   | IDecipherabilityStatusChangedMessage
   | IUpdateContentUrlsMessage
