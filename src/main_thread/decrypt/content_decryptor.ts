@@ -20,9 +20,14 @@ import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
-import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
+import type {
+  IAdaptationMetadata,
+  ICodecSupportList,
+  IPeriodMetadata,
+} from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import { parseCodec } from "../../utils/are_codecs_compatible";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
@@ -124,7 +129,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    */
   private _initDataQueue: IProtectionData[];
 
-  private _supportedCodecWhenEncrypted: string[];
+  private _supportedCodecWhenEncrypted: ICodecSupportList;
 
   /**
    * `true` if the EME API are available on the current platform according to
@@ -223,7 +228,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   /**
    *
    */
-  private findSupportedCodecForMediaKeys(mediaKeys: IMediaKeysInfos) {
+  private findSupportedCodecForMediaKeys(mediaKeys: IMediaKeysInfos): void {
     const supportedConfiguration = mediaKeys.mediaKeySystemAccess.getConfiguration();
 
     const videoCodecs = supportedConfiguration.videoCapabilities?.map(
@@ -237,8 +242,21 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       (contentType): contentType is string => contentType !== undefined,
     );
 
-    console.log("FLO DEBUG: supported device in encrypted mode:", supportedCodecs);
-    this._supportedCodecWhenEncrypted = supportedCodecs;
+    const codecSupportList: ICodecSupportList = supportedCodecs.map((codec) => {
+      const { codecs, mimeType } = parseCodec(codec);
+      return {
+        codec: codecs,
+        mimeType,
+        result: true,
+      };
+    });
+
+    console.log("FLO DEBUG: supported device in encrypted mode:", codecSupportList);
+    this._supportedCodecWhenEncrypted = codecSupportList;
+
+    //  codec: string;
+    // mimeType: string;
+    // result: boolean;
   }
 
   /**
@@ -356,7 +374,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     this.trigger("stateChange", this._stateData.state);
   }
 
-  public getSupportedCodecs(): string[] {
+  public getSupportedCodecs(): ICodecSupportList {
     return this._supportedCodecWhenEncrypted;
   }
 
@@ -744,23 +762,23 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       }
     }
 
-    const mimeType = initializationData.content?.representation.mimeType ?? "";
-    const representationCodecs =
-      initializationData.content?.representation.codecs?.map(
-        (codec) => `${mimeType};codecs=\"${codec}\"`,
-      ) ?? [];
-    console.log("FLO DEBUG: codec from representation", representationCodecs);
-    const isThereAnUnsupportedCodec = representationCodecs.some((codec) => {
-      return this._supportedCodecWhenEncrypted.indexOf(codec) === -1;
-    });
+    // const mimeType = initializationData.content?.representation.mimeType ?? "";
+    // const representationCodecs =
+    //   initializationData.content?.representation.codecs?.map(
+    //     (codec) => `${mimeType};codecs=\"${codec}\"`,
+    //   ) ?? [];
+    // console.log("FLO DEBUG: codec from representation", representationCodecs);
+    // const isThereAnUnsupportedCodec = representationCodecs.some((codec) => {
+    //   return this._supportedCodecWhenEncrypted.indexOf(codec) === -1;
+    // });
 
-    if (isThereAnUnsupportedCodec && initializationData.content !== undefined) {
-      console.log(
-        "FLO DEBUG: there is an unsupported codec, marking representation as unsupported",
-        initializationData.content.representation,
-      );
-      initializationData.content.representation.isSupported = false;
-    }
+    // if (isThereAnUnsupportedCodec && initializationData.content !== undefined) {
+    //   console.log(
+    //     "FLO DEBUG: there is an unsupported codec, marking representation as unsupported",
+    //     initializationData.content.representation,
+    //   );
+    //   initializationData.content.representation.isSupported = false;
+    // }
 
     // Check if the current key id(s) has been blacklisted by this session
     if (initializationData.keyIds !== undefined) {

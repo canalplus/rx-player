@@ -43,6 +43,7 @@ import type {
   ITrackType,
 } from "../../public_types";
 import type { ITransportOptions } from "../../transports";
+import areCodecsCompatible from "../../utils/are_codecs_compatible";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
@@ -54,7 +55,10 @@ import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
 import type { IContentProtection } from "../decrypt";
-import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
+import ContentDecryptor, {
+  ContentDecryptorState,
+  getKeySystemConfiguration,
+} from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
@@ -146,6 +150,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
+      contentDecryptor: null,
     };
     sendMessage(worker, {
       type: MainThreadMessageType.PrepareContent,
@@ -726,7 +731,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const manifest = msgData.value.manifest;
           try {
-            const codecUpdate = updateManifestCodecSupport(manifest);
+            const codecsSupportedByCDM =
+              this._currentContentInfo.contentDecryptor?.getSupportedCodecs();
+            const codecUpdate = updateManifestCodecSupport(
+              manifest,
+              codecsSupportedByCDM,
+            );
             if (codecUpdate.length > 0) {
               sendMessage(this._settings.worker, {
                 type: MainThreadMessageType.CodecSupportUpdate,
@@ -759,8 +769,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
           // TODO only on added `Representation`?
+
           try {
-            const codecUpdate = updateManifestCodecSupport(manifest);
+            const codecsSupportedByCDM =
+              this._currentContentInfo?.contentDecryptor?.getSupportedCodecs();
+            const codecUpdate = updateManifestCodecSupport(
+              manifest,
+              codecsSupportedByCDM,
+            );
             if (codecUpdate.length > 0) {
               sendMessage(this._settings.worker, {
                 type: MainThreadMessageType.CodecSupportUpdate,
@@ -1185,7 +1201,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
     log.debug("MTCI: Creating ContentDecryptor");
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
-
+    if (this._currentContentInfo !== null) {
+      this._currentContentInfo.contentDecryptor = contentDecryptor;
+    }
     contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (updates) => {
       if (
         this._currentContentInfo === null ||
@@ -1758,6 +1776,8 @@ export interface IMultiThreadContentInitializerContentInfos {
    * Set to `null` when those considerations are not taken yet.
    */
   initialPlayPerformed: IReadOnlySharedReference<boolean> | null;
+
+  contentDecryptor: ContentDecryptor | null;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
@@ -2001,9 +2021,14 @@ type IDecryptionInitializationState =
  *
  * @param {Object} manifest
  */
-function updateManifestCodecSupport(manifest: IManifestMetadata): ICodecSupportList {
+function updateManifestCodecSupport(
+  manifest: IManifestMetadata,
+  listOfSupportedCodecsByCDM?: ICodecSupportList,
+): ICodecSupportList {
   const codecSupportList: ICodecSupportList = [];
-  const codecSupportMap: Map<string, Map<string, boolean>> = new Map();
+  const codecSupportedByMseMap: Map<string, Map<string, boolean>> = new Map();
+  const codecSupportedByCdmMap: Map<string, Map<string, boolean>> = new Map();
+
   manifest.periods.forEach((p) => {
     [
       ...(p.adaptations.audio ?? []),
@@ -2012,12 +2037,16 @@ function updateManifestCodecSupport(manifest: IManifestMetadata): ICodecSupportL
     ].forEach((a) => {
       let hasSupportedCodecs = false;
       a.representations.forEach((r) => {
-        if (r.isSupported !== undefined) {
-          if (!hasSupportedCodecs && r.isSupported) {
-            hasSupportedCodecs = true;
-          }
-          return;
-        }
+        const isEncrypted = r.contentProtections !== undefined;
+        // TO DO: no cache for the representation?
+        // to fixup it will need to do all codecs check on the main thread.
+
+        // if (r.isSupported !== undefined) {
+        //   if (!hasSupportedCodecs && r.isSupported) {
+        //     hasSupportedCodecs = true;
+        //   }
+        //   return;
+        // }
         let isSupported = false;
         const mimeType = r.mimeType ?? "";
         let codecs = r.codecs ?? [];
@@ -2025,7 +2054,32 @@ function updateManifestCodecSupport(manifest: IManifestMetadata): ICodecSupportL
           codecs = [""];
         }
         for (const codec of codecs) {
-          isSupported = checkCodecSupport(mimeType, codec);
+          const isSupportedByMSE = isCodecSupportedByMSE(mimeType, codec);
+          // if MSE supports the codec, and the content is encrypted,
+          // check further if the CDM also supports the codec.
+
+          // TODO: detect if it's text, in it's case, we don't need to block it.
+          // const isAudioOrVideo = r.
+          if (isSupportedByMSE && isEncrypted) {
+            const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
+            isSupported = isSupportedByMSE.supported && isSupportedByCDM;
+            console.log(
+              `DEBUG: testing codec "${codec}" - MSE: ${isSupportedByMSE.supported} - EME: ${isSupportedByCDM} - Result: ${isSupported}`,
+            );
+          } else {
+            isSupported = isSupportedByMSE.supported;
+          }
+
+          // this intend to send the codecs to the worker
+          // maybe it should be deleted to only perfom this on main thread ?
+          if (!isSupportedByMSE.wasKnown) {
+            codecSupportList.push({
+              mimeType,
+              codec,
+              result: isSupported,
+            });
+          }
+
           if (isSupported) {
             r.codecs = [codec];
             break;
@@ -2056,29 +2110,85 @@ function updateManifestCodecSupport(manifest: IManifestMetadata): ICodecSupportL
     });
   });
   return codecSupportList;
-  function checkCodecSupport(mimeType: string, codec: string): boolean {
-    const knownSupport = codecSupportMap.get(mimeType)?.get(codec);
-    let isSupported: boolean;
+
+  /**
+   * Check if the codec is supported by the CDM (the Content Decryption Module).
+   * There can be a disparity between what codecs are supported by MSE and the CDM.
+   *
+   * Ex: Chrome with Widevine is able to create MediaSource for codec HEVC but
+   * Widevine L3 is not able to decipher HEVC because it requires hardware DRM.
+   * As a result Chrome is not able to play HEVC when it's encrypted, but it can
+   * be played if it's unencrypted.
+   * @param {string} mimeType - The mimeType of the codec to test.
+   * @param {string} codec - The codec to test.
+   * @returns { boolean } True if the codec is supported by the CDM.
+   */
+  function isCodecSupportedByCDM(mimeType: string, codec: string): boolean {
+    if (listOfSupportedCodecsByCDM === undefined) {
+      // the CDM did'nt provide any informations about what codecs are supported
+      // in this case, assume all codecs are supported.
+      return true;
+    }
+
+    const knownSupport = codecSupportedByCdmMap.get(mimeType)?.get(codec);
     if (knownSupport !== undefined) {
-      isSupported = knownSupport;
+      return knownSupport;
+    }
+
+    const mimeTypeStr = `${mimeType};codecs="${codec}"`;
+    let isSupported: boolean;
+    // Testing all codecs with the CDM is not possible, so there can be codec with
+    // specific profiles that are untests. To simplify we only check if a codec within
+    // the same codec family is supported.
+    // Ex: "avc1.4d401e" should be marked as supported if "avc1.42e01e" is supported as
+    // both are avc1 codecs.
+    isSupported = listOfSupportedCodecsByCDM.some(
+      (element) =>
+        areCodecsCompatible(
+          `${element.mimeType};codecs="${element.codec}"`,
+          mimeTypeStr,
+        ) && element.result === true,
+    );
+
+    const prevCodecMap = codecSupportedByCdmMap.get(mimeType);
+    if (prevCodecMap !== undefined) {
+      prevCodecMap.set(codec, isSupported);
     } else {
-      const mimeTypeStr = `${mimeType};codecs="${codec}"`;
-      isSupported = isCodecSupported(mimeTypeStr);
-      codecSupportList.push({
-        mimeType,
-        codec,
-        result: isSupported,
-      });
-      const prevCodecMap = codecSupportMap.get(mimeType);
-      if (prevCodecMap !== undefined) {
-        prevCodecMap.set(codec, isSupported);
-      } else {
-        const codecMap = new Map<string, boolean>();
-        codecMap.set(codec, isSupported);
-        codecSupportMap.set(mimeType, codecMap);
-      }
+      const codecMap = new Map<string, boolean>();
+      codecMap.set(codec, isSupported);
+      codecSupportedByCdmMap.set(mimeType, codecMap);
     }
     return isSupported;
+  }
+
+  /**
+   * Check if the codec is supported by MSE (Media Source Extension).
+   * If the codec is supported, the browser should be able to create
+   * a media source with the given codec.
+   * @param {string} mimeType - The mimeType of the codec to test.
+   * @param {string} codec - The codec to test.
+   * @returns { boolean } True if the codec is supported by MSE.
+   */
+  function isCodecSupportedByMSE(
+    mimeType: string,
+    codec: string,
+  ): { supported: boolean; wasKnown: boolean } {
+    const knownSupport = codecSupportedByMseMap.get(mimeType)?.get(codec);
+    if (knownSupport !== undefined) {
+      return { supported: knownSupport, wasKnown: true };
+    }
+
+    const mimeTypeStr = `${mimeType};codecs="${codec}"`;
+    const isSupported: boolean = isCodecSupported(mimeTypeStr);
+    const prevCodecMap = codecSupportedByMseMap.get(mimeType);
+    if (prevCodecMap !== undefined) {
+      prevCodecMap.set(codec, isSupported);
+    } else {
+      const codecMap = new Map<string, boolean>();
+      codecMap.set(codec, isSupported);
+      codecSupportedByMseMap.set(mimeType, codecMap);
+    }
+    return { supported: isSupported, wasKnown: false };
   }
 }
 
