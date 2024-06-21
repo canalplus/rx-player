@@ -761,24 +761,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       }
     }
 
-    // const mimeType = initializationData.content?.representation.mimeType ?? "";
-    // const representationCodecs =
-    //   initializationData.content?.representation.codecs?.map(
-    //     (codec) => `${mimeType};codecs=\"${codec}\"`,
-    //   ) ?? [];
-    // console.log("FLO DEBUG: codec from representation", representationCodecs);
-    // const isThereAnUnsupportedCodec = representationCodecs.some((codec) => {
-    //   return this._supportedCodecWhenEncrypted.indexOf(codec) === -1;
-    // });
-
-    // if (isThereAnUnsupportedCodec && initializationData.content !== undefined) {
-    //   console.log(
-    //     "FLO DEBUG: there is an unsupported codec, marking representation as unsupported",
-    //     initializationData.content.representation,
-    //   );
-    //   initializationData.content.representation.isSupported = false;
-    // }
-
     // Check if the current key id(s) has been blacklisted by this session
     if (initializationData.keyIds !== undefined) {
       /**

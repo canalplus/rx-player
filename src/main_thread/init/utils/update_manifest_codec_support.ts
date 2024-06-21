@@ -33,12 +33,12 @@ export function updateManifestCodecSupport(
         // TO DO: no cache for the representation?
         // to fixup it will need to do all codecs check on the main thread.
 
-        // if (r.isSupported !== undefined) {
-        //   if (!hasSupportedCodecs && r.isSupported) {
-        //     hasSupportedCodecs = true;
-        //   }
-        //   return;
-        // }
+        if (r.isSupported !== undefined) {
+          if (!hasSupportedCodecs && r.isSupported) {
+            hasSupportedCodecs = true;
+          }
+          return;
+        }
         let isSupported = false;
         const mimeType = r.mimeType ?? "";
         let codecs = r.codecs ?? [];
@@ -52,15 +52,17 @@ export function updateManifestCodecSupport(
 
           // TODO: detect if it's text, in it's case, we don't need to block it.
           // const isAudioOrVideo = r.
-          if (isSupportedByMSE.supported && isEncrypted) {
-            const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
-            isSupported = isSupportedByMSE.supported && isSupportedByCDM;
-            console.log(
-              `DEBUG: testing codec "${codec}" - MSE: ${isSupportedByMSE.supported} - EME: ${isSupportedByCDM} - Result: ${isSupported}`,
-            );
-          } else {
-            isSupported = isSupportedByMSE.supported;
-          }
+          // if (isSupportedByMSE.supported && isEncrypted) {
+          //   const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
+          //   isSupported = isSupportedByMSE.supported && isSupportedByCDM;
+          //   console.log(
+          //     `DEBUG: testing codec "${codec}" - MSE: ${isSupportedByMSE.supported} - EME: ${isSupportedByCDM} - Result: ${isSupported}`,
+          //   );
+          // } else {
+          //   isSupported = isSupportedByMSE.supported;
+          // }
+
+          isSupported = isSupportedByMSE.supported;
 
           // this intend to send the codecs to the worker
           // maybe it should be deleted to only perfom this on main thread ?

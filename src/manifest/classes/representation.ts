@@ -17,6 +17,7 @@
 import features from "../../features";
 import log from "../../log";
 import type { IRepresentationMetadata } from "../../manifest";
+import cdmCodecSupportProber from "../../mse/eme_codec_support_prober";
 import type {
   ICdnMetadata,
   IContentProtections,
@@ -151,6 +152,7 @@ class Representation implements IRepresentationMetadata {
             this.mimeType ?? "",
             args.supplementalCodecs ?? "",
           );
+          // TO DO: do this for supplemental codec;
           if (isSupplementaryCodecSupported !== false) {
             this.codecs = [args.supplementalCodecs];
             if (isSupplementaryCodecSupported === true) {
@@ -166,10 +168,20 @@ class Representation implements IRepresentationMetadata {
             this.codecs.push(args.codecs ?? "");
           } else {
             this.codecs = args.codecs === undefined ? [] : [args.codecs];
-            this.isSupported = features.codecSupportProber.isSupported(
+            const isCodecSupportedByMSE = features.codecSupportProber.isSupported(
               this.mimeType ?? "",
               args.codecs ?? "",
             );
+
+            if (isCodecSupportedByMSE !== true) {
+              this.isSupported = isCodecSupportedByMSE;
+            } else {
+              const isCodecSupportedByCDM = cdmCodecSupportProber.isSupported(
+                this.mimeType ?? "",
+                args.codecs ?? "",
+              );
+              this.isSupported = isCodecSupportedByCDM;
+            }
           }
         }
       } else {
