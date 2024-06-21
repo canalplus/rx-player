@@ -61,8 +61,6 @@ export function updateManifestCodecSupport(
             isSupported = isSupportedByMSE.supported;
           }
 
-          isSupported = isSupportedByMSE.supported;
-
           // this intend to send the codecs to the worker
           // maybe it should be deleted to only perfom this on main thread ?
           if (!isSupportedByMSE.wasKnown) {
