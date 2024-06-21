@@ -192,6 +192,11 @@ class Representation implements IRepresentationMetadata {
           this.codecs.push(args.codecs);
         }
       }
+
+      console.log(
+        // eslint-disable-next-line no-nested-ternary
+        `DEBUG FLO: RPZ: representation with codec:${this.codecs[0]} marked as ${this.isSupported === undefined ? "undefined" : this.isSupported ? "supported" : "not supported"}`,
+      );
     } else {
       if (args.codecs !== undefined) {
         this.codecs.push(args.codecs);

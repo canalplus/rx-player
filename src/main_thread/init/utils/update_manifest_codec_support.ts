@@ -3,7 +3,6 @@ import { MediaError } from "../../../errors";
 import type { ICodecSupportList, IManifestMetadata } from "../../../manifest";
 import cdmCodecSupportProber from "../../../mse/cdm_codec_support_prober";
 import type { ITrackType } from "../../../public_types";
-import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 /**
  * Ensure that all `Representation` and `Adaptation` have a known status
  * for their codec support and probe it for cases where that's not the
@@ -16,7 +15,6 @@ import areCodecsCompatible from "../../../utils/are_codecs_compatible";
  */
 export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
-  listOfSupportedCodecsByCDM?: ICodecSupportList,
 ): ICodecSupportList {
   const codecSupportList: ICodecSupportList = [];
   const codecSupportedByMseMap: Map<string, Map<string, boolean>> = new Map();
@@ -80,6 +78,10 @@ export function updateManifestCodecSupport(
             break;
           }
         }
+
+        console.log(
+          `DEBUG FLO: CI representation with codec:${codecs[0]} marked as ${isSupported ? "supported" : "not supported"}`,
+        );
         r.isSupported = isSupported;
         if (r.isSupported) {
           hasSupportedCodecs = true;
