@@ -1202,7 +1202,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         });
 
         for (const codec of codecsSupportedByCDM) {
-          cdmCodecSupportProber.updateCache(codec.mimeType, codec.codec, codec.result);
+          cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
         }
         contentDecryptor.removeEventListener("stateChange", handler);
       }

@@ -130,8 +130,7 @@ export function updateManifestCodecSupport(
       return knownSupport;
     }
 
-    // TO DO: remove the Boolean() one isSupported only return a boolean an not undefined
-    const isSupported = Boolean(cdmCodecSupportProber.isSupported(mimeType, codec));
+    const isSupported = cdmCodecSupportProber.isSupported(mimeType, codec);
 
     const prevCodecMap = codecSupportedByCdmMap.get(mimeType);
     if (prevCodecMap !== undefined) {

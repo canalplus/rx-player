@@ -292,9 +292,9 @@ export default function initializeWorkerMain() {
         if (preparedContent === null || preparedContent.manifest === null) {
           return;
         }
-        if (typeof features.codecSupportProber?.updateCache === "function") {
+        if (typeof features.codecSupportProber?.addToCache === "function") {
           for (const { mimeType, codec, result } of msg.value) {
-            features.codecSupportProber.updateCache(mimeType, codec, result);
+            features.codecSupportProber.addToCache(mimeType, codec, result);
           }
         }
         try {
@@ -317,9 +317,8 @@ export default function initializeWorkerMain() {
       }
 
       case MainThreadMessageType.CdmCodecSupportUpdate: {
-        // TODO: maybe remplace all ?
         for (const { mimeType, codec, result } of msg.value) {
-          cdmCodecSupportProber.updateCache(mimeType, codec, result);
+          cdmCodecSupportProber.addToCache(mimeType, codec, result);
         }
         break;
       }

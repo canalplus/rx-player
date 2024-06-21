@@ -25,40 +25,61 @@ class CdmCodecSupportProber implements ICodecSupportProber {
    */
   private _cachedCodecSupport: Map<string, Map<string, boolean>>;
 
+  /**
+   * Indicates whether the supported codecs have been received.
+   *
+   * This boolean attribute is used to determine if the initial check for supported codecs
+   * has been completed. If false, it means the supported codecs are not known yet.
+   */
+  private _hasReceivedSupportedCodecs: boolean;
+
   constructor() {
     this._currentCacheSize = 0;
     this._cachedCodecSupport = new Map();
+    this._hasReceivedSupportedCodecs = false;
   }
 
   /**
-   * Probe for the support of the given mime-type and codec combination.
-   *
-   * Only returns a boolean if the support was added to this
-   * `WorkerCodecSupportProber`'s cache (through the `updateCache` method).
-   * @param {string} mimeType
-   * @param {string} codec
+   * Determines if a given codec is supported by the CDM (the Content Decryption Module).
+   * The support for a given codec can differ from the browser and the CDM.
+   * The browser and the CDM both needs to support the codec in order to play an encrypted content.
+   * @param {string} mimeType - The MIME type of the codec to check.
+   * @param {string} codec - The codec to check.
    * @returns {boolean|undefined}
    */
-  public isSupported(mimeType: string, codec: string): boolean | undefined {
+  public isSupported(mimeType: string, codec: string): boolean {
+    if (!this._hasReceivedSupportedCodecs) {
+      // The supported codecs are not known yet. Assume it's is supported.
+      return true;
+    }
+
     const knownSupport = this._cachedCodecSupport.get(mimeType)?.get(codec);
     if (knownSupport !== undefined) {
       return knownSupport;
     }
 
+    /**
+     * Checking codec support for the CDM requires calling the requestMediaKeySystemAccess() API.
+     * Frequent calls to this API can lead to performance issues. To mitigate this, we check support
+     * for a predefined list of popular codecs only once. Subsequently, we determine if the codec
+     * to be tested has the same codec string but a different profile as an already checked codec.
+     * If a codec with the same codec string but a different profile is supported, we consider the
+     * codec to be supported as well.
+     *
+     * For example, "avc1.4d401e" should be marked as supported if "avc1.42e01e" is supported,
+     * as both are avc1 codecs.
+     */
     return this.isCodecCompatibleWithASupportedCodec(mimeType, codec);
-    // TO DO: return early undefined if EME not initialized.
-    return undefined;
   }
 
+  /**
+   * Checks if a given codec is compatible with any of the already supported codecs.
+   * @param {string} mimeType - The MIME type of the codec to check.
+   * @param {string} codec - The codec to check.
+   * @returns {boolean} - Returns true if the codec is compatible with an already supported codec.
+   */
   private isCodecCompatibleWithASupportedCodec(mimeType: string, codec: string): boolean {
     const inputCodec = `${mimeType};codecs="${codec}"`;
-
-    // Testing all codecs with the CDM is not possible, so there can be codec with
-    // specific profiles that are untests. To simplify we only check if a codec within
-    // the same codec family is supported.
-    // Ex: "avc1.4d401e" should be marked as supported if "avc1.42e01e" is supported as
-    // both are avc1 codecs.
-
     const codecMap = this._cachedCodecSupport.get(mimeType);
     if (codecMap === undefined) {
       return false;
@@ -85,7 +106,9 @@ class CdmCodecSupportProber implements ICodecSupportProber {
    * @param {string} codec
    * @param {boolean} isSupported
    */
-  public updateCache(mimeType: string, codec: string, isSupported: boolean): void {
+  public addToCache(mimeType: string, codec: string, isSupported: boolean): void {
+    this._hasReceivedSupportedCodecs = true;
+
     if (this._currentCacheSize >= MAX_CODEC_CACHE_SIZE) {
       // For simplicity, just clear everything here, we don't care that much
       // about implementing a true LRU cache here

@@ -311,5 +311,5 @@ export interface ICodecSupportProber {
    * @param {string} codec
    * @param {boolean} isSupported
    */
-  updateCache?: (mimeType: string, codec: string, isSupported: boolean) => void;
+  addToCache?: (mimeType: string, codec: string, isSupported: boolean) => void;
 }
