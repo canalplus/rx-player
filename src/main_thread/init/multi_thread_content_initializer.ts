@@ -21,6 +21,7 @@ import {
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
+import cdmCodecSupportProber from "../../mse/cdm_codec_support_prober";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   ICreateMediaSourceWorkerMessage,
@@ -1198,6 +1199,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           type: MainThreadMessageType.CdmCodecSupportUpdate,
           value: codecsSupportedByCDM,
         });
+
+        for (const codec of codecsSupportedByCDM) {
+          cdmCodecSupportProber.updateCache(codec.mimeType, codec.codec, codec.result);
+        }
         contentDecryptor.removeEventListener("stateChange", handler);
       }
     };
