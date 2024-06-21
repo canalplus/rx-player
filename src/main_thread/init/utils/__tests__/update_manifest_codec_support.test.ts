@@ -5,10 +5,10 @@ import type {
   IPeriodMetadata,
   IAdaptationMetadata,
   IRepresentationMetadata,
-} from "../../../manifest";
-import { ManifestMetadataFormat } from "../../../manifest";
-import type { IContentProtections } from "../../../parsers/manifest";
-import { updateManifestCodecSupport } from "../multi_thread_content_initializer";
+} from "../../../../manifest";
+import { ManifestMetadataFormat } from "../../../../manifest";
+import type { IContentProtections } from "../../../../parsers/manifest";
+import { updateManifestCodecSupport } from "../update_manifest_codec_support";
 
 function generateFakeManifestWithRepresentations(
   representations: IRepresentationMetadata[],
@@ -52,9 +52,9 @@ function generateFakeManifestWithRepresentations(
   return manifest;
 }
 
-describe("init - multi-thread - updateManifestCodecSupport", () => {
+describe("init - utils - updateManifestCodecSupport", () => {
   // create spy
-  vi.mock("../../../compat/is_codec_supported", () => ({
+  vi.mock("../../../../compat/is_codec_supported", () => ({
     default: vi.fn((codec: string) => {
       const mockSupportedCodec = [
         'video/mp4;codecs="avc1.4d401e"',
