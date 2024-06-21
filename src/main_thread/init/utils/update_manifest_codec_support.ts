@@ -105,12 +105,6 @@ export function updateManifestCodecSupport(
    * @returns { boolean } True if the codec is supported by the CDM.
    */
   function isCodecSupportedByCDM(mimeType: string, codec: string): boolean {
-    // if (listOfSupportedCodecsByCDM === undefined) {
-    //   // the CDM did'nt provide any informations about what codecs are supported
-    //   // in this case, assume all codecs are supported.
-    //   return true;
-    // }
-
     const knownSupport = codecSupportedByCdmMap.get(mimeType)?.get(codec);
     if (knownSupport !== undefined) {
       return knownSupport;
