@@ -53,12 +53,15 @@ export default class SegmentQueueCreator {
    */
   private readonly _backoffOptions: ISegmentQueueCreatorBackoffOptions;
 
+  /** Class allowing to select a CDN when multiple are available for a given resource. */
   private readonly _cdnPrioritizer: CdnPrioritizer;
 
   private _cmcdDataBuilder: CmcdDataBuilder | null;
 
   /**
    * @param {Object} transport
+   * @param {Object} options
+   * @param {Object} cancelSignal
    */
   constructor(
     transport: ITransportPipelines,
@@ -86,7 +89,9 @@ export default class SegmentQueueCreator {
    * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
    * @param {Object} callbacks
-   * @returns {Object}
+   * @returns {Object} - `SegmentQueue`, which is an abstraction allowing to
+   * perform a queue of segment requests for a given media type (here defined by
+   * `bufferType`) with associated priorities.
    */
   public createSegmentQueue(
     bufferType: IBufferType,
@@ -128,5 +133,13 @@ export interface ISegmentQueueCreatorBackoffOptions {
    * `undefined` will lead to a default, large, timeout being used.
    */
   requestTimeout: number | undefined;
+  /**
+   * Timeout for just the "connection" part of the request, before data is
+   * actually being transferred.
+   *
+   * Setting a lower `connectionTimeout` than a `requestTimeout` allows to
+   * fail faster without having to take into account a potentially low
+   * bandwidth.
+   */
   connectionTimeout: number | undefined;
 }
