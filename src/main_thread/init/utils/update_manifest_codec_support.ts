@@ -1,6 +1,7 @@
 import isCodecSupported from "../../../compat/is_codec_supported";
 import { MediaError } from "../../../errors";
 import type { ICodecSupportList, IManifestMetadata } from "../../../manifest";
+import cdmCodecSupportProber from "../../../mse/cdm_codec_support_prober";
 import type { ITrackType } from "../../../public_types";
 import areCodecsCompatible from "../../../utils/are_codecs_compatible";
 /**

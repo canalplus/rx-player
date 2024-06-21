@@ -3,7 +3,7 @@ import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
-import EmeCodecSupportProber from "../../../mse/eme_codec_support_prober";
+import cdmCodecSupportProber from "../../../mse/cdm_codec_support_prober";
 import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
@@ -316,10 +316,10 @@ export default function initializeWorkerMain() {
         break;
       }
 
-      case MainThreadMessageType.EMECodecSupportUpdate: {
+      case MainThreadMessageType.CdmCodecSupportUpdate: {
         // TODO: maybe remplace all ?
         for (const { mimeType, codec, result } of msg.value) {
-          EmeCodecSupportProber.updateCache(mimeType, codec, result);
+          cdmCodecSupportProber.updateCache(mimeType, codec, result);
         }
         break;
       }

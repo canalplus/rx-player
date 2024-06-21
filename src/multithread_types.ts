@@ -255,8 +255,8 @@ export interface ICodecSupportUpdateMessage {
   }>;
 }
 
-export interface IEMECodecSupportUpdateMessage {
-  type: MainThreadMessageType.EMECodecSupportUpdate;
+export interface ICdmCodecSupportUpdateMessage {
+  type: MainThreadMessageType.CdmCodecSupportUpdate;
   value: ICodecSupportList;
 }
 
@@ -553,7 +553,7 @@ export const enum MainThreadMessageType {
   PushTextDataError = "push-text-error",
   RemoveTextDataError = "remove-text-error",
   CodecSupportUpdate = "codec-support-update",
-  EMECodecSupportUpdate = "eme-codec-support-update",
+  CdmCodecSupportUpdate = "eme-codec-support-update",
   ContentUrlsUpdate = "urls-update",
   DecipherabilityStatusUpdate = "decipherability-update",
   LogLevelUpdate = "log-level-update",
@@ -578,7 +578,7 @@ export type IMainThreadMessage =
   | IStartPreparedContentMessage
   | IReferenceUpdateMessage
   | ICodecSupportUpdateMessage
-  | IEMECodecSupportUpdateMessage
+  | ICdmCodecSupportUpdateMessage
   | IPlaybackObservationMessage
   | IDecipherabilityStatusChangedMessage
   | IUpdateContentUrlsMessage

@@ -11,7 +11,7 @@ const MAX_CODEC_CACHE_SIZE = 50;
  * environment where MSE API are not available.
  * @class {WorkerCodecSupportProber}
  */
-class EMECodecSupportProber implements ICodecSupportProber {
+class CdmCodecSupportProber implements ICodecSupportProber {
   /**
    * Current size of the `_cachedCodecSupport` size.
    * We cannot rely on `_cachedCodecSupport.size` directly as it is a Map of
@@ -103,4 +103,4 @@ class EMECodecSupportProber implements ICodecSupportProber {
   }
 }
 
-export default new EMECodecSupportProber();
+export default new CdmCodecSupportProber();
