@@ -727,12 +727,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const manifest = msgData.value.manifest;
           try {
-            const codecsSupportedByCDM =
-              this._currentContentInfo.contentDecryptor?.getSupportedCodecs();
-            const codecUpdate = updateManifestCodecSupport(
-              manifest,
-              codecsSupportedByCDM,
-            );
+            const codecUpdate = updateManifestCodecSupport(manifest);
             if (codecUpdate.length > 0) {
               sendMessage(this._settings.worker, {
                 type: MainThreadMessageType.CodecSupportUpdate,
@@ -767,12 +762,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           // TODO only on added `Representation`?
 
           try {
-            const codecsSupportedByCDM =
-              this._currentContentInfo?.contentDecryptor?.getSupportedCodecs();
-            const codecUpdate = updateManifestCodecSupport(
-              manifest,
-              codecsSupportedByCDM,
-            );
+            const codecUpdate = updateManifestCodecSupport(manifest);
             if (codecUpdate.length > 0) {
               sendMessage(this._settings.worker, {
                 type: MainThreadMessageType.CodecSupportUpdate,
