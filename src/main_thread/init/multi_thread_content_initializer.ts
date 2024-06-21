@@ -55,10 +55,8 @@ import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
 import type { IContentProtection } from "../decrypt";
-import ContentDecryptor, {
-  ContentDecryptorState,
-  getKeySystemConfiguration,
-} from "../decrypt";
+import type ContentDecryptor from "../decrypt";
+import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
@@ -2021,7 +2019,7 @@ type IDecryptionInitializationState =
  *
  * @param {Object} manifest
  */
-function updateManifestCodecSupport(
+export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
   listOfSupportedCodecsByCDM?: ICodecSupportList,
 ): ICodecSupportList {
@@ -2060,7 +2058,7 @@ function updateManifestCodecSupport(
 
           // TODO: detect if it's text, in it's case, we don't need to block it.
           // const isAudioOrVideo = r.
-          if (isSupportedByMSE && isEncrypted) {
+          if (isSupportedByMSE.supported && isEncrypted) {
             const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
             isSupported = isSupportedByMSE.supported && isSupportedByCDM;
             console.log(
