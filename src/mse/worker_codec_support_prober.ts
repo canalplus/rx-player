@@ -33,7 +33,7 @@ class WorkerCodecSupportProber implements ICodecSupportProber {
    * Probe for the support of the given mime-type and codec combination.
    *
    * Only returns a boolean if the support was added to this
-   * `WorkerCodecSupportProber`'s cache (through the `updateCache` method).
+   * `WorkerCodecSupportProber`'s cache (through the `addToCache` method).
    * @param {string} mimeType
    * @param {string} codec
    * @returns {boolean|undefined}
@@ -54,7 +54,7 @@ class WorkerCodecSupportProber implements ICodecSupportProber {
    * @param {string} codec
    * @param {boolean} isSupported
    */
-  public updateCache(mimeType: string, codec: string, isSupported: boolean): void {
+  public addToCache(mimeType: string, codec: string, isSupported: boolean): void {
     if (this._currentCacheSize >= MAX_CODEC_CACHE_SIZE) {
       // For simplicity, just clear everything here, we don't care that much
       // about implementing a true LRU cache here
