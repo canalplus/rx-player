@@ -129,6 +129,9 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    */
   private _initDataQueue: IProtectionData[];
 
+  /**
+   * Store the list of supported codecs with the current key system configuration.
+   */
   private _supportedCodecWhenEncrypted: ICodecSupportList;
 
   /**
@@ -226,7 +229,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   }
 
   /**
-   *
+   * Extract from the current mediaKeys the supported Codecs.
    */
   private findSupportedCodecForMediaKeys(mediaKeys: IMediaKeysInfos): void {
     const supportedConfiguration = mediaKeys.mediaKeySystemAccess.getConfiguration();
@@ -251,12 +254,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       };
     });
 
-    console.log("DEBUG FLO: supported device in encrypted mode:", codecSupportList);
     this._supportedCodecWhenEncrypted = codecSupportList;
-
-    //  codec: string;
-    // mimeType: string;
-    // result: boolean;
   }
 
   /**
@@ -374,6 +372,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     this.trigger("stateChange", this._stateData.state);
   }
 
+  /**
+   * Returns the list of supported codecs with the keysystem configuration.
+   * @returns {ICodecSupportList}: The list of supported codecs.
+   */
   public getSupportedCodecs(): ICodecSupportList {
     return this._supportedCodecWhenEncrypted;
   }

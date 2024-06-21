@@ -29,9 +29,6 @@ export function updateManifestCodecSupport(
       let hasSupportedCodecs = false;
       a.representations.forEach((r) => {
         const isEncrypted = r.contentProtections !== undefined;
-        // TO DO: no cache for the representation?
-        // to fixup it will need to do all codecs check on the main thread.
-
         if (r.isSupported !== undefined) {
           if (!hasSupportedCodecs && r.isSupported) {
             hasSupportedCodecs = true;
@@ -48,21 +45,13 @@ export function updateManifestCodecSupport(
           const isSupportedByMSE = isCodecSupportedByMSE(mimeType, codec);
           // if MSE supports the codec, and the content is encrypted,
           // check further if the CDM also supports the codec.
-
-          // TODO: detect if it's text, in it's case, we don't need to block it.
-          // const isAudioOrVideo = r.
           if (isSupportedByMSE.supported && isEncrypted) {
             const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
             isSupported = isSupportedByMSE.supported && isSupportedByCDM;
-            console.log(
-              `DEBUG: testing codec "${codec}" - MSE: ${isSupportedByMSE.supported} - EME: ${isSupportedByCDM} - Result: ${isSupported}`,
-            );
           } else {
             isSupported = isSupportedByMSE.supported;
           }
 
-          // this intend to send the codecs to the worker
-          // maybe it should be deleted to only perfom this on main thread ?
           if (!isSupportedByMSE.wasKnown) {
             codecSupportList.push({
               mimeType,
@@ -77,9 +66,6 @@ export function updateManifestCodecSupport(
           }
         }
 
-        console.log(
-          `DEBUG FLO: CI representation with codec:${codecs[0]} marked as ${isSupported ? "supported" : "not supported"}`,
-        );
         r.isSupported = isSupported;
         if (r.isSupported) {
           hasSupportedCodecs = true;

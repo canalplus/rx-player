@@ -53,7 +53,6 @@ import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
 import type { IContentProtection } from "../decrypt";
-import type ContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
@@ -147,7 +146,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
-      contentDecryptor: null,
     };
     sendMessage(worker, {
       type: MainThreadMessageType.PrepareContent,
@@ -1188,13 +1186,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
     log.debug("MTCI: Creating ContentDecryptor");
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
-    const handler = (state: ContentDecryptorState) => {
+    const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
       if (state > ContentDecryptorState.Initializing) {
         const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
-        console.log(
-          "DEBUG FLO: sending to emeProber codecs supported by the CDM",
-          codecsSupportedByCDM,
-        );
         // TO DO: this needs to be re-done if the keySystem changes.
         sendMessage(this._settings.worker, {
           type: MainThreadMessageType.CdmCodecSupportUpdate,
@@ -1204,14 +1198,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         for (const codec of codecsSupportedByCDM) {
           cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
         }
-        contentDecryptor.removeEventListener("stateChange", handler);
+        contentDecryptor.removeEventListener("stateChange", updateCodecSupportedByCDM);
       }
     };
-    contentDecryptor.addEventListener("stateChange", handler);
+    contentDecryptor.addEventListener("stateChange", updateCodecSupportedByCDM);
 
-    if (this._currentContentInfo !== null) {
-      this._currentContentInfo.contentDecryptor = contentDecryptor;
-    }
     contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (updates) => {
       if (
         this._currentContentInfo === null ||
@@ -1784,8 +1775,6 @@ export interface IMultiThreadContentInitializerContentInfos {
    * Set to `null` when those considerations are not taken yet.
    */
   initialPlayPerformed: IReadOnlySharedReference<boolean> | null;
-
-  contentDecryptor: ContentDecryptor | null;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */

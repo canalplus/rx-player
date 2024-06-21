@@ -152,11 +152,15 @@ class Representation implements IRepresentationMetadata {
             this.mimeType ?? "",
             args.supplementalCodecs ?? "",
           );
-          // TO DO: do this for supplemental codec;
+
           if (isSupplementaryCodecSupported !== false) {
             this.codecs = [args.supplementalCodecs];
             if (isSupplementaryCodecSupported === true) {
-              this.isSupported = true;
+              const isCodecSupportedByCDM = cdmCodecSupportProber.isSupported(
+                this.mimeType ?? "",
+                args.codecs ?? "",
+              );
+              this.isSupported = isCodecSupportedByCDM;
             }
           }
         }
@@ -192,11 +196,6 @@ class Representation implements IRepresentationMetadata {
           this.codecs.push(args.codecs);
         }
       }
-
-      console.log(
-        // eslint-disable-next-line no-nested-ternary
-        `DEBUG FLO: RPZ: representation with codec:${this.codecs[0]} marked as ${this.isSupported === undefined ? "undefined" : this.isSupported ? "supported" : "not supported"}`,
-      );
     } else {
       if (args.codecs !== undefined) {
         this.codecs.push(args.codecs);
