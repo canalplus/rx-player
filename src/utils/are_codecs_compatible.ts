@@ -53,7 +53,7 @@ export function parseCodec(unparsedCodec: string): { mimeType: string; codecs: s
     codecs = codecs.substring(1, codecs.length - 2);
   }
 
-  return { mimeType, codecs: codecs };
+  return { mimeType, codecs };
 }
 
 export default areCodecsCompatible;
