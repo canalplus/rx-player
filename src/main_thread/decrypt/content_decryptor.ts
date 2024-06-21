@@ -251,7 +251,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       };
     });
 
-    console.log("FLO DEBUG: supported device in encrypted mode:", codecSupportList);
+    console.log("DEBUG FLO: supported device in encrypted mode:", codecSupportList);
     this._supportedCodecWhenEncrypted = codecSupportList;
 
     //  codec: string;
