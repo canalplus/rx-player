@@ -56,7 +56,7 @@ export function updateManifestCodecSupport(
             codecSupportList.push({
               mimeType,
               codec,
-              result: isSupported,
+              result: isSupportedByMSE.supported,
             });
           }
 

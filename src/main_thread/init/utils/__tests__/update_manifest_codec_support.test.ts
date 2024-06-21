@@ -108,21 +108,23 @@ describe("init - utils - updateManifestCodecSupport", () => {
     ]);
 
     const result = updateManifestCodecSupport(manifest);
+    expect(representationAVC.isSupported).toBe(true);
+    expect(representationHEVC.isSupported).toBe(true);
     expect(result).toStrictEqual([
       {
         codec: "avc1.4d401e",
         mimeType: "video/mp4",
-        result: true, // avc is supported
+        result: true, // avc is supported by MSE
       },
       {
         codec: "hvc1.2.4.L153.B0",
         mimeType: "video/mp4",
-        result: true, // hevc is supported
+        result: true, // hevc is supported by MSE
       },
       {
         codec: "vp9",
         mimeType: "video/mp4",
-        result: false, // VP9 is not supported
+        result: false, // VP9 is not supported by MSE
       },
     ]);
   });
@@ -159,16 +161,18 @@ describe("init - utils - updateManifestCodecSupport", () => {
     ]);
 
     const result = updateManifestCodecSupport(manifest);
+    expect(encryptedRepresentationAVC.isSupported).toBe(true);
+    expect(encryptedRepresentationHEVC.isSupported).toBe(false);
     expect(result).toStrictEqual([
       {
         codec: "avc1.4d401e",
         mimeType: "video/mp4",
-        result: true, // avc is supported
+        result: true, // avc is supported by MSE
       },
       {
         codec: "hvc1.2.4.L153.B0",
         mimeType: "video/mp4",
-        result: false, // hevc is not supported
+        result: true, // hevc is supported by MSE
       },
     ]);
   });
