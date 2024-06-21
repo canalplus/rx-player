@@ -9,6 +9,7 @@ import TaskCanceller from "../../../utils/task_canceller";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import { ContentDecryptorState } from "../../decrypt";
 import type { IContentProtection, IProcessedProtectionData } from "../../decrypt";
+import cdmCodecSupportProber from "./../../../mse/cdm_codec_support_prober";
 
 /**
  * Initialize content decryption capabilities on the given `HTMLMediaElement`.
@@ -73,6 +74,18 @@ export default function initializeContentDecryption(
 
   log.debug("Init: Creating ContentDecryptor");
   const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+
+  const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
+    if (state > ContentDecryptorState.Initializing) {
+      const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
+      // TO DO: this needs to be re-done if the keySystem changes.
+      for (const codec of codecsSupportedByCDM) {
+        cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
+      }
+      contentDecryptor.removeEventListener("stateChange", updateCodecSupportedByCDM);
+    }
+  };
+  contentDecryptor.addEventListener("stateChange", updateCodecSupportedByCDM);
 
   contentDecryptor.addEventListener("stateChange", (state) => {
     if (state === ContentDecryptorState.WaitingForAttachment) {
