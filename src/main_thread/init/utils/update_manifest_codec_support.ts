@@ -29,7 +29,7 @@ export function updateManifestCodecSupport(
     ].forEach((a) => {
       let hasSupportedCodecs = false;
       a.representations.forEach((r) => {
-        const isEncrypted = r.contentProtections !== undefined;
+        // const isEncrypted = r.contentProtections !== undefined;
         // TO DO: no cache for the representation?
         // to fixup it will need to do all codecs check on the main thread.
 
@@ -117,6 +117,7 @@ export function updateManifestCodecSupport(
    * @param {string} codec - The codec to test.
    * @returns { boolean } True if the codec is supported by the CDM.
    */
+  // @ts-ignore
   function isCodecSupportedByCDM(mimeType: string, codec: string): boolean {
     if (listOfSupportedCodecsByCDM === undefined) {
       // the CDM did'nt provide any informations about what codecs are supported
