@@ -30,7 +30,7 @@ export function updateManifestCodecSupport(
     ].forEach((a) => {
       let hasSupportedCodecs = false;
       a.representations.forEach((r) => {
-        // const isEncrypted = r.contentProtections !== undefined;
+        const isEncrypted = r.contentProtections !== undefined;
         // TO DO: no cache for the representation?
         // to fixup it will need to do all codecs check on the main thread.
 
@@ -53,15 +53,15 @@ export function updateManifestCodecSupport(
 
           // TODO: detect if it's text, in it's case, we don't need to block it.
           // const isAudioOrVideo = r.
-          // if (isSupportedByMSE.supported && isEncrypted) {
-          //   const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
-          //   isSupported = isSupportedByMSE.supported && isSupportedByCDM;
-          //   console.log(
-          //     `DEBUG: testing codec "${codec}" - MSE: ${isSupportedByMSE.supported} - EME: ${isSupportedByCDM} - Result: ${isSupported}`,
-          //   );
-          // } else {
-          //   isSupported = isSupportedByMSE.supported;
-          // }
+          if (isSupportedByMSE.supported && isEncrypted) {
+            const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
+            isSupported = isSupportedByMSE.supported && isSupportedByCDM;
+            console.log(
+              `DEBUG: testing codec "${codec}" - MSE: ${isSupportedByMSE.supported} - EME: ${isSupportedByCDM} - Result: ${isSupported}`,
+            );
+          } else {
+            isSupported = isSupportedByMSE.supported;
+          }
 
           isSupported = isSupportedByMSE.supported;
 
@@ -118,32 +118,20 @@ export function updateManifestCodecSupport(
    * @param {string} codec - The codec to test.
    * @returns { boolean } True if the codec is supported by the CDM.
    */
-  // @ts-ignore
   function isCodecSupportedByCDM(mimeType: string, codec: string): boolean {
-    if (listOfSupportedCodecsByCDM === undefined) {
-      // the CDM did'nt provide any informations about what codecs are supported
-      // in this case, assume all codecs are supported.
-      return true;
-    }
+    // if (listOfSupportedCodecsByCDM === undefined) {
+    //   // the CDM did'nt provide any informations about what codecs are supported
+    //   // in this case, assume all codecs are supported.
+    //   return true;
+    // }
 
     const knownSupport = codecSupportedByCdmMap.get(mimeType)?.get(codec);
     if (knownSupport !== undefined) {
       return knownSupport;
     }
 
-    const mimeTypeStr = `${mimeType};codecs="${codec}"`;
-    // Testing all codecs with the CDM is not possible, so there can be codec with
-    // specific profiles that are untests. To simplify we only check if a codec within
-    // the same codec family is supported.
-    // Ex: "avc1.4d401e" should be marked as supported if "avc1.42e01e" is supported as
-    // both are avc1 codecs.
-    const isSupported: boolean = listOfSupportedCodecsByCDM.some(
-      (element) =>
-        areCodecsCompatible(
-          `${element.mimeType};codecs="${element.codec}"`,
-          mimeTypeStr,
-        ) && element.result,
-    );
+    // TO DO: remove the Boolean() one isSupported only return a boolean an not undefined
+    const isSupported = Boolean(cdmCodecSupportProber.isSupported(mimeType, codec));
 
     const prevCodecMap = codecSupportedByCdmMap.get(mimeType);
     if (prevCodecMap !== undefined) {
