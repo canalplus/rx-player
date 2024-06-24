@@ -159,7 +159,9 @@ Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
-  -w, --watch            Re-build each time either the demo or library files change`,
+  -w, --watch            Re-build each time either the demo or library files change
+  --include-wasm         The demo will be able to request the WebAssembly MPD parser (if available).`,
+
     /* eslint-enable indent */
   );
   /* eslint-enable no-console */
