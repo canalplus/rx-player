@@ -185,7 +185,8 @@ const MAX_URL_CACHE_ENTRIES = 200;
  */
 function parseURL(url: string): IParsedURL {
   if (parsedUrlCache.has(url)) {
-    return parsedUrlCache.get(url) as IParsedURL;
+    // Return a deep copy to prevent external mutation
+    return { ...(parsedUrlCache.get(url) as IParsedURL) };
   }
   const matches = url.match(urlComponentRegex);
   let parsed: IParsedURL;
@@ -210,7 +211,8 @@ function parseURL(url: string): IParsedURL {
     parsedUrlCache.clear();
   }
   parsedUrlCache.set(url, parsed);
-  return parsed;
+  // Return a deep copy to prevent external mutation
+  return { ...parsed };
 }
 /**
  * Formats a parsed URL into a string.
