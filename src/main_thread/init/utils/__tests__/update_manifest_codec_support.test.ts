@@ -52,7 +52,7 @@ function generateFakeManifestWithRepresentations(
 }
 
 describe("init - utils - updateManifestCodecSupport", () => {
-  // create spy
+  // create mocks
   vi.mock("../../../../compat/is_codec_supported", () => ({
     default: vi.fn((codec: string) => {
       const mockSupportedCodec = [
@@ -110,6 +110,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     const result = updateManifestCodecSupport(manifest);
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(true);
+    expect(representationVP9.isSupported).toBe(false);
     expect(result).toStrictEqual([
       {
         codec: "avc1.4d401e",

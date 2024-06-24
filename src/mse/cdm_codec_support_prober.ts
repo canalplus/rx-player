@@ -2,14 +2,14 @@ import areCodecsCompatible from "../utils/are_codecs_compatible";
 import type { ICodecSupportProber } from "./types";
 
 /**
- * Maximum size the `WorkerCodecSupportProber`'s inner cache can be.
+ * Maximum size the `CdmCodecSupportProber`'s inner cache can be.
  */
 const MAX_CODEC_CACHE_SIZE = 50;
 
 /**
- * Class allowing to check for mimeType + codec support in a WebWorker
- * environment where MSE API are not available.
- * @class {WorkerCodecSupportProber}
+ * Class allowing to check that the CDM (Content Decryption Module) supports the
+ * mimeType + codec and will be able to decipher such a content.
+ * @class {CdmCodecSupportProber}
  */
 class CdmCodecSupportProber implements ICodecSupportProber {
   /**
@@ -99,7 +99,7 @@ class CdmCodecSupportProber implements ICodecSupportProber {
   }
 
   /**
-   * Add an entry into the `WorkerCodecSupportProber`'s cache, so that it can
+   * Add an entry into the `CdmCodecSupportProber`'s cache, so that it can
    * synchronously determine, through the `isSupported` method, whether a codec
    * and mimetype combination is currently supported.
    * @param {string} mimeType

@@ -758,7 +758,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
           // TODO only on added `Representation`?
-
           try {
             const codecUpdate = updateManifestCodecSupport(manifest);
             if (codecUpdate.length > 0) {
