@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import resolveURL, { getFilenameIndexInUrl } from "../resolve_url";
+import resolveURL, { getFilenameIndexInUrl, getRelativePathUrl } from "../resolve_url";
 
 describe(`utils - resolveURL ${resolveURL.name}`, () => {
   it("should return an empty string if no argument is given", () => {
@@ -153,5 +153,313 @@ describe("utils - getFilenameIndexInUrl", () => {
     expect(getFilenameIndexInUrl("https://ww/ddd?test/toto/efewf/ffe/")).toEqual(11);
     expect(getFilenameIndexInUrl("https://ww/rr/d?test/toto/efewf/ffe/")).toEqual(14);
     expect(getFilenameIndexInUrl("https://ww/rr/d/?test/toto/efewf/ffe/")).toEqual(16);
+  });
+});
+
+describe("utils - getRelativePathUrl", () => {
+  it("should return relative paths for two absolute URLs", () => {
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual("b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someDir/a.mp4",
+        "https://www.example.com/someDir/b.mp4",
+      ),
+    ).toEqual("b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someDir/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual("../b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/a.mp4",
+        "https://www.example.com/someDir/b.mp4",
+      ),
+    ).toEqual("someDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/different/b.mp4",
+      ),
+    ).toEqual("../different/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual("../../../b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+  });
+
+  it("should return relative paths for two relative URLs", () => {
+    expect(getRelativePathUrl("a.mp4", "b.mp4")).toEqual("b.mp4");
+    expect(getRelativePathUrl("someDir/a.mp4", "someDir/b.mp4")).toEqual("b.mp4");
+    expect(getRelativePathUrl("someDir/a.mp4", "b.mp4")).toEqual("../b.mp4");
+    expect(getRelativePathUrl("a.mp4", "someDir/b.mp4")).toEqual("someDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "someCommonDir/someDir/different/a.mp4",
+        "someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "someCommonDir/someDir/someOtherDir/a.mp4",
+        "someCommonDir/someDir/different/b.mp4",
+      ),
+    ).toEqual("../different/b.mp4");
+    expect(
+      getRelativePathUrl("someCommonDir/someDir/someOtherDir/a.mp4", "b.mp4"),
+    ).toEqual("../../../b.mp4");
+    expect(
+      getRelativePathUrl(
+        "someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+  });
+
+  it("should return relative paths for two relative URLs starting with '/'", () => {
+    expect(getRelativePathUrl("/a.mp4", "/b.mp4")).toEqual("b.mp4");
+    expect(getRelativePathUrl("/someDir/a.mp4", "/someDir/b.mp4")).toEqual("b.mp4");
+    expect(getRelativePathUrl("/someDir/a.mp4", "/b.mp4")).toEqual("../b.mp4");
+    expect(getRelativePathUrl("/a.mp4", "/someDir/b.mp4")).toEqual("someDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/someCommonDir/someDir/different/a.mp4",
+        "/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/someCommonDir/someDir/someOtherDir/a.mp4",
+        "/someCommonDir/someDir/different/b.mp4",
+      ),
+    ).toEqual("../different/b.mp4");
+    expect(
+      getRelativePathUrl("/someCommonDir/someDir/someOtherDir/a.mp4", "/b.mp4"),
+    ).toEqual("../../../b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "/../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "/../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+  });
+
+  it("should return relative paths for two relative URLs one of them starting with '/'", () => {
+    expect(getRelativePathUrl("a.mp4", "/b.mp4")).toEqual("b.mp4");
+    expect(getRelativePathUrl("/someDir/a.mp4", "someDir/b.mp4")).toEqual("b.mp4");
+    expect(getRelativePathUrl("someDir/a.mp4", "/b.mp4")).toEqual("../b.mp4");
+    expect(getRelativePathUrl("/a.mp4", "someDir/b.mp4")).toEqual("someDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "someCommonDir/someDir/different/a.mp4",
+        "/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/someCommonDir/someDir/someOtherDir/a.mp4",
+        "someCommonDir/someDir/different/b.mp4",
+      ),
+    ).toEqual("../different/b.mp4");
+    expect(
+      getRelativePathUrl("someCommonDir/someDir/someOtherDir/a.mp4", "/b.mp4"),
+    ).toEqual("../../../b.mp4");
+    expect(
+      getRelativePathUrl(
+        "someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "../someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "/../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "/someCommonDir/../someCommonDir/someDir/different/a.mp4",
+        "../someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+  });
+
+  it("should return `null` for different domains", () => {
+    expect(
+      getRelativePathUrl(
+        "https://www.example.fr/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual(null);
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someDir/a.mp4",
+        "https://example.com/someDir/b.mp4",
+      ),
+    ).toEqual(null);
+    expect(
+      getRelativePathUrl(
+        "https://www.exmple.com/someDir/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual(null);
+  });
+
+  it("should return `null` for different schemes", () => {
+    expect(
+      getRelativePathUrl(
+        "http://www.example.fr/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual(null);
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someDir/a.mp4",
+        "http://example.com/someDir/b.mp4",
+      ),
+    ).toEqual(null);
+    expect(
+      getRelativePathUrl(
+        "http://www.exmple.com/someDir/a.mp4",
+        "https://www.example.com/b.mp4",
+      ),
+    ).toEqual(null);
+  });
+
+  it("should remove a query string", () => {
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4?foo=bar&bar=foo",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4?foo=bar&bar=foo&other",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4?foo=bar&bar=foo",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4?foo=bar&bar=foo&other",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+  });
+
+  it("should remove a fragment", () => {
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4#some-fragment",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4#some-fragment&other",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4#some-fragment",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/different/a.mp4#some-fragment&other",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/b.mp4",
+      ),
+    ).toEqual("../someOtherDir/b.mp4");
+  });
+
+  it("should just return the same file when the same URL is given", () => {
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/a.mp4",
+      ),
+    ).toEqual("a.mp4");
+    expect(
+      getRelativePathUrl(
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/a.mp4",
+        "https://www.example.com/someCommonDir/someDir/someOtherDir/a.mp4#some-fragment",
+      ),
+    ).toEqual("a.mp4");
   });
 });

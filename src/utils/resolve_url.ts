@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "./is_non_empty_string";
 import startsWith from "./starts_with";
 
 // Scheme part of an url (e.g. "http://").
 const schemeRe = /^(?:[a-z]+:)?\/\//i;
 
-/** 
+/**
  * Match the different components of an URL.
- * 
+ *
  *     foo://example.com:8042/over/there?name=ferret#nose
        \_/   \______________/\_________/ \_________/ \__/
         |           |            |            |        |
@@ -116,6 +117,48 @@ function _resolveURL(base: string, relative: string) {
   return formatURL(target);
 }
 
+export function getRelativePathUrl(from: string, to: string): string | null {
+  const parsedFrom = parseURL(from);
+  const parsedTo = parseURL(to);
+  if (
+    parsedFrom.scheme !== parsedTo.scheme ||
+    parsedFrom.authority !== parsedTo.authority
+  ) {
+    // Not the same domain or protocol
+    return null;
+  }
+  parsedFrom.scheme = "";
+  parsedFrom.authority = "";
+  parsedTo.scheme = "";
+  parsedTo.authority = "";
+
+  parsedFrom.path = removeDotSegment(parsedFrom.path);
+  parsedTo.path = removeDotSegment(parsedTo.path);
+
+  if (parsedFrom.path[0] !== "/") {
+    parsedFrom.path = "/" + parsedFrom.path;
+  }
+
+  if (parsedTo.path[0] !== "/") {
+    parsedTo.path = "/" + parsedTo.path;
+  }
+
+  const splittedFrom = parsedFrom.path.split("/");
+  // We do not care about the filename of `from` here
+  splittedFrom.pop();
+  const splittedTo = parsedTo.path.split("/");
+
+  while (splittedFrom[0] === splittedTo[0]) {
+    splittedFrom.shift();
+    splittedTo.shift();
+  }
+  while (splittedFrom.length > 0) {
+    splittedFrom.shift();
+    splittedTo.unshift("..");
+  }
+  return splittedTo.join("/");
+}
+
 interface IParsedURL {
   scheme: string;
   authority: string;
@@ -176,20 +219,20 @@ function parseURL(url: string): IParsedURL {
  */
 function formatURL(parts: IParsedURL): string {
   let url = "";
-  if (parts.scheme) {
+  if (isNonEmptyString(parts.scheme)) {
     url += parts.scheme + ":";
   }
 
-  if (parts.authority) {
+  if (isNonEmptyString(parts.authority)) {
     url += "//" + parts.authority;
   }
   url += parts.path;
 
-  if (parts.query) {
+  if (isNonEmptyString(parts.query)) {
     url += "?" + parts.query;
   }
 
-  if (parts.fragment) {
+  if (isNonEmptyString(parts.fragment)) {
     url += "#" + parts.fragment;
   }
   return url;

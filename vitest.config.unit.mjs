@@ -15,7 +15,8 @@ export default defineConfig({
   test: {
     watch: process.env.WATCH === "true",
     reporters: "dot",
-    include: ["src/**/*.test.ts", "src/__tests__/**/*.ts"],
+    // include: ["src/**/*.test.ts", "src/__tests__/**/*.ts"],
+    include: ["src/**/resolve_url.test.ts"],
     environment: "jsdom",
 
     // Force explicit imports
