@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import type { ISegment } from "../../../manifest";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import type {
   ISegmentFetcher,
@@ -51,6 +52,14 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
      * @param {Object} content - content to request
      * @param {Number} priority - priority at which the content should be requested.
      * Lower number == higher priority.
+     * @param {Object|null|undefined} nextSegment - Information on the next
+     * segment that will be loaded after this one.
+     *
+     * Can be relied on in very specific scenarios to optimize caching on the
+     * CDN-side.
+     *
+     * Can be set to `undefined` if you do not care about this optimization, or to
+     * `null` if there's no segment after this one.
      * @param {Object} callbacks
      * @param {Object} cancelSignal
      * @returns {Promise}
@@ -58,11 +67,12 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
     createRequest(
       content: ISegmentLoaderContent,
       priority: number,
+      nextSegment: ISegment | undefined | null,
       callbacks: IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
       cancelSignal: CancellationSignal,
     ): Promise<void> {
       const givenTask = (innerCancelSignal: CancellationSignal) => {
-        return fetcher(content, callbacks, innerCancelSignal);
+        return fetcher(content, nextSegment, callbacks, innerCancelSignal);
       };
       const ret = prioritizer.create(givenTask, priority, callbacks, cancelSignal);
       taskHandlers.set(ret, givenTask);
@@ -92,6 +102,7 @@ export interface IPrioritizedSegmentFetcher<TSegmentDataType> {
   createRequest: (
     content: ISegmentLoaderContent,
     priority: number,
+    nextSegment: ISegment | undefined | null,
     callbacks: IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
     cancellationSignal: CancellationSignal,
   ) => Promise<void>;

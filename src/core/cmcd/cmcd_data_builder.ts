@@ -15,6 +15,7 @@ import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types"
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IRange } from "../../utils/ranges";
+import { getRelativePathUrl } from "../../utils/resolve_url";
 import TaskCanceller from "../../utils/task_canceller";
 
 /**
@@ -171,12 +172,29 @@ export default class CmcdDataBuilder {
     return this._producePayload(props);
   }
 
-  public getCmcdDataForSegmentRequest(content: ICmcdSegmentInfo): ICmcdPayload {
+  public getCmcdDataForSegmentRequest(
+    content: ICmcdSegmentInfo,
+    nextSegment: ISegment | undefined | null,
+  ): ICmcdPayload {
     const lastObservation = this._playbackObserver?.getReference().getValue();
 
     const props = this._getCommonCmcdData(this._lastThroughput[content.adaptation.type]);
     props.br = Math.round(content.representation.bitrate / 1000);
     props.d = Math.round(content.segment.duration * 1000);
+
+    if (
+      !isNullOrUndefined(nextSegment) &&
+      content.segment.url !== null &&
+      nextSegment.url !== null
+    ) {
+      const relativePath = getRelativePathUrl(content.segment.url, nextSegment.url);
+      if (relativePath !== null) {
+        props.nor = relativePath;
+        if (nextSegment.range !== undefined && nextSegment.indexRange === undefined) {
+          props.nrr = `${nextSegment.range[0]}-${nextSegment.range[1] === Infinity ? "" : nextSegment.range[1]}`;
+        }
+      }
+    }
     // TODO nor (next object request) and nrr (next range request)
 
     switch (content.adaptation.type) {
@@ -323,6 +341,22 @@ export default class CmcdDataBuilder {
     }
     if (props.mtp !== undefined) {
       const toAdd = `mtp=${String(props.mtp)},`;
+      if (this._typePreference === TypePreference.Headers) {
+        cmcdRequestValue += toAdd;
+      } else {
+        queryStringPayload += toAdd;
+      }
+    }
+    if (props.nor !== undefined) {
+      const toAdd = `nor=${formatStringPayload(props.nor)},`;
+      if (this._typePreference === TypePreference.Headers) {
+        cmcdRequestValue += toAdd;
+      } else {
+        queryStringPayload += toAdd;
+      }
+    }
+    if (props.nrr !== undefined) {
+      const toAdd = `nrr=${formatStringPayload(props.nrr)},`;
       if (this._typePreference === TypePreference.Headers) {
         cmcdRequestValue += toAdd;
       } else {
@@ -595,6 +629,35 @@ interface ICmcdProperties {
    * In kbps.
    */
   tb?: number | undefined;
+  /**
+   * Next Object Request (nor)
+   * Relative path of the next object to be requested.
+   *
+   * This can be used to trigger pre-fetching by the CDN. This MUST be a path
+   * relative to the current request.
+   *
+   * This string MUST be URLEncoded. The client SHOULD NOT depend upon any
+   * pre-fetch action being taken - it is merely a request for such a pre-fetch
+   * to take place.
+   */
+  nor?: string | undefined;
+  /**
+   * Next Range Request (nrr)
+   * If the next request will be a partial object request, then this string
+   * denotes the byte range to be requested. If the ‘nor’ field is not set, then
+   * the object is assumed to match the object currently being requested.
+   *
+   * The client SHOULD NOT depend upon any pre-fetch action being taken – it is
+   * merely a request for such a pre-fetch to take place. Formatting is similar
+   * to the HTTP Range header, except that the unit MUST be ‘byte’, the ‘Range:’
+   * prefix is NOT required and specifying multiple ranges is NOT allowed.
+   *
+   * Valid combinations are:
+   * "<range-start>-"
+   * "<range-start>-<range-end>"
+   * "-<suffix-length>"
+   */
+  nrr?: string | undefined;
 }
 
 function formatStringPayload(str: string): string {

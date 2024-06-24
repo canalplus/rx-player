@@ -366,10 +366,7 @@ describe("utils - getRelativePathUrl", () => {
 
   it("should return `null` for different domains", () => {
     expect(
-      getRelativePathUrl(
-        "https://www.example.fr/a.mp4",
-        "https://www.example.com/b.mp4",
-      ),
+      getRelativePathUrl("https://www.example.fr/a.mp4", "https://www.example.com/b.mp4"),
     ).toEqual(null);
     expect(
       getRelativePathUrl(
@@ -387,10 +384,7 @@ describe("utils - getRelativePathUrl", () => {
 
   it("should return `null` for different schemes", () => {
     expect(
-      getRelativePathUrl(
-        "http://www.example.fr/a.mp4",
-        "https://www.example.com/b.mp4",
-      ),
+      getRelativePathUrl("http://www.example.fr/a.mp4", "https://www.example.com/b.mp4"),
     ).toEqual(null);
     expect(
       getRelativePathUrl(

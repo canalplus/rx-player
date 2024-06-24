@@ -120,12 +120,21 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
   /**
    * Fetch a specific segment.
    * @param {Object} content
+   * @param {Object|null|undefined} nextSegment - Information on the next
+   * segment that will be loaded after this one.
+   *
+   * Can be relied on in very specific scenarios to optimize caching on the
+   * CDN-side.
+   *
+   * Can be set to `undefined` if you do not care about this optimization, or to
+   * `null` if there's no segment after this one.
    * @param {Object} fetcherCallbacks
    * @param {Object} cancellationSignal
    * @returns {Promise}
    */
   return async function fetchSegment(
     content: ISegmentLoaderContent,
+    nextSegment: ISegment | undefined | null,
     fetcherCallbacks: ISegmentFetcherCallbacks<TSegmentDataType>,
     cancellationSignal: CancellationSignal,
   ): Promise<void> {
@@ -293,7 +302,10 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     function callLoaderWithUrl(
       cdnMetadata: ICdnMetadata | null,
     ): ReturnType<ISegmentLoader<TLoadedFormat>> {
-      requestOptions.cmcdPayload = cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
+      requestOptions.cmcdPayload = cmcdDataBuilder?.getCmcdDataForSegmentRequest(
+        content,
+        nextSegment,
+      );
       return loadSegment(
         cdnMetadata,
         context,
@@ -398,6 +410,16 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
 export type ISegmentFetcher<TSegmentDataType> = (
   /** Information on the segment wanted. */
   content: ISegmentLoaderContent,
+  /**
+   * Information on the next segment that will be loaded after this one.
+   *
+   * Can be relied on in very specific scenarios to optimize caching on the
+   * CDN-side.
+   *
+   * Can be set to `undefined` if you do not care about this optimization, or to
+   * `null` if there's no segment after this one.
+   */
+  nextSegment: ISegment | undefined | null,
   /** Callbacks the `ISegmentFetcher` will call as it loads the data. */
   callbacks: ISegmentFetcherCallbacks<TSegmentDataType>,
   /** CancellationSignal allowing to cancel the request. */

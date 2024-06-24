@@ -38,6 +38,7 @@ export default function loadAndPushSegment(
   const pushOperations: Array<Promise<unknown>> = [];
   return segmentFetcher(
     segmentInfo,
+    undefined,
     {
       onChunk(parseChunk) {
         const parsed = parseChunk(undefined);

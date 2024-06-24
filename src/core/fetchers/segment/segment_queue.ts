@@ -257,8 +257,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
     const { segmentQueue } = downloadQueue.getValue();
     const currentNeededSegment = segmentQueue[0];
+    const currentNextSegment = segmentQueue[1]?.segment ?? null;
     const recursivelyRequestSegments = (
       startingSegment: IQueuedSegment | undefined,
+      nextSegment: ISegment | undefined | null,
     ): void => {
       if (currentCanceller !== null && currentCanceller.isUsed()) {
         contentInfo.mediaSegmentRequest = null;
@@ -318,13 +320,14 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           lastQueue.shift();
         }
         isComplete = true;
-        recursivelyRequestSegments(lastQueue[0]);
+        recursivelyRequestSegments(lastQueue[0], lastQueue[1]?.segment ?? null);
       };
 
       /** Scheduled actual segment request. */
       const request = this._segmentFetcher.createRequest(
         context,
         priority,
+        nextSegment,
         {
           /**
            * Callback called when the request has to be retried.
@@ -422,7 +425,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
 
       contentInfo.mediaSegmentRequest = { segment, priority, request, canceller };
     };
-    recursivelyRequestSegments(currentNeededSegment);
+    recursivelyRequestSegments(currentNeededSegment, currentNextSegment);
   }
 
   /**
@@ -460,6 +463,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     const request = this._segmentFetcher.createRequest(
       context,
       priority,
+      undefined,
       {
         onRetry: (err: IPlayerError): void => {
           this.trigger("requestRetry", { segment, error: err });
