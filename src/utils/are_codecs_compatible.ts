@@ -41,7 +41,7 @@ function areCodecsCompatible(a: string, b: string): boolean {
   return true;
 }
 
-const LENGTH_OF_CODEC_PREFIX = 7; // length of 'codecs='
+const LENGTH_OF_CODEC_PREFIX = "codecs=".length;
 
 export function parseCodec(unparsedCodec: string): { mimeType: string; codecs: string } {
   const [mimeType, ...props] = unparsedCodec.split(";");
