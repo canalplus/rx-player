@@ -145,10 +145,10 @@ As you can see, this function takes two arguments:
      When `type` is set to `"query"`, then `value` represents a CMCD payload formatted to
      be inserted in a query string. It is in this case an array of 2-tuples with the first
      value being a field's name as a string and the second element being either that
-     field's value if set to a string or indicating that the field has no value.
-     For example a `value` set to `[["first", "val"], ["second", null],
-     ["third", "something"]]` could be translated into the query string
-     `?first=val&second&third=something`.
+     field's value if set to a string or indicating that the field has no value. For
+     example a `value` set to
+     `[["first", "val"], ["second", null], ["third", "something"]]` could be translated
+     into the query string `?first=val&second&third=something`.
 
      When `type` is set to `"headers"`, then `value` represents a CMCD payload formatted
      to be inserted as headers. It is in this case an object where keys are header names
@@ -315,10 +315,10 @@ As you can see, this function takes three arguments:
      When `type` is set to `"query"`, then `value` represents a CMCD payload formatted to
      be inserted in a query string. It is in this case an array of 2-tuples with the first
      value being a field's name as a string and the second element being either that
-     field's value if set to a string or indicating that the field has no value.
-     For example a `value` set to `[["first", "val"], ["second", null],
-     ["third", "something"]]` could be translated into the query string
-     `?first=val&second&third=something`.
+     field's value if set to a string or indicating that the field has no value. For
+     example a `value` set to
+     `[["first", "val"], ["second", null], ["third", "something"]]` could be translated
+     into the query string `?first=val&second&third=something`.
 
      When `type` is set to `"headers"`, then `value` represents a CMCD payload formatted
      to be inserted as headers. It is in this case an object where keys are header names

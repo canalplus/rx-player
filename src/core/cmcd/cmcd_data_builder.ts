@@ -89,6 +89,11 @@ export default class CmcdDataBuilder {
   private _bufferStarvationToggle: boolean;
   private _canceller: TaskCanceller | null;
 
+  /**
+   * Create a new `CmcdDataBuilder`, linked to the given options (see type
+   * definition).
+   * @param {Object} options
+   */
   constructor(options: ICmcdOptions) {
     this._sessionId = options.sessionId ?? createUuid();
     this._contentId = options.contentId ?? createUuid();
@@ -102,6 +107,16 @@ export default class CmcdDataBuilder {
     this._canceller = null;
   }
 
+  /**
+   * Start listening to the given `playbackObserver` so the `CmcdDataBuilder`
+   * can extract some playback-linked metadata that it needs.
+   *
+   * It will keep listening for media data until `stopMonitoringPlayback` is called.
+   *
+   * If `startMonitoringPlayback` is called again, the previous monitoring is
+   * also cancelled.
+   * @param {Object} playbackObserver
+   */
   public startMonitoringPlayback(
     playbackObserver: IReadOnlyPlaybackObserver<ICmcdDataBuilderPlaybackObservation>,
   ): void {
@@ -118,16 +133,33 @@ export default class CmcdDataBuilder {
     );
   }
 
+  /**
+   * Stop the monitoring of playback conditions started from the last
+   * `stopMonitoringPlayback` call.
+   */
   public stopMonitoringPlayback(): void {
     this._canceller?.cancel();
     this._canceller = null;
     this._playbackObserver = null;
   }
 
+  /**
+   * Update the last measured throughput for a specific media type.
+   * Needed for some of CMCD's properties.
+   * @param {string} trackType
+   * @param {number|undefined} throughput - Last throughput measured for that
+   * media type. `undefined` if unknown.
+   */
   public updateThroughput(trackType: ITrackType, throughput: number | undefined) {
     this._lastThroughput[trackType] = throughput;
   }
 
+  /**
+   * Returns the base of data that is common to all resources' requests.
+   * @param {number|undefined} lastThroughput - The last measured throughput to
+   * provide. `undefined` to provide no throughput.
+   * @returns {Object}
+   */
   private _getCommonCmcdData(lastThroughput: number | undefined): ICmcdProperties {
     const props: ICmcdProperties = {};
     props.bs = this._bufferStarvationToggle;
@@ -151,6 +183,12 @@ export default class CmcdDataBuilder {
     return props;
   }
 
+  /**
+   * For the given type of Manifest, returns the corresponding CMCD payload
+   * that should be provided alongside its request.
+   * @param {string} transportType
+   * @returns {Object}
+   */
   public getCmcdDataForManifest(transportType: string): ICmcdPayload {
     const props = this._getCommonCmcdData(
       this._lastThroughput.video ?? this._lastThroughput.audio,
@@ -171,6 +209,12 @@ export default class CmcdDataBuilder {
     return this._producePayload(props);
   }
 
+  /**
+   * For the given segment information, returns the corresponding CMCD payload
+   * that should be provided alongside its request.
+   * @param {Object} content
+   * @returns {Object}
+   */
   public getCmcdDataForSegmentRequest(content: ICmcdSegmentInfo): ICmcdPayload {
     const lastObservation = this._playbackObserver?.getReference().getValue();
 
@@ -266,156 +310,111 @@ export default class CmcdDataBuilder {
     return this._producePayload(props);
   }
 
+  /**
+   * From the given CMCD properties, produce the corresponding payload according
+   * to current settings.
+   * @param {Object} props
+   * @returns {Object}
+   */
   private _producePayload(props: ICmcdProperties): ICmcdPayload {
-    let cmcdObjectValue = "";
-    let cmcdRequestValue = "";
-    let cmcdSessionValue = "";
-    let cmcdStatusValue = "";
+    const headers = {
+      object: "",
+      request: "",
+      session: "",
+      status: "",
+    };
     let queryStringPayload = "";
-    if (props.br !== undefined) {
-      queryStringPayload += `br=${String(props.br)},`;
-      const toAdd = `br=${String(props.br)},`;
+
+    const addPayload = (payload: string, headerName: keyof typeof headers): void => {
       if (this._typePreference === TypePreference.Headers) {
-        cmcdObjectValue += toAdd;
+        headers[headerName] += payload;
       } else {
-        queryStringPayload += toAdd;
+        queryStringPayload += payload;
       }
-    }
-    if (props.bl !== undefined) {
-      const toAdd = `bl=${String(props.bl)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdRequestValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
+    };
+
+    const addNumberProperty = (
+      prop: "br" | "bl" | "d" | "dl" | "mtp" | "pr" | "rtp" | "tb",
+      headerName: keyof typeof headers,
+    ): void => {
+      const val = props[prop];
+      if (val !== undefined) {
+        const toAdd = `${prop}=${String(val)},`;
+        addPayload(toAdd, headerName);
       }
-    }
-    if (props.bs === true) {
-      const toAdd = "bs,";
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdStatusValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
+    };
+
+    const addBooleanProperty = (
+      prop: "bs" | "su",
+      headerName: keyof typeof headers,
+    ): void => {
+      if (props[prop] === true) {
+        const toAdd = `${prop},`;
+        addPayload(toAdd, headerName);
       }
-    }
-    if (props.cid !== undefined) {
-      const toAdd = `cid=${formatStringPayload(props.cid)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdSessionValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
+    };
+
+    const addStringProperty = (
+      prop: "cid" | "sid",
+      headerName: keyof typeof headers,
+    ): void => {
+      const val = props[prop];
+      if (val !== undefined) {
+        const formatted = `"${val.replace("\\", "\\\\").replace('"', '\\"')}"`;
+        const toAdd = `prop=${formatted},`;
+        addPayload(toAdd, headerName);
       }
-    }
-    if (props.d !== undefined) {
-      const toAdd = `d=${String(props.d)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdObjectValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
+    };
+
+    const addTokenProperty = (
+      prop: "ot" | "sf" | "st",
+      headerName: keyof typeof headers,
+    ): void => {
+      const val = props[prop];
+      if (val !== undefined) {
+        const toAdd = `prop=${val},`;
+        addPayload(toAdd, headerName);
       }
-    }
-    if (props.dl !== undefined) {
-      const toAdd = `dl=${String(props.dl)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdRequestValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.mtp !== undefined) {
-      const toAdd = `mtp=${String(props.mtp)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdRequestValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.ot !== undefined) {
-      const toAdd = `ot=${props.ot},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdObjectValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.pr !== undefined) {
-      const toAdd = `pr=${String(props.pr)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdSessionValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.rtp !== undefined) {
-      const toAdd = `rtp=${String(props.rtp)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdStatusValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.sf !== undefined) {
-      const toAdd = `sf=${props.sf},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdSessionValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.sid !== undefined) {
-      const toAdd = `sid=${formatStringPayload(props.sid)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdSessionValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.st !== undefined) {
-      const toAdd = `st=${props.st},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdSessionValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.su === true) {
-      const toAdd = "su,";
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdRequestValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
-    if (props.tb !== undefined) {
-      const toAdd = `tb=${String(props.tb)},`;
-      if (this._typePreference === TypePreference.Headers) {
-        cmcdObjectValue += toAdd;
-      } else {
-        queryStringPayload += toAdd;
-      }
-    }
+    };
+
+    addNumberProperty("br", "object");
+    addNumberProperty("bl", "request");
+    addBooleanProperty("bs", "status");
+    addStringProperty("cid", "session");
+    addNumberProperty("d", "object");
+    addNumberProperty("dl", "request");
+    addNumberProperty("mtp", "request");
+    addTokenProperty("ot", "object");
+    addNumberProperty("pr", "session");
+    addNumberProperty("rtp", "status");
+    addTokenProperty("sf", "session");
+    addStringProperty("sid", "session");
+    addTokenProperty("st", "session");
+    addBooleanProperty("su", "request");
+    addNumberProperty("tb", "object");
 
     if (this._typePreference === TypePreference.Headers) {
-      if (cmcdObjectValue[cmcdObjectValue.length - 1] === ",") {
-        cmcdObjectValue = cmcdObjectValue.substring(0, cmcdObjectValue.length - 1);
+      if (headers.object[headers.object.length - 1] === ",") {
+        headers.object = headers.object.substring(0, headers.object.length - 1);
       }
-      if (cmcdRequestValue[cmcdRequestValue.length - 1] === ",") {
-        cmcdRequestValue = cmcdRequestValue.substring(0, cmcdRequestValue.length - 1);
+      if (headers.request[headers.request.length - 1] === ",") {
+        headers.request = headers.request.substring(0, headers.request.length - 1);
       }
-      if (cmcdSessionValue[cmcdSessionValue.length - 1] === ",") {
-        cmcdSessionValue = cmcdSessionValue.substring(0, cmcdSessionValue.length - 1);
+      if (headers.session[headers.session.length - 1] === ",") {
+        headers.session = headers.session.substring(0, headers.session.length - 1);
       }
-      if (cmcdStatusValue[cmcdStatusValue.length - 1] === ",") {
-        cmcdStatusValue = cmcdStatusValue.substring(0, cmcdStatusValue.length - 1);
+      if (headers.status[headers.status.length - 1] === ",") {
+        headers.status = headers.status.substring(0, headers.status.length - 1);
       }
       log.debug("CMCD: proposing headers payload");
       return {
         type: "headers",
         value: {
           /* eslint-disable @typescript-eslint/naming-convention */
-          "CMCD-Object": cmcdObjectValue,
-          "CMCD-Request": cmcdRequestValue,
-          "CMCD-Session": cmcdSessionValue,
-          "CMCD-Status": cmcdStatusValue,
+          "CMCD-Object": headers.object,
+          "CMCD-Request": headers.request,
+          "CMCD-Session": headers.session,
+          "CMCD-Status": headers.status,
           /* eslint-enable @typescript-eslint/naming-convention */
         },
       };
@@ -595,8 +594,4 @@ interface ICmcdProperties {
    * In kbps.
    */
   tb?: number | undefined;
-}
-
-function formatStringPayload(str: string): string {
-  return `"${str.replace("\\", "\\\\").replace('"', '\\"')}"`;
 }
