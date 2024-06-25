@@ -1447,8 +1447,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
-      const ast =
-        manifest.availabilityStartTime !== undefined ? manifest.availabilityStartTime : 0;
+      const ast = manifest.availabilityStartTime ?? 0;
       return currentTime + ast;
     }
     return 0;
