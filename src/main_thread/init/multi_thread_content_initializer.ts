@@ -1187,7 +1187,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
       if (state > ContentDecryptorState.Initializing) {
         const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
-        // TO DO: this needs to be re-done if the keySystem changes.
         sendMessage(this._settings.worker, {
           type: MainThreadMessageType.CdmCodecSupportUpdate,
           value: codecsSupportedByCDM,
