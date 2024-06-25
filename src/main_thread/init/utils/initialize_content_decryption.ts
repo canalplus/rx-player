@@ -78,7 +78,6 @@ export default function initializeContentDecryption(
   const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
     if (state > ContentDecryptorState.Initializing) {
       const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
-      // TO DO: this needs to be re-done if the keySystem changes.
       for (const codec of codecsSupportedByCDM) {
         cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
       }
