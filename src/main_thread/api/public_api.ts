@@ -322,7 +322,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return log.getLevel();
   }
   static set LogLevel(logLevel: string) {
-    log.setLevel(logLevel);
+    log.setLevel(logLevel, log.getFormat());
+  }
+
+  /**
+   * Current log format.
+   * Should be either (by verbosity ascending):
+   *   - "standard": Regular log messages.
+   *   - "full": More verbose format, including a timestamp and a namespace.
+   * Any other value will be translated to "standard".
+   */
+  static get LogFormat(): string {
+    return log.getFormat();
+  }
+  static set LogFormat(format: string) {
+    log.setLevel(log.getLevel(), format);
   }
 
   /**
@@ -531,6 +545,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         value: {
           dashWasmUrl: workerSettings.dashWasmUrl,
           logLevel: log.getLevel(),
+          logFormat: log.getFormat(),
           sendBackLogs: isDebugModeEnabled(),
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
@@ -540,7 +555,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       });
       log.addEventListener(
         "onLogLevelChange",
-        (logLevel) => {
+        (logInfo) => {
           if (this._priv_worker === null) {
             return;
           }
@@ -548,7 +563,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_worker.postMessage({
             type: MainThreadMessageType.LogLevelUpdate,
             value: {
-              logLevel,
+              logLevel: logInfo.level,
+              logFormat: logInfo.format,
               sendBackLogs: isDebugModeEnabled(),
             },
           });

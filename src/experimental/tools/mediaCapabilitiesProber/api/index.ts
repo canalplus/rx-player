@@ -58,7 +58,7 @@ const mediaCapabilitiesProber = {
    * @param {string} level
    */
   set LogLevel(level: string) {
-    log.setLevel(level);
+    log.setLevel(level, log.getFormat());
   },
 
   /**

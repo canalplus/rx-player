@@ -30,7 +30,7 @@ import type {
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
 import type { ITrackType } from "./public_types";
 import type { ITransportOptions } from "./transports";
-import type { ILoggerLevel } from "./utils/logger";
+import type { ILogFormat, ILoggerLevel } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
 
 /**
@@ -65,6 +65,12 @@ export interface IInitMessage {
     hasMseInWorker: boolean;
     /** Initial logging level that should be set. */
     logLevel: ILoggerLevel;
+    /** Intitial logger's log format that should be set. */
+    logFormat: ILogFormat;
+    /**
+     * If `true`, logs should be sent back to the main thread, through a
+     * `ILogMessageWorkerMessage` message.
+     */
     sendBackLogs: boolean;
     /**
      * Value of `Date.now()` at the time the `timestamp` property was generated.
@@ -138,6 +144,12 @@ export interface ILogLevelUpdateMessage {
   value: {
     /** The new logger level that should be set. */
     logLevel: ILoggerLevel;
+    /** Intitial logger's log format that should be set. */
+    logFormat: ILogFormat;
+    /**
+     * If `true`, logs should be sent back to the main thread, through a
+     * `ILogMessageWorkerMessage` message.
+     */
     sendBackLogs: boolean;
   };
 }

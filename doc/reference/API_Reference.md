@@ -392,6 +392,9 @@ events and so on.
 - [`LogLevel`](../api/Static_Properties.md#loglevel): Update the verbosity of the RxPlayer
   logger.
 
+- [`LogFormat`](../api/Static_Properties.md#logformat): Update the format of logs produced
+  by the logger.
+
 - [`ErrorTypes`](../api/Static_Properties.md#errortypes): All Error types that can be
   encountered.
 
