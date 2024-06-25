@@ -809,6 +809,7 @@ export interface IRequestedData<T> {
 
 export interface ITransportOptions {
   checkMediaSegmentIntegrity?: boolean | undefined;
+  checkManifestIntegrity?: boolean | undefined;
   lowLatencyMode: boolean;
   manifestLoader?: IManifestLoader | undefined;
   referenceDateTime?: number | undefined;

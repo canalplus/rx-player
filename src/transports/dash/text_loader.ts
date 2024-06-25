@@ -31,9 +31,9 @@ import type {
 import addQueryString from "../utils/add_query_string";
 import byteRange from "../utils/byte_range";
 import inferSegmentContainer from "../utils/infer_segment_container";
-import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import constructSegmentUrl from "./construct_segment_url";
 import initSegmentLoader from "./init_segment_loader";
+import { addSegmentIntegrityChecks } from "./integrity_checks";
 import loadChunkedSegmentData from "./load_chunked_segment_data";
 
 /**

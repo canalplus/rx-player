@@ -844,20 +844,23 @@ When set to an Object, it can have the following properties:
 
 ### checkMediaSegmentIntegrity
 
-_type_: `Function|undefined`
+_type_: `boolean|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
-If set to true, the RxPlayer will retry a media segment request if that segment seems
+If set to `true`, the RxPlayer will retry a media segment request if that segment seems
 corrupted.
 
-If not set or set to false, the RxPlayer might interrupt playback in the same situation.
+If not set or set to `false`, the RxPlayer might interrupt playback in the same situation.
 
 You can set this option if you suspect the CDN providing your contents to sometimes send
 you incomplete/corrupted segments.
+
+Note however that not all cases of media segment corruptions are spotted, it can still
+happen with this option set to `true`.
 
 Example:
 
@@ -865,6 +868,34 @@ Example:
 rxPlayer.loadVideo({
   // ...
   checkMediaSegmentIntegrity: true,
+});
+```
+
+### checkManifestIntegrity
+
+_type_: `boolean|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+If set to `true`, the RxPlayer will retry a Manifest request if it appears corrupted.
+
+If not set or set to `false`, the RxPlayer might interrupt playback in the same situation.
+
+You can set this option if you suspect the CDN providing your contents to sometimes send
+you incomplete/corrupted Manifests.
+
+Note however that not all cases of Manifest corruptions are spotted, and that it only has
+an effect on DASH contents for now.
+
+Example:
+
+```js
+rxPlayer.loadVideo({
+  // ...
+  checkManifestIntegrity: true,
 });
 ```
 

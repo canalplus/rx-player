@@ -144,6 +144,12 @@ export interface ILoadVideoOptions {
    */
   checkMediaSegmentIntegrity?: boolean;
 
+  /**
+   * Whether we should check that an obtained Manifest is truncated and retry
+   * the request if that's the case.
+   */
+  checkManifestIntegrity?: boolean | undefined;
+
   /** Manifest object that may be used initially. */
   initialManifest?: IInitialManifest;
 
