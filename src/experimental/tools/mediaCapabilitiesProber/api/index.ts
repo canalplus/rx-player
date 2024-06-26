@@ -15,7 +15,6 @@
  */
 
 import eme from "../../../../compat/eme";
-import arrayFind from "../../../../utils/array_find";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
 import probeDecodingInfos from "../probers/decodingInfo";
@@ -23,7 +22,6 @@ import probeHDCPPolicy from "../probers/HDCPPolicy";
 import probeContentType from "../probers/mediaContentType";
 import probeTypeWithFeatures from "../probers/mediaContentTypeWithFeatures";
 import type {
-  ICompatibleKeySystem,
   IDisplayConfiguration,
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
@@ -165,71 +163,6 @@ const mediaCapabilitiesProber = {
     } catch (err) {
       return isCodecSupported ? "Supported" : "Unknown";
     }
-  },
-
-  /**
-   * From an array of given configurations (type and key system configuration), return
-   * supported ones.
-   * @param {Array.<Object>} configurations
-   * @returns {Promise}
-   */
-  getCompatibleDRMConfigurations(
-    configurations: Array<{
-      type: string;
-      configuration: IMediaKeySystemConfiguration;
-    }>,
-  ): Promise<ICompatibleKeySystem[]> {
-    const promises: Array<
-      Promise<{
-        globalStatus: ProberStatus;
-        result?: ICompatibleKeySystem | undefined;
-      }>
-    > = [];
-    configurations.forEach((configuration) => {
-      const globalConfig = {
-        keySystem: configuration,
-      };
-      const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
-      promises.push(
-        probeMediaConfiguration(globalConfig, browserAPIS)
-          .then(({ globalStatus, resultsFromAPIS }) => {
-            const requestMediaKeySystemAccessResults = arrayFind(
-              resultsFromAPIS,
-              (result) => result.APIName === "requestMediaKeySystemAccess",
-            );
-
-            return {
-              // As only one API is called, global status is
-              // requestMediaKeySystemAccess status.
-              globalStatus,
-              result:
-                requestMediaKeySystemAccessResults === undefined
-                  ? undefined
-                  : requestMediaKeySystemAccessResults.result,
-            };
-          })
-          .catch(() => {
-            // API couln't be called.
-            return { globalStatus: ProberStatus.NotSupported };
-          }),
-      );
-    });
-    return Promise.all(promises).then((configs) => {
-      // TODO I added those lines to work-around a type issue but does it
-      // really correspond to the original intent? I find it hard to
-      // understand and shouldn't we also rely on things like `globalStatus`
-      // here?
-      return configs
-        .filter(
-          (
-            x,
-          ): x is {
-            globalStatus: ProberStatus;
-            result: ICompatibleKeySystem;
-          } => x.result !== undefined,
-        )
-        .map(({ result }: { result: ICompatibleKeySystem }) => result);
-    });
   },
 
   /**
