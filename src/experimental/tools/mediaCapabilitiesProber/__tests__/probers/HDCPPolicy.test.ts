@@ -1,6 +1,5 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
 import type IProbeHDCPPolicy from "../../probers/HDCPPolicy";
-import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   afterEach(() => {
@@ -14,28 +13,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    expect(probeHDCPPolicy({})).rejects.toEqual(
+    expect(probeHDCPPolicy("")).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: API not available",
-    );
-  });
-
-  it("should throw if no hdcp attribute in config", async () => {
-    const mockRequestMediaKeySystemAccess = vi.fn(() => {
-      return Promise.resolve({
-        getConfiguration: () => ({}),
-      });
-    });
-    vi.doMock("../../../../../compat/eme", () => ({
-      default: {
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-      },
-    }));
-    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
-      .default as typeof IProbeHDCPPolicy;
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    expect(probeHDCPPolicy({})).rejects.toEqual(
-      "MediaCapabilitiesProber >>> API_CALL: " +
-        "Missing policy argument for calling getStatusForPolicy.",
     );
   });
 
@@ -57,8 +36,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
 
-    await probeHDCPPolicy({ hdcp: "1.1" }).then(([res]: [unknown]) => {
-      expect(res).toEqual(ProberStatus.Unknown);
+    await probeHDCPPolicy("1.1").then(([res]) => {
+      expect(res).toEqual("Unknown");
       expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
       expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
     });
@@ -84,8 +63,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
 
-    await probeHDCPPolicy({ hdcp: "1.1" }).then(([res]: [unknown]) => {
-      expect(res).toEqual(ProberStatus.Supported);
+    await probeHDCPPolicy("1.1").then(([res]) => {
+      expect(res).toEqual("Supported");
       expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
       expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
     });
@@ -110,8 +89,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
-    await probeHDCPPolicy({ hdcp: "1.1" }).then(([res]: [unknown]) => {
-      expect(res).toEqual(ProberStatus.NotSupported);
+    await probeHDCPPolicy("1.1").then(([res]) => {
+      expect(res).toEqual("NotSupported");
       expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
       expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
     });

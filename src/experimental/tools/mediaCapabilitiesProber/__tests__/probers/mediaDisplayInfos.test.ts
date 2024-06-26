@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import globalScope from "../../../../../utils/global_scope";
 import type IProbeMediaDisplayInfos from "../../probers/mediaDisplayInfos";
-import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   it("should throw if matchMedia is undefined", async () => {
@@ -138,8 +137,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
 
     expect.assertions(2);
     return probeMediaDisplayInfos(config)
-      .then(([res]) => {
-        expect(res).toEqual(ProberStatus.Supported);
+      .then((res: string) => {
+        expect(res).toEqual("Supported");
         expect(mockMatchMedia).toHaveBeenCalledTimes(1);
         (
           globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
@@ -171,8 +170,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
 
     expect.assertions(2);
     return probeMediaDisplayInfos(config)
-      .then(([res]) => {
-        expect(res).toEqual(ProberStatus.NotSupported);
+      .then((res: string) => {
+        expect(res).toEqual("NotSupported");
         expect(mockMatchMedia).toHaveBeenCalledTimes(1);
         (
           globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }

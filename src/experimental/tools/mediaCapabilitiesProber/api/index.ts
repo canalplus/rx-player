@@ -27,7 +27,6 @@ import type {
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
 } from "../types";
-import { ProberStatus } from "../types";
 
 /**
  * A set of API to probe media capabilites.
@@ -100,12 +99,11 @@ const mediaCapabilitiesProber = {
     }
     try {
       const res = await probeTypeWithFeatures({ hdcp: hdcpVersion });
-      switch (res[0]) {
-        case ProberStatus.NotSupported:
-          return "NotSupported";
-        case ProberStatus.Supported:
-          return "Supported";
-        case ProberStatus.Unknown:
+      switch (res) {
+        case "NotSupported":
+        case "Supported":
+          return res;
+        case "Unknown":
           // continue
           break;
       }
@@ -144,7 +142,7 @@ const mediaCapabilitiesProber = {
 
     try {
       const res = await probeTypeWithFeatures(config);
-      if (res[0] === ProberStatus.NotSupported) {
+      if (res === "NotSupported") {
         return "NotSupported";
       }
     } catch (err) {
@@ -170,7 +168,7 @@ const mediaCapabilitiesProber = {
     const config = { display: displayConfig };
     let matchMediaSupported: boolean | undefined;
     try {
-      const status = probeMatchMedia(displayConfig);
+      const status = probeMatchMedia(config);
       if (status === "Supported") {
         matchMediaSupported = true;
       } else {
@@ -182,7 +180,7 @@ const mediaCapabilitiesProber = {
 
     try {
       const res = await probeTypeWithFeatures(config);
-      if (res[0] === ProberStatus.NotSupported) {
+      if (res === "NotSupported") {
         return "NotSupported";
       }
     } catch (err) {
