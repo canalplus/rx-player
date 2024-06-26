@@ -81,49 +81,36 @@ mediaCapabilitiesProber.LogLevel = "NONE";
 
 ## Functions
 
-### getCompatibleDRMConfigurations
+### checkDrmConfiguration
 
 _arguments_:
 
-- _keySystems_ (`Array.<Object>`): An array of key system configurations. Those objects
-  have the following properties:
+- _keySystemType_ (`string`): Key system string identifying it in the browser. Always a
+  reverse domain name (e.g. "org.w3.clearkey").
 
-  - _type_ (`string`): Key system string identifying it in the browser. Always a reverse
-    domain name (e.g. "org.w3.clearkey").
+- _configuration_ (`Object`): Wanted `MediaKeySystemConfiguration` for this key system, as
+  defined in
+  [the EME w3c specification.](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-  - _configuration_ (`Object`): Wanted MediaKeySystemConfiguration for this key system, as
-    defined in
-    [the EME w3c specification.](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
+- _options_ (`Object|undefined`): Can be set to an object with the following keys:
 
-_return value_: `Array.<Object>`
+  - _timeout_ (`number|undefined`): Optional timeout in seconds, If set and one of the
+    lower-level API calls do not answer, we will consider the configuration as not
+    supported.
 
-Probe the support of various key sytems and for each compatible ones, returns the
-corresponding configuration that will be used.
+    XXX TODO And what happens if in the future `checkDrmConfiguration` actually perform
+    multiple API Calls?
 
-#### Return value
+_return value_: `Object`
 
-The returned value is an array of object with the same number of elements than the one
-given in argument.
+Probe the support of the given key sytem configuration. If it is supported, this call will
+resolve with a `MediaKeySystemConfiguration` compatible to what you asked that would
+actually be relied on. It will often correspond to a subset of the inputted
+_configuration_ object (for example, you might have there fewer _videoCapabilities_ that
+in the _configuration_ object).
 
-It indicates the support for each Key System given in argument in the same order.
-
-Due to that, the objects in this array look like the ones given in argument (but with an
-added property):
-
-- _type_ (`string`): Corresponding key system string given in input.
-
-- _configuration_ (`Object`): Corresponding wanted MediaKeySystemConfiguration given in
-  input.
-
-- _compatibleConfiguration_ (`undefined|Object`):
-
-  if the type and configuration are both compatible with the browser, this is the
-  corresponding actual MediaKeySystemConfiguration that will be effectively used. It will
-  often correspond to a subset of the inputted _configuration_ object (for example, you
-  might have there fewer _videoCapabilities_ that in the _configuration_ object).
-
-  If the type and/or the configuration are not compatible, this property will not be
-  defined.
+Rejects if the given configuration is not supported or if we have no way to know if it is
+supported or not.
 
 #### Example
 
@@ -144,40 +131,26 @@ const mksConfiguration = {
   ],
 };
 
-const keySystems = [
-  // Let's consider this one as a compatible key system configuration
-  { type: "com.widevine.alpha", configuration: mksConfiguration },
+mediaCapabilitiesProber.checkDrmConfiguration(
+  "com.widevine.alpha",
+  mksConfiguration,
+  ).then(
+  // On success:
+  (config) => {
+    console.log("This device is compatible with the given configuration!");
+    console.log("Wanted configuration:", configuration);
+    console.log("Compatible configuration:", compatibleConfiguration);
+  },
 
-  // Let's consider this one as not compatible
-  { type: "com.microsoft.playready", configuration: mksConfiguration },
-];
-
-mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems).then((drmConfigs) => {
-  drmConfigs.forEach((config) => {
-    const { type, configuration, compatibleConfiguration } = config;
-
-    if (compatibleConfiguration !== undefined) {
-      console.log("# Compatible configuration #############################");
-      console.log("Key System:", type);
-      console.log("Wanted configuration:", configuration);
-      console.log("Compatible configuration:", compatibleConfiguration);
-      console.log("########################################################");
-      console.log("");
-    } else {
-      console.log("# Incompatible configuration ###########################");
-      console.log("Key System:", type);
-      console.log("Wanted configuration:", configuration);
-      console.log("########################################################");
-      console.log("");
-    }
-  });
+  // On failure
+  (err) => {
+    console.log("This device is not compatible with the given configuration!", err);
+  },
 });
 
 // Example output (please note that in this example, one of the widevine
 // robustness is not supported):
 //
-// # Compatible configuration #############################
-// Key System: com.widevine.alpha
 // Wanted configuration:
 // {
 //   "initDataTypes":["cenc"],
@@ -207,25 +180,6 @@ mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems).then((drmConf
 //     }
 //   ]
 // }
-// ########################################################
-//
-// # Incompatible configuration ###########################
-// Key System: com.microsoft.playready
-// Wanted configuration:
-// {
-//   "initDataTypes":["cenc"],
-//   "videoCapabilities": [
-//     {
-//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
-//       "robustness": "HW_SECURE_CRYPTO"
-//     },
-//     {
-//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
-//       "robustness": "SW_SECURE_DECODE"
-//     }
-//   ]
-// }
-// ########################################################
 ```
 
 ### getStatusForHDCP
@@ -236,25 +190,19 @@ _arguments_:
 
 _return value_: `string`
 
-Test for an HDCP configuration.
+Test for the compatibility with an HDCP configuration.
 
 The returned string of this function is either:
 
-- `"Supported"`: This HDCP configuration is supported.
+- `"Supported"`: This HDCP configuration should be supported.
 
 - `"NotSupported"`: The HDCP configuration is not supported.
 
 - `"Unknown"`: The API is not available or it is but could not check if the HDCP type is
   supported.
 
-<div class="warning">
-As of the 2018-july-03, this feature is very poorly supported (with only
-some support on the EDGE browser).
-<br>
-We should have a real support of it in the coming months on
-<a href="https://www.chromestatus.com/feature/5652917147140096">Chrome</a> and
-<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1404230">Firefox</a>.
-</div>
+Note that depending on the device, this API might be not reliable. Please test for your
+use cases before relying on this method.
 
 #### Example
 
@@ -288,6 +236,9 @@ _return value_: `string`
 
 Probe for audio/video decoding capabilities.
 
+Note that depending on the device, this API might be not reliable. Please test for your
+use cases before relying on this method.
+
 #### Argument
 
 The object in argument is inspired from the concerned API configurations. All its
@@ -319,7 +270,7 @@ properties are optional, here are what you can set.
 
 The returned string of this function is either:
 
-- `"Supported"`: This configuration is supported.
+- `"Supported"`: This configuration should be supported.
 
 - `"MaybeSupported"`: Some set configuration could not be probed because not enough
   information was provided, but what has been probed is supported.
@@ -376,6 +327,9 @@ _return value_: `string`
 
 Probe what can be displayed on the screen.
 
+Note that depending on the device, this API might be not reliable. Please test for your
+use cases before relying on this method.
+
 #### Argument
 
 The object in argument is inspired from the concerned API configurations. All its
@@ -425,36 +379,3 @@ mediaCapabilitiesProber
     }
   });
 ```
-
-## Exploited browser APIs
-
-The tool probes media capabilities from browsers (Chrome, Firefox, etc.) exploiting
-current available media API:
-
-- **mediaCapabilities** - Chrome >= 64 (https://github.com/WICG/media-capabilities)
-
-  - Check for decoding capabilites from video and audio attributes.
-
-- **isTypeSupportedWithFeatures** - Microsoft EDGE
-
-  - Check for DRM support + decoding and displaying capabilites from video, audio, display
-    and media protection configuration.
-
-- **isTypeSupported** - Chrome >= 31 / Firefox >= 41 / EDGE / IE >= 11 / Safari
-
-  > = 8 (https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported)
-
-  - Check for video and audio decoding support from content type.
-
-- **matchMedia** (with color gamut support) - Chrome >= 58.
-
-  - Check for color space support.
-
-- **requestMediaKeySystemAccess** - Chrome >= 42 / Firefox / EDGE / Safari
-  (https://developer.mozilla.org/fr/docs/Web/API/Navigator/requestMediaKeySystemAccess)
-
-  - Check for DRM support.
-
-- **getStatusForPolicy** - ?
-  (https://github.com/WICG/hdcp-detection/blob/master/explainer.md)
-  - Query a hypothetical status associated with an HDCP policy.

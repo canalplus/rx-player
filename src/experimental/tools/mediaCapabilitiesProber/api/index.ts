@@ -118,7 +118,7 @@ const mediaCapabilitiesProber = {
    * configuration.
    * TODO check alongside key system.
    * @param {Object} mediaConfig
-   * @returns {Promise}
+   * @returns {Promise.<string>}
    */
   async getDecodingCapabilities(mediaConfig: IMediaConfiguration): Promise<string> {
     const config = {
@@ -162,7 +162,7 @@ const mediaCapabilitiesProber = {
    * with specific video and/or audio constrains.
    * TODO I'm sure there's now newer APIs we can use for this (e.g. CSS etc.)
    * @param {Object} displayConfig
-   * @returns {Promise}
+   * @returns {Promise.<string>}
    */
   async getDisplayCapabilities(displayConfig: IDisplayConfiguration): Promise<string> {
     const config = { display: displayConfig };
@@ -191,11 +191,16 @@ const mediaCapabilitiesProber = {
 };
 
 /**
- * @param {Promise} prom
- * @param {number} timeout
- * @returns {Promise}
+ * Create a new Promise from the given Promise `prom`, which rejects if the
+ * amount in milliseconds defined by `timeout` has elapsed before that Promise
+ * resolved.
+ * @param {Promise} prom - The base promise.
+ * @param {number} timeout - Maximum amount of time in milliseconds before
+ * `prom` should be fullfilled.
+ * @returns {Promise} - Equivalent to `prom`, which now rejects if it takes more
+ * than `timeout` milliseconds to fullfil.
  */
-function addTimeoutToPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
+async function addTimeoutToPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutProm = new Promise<never>((_, rej) => {
     timeoutId = setTimeout(() => {
@@ -203,12 +208,11 @@ function addTimeoutToPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
     }, timeout);
   });
 
-  return Promise.race([timeoutProm, prom]).then((res) => {
-    if (timeoutId !== undefined) {
-      clearTimeout(timeoutId);
-    }
-    return res;
-  });
+  const res = await Promise.race([timeoutProm, prom]);
+  if (timeoutId !== undefined) {
+    clearTimeout(timeoutId);
+  }
+  return res;
 }
 
 export default mediaCapabilitiesProber;
