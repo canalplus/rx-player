@@ -2,7 +2,6 @@ import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import probeDecodingInfos from "../../probers/decodingInfo";
 import type { IMediaConfiguration } from "../../types";
-import { ProberStatus } from "../../types";
 
 const origDecodingInfo = navigator.mediaCapabilities;
 const origMediaCapabilities = navigator.mediaCapabilities;
@@ -201,8 +200,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
 
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.Supported);
+      .then((res) => {
+        expect(res).toBe("Supported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })
@@ -225,8 +224,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
 
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.Supported);
+      .then((res) => {
+        expect(res).toBe("Supported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })
@@ -255,8 +254,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.Supported);
+      .then((res) => {
+        expect(res).toBe("Supported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })
@@ -279,8 +278,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.NotSupported);
+      .then((res) => {
+        expect(res).toBe("NotSupported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })
@@ -302,8 +301,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.NotSupported);
+      .then((res) => {
+        expect(res).toBe("NotSupported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })
@@ -332,8 +331,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.NotSupported);
+      .then((res) => {
+        expect(res).toBe("NotSupported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })
@@ -362,8 +361,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     };
     expect.assertions(2);
     return probeDecodingInfos(configuration)
-      .then(([res]) => {
-        expect(res).toBe(ProberStatus.NotSupported);
+      .then((res) => {
+        expect(res).toBe("NotSupported");
         expect(decodingInfoStub).toHaveBeenCalledTimes(1);
         resetDecodingInfos();
       })

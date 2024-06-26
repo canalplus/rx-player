@@ -1,6 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type IProbeMediaContentType from "../../probers/mediaContentType";
-import { ProberStatus } from "../../types";
 import type { IMediaConfiguration } from "../../types";
 
 describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
@@ -74,7 +73,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const support = probeMediaContentType(config);
-    expect(support).toEqual(ProberStatus.Supported);
+    expect(support).toEqual("Supported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -97,7 +96,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const support = probeMediaContentType(config);
-    expect(support).toEqual(ProberStatus.Supported);
+    expect(support).toEqual("Supported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -123,7 +122,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const res = probeMediaContentType(config);
-    expect(res).toEqual(ProberStatus.Supported);
+    expect(res).toEqual("Supported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -146,7 +145,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const res = probeMediaContentType(config);
-    expect(res).toEqual(ProberStatus.NotSupported);
+    expect(res).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -169,7 +168,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const res = probeMediaContentType(config);
-    expect(res).toEqual(ProberStatus.NotSupported);
+    expect(res).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -195,7 +194,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const res = probeMediaContentType(config);
-    expect(res).toEqual(ProberStatus.NotSupported);
+    expect(res).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -223,7 +222,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(2);
     const res = probeMediaContentType(config);
-    expect(res).toEqual(ProberStatus.NotSupported);
+    expect(res).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 });

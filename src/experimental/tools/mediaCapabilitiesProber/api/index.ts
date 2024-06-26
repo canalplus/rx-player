@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
+import { canRelyOnRequestMediaKeySystemAccess } from "../../../../compat/can_rely_on_request_media_key_system_access";
 import eme from "../../../../compat/eme";
+import {
+  DUMMY_PLAY_READY_HEADER,
+  generatePlayReadyInitData,
+} from "../../../../compat/generate_init_data";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
 import probeDecodingInfos from "../probers/decodingInfo";
@@ -27,7 +32,6 @@ import type {
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
 } from "../types";
-import { ProberStatus } from "../types";
 
 /**
  * A set of API to probe media capabilites.
@@ -40,7 +44,7 @@ const mediaCapabilitiesProber = {
    * @param {string} level
    */
   set LogLevel(level: string) {
-    log.setLevel(level);
+    log.setLevel(level, log.getFormat());
   },
 
   /**
@@ -85,7 +89,25 @@ const mediaCapabilitiesProber = {
       checkProm = addTimeoutToPromise(checkProm, timeout);
     }
     const mksa = await checkProm;
-    return mksa.getConfiguration();
+    if (!canRelyOnRequestMediaKeySystemAccess(keySystemType)) {
+      try {
+        const mediaKeys = await mksa.createMediaKeys();
+        const session = mediaKeys.createSession();
+        const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+        await session.generateRequest("cenc", initData);
+        session.close().catch(() => {
+          log.warn("DRM: Failed to close the dummy session");
+        });
+        return mksa.getConfiguration();
+      } catch (err) {
+        log.debug("DRM: KeySystemAccess was granted but it is not usable");
+        return Promise.reject(
+          new Error("Failed to call generateRequest on this keySystem"),
+        );
+      }
+    } else {
+      return mksa.getConfiguration();
+    }
   },
 
   /**
@@ -100,12 +122,11 @@ const mediaCapabilitiesProber = {
     }
     try {
       const res = await probeTypeWithFeatures({ hdcp: hdcpVersion });
-      switch (res[0]) {
-        case ProberStatus.NotSupported:
-          return "NotSupported";
-        case ProberStatus.Supported:
-          return "Supported";
-        case ProberStatus.Unknown:
+      switch (res) {
+        case "NotSupported":
+        case "Supported":
+          return res;
+        case "Unknown":
           // continue
           break;
       }
@@ -144,7 +165,7 @@ const mediaCapabilitiesProber = {
 
     try {
       const res = await probeTypeWithFeatures(config);
-      if (res[0] === ProberStatus.NotSupported) {
+      if (res === "NotSupported") {
         return "NotSupported";
       }
     } catch (err) {
@@ -170,7 +191,7 @@ const mediaCapabilitiesProber = {
     const config = { display: displayConfig };
     let matchMediaSupported: boolean | undefined;
     try {
-      const status = probeMatchMedia(displayConfig);
+      const status = probeMatchMedia(config);
       if (status === "Supported") {
         matchMediaSupported = true;
       } else {
@@ -182,7 +203,7 @@ const mediaCapabilitiesProber = {
 
     try {
       const res = await probeTypeWithFeatures(config);
-      if (res[0] === ProberStatus.NotSupported) {
+      if (res === "NotSupported") {
         return "NotSupported";
       }
     } catch (err) {

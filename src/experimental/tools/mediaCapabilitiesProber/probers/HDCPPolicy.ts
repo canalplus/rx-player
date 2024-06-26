@@ -18,7 +18,7 @@ import eme from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
 
-export type IMediaKeyStatus =
+type IMediaKeyStatus =
   | "usable"
   | "expired"
   | "released"

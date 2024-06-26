@@ -16,16 +16,10 @@
 
 import globalScope from "../../../../../utils/global_scope";
 import type { IMediaConfiguration } from "../../types";
-import { ProberStatus } from "../../types";
 
 import formatConfig from "./format";
 
-export interface ITypeWithFeatures {
-  keySystem: string;
-  features: string | null;
-}
-
-export type ISupportWithFeatures = "" | "Maybe" | "Not Supported" | "Probably";
+type ISupportWithFeatures = "" | "Maybe" | "Not Supported" | "Probably";
 
 type IGlobalScopeWithMSMediaKeysFeatures = typeof globalScope & {
   MSMediaKeys: {
@@ -65,7 +59,7 @@ function isTypeSupportedWithFeaturesAPIAvailable(): boolean {
 /* eslint-disable-next-line @typescript-eslint/require-await */
 export default async function probeTypeWithFeatures(
   config: IMediaConfiguration,
-): Promise<[ProberStatus]> {
+): Promise<"Supported" | "NotSupported" | "Unknown"> {
   if (!isTypeSupportedWithFeaturesAPIAvailable()) {
     throw new Error("MSMediaKeys.isTypeSupportedWithFeatures is not available");
   }
@@ -88,22 +82,21 @@ export default async function probeTypeWithFeatures(
     globalScope as IGlobalScopeWithMSMediaKeysFeatures
   ).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
 
-  function formatSupport(support: ISupportWithFeatures): [ProberStatus] {
+  function formatSupport(
+    support: ISupportWithFeatures,
+  ): "NotSupported" | "Unknown" | "Supported" {
     if (support === "") {
-      throw new Error(
-        "MediaCapabilitiesProber >>> API_CALL: " +
-          "Bad arguments for calling isTypeSupportedWithFeatures",
-      );
+      throw new Error("Bad arguments for calling isTypeSupportedWithFeatures");
     } else {
       switch (support) {
         case "Not Supported":
-          return [ProberStatus.NotSupported];
+          return "NotSupported";
         case "Maybe":
-          return [ProberStatus.Unknown];
+          return "Unknown";
         case "Probably":
-          return [ProberStatus.Supported];
+          return "Supported";
         default:
-          return [ProberStatus.Unknown];
+          return "Unknown";
       }
     }
   }
