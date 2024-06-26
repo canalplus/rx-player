@@ -36,6 +36,22 @@ import { ProberStatus } from "../types";
  */
 const mediaCapabilitiesProber = {
   /**
+   * Set logger level
+   * @param {string} level
+   */
+  set LogLevel(level: string) {
+    log.setLevel(level);
+  },
+
+  /**
+   * Get logger level
+   * @returns {string}
+   */
+  get LogLevel(): string {
+    return log.getLevel();
+  },
+
+  /**
    * @param {string} keySystemType - Reverse domain name of the wanted key
    * system.
    * @param {Array.<MediaKeySystemConfiguration>} keySystemConfiguration - DRM
