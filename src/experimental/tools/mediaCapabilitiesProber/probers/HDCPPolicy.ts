@@ -16,8 +16,7 @@
 
 import eme from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IMediaConfiguration } from "../types";
-import { ProberStatus } from "../types";
+import log from "../log";
 
 export type IMediaKeyStatus =
   | "usable"
@@ -29,24 +28,18 @@ export type IMediaKeyStatus =
   | "internal-error";
 
 /**
- * @param {Object} config
+ * @param {string} hdcpVersion
  * @returns {Promise}
  */
-export default function probeHDCPPolicy(
-  config: IMediaConfiguration,
-): Promise<[ProberStatus]> {
+export default async function probeHDCPPolicy(
+  hdcpVersion: string,
+): Promise<"Unknown" | "Supported" | "NotSupported"> {
   if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
     return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " + "API not available");
   }
-  if (isNullOrUndefined(config.hdcp)) {
-    return Promise.reject(
-      "MediaCapabilitiesProber >>> API_CALL: " +
-        "Missing policy argument for calling getStatusForPolicy.",
-    );
-  }
 
-  const hdcp = "hdcp-" + config.hdcp;
-  const policy = { minHdcpVersion: hdcp };
+  const hdcpString = "hdcp-" + hdcpVersion;
+  const policy = { minHdcpVersion: hdcpString };
 
   const keySystem = "org.w3.clearkey";
   const drmConfig = {
@@ -63,41 +56,33 @@ export default function probeHDCPPolicy(
     ],
   };
 
-  return eme
-    .requestMediaKeySystemAccess(keySystem, [drmConfig])
-    .then((mediaKeysSystemAccess) => {
-      return mediaKeysSystemAccess
-        .createMediaKeys()
-        .then((mediaKeys) => {
-          if (!("getStatusForPolicy" in mediaKeys)) {
-            // do the check here, as mediaKeys can be either be native MediaKeys or
-            // custom MediaKeys from compat.
-            throw new Error(
-              "MediaCapabilitiesProber >>> API_CALL: " +
-                "getStatusForPolicy API not available",
-            );
-          }
-          return (
-            mediaKeys as {
-              getStatusForPolicy: (policy: {
-                minHdcpVersion: string;
-              }) => Promise<IMediaKeyStatus>;
-            }
-          )
-            .getStatusForPolicy(policy)
-            .then((result: IMediaKeyStatus) => {
-              let status: [ProberStatus];
-              if (result === "usable") {
-                status = [ProberStatus.Supported];
-              } else {
-                status = [ProberStatus.NotSupported];
-              }
-              return status;
-            });
-        })
-        .catch(() => {
-          const status: [ProberStatus] = [ProberStatus.Unknown];
-          return status;
-        });
-    });
+  const mediaKeysSystemAccess = await eme.requestMediaKeySystemAccess(keySystem, [
+    drmConfig,
+  ]);
+
+  let mediaKeys;
+  try {
+    mediaKeys = await mediaKeysSystemAccess.createMediaKeys();
+    if (!("getStatusForPolicy" in mediaKeys)) {
+      // do the check here, as mediaKeys can be either be native MediaKeys or
+      // custom MediaKeys from compat.
+      throw new Error("getStatusForPolicy API not available");
+    }
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error("Unknown Error");
+    log.error("MCP: `probeHDCPPolicy` didn't succeed to create a MediaKeys", error);
+    return "Unknown";
+  }
+  const result = await (
+    mediaKeys as {
+      getStatusForPolicy: (policy: {
+        minHdcpVersion: string;
+      }) => Promise<IMediaKeyStatus>;
+    }
+  ).getStatusForPolicy(policy);
+  if (result === "usable") {
+    return "Supported";
+  } else {
+    return "NotSupported";
+  }
 }

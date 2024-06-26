@@ -17,7 +17,6 @@
 import type { ICompatibleKeySystem, IMediaConfiguration, ProberStatus } from "../types";
 import probeFromDecodingConfig from "./decodingInfo";
 import probeFromDRMInfos from "./DRMInfos";
-import probeFromHDCPPolicy from "./HDCPPolicy";
 import probeFromMediaContentType from "./mediaContentType";
 import probeFromMediaContentTypeWithFeatures from "./mediaContentTypeWithFeatures";
 import probeFromMediaDisplayInfos from "./mediaDisplayInfos";
@@ -34,7 +33,6 @@ const probers: {
   matchMedia: probeFromMediaDisplayInfos,
   decodingInfos: probeFromDecodingConfig,
   requestMediaKeySystemAccess: probeFromDRMInfos,
-  getStatusForPolicy: probeFromHDCPPolicy,
 };
 
 export default probers;
