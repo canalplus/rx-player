@@ -21,35 +21,13 @@ import probeDecodingInfos from "../probers/decodingInfo";
 import probeHDCPPolicy from "../probers/HDCPPolicy";
 import probeContentType from "../probers/mediaContentType";
 import probeTypeWithFeatures from "../probers/mediaContentTypeWithFeatures";
+import probeMatchMedia from "../probers/mediaDisplayInfos";
 import type {
   IDisplayConfiguration,
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
 } from "../types";
 import { ProberStatus } from "../types";
-import type { IBrowserAPIS } from "./probeMediaConfiguration";
-import probeMediaConfiguration from "./probeMediaConfiguration";
-
-/**
- * Probe configuration and get status from result.
- * @param {Object} config
- * @param {Array.<Object>} browserAPIS
- * @returns {Promise.<string>}
- */
-function getStatusFromConfiguration(
-  config: IMediaConfiguration,
-  browserAPIS: IBrowserAPIS[],
-): Promise<string> {
-  return probeMediaConfiguration(config, browserAPIS).then(({ globalStatus }) => {
-    switch (globalStatus) {
-      case ProberStatus.Unknown:
-        return "Unknown";
-      case ProberStatus.Supported:
-        return "Supported";
-    }
-    return "NotSupported";
-  });
-}
 
 /**
  * A set of API to probe media capabilites.
@@ -168,13 +146,33 @@ const mediaCapabilitiesProber = {
   /**
    * Get display capabilites. Tells if display can output
    * with specific video and/or audio constrains.
+   * TODO I'm sure there's now newer APIs we can use for this (e.g. CSS etc.)
    * @param {Object} displayConfig
    * @returns {Promise}
    */
-  getDisplayCapabilities(displayConfig: IDisplayConfiguration): Promise<string> {
+  async getDisplayCapabilities(displayConfig: IDisplayConfiguration): Promise<string> {
     const config = { display: displayConfig };
-    const browserAPIS: IBrowserAPIS[] = ["matchMedia", "isTypeSupportedWithFeatures"];
-    return getStatusFromConfiguration(config, browserAPIS);
+    let matchMediaSupported: boolean | undefined;
+    try {
+      const status = probeMatchMedia(displayConfig);
+      if (status === "Supported") {
+        matchMediaSupported = true;
+      } else {
+        return "NotSupported";
+      }
+    } catch (err) {
+      // We do not care here
+    }
+
+    try {
+      const res = await probeTypeWithFeatures(config);
+      if (res[0] === ProberStatus.NotSupported) {
+        return "NotSupported";
+      }
+    } catch (err) {
+      // We do not care here
+    }
+    return matchMediaSupported === true ? "Supported" : "Unknown";
   },
 };
 
