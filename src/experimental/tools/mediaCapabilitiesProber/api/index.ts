@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import eme from "../../../../compat/eme";
 import arrayFind from "../../../../utils/array_find";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
 import type {
   ICompatibleKeySystem,
@@ -67,6 +69,38 @@ const mediaCapabilitiesProber = {
    */
   get LogLevel(): string {
     return log.getLevel();
+  },
+
+  async checkDrmConfiguration(
+    keySystemType: string,
+    keySystemConfiguration: IMediaKeySystemConfiguration[],
+    options?: {
+      timeout?: number | undefined;
+    },
+  ): Promise<MediaKeySystemConfiguration> {
+    if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
+      const error = new Error("EME not supported in current environment");
+      throw error;
+    }
+
+    let checkProm = eme.requestMediaKeySystemAccess(keySystemType, keySystemConfiguration);
+
+    let timeoutId;
+    const timeout = options?.timeout;
+    if (!isNullOrUndefined(timeout)) {
+      const timeoutProm = new Promise<never>((_, rej) => {
+        timeoutId = setTimeout(() => {
+          rej(new Error("`checkDrmConfiguration` call timeouted"));
+        }, timeout);
+      });
+
+      checkProm = Promise.race([timeoutProm, checkProm]);
+    }
+    const mksa = await checkProm;
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+    return mksa.getConfiguration()
   },
 
   /**
