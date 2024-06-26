@@ -17,7 +17,6 @@
 import eme from "../../../../compat/eme";
 import arrayFind from "../../../../utils/array_find";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import log from "../log";
 import type {
   ICompatibleKeySystem,
   IDisplayConfiguration,
@@ -55,22 +54,6 @@ function getStatusFromConfiguration(
  * and relies on different browser API to probe capabilites.
  */
 const mediaCapabilitiesProber = {
-  /**
-   * Set logger level
-   * @param {string} level
-   */
-  set LogLevel(level: string) {
-    log.setLevel(level, log.getFormat());
-  },
-
-  /**
-   * Get logger level
-   * @returns {string}
-   */
-  get LogLevel(): string {
-    return log.getLevel();
-  },
-
   async checkDrmConfiguration(
     keySystemType: string,
     keySystemConfiguration: IMediaKeySystemConfiguration[],
