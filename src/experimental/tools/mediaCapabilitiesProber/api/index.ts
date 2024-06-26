@@ -17,7 +17,10 @@
 import eme from "../../../../compat/eme";
 import arrayFind from "../../../../utils/array_find";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import log from "../log";
+import probeDecodingInfos from "../probers/decodingInfo";
 import probeHDCPPolicy from "../probers/HDCPPolicy";
+import probeContentType from "../probers/mediaContentType";
 import probeTypeWithFeatures from "../probers/mediaContentTypeWithFeatures";
 import type {
   ICompatibleKeySystem,
@@ -123,21 +126,45 @@ const mediaCapabilitiesProber = {
   /**
    * Get decoding capabilities from a given video and/or audio
    * configuration.
+   * TODO check alongside key system.
    * @param {Object} mediaConfig
    * @returns {Promise}
    */
-  getDecodingCapabilities(mediaConfig: IMediaConfiguration): Promise<string> {
+  async getDecodingCapabilities(mediaConfig: IMediaConfiguration): Promise<string> {
     const config = {
       type: mediaConfig.type,
       video: mediaConfig.video,
       audio: mediaConfig.audio,
     };
-    const browserAPIS: IBrowserAPIS[] = [
-      "isTypeSupported",
-      "isTypeSupportedWithFeatures",
-      "decodingInfos",
-    ];
-    return getStatusFromConfiguration(config, browserAPIS);
+
+    let isCodecSupported = false;
+    try {
+      const status = probeContentType(config);
+      if (status === "Supported") {
+        isCodecSupported = true;
+      } else if (status === "NotSupported") {
+        return "NotSupported";
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      log.error("MCP: probeContentType failed", error);
+    }
+
+    try {
+      const res = await probeTypeWithFeatures(config);
+      if (res[0] === ProberStatus.NotSupported) {
+        return "NotSupported";
+      }
+    } catch (err) {
+      // We do not care here
+    }
+
+    try {
+      const res = await probeDecodingInfos(config);
+      return res;
+    } catch (err) {
+      return isCodecSupported ? "Supported" : "Unknown";
+    }
   },
 
   /**
