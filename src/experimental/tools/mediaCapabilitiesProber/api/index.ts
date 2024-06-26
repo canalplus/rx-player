@@ -17,6 +17,8 @@
 import eme from "../../../../compat/eme";
 import arrayFind from "../../../../utils/array_find";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import probeHDCPPolicy from "../probers/HDCPPolicy";
+import probeTypeWithFeatures from "../probers/mediaContentTypeWithFeatures";
 import type {
   ICompatibleKeySystem,
   IDisplayConfiguration,
@@ -54,6 +56,18 @@ function getStatusFromConfiguration(
  * and relies on different browser API to probe capabilites.
  */
 const mediaCapabilitiesProber = {
+  /**
+   * @param {string} keySystemType - Reverse domain name of the wanted key
+   * system.
+   * @param {Array.<MediaKeySystemConfiguration>} keySystemConfiguration - DRM
+   * configuration wanted.
+   * @param {Object|undefined} [options]
+   * @param {number|undefined} [options.timeout] - Optional timeout in seconds,
+   * after which we'll abandon the check and return a rejecting Promise.
+   * @returns {Promise.<MediaKeySystemConfiguration>} - Resolved the
+   * MediaKeySystemConfiguration actually obtained if the given configuration is
+   * compatible or a rejected Promise if not.
+   */
   async checkDrmConfiguration(
     keySystemType: string,
     keySystemConfiguration: IMediaKeySystemConfiguration[],
@@ -66,7 +80,10 @@ const mediaCapabilitiesProber = {
       throw error;
     }
 
-    let checkProm = eme.requestMediaKeySystemAccess(keySystemType, keySystemConfiguration);
+    let checkProm = eme.requestMediaKeySystemAccess(
+      keySystemType,
+      keySystemConfiguration,
+    );
 
     let timeoutId;
     const timeout = options?.timeout;
@@ -83,29 +100,34 @@ const mediaCapabilitiesProber = {
     if (timeoutId !== undefined) {
       clearTimeout(timeoutId);
     }
-    return mksa.getConfiguration()
+    return mksa.getConfiguration();
   },
 
   /**
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
-   * @param {string} hdcp
+   * @param {string} hdcpVersion
    * @returns {Promise}
    */
-  getStatusForHDCP(hdcp: string): Promise<string> {
-    if (hdcp === undefined || hdcp.length === 0) {
-      return Promise.reject(
-        "MediaCapabilitiesProbers >>> Bad Arguments: " + "No HDCP Policy specified.",
-      );
+  async getStatusForHDCP(hdcpVersion: string): Promise<string> {
+    if (hdcpVersion === undefined || hdcpVersion.length === 0) {
+      throw new Error("Bad Arguments: " + "No HDCP Policy specified.");
     }
-    const config = {
-      hdcp,
-    };
-    const browserAPIS: IBrowserAPIS[] = [
-      "isTypeSupportedWithFeatures",
-      "getStatusForPolicy",
-    ];
-    return getStatusFromConfiguration(config, browserAPIS);
+    try {
+      const res = await probeTypeWithFeatures({ hdcp: hdcpVersion });
+      switch (res[0]) {
+        case ProberStatus.NotSupported:
+          return "NotSupported";
+        case ProberStatus.Supported:
+          return "Supported";
+        case ProberStatus.Unknown:
+          // continue
+          break;
+      }
+    } catch (err) {
+      // We do not care about this call erroring
+    }
+    return probeHDCPPolicy(hdcpVersion);
   },
 
   /**

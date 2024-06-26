@@ -37,77 +37,76 @@ type IGlobalScopeWithMSMediaKeysFeatures = typeof globalScope & {
 };
 
 /**
- * @returns {Promise}
+ * @returns {boolean}
  */
-function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
-  return new Promise((resolve) => {
-    if (!("MSMediaKeys" in globalScope)) {
-      throw new Error(
-        "MediaCapabilitiesProber >>> API_CALL: " + "MSMediaKeys API not available",
-      );
-    }
-    if (
-      !(
-        "isTypeSupportedWithFeatures" in
-        (globalScope as IGlobalScopeWithMSMediaKeysFeatures).MSMediaKeys
-      )
-    ) {
-      throw new Error(
-        "MediaCapabilitiesProber >>> API_CALL: " +
-          "isTypeSupportedWithFeatures not available",
-      );
-    }
-    resolve();
-  });
+function isTypeSupportedWithFeaturesAPIAvailable(): boolean {
+  if (!("MSMediaKeys" in globalScope)) {
+    // MSMediaKeys API not available
+    return false;
+  }
+  if (
+    !(
+      "isTypeSupportedWithFeatures" in
+      (globalScope as IGlobalScopeWithMSMediaKeysFeatures).MSMediaKeys
+    )
+  ) {
+    // isTypeSupportedWithFeatures not available
+    return false;
+  }
+  return true;
 }
 
 /**
+ * Rely on `MSMediaKeys`-only API `isTypeSupportedWithFeatures` to check for
+ * several potential features.
  * @param {Object} config
  * @returns {Promise}
  */
-export default function probeTypeWithFeatures(
+/* eslint-disable-next-line @typescript-eslint/require-await */
+export default async function probeTypeWithFeatures(
   config: IMediaConfiguration,
 ): Promise<[ProberStatus]> {
-  return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
-    const keySystem = config.keySystem;
+  if (!isTypeSupportedWithFeaturesAPIAvailable()) {
+    throw new Error("MSMediaKeys.isTypeSupportedWithFeatures is not available");
+  }
+  const keySystem = config.keySystem;
 
-    const type = (() => {
-      if (
-        keySystem === undefined ||
-        keySystem.type === undefined ||
-        keySystem.type.length === 0
-      ) {
-        return "org.w3.clearkey";
-      }
-      return keySystem.type;
-    })();
+  const type = (() => {
+    if (
+      keySystem === undefined ||
+      keySystem.type === undefined ||
+      keySystem.type.length === 0
+    ) {
+      return "org.w3.clearkey";
+    }
+    return keySystem.type;
+  })();
 
-    const features = formatConfig(config);
+  const features = formatConfig(config);
 
-    const result: ISupportWithFeatures = (
-      globalScope as IGlobalScopeWithMSMediaKeysFeatures
-    ).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
+  const result: ISupportWithFeatures = (
+    globalScope as IGlobalScopeWithMSMediaKeysFeatures
+  ).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
 
-    function formatSupport(support: ISupportWithFeatures): [ProberStatus] {
-      if (support === "") {
-        throw new Error(
-          "MediaCapabilitiesProber >>> API_CALL: " +
-            "Bad arguments for calling isTypeSupportedWithFeatures",
-        );
-      } else {
-        switch (support) {
-          case "Not Supported":
-            return [ProberStatus.NotSupported];
-          case "Maybe":
-            return [ProberStatus.Unknown];
-          case "Probably":
-            return [ProberStatus.Supported];
-          default:
-            return [ProberStatus.Unknown];
-        }
+  function formatSupport(support: ISupportWithFeatures): [ProberStatus] {
+    if (support === "") {
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " +
+          "Bad arguments for calling isTypeSupportedWithFeatures",
+      );
+    } else {
+      switch (support) {
+        case "Not Supported":
+          return [ProberStatus.NotSupported];
+        case "Maybe":
+          return [ProberStatus.Unknown];
+        case "Probably":
+          return [ProberStatus.Supported];
+        default:
+          return [ProberStatus.Unknown];
       }
     }
+  }
 
-    return formatSupport(result);
-  });
+  return formatSupport(result);
 }
