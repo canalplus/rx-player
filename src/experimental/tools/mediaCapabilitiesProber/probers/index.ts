@@ -15,9 +15,7 @@
  */
 
 import type { ICompatibleKeySystem, IMediaConfiguration, ProberStatus } from "../types";
-import probeFromDecodingConfig from "./decodingInfo";
 import probeFromDRMInfos from "./DRMInfos";
-import probeFromMediaContentType from "./mediaContentType";
 import probeFromMediaContentTypeWithFeatures from "./mediaContentTypeWithFeatures";
 import probeFromMediaDisplayInfos from "./mediaDisplayInfos";
 
@@ -28,10 +26,8 @@ const probers: {
     config: IMediaConfiguration,
   ) => Promise<[ProberStatus, IResultsFromAPI?]>;
 } = {
-  isTypeSupported: probeFromMediaContentType,
   isTypeSupportedWithFeatures: probeFromMediaContentTypeWithFeatures,
   matchMedia: probeFromMediaDisplayInfos,
-  decodingInfos: probeFromDecodingConfig,
   requestMediaKeySystemAccess: probeFromDRMInfos,
 };
 
