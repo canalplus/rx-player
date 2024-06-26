@@ -85,21 +85,11 @@ const mediaCapabilitiesProber = {
       keySystemConfiguration,
     );
 
-    let timeoutId;
     const timeout = options?.timeout;
     if (!isNullOrUndefined(timeout)) {
-      const timeoutProm = new Promise<never>((_, rej) => {
-        timeoutId = setTimeout(() => {
-          rej(new Error("`checkDrmConfiguration` call timeouted"));
-        }, timeout);
-      });
-
-      checkProm = Promise.race([timeoutProm, checkProm]);
+      checkProm = addTimeoutToPromise(checkProm, timeout);
     }
     const mksa = await checkProm;
-    if (timeoutId !== undefined) {
-      clearTimeout(timeoutId);
-    }
     return mksa.getConfiguration();
   },
 
@@ -107,7 +97,7 @@ const mediaCapabilitiesProber = {
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
    * @param {string} hdcpVersion
-   * @returns {Promise}
+   * @returns {Promise.<string>}
    */
   async getStatusForHDCP(hdcpVersion: string): Promise<string> {
     if (hdcpVersion === undefined || hdcpVersion.length === 0) {
@@ -227,5 +217,26 @@ const mediaCapabilitiesProber = {
     return getStatusFromConfiguration(config, browserAPIS);
   },
 };
+
+/**
+ * @param {Promise} prom
+ * @param {number} timeout
+ * @returns {Promise}
+ */
+function addTimeoutToPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutProm = new Promise<never>((_, rej) => {
+    timeoutId = setTimeout(() => {
+      rej(new Error("`checkDrmConfiguration` call timeouted"));
+    }, timeout);
+  });
+
+  return Promise.race([timeoutProm, prom]).then((res) => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+    return res;
+  });
+}
 
 export default mediaCapabilitiesProber;
