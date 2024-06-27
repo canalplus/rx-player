@@ -55,9 +55,6 @@ const mediaCapabilitiesProber = {
    * system.
    * @param {Array.<MediaKeySystemConfiguration>} keySystemConfiguration - DRM
    * configuration wanted.
-   * @param {Object|undefined} [options]
-   * @param {number|undefined} [options.timeout] - Optional timeout in seconds,
-   * after which we'll abandon the check and return a rejecting Promise.
    * @returns {Promise.<MediaKeySystemConfiguration>} - Resolved the
    * MediaKeySystemConfiguration actually obtained if the given configuration is
    * compatible or a rejected Promise if not.
@@ -65,25 +62,16 @@ const mediaCapabilitiesProber = {
   async checkDrmConfiguration(
     keySystemType: string,
     keySystemConfiguration: IMediaKeySystemConfiguration[],
-    options?: {
-      timeout?: number | undefined;
-    },
   ): Promise<MediaKeySystemConfiguration> {
     if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
       const error = new Error("EME not supported in current environment");
       throw error;
     }
 
-    let checkProm = eme.requestMediaKeySystemAccess(
+    const mksa = await eme.requestMediaKeySystemAccess(
       keySystemType,
       keySystemConfiguration,
     );
-
-    const timeout = options?.timeout;
-    if (!isNullOrUndefined(timeout)) {
-      checkProm = addTimeoutToPromise(checkProm, timeout);
-    }
-    const mksa = await checkProm;
     return mksa.getConfiguration();
   },
 
@@ -199,30 +187,5 @@ const mediaCapabilitiesProber = {
     return matchMediaSupported === true ? "Supported" : "Unknown";
   },
 };
-
-/**
- * Create a new Promise from the given Promise `prom`, which rejects if the
- * amount in milliseconds defined by `timeout` has elapsed before that Promise
- * resolved.
- * @param {Promise} prom - The base promise.
- * @param {number} timeout - Maximum amount of time in milliseconds before
- * `prom` should be fullfilled.
- * @returns {Promise} - Equivalent to `prom`, which now rejects if it takes more
- * than `timeout` milliseconds to fullfil.
- */
-async function addTimeoutToPromise<T>(prom: Promise<T>, timeout: number): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeoutProm = new Promise<never>((_, rej) => {
-    timeoutId = setTimeout(() => {
-      rej(new Error("`checkDrmConfiguration` call timeouted"));
-    }, timeout);
-  });
-
-  const res = await Promise.race([timeoutProm, prom]);
-  if (timeoutId !== undefined) {
-    clearTimeout(timeoutId);
-  }
-  return res;
-}
 
 export default mediaCapabilitiesProber;
