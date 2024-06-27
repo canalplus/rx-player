@@ -64,44 +64,34 @@ const generateRequestID = idGenerator();
  * Create an `ISegmentFetcher` object which will allow to easily fetch and parse
  * segments.
  * An `ISegmentFetcher` also implements a retry mechanism, based on the given
- * `options` argument, which may retry a segment request when it fails.
+ * `requestOptions` argument, which may retry a segment request when it fails.
  *
- * @param {string} bufferType - Type of  buffer concerned (e.g. `"audio"`,
- * `"video"`, `"text" etc.)
- * @param {Object} pipeline - The transport-specific logic allowing to load
- * segments of the given buffer type and transport protocol (e.g. DASH).
- * @param {Object|null} cdnPrioritizer - Abstraction allowing to synchronize,
- * update and keep track of the priorization of the CDN to use to load any given
- * segment, in cases where multiple ones are available.
- *
- * Can be set to `null` in which case a minimal priorization logic will be used
- * instead.
- * @param {Object|null} cmcdDataBuilder - Optional module allowing to collect
- * "Common Media Client Data" (a.k.a. CMCD) for the CDN.
- * @param {Object} lifecycleCallbacks - Callbacks that can be registered to be
- * informed when new requests are made, ended, new metrics are available etc.
- * This should be mainly useful to implement an adaptive logic relying on those
- * metrics and events.
- * @param {Object} options - Various tweaking options allowing to configure the
- * behavior of the returned `ISegmentFetcher`.
+ * @param {Object} args
  * @returns {Function}
  */
-export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
-  bufferType: IBufferType,
-  pipeline: ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
-  cdnPrioritizer: CdnPrioritizer | null,
-  cmcdDataBuilder: CmcdDataBuilder | null,
-  lifecycleCallbacks: ISegmentFetcherLifecycleCallbacks,
-  options: ISegmentFetcherOptions,
-): ISegmentFetcher<TSegmentDataType> {
+export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
+  bufferType,
+  pipeline,
+  cdnPrioritizer,
+  cmcdDataBuilder,
+  eventListeners,
+  requestOptions,
+}: ISegmentFetcherArguments<
+  TLoadedFormat,
+  TSegmentDataType
+>): ISegmentFetcher<TSegmentDataType> {
   let connectionTimeout;
-  if (options.connectionTimeout === undefined || options.connectionTimeout < 0) {
+  if (
+    requestOptions.connectionTimeout === undefined ||
+    requestOptions.connectionTimeout < 0
+  ) {
     connectionTimeout = undefined;
   } else {
-    connectionTimeout = options.connectionTimeout;
+    connectionTimeout = requestOptions.connectionTimeout;
   }
-  const requestOptions: ISegmentLoaderOptions = {
-    timeout: options.requestTimeout < 0 ? undefined : options.requestTimeout,
+  const pipelineRequestOptions: ISegmentLoaderOptions = {
+    timeout:
+      requestOptions.requestTimeout < 0 ? undefined : requestOptions.requestTimeout,
     connectionTimeout,
     cmcdPayload: undefined,
   };
@@ -190,7 +180,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
           return; // request already termminated
         }
         if (info.totalSize !== undefined && info.size < info.totalSize) {
-          lifecycleCallbacks.onProgress?.({
+          eventListeners.onProgress?.({
             duration: info.duration,
             size: info.size,
             totalSize: info.totalSize,
@@ -220,7 +210,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     }
 
     log.debug("SF: Beginning request", segmentIdString);
-    lifecycleCallbacks.onRequestBegin?.({
+    eventListeners.onRequestBegin?.({
       requestTimestamp: getTimestamp(),
       id: requestId,
       content,
@@ -233,7 +223,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         content.representation.cdnMetadata,
         cdnPrioritizer,
         callLoaderWithUrl,
-        objectAssign({ onRetry }, options),
+        objectAssign({ onRetry }, requestOptions),
         cancellationSignal,
       );
 
@@ -261,7 +251,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         // The current task could have been canceled as a result of one
         // of the previous callbacks call. In that case, we don't want to send
         // a "requestEnd" again as it has already been sent on cancellation.
-        lifecycleCallbacks.onRequestEnd?.({ id: requestId });
+        eventListeners.onRequestEnd?.({ id: requestId });
       }
       cancellationSignal.deregister(onCancellation);
     } catch (err) {
@@ -272,7 +262,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         throw err;
       }
       log.debug("SF: Segment request failed", segmentIdString);
-      lifecycleCallbacks.onRequestEnd?.({ id: requestId });
+      eventListeners.onRequestEnd?.({ id: requestId });
       throw errorSelector(err);
     }
 
@@ -282,7 +272,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
       }
       log.debug("SF: Segment request cancelled", segmentIdString);
       requestInfo = null;
-      lifecycleCallbacks.onRequestEnd?.({ id: requestId });
+      eventListeners.onRequestEnd?.({ id: requestId });
     }
 
     /**
@@ -293,11 +283,12 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     function callLoaderWithUrl(
       cdnMetadata: ICdnMetadata | null,
     ): ReturnType<ISegmentLoader<TLoadedFormat>> {
-      requestOptions.cmcdPayload = cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
+      pipelineRequestOptions.cmcdPayload =
+        cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
       return loadSegment(
         cdnMetadata,
         context,
-        requestOptions,
+        pipelineRequestOptions,
         cancellationSignal,
         loaderCallbacks,
       );
@@ -375,7 +366,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
         parsedChunks.every((isParsed) => isParsed)
       ) {
         metricsSent = true;
-        lifecycleCallbacks.onMetrics?.({
+        eventListeners.onMetrics?.({
           size: requestInfo.size,
           requestDuration: requestInfo.requestDuration,
           content,
@@ -466,7 +457,7 @@ export interface ISegmentFetcherLifecycleCallbacks {
   onMetrics?: (arg: IMetricsCallbackPayload) => void;
 }
 
-/** Options allowing to configure an `ISegmentFetcher`'s behavior. */
+/** requestOptions allowing to configure an `ISegmentFetcher`'s behavior. */
 export interface ISegmentFetcherOptions {
   /**
    * Initial delay to wait if a request fails before making a new request, in
@@ -484,7 +475,7 @@ export interface ISegmentFetcherOptions {
    */
   maxRetry: number;
   /**
-   * Timeout after which request are aborted and, depending on other options,
+   * Timeout after which request are aborted and, depending on other requestOptions,
    * retried.
    * To set to `-1` for no timeout.
    */
@@ -498,11 +489,10 @@ export interface ISegmentFetcherOptions {
 }
 
 /**
- * @param {string} bufferType
- * @param {Object}
+ * @param {Object} baseOptions
  * @returns {Object}
  */
-export function getSegmentFetcherOptions({
+export function getSegmentFetcherRequestOptions({
   maxRetry,
   lowLatencyMode,
   requestTimeout,
@@ -533,4 +523,40 @@ export function getSegmentFetcherOptions({
     connectionTimeout:
       connectionTimeout === undefined ? DEFAULT_CONNECTION_TIMEOUT : connectionTimeout,
   };
+}
+
+export interface ISegmentFetcherArguments<TLoadedFormat, TSegmentDataType> {
+  /** Type of  buffer concerned (e.g. `"audio"`, `"video"`, `"text" etc.) */
+  bufferType: IBufferType;
+  /**
+   * The transport-specific logic allowing to load segments of the given buffer
+   * type and transport protocol (e.g. DASH).
+   */
+  pipeline: ISegmentPipeline<TLoadedFormat, TSegmentDataType>;
+  /**
+   * Abstraction allowing to synchronize, update and keep track of the
+   * priorization of the CDN to use to load any given segment, in cases where
+   * multiple ones are available.
+   *
+   * Can be set to `null` in which case a minimal priorization logic will be used
+   * instead.
+   */
+  cdnPrioritizer: CdnPrioritizer | null;
+  /**
+   * Optional module allowing to collect "Common Media Client Data" (a.k.a. CMCD)
+   * for the CDN.
+   */
+  cmcdDataBuilder: CmcdDataBuilder | null;
+  /**
+   * Callbacks that can be registered to be informed when new requests are made,
+   * ended, new metrics are available etc.
+   * This should be mainly useful to implement an adaptive logic relying on those
+   * metrics and events.
+   */
+  eventListeners: ISegmentFetcherLifecycleCallbacks;
+  /**
+   * Various tweaking requestOptions allowing to configure the behavior of the returned
+   * `ISegmentFetcher` regarding segment requests.
+   */
+  requestOptions: ISegmentFetcherOptions;
 }

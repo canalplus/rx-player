@@ -180,21 +180,21 @@ export default class VideoThumbnailLoader {
     let lastRepInfo: IVideoThumbnailLoaderRepresentationInfo;
     if (this._lastRepresentationInfo === null) {
       const lastRepInfoCleaner = new TaskCanceller();
-      const segmentFetcher = createSegmentFetcher(
-        "video",
-        loader.video,
-        null,
-        null,
-        // We don't care about the SegmentFetcher's lifecycle events
-        {},
-        {
+      const segmentFetcher = createSegmentFetcher({
+        bufferType: "video",
+        pipeline: loader.video,
+        cdnPrioritizer: null,
+        cmcdDataBuilder: null,
+        requestOptions: {
           baseDelay: 0,
           maxDelay: 0,
           maxRetry: 0,
           requestTimeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
           connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
         },
-      ) as ISegmentFetcher<ArrayBuffer | Uint8Array>;
+        // We don't care about the SegmentFetcher's lifecycle events
+        eventListeners: {},
+      }) as ISegmentFetcher<ArrayBuffer | Uint8Array>;
       const initSegment = content.representation.index.getInitSegment();
       const initSegmentUniqueId =
         initSegment !== null ? content.representation.uniqueId : null;
