@@ -92,15 +92,6 @@ _arguments_:
   defined in
   [the EME w3c specification.](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
 
-- _options_ (`Object|undefined`): Can be set to an object with the following keys:
-
-  - _timeout_ (`number|undefined`): Optional timeout in seconds, If set and one of the
-    lower-level API calls do not answer, we will consider the configuration as not
-    supported.
-
-    XXX TODO And what happens if in the future `checkDrmConfiguration` actually perform
-    multiple API Calls?
-
 _return value_: `Object`
 
 Probe the support of the given key sytem configuration. If it is supported, this call will
