@@ -14,7 +14,7 @@ import type {
   IAudioRepresentationsSwitchingMode,
   ICmcdOptions,
   IVideoRepresentationsSwitchingMode,
-} from "../../../../src/public_types";
+} from "../../../src/public_types";
 
 const { useCallback } = React;
 

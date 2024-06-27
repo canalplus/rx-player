@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IAudioRepresentationsSwitchingMode } from "../../../../../src/public_types";
+import { IAudioRepresentationsSwitchingMode } from "../../../../src/public_types";
 import Select from "../Select";
 
 /**

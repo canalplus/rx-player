@@ -1,10 +1,10 @@
 import type { IPlayerModuleState } from ".";
-import type RxPlayer from "../../../../../src";
+import type RxPlayer from "../../../../src";
 import type {
   IBrokenRepresentationsLockContext,
   IPlayerError,
   IVideoTrack,
-} from "../../../../../src/public_types";
+} from "../../../../src/public_types";
 import type { IStateUpdater } from "../../lib/declareModule";
 
 const POSITION_UPDATES_INTERVAL = 100;

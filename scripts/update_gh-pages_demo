@@ -3,7 +3,7 @@
 # Update gh-pages demo
 # ====================
 #
-# This script allows to automatically update the full demo on the gh-pages
+# This script allows to automatically update the demo on the gh-pages
 # branch.
 #
 # To use it:
@@ -47,14 +47,14 @@ tmpWorkerFile=$(mktemp)
 tmpMpdWasmFile=$(mktemp)
 tmpDemoList=$(mktemp)
 
-cp -r demo/full/fonts $tmpFontsDir -v
-cp -r demo/full/assets $tmpAssetsDir -v
-cp -r demo/full/styles $tmpStylesDir -v
-cp demo/full/bundle.js $tmpDemoFile -v
-cp demo/full/index.html $tmpIndexFile -v
-cp demo/full/plus.ico $tmpFaviconFile -v
-cp demo/full/worker.js $tmpWorkerFile -v
-cp demo/full/mpd-parser.wasm $tmpMpdWasmFile -v
+cp -r demo/fonts $tmpFontsDir -v
+cp -r demo/assets $tmpAssetsDir -v
+cp -r demo/styles $tmpStylesDir -v
+cp demo/bundle.js $tmpDemoFile -v
+cp demo/index.html $tmpIndexFile -v
+cp demo/plus.ico $tmpFaviconFile -v
+cp demo/worker.js $tmpWorkerFile -v
+cp demo/mpd-parser.wasm $tmpMpdWasmFile -v
 cp scripts/generate_demo_list.mjs $tmpDemoList -v
 
 # update gh-pages

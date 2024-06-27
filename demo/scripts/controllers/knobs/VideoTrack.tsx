@@ -1,8 +1,8 @@
 import * as React from "react";
+import type { IVideoTrack, IAvailableVideoTrack } from "../../../../src/public_types";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";
-import type { IVideoTrack, IAvailableVideoTrack } from "../../../../../src/public_types";
 
 function findVideoTrackIndex(
   videoTrack: IVideoTrack,

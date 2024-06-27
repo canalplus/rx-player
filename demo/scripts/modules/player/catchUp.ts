@@ -1,7 +1,7 @@
 // Distance from live edge we try to reach when the catching up button
 
 import type { IPlayerModuleState } from ".";
-import type RxPlayer from "../../../../../src";
+import type RxPlayer from "../../../../src";
 import type { IStateUpdater } from "../../lib/declareModule";
 
 // is enabled.

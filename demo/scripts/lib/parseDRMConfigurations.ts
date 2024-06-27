@@ -1,4 +1,4 @@
-import type { IKeySystemOption } from "../../../../src/public_types";
+import type { IKeySystemOption } from "../../../src/public_types";
 import { utf8ToStr, strToUtf8, leUtf16ToStr } from "./bytes";
 
 export default async function parseDRMConfigurations(
