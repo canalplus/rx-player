@@ -1,11 +1,12 @@
 import { mediaCapabilitiesProber } from "../../../../dist/es2017/experimental/tools";
 import { describe, it, expect } from "vitest";
 
+const saveRMKSA = navigator.requestMediaKeySystemAccess;
+
 /**
  * Mock requestMediaKeySystemAccess delivering mediaKeySystemAccess.
  */
 function mockPositivesResultsRMKSA() {
-  const saveRMKSA = navigator.requestMediaKeySystemAccess;
   const saveSetMediaKeys = HTMLMediaElement.prototype.setMediaKeys;
   HTMLMediaElement.prototype.setMediaKeys = () => {
     return Promise.resolve();
@@ -45,6 +46,7 @@ function mockPositivesResultsRMKSA() {
       });
     });
   };
+
   return function reset() {
     navigator.requestMediaKeySystemAccess = saveRMKSA;
     HTMLMediaElement.prototype.setMediaKeys = saveSetMediaKeys;
@@ -57,12 +59,11 @@ function mockPositivesResultsRMKSA() {
  */
 function mockMixedResultsRMKSA() {
   let i = 0;
-  const saveRMKSA = navigator.requestMediaKeySystemAccess;
   navigator.requestMediaKeySystemAccess = (type, configurations) => {
     return new Promise((resolve, reject) => {
       i++;
       if (i % 2) {
-        reject();
+        reject(new Error("Incompatible configuration"));
         return;
       }
       resolve({
@@ -73,23 +74,29 @@ function mockMixedResultsRMKSA() {
         createMediaKeys: () => {
           return {
             setServerCertificate: () => Promise.resolve(),
+
             createSession: () => {
               return {
                 addEventListener: () => {
                   /* noop */
                 },
+
                 removeEventListener: () => {
                   /* noop */
                 },
+
                 load: () => {
                   return Promise.reject(new Error("Do not load"));
                 },
+
                 generateRequest: () => {
                   return Promise.resolve();
                 },
+
                 close: () => {
                   return Promise.resolve();
                 },
+
                 update: () => {},
               };
             },
@@ -107,79 +114,87 @@ function mockMixedResultsRMKSA() {
  * Mock requestMediaKeySystemAccess rejecting.
  */
 function mockNegativeResultsRMKSA() {
-  const saveRMKSA = navigator.requestMediaKeySystemAccess;
   navigator.requestMediaKeySystemAccess = () => {
-    return Promise.reject();
+    return Promise.reject(new Error("Incompatible configuration"));
   };
   return function reset() {
     navigator.requestMediaKeySystemAccess = saveRMKSA;
   };
 }
 
-describe("mediaCapabilitiesProber - getCompatibleDRMConfigurations", () => {
-  const mksConfiguration = {
-    initDataTypes: ["cenc"],
-    videoCapabilities: [
-      {
-        contentType: 'video/mp4;codecs="avc1.4d401e"', // standard mp4 codec
-        robustness: "HW_SECURE_CRYPTO",
-      },
-      {
-        contentType: 'video/mp4;codecs="avc1.4d401e"',
-        robustness: "SW_SECURE_DECODE",
-      },
-    ],
-  };
+describe("mediaCapabilitiesProber - checkDrmConfiguration", () => {
+  const mksConfiguration = [
+    {
+      initDataTypes: ["cenc"],
+      videoCapabilities: [
+        {
+          contentType: 'video/mp4;codecs="avc1.4d401e"', // standard mp4 codec
+          robustness: "HW_SECURE_CRYPTO",
+        },
+        {
+          contentType: 'video/mp4;codecs="avc1.4d401e"',
+          robustness: "SW_SECURE_DECODE",
+        },
+      ],
+    },
+  ];
 
   const keySystems = [
     // Let's consider this one as a compatible key system configuration
-    { type: "com.widevine.alpha", configuration: mksConfiguration },
+    ["com.widevine.alpha", mksConfiguration],
 
     // Let's consider this one as not compatible
-    { type: "com.microsoft.playready", configuration: mksConfiguration },
+    ["com.microsoft.playready", mksConfiguration],
   ];
 
-  it("Should support all configurations.", async () => {
+  it("Should resolve when the given configuration is supported.", async () => {
     const resetRMKSA = mockPositivesResultsRMKSA();
-    const results =
-      await mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems);
-
-    expect(results.length).to.be.equal(2);
-    for (let i = 0; i < results.length; i++) {
-      expect(results[i].configuration).not.to.be.undefined;
-      expect(results[i].type).not.to.be.undefined;
-      expect(results[i].compatibleConfiguration).not.to.be.undefined;
-    }
+    const results1 = await mediaCapabilitiesProber.checkDrmConfiguration(
+      ...keySystems[0],
+    );
+    expect(results1).not.to.be.undefined;
+    const results2 = await mediaCapabilitiesProber.checkDrmConfiguration(
+      ...keySystems[1],
+    );
+    expect(results2).not.to.be.undefined;
     resetRMKSA();
   });
 
-  it("Should support half of configurations only.", async () => {
+  it("Should reject when configurations are not supported yet resolve when some are.", async () => {
     const resetRMKSA = mockMixedResultsRMKSA();
-    const results =
-      await mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems);
-
-    expect(results.length).to.be.equal(2);
-    expect(results[0].configuration).not.to.be.undefined;
-    expect(results[0].type).not.to.be.undefined;
-    expect(results[0].compatibleConfiguration).to.be.undefined;
-    expect(results[1].configuration).not.to.be.undefined;
-    expect(results[1].type).not.to.be.undefined;
-    expect(results[1].compatibleConfiguration).not.to.be.undefined;
+    await mediaCapabilitiesProber.checkDrmConfiguration(...keySystems[0]).then(
+      () => {
+        throw new Error("Should not have resolved");
+      },
+      (err) => {
+        expect(err).toBeInstanceOf(Error);
+      },
+    );
+    const results2 = await mediaCapabilitiesProber.checkDrmConfiguration(
+      ...keySystems[1],
+    );
+    expect(results2).not.to.be.undefined;
     resetRMKSA();
   });
 
-  it("Should not support configurations.", async () => {
+  it("Should reject when no configuration is supported", async () => {
     const resetRMKSA = mockNegativeResultsRMKSA();
-    const results =
-      await mediaCapabilitiesProber.getCompatibleDRMConfigurations(keySystems);
-
-    expect(results.length).to.be.equal(2);
-    expect(results[0].configuration).not.to.be.undefined;
-    expect(results[0].type).not.to.be.undefined;
-    expect(results[0].compatibleConfiguration).to.be.undefined;
-    expect(results[1].configuration).not.to.be.undefined;
-    expect(results[1].type).not.to.be.undefined;
-    expect(results[1].compatibleConfiguration).to.be.undefined;
+    await mediaCapabilitiesProber.checkDrmConfiguration(...keySystems[0]).then(
+      () => {
+        throw new Error("Should not have resolved");
+      },
+      (err) => {
+        expect(err).toBeInstanceOf(Error);
+      },
+    );
+    await mediaCapabilitiesProber.checkDrmConfiguration(...keySystems[1]).then(
+      () => {
+        throw new Error("Should not have resolved");
+      },
+      (err) => {
+        expect(err).toBeInstanceOf(Error);
+      },
+    );
     resetRMKSA();
   });
 });
