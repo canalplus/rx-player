@@ -14,15 +14,101 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { IMediaConfiguration } from "../../types";
-import { findDefaultVideoCodec } from "../defaultCodecsFinder";
+import globalScope from "../../../../utils/global_scope";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type { IMediaConfiguration } from "../types";
+import { findDefaultVideoCodec } from "./defaultCodecsFinder";
+
+type ISupportWithFeatures = "" | "Maybe" | "Not Supported" | "Probably";
+
+type IGlobalScopeWithMSMediaKeysFeatures = typeof globalScope & {
+  MSMediaKeys: {
+    isTypeSupportedWithFeatures: (
+      type: string,
+      features: string | null,
+    ) => ISupportWithFeatures;
+  };
+};
+
+/**
+ * @returns {boolean}
+ */
+function isTypeSupportedWithFeaturesAPIAvailable(): boolean {
+  if (!("MSMediaKeys" in globalScope)) {
+    // MSMediaKeys API not available
+    return false;
+  }
+  if (
+    !(
+      "isTypeSupportedWithFeatures" in
+      (globalScope as IGlobalScopeWithMSMediaKeysFeatures).MSMediaKeys
+    )
+  ) {
+    // isTypeSupportedWithFeatures not available
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Rely on `MSMediaKeys`-only API `isTypeSupportedWithFeatures` to check for
+ * several potential features.
+ * @param {Object} config
+ * @returns {Promise}
+ */
+/* eslint-disable-next-line @typescript-eslint/require-await */
+export default async function probeTypeWithFeatures(
+  config: IMediaConfiguration,
+): Promise<"Supported" | "NotSupported" | "Unknown"> {
+  if (!isTypeSupportedWithFeaturesAPIAvailable()) {
+    throw new Error("MSMediaKeys.isTypeSupportedWithFeatures is not available");
+  }
+  const keySystem = config.keySystem;
+
+  const type = (() => {
+    if (
+      keySystem === undefined ||
+      keySystem.type === undefined ||
+      keySystem.type.length === 0
+    ) {
+      return "org.w3.clearkey";
+    }
+    return keySystem.type;
+  })();
+
+  const features = formatTypeSupportedWithFeaturesConfigForAPI(config);
+
+  const result: ISupportWithFeatures = (
+    globalScope as IGlobalScopeWithMSMediaKeysFeatures
+  ).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
+
+  function formatSupport(
+    support: ISupportWithFeatures,
+  ): "NotSupported" | "Unknown" | "Supported" {
+    if (support === "") {
+      throw new Error("Bad arguments for calling isTypeSupportedWithFeatures");
+    } else {
+      switch (support) {
+        case "Not Supported":
+          return "NotSupported";
+        case "Maybe":
+          return "Unknown";
+        case "Probably":
+          return "Supported";
+        default:
+          return "Unknown";
+      }
+    }
+  }
+
+  return formatSupport(result);
+}
 
 /**
  * @param {Object} config
  * @returns {string|null}
  */
-export default function formatTypeSupportedWithFeaturesConfigForAPI(
+function formatTypeSupportedWithFeaturesConfigForAPI(
   config: IMediaConfiguration,
 ): string | null {
   const { video, audio, hdcp: outputHdcp, display } = config;

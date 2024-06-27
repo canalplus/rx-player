@@ -27,26 +27,19 @@ export default function probeMatchMedia(
 ): "Supported" | "NotSupported" {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   if (typeof globalScope.matchMedia !== "function") {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " + "matchMedia not available",
-    );
+    throw new Error("matchMedia API not available");
   }
   if (
     isNullOrUndefined(config.display) ||
     config.display.colorSpace === undefined ||
     config.display.colorSpace.length === 0
   ) {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling matchMedia.",
-    );
+    throw new Error("Not enough arguments for calling matchMedia.");
   }
 
   const match = globalScope.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
   if (match.media === "not all") {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " + "Bad arguments for calling matchMedia.",
-    );
+    throw new Error("Bad arguments for calling matchMedia.");
   }
   return match.matches ? "Supported" : "NotSupported";
 }

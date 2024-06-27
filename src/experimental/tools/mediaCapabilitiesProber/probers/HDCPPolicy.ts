@@ -35,7 +35,7 @@ export default async function probeHDCPPolicy(
   hdcpVersion: string,
 ): Promise<"Unknown" | "Supported" | "NotSupported"> {
   if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
-    return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " + "API not available");
+    return Promise.reject(new Error("EME API not available"));
   }
 
   const hdcpString = "hdcp-" + hdcpVersion;
@@ -60,9 +60,8 @@ export default async function probeHDCPPolicy(
     drmConfig,
   ]);
 
-  let mediaKeys;
+  const mediaKeys = await mediaKeysSystemAccess.createMediaKeys();
   try {
-    mediaKeys = await mediaKeysSystemAccess.createMediaKeys();
     if (!("getStatusForPolicy" in mediaKeys)) {
       // do the check here, as mediaKeys can be either be native MediaKeys or
       // custom MediaKeys from compat.
