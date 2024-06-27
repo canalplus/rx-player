@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-import { canRelyOnRequestMediaKeySystemAccess } from "../../../../compat/can_rely_on_request_media_key_system_access";
-import eme from "../../../../compat/eme";
+import { canRelyOnRequestMediaKeySystemAccess } from "../../../compat/can_rely_on_request_media_key_system_access";
+import eme from "../../../compat/eme";
 import {
   DUMMY_PLAY_READY_HEADER,
   generatePlayReadyInitData,
-} from "../../../../compat/generate_init_data";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import log from "../log";
-import probeDecodingInfos from "../probers/decodingInfo";
-import probeHDCPPolicy from "../probers/HDCPPolicy";
-import probeContentType from "../probers/mediaContentType";
-import probeTypeWithFeatures from "../probers/mediaContentTypeWithFeatures";
-import probeMatchMedia from "../probers/mediaDisplayInfos";
+} from "../../../compat/generate_init_data";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import log from "./log";
+import probeDecodingInfos from "./probers/decodingInfo";
+import probeHDCPPolicy from "./probers/HDCPPolicy";
+import probeTypeWithFeatures from "./probers/isTypeSupportedWithFeatures";
+import probeContentType from "./probers/mediaContentType";
+import probeMatchMedia from "./probers/mediaDisplayInfos";
 import type {
   IDisplayConfiguration,
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
-} from "../types";
+} from "./types";
 
 /**
  * A set of API to probe media capabilites.
@@ -113,8 +113,18 @@ const mediaCapabilitiesProber = {
   /**
    * Get HDCP status. Evaluates if current equipement support given
    * HDCP revision.
-   * @param {string} hdcpVersion
-   * @returns {Promise.<string>}
+   * @param {string} hdcpVersion - The wanted HDCP version to test (e.g.
+   * `"1.1"`).
+   * @returns {Promise.<string>} - Returns a Promise which rejects if the
+   * browser API we need to rely on unexpectedly fail.
+   *
+   * If they resolve, resolve with one of the following string:
+   *
+   *   - `"Supported"`: The HDCP version is probably supported
+   *
+   *   - `"NotSupported"`: The HDCP version is probably not supported
+   *
+   *   - `"Unknown"`: It is unknown if the HDCP version may be supported or not.
    */
   async getStatusForHDCP(hdcpVersion: string): Promise<string> {
     if (hdcpVersion === undefined || hdcpVersion.length === 0) {

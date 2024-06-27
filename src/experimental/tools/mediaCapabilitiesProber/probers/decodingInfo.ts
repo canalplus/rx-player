@@ -64,10 +64,7 @@ export default async function probeDecodingInfos(
     config.audio.samplerate !== undefined;
 
   if (!hasVideoConfig && !hasAudioConfig) {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling mediaCapabilites.",
-    );
+    throw new Error("Not enough arguments for calling mediaCapabilites.");
   }
 
   try {

@@ -14,9 +14,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     const probeMediaContentType = (
       await vi.importActual("../../probers/mediaContentType")
     ).default as typeof IProbeMediaContentType;
-    expect(() => probeMediaContentType({})).toThrowError(
-      "MediaCapabilitiesProber >>> API_CALL: " + "MediaSource API not available",
-    );
+    expect(() => probeMediaContentType({})).toThrowError("MediaSource API not available");
   });
 
   it("should throw if no compatible isTypeSupported API", async () => {
@@ -29,7 +27,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       await vi.importActual("../../probers/mediaContentType")
     ).default as typeof IProbeMediaContentType;
     expect(() => probeMediaContentType({})).toThrowError(
-      "MediaCapabilitiesProber >>> API_CALL: " + "isTypeSupported not available",
+      "MediaSource.isTypeSupported API not available",
     );
   });
 
@@ -49,12 +47,11 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
 
     expect.assertions(1);
     expect(() => probeMediaContentType(config)).toThrowError(
-      "MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling isTypeSupported.",
+      "Not enough arguments for calling isTypeSupported.",
     );
   });
 
-  it("should resolve with `Supported` when video contentType is supported", async () => {
+  it("should return `Supported` when video contentType is supported", async () => {
     const mockIsTypeSupported = vi.fn(() => true);
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
@@ -72,12 +69,11 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
-    const support = probeMediaContentType(config);
-    expect(support).toEqual("Supported");
+    expect(probeMediaContentType(config)).toEqual("Supported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should resolve with `Supported` when audio contentType is supported", async () => {
+  it("should return `Supported` when audio contentType is supported", async () => {
     const mockIsTypeSupported = vi.fn(() => true);
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
@@ -95,12 +91,11 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
-    const support = probeMediaContentType(config);
-    expect(support).toEqual("Supported");
+    expect(probeMediaContentType(config)).toEqual("Supported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should resolve with `Supported` when both contentTypes are supported", async () => {
+  it("should return `Supported` when both contentTypes are supported", async () => {
     const mockIsTypeSupported = vi.fn(() => true);
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
@@ -120,10 +115,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       await vi.importActual("../../probers/mediaContentType")
     ).default as typeof IProbeMediaContentType;
 
-    expect.assertions(2);
-    const res = probeMediaContentType(config);
-    expect(res).toEqual("Supported");
-    expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
+    expect(probeMediaContentType(config)).toEqual("Supported");
+    expect(mockIsTypeSupported).toHaveBeenCalledTimes(2);
   });
 
   it("should return `NotSupported` when audio contentType is not supported", async () => {
@@ -144,8 +137,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
-    const res = probeMediaContentType(config);
-    expect(res).toEqual("NotSupported");
+    expect(probeMediaContentType(config)).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -167,12 +159,11 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
-    const res = probeMediaContentType(config);
-    expect(res).toEqual("NotSupported");
+    expect(probeMediaContentType(config)).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
-  it("should resolve with `NotSupported` when contentTypes are not supported", async () => {
+  it("should return `NotSupported` when contentTypes are not supported", async () => {
     const mockIsTypeSupported = vi.fn(() => false);
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {
@@ -193,8 +184,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
-    const res = probeMediaContentType(config);
-    expect(res).toEqual("NotSupported");
+    expect(probeMediaContentType(config)).toEqual("NotSupported");
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
 
@@ -221,8 +211,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
     ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
-    const res = probeMediaContentType(config);
-    expect(res).toEqual("NotSupported");
-    expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
+    expect(probeMediaContentType(config)).toEqual("NotSupported");
+    expect(mockIsTypeSupported).toHaveBeenCalledTimes(2);
   });
 });

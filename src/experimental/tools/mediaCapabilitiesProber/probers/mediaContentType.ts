@@ -26,14 +26,10 @@ export default function probeContentType(
   config: IMediaConfiguration,
 ): "NotSupported" | "Supported" {
   if (isNullOrUndefined(MediaSource_)) {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " + "MediaSource API not available",
-    );
+    throw new Error("MediaSource API not available");
   }
   if (typeof MediaSource_.isTypeSupported !== "function") {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " + "isTypeSupported not available",
-    );
+    throw new Error("MediaSource.isTypeSupported API not available");
   }
   const contentTypes: string[] = [];
   if (
@@ -51,10 +47,7 @@ export default function probeContentType(
     contentTypes.push(config.audio.contentType);
   }
   if (contentTypes.length === 0) {
-    throw new Error(
-      "MediaCapabilitiesProber >>> API_CALL: " +
-        "Not enough arguments for calling isTypeSupported.",
-    );
+    throw new Error("Not enough arguments for calling isTypeSupported.");
   }
   for (let i = 0; i < contentTypes.length; i++) {
     if (!MediaSource_.isTypeSupported(contentTypes[i])) {
