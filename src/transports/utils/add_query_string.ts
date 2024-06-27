@@ -16,43 +16,26 @@ export default function addQueryString(
   if (supplementaryQueryStringData.length === 0) {
     return baseUrl;
   }
-  let urlPrefix: string;
-  let urlSuffix: string | null;
   let queryStringStartingChar: "?" | "&" | "";
-  const indexOfQueryString = baseUrl.indexOf("?");
-  if (indexOfQueryString === -1) {
-    queryStringStartingChar = "?";
-    const indexOfFragment = baseUrl.indexOf("#");
-    if (indexOfFragment >= 0) {
-      urlPrefix = baseUrl.substring(0, indexOfFragment);
-      urlSuffix = baseUrl.substring(indexOfFragment);
-    } else {
-      urlPrefix = baseUrl;
-      urlSuffix = null;
-    }
-  } else {
-    let indexOfFragment = baseUrl.substring(indexOfQueryString).indexOf("#");
-    if (indexOfFragment >= 0) {
-      indexOfFragment += indexOfQueryString;
-      if (indexOfQueryString + 1 === indexOfFragment) {
-        queryStringStartingChar = "";
-      } else {
-        queryStringStartingChar = "&";
-      }
-      urlPrefix = baseUrl.substring(0, indexOfFragment);
-      urlSuffix = baseUrl.substring(indexOfFragment);
-    } else {
-      if (indexOfQueryString === baseUrl.length - 1) {
-        queryStringStartingChar = "";
-      } else {
-        queryStringStartingChar = "&";
-      }
-      urlPrefix = baseUrl;
-      urlSuffix = null;
-    }
+
+  let urlFragment = "";
+  const indexOfFragment = baseUrl.indexOf("#");
+  let baseUrlWithoutFragment = baseUrl;
+  if (indexOfFragment >= 0) {
+    urlFragment = baseUrl.substring(indexOfFragment);
+    baseUrlWithoutFragment = baseUrl.substring(0, indexOfFragment);
   }
 
-  let url = urlPrefix + queryStringStartingChar;
+  const indexOfQueryString = baseUrlWithoutFragment.indexOf("?");
+  if (indexOfQueryString === -1) {
+    queryStringStartingChar = "?";
+  } else if (indexOfQueryString + 1 === baseUrlWithoutFragment.length) {
+    queryStringStartingChar = "";
+  } else {
+    queryStringStartingChar = "&";
+  }
+
+  let url = baseUrlWithoutFragment + queryStringStartingChar;
   for (let i = 0; i < supplementaryQueryStringData.length; i++) {
     const queryStringElt = supplementaryQueryStringData[i];
     if (queryStringElt[1] === null) {
@@ -64,8 +47,8 @@ export default function addQueryString(
       url += "&";
     }
   }
-  if (urlSuffix !== null) {
-    url += urlSuffix;
+  if (urlFragment.length > 0) {
+    url += urlFragment;
   }
   return url;
 }

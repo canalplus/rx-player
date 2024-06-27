@@ -16,6 +16,7 @@ describe("addQueryString", () => {
       ]),
     ).toEqual("https://www.example.com?first=val&second&third=something");
   });
+
   it("should add query string before present fragment", () => {
     expect(
       addQueryString("https://www.example.com#toto", [
@@ -24,7 +25,77 @@ describe("addQueryString", () => {
         ["third", "something"],
       ]),
     ).toEqual("https://www.example.com?first=val&second&third=something#toto");
+    expect(
+      addQueryString("https://www.example.com#t?oto", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?first=val&second&third=something#t?oto");
+    expect(
+      addQueryString("https://www.example.com#?toto", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?first=val&second&third=something#?toto");
   });
+
+  it("should have special handling if only the ? character is already present in query string", () => {
+    expect(
+      addQueryString("https://www.example.com?#?toto", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?first=val&second&third=something#?toto");
+    expect(
+      addQueryString("https://www.example.com?", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?first=val&second&third=something");
+    expect(
+      addQueryString("https://www.example.com?#", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?first=val&second&third=something#");
+    expect(
+      addQueryString("https://www.example.com?#??????", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?first=val&second&third=something#??????");
+  });
+
+  it("should combine with already-present query string", () => {
+    expect(
+      addQueryString("https://www.example.com?before=5", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?before=5&first=val&second&third=something");
+    expect(
+      addQueryString("https://www.example.com?someBool", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?someBool&first=val&second&third=something");
+    expect(
+      addQueryString("https://www.example.com?a", [
+        ["first", "val"],
+        ["second", null],
+        ["third", "something"],
+      ]),
+    ).toEqual("https://www.example.com?a&first=val&second&third=something");
+  });
+
   it("should combine with already-present query string and fragment", () => {
     expect(
       addQueryString("https://www.example.com?before=5#test", [
