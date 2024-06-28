@@ -26,12 +26,11 @@ import { INetworkErrorType } from "./error_codes";
  * @extends Error
  */
 export default class RequestError extends Error {
-  public readonly name : "RequestError";
-  public readonly type : INetworkErrorType;
-  public readonly message : string;
-  public readonly xhr? : XMLHttpRequest;
-  public readonly url : string;
-  public readonly status : number;
+  public readonly name: "RequestError";
+  public readonly type: INetworkErrorType;
+  public readonly xhr?: XMLHttpRequest;
+  public readonly url: string;
+  public readonly status: number;
 
   /**
    * @param {XMLHttpRequest} xhr
@@ -74,6 +73,5 @@ export default class RequestError extends Error {
     }
     this.status = status;
     this.type = type;
-    this.message = message;
   }
 }

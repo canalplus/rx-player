@@ -30,15 +30,14 @@ import RequestError from "./request_error";
  * @extends Error
  */
 export default class NetworkError extends Error {
-  public readonly name : "NetworkError";
-  public readonly type : "NETWORK_ERROR";
-  public readonly message : string;
-  public readonly code : INetworkErrorCode;
-  public readonly xhr : XMLHttpRequest | null;
-  public readonly url : string;
-  public readonly status : number;
-  public readonly errorType : INetworkErrorType;
-  public fatal : boolean;
+  public readonly name: "NetworkError";
+  public readonly type: "NETWORK_ERROR";
+  public readonly code: INetworkErrorCode;
+  public readonly xhr: XMLHttpRequest | null;
+  public readonly url: string;
+  public readonly status: number;
+  public readonly errorType: INetworkErrorType;
+  public fatal: boolean;
 
   /**
    * @param {string} code
@@ -58,7 +57,6 @@ export default class NetworkError extends Error {
     this.errorType = baseError.type;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, baseError.message);
     this.fatal = false;
   }
 

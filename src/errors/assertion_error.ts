@@ -23,8 +23,7 @@
  * @extends Error
  */
 export default class AssertionError extends Error {
-  public readonly name : "AssertionError";
-  public readonly message : string;
+  public readonly name: "AssertionError";
 
   /**
    * @param {string} message
@@ -35,6 +34,5 @@ export default class AssertionError extends Error {
     Object.setPrototypeOf(this, AssertionError.prototype);
 
     this.name = "AssertionError";
-    this.message = message;
   }
 }

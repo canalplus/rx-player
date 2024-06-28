@@ -28,12 +28,11 @@ import errorMessage from "./error_message";
  * @extends Error
  */
 export default class EncryptedMediaError extends Error {
-  public readonly name : "EncryptedMediaError";
-  public readonly type : "ENCRYPTED_MEDIA_ERROR";
-  public readonly code : IEncryptedMediaErrorCode;
-  public readonly keyStatuses? : IEncryptedMediaErrorKeyStatusObject[];
-  public message : string;
-  public fatal : boolean;
+  public readonly name: "EncryptedMediaError";
+  public readonly type: "ENCRYPTED_MEDIA_ERROR";
+  public readonly code: IEncryptedMediaErrorCode;
+  public readonly keyStatuses?: IEncryptedMediaErrorKeyStatusObject[];
+  public fatal: boolean;
 
   /**
    * @param {string} code
@@ -61,7 +60,6 @@ export default class EncryptedMediaError extends Error {
     this.type = ErrorTypes.ENCRYPTED_MEDIA_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, reason);
     this.fatal = false;
 
     if (typeof supplementaryInfos?.keyStatuses === "string") {

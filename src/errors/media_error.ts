@@ -57,12 +57,11 @@ type ICodeWithAdaptationType = "BUFFER_APPEND_ERROR" |
  * @extends Error
  */
 export default class MediaError extends Error {
-  public readonly name : "MediaError";
-  public readonly type : "MEDIA_ERROR";
-  public readonly message : string;
-  public readonly code : IMediaErrorCode;
-  public readonly trackInfo : IMediaErrorTrackContext | undefined;
-  public fatal : boolean;
+  public readonly name: "MediaError";
+  public readonly type: "MEDIA_ERROR";
+  public readonly code: IMediaErrorCode;
+  public readonly trackInfo: IMediaErrorTrackContext | undefined;
+  public fatal: boolean;
 
   /**
    * @param {string} code
@@ -95,7 +94,6 @@ export default class MediaError extends Error {
     this.type = ErrorTypes.MEDIA_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.name, this.code, reason);
     this.fatal = false;
     const adaptation = context?.adaptation;
     if (adaptation !== undefined) {
