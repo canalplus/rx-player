@@ -26,18 +26,16 @@ import isNullOrUndefined from "./is_null_or_undefined";
  */
 export class AssertionError extends Error {
   public readonly name: "AssertionError";
-  public readonly message: string;
 
   /**
    * @param {string} message
    */
   constructor(message: string) {
-    super();
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, AssertionError.prototype);
 
     this.name = "AssertionError";
-    this.message = message;
   }
 }
 

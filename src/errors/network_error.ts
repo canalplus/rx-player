@@ -28,7 +28,6 @@ import errorMessage from "./error_message";
 export default class NetworkError extends Error {
   public readonly name: "NetworkError";
   public readonly type: "NETWORK_ERROR";
-  public readonly message: string;
   public readonly code: INetworkErrorCode;
   public readonly url: string;
   public readonly status: number;
@@ -41,7 +40,7 @@ export default class NetworkError extends Error {
    * @param {Error} baseError
    */
   constructor(code: INetworkErrorCode, baseError: RequestError) {
-    super();
+    super(errorMessage(code, baseError.message));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
 
@@ -54,7 +53,6 @@ export default class NetworkError extends Error {
     this._baseError = baseError;
 
     this.code = code;
-    this.message = errorMessage(this.code, baseError.message);
     this.fatal = false;
   }
 

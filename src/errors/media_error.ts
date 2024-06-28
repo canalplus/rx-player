@@ -34,7 +34,6 @@ type ICodeWithAdaptationType =
 export default class MediaError extends Error {
   public readonly name: "MediaError";
   public readonly type: "MEDIA_ERROR";
-  public readonly message: string;
   public readonly code: IMediaErrorCode;
   public readonly tracksInfo: ITaggedTrack[] | undefined;
   public fatal: boolean;
@@ -70,7 +69,7 @@ export default class MediaError extends Error {
         }
       | undefined,
   ) {
-    super();
+    super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
 
@@ -79,7 +78,6 @@ export default class MediaError extends Error {
     this._originalMessage = reason;
 
     this.code = code;
-    this.message = errorMessage(this.code, reason);
     this.fatal = false;
     if (context?.tracks !== undefined && context?.tracks.length > 0) {
       this.tracksInfo = context.tracks;

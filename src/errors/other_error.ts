@@ -25,7 +25,6 @@ import errorMessage from "./error_message";
 export default class OtherError extends Error {
   public readonly name: "OtherError";
   public readonly type: "OTHER_ERROR";
-  public readonly message: string;
   public readonly code: IOtherErrorCode;
   public fatal: boolean;
   private _originalMessage: string;
@@ -35,7 +34,7 @@ export default class OtherError extends Error {
    * @param {string} reason
    */
   constructor(code: IOtherErrorCode, reason: string) {
-    super();
+    super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, OtherError.prototype);
 
@@ -43,7 +42,6 @@ export default class OtherError extends Error {
     this.type = ErrorTypes.OTHER_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.code, reason);
     this.fatal = false;
     this._originalMessage = reason;
   }

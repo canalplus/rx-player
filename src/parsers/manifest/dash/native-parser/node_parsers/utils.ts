@@ -357,18 +357,15 @@ function ValueParser<T>(dest: T, warnings: Error[]) {
  */
 class MPDError extends Error {
   public readonly name: "MPDError";
-  public readonly message: string;
-
   /**
    * @param {string} message
    */
   constructor(message: string) {
-    super();
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MPDError.prototype);
 
     this.name = "MPDError";
-    this.message = message;
   }
 }
 

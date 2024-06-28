@@ -43,7 +43,7 @@ export class DecommissionedSessionError extends Error {
    * current MediaKeySession. Should be used for reporting purposes.
    */
   constructor(reason: IPlayerError) {
-    super();
+    super(reason.message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, DecommissionedSessionError.prototype);
     this.reason = reason;
