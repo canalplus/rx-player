@@ -30,7 +30,6 @@ export default class EncryptedMediaError extends Error {
   public readonly type: "ENCRYPTED_MEDIA_ERROR";
   public readonly code: IEncryptedMediaErrorCode;
   public readonly keyStatuses?: IEncryptedMediaErrorKeyStatusObject[];
-  public message: string;
   public fatal: boolean;
   private _originalMessage: string;
 
@@ -63,7 +62,6 @@ export default class EncryptedMediaError extends Error {
 
     this.code = code;
     this._originalMessage = reason;
-    this.message = errorMessage(this.code, reason);
     this.fatal = false;
 
     if (typeof supplementaryInfos?.keyStatuses === "string") {

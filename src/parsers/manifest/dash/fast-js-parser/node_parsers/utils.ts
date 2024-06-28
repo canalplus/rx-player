@@ -361,7 +361,6 @@ function ValueParser<T>(dest: T, warnings: Error[]) {
  */
 class MPDError extends Error {
   public readonly name: "MPDError";
-  public readonly message: string;
 
   /**
    * @param {string} message
@@ -372,7 +371,6 @@ class MPDError extends Error {
     Object.setPrototypeOf(this, MPDError.prototype);
 
     this.name = "MPDError";
-    this.message = message;
   }
 }
 

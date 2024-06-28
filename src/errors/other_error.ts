@@ -25,7 +25,6 @@ import errorMessage from "./error_message";
 export default class OtherError extends Error {
   public readonly name: "OtherError";
   public readonly type: "OTHER_ERROR";
-  public readonly message: string;
   public readonly code: IOtherErrorCode;
   public fatal: boolean;
   private _originalMessage: string;
@@ -43,7 +42,6 @@ export default class OtherError extends Error {
     this.type = ErrorTypes.OTHER_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.code, reason);
     this.fatal = false;
     this._originalMessage = reason;
   }

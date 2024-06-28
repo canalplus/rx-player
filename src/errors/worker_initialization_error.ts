@@ -14,7 +14,6 @@ type IWorkerInitializationErrorCode =
 export default class WorkerInitializationError extends Error {
   public readonly name: "WorkerInitializationError";
   public readonly type: "WORKER_INITIALIZATION_ERROR";
-  public readonly message: string;
   public readonly code: IWorkerInitializationErrorCode;
 
   /**
@@ -29,6 +28,5 @@ export default class WorkerInitializationError extends Error {
     this.name = "WorkerInitializationError";
     this.type = "WORKER_INITIALIZATION_ERROR";
     this.code = code;
-    this.message = errorMessage(this.code, message);
   }
 }

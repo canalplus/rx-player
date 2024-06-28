@@ -19,7 +19,6 @@ import errorMessage from "../../../errors/error_message";
 // Returned error when rejecting
 export default class VideoThumbnailLoaderError extends Error {
   public readonly name: "VideoThumbnailLoaderError";
-  public readonly message: string;
   public readonly code: string;
 
   /**
@@ -31,6 +30,5 @@ export default class VideoThumbnailLoaderError extends Error {
     Object.setPrototypeOf(this, VideoThumbnailLoaderError.prototype);
     this.name = "VideoThumbnailLoaderError";
     this.code = code;
-    this.message = errorMessage(code, message);
   }
 }

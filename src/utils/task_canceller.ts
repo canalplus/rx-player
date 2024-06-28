@@ -335,7 +335,6 @@ export type ICancellationListener = (error: CancellationError) => void;
  */
 export class CancellationError extends Error {
   public readonly name: "CancellationError";
-  public readonly message: string;
 
   constructor() {
     const message = "This task was cancelled.";
@@ -344,7 +343,6 @@ export class CancellationError extends Error {
     Object.setPrototypeOf(this, CancellationError.prototype);
 
     this.name = "CancellationError";
-    this.message = message;
   }
 }
 

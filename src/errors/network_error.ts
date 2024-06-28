@@ -28,7 +28,6 @@ import errorMessage from "./error_message";
 export default class NetworkError extends Error {
   public readonly name: "NetworkError";
   public readonly type: "NETWORK_ERROR";
-  public readonly message: string;
   public readonly code: INetworkErrorCode;
   public readonly url: string;
   public readonly status: number;
@@ -54,7 +53,6 @@ export default class NetworkError extends Error {
     this._baseError = baseError;
 
     this.code = code;
-    this.message = errorMessage(this.code, baseError.message);
     this.fatal = false;
   }
 

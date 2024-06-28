@@ -26,7 +26,6 @@
 export default class RequestError extends Error {
   public readonly name: "RequestError";
   public readonly type: IRequestErrorType;
-  public readonly message: string;
   public readonly url: string;
   public readonly status: number;
 
@@ -62,7 +61,6 @@ export default class RequestError extends Error {
     this.url = url;
     this.status = status;
     this.type = type;
-    this.message = message;
   }
 
   public serialize(): ISerializedRequestError {
