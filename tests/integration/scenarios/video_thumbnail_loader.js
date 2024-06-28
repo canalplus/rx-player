@@ -41,8 +41,10 @@ describe("Video Thumbnail Loader", () => {
       error = err;
     }
     expect(error).not.to.equal(undefined);
-    expect(error.message).to.equal("VideoThumbnailLoaderError: No imported "+
-                                   "loader for this transport type: dash");
+    expect(error.message).to.equal(
+      "VideoThumbnailLoaderError (NO_LOADER) VideoThumbnailLoaderError: No imported " +
+        "loader for this transport type: dash",
+    );
   });
 
   it("should not work when no thumbnail track", async () => {
@@ -59,7 +61,9 @@ describe("Video Thumbnail Loader", () => {
     }
     expect(error).not.to.equal(undefined);
     expect(time).to.equal(undefined);
-    expect(error.message).to.equal("Couldn't find a trickmode track for this time.");
+    expect(error.message).to.equal(
+      "VideoThumbnailLoaderError (NO_TRACK) Couldn't find a trickmode track for this time.",
+    );
   });
 
   it("should not work when no period at given time", async () => {
@@ -79,7 +83,9 @@ describe("Video Thumbnail Loader", () => {
     }
     expect(error).not.to.equal(undefined);
     expect(time).to.equal(undefined);
-    expect(error.message).to.equal("Couldn't find a trickmode track for this time.");
+    expect(error.message).to.equal(
+      "VideoThumbnailLoaderError (NO_TRACK) Couldn't find a trickmode track for this time.",
+    );
   });
 
   it("should load one thumbnail", async () => {
@@ -290,7 +296,9 @@ describe("Video Thumbnail Loader", () => {
     }
 
     expect(error1).not.to.equal(undefined);
-    expect(error1.message).to.equal("VideoThumbnailLoaderError: Aborted job.");
+    expect(error1.message).to.equal(
+      "VideoThumbnailLoaderError (ABORTED) VideoThumbnailLoaderError: Aborted job."
+    );
     expect(error2).to.equal(undefined);
     expect(time).to.equal(wantedThumbnail2.time);
     expect(videoElement.buffered.length).to.equal(1);
