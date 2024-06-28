@@ -337,12 +337,13 @@ export class CancellationError extends Error {
   public readonly message : string;
 
   constructor() {
-    super();
+    const message = "This task was cancelled.";
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, CancellationError.prototype);
 
     this.name = "CancellationError";
-    this.message = "This task was cancelled.";
+    this.message = message;
   }
 }
 

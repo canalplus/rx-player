@@ -362,9 +362,9 @@ export interface IKeyUpdateValue {
  * @extends Error
  */
 export class BlacklistedSessionError extends Error {
-  public sessionError : IPlayerError;
-  constructor(sessionError : IPlayerError) {
-    super();
+  public sessionError: IPlayerError;
+  constructor(sessionError: IPlayerError) {
+    super(sessionError.message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, BlacklistedSessionError.prototype);
     this.sessionError = sessionError;
@@ -377,8 +377,8 @@ export class BlacklistedSessionError extends Error {
  * @extends Error
  */
 export class GetLicenseTimeoutError extends Error {
-  constructor(message : string) {
-    super();
+  constructor(message: string) {
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, BlacklistedSessionError.prototype);
     this.message = message;

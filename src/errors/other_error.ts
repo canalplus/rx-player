@@ -35,8 +35,8 @@ export default class OtherError extends Error {
    * @param {string} code
    * @param {string} reason
    */
-  constructor(code : IOtherErrorCode, reason : string) {
-    super();
+  constructor(code: IOtherErrorCode, reason: string) {
+    super(errorMessage("OtherError", code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, OtherError.prototype);
 
