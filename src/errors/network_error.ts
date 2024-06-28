@@ -41,7 +41,7 @@ export default class NetworkError extends Error {
    * @param {Error} baseError
    */
   constructor(code: INetworkErrorCode, baseError: RequestError) {
-    super();
+    super(errorMessage(code, baseError.message));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, NetworkError.prototype);
 

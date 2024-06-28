@@ -54,7 +54,7 @@ export default class EncryptedMediaError extends Error {
       | { keyStatuses?: IEncryptedMediaErrorKeyStatusObject[] | undefined }
       | undefined,
   ) {
-    super();
+    super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, EncryptedMediaError.prototype);
 

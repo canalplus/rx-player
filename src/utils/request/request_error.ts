@@ -36,7 +36,25 @@ export default class RequestError extends Error {
    * @param {string} type
    */
   constructor(url: string, status: number, type: IRequestErrorType) {
-    super();
+    let message: string;
+    switch (type) {
+      case "TIMEOUT":
+        message = "The request timed out";
+        break;
+      case "ERROR_EVENT":
+        message = "An error prevented the request to be performed successfully";
+        break;
+      case "PARSE_ERROR":
+        message = "An error happened while formatting the response data";
+        break;
+      case "ERROR_HTTP_CODE":
+        message =
+          "An HTTP status code indicating failure was received: " + String(status);
+        break;
+    }
+
+    super(message);
+
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, RequestError.prototype);
 
@@ -44,22 +62,7 @@ export default class RequestError extends Error {
     this.url = url;
     this.status = status;
     this.type = type;
-
-    switch (type) {
-      case "TIMEOUT":
-        this.message = "The request timed out";
-        break;
-      case "ERROR_EVENT":
-        this.message = "An error prevented the request to be performed successfully";
-        break;
-      case "PARSE_ERROR":
-        this.message = "An error happened while formatting the response data";
-        break;
-      case "ERROR_HTTP_CODE":
-        this.message =
-          "An HTTP status code indicating failure was received: " + String(this.status);
-        break;
-    }
+    this.message = message;
   }
 
   public serialize(): ISerializedRequestError {

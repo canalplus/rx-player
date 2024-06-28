@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import errorMessage from "../../../errors/error_message";
+
 // Returned error when rejecting
 export default class VideoThumbnailLoaderError extends Error {
   public readonly name: "VideoThumbnailLoaderError";
@@ -25,10 +27,10 @@ export default class VideoThumbnailLoaderError extends Error {
    * @param {string} message
    */
   constructor(code: string, message: string) {
-    super();
+    super(errorMessage(code, message));
     Object.setPrototypeOf(this, VideoThumbnailLoaderError.prototype);
     this.name = "VideoThumbnailLoaderError";
     this.code = code;
-    this.message = message;
+    this.message = errorMessage(code, message);
   }
 }

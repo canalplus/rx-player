@@ -16,7 +16,7 @@ export default class SourceBufferError extends Error {
    * that the `SourceBuffer` was full.
    */
   constructor(errorName: string, message: string, isBufferFull: boolean) {
-    super();
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, SourceBufferError.prototype);
 

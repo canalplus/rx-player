@@ -70,7 +70,7 @@ export default class MediaError extends Error {
         }
       | undefined,
   ) {
-    super();
+    super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
 

@@ -32,7 +32,7 @@ export class AssertionError extends Error {
    * @param {string} message
    */
   constructor(message: string) {
-    super();
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, AssertionError.prototype);
 
