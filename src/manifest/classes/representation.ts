@@ -161,11 +161,11 @@ class Representation implements IRepresentationMetadata {
           if (isSupplementaryCodecSupported !== false) {
             this.codecs = [args.supplementalCodecs];
             if (isSupplementaryCodecSupported === true) {
-              const isCodecSupportedByCDM = cdmCodecSupportProber.isSupported(
+              const isSupportedByCDM = cdmCodecSupportProber.isSupported(
                 this.mimeType ?? "",
                 args.codecs ?? "",
               );
-              this.isSupported = isCodecSupportedByCDM;
+              this.isSupported = isSupportedByCDM;
             }
           }
         }
@@ -239,14 +239,14 @@ class Representation implements IRepresentationMetadata {
       const isSupportedByMSE = isCodecSupportedByMSE(mimeType, codec);
       // if MSE supports the codec, and the content is encrypted,
       // check further if the CDM also supports the codec.
-      if (isSupportedByMSE && isEncrypted) {
+      if (isSupportedByMSE === true && isEncrypted) {
         const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
         isSupported = isSupportedByMSE && isSupportedByCDM;
       } else {
         isSupported = isSupportedByMSE;
       }
 
-      if (isSupported) {
+      if (isSupported === true) {
         this.codecs = [codec];
         break;
       }

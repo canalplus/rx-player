@@ -34,6 +34,7 @@ export const defaultKSConfig = [
     videoCapabilities: [
       { contentType: 'video/mp4;codecs="avc1.4d401e"' },
       { contentType: 'video/mp4;codecs="avc1.42e01e"' },
+      { contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"' },
       { contentType: 'video/webm;codecs="vp8"' },
     ],
   },
@@ -66,9 +67,11 @@ export const defaultPRRecommendationKSConfig = [
     videoCapabilities: [
       { robustness: "3000", contentType: 'video/mp4;codecs="avc1.4d401e"' },
       { robustness: "3000", contentType: 'video/mp4;codecs="avc1.42e01e"' },
+      { robustness: "3000", contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"' },
       { robustness: "3000", contentType: 'video/webm;codecs="vp8"' },
       { robustness: "2000", contentType: 'video/mp4;codecs="avc1.4d401e"' },
       { robustness: "2000", contentType: 'video/mp4;codecs="avc1.42e01e"' },
+      { robustness: "2000", contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"' },
       { robustness: "2000", contentType: 'video/webm;codecs="vp8"' },
     ],
   },
@@ -95,6 +98,7 @@ export const defaultWidevineConfig = (() => {
     return [
       { contentType: 'video/mp4;codecs="avc1.4d401e"', robustness },
       { contentType: 'video/mp4;codecs="avc1.42e01e"', robustness },
+      { contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"', robustness },
       { contentType: 'video/webm;codecs="vp8"', robustness },
     ];
   });
