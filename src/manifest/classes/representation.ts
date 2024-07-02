@@ -101,6 +101,10 @@ class Representation implements IRepresentationMetadata {
    * @see IRepresentationMetadata
    */
   public isSupported: boolean | undefined;
+  /**
+   * @see ITrackType
+   */
+  public trackType: ITrackType;
 
   /**
    * @param {Object} args
@@ -111,6 +115,7 @@ class Representation implements IRepresentationMetadata {
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
     this.codecs = [];
+    this.trackType = trackType;
 
     if (args.isSpatialAudio !== undefined) {
       this.isSpatialAudio = args.isSpatialAudio;
@@ -172,19 +177,19 @@ class Representation implements IRepresentationMetadata {
             this.codecs.push(args.codecs ?? "");
           } else {
             this.codecs = args.codecs === undefined ? [] : [args.codecs];
-            const isCodecSupportedByMSE = features.codecSupportProber.isSupported(
+            const isSupportedByMSE = isCodecSupportedByMSE(
               this.mimeType ?? "",
               args.codecs ?? "",
             );
 
-            if (isCodecSupportedByMSE !== true) {
-              this.isSupported = isCodecSupportedByMSE;
+            if (isSupportedByMSE !== true) {
+              this.isSupported = isSupportedByMSE;
             } else {
-              const isCodecSupportedByCDM = cdmCodecSupportProber.isSupported(
+              const isSupportedByCDM = isCodecSupportedByCDM(
                 this.mimeType ?? "",
                 args.codecs ?? "",
               );
-              this.isSupported = isCodecSupportedByCDM;
+              this.isSupported = isSupportedByCDM;
             }
           }
         }
@@ -208,46 +213,45 @@ class Representation implements IRepresentationMetadata {
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
    *
    * If the right mimetype+codec combination is found in the provided object,
    * this `Representation`'s `isSupported` property will be updated accordingly.
    *
    * @param {Array.<Object>} supportList
    */
-  public refreshCodecSupport(supportList: ICodecSupportList): void {
+  public refreshCodecSupport() {
+    if (this.trackType === "text") {
+      this.isSupported = true;
+      return;
+    }
+
+    const isEncrypted = this.contentProtections !== undefined;
+    let isSupported: boolean | undefined = false;
     const mimeType = this.mimeType ?? "";
-    let codecs = this.codecs;
+    let codecs = this.codecs ?? [];
     if (codecs.length === 0) {
       codecs = [""];
     }
+    for (const codec of codecs) {
+      cdmCodecSupportProber.isSupported(mimeType, codec);
+      const isSupportedByMSE = isCodecSupportedByMSE(mimeType, codec);
+      // if MSE supports the codec, and the content is encrypted,
+      // check further if the CDM also supports the codec.
+      if (isSupportedByMSE && isEncrypted) {
+        const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
+        isSupported = isSupportedByMSE && isSupportedByCDM;
+      } else {
+        isSupported = isSupportedByMSE;
+      }
 
-    // Go through each codec, from the most detailed to the most compatible one
-    for (let codecIdx = 0; codecIdx < codecs.length; codecIdx++) {
-      // Find out if an entry is present for it in the support list
-      for (const obj of supportList) {
-        const codec = codecs[codecIdx];
-        if (obj.codec === codec && obj.mimeType === mimeType) {
-          if (obj.result) {
-            // We found that this codec was supported. Remove all reference to
-            // other codecs which are either unsupported, less detailed, or
-            // both and anounce support.
-            this.isSupported = true;
-            this.codecs = [codec];
-            return;
-          } else if (codecIdx === codecs.length) {
-            // The last more compatible codec, was still found unsupported,
-            // this Representation is not decodable.
-            // Put the more compatible codec only for the API.
-            this.isSupported = false;
-            this.codecs = [codec];
-            return;
-          }
-        }
+      if (isSupported) {
+        this.codecs = [codec];
+        break;
       }
     }
+    this.isSupported = isSupported;
   }
 
   /**
@@ -499,5 +503,36 @@ export type ICodecSupportList = Array<{
   mimeType: string;
   result: boolean;
 }>;
+
+/**
+ * Check if the codec is supported by the CDM (the Content Decryption Module).
+ * There can be a disparity between what codecs are supported by MSE and the CDM.
+ *
+ * Ex: Chrome with Widevine is able to create MediaSource for codec HEVC but
+ * Widevine L3 is not able to decipher HEVC because it requires hardware DRM.
+ * As a result Chrome is not able to play HEVC when it's encrypted, but it can
+ * be played if it's unencrypted.
+ * @param {string} mimeType - The mimeType of the codec to test.
+ * @param {string} codec - The codec to test.
+ * @returns { boolean } True if the codec is supported by the CDM.
+ */
+function isCodecSupportedByCDM(mimeType: string, codec: string): boolean {
+  return cdmCodecSupportProber.isSupported(mimeType, codec);
+}
+
+/**
+ * Check if the codec is supported by MSE (Media Source Extension).
+ * If the codec is supported, the browser should be able to create
+ * a media source with the given codec.
+ * @param {string} mimeType - The mimeType of the codec to test.
+ * @param {string} codec - The codec to test.
+ * @returns { boolean } True if the codec is supported by MSE.
+ */
+function isCodecSupportedByMSE(mimeType: string, codec: string): boolean | undefined {
+  if (features.codecSupportProber === null) {
+    return true;
+  }
+  return features.codecSupportProber.isSupported(mimeType, codec);
+}
 
 export default Representation;

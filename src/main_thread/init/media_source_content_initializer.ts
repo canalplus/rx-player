@@ -264,6 +264,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
+          onCodecSupportUpdate: () => {
+            if (this._manifest === null) {
+              return;
+            }
+            const manifestMetadata = this._manifest.syncValue?.getMetadataSnapshot();
+            if (manifestMetadata === undefined) {
+              return;
+            }
+            this._manifest.syncValue?.refreshCodecSupport();
+          },
         },
         initCanceller.signal,
       );

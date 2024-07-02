@@ -40,7 +40,6 @@ import {
 import type Adaptation from "./adaptation";
 import type { IManifestAdaptations } from "./period";
 import Period from "./period";
-import type { ICodecSupportList } from "./representation";
 import type Representation from "./representation";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 import type { IPeriodsUpdateResult } from "./update_periods";
@@ -370,20 +369,18 @@ export default class Manifest
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
    *
-   * @param {Array.<Object>} supportList
    * @returns {Error|null} - Refreshing codec support might reveal that some
    * `Adaptation` don't have any of their `Representation`s supported.
    * In that case, an error object will be created and returned, so you can
    * e.g. later emit it as a warning through the RxPlayer API.
    */
-  public refreshCodecSupport(supportList: ICodecSupportList): MediaError | null {
+  public refreshCodecSupport(): MediaError | null {
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(supportList, unsupportedAdaptations);
+      period.refreshCodecSupport(unsupportedAdaptations);
     }
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
