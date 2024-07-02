@@ -1,3 +1,14 @@
+/**
+ * Class facilitating the exploitation of what could be called the "playback
+ * position" (the position at which we should currently be playing).
+ *
+ * In appearance a simple concept, it has in reality some gotchas that we wanted
+ * to make more explicit.
+ * As such, this class defines multiple methods to obtain an estimate of it,
+ * each having its own pros and cons.
+ *
+ * @class ObservationPosition
+ */
 export default class ObservationPosition {
   /**
    * Known position at the time the Observation was emitted, in seconds.
