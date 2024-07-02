@@ -12,6 +12,8 @@
 -   Await some delay before re-attempting to push a segment following an error [#1411]
 -   DRM/Compat: on Edge test comprehensively KeySystems before considering them as usable
     [#1450]
+-   DRM/DASH: Ignore `0x0` key id found in DASH initialization segments are they are often
+    linked to unencrypted data. [#1466, #1458]
 -   DRM/Compat: On the PlayStation 5, reload directly when a decryption key become
     unusable to prevent fatal errors [#1451]
 -   Directfile/Compat: On safari on iOS no longer stay stuck in buffering when `autoPlay`
@@ -20,6 +22,8 @@
 -   Directfile/compat: On safari mobile in directfile mode, do not stay in an infinite
     `LOADING` state if the `duration` is set to `NaN` (rare issue in a
     normally-unsupported multiple RxPlayer-per-media-element scenario) [#1452]
+-   Fix RxPlay error messages not properly displaying in Chrome's inspector since Chrome 126
+    [#1474]
 
 ### Other improvements
 
