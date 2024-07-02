@@ -46,6 +46,7 @@ export default function initializeContentDecryption(
       blacklistedKeyIds: Uint8Array[];
       delistedKeyIds: Uint8Array[];
     }) => void;
+    onCodecSupportUpdate?: () => void;
   },
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<IDrmInitializationStatus> {
@@ -79,6 +80,9 @@ export default function initializeContentDecryption(
       const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
       for (const codec of codecsSupportedByCDM) {
         cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
+      }
+      if (callbacks.onCodecSupportUpdate !== undefined) {
+        callbacks.onCodecSupportUpdate();
       }
       contentDecryptor.removeEventListener("stateChange", updateCodecSupportedByCDM);
     }

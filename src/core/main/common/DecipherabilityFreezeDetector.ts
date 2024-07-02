@@ -103,6 +103,14 @@ export default class DecipherabilityFreezeDetector {
                 hasOnlyDecipherableSegments = false;
               }
             }
+
+            if (representation.isSupported === false) {
+              log.warn(
+                "Init: we have unsupported segments left in the buffer, reloading",
+              );
+              this._currentFreezeTimestamp = null;
+              return true;
+            }
           }
         }
       }

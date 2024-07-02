@@ -21,7 +21,6 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
 import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
 import Adaptation from "./adaptation";
-import type { ICodecSupportList } from "./representation";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
@@ -135,9 +134,8 @@ export default class Period implements IPeriodMetadata {
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
    *
    * @param {Array.<Object>} supportList
    * @param {Array.<Object>} unsupportedAdaptations - Array on which
@@ -145,10 +143,7 @@ export default class Period implements IPeriodMetadata {
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
    */
-  refreshCodecSupport(
-    supportList: ICodecSupportList,
-    unsupportedAdaptations: Adaptation[],
-  ) {
+  refreshCodecSupport(unsupportedAdaptations: Adaptation[]) {
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
       if (adaptationsForType === undefined) {
@@ -157,7 +152,7 @@ export default class Period implements IPeriodMetadata {
       let hasSupportedAdaptations: boolean | undefined = false;
       for (const adaptation of adaptationsForType) {
         const wasSupported = adaptation.isSupported;
-        adaptation.refreshCodecSupport(supportList);
+        adaptation.refreshCodecSupport();
         if (wasSupported !== false && adaptation.isSupported === false) {
           unsupportedAdaptations.push(adaptation);
         }

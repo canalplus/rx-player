@@ -845,6 +845,7 @@ const DEFAULT_CONFIG = {
   EME_DEFAULT_VIDEO_CODECS: [
     'video/mp4;codecs="avc1.4d401e"',
     'video/mp4;codecs="avc1.42e01e"',
+    'video/mp4;codecs="hvc1.1.6.L93.B0"',
     'video/webm;codecs="vp8"',
   ],
 

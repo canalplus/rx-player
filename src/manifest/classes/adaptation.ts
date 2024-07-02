@@ -25,7 +25,6 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
-import type { ICodecSupportList } from "./representation";
 import Representation from "./representation";
 
 /**
@@ -213,9 +212,9 @@ export default class Adaptation implements IAdaptationMetadata {
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
+   *
    *
    * If the right mimetype+codec combination is found in the provided object,
    * this `Adaptation`'s `isSupported` property will be updated accordingly as
@@ -223,18 +222,13 @@ export default class Adaptation implements IAdaptationMetadata {
    *
    * @param {Array.<Object>} supportList
    */
-  refreshCodecSupport(supportList: ICodecSupportList): void {
+  refreshCodecSupport(): void {
     for (const representation of this.representations) {
-      if (representation.isSupported === undefined) {
-        representation.refreshCodecSupport(supportList);
-        if (this.isSupported !== true && representation.isSupported === true) {
-          this.isSupported = true;
-        } else if (
-          this.isSupported === undefined &&
-          representation.isSupported === false
-        ) {
-          this.isSupported = false;
-        }
+      representation.refreshCodecSupport();
+      if (this.isSupported !== true && representation.isSupported === true) {
+        this.isSupported = true;
+      } else if (this.isSupported === undefined && representation.isSupported === false) {
+        this.isSupported = false;
       }
     }
   }

@@ -298,7 +298,7 @@ export default function initializeWorkerMain() {
           }
         }
         try {
-          const warning = preparedContent.manifest.refreshCodecSupport(msg.value);
+          const warning = preparedContent.manifest.refreshCodecSupport();
           if (warning !== null) {
             sendMessage({
               type: WorkerMessageType.Warning,
@@ -320,6 +320,33 @@ export default function initializeWorkerMain() {
         for (const { mimeType, codec, result } of msg.value) {
           cdmCodecSupportProber.addToCache(mimeType, codec, result);
         }
+        /**
+         * Refresh the support of already parsed representation in the manifest
+         * when a change in codec support occurs, as the support of all codecs
+         * may be known after manifest parsing.
+         */
+        const preparedContent = contentPreparer.getCurrentContent();
+        if (preparedContent === null || preparedContent.manifest === null) {
+          return;
+        }
+
+        try {
+          const warning = preparedContent.manifest.refreshCodecSupport();
+          if (warning !== null) {
+            sendMessage({
+              type: WorkerMessageType.Warning,
+              contentId: preparedContent.contentId,
+              value: formatErrorForSender(warning),
+            });
+          }
+        } catch (err) {
+          sendMessage({
+            type: WorkerMessageType.Error,
+            contentId: preparedContent.contentId,
+            value: formatErrorForSender(err),
+          });
+        }
+
         break;
       }
 
