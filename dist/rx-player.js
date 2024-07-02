@@ -1534,6 +1534,37 @@ var DEFAULT_CONFIG = {
    */
   UNFREEZING_DELTA_POSITION: 0.001,
   /**
+   * The RxPlayer has a recurring logic which will synchronize the browser's
+   * buffers' buffered time ranges with its internal representation in the
+   * RxPlayer to then rely on that internal representation to determine where
+   * segments are technically present in the browser's buffer.
+   *
+   * We found out that when inserting a new segment to the buffer, the browser
+   * may actually take time before actually considering the full segment in its
+   * advertised buffered time ranges.
+   *
+   * This value thus set an amount of milliseconds we might want to wait before
+   * being sure that the buffered time ranges should have considered a segment
+   * that has been pushed.
+   */
+  SEGMENT_SYNCHRONIZATION_DELAY: 1500,
+  /**
+   * The `SEGMENT_SYNCHRONIZATION_DELAY` defined in this same configuration
+   * object only needs to be used if it appears that the current buffered
+   * time ranges do not reflect the full data of a pushed segment yet.
+   *
+   * The `MISSING_DATA_TRIGGER_SYNC_DELAY` value thus allows to define a
+   * minimum time difference in seconds between what's buffered and what the
+   * segment's ranges should have been, from which we might consider that we may
+   * want to wait the `SEGMENT_SYNCHRONIZATION_DELAY` before trusting the buffered
+   * time ranges for that segment.
+   * If what's missing from that segment is however less than that value in
+   * seconds, we can begin to trust the reported buffered time ranges.
+   *
+   * Should generally be inferior to `MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT`.
+   */
+  MISSING_DATA_TRIGGER_SYNC_DELAY: 0.1,
+  /**
    * Maximum authorized difference between what we calculated to be the
    * beginning or end of the segment in a media buffer and what we
    * actually are noticing now.
@@ -3068,7 +3099,7 @@ function getCurrentKeySystem(mediaElement) {
 
 /***/ }),
 
-/***/ 7682:
+/***/ 6699:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4898,6 +4929,112 @@ function canReuseMediaKeys() {
 function shouldRenewMediaKeySystemAccess() {
   return browser_detection/* isIE11 */.lw;
 }
+;// CONCATENATED MODULE: ./src/compat/can_rely_on_request_media_key_system_access.ts
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * This functions tells if the RxPlayer can trust the browser when it has
+ * successfully granted the MediaKeySystemAccess with
+ * `navigator.requestMediaKeySystemAccess(keySystem)` function, or if it should do
+ * some additional testing to confirm that the `keySystem` is supported on the device.
+ *
+ * This behavior has been experienced on the following device:
+ *
+ * On a Microsoft Surface with Edge v.124:
+ * - Althought `requestMediaKeySystemAccess` resolve correctly with the keySystem
+ *   "com.microsoft.playready.recommendation.3000", generating a request with
+ *   `generateRequest` throws an error: "NotSupportedError: Failed to execute
+ *   'generateRequest' on 'MediaKeySession': Failed to create MF PR CdmSession".
+ *   In this particular case, the work-around was to consider
+ *   recommendation.3000 as not supported and try another keySystem.
+ * @param keySystem - The key system in use.
+ * @returns {boolean}
+ */
+function canRelyOnRequestMediaKeySystemAccess(keySystem) {
+  if (browser_detection/* isEdgeChromium */.op && keySystem.indexOf("playready") !== -1) {
+    return false;
+  }
+  return true;
+}
+;// CONCATENATED MODULE: ./src/compat/generate_init_data.ts
+
+
+/**
+ * The PlayReadyHeader sample that will be used to test if the CDM is supported.
+ * The KID does not matter because no content will be played, it's only to check if
+ * the CDM is capable of creating a session and generating a request.
+ */
+var DUMMY_PLAY_READY_HEADER = /* eslint-disable-next-line max-len */
+"<WRMHEADER xmlns=\"http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader\" version=\"4.0.0.0\"><DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>ckB07BNLskeUq0qd83fTbA==</KID><DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID><CUSTOMATTRIBUTES xmlns=\"\"><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES><CHECKSUM>U/tsUYRgMzw=</CHECKSUM></DATA></WRMHEADER>";
+/**
+ * Generate the "cenc" init data for playready from the PlayreadyHeader string.
+ * @param {string} playreadyHeader - String representing the PlayreadyHeader XML.
+ * @returns {Uint8Array} The init data generated for that PlayreadyHeader.
+ * @see https://learn.microsoft.com/en-us/playready/specifications/playready-hea
+ * der-specification
+ */
+function generatePlayReadyInitData(playreadyHeader) {
+  var recordValueEncoded = (0,string_parsing/* strToUtf16LE */.kY)(playreadyHeader);
+  var recordLength = (0,byte_parsing/* itole2 */.WO)(recordValueEncoded.length);
+  // RecordType: 0x0001	Indicates that the record contains a PlayReady Header (PRH).
+  var recordType = new Uint8Array([1, 0]);
+  var numberOfObjects = new Uint8Array([1, 0]); // 1 PlayReady object
+  /* playReadyObjectLength equals = X bytes for record + 2 bytes for record length,
+  + 2 bytes for record types + 2 bytes for number of object  */
+  var playReadyObjectLength = (0,byte_parsing/* itole4 */.Wz)(recordValueEncoded.length + 6);
+  var playReadyObject = (0,byte_parsing/* concat */.xW)(playReadyObjectLength,
+  // 4 bytes for the Playready object length
+  numberOfObjects,
+  // 2 bytes for the number of PlayReady objects
+  recordType,
+  // 2 bytes for record type
+  recordLength,
+  // 2 bytes for record length
+  recordValueEncoded // X bytes for record value
+  );
+  /**  the systemId is define at https://dashif.org/identifiers/content_protection/ */
+  var playreadySystemId = (0,string_parsing/* hexToBytes */.aT)("9a04f07998404286ab92e65be0885f95");
+  return generateInitData(playReadyObject, playreadySystemId);
+}
+/**
+ * Generate the "cenc" initData given the data and the systemId to use.
+ * Note this will generate an initData for version 0 of pssh.
+ * @param data - The data that is contained inside the pssh.
+ * @param systemId - The systemId to use.
+ * @returns
+ */
+function generateInitData(data, systemId) {
+  var psshBoxName = (0,string_parsing/* strToUtf8 */.eb)("pssh");
+  var versionAndFlags = new Uint8Array([0, 0, 0, 0]); // pssh version 0
+  var sizeOfData = (0,byte_parsing/* itobe4 */.KS)(data.length);
+  var psshSize = (0,byte_parsing/* itobe4 */.KS)(4 /* pssh size */ + 4 /* pssh box */ + 4 /* version and flags */ + 16 /* systemId */ + 4 /* size of data */ + data.length /* data */);
+  return (0,byte_parsing/* concat */.xW)(psshSize,
+  // 4 bytes for the pssh size
+  psshBoxName,
+  // 4 bytes for the pssh box
+  versionAndFlags,
+  // 4 bytes for version and flags
+  systemId,
+  // 16 bytes for the systemId
+  sizeOfData,
+  // 4 bytes for the data size
+  data // X bytes for data
+  );
+}
 // EXTERNAL MODULE: ./src/utils/flat_map.ts
 var flat_map = __webpack_require__(3262);
 ;// CONCATENATED MODULE: ./src/core/decrypt/find_key_system.ts
@@ -4918,6 +5055,8 @@ var flat_map = __webpack_require__(3262);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 
 
 
@@ -5191,7 +5330,7 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
             log/* default */.A.debug("DRM: Request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length));
             _context.prev = 7;
             _context.next = 10;
-            return eme.requestMediaKeySystemAccess(keyType, keySystemConfigurations);
+            return testKeySystem(keyType, keySystemConfigurations);
           case 10:
             keySystemAccess = _context.sent;
             log/* default */.A.info("DRM: Found compatible keysystem", keyType, index + 1);
@@ -5221,6 +5360,59 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
     }));
     return _recursivelyTestKeySystems.apply(this, arguments);
   }
+}
+/**
+ * Test a key system configuration, resolves with the MediaKeySystemAccess
+ * or reject if the key system is unsupported.
+ * @param {string} keyType - The KeySystem string to test
+ * (ex: com.microsoft.playready.recommendation)
+ * @param {Array.<MediaKeySystemMediaCapability>} keySystemConfigurations -
+ * Configurations for this keySystem
+ * @returns Promise resolving with the MediaKeySystemAccess. Rejects if unsupported.
+ */
+function testKeySystem(_x2, _x3) {
+  return _testKeySystem.apply(this, arguments);
+}
+function _testKeySystem() {
+  _testKeySystem = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee2(keyType, keySystemConfigurations) {
+    var keySystemAccess, mediaKeys, session, initData;
+    return regenerator_default().wrap(function _callee2$(_context2) {
+      while (1) switch (_context2.prev = _context2.next) {
+        case 0:
+          _context2.next = 2;
+          return eme.requestMediaKeySystemAccess(keyType, keySystemConfigurations);
+        case 2:
+          keySystemAccess = _context2.sent;
+          if (canRelyOnRequestMediaKeySystemAccess(keyType)) {
+            _context2.next = 18;
+            break;
+          }
+          _context2.prev = 4;
+          _context2.next = 7;
+          return keySystemAccess.createMediaKeys();
+        case 7:
+          mediaKeys = _context2.sent;
+          session = mediaKeys.createSession();
+          initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+          _context2.next = 12;
+          return session.generateRequest("cenc", initData);
+        case 12:
+          _context2.next = 18;
+          break;
+        case 14:
+          _context2.prev = 14;
+          _context2.t0 = _context2["catch"](4);
+          log/* default */.A.debug("DRM: KeySystemAccess was granted but it is not usable");
+          throw _context2.t0;
+        case 18:
+          return _context2.abrupt("return", keySystemAccess);
+        case 19:
+        case "end":
+          return _context2.stop();
+      }
+    }, _callee2, null, [[4, 14]]);
+  }));
+  return _testKeySystem.apply(this, arguments);
 }
 // EXTERNAL MODULE: ./src/parsers/containers/isobmff/get_box.ts
 var get_box = __webpack_require__(8797);
@@ -7901,7 +8093,7 @@ function _updateSessionWithMessage() {
 var BlacklistedSessionError = /*#__PURE__*/function (_Error) {
   function BlacklistedSessionError(sessionError) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, sessionError.message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, BlacklistedSessionError.prototype);
     _this.sessionError = sessionError;
@@ -7918,7 +8110,7 @@ var BlacklistedSessionError = /*#__PURE__*/function (_Error) {
 var GetLicenseTimeoutError = /*#__PURE__*/function (_Error2) {
   function GetLicenseTimeoutError(message) {
     var _this2;
-    _this2 = _Error2.call(this) || this;
+    _this2 = _Error2.call(this, message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this2, BlacklistedSessionError.prototype);
     _this2.message = message;
@@ -9678,7 +9870,7 @@ function getDirectFileInitialTime(mediaElement, startAt) {
 
 /***/ }),
 
-/***/ 8241:
+/***/ 1737:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -9724,6 +9916,26 @@ var regenerator_default = /*#__PURE__*/__webpack_require__.n(regenerator);
 function shouldReloadMediaSourceOnDecipherabilityUpdate(currentKeySystem) {
   return currentKeySystem === undefined || currentKeySystem.indexOf("widevine") < 0;
 }
+// EXTERNAL MODULE: ./src/compat/browser_detection.ts
+var browser_detection = __webpack_require__(443);
+;// CONCATENATED MODULE: ./src/compat/may_media_element_fail_on_undecipherable_data.ts
+
+/**
+ * We noticed that the PlayStation 5 may have the HTMLMediaElement on which the
+ * content is played stop on a `MEDIA_ERR_DECODE` error if it encounters
+ * encrypted media data whose key is not usable due to policy restrictions (the
+ * most usual issue being non-respect of HDCP restrictions).
+ *
+ * This is not an usual behavior, other platforms just do not attempt to decode
+ * the encrypted media data and stall the playback instead (which is a much
+ * preferable behavior for us as we have some advanced mechanism to restart
+ * playback when this happens).
+ *
+ * Consequently, we have to specifically consider platforms with that
+ * fail-on-undecipherable-data issue, to perform a work-around in that case.
+ */
+var mayMediaElementFailOnUndecipherableData = browser_detection/* isPlayStation5 */.A7;
+/* harmony default export */ var may_media_element_fail_on_undecipherable_data = (mayMediaElementFailOnUndecipherableData);
 // EXTERNAL MODULE: ./src/config.ts + 2 modules
 var config = __webpack_require__(5151);
 // EXTERNAL MODULE: ./src/errors/media_error.ts
@@ -13926,7 +14138,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       var error = err instanceof Error ? err : new Error("An unknown error occured when doing operations " + "on the SourceBuffer");
       var task = this._pendingTask;
       if (task.type === types/* SegmentBufferOperation */.B.Push && task.data.length === 0 && task.inventoryData !== null) {
-        this._segmentInventory.insertChunk(task.inventoryData, false);
+        this._segmentInventory.insertChunk(task.inventoryData, false, performance.now());
       }
       this._pendingTask = null;
       task.reject(error);
@@ -13979,7 +14191,7 @@ var AudioVideoSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
         switch (task.type) {
           case types/* SegmentBufferOperation */.B.Push:
             if (task.inventoryData !== null) {
-              this._segmentInventory.insertChunk(task.inventoryData, true);
+              this._segmentInventory.insertChunk(task.inventoryData, true, performance.now());
             }
             break;
           case types/* SegmentBufferOperation */.B.EndOfSegment:
@@ -15534,7 +15746,11 @@ function getNeededSegments(_ref) {
         if (oldSegment.time - ROUNDING_ERROR > time) {
           return false;
         }
-        if (oldSegment.end + ROUNDING_ERROR < end) {
+        if (oldSegment.complete) {
+          if (oldSegment.end + ROUNDING_ERROR < end) {
+            return false;
+          }
+        } else if (Math.abs(time - oldSegment.time) > time) {
           return false;
         }
         return !shouldContentBeReplaced(pendingSegment, contentObject, currentPlaybackTime, fastSwitchThreshold);
@@ -15551,10 +15767,17 @@ function getNeededSegments(_ref) {
       // periods, we should consider a segment as already downloaded if
       // it is from same period (but can be from different adaptation or
       // representation)
-      if (areFromSamePeriod) {
+      if (completeSeg.status === 1 /* ChunkStatus.FullyLoaded */ && areFromSamePeriod) {
         var completeSegInfos = completeSeg.infos.segment;
-        if (time - completeSegInfos.time > -ROUNDING_ERROR && completeSegInfos.end - end > -ROUNDING_ERROR) {
-          return false; // already downloaded
+        if (time - completeSegInfos.time > -ROUNDING_ERROR) {
+          if (completeSegInfos.complete) {
+            if (completeSegInfos.end - end > -ROUNDING_ERROR) {
+              return false; // Same segment's characteristics: already downloaded
+            }
+          } else if (Math.abs(time - completeSegInfos.time) < ROUNDING_ERROR) {
+            // same start (special case for non-complete segments): already downloaded
+            return false;
+          }
         }
       }
     }
@@ -15707,8 +15930,7 @@ function doesStartSeemGarbageCollected(currentSeg, prevSeg, maximumStartTime) {
   var _config$getCurrent5 = config/* default */.A.getCurrent(),
     MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = _config$getCurrent5.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT;
   if (currentSeg.bufferedStart === undefined) {
-    log/* default */.A.warn("Stream: Start of a segment unknown. " + "Assuming it is garbage collected by default.", currentSeg.start);
-    return true;
+    return false;
   }
   if (prevSeg !== null && prevSeg.bufferedEnd !== undefined && currentSeg.bufferedStart - prevSeg.bufferedEnd < 0.1) {
     return false;
@@ -15735,8 +15957,7 @@ function doesEndSeemGarbageCollected(currentSeg, nextSeg, minimumEndTime) {
   var _config$getCurrent6 = config/* default */.A.getCurrent(),
     MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT = _config$getCurrent6.MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT;
   if (currentSeg.bufferedEnd === undefined) {
-    log/* default */.A.warn("Stream: End of a segment unknown. " + "Assuming it is garbage collected by default.", currentSeg.end);
-    return true;
+    return false;
   }
   if (nextSeg !== null && nextSeg.bufferedStart !== undefined && nextSeg.bufferedStart - currentSeg.bufferedEnd < 0.1) {
     return false;
@@ -15902,7 +16123,6 @@ function getSegmentPriority(segmentTime, wantedStartTimestamp) {
 
 
 
-
 /**
  * Checks on the current buffered data for the given type and Period
  * and returns what should be done to fill the buffer according to the buffer
@@ -15935,10 +16155,7 @@ function getBufferStatus(content, initialWantedTime, playbackObserver, fastSwitc
     return operation.value;
   });
   /** Data on every segments buffered around `neededRange`. */
-  var bufferedSegments = getPlayableBufferedSegments({
-    start: Math.max(neededRange.start - 0.5, 0),
-    end: neededRange.end + 0.5
-  }, segmentBuffer.getInventory());
+  var bufferedSegments = segmentBuffer.getInventory();
   var currentPlaybackTime = playbackObserver.getCurrentTime();
   /** Callback allowing to retrieve a segment's history in the buffer. */
   var getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
@@ -16057,35 +16274,6 @@ function isPeriodTheCurrentAndLastOne(manifest, period, time) {
   var _a;
   var nextPeriod = manifest.getPeriodAfter(period);
   return period.containsTime(time, nextPeriod) && manifest.isLastPeriodKnown && period.id === ((_a = manifest.periods[manifest.periods.length - 1]) === null || _a === void 0 ? void 0 : _a.id);
-}
-/**
- * From the given SegmentInventory, filters the "playable" (in a supported codec
- * and not known to be undecipherable) buffered Segment Objects which overlap
- * with the given range.
- * @param {Object} neededRange
- * @param {Array.<Object>} segmentInventory
- * @returns {Array.<Object>}
- */
-function getPlayableBufferedSegments(neededRange, segmentInventory) {
-  var _config$getCurrent = config/* default */.A.getCurrent(),
-    MINIMUM_SEGMENT_SIZE = _config$getCurrent.MINIMUM_SEGMENT_SIZE;
-  var segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
-  var minEnd = neededRange.start + segmentRoundingError;
-  var maxStart = neededRange.end - segmentRoundingError;
-  var overlappingChunks = [];
-  for (var i = segmentInventory.length - 1; i >= 0; i--) {
-    var eltInventory = segmentInventory[i];
-    var representation = eltInventory.infos.representation;
-    if (eltInventory.status === 1 /* ChunkStatus.Complete */ && representation.decipherable !== false && representation.isSupported) {
-      var inventorySegment = eltInventory.infos.segment;
-      var eltInventoryStart = inventorySegment.time / inventorySegment.timescale;
-      var eltInventoryEnd = !inventorySegment.complete ? eltInventory.end : eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
-      if (eltInventoryEnd > minEnd && eltInventoryStart < maxStart || eltInventory.end > minEnd && eltInventory.start < maxStart) {
-        overlappingChunks.unshift(eltInventory);
-      }
-    }
-  }
-  return overlappingChunks;
 }
 // EXTERNAL MODULE: ./src/utils/sleep.ts
 var sleep = __webpack_require__(8801);
@@ -19649,8 +19837,6 @@ var get_loaded_reference = __webpack_require__(5097);
 var initial_seek_and_play = __webpack_require__(107);
 // EXTERNAL MODULE: ./src/core/init/utils/initialize_content_decryption.ts
 var initialize_content_decryption = __webpack_require__(6899);
-// EXTERNAL MODULE: ./src/compat/browser_detection.ts
-var browser_detection = __webpack_require__(443);
 ;// CONCATENATED MODULE: ./src/compat/has_issues_with_high_media_source_duration.ts
 
 /**
@@ -20304,6 +20490,8 @@ function media_source_content_initializer_arrayLikeToArray(r, a) { (null == a ||
  * limitations under the License.
  */
 
+/* eslint-disable-next-line max-len */
+
 
 
 
@@ -20658,6 +20846,16 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
       startTime: initialTime
     }, cancelSignal);
     var rebufferingController = this._createRebufferingController(playbackObserver, manifest, speed, cancelSignal);
+    if (may_media_element_fail_on_undecipherable_data) {
+      // On some devices, just reload immediately when data become undecipherable
+      manifest.addEventListener("decipherabilityUpdate", function (elts) {
+        if (elts.some(function (e) {
+          return e.representation.decipherable !== true;
+        })) {
+          reloadMediaSource(0, undefined, undefined);
+        }
+      }, cancelSignal);
+    }
     var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     /**
      * Emit a "loaded" events once the initial play has been performed and the
@@ -20808,21 +21006,7 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
           return self.trigger("addedSegment", value);
         },
         needsMediaSourceReload: function needsMediaSourceReload(payload) {
-          var _a, _b;
-          var lastObservation = streamObserver.getReference().getValue();
-          var currentPosition = (_a = lastObservation.position.pending) !== null && _a !== void 0 ? _a : streamObserver.getCurrentTime();
-          var isPaused = (_b = lastObservation.paused.pending) !== null && _b !== void 0 ? _b : streamObserver.getIsPaused();
-          var position = currentPosition + payload.timeOffset;
-          if (payload.minimumPosition !== undefined) {
-            position = Math.max(payload.minimumPosition, position);
-          }
-          if (payload.maximumPosition !== undefined) {
-            position = Math.min(payload.maximumPosition, position);
-          }
-          onReloadOrder({
-            position: position,
-            autoPlay: !isPaused
-          });
+          reloadMediaSource(payload.timeOffset, payload.minimumPosition, payload.maximumPosition);
         },
         needsDecipherabilityFlush: function needsDecipherabilityFlush() {
           var _a, _b, _c;
@@ -20860,6 +21044,32 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
           return self._onFatalError(err);
         }
       };
+    }
+    /**
+     * Callback allowing to reload the current content.
+     * @param {number} deltaPosition - Position you want to seek to after
+     * reloading, as a delta in seconds from the last polled playing position.
+     * @param {number|undefined} minimumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     * @param {number|undefined} maximumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     */
+    function reloadMediaSource(deltaPosition, minimumPosition, maximumPosition) {
+      var _a, _b;
+      var lastObservation = streamObserver.getReference().getValue();
+      var currentPosition = (_a = lastObservation.position.pending) !== null && _a !== void 0 ? _a : streamObserver.getCurrentTime();
+      var isPaused = (_b = lastObservation.paused.pending) !== null && _b !== void 0 ? _b : streamObserver.getIsPaused();
+      var position = currentPosition + deltaPosition;
+      if (minimumPosition !== undefined) {
+        position = Math.max(minimumPosition, position);
+      }
+      if (maximumPosition !== undefined) {
+        position = Math.min(maximumPosition, position);
+      }
+      onReloadOrder({
+        position: position,
+        autoPlay: !isPaused
+      });
     }
   }
   /**
@@ -21115,6 +21325,11 @@ function getLoadedReference(playbackObserver, mediaElement, isDirectfile, cancel
       return;
     }
     if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
+      // The duration is NaN if no media data is available,
+      // which means media is not loaded yet.
+      if (isNaN(mediaElement.duration)) {
+        return;
+      }
       if (mediaElement.duration > 0) {
         isLoaded.setValue(true);
         listenCanceller.cancel();
@@ -22182,7 +22397,7 @@ var ImageSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
     try {
       this._buffered.insert(startTime, endTime);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true, performance.now());
       }
     } catch (err) {
       return Promise.reject(err);
@@ -22487,6 +22702,29 @@ function areNearlyEqual(a, b, delta) {
   }
   return Math.abs(a - b) <= Math.min(delta, MAX_DELTA_BUFFER_TIME);
 }
+var EPSILON = 5e-2; // 5%
+/**
+ * Check if two cues start are almost the same.
+ * It should depend on there relative length:
+ *
+ * [0, 2] and [2, 4] start are NOT equals
+ * [0, 2] and [0, 4]  start are equals
+ * [0, 0.1] and [0.101, 2] start are NOT equals
+ * [0, 2] and [0.01, 4]  start are equals
+ * [0, 100] and [1, 200]  start are NOT equals
+ * @see MAX_DELTA_BUFFER_TIME
+ * @param {Number} firstCue the existing cue
+ * @param {Number} secondCue the cue that we test if it follow firstCue
+ * @returns {Boolean}
+ */
+function areCuesStartNearlyEqual(firstCue, secondCue) {
+  var firstCueDuration = firstCue.end - firstCue.start;
+  var secondCueDuration = secondCue.end - secondCue.start;
+  var diffBetweenStart = Math.abs(firstCue.start - secondCue.start);
+  var minDuration = Math.min(firstCueDuration, secondCueDuration, MAX_DELTA_BUFFER_TIME);
+  // ratio diff/ minduration is bellow 5%
+  return diffBetweenStart / minDuration <= EPSILON;
+}
 /**
  * Get all cues which have data before the given time.
  * @param {Object} cues
@@ -22766,7 +23004,7 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
     for (var cueIdx = 0; cueIdx < cuesBuffer.length; cueIdx++) {
       var cuesInfos = cuesBuffer[cueIdx];
       if (start < cuesInfos.end) {
-        if (areNearlyEqual(start, cuesInfos.start, relativeDelta)) {
+        if (areCuesStartNearlyEqual(cuesInfosToInsert, cuesInfos)) {
           if (areNearlyEqual(end, cuesInfos.end, relativeDelta)) {
             // exact same segment
             //   ours:            |AAAAA|
@@ -23214,7 +23452,7 @@ var HTMLTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       return;
     }
     if (infos.inventoryInfos !== null) {
-      this._segmentInventory.insertChunk(infos.inventoryInfos, true);
+      this._segmentInventory.insertChunk(infos.inventoryInfos, true, performance.now());
     }
     this._buffer.insert(cues, start, end);
     this._buffered.insert(start, end);
@@ -23729,7 +23967,7 @@ var NativeTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       }
       this._buffered.insert(start, end);
       if (infos.inventoryInfos !== null) {
-        this._segmentInventory.insertChunk(infos.inventoryInfos, true);
+        this._segmentInventory.insertChunk(infos.inventoryInfos, true, performance.now());
       }
     } catch (err) {
       return Promise.reject(err);
@@ -24103,7 +24341,17 @@ var SegmentInventory = /*#__PURE__*/function () {
           // those segments are contiguous, we have no way to infer their real
           // end
           if (prevSegment.bufferedEnd === undefined) {
-            prevSegment.bufferedEnd = thisSegment.precizeStart ? thisSegment.start : prevSegment.end;
+            if (thisSegment.precizeStart) {
+              prevSegment.bufferedEnd = thisSegment.start;
+            } else if (prevSegment.infos.segment.complete) {
+              prevSegment.bufferedEnd = prevSegment.end;
+            } else {
+              // We cannot truly trust the anounced end here as the segment was
+              // potentially not complete at its time of announce.
+              // Just assume the next's segment announced start is right - as
+              // `start` is in that scenario more "trustable" than `end`.
+              prevSegment.bufferedEnd = thisSegment.start;
+            }
             log/* default */.A.debug("SI: calculating buffered end of contiguous segment", bufferType, prevSegment.bufferedEnd, prevSegment.end);
           }
           thisSegment.bufferedStart = prevSegment.bufferedEnd;
@@ -24142,8 +24390,12 @@ var SegmentInventory = /*#__PURE__*/function () {
    * Chunks are decodable sub-parts of a whole segment. Once all chunks in a
    * segment have been inserted, you should call the `completeSegment` method.
    * @param {Object} chunkInformation
+   * @param {boolean} succeed - If `true` the insertion operation finished with
+   * success, if `false` an error arised while doing it.
+   * @param {number} insertionTs - The monotonically-increasing timestamp at the
+   * time the segment has been confirmed to be inserted by the buffer.
    */;
-  _proto.insertChunk = function insertChunk(_ref, succeed) {
+  _proto.insertChunk = function insertChunk(_ref, succeed, insertionTs) {
     var period = _ref.period,
       adaptation = _ref.adaptation,
       representation = _ref.representation,
@@ -24162,6 +24414,7 @@ var SegmentInventory = /*#__PURE__*/function () {
     var inventory = this._inventory;
     var newSegment = {
       status: succeed ? 0 /* ChunkStatus.PartiallyPushed */ : 2 /* ChunkStatus.Failed */,
+      insertionTs: insertionTs,
       chunkSize: chunkSize,
       splitted: false,
       start: start,
@@ -24358,6 +24611,7 @@ var SegmentInventory = /*#__PURE__*/function () {
               log/* default */.A.warn("SI: Segment pushed is contained in a previous one", bufferType, start, end, segmentI.start, segmentI.end);
               var nextSegment = {
                 status: segmentI.status,
+                insertionTs: segmentI.insertionTs,
                 /**
                  * Note: this sadly means we're doing as if
                  * that chunk is present two times.
@@ -24471,7 +24725,8 @@ var SegmentInventory = /*#__PURE__*/function () {
     }
   }
   /**
-   * Indicate that inserted chunks can now be considered as a complete segment.
+   * Indicate that inserted chunks can now be considered as a fully-loaded
+   * segment.
    * Take in argument the same content than what was given to `insertChunk` for
    * the corresponding chunks.
    * @param {Object} content
@@ -24511,7 +24766,7 @@ var SegmentInventory = /*#__PURE__*/function () {
           i -= length;
         }
         if (this._inventory[firstI].status === 0 /* ChunkStatus.PartiallyPushed */) {
-          this._inventory[firstI].status = 1 /* ChunkStatus.Complete */;
+          this._inventory[firstI].status = 1 /* ChunkStatus.FullyLoaded */;
         }
         this._inventory[firstI].chunkSize = segmentSize;
         this._inventory[firstI].end = lastEnd;
@@ -24534,6 +24789,8 @@ var SegmentInventory = /*#__PURE__*/function () {
             });
           }
         } else {
+          // TODO FIXME There might be a false positive here when the
+          // `SEGMENT_SYNCHRONIZATION_DELAY` config value is at play
           log/* default */.A.debug("SI: buffered range not known after sync. Skipping history.", seg.start, seg.end);
         }
       }
@@ -24575,7 +24832,7 @@ var SegmentInventory = /*#__PURE__*/function () {
  */
 
 function bufferedStartLooksCoherent(thisSegment) {
-  if (thisSegment.bufferedStart === undefined || thisSegment.status !== 1 /* ChunkStatus.Complete */) {
+  if (thisSegment.bufferedStart === undefined || thisSegment.status !== 1 /* ChunkStatus.FullyLoaded */) {
     return false;
   }
   var start = thisSegment.start,
@@ -24593,7 +24850,7 @@ function bufferedStartLooksCoherent(thisSegment) {
  * @returns {Boolean}
  */
 function bufferedEndLooksCoherent(thisSegment) {
-  if (thisSegment.bufferedEnd === undefined || thisSegment.status !== 1 /* ChunkStatus.Complete */) {
+  if (thisSegment.bufferedEnd === undefined || !thisSegment.infos.segment.complete || thisSegment.status !== 1 /* ChunkStatus.FullyLoaded */) {
     return false;
   }
   var start = thisSegment.start,
@@ -24613,7 +24870,9 @@ function bufferedEndLooksCoherent(thisSegment) {
  */
 function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastDeletedSegmentInfos, bufferType) {
   var _config$getCurrent5 = config/* default */.A.getCurrent(),
-    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent5.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE;
+    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent5.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+    MISSING_DATA_TRIGGER_SYNC_DELAY = _config$getCurrent5.MISSING_DATA_TRIGGER_SYNC_DELAY,
+    SEGMENT_SYNCHRONIZATION_DELAY = _config$getCurrent5.SEGMENT_SYNCHRONIZATION_DELAY;
   if (firstSegmentInRange.bufferedStart !== undefined) {
     if (firstSegmentInRange.bufferedStart < rangeStart) {
       log/* default */.A.debug("SI: Segment partially GCed at the start", bufferType, firstSegmentInRange.bufferedStart, rangeStart);
@@ -24634,6 +24893,11 @@ function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastD
       firstSegmentInRange.precizeStart = true;
     }
   } else if (firstSegmentInRange.start - rangeStart <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE) {
+    var now = performance.now();
+    if (firstSegmentInRange.start - rangeStart >= MISSING_DATA_TRIGGER_SYNC_DELAY && now - firstSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY) {
+      log/* default */.A.debug("SI: Ignored bufferedStart synchronization", bufferType, rangeStart, firstSegmentInRange.start, now - firstSegmentInRange.insertionTs);
+      return;
+    }
     log/* default */.A.debug("SI: found true buffered start", bufferType, rangeStart, firstSegmentInRange.start);
     firstSegmentInRange.bufferedStart = rangeStart;
     if (bufferedStartLooksCoherent(firstSegmentInRange)) {
@@ -24644,7 +24908,12 @@ function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastD
     log/* default */.A.debug("SI: range start too far from expected start", bufferType, rangeStart, firstSegmentInRange.start);
     firstSegmentInRange.bufferedStart = firstSegmentInRange.start;
   } else {
-    log/* default */.A.debug("SI: Segment appears immediately garbage collected at the start", bufferType, firstSegmentInRange.bufferedStart, rangeStart);
+    var _now = performance.now();
+    if (firstSegmentInRange.start - rangeStart >= MISSING_DATA_TRIGGER_SYNC_DELAY && _now - firstSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY) {
+      log/* default */.A.debug("SI: Ignored bufferedStart synchronization", bufferType, rangeStart, firstSegmentInRange.start, _now - firstSegmentInRange.insertionTs);
+      return;
+    }
+    log/* default */.A.debug("SI: Segment appears immediately garbage collected at the start", bufferType, rangeStart, firstSegmentInRange.start);
     firstSegmentInRange.bufferedStart = rangeStart;
   }
 }
@@ -24657,7 +24926,9 @@ function guessBufferedStartFromRangeStart(firstSegmentInRange, rangeStart, lastD
  */
 function guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd, bufferType) {
   var _config$getCurrent6 = config/* default */.A.getCurrent(),
-    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent6.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE;
+    MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE = _config$getCurrent6.MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE,
+    MISSING_DATA_TRIGGER_SYNC_DELAY = _config$getCurrent6.MISSING_DATA_TRIGGER_SYNC_DELAY,
+    SEGMENT_SYNCHRONIZATION_DELAY = _config$getCurrent6.SEGMENT_SYNCHRONIZATION_DELAY;
   if (lastSegmentInRange.bufferedEnd !== undefined) {
     if (lastSegmentInRange.bufferedEnd > rangeEnd) {
       log/* default */.A.debug("SI: Segment partially GCed at the end", bufferType, lastSegmentInRange.bufferedEnd, rangeEnd);
@@ -24670,7 +24941,12 @@ function guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd, bufferType) 
   } else if (lastSegmentInRange.precizeEnd) {
     log/* default */.A.debug("SI: buffered end is precize end", bufferType, lastSegmentInRange.end);
     lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
-  } else if (rangeEnd - lastSegmentInRange.end <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE) {
+  } else if (rangeEnd - lastSegmentInRange.end <= MAX_MANIFEST_BUFFERED_START_END_DIFFERENCE || !lastSegmentInRange.infos.segment.complete) {
+    var now = performance.now();
+    if (rangeEnd - lastSegmentInRange.end >= MISSING_DATA_TRIGGER_SYNC_DELAY && now - lastSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY) {
+      log/* default */.A.debug("SI: Ignored bufferedEnd synchronization", bufferType, rangeEnd, lastSegmentInRange.end, now - lastSegmentInRange.insertionTs);
+      return;
+    }
     log/* default */.A.debug("SI: found true buffered end", bufferType, rangeEnd, lastSegmentInRange.end);
     lastSegmentInRange.bufferedEnd = rangeEnd;
     if (bufferedEndLooksCoherent(lastSegmentInRange)) {
@@ -24681,6 +24957,11 @@ function guessBufferedEndFromRangeEnd(lastSegmentInRange, rangeEnd, bufferType) 
     log/* default */.A.debug("SI: range end too far from expected end", bufferType, rangeEnd, lastSegmentInRange.end);
     lastSegmentInRange.bufferedEnd = lastSegmentInRange.end;
   } else {
+    var _now2 = performance.now();
+    if (rangeEnd - lastSegmentInRange.end >= MISSING_DATA_TRIGGER_SYNC_DELAY && _now2 - lastSegmentInRange.insertionTs < SEGMENT_SYNCHRONIZATION_DELAY) {
+      log/* default */.A.debug("SI: Ignored bufferedEnd synchronization", bufferType, rangeEnd, lastSegmentInRange.end, _now2 - lastSegmentInRange.insertionTs);
+      return;
+    }
     log/* default */.A.debug("SI: Segment appears immediately garbage collected at the end", bufferType, lastSegmentInRange.bufferedEnd, rangeEnd);
     lastSegmentInRange.bufferedEnd = rangeEnd;
   }
@@ -25045,11 +25326,10 @@ var CustomLoaderError = /*#__PURE__*/function (_Error) {
    */
   function CustomLoaderError(message, canRetry, isOfflineError, xhr) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, CustomLoaderError.prototype);
     _this.name = "CustomLoaderError";
-    _this.message = message;
     _this.canRetry = canRetry;
     _this.isOfflineError = isOfflineError;
     _this.xhr = xhr;
@@ -25071,8 +25351,8 @@ var CustomLoaderError = /*#__PURE__*/function (_Error) {
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7387);
 /* harmony import */ var _babel_runtime_helpers_wrapNativeSuper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8593);
-/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5497);
-/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2620);
+/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5497);
+/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2620);
 
 
 /**
@@ -25101,13 +25381,12 @@ var CustomLoaderError = /*#__PURE__*/function (_Error) {
 var EncryptedMediaError = /*#__PURE__*/function (_Error) {
   function EncryptedMediaError(code, reason, supplementaryInfos) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, (0,_error_message__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)("EncryptedMediaError", code, reason)) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, EncryptedMediaError.prototype);
     _this.name = "EncryptedMediaError";
-    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_0__/* .ErrorTypes */ .wU.ENCRYPTED_MEDIA_ERROR;
+    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_1__/* .ErrorTypes */ .wU.ENCRYPTED_MEDIA_ERROR;
     _this.code = code;
-    _this.message = (0,_error_message__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(_this.name, _this.code, reason);
     _this.fatal = false;
     if (typeof (supplementaryInfos === null || supplementaryInfos === void 0 ? void 0 : supplementaryInfos.keyStatuses) === "string") {
       _this.keyStatuses = supplementaryInfos.keyStatuses;
@@ -25333,8 +25612,8 @@ function isKnownError(error) {
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7387);
 /* harmony import */ var _babel_runtime_helpers_wrapNativeSuper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8593);
-/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5497);
-/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2620);
+/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5497);
+/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2620);
 
 
 /**
@@ -25363,13 +25642,12 @@ function isKnownError(error) {
 var MediaError = /*#__PURE__*/function (_Error) {
   function MediaError(code, reason, context) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, (0,_error_message__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)("MediaError", code, reason)) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, MediaError.prototype);
     _this.name = "MediaError";
-    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_0__/* .ErrorTypes */ .wU.MEDIA_ERROR;
+    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_1__/* .ErrorTypes */ .wU.MEDIA_ERROR;
     _this.code = code;
-    _this.message = (0,_error_message__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(_this.name, _this.code, reason);
     _this.fatal = false;
     var adaptation = context === null || context === void 0 ? void 0 : context.adaptation;
     if (adaptation !== undefined) {
@@ -25412,8 +25690,8 @@ var MediaError = /*#__PURE__*/function (_Error) {
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7387);
 /* harmony import */ var _babel_runtime_helpers_wrapNativeSuper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8593);
-/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5497);
-/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2620);
+/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5497);
+/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2620);
 
 
 /**
@@ -25446,17 +25724,16 @@ var NetworkError = /*#__PURE__*/function (_Error) {
    */
   function NetworkError(code, baseError) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, (0,_error_message__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)("NetworkError", code, baseError.message)) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, NetworkError.prototype);
     _this.name = "NetworkError";
-    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_0__/* .ErrorTypes */ .wU.NETWORK_ERROR;
+    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_1__/* .ErrorTypes */ .wU.NETWORK_ERROR;
     _this.xhr = baseError.xhr === undefined ? null : baseError.xhr;
     _this.url = baseError.url;
     _this.status = baseError.status;
     _this.errorType = baseError.type;
     _this.code = code;
-    _this.message = (0,_error_message__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(_this.name, _this.code, baseError.message);
     _this.fatal = false;
     return _this;
   }
@@ -25468,7 +25745,7 @@ var NetworkError = /*#__PURE__*/function (_Error) {
   (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A)(NetworkError, _Error);
   var _proto = NetworkError.prototype;
   _proto.isHttpError = function isHttpError(httpErrorCode) {
-    return this.errorType === _error_codes__WEBPACK_IMPORTED_MODULE_0__/* .NetworkErrorTypes */ .yl.ERROR_HTTP_CODE && this.status === httpErrorCode;
+    return this.errorType === _error_codes__WEBPACK_IMPORTED_MODULE_1__/* .NetworkErrorTypes */ .yl.ERROR_HTTP_CODE && this.status === httpErrorCode;
   };
   return NetworkError;
 }( /*#__PURE__*/(0,_babel_runtime_helpers_wrapNativeSuper__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A)(Error));
@@ -25485,8 +25762,8 @@ var NetworkError = /*#__PURE__*/function (_Error) {
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7387);
 /* harmony import */ var _babel_runtime_helpers_wrapNativeSuper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8593);
-/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5497);
-/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2620);
+/* harmony import */ var _error_codes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5497);
+/* harmony import */ var _error_message__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2620);
 
 
 /**
@@ -25517,13 +25794,12 @@ var OtherError = /*#__PURE__*/function (_Error) {
    */
   function OtherError(code, reason) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, (0,_error_message__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)("OtherError", code, reason)) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, OtherError.prototype);
     _this.name = "OtherError";
-    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_0__/* .ErrorTypes */ .wU.OTHER_ERROR;
+    _this.type = _error_codes__WEBPACK_IMPORTED_MODULE_1__/* .ErrorTypes */ .wU.OTHER_ERROR;
     _this.code = code;
-    _this.message = (0,_error_message__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(_this.name, _this.code, reason);
     _this.fatal = false;
     return _this;
   }
@@ -25577,7 +25853,22 @@ var RequestError = /*#__PURE__*/function (_Error) {
    */
   function RequestError(url, status, type, xhr) {
     var _this;
-    _this = _Error.call(this) || this;
+    var message;
+    switch (type) {
+      case "TIMEOUT":
+        message = "The request timed out";
+        break;
+      case "ERROR_EVENT":
+        message = "An error prevented the request to be performed successfully";
+        break;
+      case "PARSE_ERROR":
+        message = "An error happened while formatting the response data";
+        break;
+      case "ERROR_HTTP_CODE":
+        message = "An HTTP status code indicating failure was received: " + String(status);
+        break;
+    }
+    _this = _Error.call(this, message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, RequestError.prototype);
     _this.name = "RequestError";
@@ -25587,20 +25878,6 @@ var RequestError = /*#__PURE__*/function (_Error) {
     }
     _this.status = status;
     _this.type = type;
-    switch (type) {
-      case "TIMEOUT":
-        _this.message = "The request timed out";
-        break;
-      case "ERROR_EVENT":
-        _this.message = "An error prevented the request to be performed successfully";
-        break;
-      case "PARSE_ERROR":
-        _this.message = "An error happened while formatting the response data";
-        break;
-      case "ERROR_HTTP_CODE":
-        _this.message = "An HTTP status code indicating failure was received: " + String(_this.status);
-        break;
-    }
     return _this;
   }
   (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(RequestError, _Error);
@@ -28666,7 +28943,11 @@ function getKeyIdFromInitSegment(segment) {
   if (tenc === null || tenc.byteLength < 24) {
     return null;
   }
-  return tenc.subarray(8, 24);
+  var keyId = tenc.subarray(8, 24);
+  // Zero-filled keyId should only be valid for unencrypted content
+  return keyId.every(function (b) {
+    return b === 0;
+  }) ? null : keyId;
 }
 
 
@@ -31020,22 +31301,7 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    // destructuring to please TypeScript
-    var _this$_index = this._index,
-      segmentUrlTemplate = _this$_index.segmentUrlTemplate,
-      startNumber = _this$_index.startNumber,
-      endNumber = _this$_index.endNumber,
-      timeline = _this$_index.timeline,
-      timescale = _this$_index.timescale,
-      indexTimeOffset = _this$_index.indexTimeOffset;
-    return (0,get_segments_from_timeline/* default */.A)({
-      segmentUrlTemplate: segmentUrlTemplate,
-      startNumber: startNumber,
-      endNumber: endNumber,
-      timeline: timeline,
-      timescale: timescale,
-      indexTimeOffset: indexTimeOffset
-    }, from, duration, this._manifestBoundsCalculator, this._scaledPeriodEnd, this._isEMSGWhitelisted);
+    return (0,get_segments_from_timeline/* default */.A)(this._index, from, duration, this._manifestBoundsCalculator, this._scaledPeriodEnd, this._isEMSGWhitelisted);
   }
   /**
    * Returns true if the index should be refreshed.
@@ -31123,9 +31389,9 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    var _this$_index2 = this._index,
-      timescale = _this$_index2.timescale,
-      timeline = _this$_index2.timeline;
+    var _this$_index = this._index,
+      timescale = _this$_index.timescale,
+      timeline = _this$_index.timeline;
     var segmentTimeRounding = getSegmentTimeRoundingError(timescale);
     var scaledWantedEnd = (0,index_helpers/* toIndexTime */.vb)(end, this._index);
     var lastReqSegInfo = getLastRequestableSegmentInfo(
@@ -32020,7 +32286,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
  * @returns {Array.<Object>}
  */
 function parseRepresentationIndex(representation, context) {
-  var _a, _b;
+  var _a, _b, _c;
   var availabilityTimeOffset = context.availabilityTimeOffset,
     manifestBoundsCalculator = context.manifestBoundsCalculator,
     isDynamic = context.isDynamic,
@@ -32069,6 +32335,9 @@ function parseRepresentationIndex(representation, context) {
     var segmentTemplate = object_assign/* default */.A.apply(void 0, [{}].concat(segmentTemplates));
     if (segmentTemplate.availabilityTimeOffset !== undefined || context.availabilityTimeOffset !== undefined) {
       reprIndexCtxt.availabilityTimeOffset = ((_a = segmentTemplate.availabilityTimeOffset) !== null && _a !== void 0 ? _a : 0) + ((_b = context.availabilityTimeOffset) !== null && _b !== void 0 ? _b : 0);
+    }
+    if (segmentTemplate.availabilityTimeComplete !== undefined || context.availabilityTimeComplete !== undefined) {
+      reprIndexCtxt.availabilityTimeComplete = (_c = segmentTemplate.availabilityTimeComplete) !== null && _c !== void 0 ? _c : context.availabilityTimeComplete;
     }
     representationIndex = timeline.isTimelineIndexArgument(segmentTemplate) ? new timeline(segmentTemplate, reprIndexCtxt) : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
   } else {
@@ -33735,11 +34004,10 @@ var MPDError = /*#__PURE__*/function (_Error) {
    */
   function MPDError(message) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, MPDError.prototype);
     _this.name = "MPDError";
-    _this.message = message;
     return _this;
   }
   (0,inheritsLoose/* default */.A)(MPDError, _Error);
@@ -40805,8 +41073,9 @@ var find_complete_box = __webpack_require__(1688);
 function extractCompleteChunks(buffer) {
   var _position = 0;
   var chunks = [];
+  var currentBuffer = null;
   while (_position < buffer.length) {
-    var currentBuffer = buffer.subarray(_position, Infinity);
+    currentBuffer = buffer.subarray(_position, Infinity);
     var moofIndex = (0,find_complete_box/* default */.A)(currentBuffer, 0x6D6F6F66 /* moof */);
     if (moofIndex < 0) {
       // no moof, not a segment.
@@ -40834,7 +41103,10 @@ function extractCompleteChunks(buffer) {
     chunks.push(chunk);
     _position = maxEnd;
   }
-  return [chunks, null];
+  if (chunks.length === 0) {
+    return [null, currentBuffer];
+  }
+  return [chunks, currentBuffer];
 }
 ;// CONCATENATED MODULE: ./src/transports/dash/low_latency_segment_loader.ts
 /**
@@ -40884,8 +41156,10 @@ function lowLatencySegmentLoader(url, content, options, callbacks, cancelSignal)
     var res = extractCompleteChunks(concatenated);
     var completeChunks = res[0];
     partialChunk = res[1];
-    for (var i = 0; i < completeChunks.length; i++) {
-      callbacks.onNewChunk(completeChunks[i]);
+    if (completeChunks !== null) {
+      completeChunks.forEach(function (completedChunk) {
+        callbacks.onNewChunk(completedChunk);
+      });
       if (cancelSignal.isCancelled()) {
         return;
       }
@@ -46172,11 +46446,10 @@ var AssertionError = /*#__PURE__*/function (_Error) {
    */
   function AssertionError(message) {
     var _this;
-    _this = _Error.call(this) || this;
+    _this = _Error.call(this, message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this, AssertionError.prototype);
     _this.name = "AssertionError";
-    _this.message = message;
     return _this;
   }
   (0,inheritsLoose/* default */.A)(AssertionError, _Error);
@@ -46380,6 +46653,7 @@ function base64ToBytes(str) {
 /* harmony export */   KS: function() { return /* binding */ itobe4; },
 /* harmony export */   Kk: function() { return /* binding */ itobe8; },
 /* harmony export */   UU: function() { return /* binding */ be2toi; },
+/* harmony export */   WO: function() { return /* binding */ itole2; },
 /* harmony export */   Wz: function() { return /* binding */ itole4; },
 /* harmony export */   eR: function() { return /* binding */ le4toi; },
 /* harmony export */   mq: function() { return /* binding */ be4toi; },
@@ -46387,7 +46661,7 @@ function base64ToBytes(str) {
 /* harmony export */   ww: function() { return /* binding */ itobe2; },
 /* harmony export */   xW: function() { return /* binding */ concat; }
 /* harmony export */ });
-/* unused harmony exports le8toi, itole2, isABEqualBytes, toUint8Array */
+/* unused harmony exports le8toi, isABEqualBytes, toUint8Array */
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -47517,7 +47791,10 @@ var ISO_MAP_2_TO_3 = {
  */
 function normalizeLanguage(_language) {
   if ((0,is_null_or_undefined/* default */.A)(_language) || _language === "") {
-    return "";
+    /**
+     * "und" is a special value in ISO 639-3 that stands for "undetermined language".
+     */
+    return "und";
   }
   var fields = ("" + _language).toLowerCase().split("-");
   var base = fields[0];
@@ -49298,7 +49575,7 @@ function strToUtf16LE(str) {
 }
 /**
  * Convert a string to an Uint8Array containing the corresponding UTF-16 code
- * units in little-endian.
+ * units in big-endian.
  * @param {string} str
  * @returns {Uint8Array}
  */
@@ -49920,11 +50197,11 @@ var CancellationSignal = /*#__PURE__*/function () {
 var CancellationError = /*#__PURE__*/function (_Error) {
   function CancellationError() {
     var _this4;
-    _this4 = _Error.call(this) || this;
+    var message = "This task was cancelled.";
+    _this4 = _Error.call(this, message) || this;
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(_this4, CancellationError.prototype);
     _this4.name = "CancellationError";
-    _this4.message = "This task was cancelled.";
     return _this4;
   }
   (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A)(CancellationError, _Error);
@@ -53383,6 +53660,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     _this.log = src_log/* default */.A;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
+    Player._priv_registerVideoElement(_this.videoElement);
     var destroyCanceller = new task_canceller/* default */.Ay();
     _this._destroyCanceller = destroyCanceller;
     _this._priv_pictureInPictureRef = getPictureOnPictureStateRef(videoElement, destroyCanceller.signal);
@@ -53488,6 +53766,35 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
    */
   Player.addFeatures = function addFeatures(featureList) {
     add_features_addFeatures(featureList);
+  }
+  /**
+   * Register the video element to the set of elements currently in use.
+   * @param videoElement the video element to register.
+   * @throws Error - Throws if the element is already used by another player instance.
+   */;
+  Player._priv_registerVideoElement = function _priv_registerVideoElement(videoElement) {
+    if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
+      var errorMessage = "The video element is already attached to another RxPlayer instance." + "\nMake sure to dispose the previous instance with player.dispose() " + "before creating a new player instance attaching that video element.";
+      // eslint-disable-next-line no-console
+      console.warn(errorMessage);
+      /*
+       * TODO: for next major version 5.0: this need to throw an error instead
+       * of just logging this was not done for minor version as it could be
+       * considerated a breaking change.
+       *
+       * throw new Error(errorMessage);
+       */
+    }
+    Player._priv_currentlyUsedVideoElements.add(videoElement);
+  }
+  /**
+   * Deregister the video element of the set of elements currently in use.
+   * @param videoElement the video element to deregister.
+   */;
+  Player._priv_deregisterVideoElement = function _priv_deregisterVideoElement(videoElement) {
+    if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
+      Player._priv_currentlyUsedVideoElements["delete"](videoElement);
+    }
   };
   var _proto = Player.prototype;
   _proto.addEventListener = function addEventListener(evt, fn) {
@@ -53517,6 +53824,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // free resources linked to the loaded content
     this.stop();
     if (this.videoElement !== null) {
+      Player._priv_deregisterVideoElement(this.videoElement);
       // free resources used for decryption management
       disposeDecryptionResources(this.videoElement)["catch"](function (err) {
         var message = err instanceof Error ? err.message : "Unknown error";
@@ -55830,6 +56138,12 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     }
   }]);
 }(event_emitter/* default */.A);
+/**
+ * Store all video elements currently in use by an RxPlayer instance.
+ * This is used to check that a video element is not shared between multiple instances.
+ * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
+ */
+Player._priv_currentlyUsedVideoElements = new WeakSet();
 Player.version = /* PLAYER_VERSION */"3.33.3";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
@@ -55878,10 +56192,10 @@ Player.version = /* PLAYER_VERSION */"3.33.3";
 function initializeFeaturesObject() {
   var HAS_MEDIA_SOURCE =  true || 0;
   if (HAS_MEDIA_SOURCE) {
-    features_object/* default */.A.mediaSourceInit = (__webpack_require__(8241)/* ["default"] */ .A);
+    features_object/* default */.A.mediaSourceInit = (__webpack_require__(1737)/* ["default"] */ .A);
   }
   if (true) {
-    features_object/* default */.A.decrypt = (__webpack_require__(7682)/* ["default"] */ .Ay);
+    features_object/* default */.A.decrypt = (__webpack_require__(6699)/* ["default"] */ .Ay);
   }
   if (true) {
     features_object/* default */.A.imageBuffer = (__webpack_require__(4166)/* ["default"] */ .A);
