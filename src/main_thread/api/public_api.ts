@@ -874,6 +874,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const canRunInMultiThread =
         features.multithread !== null &&
         this._priv_worker !== null &&
+        this.videoElement.FORCED_MEDIA_SOURCE === undefined &&
         transport === "dash" &&
         MULTI_THREAD_UNSUPPORTED_LOAD_VIDEO_OPTIONS.every((option) =>
           isNullOrUndefined(options[option]),

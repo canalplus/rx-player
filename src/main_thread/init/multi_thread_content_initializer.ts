@@ -1181,7 +1181,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       cancelSignal,
     );
     const ContentDecryptor = features.decrypt;
-    const emeApi = getEmeApiImplementation("auto");
+    const emeApi = mediaElement.FORCED_EME_API ?? getEmeApiImplementation("auto");
     if (emeApi === null) {
       return createEmeDisabledReference("EME API not available on the current page.");
     }

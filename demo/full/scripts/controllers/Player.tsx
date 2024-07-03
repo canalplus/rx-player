@@ -17,7 +17,8 @@ import type {
   ILoadVideoOptions,
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
-import { DummyMediaElement } from "../../../../src/compat/dummy_media_element";
+import DummyMediaElement from "../../../../src/experimental/tools/DummyMediaElement";
+import { toDummyDrmConfiguration } from "../lib/parseDRMConfigurations";
 
 const { useCallback, useEffect, useRef, useState } = React;
 
@@ -158,13 +159,14 @@ function Player(): JSX.Element {
     if (playerModule) {
       playerModule.destroy();
     }
+    const videoElement = useDummyMediaElement
+      ? (new DummyMediaElement() as unknown as HTMLMediaElement)
+      : videoElementRef.current;
     const playerMod = new PlayerModule(
       Object.assign(
         {},
         {
-          videoElement: useDummyMediaElement ?
-            new DummyMediaElement() as unknown as HTMLMediaElement :
-            videoElementRef.current,
+          videoElement,
           textTrackElement: textTrackElementRef.current,
           debugElement: debugElementRef.current,
         },
@@ -222,6 +224,9 @@ function Player(): JSX.Element {
         }
         created.actions.updateWorkerMode(relyOnWorker);
         playerMod = created;
+      }
+      if (useDummyMediaElement && contentInfo.keySystems !== undefined) {
+        contentInfo.keySystems = toDummyDrmConfiguration(contentInfo.keySystems);
       }
       loadContent(playerMod, contentInfo, loadVideoOpts);
     },

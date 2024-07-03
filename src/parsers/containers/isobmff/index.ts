@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import extractCompleteChunks from "./extract_complete_chunks";
+import extractCompleteChunks, { extractInitSegment } from "./extract_complete_chunks";
 import findCompleteBox from "./find_complete_box";
 import takePSSHOut, { getPsshSystemID } from "./take_pssh_out";
 
+export { extractInitSegment };
 export { createBox, createBoxWithChildren } from "./create_box";
 export {
   getBox,

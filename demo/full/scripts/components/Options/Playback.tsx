@@ -68,8 +68,9 @@ function PlaybackConfig({
         </Checkbox>
         <span className="option-desc">
           {useDummyMediaElement
-            ? "Use mocked media API. The content will not really play but the " +
-              "RxPlayer will believe it does (useful for debugging inaccessible content)."
+            ? "Use mocked media API: The content will not really play but the RxPlayer " +
+              "will believe it does. Useful for debugging the RxPlayer's logic even on " +
+              "undecipherable or undecodable content."
             : "Actually play the chosen content."}
         </span>
       </li>

@@ -45,6 +45,47 @@ export default async function parseDRMConfigurations(
   return keySystems.filter((ks): ks is IKeySystemOption => ks !== undefined);
 }
 
+export function toDummyDrmConfiguration(
+  baseOptions: IKeySystemOption[],
+): IKeySystemOption[] {
+  return baseOptions.map((ks) => {
+    return {
+      ...ks,
+      getLicense(...args: Parameters<IKeySystemOption["getLicense"]>) {
+        try {
+          const challenge = args[0];
+          const challengeStr = utf8ToStr(challenge);
+          const challengeObj = JSON.parse(challengeStr) as {
+            certificate: string | null;
+            persistent: boolean;
+            keyIds: string[];
+          };
+          const keys: Record<
+            string,
+            {
+              policyLevel: number;
+            }
+          > = {};
+          challengeObj.keyIds.forEach((kid) => {
+            keys[kid] = {
+              policyLevel: 50,
+            };
+          });
+          const license = {
+            type: "license",
+            persistent: false,
+            keys,
+          };
+          const licenseU8 = strToUtf8(JSON.stringify(license));
+          return licenseU8.buffer;
+        } catch (e) {
+          return ks.getLicense(...args);
+        }
+      },
+    };
+  });
+}
+
 function getServerCertificate(url: string): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
