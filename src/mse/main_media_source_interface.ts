@@ -69,7 +69,7 @@ export default class MainMediaSourceInterface
    * You can then obtain a link to that `MediaSource`, for example to link it
    * to an `HTMLMediaElement`, through the `handle` property.
    */
-  constructor(id: string) {
+  constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
     super();
     this.id = id;
     this.sourceBuffers = [];
@@ -83,7 +83,8 @@ export default class MainMediaSourceInterface
     }
 
     log.info("Init: Creating MediaSource");
-    const mediaSource = new MediaSource_();
+    const mediaSource =
+      forcedMediaSource !== undefined ? new forcedMediaSource() : new MediaSource_();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
     this.handle = isNullOrUndefined(handle)
       ? // eslint-disable-next-line @typescript-eslint/no-restricted-types
