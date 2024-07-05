@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import type {
-  ICustomMediaKeys,
-  ICustomMediaKeySystemAccess,
-  IEmeApiImplementation,
-} from "../../../compat/eme";
+  IMediaElement,
+  IMediaKeys,
+  IMediaKeySystemAccess,
+} from "../../../compat/browser_compatibility_types";
+import type { IEmeApiImplementation } from "../../../compat/eme";
 import { setMediaKeys } from "../../../compat/eme/set_media_keys";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
@@ -44,10 +44,10 @@ export interface IMediaElementMediaKeysInfos {
    * Last MediaKeySystemAccess used to create a MediaKeys bound to that
    * HTMLMediaElement.
    */
-  mediaKeySystemAccess: ICustomMediaKeySystemAccess | MediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
 
   /** Last MediaKeys instance bound to that HTMLMediaElement. */
-  mediaKeys: MediaKeys | ICustomMediaKeys;
+  mediaKeys: IMediaKeys;
 
   /**
    * Store containing information about every MediaKeySession active on the

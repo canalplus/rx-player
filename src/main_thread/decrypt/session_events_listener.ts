@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../compat/eme";
+import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
 import {
   onKeyError,
   onKeyMessage,
@@ -40,7 +40,7 @@ import checkKeyStatuses from "./utils/check_key_statuses";
  * @param {Object} cancelSignal
  */
 export default function SessionEventsListener(
-  session: MediaKeySession | ICustomMediaKeySession,
+  session: IMediaKeySession,
   keySystemOptions: IKeySystemOption,
   keySystem: string,
   callbacks: ISessionEventListenerCallbacks,
@@ -286,7 +286,7 @@ function formatGetLicenseError(error: unknown): IPlayerError {
  * @returns {Promise}
  */
 async function updateSessionWithMessage(
-  session: MediaKeySession | ICustomMediaKeySession,
+  session: IMediaKeySession,
   message: BufferSource,
 ): Promise<void> {
   log.info("DRM: Updating MediaKeySession with message");

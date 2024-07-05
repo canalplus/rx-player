@@ -29,8 +29,8 @@ import type {
   ICompatPictureInPictureWindow,
   IEventTarget,
   IMediaElement,
+  IMediaEncryptedEvent,
 } from "./browser_compatibility_types";
-import type { ICustomMediaEncryptedEvent } from "./eme/custom_media_keys/types";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -112,7 +112,7 @@ function createCompatibleEventListener(
   prefixes?: string[],
 ): (
   element: IEventTargetLike,
-  listener: (event: ICustomMediaEncryptedEvent) => void,
+  listener: (event: IMediaEncryptedEvent) => void,
   cancelSignal: CancellationSignal,
 ) => void;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeys } from "../../../compat/eme";
+import type { IMediaKeys } from "../../../compat/browser_compatibility_types";
 import hashBuffer from "../../../utils/hash_buffer";
 
 /**
@@ -31,7 +31,7 @@ import hashBuffer from "../../../utils/hash_buffer";
  * EME APIs failed or had an unexpected behavior).
  */
 const serverCertificateHashesMap = new WeakMap<
-  MediaKeys | ICustomMediaKeys,
+  IMediaKeys,
   { hash: number; serverCertificate: Uint8Array } | null
 >();
 
@@ -49,7 +49,7 @@ export default {
    * server certificate attached to this MediaKeys is for now invalid.
    * @param {MediaKeys | Object} mediaKeys
    */
-  prepare(mediaKeys: MediaKeys | ICustomMediaKeys): void {
+  prepare(mediaKeys: IMediaKeys): void {
     serverCertificateHashesMap.set(mediaKeys, null);
   },
 
@@ -64,10 +64,7 @@ export default {
    * @param {MediaKeys | Object} mediaKeys
    * @param {ArrayBufferView | BufferSource} serverCertificate
    */
-  set(
-    mediaKeys: MediaKeys | ICustomMediaKeys,
-    serverCertificate: ArrayBufferView | BufferSource,
-  ): void {
+  set(mediaKeys: IMediaKeys, serverCertificate: ArrayBufferView | BufferSource): void {
     const formattedServerCertificate: Uint8Array =
       serverCertificate instanceof Uint8Array
         ? serverCertificate
@@ -92,7 +89,7 @@ export default {
    * @param {MediaKeys} mediaKeys
    * @returns {Boolean|undefined}
    */
-  hasOne(mediaKeys: MediaKeys | ICustomMediaKeys): boolean | undefined {
+  hasOne(mediaKeys: IMediaKeys): boolean | undefined {
     const currentServerCertificate = serverCertificateHashesMap.get(mediaKeys);
     if (currentServerCertificate === undefined) {
       return false;
@@ -111,10 +108,7 @@ export default {
    * @param {ArrayBufferView | BufferSource} serverCertificate
    * @returns {boolean}
    */
-  has(
-    mediaKeys: MediaKeys | ICustomMediaKeys,
-    serverCertificate: ArrayBufferView | BufferSource,
-  ): boolean {
+  has(mediaKeys: IMediaKeys, serverCertificate: ArrayBufferView | BufferSource): boolean {
     const serverCertificateHash = serverCertificateHashesMap.get(mediaKeys);
     if (serverCertificateHash === undefined || serverCertificateHash === null) {
       return false;

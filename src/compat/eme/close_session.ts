@@ -17,7 +17,7 @@
 import log from "../../log";
 import cancellableSleep from "../../utils/cancellable_sleep";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
-import type { ICustomMediaKeySession } from "./custom_media_keys";
+import type { IMediaKeySession } from "../browser_compatibility_types";
 
 /**
  * Close the given `MediaKeySession` and returns a Promise resolving when the
@@ -32,9 +32,7 @@ import type { ICustomMediaKeySession } from "./custom_media_keys";
  * @param {MediaKeySession|Object} session
  * @returns {Promise.<undefined>}
  */
-export default function closeSession(
-  session: MediaKeySession | ICustomMediaKeySession,
-): Promise<void> {
+export default function closeSession(session: IMediaKeySession): Promise<void> {
   const timeoutCanceller = new TaskCanceller();
 
   return Promise.race([
