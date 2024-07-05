@@ -19,8 +19,8 @@ import { getPsshSystemID } from "../../parsers/containers/isobmff";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import { be4toi } from "../../utils/byte_parsing";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import type { IMediaEncryptedEvent } from "../browser_compatibility_types";
 import { PSSH_TO_INTEGER } from "./constants";
-import type { ICustomMediaEncryptedEvent } from "./custom_media_keys/types";
 
 /** Data recuperated from parsing the payload of an `encrypted` event. */
 export interface IEncryptedEventData {
@@ -147,7 +147,7 @@ function isPSSHAlreadyEncountered(
  * encountered in the given event.
  */
 export default function getInitData(
-  encryptedEvent: ICustomMediaEncryptedEvent,
+  encryptedEvent: IMediaEncryptedEvent,
 ): IEncryptedEventData | null {
   const { initData, initDataType, forceSessionRecreation } = encryptedEvent;
   if (isNullOrUndefined(initData)) {

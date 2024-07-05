@@ -18,22 +18,14 @@ import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import startsWith from "../../../utils/starts_with";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { IMediaElement } from "../../browser_compatibility_types";
-import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import type {
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-  ICustomMediaKeyStatusMap,
-  IMediaKeySessionEvents,
-} from "./types";
+  IMediaElement,
+  IMediaKeySession,
+  IMediaKeys,
+} from "../../browser_compatibility_types";
+import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
 import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
-
-export interface ICustomWebKitMediaKeys {
-  _setVideo: (videoElement: IMediaElement) => Promise<unknown>;
-  createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
-  setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
-}
 
 /**
  * Check if keyType is for fairplay DRM
@@ -69,19 +61,19 @@ function setWebKitMediaKeys(elt: IMediaElement, mediaKeys: unknown): Promise<unk
  * EME custom APIs.
  */
 class WebkitMediaKeySession
-  extends EventEmitter<IMediaKeySessionEvents>
-  implements ICustomMediaKeySession
+  extends EventEmitter<MediaKeySessionEventMap>
+  implements IMediaKeySession
 {
-  public readonly closed: Promise<void>;
+  public readonly closed: Promise<MediaKeySessionClosedReason>;
   public expiration: number;
-  public keyStatuses: ICustomMediaKeyStatusMap;
+  public keyStatuses: MediaKeyStatusMap;
 
   private readonly _videoElement: IMediaElement;
   private readonly _keyType: string;
-  private _nativeSession: undefined | MediaKeySession;
+  private _nativeSession: undefined | IMediaKeySession;
   private _serverCertificate: Uint8Array | undefined;
 
-  private _closeSession: () => void;
+  private _closeSession: (val: MediaKeySessionClosedReason) => void;
   private _unbindSession: () => void;
 
   /**
@@ -101,7 +93,7 @@ class WebkitMediaKeySession
 
     this._unbindSession = noop;
     this._closeSession = noop; // Just here to make TypeScript happy
-    this.closed = new Promise((resolve) => {
+    this.closed = new Promise((resolve: (val: MediaKeySessionClosedReason) => void) => {
       this._closeSession = resolve;
     });
     this.keyStatuses = new Map();
@@ -167,7 +159,7 @@ class WebkitMediaKeySession
   public close(): Promise<void> {
     return new Promise((resolve, reject) => {
       this._unbindSession();
-      this._closeSession();
+      this._closeSession("closed-by-application");
       if (this._nativeSession === undefined) {
         reject("No session to close.");
         return;
@@ -190,30 +182,33 @@ class WebkitMediaKeySession
     return this._nativeSession?.sessionId ?? "";
   }
 
-  private _listenEvent(session: MediaKeySession): void {
+  private _listenEvent(session: IMediaKeySession): void {
     this._unbindSession(); // If previous session was linked
 
     const onEvent = (evt: Event) => {
-      this.trigger(evt.type, evt);
+      this.trigger(evt.type as keyof MediaKeySessionEventMap, evt);
     };
 
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach((evt) => {
-      session.addEventListener(evt, onEvent);
-      session.addEventListener(`webkit${evt}`, onEvent);
+      session.addEventListener(evt as keyof MediaKeySessionEventMap, onEvent);
+      session.addEventListener(`webkit${evt}` as keyof MediaKeySessionEventMap, onEvent);
     });
 
     this._unbindSession = () => {
       ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(
         (evt) => {
-          session.removeEventListener(evt, onEvent);
-          session.removeEventListener(`webkit${evt}`, onEvent);
+          session.removeEventListener(evt as keyof MediaKeySessionEventMap, onEvent);
+          session.removeEventListener(
+            `webkit${evt}` as keyof MediaKeySessionEventMap,
+            onEvent,
+          );
         },
       );
     };
   }
 }
 
-class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
+class WebKitCustomMediaKeys implements IMediaKeys {
   private _videoElement?: IMediaElement;
   private _mediaKeys?: IWebKitMediaKeys;
   private _serverCertificate?: Uint8Array;
@@ -235,7 +230,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     return setWebKitMediaKeys(this._videoElement, this._mediaKeys);
   }
 
-  createSession(/* sessionType */): ICustomMediaKeySession {
+  createSession(/* sessionType */): IMediaKeySession {
     if (this._videoElement === undefined || this._mediaKeys === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
@@ -246,19 +241,16 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     );
   }
 
-  setServerCertificate(serverCertificate: Uint8Array): Promise<void> {
+  setServerCertificate(serverCertificate: Uint8Array): Promise<boolean> {
     this._serverCertificate = serverCertificate;
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 }
 
 export default function getWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => WebKitCustomMediaKeys;
-  setMediaKeys: (
-    elt: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
-  ) => Promise<unknown>;
+  setMediaKeys: (elt: IMediaElement, mediaKeys: IMediaKeys | null) => Promise<unknown>;
 } {
   if (WebKitMediaKeysConstructor === undefined) {
     throw new Error("No WebKitMediaKeys API.");
@@ -267,7 +259,7 @@ export default function getWebKitMediaKeysCallbacks(): {
   const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
     elt: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
+    mediaKeys: IMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {
       return setWebKitMediaKeys(elt, mediaKeys);
