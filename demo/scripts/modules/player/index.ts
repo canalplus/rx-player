@@ -275,6 +275,10 @@ const PlayerModule = declareModule(
         player.setVolume(volume);
       },
 
+      getMediaElement(): HTMLMediaElement | null {
+        return player.getVideoElement();
+      },
+
       updateWorkerMode(enabled: boolean) {
         if (enabled && !hasAttachedMultithread) {
           attachMultithread(player);
@@ -310,6 +314,11 @@ const PlayerModule = declareModule(
         if (!isStopped && !hasEnded) {
           state.update("isPaused", false);
         }
+        setTimeout(() => {
+          if (!isStopped && !hasEnded && player.isPaused() && !state.get("isPaused")) {
+            state.update("isPaused", true);
+          }
+        }, 100);
       },
 
       pause() {
@@ -320,6 +329,11 @@ const PlayerModule = declareModule(
         if (!isStopped && !hasEnded) {
           state.update("isPaused", true);
         }
+        setTimeout(() => {
+          if (!isStopped && !hasEnded && !player.isPaused() && state.get("isPaused")) {
+            state.update("isPaused", false);
+          }
+        }, 100);
       },
 
       stop() {
