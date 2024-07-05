@@ -17,6 +17,7 @@ import type {
   ILoadVideoOptions,
   IVideoRepresentationsSwitchingMode,
 } from "../../../../src/public_types";
+import { DummyMediaElement } from "../../../../src/compat/dummy_media_element";
 
 const { useCallback, useEffect, useRef, useState } = React;
 
@@ -45,6 +46,7 @@ function Player(): JSX.Element {
     defaultOptionsValues.loadVideo,
   );
   const [relyOnWorker, setRelyOnWorker] = useState(false);
+  const [useDummyMediaElement, setUseDummyMediaElement] = useState(false);
   const [hasUpdatedPlayerOptions, setHasUpdatedPlayerOptions] = useState(false);
   const displaySpinnerTimeoutRef = useRef<number | null>(null);
 
@@ -160,7 +162,9 @@ function Player(): JSX.Element {
       Object.assign(
         {},
         {
-          videoElement: videoElementRef.current,
+          videoElement: useDummyMediaElement ?
+            new DummyMediaElement() as unknown as HTMLMediaElement :
+            videoElementRef.current,
           textTrackElement: textTrackElementRef.current,
           debugElement: debugElementRef.current,
         },
@@ -169,7 +173,24 @@ function Player(): JSX.Element {
     );
     setPlayerModule(playerMod);
     return playerMod;
-  }, [playerOpts, playerModule]);
+  }, [useDummyMediaElement, playerOpts, playerModule]);
+
+  useEffect(() => {
+    if (playerModule === null) {
+      return;
+    }
+    const mediaElement = playerModule.actions.getMediaElement();
+    if (mediaElement === null) {
+      return;
+    }
+    if (useDummyMediaElement) {
+      if (!(mediaElement instanceof DummyMediaElement)) {
+        setHasUpdatedPlayerOptions(true);
+      }
+    } else if (mediaElement !== videoElementRef.current) {
+      setHasUpdatedPlayerOptions(true);
+    }
+  }, [setHasUpdatedPlayerOptions, useDummyMediaElement, playerModule]);
 
   const onVideoClick = useCallback(() => {
     if (playerModule === null) {
@@ -285,6 +306,8 @@ function Player(): JSX.Element {
           }
           tryRelyOnWorker={relyOnWorker}
           updateTryRelyOnWorker={setRelyOnWorker}
+          useDummyMediaElement={useDummyMediaElement}
+          updateUseDummyMediaElement={setUseDummyMediaElement}
         />
         <div className="video-player-wrapper" ref={playerWrapperElementRef}>
           <div className="video-screen-parent">

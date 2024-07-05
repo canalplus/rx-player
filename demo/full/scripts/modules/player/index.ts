@@ -267,6 +267,10 @@ const PlayerModule = declareModule(
         player.setVolume(volume);
       },
 
+      getMediaElement(): HTMLMediaElement | null {
+        return player.getVideoElement();
+      },
+
       updateWorkerMode(enabled: boolean) {
         if (enabled && !hasAttachedMultithread) {
           attachMultithread(player);
