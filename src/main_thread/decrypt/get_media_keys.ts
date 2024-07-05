@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import type {
+  IMediaElement,
+  IMediaKeySystemAccess,
+  IMediaKeys,
+} from "../../compat/browser_compatibility_types";
 import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
-import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
@@ -49,9 +52,9 @@ function createPersistentSessionsStorage(
 /** Object returned by `getMediaKeysInfos`. */
 export interface IMediaKeysInfos {
   /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
   /** The MediaKeys instance. */
-  mediaKeys: MediaKeys | ICustomMediaKeys;
+  mediaKeys: IMediaKeys;
   /** Stores allowing to create and retrieve MediaKeySessions. */
   stores: IMediaKeySessionStores;
   /** IKeySystemOption compatible to the created MediaKeys instance. */
@@ -131,8 +134,8 @@ export default async function getMediaKeysInfos(
  * @returns {Promise.<MediaKeys>}
  */
 async function createMediaKeys(
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
-): Promise<MediaKeys | ICustomMediaKeys> {
+  mediaKeySystemAccess: IMediaKeySystemAccess,
+): Promise<IMediaKeys> {
   log.info("DRM: Calling createMediaKeys on the MediaKeySystemAccess");
   try {
     const mediaKeys = await mediaKeySystemAccess.createMediaKeys();

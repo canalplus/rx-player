@@ -18,12 +18,6 @@ import type { IListener } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 
-/** Regular MediaKeys type + optional functions present in IE11. */
-interface ICompatMediaKeysConstructor {
-  isTypeSupported?: (type: string) => boolean; // IE11 only
-  new (keyType?: string): MediaKeys; // argument for IE11 only
-}
-
 /**
  * Browser implementation of a VTTCue constructor.
  * TODO open TypeScript issue about it?
@@ -237,7 +231,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   duration: number;
   ended: boolean;
   error: MediaError | null;
-  mediaKeys: null | MediaKeys;
+  mediaKeys: null | IMediaKeys;
   muted: boolean;
   nodeName: string;
   paused: boolean;
@@ -259,7 +253,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   play(): Promise<void>;
   removeAttribute(attr: string): void;
   removeChild(x: unknown): void;
-  setMediaKeys(x: MediaKeys | null): Promise<void>;
+  setMediaKeys(x: IMediaKeys | null): Promise<void>;
 
   onencrypted: ((evt: MediaEncryptedEvent) => void) | null;
   oncanplay: ((evt: Event) => void) | null;
@@ -291,10 +285,34 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   msSetMediaKeys?: (mediaKeys: unknown) => void;
   webkitSetMediaKeys?: (mediaKeys: unknown) => void;
   webkitKeys?: {
-    createSession?: (mimeType: string, initData: BufferSource) => MediaKeySession;
+    createSession?: (mimeType: string, initData: BufferSource) => IMediaKeySession;
   };
   audioTracks?: ICompatAudioTrackList;
   videoTracks?: ICompatVideoTrackList;
+}
+
+export interface IMediaKeySystemAccess {
+  readonly keySystem: string;
+  getConfiguration(): MediaKeySystemConfiguration;
+  createMediaKeys(): Promise<IMediaKeys>;
+}
+
+export interface IMediaKeys {
+  isTypeSupported?: (type: string) => boolean; // IE11 only
+  createSession(sessionType?: MediaKeySessionType): IMediaKeySession;
+  setServerCertificate(serverCertificate: BufferSource): Promise<boolean>;
+}
+
+export interface IMediaKeySession extends IEventTarget<MediaKeySessionEventMap> {
+  readonly closed: Promise<MediaKeySessionClosedReason>;
+  readonly expiration: number;
+  readonly keyStatuses: MediaKeyStatusMap;
+  readonly sessionId: string;
+  close(): Promise<void>;
+  generateRequest(_initDataType: string, _initData: BufferSource): Promise<void>;
+  load(sessionId: string): Promise<boolean>;
+  remove(): Promise<void>;
+  update(response: BufferSource): Promise<void>;
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
@@ -324,6 +342,27 @@ function testSourceBufferList(x: SourceBufferList) {
   assertCompatibleISourceBufferList(x);
 }
 function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testMediaKeySystemAccess(x: MediaKeySystemAccess) {
+  assertCompatibleIMediaKeySystemAccess(x);
+}
+function assertCompatibleIMediaKeySystemAccess(_x: IMediaKeySystemAccess) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testMediaKeys(x: MediaKeys) {
+  assertCompatibleIMediaKeys(x);
+}
+function assertCompatibleIMediaKeys(_x: IMediaKeys) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testMediaKeySession(x: MediaKeySession) {
+  assertCompatibleIMediaKeySession(x);
+}
+function assertCompatibleIMediaKeySession(_x: IMediaKeySession) {
   // Noop
 }
 /* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
@@ -439,7 +478,6 @@ export type {
   ICompatVideoTrackList,
   ICompatAudioTrack,
   ICompatVideoTrack,
-  ICompatMediaKeysConstructor,
   ICompatTextTrack,
   ICompatVTTCue,
   ICompatVTTCueConstructor,

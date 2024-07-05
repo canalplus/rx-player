@@ -4,7 +4,11 @@ import globalScope from "../../utils/global_scope";
 import isNode from "../../utils/is_node";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import type { IMediaElement } from "../browser_compatibility_types";
+import type {
+  IMediaElement,
+  IMediaKeySystemAccess,
+  IMediaKeys,
+} from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
@@ -19,7 +23,6 @@ import getMozMediaKeysCallbacks, {
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
-import type { ICustomMediaKeys } from "./custom_media_keys/types";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
 import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
 
@@ -49,7 +52,7 @@ export interface IEmeApiImplementation {
   requestMediaKeySystemAccess: (
     keyType: string,
     config: MediaKeySystemConfiguration[],
-  ) => Promise<MediaKeySystemAccess | CustomMediaKeySystemAccess>;
+  ) => Promise<IMediaKeySystemAccess | CustomMediaKeySystemAccess>;
 
   /**
    * API allowing to listen for `"encrypted"` events, presumably sent by the
@@ -68,7 +71,7 @@ export interface IEmeApiImplementation {
   ) => void;
 
   /**
-   * API allowing to attach a `MediaKeys` instance (or an `ICustomMediaKeys`) to
+   * API allowing to attach a `MediaKeys` instance (or an `IMediaKeys`) to
    * the HTMLMediaElement so it can start decoding.
    * @param {HTMLMediaElement} The HTMLMediaElement on which the content plays.
    * @param {MediaKeys} mediaKeys - The MediaKeys instance to attach.
@@ -78,7 +81,7 @@ export interface IEmeApiImplementation {
    */
   setMediaKeys: (
     mediaElement: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
+    mediaKeys: IMediaKeys | null,
   ) => Promise<unknown>;
 
   /**
@@ -140,7 +143,7 @@ function getEmeApiImplementation(
     implementation = "standard";
   } else {
     let isTypeSupported: (keyType: string) => boolean;
-    let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
+    let createCustomMediaKeys: (keyType: string) => IMediaKeys;
 
     if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== undefined) {
       onEncrypted = createCompatibleEventListener(["needkey"]);
@@ -184,7 +187,7 @@ function getEmeApiImplementation(
         onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
         const MK = globalScope.MediaKeys as unknown as typeof MediaKeys & {
           isTypeSupported?: (keyType: string) => boolean;
-          new (keyType?: string): ICustomMediaKeys;
+          new (keyType?: string): IMediaKeys;
         };
         const checkForStandardMediaKeys = () => {
           if (MK === undefined) {
@@ -218,7 +221,7 @@ function getEmeApiImplementation(
     requestMediaKeySystemAccess = function (
       keyType: string,
       keySystemConfigurations: MediaKeySystemConfiguration[],
-    ): Promise<MediaKeySystemAccess | CustomMediaKeySystemAccess> {
+    ): Promise<IMediaKeySystemAccess> {
       if (!isTypeSupported(keyType)) {
         return Promise.reject(new Error("Unsupported key type"));
       }
@@ -284,15 +287,15 @@ function getEmeApiImplementation(
  */
 function defaultSetMediaKeys(
   elt: IMediaElement,
-  mediaKeys: MediaKeys | ICustomMediaKeys | null,
+  mediaKeys: IMediaKeys | null,
 ): Promise<unknown> {
   try {
     let ret: unknown;
-    /* eslint-disable @typescript-eslint/unbound-method */
+    /* eslint-disable-next-line @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
+      // eslint-disable-next-line @typescript-eslint/ban-types
       ret = elt.setMediaKeys(mediaKeys as MediaKeys);
     }
-    /* eslint-enable @typescript-eslint/unbound-method */
 
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary

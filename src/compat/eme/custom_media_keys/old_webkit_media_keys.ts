@@ -20,13 +20,11 @@ import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
 import { utf8ToStr } from "../../../utils/string_parsing";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { IMediaElement } from "../../browser_compatibility_types";
 import type {
-  ICustomMediaKeys,
-  ICustomMediaKeySession,
-  ICustomMediaKeyStatusMap,
-  IMediaKeySessionEvents,
-} from "./types";
+  IMediaElement,
+  IMediaKeySession,
+  IMediaKeys,
+} from "../../browser_compatibility_types";
 
 export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
   webkitGenerateKeyRequest: (keyType: string, initData: ArrayBuffer) => void;
@@ -60,12 +58,12 @@ export function isOldWebkitMediaElement(
  * @class OldWebkitMediaKeySession
  */
 class OldWebkitMediaKeySession
-  extends EventEmitter<IMediaKeySessionEvents>
-  implements ICustomMediaKeySession
+  extends EventEmitter<MediaKeySessionEventMap>
+  implements IMediaKeySession
 {
-  public readonly closed: Promise<void>;
+  public readonly closed: Promise<MediaKeySessionClosedReason>;
   public expiration: number;
-  public keyStatuses: ICustomMediaKeyStatusMap;
+  public keyStatuses: MediaKeyStatusMap;
   public sessionId: string;
 
   private readonly _vid: IOldWebkitHTMLMediaElement;
@@ -84,7 +82,7 @@ class OldWebkitMediaKeySession
     this.expiration = NaN;
 
     const onSessionRelatedEvent = (evt: Event) => {
-      this.trigger(evt.type, evt);
+      this.trigger(evt.type as keyof MediaKeySessionEventMap, evt);
     };
     this.closed = new Promise((resolve) => {
       this._closeSession = () => {
@@ -94,7 +92,7 @@ class OldWebkitMediaKeySession
             mediaElement.removeEventListener(`webkit${evt}`, onSessionRelatedEvent);
           },
         );
-        resolve();
+        resolve("closed-by-application");
       };
     });
 
@@ -158,7 +156,7 @@ class OldWebkitMediaKeySession
   }
 }
 
-class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
+class OldWebKitCustomMediaKeys implements IMediaKeys {
   private readonly _keySystem: string;
   private _videoElement?: IOldWebkitHTMLMediaElement;
 
@@ -175,14 +173,14 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
     });
   }
 
-  createSession(/* sessionType */): ICustomMediaKeySession {
+  createSession(/* sessionType */): IMediaKeySession {
     if (isNullOrUndefined(this._videoElement)) {
       throw new Error("Video not attached to the MediaKeys");
     }
     return new OldWebkitMediaKeySession(this._videoElement, this._keySystem);
   }
 
-  setServerCertificate(): Promise<void> {
+  setServerCertificate(): Promise<boolean> {
     throw new Error("Server certificate is not implemented in your browser");
   }
 }
@@ -190,10 +188,7 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
 export default function getOldWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => OldWebKitCustomMediaKeys;
-  setMediaKeys: (
-    elt: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
-  ) => Promise<unknown>;
+  setMediaKeys: (elt: IMediaElement, mediaKeys: IMediaKeys | null) => Promise<unknown>;
 } {
   const isTypeSupported = function (keyType: string): boolean {
     // get any <video> element from the DOM or create one
@@ -220,7 +215,7 @@ export default function getOldWebKitMediaKeysCallbacks(): {
     new OldWebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
     elt: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
+    mediaKeys: IMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {
       return Promise.resolve(undefined);

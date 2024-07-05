@@ -8,7 +8,7 @@ import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-restricted-properties */
 
-import type { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
+import type { IMediaKeySystemAccess } from "../../../../compat/browser_compatibility_types";
 import {
   defaultKSConfig,
   defaultPRRecommendationKSConfig,
@@ -20,7 +20,7 @@ import {
 export function requestMediaKeySystemAccessNoMediaKeys(
   keySystem: string,
   config: MediaKeySystemConfiguration[],
-): Promise<ICustomMediaKeySystemAccess> {
+): Promise<IMediaKeySystemAccess> {
   if (config.length === 0) {
     throw new Error("requestMediaKeySystemAccessNoMediaKeys: no config given");
   }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../../compat/eme";
+import type { IMediaKeySession } from "../../../compat/browser_compatibility_types";
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
@@ -83,7 +83,7 @@ type IKeyStatusesForEach = (
  * @returns {Object} - Warnings to send, whitelisted and blacklisted key ids.
  */
 export default function checkKeyStatuses(
-  session: MediaKeySession | ICustomMediaKeySession,
+  session: IMediaKeySession,
   options: IKeyStatusesCheckingOptions,
   keySystem: string,
 ): {

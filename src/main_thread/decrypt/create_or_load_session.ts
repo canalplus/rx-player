@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../compat/eme";
+import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
 import log from "../../log";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import createSession from "./create_session";
@@ -49,7 +49,7 @@ export default async function createOrLoadSession(
   cancelSignal: CancellationSignal,
 ): Promise<ICreateOrLoadSessionResult> {
   /** Store previously-loaded compatible MediaKeySession, if one. */
-  let previousLoadedSession: MediaKeySession | ICustomMediaKeySession | null = null;
+  let previousLoadedSession: IMediaKeySession | null = null;
 
   const { loadedSessionsStore, persistentSessionsStore } = stores;
   const entry = loadedSessionsStore.reuse(initializationData);
@@ -106,7 +106,7 @@ export default async function createOrLoadSession(
 /** Information concerning a MediaKeySession. */
 export interface IMediaKeySessionContext {
   /** The MediaKeySession itself. */
-  mediaKeySession: MediaKeySession | ICustomMediaKeySession;
+  mediaKeySession: IMediaKeySession;
   /** The type of MediaKeySession (e.g. "temporary"). */
   sessionType: MediaKeySessionType;
   /** `KeySessionRecord` assiociated to this MediaKeySession. */

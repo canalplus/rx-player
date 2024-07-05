@@ -71,6 +71,18 @@ module.exports = {
             message:
               "Avoid relying on `SourceBufferList` directly unless it is API-facing. Prefer our more restricted `ISourceBufferList` type",
           },
+          MediaKeySystemAccess: {
+            message:
+              "Avoid relying on `MediaKeySystemAccess` directly unless it is API-facing. Prefer our more restricted `IMediaKeySystemAccess` type",
+          },
+          MediaKeys: {
+            message:
+              "Avoid relying on `MediaKeys` directly unless it is API-facing. Prefer our more restricted `IMediaKeys` type",
+          },
+          MediaKeySession: {
+            message:
+              "Avoid relying on `MediaKeySession` directly unless it is API-facing. Prefer our more restricted `IMediaKeySession` type",
+          },
         },
       },
     ],

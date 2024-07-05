@@ -13,14 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { ICustomMediaKeys } from "./custom_media_keys";
-
-// MediaKeySystemAccess implementation
-export interface ICustomMediaKeySystemAccess {
-  readonly keySystem: string;
-  getConfiguration(): MediaKeySystemConfiguration;
-  createMediaKeys(): Promise<MediaKeys | ICustomMediaKeys>;
-}
+import type { IMediaKeySystemAccess, IMediaKeys } from "../browser_compatibility_types";
 
 /**
  * Simple implementation of the MediaKeySystemAccess EME API.
@@ -28,7 +21,7 @@ export interface ICustomMediaKeySystemAccess {
  * All needed arguments are given to the constructor
  * @class CustomMediaKeySystemAccess
  */
-export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystemAccess {
+export default class CustomMediaKeySystemAccess implements IMediaKeySystemAccess {
   /**
    * @param {string} _keyType - type of key system (e.g. "widevine" or
    * "com.widevine.alpha").
@@ -38,7 +31,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
    */
   constructor(
     private readonly _keyType: string,
-    private readonly _mediaKeys: ICustomMediaKeys | MediaKeys,
+    private readonly _mediaKeys: IMediaKeys,
     private readonly _configuration: MediaKeySystemConfiguration,
   ) {}
 
@@ -54,7 +47,7 @@ export default class CustomMediaKeySystemAccess implements ICustomMediaKeySystem
    * @returns {Promise.<Object>} - Promise wrapping the MediaKeys for this
    * MediaKeySystemAccess. Never rejects.
    */
-  public createMediaKeys(): Promise<ICustomMediaKeys | MediaKeys> {
+  public createMediaKeys(): Promise<IMediaKeys> {
     return new Promise((res) => res(this._mediaKeys));
   }
 

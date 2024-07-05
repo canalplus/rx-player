@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
+import type {
+  IMediaElement,
+  IMediaKeySystemAccess,
+  IMediaKeys,
+} from "../../compat/browser_compatibility_types";
 import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
@@ -891,7 +894,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
  * @returns {Boolean}
  */
 function canCreatePersistentSession(
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
 ): boolean {
   const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
   return sessionTypes !== undefined && arrayIncludes(sessionTypes, "persistent-license");
@@ -1267,9 +1270,9 @@ interface IActiveSessionInfo {
  */
 interface IAttachedMediaKeysData {
   /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
   /** The MediaKeys instance. */
-  mediaKeys: MediaKeys | ICustomMediaKeys;
+  mediaKeys: IMediaKeys;
   stores: IMediaKeySessionStores;
   options: IKeySystemOption;
 }

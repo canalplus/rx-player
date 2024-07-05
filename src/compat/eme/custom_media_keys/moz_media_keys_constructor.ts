@@ -16,11 +16,10 @@
 
 import globalScope from "../../../utils/global_scope";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { IMediaElement } from "../../browser_compatibility_types";
-import type { ICustomMediaKeys } from "./types";
+import type { IMediaElement, IMediaKeys } from "../../browser_compatibility_types";
 
 interface IMozMediaKeysConstructor {
-  new (keySystem: string): ICustomMediaKeys;
+  new (keySystem: string): IMediaKeys;
   isTypeSupported(keySystem: string, type?: string | null): boolean;
 }
 
@@ -42,11 +41,8 @@ export { MozMediaKeysConstructor };
 
 export default function getMozMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
-  createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
-  setMediaKeys: (
-    elt: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
-  ) => Promise<unknown>;
+  createCustomMediaKeys: (keyType: string) => IMediaKeys;
+  setMediaKeys: (elt: IMediaElement, mediaKeys: IMediaKeys | null) => Promise<unknown>;
 } {
   const isTypeSupported = (keySystem: string, type?: string | null) => {
     if (MozMediaKeysConstructor === undefined) {
@@ -65,7 +61,7 @@ export default function getMozMediaKeysCallbacks(): {
   };
   const setMediaKeys = (
     elt: IMediaElement,
-    mediaKeys: MediaKeys | ICustomMediaKeys | null,
+    mediaKeys: IMediaKeys | null,
   ): Promise<unknown> => {
     return wrapInPromise(() => {
       if (

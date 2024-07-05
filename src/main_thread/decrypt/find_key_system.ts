@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import type {
+  IMediaElement,
+  IMediaKeySystemAccess,
+} from "../../compat/browser_compatibility_types";
 import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
-import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
 import {
   generatePlayReadyInitData,
@@ -36,7 +38,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 
 export interface IMediaKeySystemAccessInfos {
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
   options: IKeySystemOption;
 }
 
@@ -76,11 +78,11 @@ interface IKeySystemType {
  */
 function checkCachedMediaKeySystemAccess(
   keySystems: IKeySystemOption[],
-  currentKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
+  currentKeySystemAccess: IMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption,
 ): null | {
   keySystemOptions: IKeySystemOption;
-  keySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  keySystemAccess: IMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
   if (shouldRenewMediaKeySystemAccess() || isNullOrUndefined(mksConfiguration)) {

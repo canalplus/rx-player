@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeys, ICustomMediaKeySession } from "../../../compat/eme";
+import type {
+  IMediaKeySession,
+  IMediaKeys,
+} from "../../../compat/browser_compatibility_types";
 import { closeSession, generateKeyRequest, loadSession } from "../../../compat/eme";
 import log from "../../../log";
 import assert from "../../../utils/assert";
@@ -32,7 +35,7 @@ import KeySessionRecord from "./key_session_record";
  */
 export default class LoadedSessionsStore {
   /** MediaKeys instance on which the MediaKeySessions are created. */
-  private readonly _mediaKeys: MediaKeys | ICustomMediaKeys;
+  private readonly _mediaKeys: IMediaKeys;
 
   /** Store unique MediaKeySession information per initialization data. */
   private _storage: IStoredSessionEntry[];
@@ -42,7 +45,7 @@ export default class LoadedSessionsStore {
    * loaded MediaKeySessions on the given MediaKeys instance.
    * @param {MediaKeys} mediaKeys
    */
-  constructor(mediaKeys: MediaKeys | ICustomMediaKeys) {
+  constructor(mediaKeys: IMediaKeys) {
     this._mediaKeys = mediaKeys;
     this._storage = [];
   }
@@ -128,7 +131,7 @@ export default class LoadedSessionsStore {
    * @returns {Object|null}
    */
   public getEntryForSession(
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession,
+    mediaKeySession: IMediaKeySession,
   ): IStoredSessionEntry | null {
     for (let i = this._storage.length - 1; i >= 0; i--) {
       const stored = this._storage[i];
@@ -144,14 +147,14 @@ export default class LoadedSessionsStore {
    * to the LoadedSessionsStore that a license-request is pending so
    * session-closing orders are properly scheduled after it is done.
    * @param {Object} mediaKeySession
-   * @param {string} initializationDataType - Initialization data type given
-   * e.g. by the "encrypted" event for the corresponding request.
+   * @param {string|undefined} initializationDataType - Initialization data type
+   * given e.g. by the "encrypted" event for the corresponding request.
    * @param {Uint8Array} initializationData - Initialization data given e.g. by
    * the "encrypted" event for the corresponding request.
    * @returns {Promise}
    */
   public async generateLicenseRequest(
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession,
+    mediaKeySession: IMediaKeySession,
     initializationDataType: string | undefined,
     initializationData: Uint8Array,
   ): Promise<unknown> {
@@ -212,7 +215,7 @@ export default class LoadedSessionsStore {
    * @returns {Promise}
    */
   public async loadPersistentSession(
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession,
+    mediaKeySession: IMediaKeySession,
     sessionId: string,
   ): Promise<boolean> {
     let entry: IStoredSessionEntry | undefined;
@@ -266,9 +269,7 @@ export default class LoadedSessionsStore {
    * @param {Object} mediaKeySession
    * @returns {Promise}
    */
-  public async closeSession(
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession,
-  ): Promise<boolean> {
+  public async closeSession(mediaKeySession: IMediaKeySession): Promise<boolean> {
     let entry: IStoredSessionEntry | undefined;
     for (const stored of this._storage) {
       if (stored.mediaKeySession === mediaKeySession) {
@@ -333,9 +334,7 @@ export default class LoadedSessionsStore {
    * @param {MediaKeySession} mediaKeySession
    * @returns {boolean}
    */
-  public removeSessionWithoutClosingIt(
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession,
-  ): boolean {
+  public removeSessionWithoutClosingIt(mediaKeySession: IMediaKeySession): boolean {
     assert(
       mediaKeySession.sessionId === "",
       "Initialized `MediaKeySession`s should always be properly closed",
@@ -433,7 +432,7 @@ export interface IStoredSessionEntry {
   keySessionRecord: KeySessionRecord;
 
   /** The MediaKeySession created. */
-  mediaKeySession: MediaKeySession | ICustomMediaKeySession;
+  mediaKeySession: IMediaKeySession;
 
   /**
    * The MediaKeySessionType (e.g. "temporary" or "persistent-license") with
@@ -494,7 +493,7 @@ export interface IStoredSessionEntry {
  * @returns {Promise}
  */
 async function safelyCloseMediaKeySession(
-  mediaKeySession: MediaKeySession | ICustomMediaKeySession,
+  mediaKeySession: IMediaKeySession,
 ): Promise<void> {
   log.debug("DRM: Trying to close a MediaKeySession", mediaKeySession.sessionId);
   try {
