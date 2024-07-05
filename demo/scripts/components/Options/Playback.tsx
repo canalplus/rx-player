@@ -10,11 +10,15 @@ function PlaybackConfig({
   onAutoPlayChange,
   tryRelyOnWorker,
   onTryRelyOnWorkerChange,
+  useDummyMediaElement,
+  onUseDummyMediaElementChange,
 }: {
   autoPlay: boolean;
   onAutoPlayChange: (val: boolean) => void;
   tryRelyOnWorker: boolean;
   onTryRelyOnWorkerChange: (val: boolean) => void;
+  useDummyMediaElement: boolean;
+  onUseDummyMediaElementChange: (val: boolean) => void;
 }): JSX.Element {
   return (
     <>
@@ -49,6 +53,25 @@ function PlaybackConfig({
           {tryRelyOnWorker
             ? "Running the RxPlayer's main logic in a WebWorker when possible"
             : "Currently running the RxPlayer's main logic only in main thread."}
+        </span>
+      </li>
+
+      <li>
+        <Checkbox
+          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
+          name="useDummyMediaElement"
+          ariaLabel="Rely in a WebWorker when possible"
+          checked={useDummyMediaElement}
+          onChange={onUseDummyMediaElementChange}
+        >
+          Dummy Media API
+        </Checkbox>
+        <span className="option-desc">
+          {useDummyMediaElement
+            ? "Use mocked media API: The content will not really play but the RxPlayer " +
+              "will believe it does. Useful for debugging the RxPlayer's logic even on " +
+              "undecipherable or undecodable content."
+            : "Actually play the chosen content."}
         </span>
       </li>
     </>
