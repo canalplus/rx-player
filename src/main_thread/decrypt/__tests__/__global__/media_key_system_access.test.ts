@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import type { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
+import type { IMediaKeySystemAccess } from "../../../../compat/browser_compatibility_types";
 import type { IKeySystemOption } from "../../../../public_types";
 import type IContentDecryptor from "../../content_decryptor";
 import {
@@ -13,7 +13,7 @@ import {
 function requestMediaKeySystemAccessNoMediaKeys(
   keySystem: string,
   config: MediaKeySystemConfiguration[],
-): Promise<ICustomMediaKeySystemAccess> {
+): Promise<IMediaKeySystemAccess> {
   if (config.length === 0) {
     throw new Error("requestMediaKeySystemAccessNoMediaKeys: no config given");
   }

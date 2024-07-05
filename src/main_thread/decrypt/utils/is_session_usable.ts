@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../../compat/eme";
+import type { IMediaKeySession } from "../../../compat/browser_compatibility_types";
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array_includes";
 
@@ -25,9 +25,7 @@ import arrayIncludes from "../../../utils/array_includes";
  * @param {MediaKeySession} loadedSession
  * @returns {MediaKeySession}
  */
-export default function isSessionUsable(
-  loadedSession: MediaKeySession | ICustomMediaKeySession,
-): boolean {
+export default function isSessionUsable(loadedSession: IMediaKeySession): boolean {
   if (loadedSession.sessionId === "") {
     return false;
   }
