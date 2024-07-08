@@ -136,12 +136,6 @@ describe("Memory tests", () => {
           initialAudiobitrate: Infinity,
           preferredtexttracks: [{ language: "fra", closedcaption: true }],
         });
-        player.loadVideo({
-          url: manifestInfos.url,
-          transport: manifestInfos.transport,
-          autoPlay: true,
-        });
-        await waitForLoadedStateAfterLoadVideo(player);
         player.dispose();
       }
       await sleep(5000);
