@@ -30,16 +30,17 @@ import type {
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
 } from "../types";
+import addQueryString from "../utils/add_query_string";
 import byteRange from "../utils/byte_range";
 import inferSegmentContainer from "../utils/infer_segment_container";
 import addSegmentIntegrityChecks from "./add_segment_integrity_checks_to_loader";
 import constructSegmentUrl from "./construct_segment_url";
 import initSegmentLoader from "./init_segment_loader";
-import lowLatencySegmentLoader from "./low_latency_segment_loader";
+import loadChunkedSegmentData from "./load_chunked_segment_data";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} url
+ * @param {string} initialUrl
  * @param {Object} context
  * @param {boolean} lowLatencyMode
  * @param {Object} options
@@ -47,8 +48,8 @@ import lowLatencySegmentLoader from "./low_latency_segment_loader";
  * @param {Object} cancelSignal
  * @returns {Promise}
  */
-export function regularSegmentLoader(
-  url: string,
+export async function regularSegmentLoader(
+  initialUrl: string,
   context: ISegmentContext,
   lowLatencyMode: boolean,
   options: ISegmentLoaderOptions,
@@ -60,13 +61,47 @@ export function regularSegmentLoader(
   | ISegmentLoaderResultChunkedComplete
 > {
   if (context.segment.isInit) {
-    return initSegmentLoader(url, context.segment, options, cancelSignal, callbacks);
+    return initSegmentLoader(
+      initialUrl,
+      context.segment,
+      options,
+      cancelSignal,
+      callbacks,
+    );
+  }
+
+  const url =
+    options.cmcdPayload?.type === "query"
+      ? addQueryString(initialUrl, options.cmcdPayload.value)
+      : initialUrl;
+
+  const cmcdHeaders =
+    options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
+
+  const { segment } = context;
+  let headers;
+  if (segment.range !== undefined) {
+    headers = {
+      ...cmcdHeaders,
+      Range: byteRange(segment.range),
+    };
+  } else if (cmcdHeaders !== undefined) {
+    headers = cmcdHeaders;
   }
 
   const containerType = inferSegmentContainer(context.type, context.mimeType);
   if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
     if (fetchIsSupported()) {
-      return lowLatencySegmentLoader(url, context, options, callbacks, cancelSignal);
+      return loadChunkedSegmentData(
+        url,
+        {
+          headers,
+          timeout: options.timeout,
+          connectionTimeout: options.connectionTimeout,
+        },
+        callbacks,
+        cancelSignal,
+      );
     } else {
       warnOnce(
         "DASH: Your browser does not have the fetch API. You will have " +
@@ -75,17 +110,16 @@ export function regularSegmentLoader(
     }
   }
 
-  const { segment } = context;
-  return request({
+  const data = await request({
     url,
     responseType: "arraybuffer",
-    headers:
-      segment.range !== undefined ? { Range: byteRange(segment.range) } : undefined,
+    headers,
     timeout: options.timeout,
     connectionTimeout: options.connectionTimeout,
     cancelSignal,
     onProgress: callbacks.onProgress,
-  }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
+  });
+  return { resultType: "segment-loaded", resultData: data };
 }
 
 /**
@@ -101,6 +135,7 @@ export default function generateSegmentLoader({
   segmentLoader?: ICustomSegmentLoader | undefined;
   checkMediaSegmentIntegrity?: boolean | undefined;
 }): ISegmentLoader<Uint8Array | ArrayBuffer | null> {
+  // XXX TODO what to do here?
   return checkMediaSegmentIntegrity !== true
     ? segmentLoader
     : addSegmentIntegrityChecks(segmentLoader);
@@ -249,6 +284,7 @@ export default function generateSegmentLoader({
         byteRanges,
         trackType: context.type,
         url,
+        cmcdPayload: options.cmcdPayload,
       };
       const abort = customSegmentLoader(args, customCallbacks);
 

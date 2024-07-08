@@ -51,3 +51,8 @@ Those modules are:
   Link the `transports` module with the rest of the code, to download segments,
   download/refresh the manifest and collect data (such as the user's bandwidth) for the
   other modules.
+
+- **the `CmcdDataBuilder` (./cmcd)**
+
+  Perform data collection and retrieval for the "Common Media Client Data" scheme, which
+  is a specification allowing to communicate about playback conditions with a CDN.

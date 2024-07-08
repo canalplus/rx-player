@@ -42,6 +42,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
   const textTrackParser = generateTextTrackParser(options);
 
   return {
+    transportName: "dash",
     manifest: { loadManifest: manifestLoader, parseManifest: manifestParser },
     audio: {
       loadSegment: segmentLoader,

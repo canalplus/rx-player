@@ -746,6 +746,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_initializeContentPlayback(options: IParsedLoadVideoOptions): void {
     const {
       autoPlay,
+      cmcd,
       defaultAudioTrackSwitchingMode,
       enableFastSwitching,
       initialManifest,
@@ -912,6 +913,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           adaptiveOptions,
           autoPlay,
           bufferOptions,
+          cmcd,
           keySystems,
           lowLatencyMode,
           transport: transportPipelines,
@@ -952,6 +954,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           adaptiveOptions,
           autoPlay,
           bufferOptions,
+          cmcd,
           keySystems,
           lowLatencyMode,
           transportOptions,

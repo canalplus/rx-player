@@ -26,6 +26,7 @@ import type {
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
 } from "../types";
+import addQueryString from "../utils/add_query_string";
 import byteRange from "../utils/byte_range";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
@@ -33,7 +34,7 @@ import { createAudioInitSegment, createVideoInitSegment } from "./isobmff";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.
- * @param {string} url
+ * @param {string} initialUrl
  * @param {Object} context
  * @param {Object} loaderOptions
  * @param {Object} callbacks
@@ -41,21 +42,36 @@ import { createAudioInitSegment, createVideoInitSegment } from "./isobmff";
  * @param {boolean} checkMediaSegmentIntegrity
  * @returns {Promise}
  */
-function regularSegmentLoader(
-  url: string,
+async function regularSegmentLoader(
+  initialUrl: string,
   context: ISegmentContext,
   callbacks: ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
   loaderOptions: ISegmentLoaderOptions,
   cancelSignal: CancellationSignal,
   checkMediaSegmentIntegrity?: boolean | undefined,
 ): Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
-  let headers;
+  const cmcdHeaders =
+    loaderOptions.cmcdPayload?.type === "headers"
+      ? loaderOptions.cmcdPayload.value
+      : undefined;
   const range = context.segment.range;
+
+  let headers;
   if (Array.isArray(range)) {
-    headers = { Range: byteRange(range) };
+    headers = {
+      ...cmcdHeaders,
+      Range: byteRange(range),
+    };
+  } else if (cmcdHeaders !== undefined) {
+    headers = cmcdHeaders;
   }
 
-  return request({
+  const url =
+    loaderOptions.cmcdPayload?.type === "query"
+      ? addQueryString(initialUrl, loaderOptions.cmcdPayload.value)
+      : initialUrl;
+
+  const data = await request({
     url,
     responseType: "arraybuffer",
     headers,
@@ -63,18 +79,17 @@ function regularSegmentLoader(
     connectionTimeout: loaderOptions.connectionTimeout,
     cancelSignal,
     onProgress: callbacks.onProgress,
-  }).then((data) => {
-    const isMP4 = isMP4EmbeddedTrack(context.mimeType);
-    if (!isMP4 || checkMediaSegmentIntegrity !== true) {
-      return { resultType: "segment-loaded" as const, resultData: data };
-    }
-    const dataU8 = new Uint8Array(data.responseData);
-    checkISOBMFFIntegrity(dataU8, context.segment.isInit);
-    return {
-      resultType: "segment-loaded" as const,
-      resultData: { ...data, responseData: dataU8 },
-    };
   });
+  const isMP4 = isMP4EmbeddedTrack(context.mimeType);
+  if (!isMP4 || checkMediaSegmentIntegrity !== true) {
+    return { resultType: "segment-loaded" as const, resultData: data };
+  }
+  const dataU8 = new Uint8Array(data.responseData);
+  checkISOBMFFIntegrity(dataU8, context.segment.isInit);
+  return {
+    resultType: "segment-loaded" as const,
+    resultData: { ...data, responseData: dataU8 },
+  };
 }
 
 /**
@@ -300,6 +315,7 @@ const generateSegmentLoader =
           byteRanges,
           trackType: context.type,
           url,
+          cmcdPayload: loaderOptions.cmcdPayload,
         };
         const abort = segmentLoader(args, customCallbacks);
 

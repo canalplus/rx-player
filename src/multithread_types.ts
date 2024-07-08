@@ -28,7 +28,7 @@ import type {
   SourceBufferType,
 } from "./mse";
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
-import type { ITrackType } from "./public_types";
+import type { ICmcdOptions, ITrackType } from "./public_types";
 import type { ITransportOptions } from "./transports";
 import type { ILogFormat, ILoggerLevel } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
@@ -104,6 +104,10 @@ export interface IContentInitializationData {
    */
   contentId: string;
   /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
+  /**
    * URL at which the content's Manifest is accessible.
    * `undefined` if unknown.
    */
@@ -134,7 +138,7 @@ export interface IContentInitializationData {
   /**
    * Options relative to the fetching and refreshing of the Manifest.
    */
-  manifestRetryOptions: IManifestFetcherSettings;
+  manifestRetryOptions: Omit<IManifestFetcherSettings, "cmcdDataBuilder">;
   /** Options relative to the fetching of media segments. */
   segmentRetryOptions: ISegmentFetcherCreatorBackoffOptions;
 }

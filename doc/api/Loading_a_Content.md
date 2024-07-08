@@ -807,6 +807,41 @@ If not set or set to `"auto"`, you can see which mode is effective by calling th
 If the `useWorker` property is set to `false`, you're running in `"main"` mode, if set to
 `true`, you're running in `"multithread"` mode.
 
+### cmcd
+
+_type_: `Object|undefined`
+
+_defaults_: `"undefined"`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+When set to an object, it enables "Common Media Client Data" (CMCD) so the RxPlayer is
+able to report playback conditions to the CDN.
+
+If set to `undefined` or not defined, CMCD will be disabled.
+
+When set to an Object, it can have the following properties:
+
+- `contentId` (`string|undefined`): Content ID delivered by CMCD metadata for that
+  content. If not specified, a default one will be generated.
+
+  It is heavily recommended that you provide your own content identifier here.
+
+- `sessionId` (`string|undefined`): Session ID delivered by CMCD metadata. If not
+  specified, a default one will be generated.
+
+- `communicationType` (`string|undefined`): Way in which the CMCD metadata is
+  communicated.
+
+  Can be set to `"query"` for communicating it through query strings or `"headers"` for
+  communicating it through headers (which may lead to supplementary complexities linked to
+  CORS policies such as preflight request, blocking etc.).
+
+  If not set, the RxPlayer will automatically select the most appropriate way instead.
+
 ### checkMediaSegmentIntegrity
 
 _type_: `Function|undefined`

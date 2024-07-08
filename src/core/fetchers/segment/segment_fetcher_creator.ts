@@ -17,12 +17,13 @@
 import config from "../../../config";
 import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
 import type { CancellationSignal } from "../../../utils/task_canceller";
+import type CmcdDataBuilder from "../../cmcd";
 import type { IBufferType } from "../../segment_sinks";
 import CdnPrioritizer from "../cdn_prioritizer";
 import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
 import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
 import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
-import createSegmentFetcher, { getSegmentFetcherOptions } from "./segment_fetcher";
+import createSegmentFetcher, { getSegmentFetcherRequestOptions } from "./segment_fetcher";
 import TaskPrioritizer from "./task_prioritizer";
 
 /**
@@ -54,11 +55,14 @@ export default class SegmentFetcherCreator {
 
   private readonly _cdnPrioritizer: CdnPrioritizer;
 
+  private _cmcdDataBuilder: CmcdDataBuilder | null;
+
   /**
    * @param {Object} transport
    */
   constructor(
     transport: ITransportPipelines,
+    cmcdDataBuilder: CmcdDataBuilder | null,
     options: ISegmentFetcherCreatorBackoffOptions,
     cancelSignal: CancellationSignal,
   ) {
@@ -74,30 +78,32 @@ export default class SegmentFetcherCreator {
     });
     this._cdnPrioritizer = cdnPrioritizer;
     this._backoffOptions = options;
+    this._cmcdDataBuilder = cmcdDataBuilder;
   }
 
   /**
    * Create a segment fetcher, allowing to easily perform segment requests.
    * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
-   * @param {Object} callbacks
+   * @param {Object} eventListeners
    * @returns {Object}
    */
   createSegmentFetcher(
     bufferType: IBufferType,
-    callbacks: ISegmentFetcherLifecycleCallbacks,
+    eventListeners: ISegmentFetcherLifecycleCallbacks,
   ): IPrioritizedSegmentFetcher<unknown> {
-    const backoffOptions = getSegmentFetcherOptions(this._backoffOptions);
+    const requestOptions = getSegmentFetcherRequestOptions(this._backoffOptions);
     const pipelines = this._transport[bufferType];
 
     // Types are very complicated here as they are per-type of buffer.
-    const segmentFetcher = createSegmentFetcher<unknown, unknown>(
+    const segmentFetcher = createSegmentFetcher<unknown, unknown>({
       bufferType,
-      pipelines as ISegmentPipeline<unknown, unknown>,
-      this._cdnPrioritizer,
-      callbacks,
-      backoffOptions,
-    );
+      pipeline: pipelines as ISegmentPipeline<unknown, unknown>,
+      cdnPrioritizer: this._cdnPrioritizer,
+      cmcdDataBuilder: this._cmcdDataBuilder,
+      eventListeners,
+      requestOptions,
+    });
     return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
   }
 }

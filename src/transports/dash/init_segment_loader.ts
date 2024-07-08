@@ -25,11 +25,12 @@ import type {
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
 } from "../types";
+import addQueryString from "../utils/add_query_string";
 import byteRange from "../utils/byte_range";
 
 /**
  * Perform a request for an initialization segment, agnostic to the container.
- * @param {string} url
+ * @param {string} initialUrl
  * @param {Object} segment
  * @param {Object} options
  * @param {CancellationSignal} cancelSignal
@@ -37,7 +38,7 @@ import byteRange from "../utils/byte_range";
  * @returns {Promise}
  */
 export default function initSegmentLoader(
-  url: string,
+  initialUrl: string,
   segment: ISegment,
   options: ISegmentLoaderOptions,
   cancelSignal: CancellationSignal,
@@ -47,10 +48,17 @@ export default function initSegmentLoader(
   | ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array>
   | ISegmentLoaderResultChunkedComplete
 > {
+  let url = initialUrl;
+  if (options.cmcdPayload?.type === "query") {
+    url = addQueryString(url, options.cmcdPayload.value);
+  }
+  const cmcdHeaders =
+    options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
   if (segment.range === undefined) {
     return request({
       url,
       responseType: "arraybuffer",
+      headers: cmcdHeaders,
       timeout: options.timeout,
       connectionTimeout: options.connectionTimeout,
       cancelSignal,
@@ -61,7 +69,10 @@ export default function initSegmentLoader(
   if (segment.indexRange === undefined) {
     return request({
       url,
-      headers: { Range: byteRange(segment.range) },
+      headers: {
+        ...cmcdHeaders,
+        Range: byteRange(segment.range),
+      },
       responseType: "arraybuffer",
       timeout: options.timeout,
       connectionTimeout: options.connectionTimeout,
@@ -74,7 +85,10 @@ export default function initSegmentLoader(
   if (segment.range[1] + 1 === segment.indexRange[0]) {
     return request({
       url,
-      headers: { Range: byteRange([segment.range[0], segment.indexRange[1]]) },
+      headers: {
+        ...cmcdHeaders,
+        Range: byteRange([segment.range[0], segment.indexRange[1]]),
+      },
       responseType: "arraybuffer",
       timeout: options.timeout,
       connectionTimeout: options.connectionTimeout,
@@ -85,7 +99,10 @@ export default function initSegmentLoader(
 
   const rangeRequest$ = request({
     url,
-    headers: { Range: byteRange(segment.range) },
+    headers: {
+      ...cmcdHeaders,
+      Range: byteRange(segment.range),
+    },
     responseType: "arraybuffer",
     timeout: options.timeout,
     connectionTimeout: options.connectionTimeout,
@@ -94,7 +111,10 @@ export default function initSegmentLoader(
   });
   const indexRequest$ = request({
     url,
-    headers: { Range: byteRange(segment.indexRange) },
+    headers: {
+      ...cmcdHeaders,
+      Range: byteRange(segment.indexRange),
+    },
     responseType: "arraybuffer",
     timeout: options.timeout,
     connectionTimeout: options.connectionTimeout,

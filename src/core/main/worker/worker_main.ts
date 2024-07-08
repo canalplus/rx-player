@@ -516,6 +516,7 @@ function loadOrReloadPreparedContent(
   }
   const {
     contentId,
+    cmcdDataBuilder,
     manifest,
     mediaSource,
     representationEstimator,
@@ -562,6 +563,10 @@ function loadOrReloadPreparedContent(
     sendMessage,
     currentLoadCanceller.signal,
   );
+  cmcdDataBuilder?.startMonitoringPlayback(playbackObserver);
+  currentLoadCanceller.signal.register(() => {
+    cmcdDataBuilder?.stopMonitoringPlayback();
+  });
 
   const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
     manifest,
@@ -758,6 +763,13 @@ function loadOrReloadPreparedContent(
       },
 
       bitrateEstimateChange(payload) {
+        if (preparedContent !== null) {
+          preparedContent.cmcdDataBuilder?.updateThroughput(
+            payload.type,
+            payload.bitrate,
+          );
+        }
+
         // TODO for low-latency contents it is __VERY__ frequent.
         // Considering this is only for an unimportant undocumented API, we may
         // throttle such messages. (e.g. max one per 2 seconds for each type?).

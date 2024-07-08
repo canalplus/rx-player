@@ -29,6 +29,26 @@ export interface IWorkerSettings {
   dashWasmUrl?: string | ArrayBuffer | undefined;
 }
 
+/** Object that defines Common Media Client Data (CMCD) options. */
+export interface ICmcdOptions {
+  /**
+   * Content ID delivered by CMCD metadata for that content.
+   * If not specified, a default one will be generated.
+   */
+  contentId?: string;
+  /**
+   * Session ID delivered by CMCD metadata.
+   * If not specified, a default one will be generated.
+   */
+  sessionId?: string;
+  /**
+   * Allow to force the way in which the CMCD payload should be communicated.
+   *
+   * If not set, the most appropriate type will be relied on.
+   */
+  communicationType?: "headers" | "query";
+}
+
 /** Every options that can be given to the RxPlayer's constructor. */
 export interface IConstructorOptions {
   maxBufferAhead?: number;
@@ -150,6 +170,11 @@ export interface ILoadVideoOptions {
    * in "multithread" mode) for that content.
    */
   mode?: IRxPlayerMode | undefined;
+
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -404,10 +429,58 @@ export interface ISegmentLoaderContext {
   byteRanges?: Array<[number, number]> | undefined;
   /** Type of the corresponding track. */
   trackType: ITrackType;
+  /**
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
+   */
+  cmcdPayload?: ICmcdPayload | undefined;
 }
 
 /** Every possible value for the Adaptation's `type` property. */
 export type ITrackType = "video" | "audio" | "text";
+
+/**
+ * Payload to add to a request to provide CMCD metadata through HTTP request
+ * headers.
+ *
+ * This is an object where keys are header names and values are header contents.
+ */
+export type ICmcdHeadersData = Record<string, string>;
+
+/**
+ * Payload to add to a request to provide CMCD metadata through an URL's query
+ * string.
+ *
+ * This is an array of all fields and corresponding values that should be
+ * added to the query string, the order should be kept.
+ *
+ * `null` indicates that the field has no value and should be added as is.
+ */
+export type ICmcdQueryData = Array<[string, string | null]>;
+
+/**
+ * Type when CMCD metadata should be added through headers to the HTTP request
+ * for the corresponding resource.
+ */
+export interface ICmcdHeadersPayload {
+  type: "headers";
+  value: ICmcdHeadersData;
+}
+
+/**
+ * Type when CMCD metadata should be added through the query string to the HTTP
+ * request for the corresponding resource.
+ */
+export interface ICmcdQueryPayload {
+  type: "query";
+  value: ICmcdQueryData;
+}
+
+/**
+ * Type to indicate that CMCD metadata should be added to the request for the
+ * corresponding resource.
+ */
+export type ICmcdPayload = ICmcdHeadersPayload | ICmcdQueryPayload;
 
 export type ILoadedManifestFormat = IInitialManifest;
 
@@ -433,8 +506,14 @@ export type IManifestLoader = (
 (() => void) | void;
 
 export interface IManifestLoaderInfo {
+  /** URL at which the wanted Manifest can be accessed. */
   url: string | undefined;
   timeout: number | undefined;
+  /**
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
+   */
+  cmcdPayload: ICmcdPayload | undefined;
 }
 
 /** Options related to a single key system. */

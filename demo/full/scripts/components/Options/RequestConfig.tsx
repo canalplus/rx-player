@@ -2,6 +2,7 @@ import * as React from "react";
 import Checkbox from "../CheckBox";
 import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
 import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
+import Select from "../Select";
 
 const { Fragment, useCallback, useEffect, useState } = React;
 
@@ -19,19 +20,23 @@ const DEFAULT_MANIFEST_REQUEST_TIMEOUT =
 function RequestConfig({
   manifestRequestTimeout,
   manifestRetry,
+  cmcdCommunicationMethod,
   onManifestRequestTimeoutChange,
   onManifestRetryChange,
   onSegmentRequestTimeoutChange,
   onSegmentRetryChange,
+  onCmcdChange,
   segmentRequestTimeout,
   segmentRetry,
 }: {
   manifestRequestTimeout: number;
   manifestRetry: number;
+  cmcdCommunicationMethod: string;
   onManifestRequestTimeoutChange: (val: number) => void;
   onManifestRetryChange: (val: number) => void;
   onSegmentRequestTimeoutChange: (val: number) => void;
   onSegmentRetryChange: (val: number) => void;
+  onCmcdChange: (val: string) => void;
   segmentRequestTimeout: number;
   segmentRetry: number;
 }): JSX.Element {
@@ -74,6 +79,27 @@ function RequestConfig({
    */
   const [isManifestRequestTimeoutLimited, setManifestRequestTimeoutLimit] = useState(
     manifestRequestTimeout !== -1,
+  );
+
+  let cmcdDescMsg;
+  switch (cmcdCommunicationMethod) {
+    case "disabled":
+      cmcdDescMsg = "Not relying on CMCD with the CDN";
+      break;
+    case "query":
+      cmcdDescMsg = "Communicate CMCD payload through URL's query strings";
+      break;
+    case "headers":
+      cmcdDescMsg = "Communicate CMCD payload through HTTP(S) headers";
+      break;
+    default:
+      cmcdDescMsg = "Unknown value";
+      break;
+  }
+
+  const onCmcdSelection = React.useCallback(
+    ({ value }: { value: string }) => onCmcdChange(value),
+    [onCmcdChange],
   );
 
   // Update manifestRequestTimeout when its linked text change
@@ -274,6 +300,21 @@ function RequestConfig({
             ? "Perform manifest requests without timeout"
             : `Stop manifest requests after ${manifestRequestTimeout} millisecond(s)`}
         </span>
+      </li>
+
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          ariaLabel="Selecting the CMCD communication method"
+          disabled={false}
+          className="playerOptionInput"
+          name="cmcd"
+          onChange={onCmcdSelection}
+          selected={{ value: cmcdCommunicationMethod, index: undefined }}
+          options={["disabled", "query", "headers"]}
+        >
+          CMCD (Common Media Client Data) communication type
+        </Select>
+        <span className="option-desc">{cmcdDescMsg}</span>
       </li>
     </Fragment>
   );
