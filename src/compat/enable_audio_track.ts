@@ -1,4 +1,4 @@
-import { ICompatAudioTrack } from "./browser_compatibility_types";
+import type { ICompatAudioTrack } from "./browser_compatibility_types";
 import { isTizen } from "./browser_detection";
 
 /**
@@ -11,9 +11,9 @@ import { isTizen } from "./browser_detection";
  * @returns {boolean}
  */
 export default function enableAudioTrack(
-  audioTracks : ICompatAudioTrack[],
-  indexToEnable : number
-) : boolean {
+  audioTracks: ICompatAudioTrack[],
+  indexToEnable: number,
+): boolean {
   // Seen on Safari MacOS only (2022-02-14), not disabling ALL audio tracks
   // first (even the wanted one), can lead to the media not playing.
   for (let i = 0; i < audioTracks.length; i++) {
@@ -24,7 +24,7 @@ export default function enableAudioTrack(
     }
   }
 
-  if (indexToEnable < 0 ||  indexToEnable >= audioTracks.length) {
+  if (indexToEnable < 0 || indexToEnable >= audioTracks.length) {
     return false;
   }
 

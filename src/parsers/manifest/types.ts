@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import { IRepresentationIndex } from "../../manifest";
-import { IHDRInformation } from "../../public_types";
+import type { IRepresentationIndex } from "../../manifest";
+import type { IHDRInformation } from "../../public_types";
 
-export interface IManifestStreamEvent { start: number;
-                                        end?: number | undefined;
-                                        id?: string | undefined;
-                                        data: IParsedStreamEventData; }
+export interface IManifestStreamEvent {
+  start: number;
+  end?: number | undefined;
+  id?: string | undefined;
+  data: IParsedStreamEventData;
+}
 
 export interface IParsedStreamEventData {
   type: "dash-event-stream";
@@ -28,16 +30,20 @@ export interface IParsedStreamEventData {
     schemeIdUri: string;
     timescale: number;
     element?: Element | undefined;
-    xmlData?: {
-      namespaces: Array<{ key: string; value: string }>;
-      data: string;
-    } | undefined;
+    xmlData?:
+      | {
+          namespaces: Array<{ key: string; value: string }>;
+          data: string;
+        }
+      | undefined;
   };
 }
 
 /** Describes information about an encryption Key ID of a given media. */
-export interface IContentProtectionKID { keyId : Uint8Array;
-                                         systemId?: string | undefined; }
+export interface IContentProtectionKID {
+  keyId: Uint8Array;
+  systemId?: string | undefined;
+}
 
 /**
  * Encryption initialization data.
@@ -63,7 +69,7 @@ export interface IContentProtectionInitData {
      * For example, with ISOBMFF "cenc" initialization data, this will be the
      * whole PSSH box.
      */
-     data: Uint8Array;
+    data: Uint8Array;
   }>;
 }
 
@@ -79,9 +85,9 @@ export interface IContentProtections {
    * `undefined` if the key id(s) associated with that content may exist but are
    * not known.
    */
-  keyIds : IContentProtectionKID[] | undefined;
+  keyIds: IContentProtectionKID[] | undefined;
   /** The different encryption initialization data associated with that content. */
-  initData : IContentProtectionInitData[];
+  initData: IContentProtectionInitData[];
 }
 
 /** Represents metadata of a CDN which can serve resources. */
@@ -95,18 +101,18 @@ export interface ICdnMetadata {
    * May be an empty string to indicate that all segments should contain the
    * full URL.
    */
-  baseUrl : string;
+  baseUrl: string;
 
   /**
    * Identifier that might be re-used in other documents.
    */
-  id? : string | undefined;
+  id?: string | undefined;
 }
 
 /** Representation of a "quality" available in an Adaptation. */
 export interface IParsedRepresentation {
   /** Maximum bitrate the Representation is available in, in bits per seconds. */
-  bitrate : number;
+  bitrate: number;
   /**
    * Information on the CDN(s) on which requests should be done to request this
    * Representation's initialization and media segments.
@@ -117,12 +123,12 @@ export interface IParsedRepresentation {
    * An empty array means that no CDN are left to request the resource. As such,
    * no resource can be loaded in that situation.
    */
-  cdnMetadata : ICdnMetadata[] | null;
+  cdnMetadata: ICdnMetadata[] | null;
   /**
    * Interface to get information about segments associated with this
    * Representation,
    */
-  index : IRepresentationIndex;
+  index: IRepresentationIndex;
   /**
    * Unique ID that should not change between Manifest updates for this
    * Representation but which should be different than any other Representation
@@ -136,7 +142,7 @@ export interface IParsedRepresentation {
    * Information about the encryption associated with this Representation.
    * Not set if unknown or if the content is not encrypted.
    */
-  contentProtections? : IContentProtections | undefined;
+  contentProtections?: IContentProtections | undefined;
   /**
    * Frame rate (images per seconds) associated with this Representation.
    * Not set if unknown or if it makes no sense.
@@ -165,20 +171,19 @@ export interface IParsedRepresentation {
   /** `true` if audio has Dolby Atmos. */
   isSpatialAudio?: boolean | undefined;
 
-  supplementalCodecs? : string | undefined;
+  supplementalCodecs?: string | undefined;
 }
 
 /** Every possible types an Adaptation can have. */
-export type IParsedAdaptationType = "audio" |
-                                    "video" |
-                                    "text";
+export type IParsedAdaptationType = "audio" | "video" | "text";
 
 /**
  * Collection of multiple `Adaptation`, regrouped by type, as used by a
  * `Period`.
  */
-export type IParsedAdaptations =
-  Partial<Record<IParsedAdaptationType, IParsedAdaptation[]>>;
+export type IParsedAdaptations = Partial<
+  Record<IParsedAdaptationType, IParsedAdaptation[]>
+>;
 
 /** Representation of a "track" available in any Period. */
 export interface IParsedAdaptation {
@@ -197,32 +202,32 @@ export interface IParsedAdaptation {
    * Not set if unknown or if it makes no sense for the current track (e.g. for
    * a video track).
    */
-  audioDescription? : boolean | undefined;
+  audioDescription?: boolean | undefined;
   /**
    * Whether this Adaptation are closed captions for the hard of hearing.
    * Not set if unknown or if it makes no sense for the current track (e.g. for
    * a video track).
    */
-  closedCaption? : boolean | undefined;
+  closedCaption?: boolean | undefined;
   /**
    * If `true` this Adaptation are subtitles Meant for display when no other text
    * Adaptation is selected. It is used to clarify dialogue, alternate
    * languages, texted graphics or location/person IDs that are not otherwise
    * covered in the dubbed/localized audio Adaptation.
    */
-  forcedSubtitles? : boolean;
+  forcedSubtitles?: boolean;
   /**
    * If true this Adaptation is in a dub: it was recorded in another language
    * than the original(s) one(s).
    */
-  isDub? : boolean | undefined;
+  isDub?: boolean | undefined;
   /**
    * If true this Adaptation is in a sign interpreted: which is a variant of the
    * video with sign language.
    */
-  isSignInterpreted? : boolean | undefined;
+  isSignInterpreted?: boolean | undefined;
   /** Tells if the track is a trick mode track. */
-  isTrickModeTrack? : boolean | undefined;
+  isTrickModeTrack?: boolean | undefined;
   /**
    * Language the `Adaptation` is in.
    * Not set if unknown or if it makes no sense for the current track.
@@ -245,26 +250,26 @@ export interface IParsedPeriod {
    * Period but which should be different than any other Period in this
    * Manifest.
    */
-  id : string;
+  id: string;
   /**
    * Start time at which the Period begins.
    * For static contents, the start of the first Period should
    * corresponds to the time of the first available segment
    */
-  start : number;
+  start: number;
   /** Available tracks for this Period.  */
-  adaptations : IParsedAdaptations;
+  adaptations: IParsedAdaptations;
   /**
    * Duration of the Period (from the start to the end), in seconds.
    * `undefined` if the Period is the last one and is still being updated.
    */
-  duration? : number | undefined;
+  duration?: number | undefined;
   /**
    * Time at which the Period ends, in seconds.
    * `undefined` if the Period is the last one and is still
    * being updated.
    */
-  end? : number | undefined;
+  end?: number | undefined;
   /**
    * Array containing every stream event from period in manifest.
    * `undefined` if no parsed stream event in manifest.
@@ -275,46 +280,46 @@ export interface IParsedPeriod {
 /** Information on the whole content */
 export interface IParsedManifest {
   /** If true, this Manifest can be updated. */
-  isDynamic : boolean;
+  isDynamic: boolean;
   /**
    * If true, this Manifest describes a "live" content we shall play close to
    * its "live edge".
    */
-  isLive : boolean;
+  isLive: boolean;
   /**
    * If `true`, no more periods will be added after the current last manifest's
    * Period.
    * `false` if we know that more Period is coming or if we don't know.
    */
-  isLastPeriodKnown : boolean;
+  isLastPeriodKnown: boolean;
   /** Periods contained in this manifest. */
   periods: IParsedPeriod[];
   /**
    * The wall-clock time when the manifest was generated and published at the
    * origin server
    */
-  publishTime? : number | undefined;
+  publishTime?: number | undefined;
   /** Underlying transport protocol: "smooth", "dash", "metaplaylist" etc. */
   transportType: string;
   /** Base time from which the segments are generated. */
-  availabilityStartTime? : number | undefined;
+  availabilityStartTime?: number | undefined;
   /**
    * Difference between the server's clock, in milliseconds, and the
    * monotonically-raising timestamp used by the RxPlayer.
    */
-  clockOffset? : number | undefined;
+  clockOffset?: number | undefined;
   /** If set, the Manifest needs to be updated when that Promise resolves. */
-  expired? : Promise<void> | undefined;
+  expired?: Promise<void> | undefined;
   /**
    * Duration of the validity of this Manifest from its download time.
    * After that time has elapsed, the Manifest should be refreshed.
    */
-  lifetime? : number | undefined;
+  lifetime?: number | undefined;
   /**
    * Data allowing to calculate the minimum and maximum seekable positions at
    * any given time.
    */
-  timeBounds : {
+  timeBounds: {
     /**
      * This is the theoretical minimum playable position on the content
      * regardless of the current Adaptation chosen, as estimated at parsing
@@ -324,7 +329,7 @@ export interface IParsedManifest {
      * More technically, the `minimumSafePosition` is the maximum between all
      * the minimum positions reachable in any of the audio and video Adaptation.
      */
-    minimumSafePosition? : number | undefined;
+    minimumSafePosition?: number | undefined;
     /**
      * Some dynamic contents have the concept of a "window depth" (or "buffer
      * depth") which allows to set a minimum position for all reachable
@@ -338,16 +343,16 @@ export interface IParsedManifest {
      *
      * If set to `null`, this content has no concept of a "window depth".
      */
-    timeshiftDepth : number | null;
+    timeshiftDepth: number | null;
     /** Data allowing to calculate the maximum position at any given time. */
-    maximumTimeData : {
+    maximumTimeData: {
       /**
        * Current position representing live content.
        * Only makes sense for un-ended live contents.
        *
        * `undefined` if unknown or if it doesn't make sense in the current context.
        */
-      livePosition : number | undefined;
+      livePosition: number | undefined;
       /**
        * Whether the maximum positions should evolve linearly over time.
        *
@@ -377,14 +382,14 @@ export interface IParsedManifest {
        * This can for example be understood as the safe maximum playable
        * position through all possible tacks.
        */
-      maximumSafePosition : number;
+      maximumSafePosition: number;
       /**
        * Monotonically-raising timestamp at the time both `maximumSafePosition`
        * and `maximumPositionWithMediaData` were calculated.
        * This can be used to retrieve a new maximum position from them when they
        * linearly evolves over time (see `isLinear` property).
        */
-      time : number;
+      time: number;
     };
   };
   /**
@@ -392,7 +397,7 @@ export interface IParsedManifest {
    * Suggested delay from the last position the player should start from by
    * default.
    */
-  suggestedPresentationDelay? : number | undefined;
+  suggestedPresentationDelay?: number | undefined;
   /** URIs where the manifest can be refreshed by order of importance. */
-  uris? : string[] | undefined;
+  uris?: string[] | undefined;
 }

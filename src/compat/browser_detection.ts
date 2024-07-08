@@ -20,15 +20,15 @@ import isNode from "../utils/is_node";
 type GlobalScope = typeof globalScope;
 
 interface IIE11WindowObject extends GlobalScope {
-  MSInputMethodContext? : unknown;
+  MSInputMethodContext?: unknown;
 }
 
 interface IIE11Document extends Document {
-  documentMode? : unknown;
+  documentMode?: unknown;
 }
 
 interface ISafariWindowObject extends GlobalScope {
-  safari? : { pushNotification? : { toString() : string } };
+  safari?: { pushNotification?: { toString(): string } };
 }
 
 /** Edge Chromium, regardless of the device */
@@ -67,37 +67,41 @@ let isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
+/** `true` for the PlayStation 4 game console. */
+let isPlayStation4 = false;
+
 /** `true` for the PlayStation 5 game console. */
 let isPlayStation5 = false;
 
 /** `true` for the Xbox game consoles. */
 let isXbox = false;
 
-((function findCurrentBrowser() : void {
+(function findCurrentBrowser(): void {
   if (isNode) {
-    return ;
+    return;
   }
 
   // 1 - Find out browser between IE/Edge Legacy/Edge Chromium/Firefox/Safari
 
-  if (typeof (globalScope as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
-      typeof (document as IIE11Document).documentMode !== "undefined")
-  {
+  if (
+    typeof (globalScope as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
+    typeof (document as IIE11Document).documentMode !== "undefined"
+  ) {
     isIE11 = true;
     isIEOrEdge = true;
   } else if (
     navigator.appName === "Microsoft Internet Explorer" ||
-    navigator.appName === "Netscape" &&
-    /(Trident|Edge)\//.test(navigator.userAgent)
+    (navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent))
   ) {
     isIEOrEdge = true;
   } else if (navigator.userAgent.toLowerCase().indexOf("edg/") !== -1) {
     isEdgeChromium = true;
   } else if (navigator.userAgent.toLowerCase().indexOf("firefox") !== -1) {
     isFirefox = true;
-  } else if (typeof navigator.platform === "string" &&
-             /iPad|iPhone|iPod/.test(navigator.platform))
-  {
+  } else if (
+    typeof navigator.platform === "string" &&
+    /iPad|iPhone|iPod/.test(navigator.platform)
+  ) {
     isSafariMobile = true;
   } else if (
     // the following statement check if the window.safari contains the method
@@ -109,14 +113,13 @@ let isXbox = false;
     // browsers are lying: Chrome reports both as Chrome and Safari in user
     // agent string, So to detect Safari we have to check for the Safari string
     // and the absence of the Chrome string
-    // eslint-disable-next-line max-len
     // @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent#which_part_of_the_user_agent_contains_the_information_you_are_looking_for
-    ((/Safari\/(\d+)/).test(navigator.userAgent) &&
-    // Safari should contain Version/ in userAgent
-    (/Version\/(\d+)/).test(navigator.userAgent) &&
-    (navigator.vendor?.indexOf("Apple") !== -1) &&
-    !(/Chrome\/(\d+)/).test(navigator.userAgent) &&
-    !(/Chromium\/(\d+)/).test(navigator.userAgent))
+    (/Safari\/(\d+)/.test(navigator.userAgent) &&
+      // Safari should contain Version/ in userAgent
+      /Version\/(\d+)/.test(navigator.userAgent) &&
+      navigator.vendor?.indexOf("Apple") !== -1 &&
+      !/Chrome\/(\d+)/.test(navigator.userAgent) &&
+      !/Chromium\/(\d+)/.test(navigator.userAgent))
   ) {
     isSafariDesktop = true;
   }
@@ -128,14 +131,16 @@ let isXbox = false;
     isSamsungBrowser = true;
   }
 
-  if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
+  if (navigator.userAgent.indexOf("PlayStation 4") !== -1) {
+    isPlayStation4 = true;
+  } else if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
     isPlayStation5 = true;
   } else if (/Tizen/.test(navigator.userAgent)) {
     isTizen = true;
 
-  // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
-  // Note: even that page doesn't correspond to what we've actually seen in the
-  // wild
+    // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
+    // Note: even that page doesn't correspond to what we've actually seen in the
+    // wild
   } else if (/[Ww]eb[O0]S/.test(navigator.userAgent)) {
     isWebOs = true;
 
@@ -155,7 +160,7 @@ let isXbox = false;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
     isXbox = true;
   }
-})());
+})();
 
 export {
   isEdgeChromium,
@@ -163,6 +168,7 @@ export {
   isIEOrEdge,
   isFirefox,
   isPanasonic,
+  isPlayStation4,
   isPlayStation5,
   isXbox,
   isSafariDesktop,

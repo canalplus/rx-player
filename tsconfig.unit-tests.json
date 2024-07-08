@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "typeRoots": ["./src/globals.dev.d.ts", "./node_modules/@types"]
+  },
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./src/globals.prod.d.ts"]
+}

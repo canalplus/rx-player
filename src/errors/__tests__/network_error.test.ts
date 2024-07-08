@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect } from "vitest";
 import { RequestError } from "../../utils/request";
 import NetworkError from "../network_error";
 
@@ -28,8 +13,7 @@ describe("errors - NetworkError", () => {
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(networkError.fatal).toBe(false);
-    expect(networkError.message)
-      .toBe("PIPELINE_LOAD_ERROR: The request timed out");
+    expect(networkError.message).toBe("PIPELINE_LOAD_ERROR: The request timed out");
   });
 
   it("should filter in a valid error code", () => {
@@ -43,9 +27,10 @@ describe("errors - NetworkError", () => {
     expect(networkError.errorType).toBe(requestError.type);
     expect(networkError.code).toBe("PIPELINE_LOAD_ERROR");
     expect(networkError.fatal).toBe(true);
-    expect(networkError.message)
-      .toBe("PIPELINE_LOAD_ERROR: An HTTP status code " +
-            "indicating failure was received: 403");
+    expect(networkError.message).toBe(
+      "PIPELINE_LOAD_ERROR: An HTTP status code " +
+        "indicating failure was received: 403",
+    );
   });
 
   it("should return false in isHttpError if not an HTTP error", () => {
@@ -54,17 +39,13 @@ describe("errors - NetworkError", () => {
     expect(networkError.isHttpError(0)).toBe(false);
   });
 
-  /* eslint-disable max-len */
   it("should return false in isHttpError if it is an HTTP error with a different code", () => {
-  /* eslint-enable max-len */
     const requestError = new RequestError("foo", 500, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     expect(networkError.isHttpError(1)).toBe(false);
   });
 
-  /* eslint-disable max-len */
   it("should return true in isHttpError if it is an HTTP error with the same code", () => {
-  /* eslint-enable max-len */
     const requestError = new RequestError("foo", 418, "ERROR_HTTP_CODE");
     const networkError = new NetworkError("PIPELINE_LOAD_ERROR", requestError);
     expect(networkError.isHttpError(418)).toBe(true);

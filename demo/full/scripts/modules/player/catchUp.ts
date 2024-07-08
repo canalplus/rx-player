@@ -55,7 +55,8 @@ export default class CatchUpModeController {
         interval = null;
       }
       const playerState = this._rxPlayer.getPlayerState();
-      const canCatchUp = playerState === "LOADED" ||
+      const canCatchUp =
+        playerState === "LOADED" ||
         playerState === "PLAYING" ||
         playerState === "PAUSED" ||
         playerState === "BUFFERING" ||
@@ -70,8 +71,8 @@ export default class CatchUpModeController {
         this._state.updateBulk({ isCatchingUp: false, playbackRate: 1 });
       } else {
         const checkCatchUp = () => {
-          const livePos = this._rxPlayer.getLivePosition() ??
-                          this._rxPlayer.getMaximumPosition();
+          const livePos =
+            this._rxPlayer.getLivePosition() ?? this._rxPlayer.getMaximumPosition();
           if (livePos === null) {
             this._rxPlayer.setPlaybackRate(1);
             this._state.updateBulk({ isCatchingUp: false, playbackRate: 1 });
@@ -139,7 +140,7 @@ export default class CatchUpModeController {
 
   stopCatchUp() {
     if (this._catchUpAborter === null) {
-      return ;
+      return;
     }
     this._catchUpAborter.abort();
     this._catchUpAborter = null;

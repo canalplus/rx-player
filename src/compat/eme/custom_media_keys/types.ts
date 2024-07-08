@@ -14,54 +14,48 @@
  * limitations under the License.
  */
 
-import { IEventEmitter } from "../../../utils/event_emitter";
+import type { IEventEmitter } from "../../../utils/event_emitter";
 
 export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEvents> {
   // Attributes
   readonly closed: Promise<void>;
   expiration: number;
   keyStatuses: ICustomMediaKeyStatusMap;
-  sessionId : string;
+  sessionId: string;
 
   // Event handlers
-  onmessage? : (message : MediaKeyMessageEvent) => void;
-  onkeystatusesChange? : (evt : Event) => void;
+  onmessage?: (message: MediaKeyMessageEvent) => void;
+  onkeystatusesChange?: (evt: Event) => void;
 
   // Functions
 
-  generateRequest(initDataType: string,
-                  initData: BufferSource | null)
-                 : Promise<void>;
+  generateRequest(initDataType: string, initData: BufferSource | null): Promise<void>;
 
-  load(sessionId: string) : Promise<boolean>;
+  load(sessionId: string): Promise<boolean>;
   update(response: BufferSource | null): Promise<void>;
-  close() : Promise<void>;
-  remove() : Promise<void>;
+  close(): Promise<void>;
+  remove(): Promise<void>;
 }
 
 export interface ICustomMediaKeys {
-  _setVideo : (vid : HTMLMediaElement) => Promise<unknown>;
-  createSession(sessionType? : MediaKeySessionType) : ICustomMediaKeySession;
-  setServerCertificate(setServerCertificate : BufferSource) : Promise<void>;
+  _setVideo: (vid: HTMLMediaElement) => Promise<unknown>;
+  createSession(sessionType?: MediaKeySessionType): ICustomMediaKeySession;
+  setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
 
 export interface ICustomMediaKeyStatusMap {
   readonly size: number;
-  forEach(callback: (status : MediaKeyStatus) => void, thisArg?: unknown): void;
-  get(
-    keyId: BufferSource |
-           null
-  ) : MediaKeyStatus|undefined;
-  has(
-    keyId: BufferSource |
-           null
-    ) : boolean;
+  forEach(callback: (status: MediaKeyStatus) => void, thisArg?: unknown): void;
+  get(keyId: BufferSource | null): MediaKeyStatus | undefined;
+  has(keyId: BufferSource | null): boolean;
 }
 
-export interface IMediaKeySessionEvents { [key : string] : MediaKeyMessageEvent|Event;
-                                          // "keymessage"
-                                          // "message"
-                                          // "keyadded"
-                                          // "ready"
-                                          // "keyerror"
-                                          /* "error" */ }
+export interface IMediaKeySessionEvents {
+  [key: string]: MediaKeyMessageEvent | Event;
+  // "keymessage"
+  // "message"
+  // "keyadded"
+  // "ready"
+  // "keyerror"
+  /* "error" */
+}

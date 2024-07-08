@@ -20,7 +20,7 @@
  */
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
-import Player from "./core/api";
+import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
 import {
   DASH,
   DIRECTFILE,
@@ -36,6 +36,10 @@ import {
   SMOOTH,
 } from "./features/list";
 import logger from "./log";
+import Player from "./main_thread/api";
+import globalScope from "./utils/global_scope";
+
+patchWebkitSourceBuffer();
 
 Player.addFeatures([
   SMOOTH,
@@ -53,8 +57,11 @@ Player.addFeatures([
 ]);
 if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG");
-} else if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
+} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
 }
-
 export default Player;
+
+if (typeof __GLOBAL_SCOPE__ === "boolean" && __GLOBAL_SCOPE__) {
+  (globalScope as typeof globalScope & { RxPlayer?: typeof Player }).RxPlayer = Player;
+}

@@ -16,18 +16,18 @@
 
 import globalScope from "../../../utils/global_scope";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
-import { ICustomMediaKeys } from "./types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICustomMediaKeys } from "./types";
 
 interface IMozMediaKeysConstructor {
-  new(keySystem: string): ICustomMediaKeys;
+  new (keySystem: string): ICustomMediaKeys;
   isTypeSupported(keySystem: string, type?: string | null): boolean;
 }
 
-let MozMediaKeysConstructor: IMozMediaKeysConstructor|undefined;
-const { MozMediaKeys } = (globalScope as typeof globalThis & {
-  MozMediaKeys? : IMozMediaKeysConstructor;
-});
+let MozMediaKeysConstructor: IMozMediaKeysConstructor | undefined;
+const { MozMediaKeys } = globalScope as typeof globalThis & {
+  MozMediaKeys?: IMozMediaKeysConstructor;
+};
 if (
   MozMediaKeys !== undefined &&
   MozMediaKeys.prototype !== undefined &&
@@ -40,15 +40,15 @@ if (
 }
 export { MozMediaKeysConstructor };
 
-export default function getMozMediaKeysCallbacks() : {
+export default function getMozMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
   setMediaKeys: (
     elt: HTMLMediaElement,
-    mediaKeys: MediaKeys|ICustomMediaKeys|null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
-  const isTypeSupported = (keySystem: string, type?: string|null) => {
+  const isTypeSupported = (keySystem: string, type?: string | null) => {
     if (MozMediaKeysConstructor === undefined) {
       throw new Error("No MozMediaKeys API.");
     }
@@ -65,10 +65,10 @@ export default function getMozMediaKeysCallbacks() : {
   };
   const setMediaKeys = (
     mediaElement: HTMLMediaElement,
-    mediaKeys: MediaKeys|ICustomMediaKeys|null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     return wrapInPromise(() => {
-      const elt : ICompatHTMLMediaElement = mediaElement;
+      const elt: ICompatHTMLMediaElement = mediaElement;
       if (
         elt.mozSetMediaKeys === undefined ||
         typeof elt.mozSetMediaKeys !== "function"

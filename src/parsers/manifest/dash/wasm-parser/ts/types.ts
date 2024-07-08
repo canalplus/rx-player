@@ -29,7 +29,7 @@ export const enum CustomEventType {
    */
   Log = 0,
 
-    /** Variant used to report parsing errors to the RxPlayer. */
+  /** Variant used to report parsing errors to the RxPlayer. */
   Error = 1,
 }
 
@@ -137,6 +137,8 @@ export const enum AttributeName {
   ContentProtectionValue = 13, // String
   ContentProtectionKeyId = 14, // ArrayBuffer
   ContentProtectionCencPSSH = 15, // ArrayBuffer
+  ContentProtectionRef = 78, // String
+  ContentProtectionRefId = 79, // String
 
   // Various schemes (Accessibility) + EventStream + ContentProtection
   SchemeIdUri = 16, // String
@@ -182,7 +184,6 @@ export const enum AttributeName {
 
   // Period + AdaptationSet + SegmentTemplate
   BitstreamSwitching = 32, // u8 (bool)
-
 
   // MPD
   Type = 33, // String

@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-import config from "../../../../config";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import { IReadOnlyPlaybackObserver } from "../../../api";
-import SegmentBuffersStore, {
-  ChunkStatus,
-  IBufferedChunk,
+import type {
   ISignalCompleteSegmentOperation,
-  SegmentBuffer,
-  SegmentBufferOperation,
-} from "../../../segment_buffers";
-import {
+  SegmentSink,
+} from "../../../segment_sinks";
+import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks";
+import type {
   IBufferDiscontinuity,
   IRepresentationStreamPlaybackObservation,
   IQueuedSegment,
@@ -38,32 +36,31 @@ import checkForDiscontinuity from "./check_for_discontinuity";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
 
-
 /** Analysis of the current buffer's status. */
 export interface IBufferStatus {
   /**
-   * Future discontinuity found in the SegmentBuffer's buffer: hole that won't
+   * Future discontinuity found in the SegmentSink's buffer: hole that won't
    * be filled by a segment.
    * `null` if no such discontinuity is found in the near future.
    */
-  imminentDiscontinuity : IBufferDiscontinuity | null;
+  imminentDiscontinuity: IBufferDiscontinuity | null;
   /**
    * If `true`, no segment need to be loaded to be able to play until the end of
    * the Period.
    * Some segments might still be in the process of being pushed.
    */
-  hasFinishedLoading : boolean;
+  hasFinishedLoading: boolean;
   /**
    * Segments that have to be scheduled for download to fill the buffer at least
    * until the given buffer goal.
    * The first element of that list might already be currently downloading.
    */
-  neededSegments : IQueuedSegment[];
+  neededSegments: IQueuedSegment[];
   /**
    * If `true`, the Manifest has to be reloaded to obtain more information
    * on which segments should be loaded.
    */
-  shouldRefreshManifest : boolean;
+  shouldRefreshManifest: boolean;
   /**
    * If 'true', the buffer memory is saturated, thus we may have issues loading
    * new segments.
@@ -84,21 +81,23 @@ export interface IBufferStatus {
  * @param {number|undefined} fastSwitchThreshold
  * @param {number} bufferGoal
  * @param {number} maxBufferSize
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @returns {Object}
  */
 export default function getBufferStatus(
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; },
-  initialWantedTime : number,
-  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
-  fastSwitchThreshold : number | undefined,
-  bufferGoal : number,
-  maxBufferSize : number,
-  segmentBuffer : SegmentBuffer
-) : IBufferStatus {
+  content: {
+    adaptation: IAdaptation;
+    manifest: IManifest;
+    period: IPeriod;
+    representation: IRepresentation;
+  },
+  initialWantedTime: number,
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  fastSwitchThreshold: number | undefined,
+  bufferGoal: number,
+  maxBufferSize: number,
+  segmentSink: SegmentSink,
+): IBufferStatus {
   const { representation } = content;
   const isPaused =
     playbackObserver.getIsPaused() ??
@@ -108,33 +107,35 @@ export default function getBufferStatus(
     playbackObserver.getPlaybackRate() ??
     playbackObserver.getReference().getValue().speed;
   let askedStart = initialWantedTime;
-  if (isPaused === undefined ||
-      playbackRate === undefined ||
-      (isPaused || playbackRate <= 0))
-  {
+  if (
+    isPaused === undefined ||
+    playbackRate === undefined ||
+    isPaused ||
+    playbackRate <= 0
+  ) {
     askedStart -= 0.1;
   }
-  const neededRange = getRangeOfNeededSegments(content,
-                                               askedStart,
-                                               bufferGoal);
-  const shouldRefreshManifest = representation.index.shouldRefresh(neededRange.start,
-                                                                   neededRange.end);
+  const neededRange = getRangeOfNeededSegments(content, askedStart, bufferGoal);
+  const shouldRefreshManifest = representation.index.shouldRefresh(
+    neededRange.start,
+    neededRange.end,
+  );
 
   /**
    * Every segment awaiting an "SignalSegmentComplete" operation, which
    * indicates that a completely-loaded segment is still being pushed to the
-   * SegmentBuffer.
+   * SegmentSink.
    */
-  const segmentsBeingPushed = segmentBuffer.getPendingOperations()
-    .filter((operation) : operation is ISignalCompleteSegmentOperation =>
-      operation.type === SegmentBufferOperation.SignalSegmentComplete
-    ).map(operation => operation.value);
+  const segmentsBeingPushed = segmentSink
+    .getPendingOperations()
+    .filter(
+      (operation): operation is ISignalCompleteSegmentOperation =>
+        operation.type === SegmentSinkOperation.SignalSegmentComplete,
+    )
+    .map((operation) => operation.value);
 
   /** Data on every segments buffered around `neededRange`. */
-  const bufferedSegments =
-    getPlayableBufferedSegments({ start: Math.max(neededRange.start - 0.5, 0),
-                                  end: neededRange.end + 0.5 },
-                                segmentBuffer.getLastKnownInventory());
+  const bufferedSegments = segmentSink.getLastKnownInventory();
   let currentPlaybackTime = playbackObserver.getCurrentTime();
   if (currentPlaybackTime === undefined) {
     // We're in a WebWorker, just consider the last known position
@@ -142,66 +143,71 @@ export default function getBufferStatus(
   }
 
   /** Callback allowing to retrieve a segment's history in the buffer. */
-  const getBufferedHistory = segmentBuffer.getSegmentHistory.bind(segmentBuffer);
+  const getBufferedHistory = segmentSink.getSegmentHistory.bind(segmentSink);
 
   /** List of segments we will need to download. */
-  const { segmentsToLoad,
-          segmentsOnHold,
-          isBufferFull } = getNeededSegments({ content,
-                                               bufferedSegments,
-                                               currentPlaybackTime,
-                                               fastSwitchThreshold,
-                                               getBufferedHistory,
-                                               neededRange,
-                                               segmentsBeingPushed,
-                                               maxBufferSize });
+  const { segmentsToLoad, segmentsOnHold, isBufferFull } = getNeededSegments({
+    content,
+    bufferedSegments,
+    currentPlaybackTime,
+    fastSwitchThreshold,
+    getBufferedHistory,
+    neededRange,
+    segmentsBeingPushed,
+    maxBufferSize,
+  });
 
-  const prioritizedNeededSegments: IQueuedSegment[] = segmentsToLoad.map((segment) => (
-    {
-      priority: getSegmentPriority(segment.time, askedStart),
-      segment,
-    }
-  ));
+  const prioritizedNeededSegments: IQueuedSegment[] = segmentsToLoad.map((segment) => ({
+    priority: getSegmentPriority(segment.time, askedStart),
+    segment,
+  }));
 
   /**
    * `true` if the current `RepresentationStream` has loaded all the
    * needed segments for this Representation until the end of the Period.
    */
-  const hasFinishedLoading = representation.index.isInitialized() &&
-                             !representation.index.isStillAwaitingFutureSegments() &&
-                             neededRange.hasReachedPeriodEnd &&
-                             prioritizedNeededSegments.length === 0 &&
-                             segmentsOnHold.length === 0;
+  const hasFinishedLoading =
+    representation.index.isInitialized() &&
+    !representation.index.isStillAwaitingFutureSegments() &&
+    neededRange.hasReachedPeriodEnd &&
+    prioritizedNeededSegments.length === 0 &&
+    segmentsOnHold.length === 0;
 
   /**
    * Start time in seconds of the next available not-yet pushed segment.
    * `null` if no segment is wanted for the current wanted range.
    */
-  let nextSegmentStart : number | null = null;
+  let nextSegmentStart: number | null = null;
   if (segmentsBeingPushed.length > 0) {
-    nextSegmentStart = Math.min(...segmentsBeingPushed.map(info => info.segment.time));
+    nextSegmentStart = Math.min(...segmentsBeingPushed.map((info) => info.segment.time));
   }
   if (segmentsOnHold.length > 0) {
-    nextSegmentStart = nextSegmentStart !== null ?
-      Math.min(nextSegmentStart, segmentsOnHold[0].time) :
-      segmentsOnHold[0].time;
+    nextSegmentStart =
+      nextSegmentStart !== null
+        ? Math.min(nextSegmentStart, segmentsOnHold[0].time)
+        : segmentsOnHold[0].time;
   }
   if (prioritizedNeededSegments.length > 0) {
-    nextSegmentStart = nextSegmentStart !== null ?
-      Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time) :
-      prioritizedNeededSegments[0].segment.time;
+    nextSegmentStart =
+      nextSegmentStart !== null
+        ? Math.min(nextSegmentStart, prioritizedNeededSegments[0].segment.time)
+        : prioritizedNeededSegments[0].segment.time;
   }
 
-  const imminentDiscontinuity = checkForDiscontinuity(content,
-                                                      neededRange,
-                                                      nextSegmentStart,
-                                                      hasFinishedLoading,
-                                                      bufferedSegments);
-  return { imminentDiscontinuity,
-           hasFinishedLoading,
-           neededSegments: prioritizedNeededSegments,
-           isBufferFull,
-           shouldRefreshManifest };
+  const imminentDiscontinuity = checkForDiscontinuity(
+    content,
+    neededRange,
+    nextSegmentStart,
+    hasFinishedLoading,
+    bufferedSegments,
+  );
+  return {
+    imminentDiscontinuity,
+    hasFinishedLoading,
+    neededSegments: prioritizedNeededSegments,
+    isBufferFull,
+    shouldRefreshManifest,
+  };
 }
 
 /**
@@ -214,14 +220,16 @@ export default function getBufferStatus(
  * @returns {Object}
  */
 function getRangeOfNeededSegments(
-  content: { adaptation : Adaptation;
-             manifest : Manifest;
-             period : Period;
-             representation : Representation; },
-  initialWantedTime : number,
-  bufferGoal : number
-) : { start : number; end : number; hasReachedPeriodEnd : boolean } {
-  let wantedStartPosition : number;
+  content: {
+    adaptation: IAdaptation;
+    manifest: IManifest;
+    period: IPeriod;
+    representation: IRepresentation;
+  },
+  initialWantedTime: number,
+  bufferGoal: number,
+): { start: number; end: number; hasReachedPeriodEnd: boolean } {
+  let wantedStartPosition: number;
   const { manifest, period, representation } = content;
   const lastIndexPosition = representation.index.getLastAvailablePosition();
   const representationIndex = representation.index;
@@ -232,13 +240,14 @@ function getRangeOfNeededSegments(
   // In that case, we want to actually request at least the last segment to
   // avoid ending the last Period - and by extension the content - with a
   // segment which isn't the last one.
-  if (!isNullOrUndefined(lastIndexPosition) &&
-      SegmentBuffersStore.isNative(content.adaptation.type) &&
-      initialWantedTime >= lastIndexPosition &&
-      representationIndex.isInitialized() &&
-      !representationIndex.isStillAwaitingFutureSegments() &&
-      isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime))
-  {
+  if (
+    !isNullOrUndefined(lastIndexPosition) &&
+    SegmentSinksStore.isNative(content.adaptation.type) &&
+    initialWantedTime >= lastIndexPosition &&
+    representationIndex.isInitialized() &&
+    !representationIndex.isStillAwaitingFutureSegments() &&
+    isPeriodTheCurrentAndLastOne(manifest, period, initialWantedTime)
+  ) {
     wantedStartPosition = lastIndexPosition - 1;
   } else {
     wantedStartPosition = initialWantedTime - 0.1;
@@ -247,10 +256,11 @@ function getRangeOfNeededSegments(
   const wantedEndPosition = wantedStartPosition + bufferGoal;
 
   let hasReachedPeriodEnd;
-  if (!representation.index.isInitialized() ||
-      representation.index.isStillAwaitingFutureSegments() ||
-      period.end === undefined)
-  {
+  if (
+    !representation.index.isInitialized() ||
+    representation.index.isStillAwaitingFutureSegments() ||
+    period.end === undefined
+  ) {
     hasReachedPeriodEnd = false;
   } else if (lastIndexPosition === undefined) {
     // We do not know the end of this index.
@@ -266,10 +276,11 @@ function getRangeOfNeededSegments(
     hasReachedPeriodEnd = wantedEndPosition >= lastIndexPosition;
   }
 
-  return { start: Math.max(wantedStartPosition,
-                           period.start),
-           end: Math.min(wantedEndPosition, period.end ?? Infinity),
-           hasReachedPeriodEnd };
+  return {
+    start: Math.max(wantedStartPosition, period.start),
+    end: Math.min(wantedEndPosition, period.end ?? Infinity),
+    hasReachedPeriodEnd,
+  };
 }
 
 /**
@@ -283,54 +294,14 @@ function getRangeOfNeededSegments(
  * @returns {boolean}
  */
 function isPeriodTheCurrentAndLastOne(
-  manifest : Manifest,
-  period : Period,
-  time : number
-) : boolean {
+  manifest: IManifest,
+  period: IPeriod,
+  time: number,
+): boolean {
   const nextPeriod = manifest.getPeriodAfter(period);
-  return period.containsTime(time, nextPeriod) &&
-         manifest.isLastPeriodKnown &&
-         period.id === manifest.periods[manifest.periods.length - 1]?.id;
-}
-
-/**
- * From the given SegmentInventory, filters the "playable" (in a supported codec
- * and not known to be undecipherable) buffered Segment Objects which overlap
- * with the given range.
- * @param {Object} neededRange
- * @param {Array.<Object>} segmentInventory
- * @returns {Array.<Object>}
- */
-function getPlayableBufferedSegments(
-  neededRange : { start : number; end : number },
-  segmentInventory : IBufferedChunk[]
-) : IBufferedChunk[] {
-  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
-  const segmentRoundingError = Math.max(1 / 60, MINIMUM_SEGMENT_SIZE);
-  const minEnd = neededRange.start + segmentRoundingError;
-  const maxStart = neededRange.end - segmentRoundingError;
-
-  const overlappingChunks : IBufferedChunk[] = [];
-  for (let i = segmentInventory.length - 1; i >= 0; i--) {
-    const eltInventory = segmentInventory[i];
-
-    const { representation } = eltInventory.infos;
-    if (eltInventory.status === ChunkStatus.Complete &&
-        representation.decipherable !== false &&
-        representation.isSupported !== false)
-    {
-      const inventorySegment = eltInventory.infos.segment;
-      const eltInventoryStart = inventorySegment.time /
-                                inventorySegment.timescale;
-      const eltInventoryEnd = !inventorySegment.complete ?
-        eltInventory.end :
-        eltInventoryStart + inventorySegment.duration / inventorySegment.timescale;
-      if ((eltInventoryEnd > minEnd && eltInventoryStart < maxStart) ||
-          (eltInventory.end > minEnd && eltInventory.start < maxStart))
-      {
-        overlappingChunks.unshift(eltInventory);
-      }
-    }
-  }
-  return overlappingChunks;
+  return (
+    period.containsTime(time, nextPeriod) &&
+    manifest.isLastPeriodKnown &&
+    period.id === manifest.periods[manifest.periods.length - 1]?.id
+  );
 }

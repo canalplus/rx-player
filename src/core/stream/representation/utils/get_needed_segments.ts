@@ -16,28 +16,29 @@
 
 import config from "../../../../config";
 import log from "../../../../log";
-import Manifest, {
-  Adaptation,
-  areSameContent,
+import type {
+  IManifest,
+  IAdaptation,
   ISegment,
-  Period,
-  Representation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
+import { areSameContent } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
-import { IBufferedChunk, ICompleteSegmentInfo } from "../../../segment_buffers";
-import {
+import type {
+  IBufferedChunk,
+  ICompleteSegmentInfo,
   IBufferedHistoryEntry,
   IChunkContext,
-} from "../../../segment_buffers/inventory";
-
+} from "../../../segment_sinks";
+import { ChunkStatus } from "../../../segment_sinks/inventory/segment_inventory";
 
 interface IContentContext {
-  adaptation: Adaptation;
-  manifest: Manifest;
-  period: Period;
-  representation: Representation;
+  adaptation: IAdaptation;
+  manifest: IManifest;
+  period: IPeriod;
+  representation: IRepresentation;
 }
-
 
 /** Arguments for `getNeededSegments`. */
 export interface IGetNeededSegmentsArguments {
@@ -57,11 +58,11 @@ export interface IGetNeededSegmentsArguments {
    * Set to `undefined` to indicate that there's no threshold (anything can be
    * replaced by higher-quality segments).
    */
-  fastSwitchThreshold : number | undefined;
+  fastSwitchThreshold: number | undefined;
   /** The range we want to fill with segments. */
-  neededRange : { start: number; end: number };
+  neededRange: { start: number; end: number };
   /** The list of segments that are already in the process of being pushed. */
-  segmentsBeingPushed : ICompleteSegmentInfo[];
+  segmentsBeingPushed: ICompleteSegmentInfo[];
   /**
    * Information on the segments already in the buffer, in chronological order.
    *
@@ -71,16 +72,15 @@ export interface IGetNeededSegmentsArguments {
    * (let's say around 5 seconds) however to avoid some segments being
    * re-requested.
    */
-  bufferedSegments : IBufferedChunk[];
+  bufferedSegments: IBufferedChunk[];
 
   /**
    * maxBufferSize is the maximum memory in kilobytes that the buffer should take
    */
   maxBufferSize: number;
 
-  getBufferedHistory : (context : IChunkContext) => IBufferedHistoryEntry[];
+  getBufferedHistory: (context: IChunkContext) => IBufferedHistoryEntry[];
 }
-
 
 interface INeededSegments {
   /** Segments that should be loaded right now, by chronological order. */
@@ -89,7 +89,7 @@ interface INeededSegments {
    * Segments that should be loaded, but not right now, due to some other
    * constraints, such as memory limitations.
    */
-  segmentsOnHold : ISegment[];
+  segmentsOnHold: ISegment[];
   /**
    * If `true` the buffer is currently full according to the given limits.
    * Memory should be freed if possible, for example by cleaning the buffers.
@@ -115,54 +115,38 @@ export default function getNeededSegments({
   neededRange,
   segmentsBeingPushed,
   maxBufferSize,
-} : IGetNeededSegmentsArguments) : INeededSegments {
+}: IGetNeededSegmentsArguments): INeededSegments {
   const { adaptation, representation } = content;
-  let availableBufferSize = getAvailableBufferSize(bufferedSegments,
-                                                   segmentsBeingPushed,
-                                                   maxBufferSize);
+  let availableBufferSize = getAvailableBufferSize(
+    bufferedSegments,
+    segmentsBeingPushed,
+    maxBufferSize,
+  );
 
-  const availableSegmentsForRange = representation.index
-    .getSegments(neededRange.start, neededRange.end - neededRange.start);
+  const availableSegmentsForRange = representation.index.getSegments(
+    neededRange.start,
+    neededRange.end - neededRange.start,
+  );
 
-  // Remove from `bufferedSegments` any segments we would prefer to replace:
-  //   - segments in the wrong track / bad quality
-  //   - garbage-collected segments
-  const segmentsToKeep = bufferedSegments
-    .filter((bufferedSegment) => !shouldContentBeReplaced(bufferedSegment.infos,
-                                                          content,
-                                                          currentPlaybackTime,
-                                                          fastSwitchThreshold))
-    .filter((currentSeg, i, consideredSegments) => {
-      const prevSeg = i === 0 ? null :
-                                consideredSegments[i - 1];
-      const nextSeg = i >= consideredSegments.length - 1 ? null :
-                                                           consideredSegments[i + 1];
+  // Remove from `bufferedSegments` any segments in the wrong track / bad quality
+  const segmentsToKeep = bufferedSegments.filter(
+    (bufferedSegment) =>
+      !shouldContentBeReplaced(
+        bufferedSegment.infos,
+        content,
+        currentPlaybackTime,
+        fastSwitchThreshold,
+      ),
+  );
 
-      let lazySegmentHistory : IBufferedHistoryEntry[] | null = null;
-      if (doesStartSeemGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
-        lazySegmentHistory = getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheStart(lazySegmentHistory,
-                                              currentSeg.bufferedStart)) {
-          return false;
-        }
-        log.debug("Stream: skipping segment gc-ed at the start",
-                  currentSeg.start,
-                  currentSeg.bufferedStart);
-      }
-      if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
-        lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
-        if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory,
-                                            currentSeg.bufferedEnd)) {
-          return false;
-        }
-        log.debug("Stream: skipping segment gc-ed at the end",
-                  currentSeg.end,
-                  currentSeg.bufferedEnd);
-      }
-      return true;
-    });
-  const { MINIMUM_SEGMENT_SIZE,
-          MIN_BUFFER_AHEAD } = config.getCurrent();
+  // Remove any segments that are not usable because they have been garbage collected
+  const reusableSegments = filterOutGCedSegments(
+    segmentsToKeep,
+    neededRange,
+    getBufferedHistory,
+  );
+
+  const { MINIMUM_SEGMENT_SIZE, MIN_BUFFER_AHEAD } = config.getCurrent();
   let shouldStopLoadingSegments = false;
   /**
    * Epsilon compensating for rounding errors when comparing the start and end
@@ -170,14 +154,16 @@ export default function getNeededSegments({
    */
   const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   let isBufferFull = false;
-  const segmentsOnHold : ISegment[] = [];
-  const segmentsToLoad = availableSegmentsForRange.filter(segment => {
+  const segmentsOnHold: ISegment[] = [];
+
+  const segmentsToLoad = availableSegmentsForRange.filter((segment) => {
     const contentObject = objectAssign({ segment }, content);
 
     // First, check that the segment is not already being pushed
     if (segmentsBeingPushed.length > 0) {
-      const isAlreadyBeingPushed = segmentsBeingPushed
-        .some((pendingSegment) => areSameContent(contentObject, pendingSegment));
+      const isAlreadyBeingPushed = segmentsBeingPushed.some((pendingSegment) =>
+        areSameContent(contentObject, pendingSegment),
+      );
       if (isAlreadyBeingPushed) {
         return false;
       }
@@ -199,22 +185,29 @@ export default function getNeededSegments({
     // being pushed.
     if (segmentsBeingPushed.length > 0) {
       const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
-        if (pendingSegment.period.id !== content.period.id ||
-            pendingSegment.adaptation.id !== content.adaptation.id)
-        {
+        if (
+          pendingSegment.period.id !== content.period.id ||
+          pendingSegment.adaptation.id !== content.adaptation.id
+        ) {
           return false;
         }
         const { segment: oldSegment } = pendingSegment;
-        if ((oldSegment.time - ROUNDING_ERROR) > time) {
+        if (oldSegment.time - ROUNDING_ERROR > time) {
           return false;
         }
-        if ((oldSegment.end + ROUNDING_ERROR) < end) {
+        if (oldSegment.complete) {
+          if (oldSegment.end + ROUNDING_ERROR < end) {
+            return false;
+          }
+        } else if (Math.abs(time - oldSegment.time) > time) {
           return false;
         }
-        return !shouldContentBeReplaced(pendingSegment,
-                                        contentObject,
-                                        currentPlaybackTime,
-                                        fastSwitchThreshold);
+        return !shouldContentBeReplaced(
+          pendingSegment,
+          contentObject,
+          currentPlaybackTime,
+          fastSwitchThreshold,
+        );
       });
       if (waitForPushedSegment) {
         return false;
@@ -222,24 +215,29 @@ export default function getNeededSegments({
     }
 
     // check if the segment is already downloaded
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
+    for (let i = 0; i < reusableSegments.length; i++) {
+      const completeSeg = reusableSegments[i];
       const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
       // Check if content are from same period, as there can't be overlapping
       // periods, we should consider a segment as already downloaded if
       // it is from same period (but can be from different adaptation or
       // representation)
-      if (areFromSamePeriod) {
+      if (completeSeg.status === ChunkStatus.FullyLoaded && areFromSamePeriod) {
         const completeSegInfos = completeSeg.infos.segment;
-        if (time - completeSegInfos.time > -ROUNDING_ERROR &&
-            completeSegInfos.end - end > -ROUNDING_ERROR)
-        {
-          return false; // already downloaded
+        if (time - completeSegInfos.time > -ROUNDING_ERROR) {
+          if (completeSegInfos.complete) {
+            if (completeSegInfos.end - end > -ROUNDING_ERROR) {
+              return false; // Same segment's characteristics: already downloaded
+            }
+          } else if (Math.abs(time - completeSegInfos.time) < ROUNDING_ERROR) {
+            // same start (special case for non-complete segments): already downloaded
+            return false;
+          }
         }
       }
     }
 
-    const estimatedSegmentSize = (duration * content.representation.bitrate); // in bits
+    const estimatedSegmentSize = duration * content.representation.bitrate; // in bits
     if (availableBufferSize - estimatedSegmentSize < 0) {
       isBufferFull = true;
       if (time > neededRange.start + MIN_BUFFER_AHEAD) {
@@ -254,32 +252,35 @@ export default function getNeededSegments({
     if (segmentHistory.length > 1) {
       const lastTimeItWasPushed = segmentHistory[segmentHistory.length - 1];
       const beforeLastTimeItWasPushed = segmentHistory[segmentHistory.length - 2];
-      if (lastTimeItWasPushed.buffered === null &&
-          beforeLastTimeItWasPushed.buffered === null
+      if (
+        lastTimeItWasPushed.buffered === null &&
+        beforeLastTimeItWasPushed.buffered === null
       ) {
-        log.warn("Stream: Segment GCed multiple times in a row, ignoring it.",
-                 "If this happens a lot and lead to unpleasant experience, please " +
-                 " check your device's available memory. If it's low when this message " +
-                 "is emitted, you might want to update the RxPlayer's settings (" +
-                 "`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used " +
-                 "by regular media data buffering." +
-                 adaptation.type,
-                 representation.id,
-                 segment.time);
+        log.warn(
+          "Stream: Segment GCed multiple times in a row, ignoring it.",
+          "If this happens a lot and lead to unpleasant experience, please " +
+            " check your device's available memory. If it's low when this message " +
+            "is emitted, you might want to update the RxPlayer's settings (" +
+            "`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used " +
+            "by regular media data buffering." +
+            adaptation.type,
+          representation.id,
+          segment.time,
+        );
         return false;
       }
     }
 
     // check if there is an hole in place of the segment currently
-    for (let i = 0; i < segmentsToKeep.length; i++) {
-      const completeSeg = segmentsToKeep[i];
+    for (let i = 0; i < reusableSegments.length; i++) {
+      const completeSeg = reusableSegments[i];
 
       // For the first already-loaded segment, take the first one ending after
       // this one' s start
-      if ((completeSeg.end + ROUNDING_ERROR) > time) {
-        const shouldLoad = completeSeg.start > time + ROUNDING_ERROR ||
-                           getLastContiguousSegment(segmentsToKeep, i).end <
-                             end - ROUNDING_ERROR;
+      if (completeSeg.end + ROUNDING_ERROR > time) {
+        const shouldLoad =
+          completeSeg.start > time + ROUNDING_ERROR ||
+          getLastContiguousSegment(reusableSegments, i).end < end - ROUNDING_ERROR;
         if (shouldLoad) {
           availableBufferSize -= estimatedSegmentSize;
         }
@@ -290,7 +291,6 @@ export default function getNeededSegments({
     return true;
   });
   return { segmentsToLoad, segmentsOnHold, isBufferFull };
-
 }
 /**
  * Compute the estimated available buffer size in memory in kilobytes
@@ -302,24 +302,23 @@ export default function getNeededSegments({
 function getAvailableBufferSize(
   bufferedSegments: IBufferedChunk[],
   segmentsBeingPushed: ICompleteSegmentInfo[],
-  maxVideoBufferSize: number
-) : number {
+  maxVideoBufferSize: number,
+): number {
   let availableBufferSize = maxVideoBufferSize * 8000; // in bits
   availableBufferSize -= segmentsBeingPushed.reduce((size, segment) => {
     const { bitrate } = segment.representation;
     // Not taking into account the fact that the segment
     // can still be generated and the duration not fully exact
     const { duration } = segment.segment;
-    return size + (bitrate * duration);
+    return size + bitrate * duration;
   }, 0);
   return bufferedSegments.reduce((size, chunk) => {
     if (chunk.chunkSize !== undefined) {
-      return size - (chunk.chunkSize * 8); // in bits
+      return size - chunk.chunkSize * 8; // in bits
     } else {
       return size;
     }
-
-  } , availableBufferSize);
+  }, availableBufferSize);
 }
 
 /**
@@ -330,9 +329,9 @@ function getAvailableBufferSize(
  * @returns {Object}
  */
 function getLastContiguousSegment(
-  bufferedSegments : IBufferedChunk[],
-  startIndex : number
-) : IBufferedChunk {
+  bufferedSegments: IBufferedChunk[],
+  startIndex: number,
+): IBufferedChunk {
   let j = startIndex + 1;
   const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
   /**
@@ -341,16 +340,15 @@ function getLastContiguousSegment(
    */
   const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
   // go through all contiguous segments and take the last one
-  while (j < bufferedSegments.length - 1 &&
-         (bufferedSegments[j - 1].end + ROUNDING_ERROR) >
-          bufferedSegments[j].start)
-  {
+  while (
+    j < bufferedSegments.length - 1 &&
+    bufferedSegments[j - 1].end + ROUNDING_ERROR > bufferedSegments[j].start
+  ) {
     j++;
   }
   j--; // index of last contiguous segment
   return bufferedSegments[j];
 }
-
 
 /**
  * Returns `true` if segments linked to the given `oldContent` currently present
@@ -362,20 +360,22 @@ function getLastContiguousSegment(
  * @returns {boolean}
  */
 function shouldContentBeReplaced(
-  oldContent : ICompleteSegmentInfo,
-  currentContent : { adaptation : Adaptation;
-                     period : Period;
-                     representation : Representation; },
+  oldContent: ICompleteSegmentInfo,
+  currentContent: {
+    adaptation: IAdaptation;
+    period: IPeriod;
+    representation: IRepresentation;
+  },
   currentPlaybackTime: number,
-  fastSwitchThreshold? : number
-) : boolean {
+  fastSwitchThreshold?: number,
+): boolean {
   const { CONTENT_REPLACEMENT_PADDING } = config.getCurrent();
   if (oldContent.period.id !== currentContent.period.id) {
     return false; // keep segments from another Period by default.
   }
 
   const { segment } = oldContent;
-  if (segment.time < (currentPlaybackTime + CONTENT_REPLACEMENT_PADDING)) {
+  if (segment.time < currentPlaybackTime + CONTENT_REPLACEMENT_PADDING) {
     return false;
   }
 
@@ -383,9 +383,11 @@ function shouldContentBeReplaced(
     return true; // replace segments from another Adaptation
   }
 
-  return canFastSwitch(oldContent.representation,
-                       currentContent.representation,
-                       fastSwitchThreshold);
+  return canFastSwitch(
+    oldContent.representation,
+    currentContent.representation,
+    fastSwitchThreshold,
+  );
 }
 
 /**
@@ -399,10 +401,10 @@ function shouldContentBeReplaced(
  * @returns {boolean}
  */
 function canFastSwitch(
-  oldSegmentRepresentation : Representation,
-  newSegmentRepresentation : Representation,
-  fastSwitchThreshold : number | undefined
-) : boolean {
+  oldSegmentRepresentation: IRepresentation,
+  newSegmentRepresentation: IRepresentation,
+  fastSwitchThreshold: number | undefined,
+): boolean {
   const oldContentBitrate = oldSegmentRepresentation.bitrate;
   const { BITRATE_REBUFFERING_RATIO } = config.getCurrent();
   if (fastSwitchThreshold === undefined) {
@@ -410,8 +412,10 @@ function canFastSwitch(
     const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
     return newSegmentRepresentation.bitrate > bitrateCeil;
   }
-  return oldContentBitrate < fastSwitchThreshold &&
-         newSegmentRepresentation.bitrate > oldContentBitrate;
+  return (
+    oldContentBitrate < fastSwitchThreshold &&
+    newSegmentRepresentation.bitrate > oldContentBitrate
+  );
 }
 
 /**
@@ -427,28 +431,32 @@ function canFastSwitch(
  * that time, we will return `false`.
  */
 function doesStartSeemGarbageCollected(
-  currentSeg : IBufferedChunk,
-  prevSeg : IBufferedChunk | null,
-  maximumStartTime : number
+  currentSeg: IBufferedChunk,
+  prevSeg: IBufferedChunk | null,
+  maximumStartTime: number,
 ) {
   const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
-  if (currentSeg.bufferedStart === undefined)  {
+  if (currentSeg.bufferedStart === undefined) {
     return false;
   }
 
-  if (prevSeg !== null && prevSeg.bufferedEnd !== undefined &&
-      (currentSeg.bufferedStart - prevSeg.bufferedEnd < 0.1))
-  {
+  if (
+    prevSeg !== null &&
+    prevSeg.bufferedEnd !== undefined &&
+    currentSeg.bufferedStart - prevSeg.bufferedEnd < 0.1
+  ) {
     return false;
   }
 
-  if (maximumStartTime < currentSeg.bufferedStart &&
-      currentSeg.bufferedStart - currentSeg.start >
-        MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
-  {
-    log.info("Stream: The start of the wanted segment has been garbage collected",
-             currentSeg.start,
-             currentSeg.bufferedStart);
+  if (
+    maximumStartTime < currentSeg.bufferedStart &&
+    currentSeg.bufferedStart - currentSeg.start > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT
+  ) {
+    log.info(
+      "Stream: The start of the wanted segment has been garbage collected",
+      currentSeg.start,
+      currentSeg.bufferedStart,
+    );
     return true;
   }
 
@@ -468,27 +476,32 @@ function doesStartSeemGarbageCollected(
  * that time, we will return `false`.
  */
 function doesEndSeemGarbageCollected(
-  currentSeg : IBufferedChunk,
-  nextSeg : IBufferedChunk | null,
-  minimumEndTime : number
+  currentSeg: IBufferedChunk,
+  nextSeg: IBufferedChunk | null,
+  minimumEndTime: number,
 ) {
   const { MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT } = config.getCurrent();
-  if (currentSeg.bufferedEnd === undefined)  {
+  if (currentSeg.bufferedEnd === undefined) {
     return false;
   }
 
-  if (nextSeg !== null && nextSeg.bufferedStart !== undefined &&
-      (nextSeg.bufferedStart - currentSeg.bufferedEnd < 0.1))
-  {
+  if (
+    nextSeg !== null &&
+    nextSeg.bufferedStart !== undefined &&
+    nextSeg.bufferedStart - currentSeg.bufferedEnd < 0.1
+  ) {
     return false;
   }
 
-  if (minimumEndTime > currentSeg.bufferedEnd &&
-      currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT)
-  {
-    log.info("Stream: The end of the wanted segment has been garbage collected",
-             currentSeg.end,
-             currentSeg.bufferedEnd);
+  if (
+    minimumEndTime > currentSeg.bufferedEnd &&
+    currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT
+  ) {
+    log.info(
+      "Stream: The end of the wanted segment has been garbage collected",
+      currentSeg.end,
+      currentSeg.bufferedEnd,
+    );
     return true;
   }
 
@@ -502,7 +515,7 @@ function doesEndSeemGarbageCollected(
  * Returns `false` if we have a high chance of staying in the same situation
  * after re-loading the segment.
  *
- * This function takes in argument the entries of a SegmentBuffer's history
+ * This function takes in argument the entries of a SegmentSink's history
  * related to the corresponding segment and check if the segment appeared
  * garbage-collected at the start directly after the last few times it was
  * pushed, indicating that the issue might be sourced at a browser issue instead
@@ -513,9 +526,9 @@ function doesEndSeemGarbageCollected(
  * @returns {boolean}
  */
 function shouldReloadSegmentGCedAtTheStart(
-  segmentEntries : IBufferedHistoryEntry[],
-  currentBufferedStart : number | undefined
-) : boolean {
+  segmentEntries: IBufferedHistoryEntry[],
+  currentBufferedStart: number | undefined,
+): boolean {
   if (segmentEntries.length < 2) {
     return true;
   }
@@ -526,10 +539,11 @@ function shouldReloadSegmentGCedAtTheStart(
   // If the current segment's buffered start is much higher than what it
   // initially was when we pushed it, the segment has a very high chance of
   // having been truly garbage-collected.
-  if (currentBufferedStart !== undefined &&
-      lastBufferedStart !== undefined &&
-      currentBufferedStart - lastBufferedStart > 0.05)
-  {
+  if (
+    currentBufferedStart !== undefined &&
+    lastBufferedStart !== undefined &&
+    currentBufferedStart - lastBufferedStart > 0.05
+  ) {
     return true;
   }
 
@@ -560,7 +574,7 @@ function shouldReloadSegmentGCedAtTheStart(
  * Returns `false` if we have a high chance of staying in the same situation
  * after re-loading the segment.
  *
- * This function takes in argument the entries of a SegmentBuffer's history
+ * This function takes in argument the entries of a SegmentSink's history
  * related to the corresponding segment and check if the segment appeared
  * garbage-collected at the end directly after the last few times it was
  * pushed, indicating that the issue might be sourced at a browser issue instead
@@ -571,9 +585,9 @@ function shouldReloadSegmentGCedAtTheStart(
  * @returns {boolean}
  */
 function shouldReloadSegmentGCedAtTheEnd(
-  segmentEntries : IBufferedHistoryEntry[],
-  currentBufferedEnd : number | undefined
-) : boolean {
+  segmentEntries: IBufferedHistoryEntry[],
+  currentBufferedEnd: number | undefined,
+): boolean {
   if (segmentEntries.length < 2) {
     return true;
   }
@@ -583,10 +597,11 @@ function shouldReloadSegmentGCedAtTheEnd(
   // If the current segment's buffered end is much lower than what it
   // initially was when we pushed it, the segment has a very high chance of
   // having been truly garbage-collected.
-  if (currentBufferedEnd !== undefined &&
-      lastBufferedEnd !== undefined &&
-      lastBufferedEnd - currentBufferedEnd > 0.05)
-  {
+  if (
+    currentBufferedEnd !== undefined &&
+    lastBufferedEnd !== undefined &&
+    lastBufferedEnd - currentBufferedEnd > 0.05
+  ) {
     return true;
   }
 
@@ -608,4 +623,49 @@ function shouldReloadSegmentGCedAtTheEnd(
   // This is very unlikely and might be linked to either a content or browser
   // issue. In that case, don't try to reload.
   return Math.abs(prevBufferedEnd - lastBufferedEnd) > 0.01;
+}
+
+/**
+ * Returns the list of segments, minus those that have been garbage collected.
+ * @param {IBufferedChunk[]} segments - The segments list to filter.
+ * @param {Object} neededRange - The range we want to fill with segments.
+ * @param getBufferedHistory - Callback allowing to retrieve a segment's history in the buffer
+ * @returns The segments list including only reusable segments.
+ */
+function filterOutGCedSegments(
+  segments: IBufferedChunk[],
+  neededRange: { start: number; end: number },
+  getBufferedHistory: (context: IChunkContext) => IBufferedHistoryEntry[],
+): IBufferedChunk[] {
+  return segments.filter((currentSeg, i, consideredSegments) => {
+    const prevSeg = i === 0 ? null : consideredSegments[i - 1];
+    const nextSeg = i >= consideredSegments.length - 1 ? null : consideredSegments[i + 1];
+
+    let lazySegmentHistory: IBufferedHistoryEntry[] | null = null;
+    if (doesStartSeemGarbageCollected(currentSeg, prevSeg, neededRange.start)) {
+      lazySegmentHistory = getBufferedHistory(currentSeg.infos);
+      if (
+        shouldReloadSegmentGCedAtTheStart(lazySegmentHistory, currentSeg.bufferedStart)
+      ) {
+        return false;
+      }
+      log.debug(
+        "Stream: skipping segment gc-ed at the start",
+        currentSeg.start,
+        currentSeg.bufferedStart,
+      );
+    }
+    if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
+      lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
+      if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory, currentSeg.bufferedEnd)) {
+        return false;
+      }
+      log.debug(
+        "Stream: skipping segment gc-ed at the end",
+        currentSeg.end,
+        currentSeg.bufferedEnd,
+      );
+    }
+    return true;
+  });
 }

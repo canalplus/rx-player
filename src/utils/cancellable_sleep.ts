@@ -15,7 +15,7 @@
  */
 
 import createCancellablePromise from "./create_cancellable_promise";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 /**
  * Wait the given `delay`, resolving the Promise when finished.
@@ -32,8 +32,8 @@ import { CancellationSignal } from "./task_canceller";
  */
 export default function cancellableSleep(
   delay: number,
-  cancellationSignal: CancellationSignal
-) : Promise<void> {
+  cancellationSignal: CancellationSignal,
+): Promise<void> {
   return createCancellablePromise(cancellationSignal, (res) => {
     const timeout = setTimeout(() => res(), delay);
     return () => clearTimeout(timeout);

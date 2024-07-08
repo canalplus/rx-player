@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-import {
-  ICompatVTTCue,
-  isVTTCue,
-  makeVTTCue,
-} from "../../../../compat";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
+import isVTTCue from "../../../../compat/is_vtt_cue";
+import makeVTTCue from "../../../../compat/make_vtt_cue";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import {
-  IStyleList,
-} from "../get_styling";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type { IStyleList } from "../get_styling";
 import getTimeDelimiters from "../get_time_delimiters";
-import { IParsedTTMLCue } from "../parse_ttml";
+import type { IParsedTTMLCue } from "../parse_ttml";
 import { REGXP_PERCENT_VALUES } from "../regexps";
-import {
-  isLineBreakElement,
-  isSpanElement,
-} from "../xml_utils";
+import { isLineBreakElement, isSpanElement } from "../xml_utils";
 
-const TEXT_ALIGN_TO_LIGN_ALIGN : Partial<Record<string, string>> = {
+const TEXT_ALIGN_TO_LIGN_ALIGN: Partial<Record<string, string>> = {
   left: "start",
   center: "center",
   right: "end",
@@ -42,7 +36,7 @@ const TEXT_ALIGN_TO_LIGN_ALIGN : Partial<Record<string, string>> = {
 /**
  * @type {Object}
  */
-const TEXT_ALIGN_TO_POSITION_ALIGN : Partial<Record<string, string>> = {
+const TEXT_ALIGN_TO_POSITION_ALIGN: Partial<Record<string, string>> = {
   left: "line-left",
   center: "center",
   right: "line-right",
@@ -61,22 +55,19 @@ const TEXT_ALIGN_TO_POSITION_ALIGN : Partial<Record<string, string>> = {
  * @returns {TextTrackCue|null}
  */
 export default function parseCue(
-  parsedCue: IParsedTTMLCue
-) : ICompatVTTCue|TextTrackCue|null {
-  const {
-    paragraph,
-    timeOffset,
-    paragraphStyle,
-    ttParams,
-    shouldTrimWhiteSpace,
-  } = parsedCue;
+  parsedCue: IParsedTTMLCue,
+): ICompatVTTCue | TextTrackCue | null {
+  const { paragraph, timeOffset, paragraphStyle, ttParams, shouldTrimWhiteSpace } =
+    parsedCue;
 
   // Disregard empty elements:
   // TTML allows for empty elements like <div></div>.
   // If paragraph has neither time attributes, nor
   // non-whitespace text, don't try to make a cue out of it.
-  if (!paragraph.hasAttribute("begin") && !paragraph.hasAttribute("end") &&
-      /^\s*$/.test(paragraph.textContent === null ? "" : paragraph.textContent)
+  if (
+    !paragraph.hasAttribute("begin") &&
+    !paragraph.hasAttribute("end") &&
+    /^\s*$/.test(paragraph.textContent === null ? "" : paragraph.textContent)
   ) {
     return null;
   }
@@ -100,19 +91,16 @@ export default function parseCue(
  * @returns {string}
  */
 function generateTextContent(
-  paragraph : Element,
-  shouldTrimWhiteSpaceForParagraph : boolean
-) : string {
+  paragraph: Element,
+  shouldTrimWhiteSpaceForParagraph: boolean,
+): string {
   /**
    * Recursive function, taking a node in argument and returning the
    * corresponding string.
    * @param {Node} node - the node in question
    * @returns {string}
    */
-  function loop(
-    node : Node,
-    shouldTrimWhiteSpaceFromParent : boolean
-  ) : string {
+  function loop(node: Node, shouldTrimWhiteSpaceFromParent: boolean): string {
     const childNodes = node.childNodes;
     let text = "";
     for (let i = 0; i < childNodes.length; i++) {
@@ -152,9 +140,9 @@ function generateTextContent(
         currentNode.childNodes.length > 0
       ) {
         const spaceAttribute = (currentNode as Element).getAttribute("xml:space");
-        const shouldTrimWhiteSpaceForSpan = isNonEmptyString(spaceAttribute) ?
-          spaceAttribute === "default" :
-          shouldTrimWhiteSpaceFromParent;
+        const shouldTrimWhiteSpaceForSpan = isNonEmptyString(spaceAttribute)
+          ? spaceAttribute === "default"
+          : shouldTrimWhiteSpaceFromParent;
 
         text += loop(currentNode, shouldTrimWhiteSpaceForSpan);
       }
@@ -170,11 +158,11 @@ function generateTextContent(
  * @param {VTTCue} cue
  * @param {Object} style
  */
-function addStyle(cue : ICompatVTTCue, style : IStyleList) {
+function addStyle(cue: ICompatVTTCue, style: IStyleList) {
   const extent = style.extent;
   if (isNonEmptyString(extent)) {
     const results = REGXP_PERCENT_VALUES.exec(extent);
-    if (results != null) {
+    if (!isNullOrUndefined(results)) {
       // Use width value of the extent attribute for size.
       // Height value is ignored.
       cue.size = Number(results[1]);
@@ -199,18 +187,18 @@ function addStyle(cue : ICompatVTTCue, style : IStyleList) {
   const origin = style.origin;
   if (isNonEmptyString(origin)) {
     const results = REGXP_PERCENT_VALUES.exec(origin);
-    if (results != null) {
+    if (!isNullOrUndefined(results)) {
       // for vertical text use first coordinate of tts:origin
       // to represent line of the cue and second - for position.
       // Otherwise (horizontal), use them the other way around.
       // if (isVerticalText) {
-        // TODO check and uncomment
-        // cue.position = Number(results[2]);
-        // cue.line = Number(results[1]);
+      // TODO check and uncomment
+      // cue.position = Number(results[2]);
+      // cue.line = Number(results[1]);
       // } else {
-        // TODO check and uncomment
-        // cue.position = Number(results[1]);
-        // cue.line = Number(results[2]);
+      // TODO check and uncomment
+      // cue.position = Number(results[1]);
+      // cue.line = Number(results[2]);
       // }
       // A boolean indicating whether the line is an integer
       // number of lines (using the line dimensions of the first
@@ -235,11 +223,9 @@ function addStyle(cue : ICompatVTTCue, style : IStyleList) {
     }
 
     const positionAlign = TEXT_ALIGN_TO_POSITION_ALIGN[align];
-    cue.positionAlign = positionAlign === undefined ? "" :
-                                                      positionAlign;
+    cue.positionAlign = positionAlign === undefined ? "" : positionAlign;
 
     const lineAlign = TEXT_ALIGN_TO_LIGN_ALIGN[align];
-    cue.lineAlign = lineAlign === undefined ? "" :
-                                              lineAlign;
+    cue.lineAlign = lineAlign === undefined ? "" : lineAlign;
   }
 }

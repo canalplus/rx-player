@@ -15,11 +15,9 @@
  */
 
 import log from "../../../../../log";
-import {
-  IRepresentationIndex,
-  ISegment,
-} from "../../../../../manifest";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { IRepresentationIndex, ISegment } from "../../../../../manifest";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import type { IEMSG } from "../../../../containers/isobmff";
 import { getTimescaledRange } from "../../../utils/index_helpers";
 import getInitSegment from "./get_init_segment";
 import { constructRepresentationUrl } from "./tokens";
@@ -34,7 +32,7 @@ export interface IListIndex {
    * Duration of each element in the list, in the timescale given (see
    * timescale and list properties.)
    */
-  duration : number;
+  duration: number;
   /** Byte range for a possible index of segments in the server. */
   indexRange?: [number, number] | undefined;
   /**
@@ -49,33 +47,35 @@ export interface IListIndex {
    * T * timescale + indexTimeOffset
    * ```
    */
-  indexTimeOffset : number;
+  indexTimeOffset: number;
   /** Information on the initialization segment. */
-  initialization? : {
-    /**
-     * URL path, to add to the wanted CDN, to access the initialization segment.
-     * `null` if no URL exists.
-     */
-    url: string | null;
-    /** possible byte range to request it. */
-    range?: [number, number] | undefined;
-  } | undefined;
+  initialization?:
+    | {
+        /**
+         * URL path, to add to the wanted CDN, to access the initialization segment.
+         * `null` if no URL exists.
+         */
+        url: string | null;
+        /** possible byte range to request it. */
+        range?: [number, number] | undefined;
+      }
+    | undefined;
   /** Information on the list of segments for this index. */
   list: Array<{
     /**
      * URL path, to add to the wanted CDN, to access this media segment.
      * `null` if no URL exists.
      */
-    url : string | null;
+    url: string | null;
     /** Possible byte-range of the segment. */
-    mediaRange? : [number, number] | undefined;
+    mediaRange?: [number, number] | undefined;
   }>;
   /**
    * Timescale to convert a time given here into seconds.
    * This is done by this simple operation:
    * ``timeInSeconds = timeInIndex * timescale``
    */
-  timescale : number;
+  timescale: number;
 }
 
 /**
@@ -83,12 +83,16 @@ export interface IListIndex {
  * Most of the properties here are already defined in IListIndex.
  */
 export interface IListIndexIndexArgument {
-  duration? : number | undefined;
+  duration?: number | undefined;
   indexRange?: [number, number] | undefined;
-  initialization?: { media? : string | undefined;
-                     range? : [number, number] | undefined; };
-  list: Array<{ media? : string | undefined;
-                mediaRange? : [number, number] | undefined; }>;
+  initialization?: {
+    media?: string | undefined;
+    range?: [number, number] | undefined;
+  };
+  list: Array<{
+    media?: string | undefined;
+    mediaRange?: [number, number] | undefined;
+  }>;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -103,31 +107,31 @@ export interface IListIndexIndexArgument {
    * The time given here is in the current
    * timescale (see timescale)
    */
-  presentationTimeOffset? : number | undefined;
-  timescale? : number | undefined;
+  presentationTimeOffset?: number | undefined;
+  timescale?: number | undefined;
 }
 
 /** Aditional context needed by a SegmentList RepresentationIndex. */
 export interface IListIndexContextArgument {
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
-  periodStart : number;
+  periodStart: number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
-  periodEnd : number | undefined;
+  periodEnd: number | undefined;
   /** ID of the Representation concerned. */
-  representationId? : string | undefined;
+  representationId?: string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number | undefined;
+  representationBitrate?: number | undefined;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
 
 export default class ListRepresentationIndex implements IRepresentationIndex {
   /** Underlying structure to retrieve segment information. */
-  private _index : IListIndex;
+  private _index: IListIndex;
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
-  protected _periodStart : number;
+  protected _periodStart: number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
-  protected _periodEnd : number | undefined;
+  protected _periodEnd: number | undefined;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 
@@ -135,51 +139,61 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @param {Object} index
    * @param {Object} context
    */
-  constructor(index : IListIndexIndexArgument, context : IListIndexContextArgument) {
+  constructor(index: IListIndexIndexArgument, context: IListIndexContextArgument) {
     if (index.duration === undefined) {
       throw new Error("Invalid SegmentList: no duration");
     }
 
-    const { periodStart,
-            periodEnd,
-            representationId,
-            representationBitrate,
-            isEMSGWhitelisted } = context;
+    const {
+      periodStart,
+      periodEnd,
+      representationId,
+      representationBitrate,
+      isEMSGWhitelisted,
+    } = context;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._periodStart = periodStart;
     this._periodEnd = periodEnd;
-    const presentationTimeOffset =
-      index.presentationTimeOffset != null ? index.presentationTimeOffset :
-                                             0;
+    const presentationTimeOffset = index.presentationTimeOffset ?? 0;
     const timescale = index.timescale ?? 1;
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const initializationUrl = index.initialization?.media === undefined ?
-      null :
-      constructRepresentationUrl(index.initialization.media,
-                                 representationId,
-                                 representationBitrate);
+    const initializationUrl =
+      index.initialization?.media === undefined
+        ? null
+        : constructRepresentationUrl(
+            index.initialization.media,
+            representationId,
+            representationBitrate,
+          );
     const list = index.list.map((lItem) => ({
-      url: lItem.media === undefined ?
-        null :
-        constructRepresentationUrl(lItem.media, representationId, representationBitrate),
-      mediaRange: lItem.mediaRange }));
-    this._index = { list,
-                    timescale,
-                    duration: index.duration,
-                    indexTimeOffset,
-                    indexRange: index.indexRange,
-                    initialization: index.initialization == null ?
-                      undefined :
-                      { url: initializationUrl,
-                        range: index.initialization.range } };
+      url:
+        lItem.media === undefined
+          ? null
+          : constructRepresentationUrl(
+              lItem.media,
+              representationId,
+              representationBitrate,
+            ),
+      mediaRange: lItem.mediaRange,
+    }));
+    this._index = {
+      list,
+      timescale,
+      duration: index.duration,
+      indexTimeOffset,
+      indexRange: index.indexRange,
+      initialization: isNullOrUndefined(index.initialization)
+        ? undefined
+        : { url: initializationUrl, range: index.initialization.range },
+    };
   }
 
   /**
    * Construct init Segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
+  getInitSegment(): ISegment {
     const initSegment = getInitSegment(this._index);
     if (initSegment.privateInfos === undefined) {
       initSegment.privateInfos = {};
@@ -193,33 +207,33 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @param {Number} dur
    * @returns {Array.<Object>}
    */
-  getSegments(fromTime : number, dur : number) : ISegment[] {
+  getSegments(fromTime: number, dur: number): ISegment[] {
     const index = this._index;
     const { duration, list, timescale } = index;
     const durationInSeconds = duration / timescale;
     const fromTimeInPeriod = fromTime - this._periodStart;
-    const [ up, to ] = getTimescaledRange(fromTimeInPeriod, dur, timescale);
+    const [up, to] = getTimescaledRange(fromTimeInPeriod, dur, timescale);
 
     const length = Math.min(list.length - 1, Math.floor(to / duration));
-    const segments : ISegment[] = [];
+    const segments: ISegment[] = [];
     let i = Math.floor(up / duration);
     while (i <= length) {
       const range = list[i].mediaRange;
       const url = list[i].url;
       const time = i * durationInSeconds + this._periodStart;
-      const segment =
-        { id: String(i),
-          time,
-          isInit: false,
-          range,
-          duration: durationInSeconds,
-          timescale: 1 as const,
-          end: time + durationInSeconds,
-          url,
-          timestampOffset: -(index.indexTimeOffset / timescale),
-          complete: true,
-          privateInfos: { isEMSGWhitelisted:
-                            this._isEMSGWhitelisted } };
+      const segment = {
+        id: String(i),
+        time,
+        isInit: false,
+        range,
+        duration: durationInSeconds,
+        timescale: 1 as const,
+        end: time + durationInSeconds,
+        url,
+        timestampOffset: -(index.indexTimeOffset / timescale),
+        complete: true,
+        privateInfos: { isEMSGWhitelisted: this._isEMSGWhitelisted },
+      };
       segments.push(segment);
       i++;
     }
@@ -234,7 +248,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * @param {Number} _toTime
    * @returns {Boolean}
    */
-  shouldRefresh(_fromTime : number, _toTime : number) : boolean {
+  shouldRefresh(_fromTime: number, _toTime: number): boolean {
     // DASH Manifests are usually refreshed through other means, i.e. thanks to
     // the `minimumUpdatePeriod` attribute.
     // Moreover, SegmentList are usually only found in static MPDs.
@@ -245,7 +259,7 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * Returns first position in this index, in seconds.
    * @returns {Number}
    */
-  getFirstAvailablePosition() : number {
+  getFirstAvailablePosition(): number {
     return this._periodStart;
   }
 
@@ -253,11 +267,13 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * Returns last position in this index, in seconds.
    * @returns {Number}
    */
-  getLastAvailablePosition() : number {
+  getLastAvailablePosition(): number {
     const index = this._index;
     const { duration, list } = index;
-    return Math.min(((list.length * duration) / index.timescale) + this._periodStart,
-                    this._periodEnd ?? Infinity);
+    return Math.min(
+      (list.length * duration) / index.timescale + this._periodStart,
+      this._periodEnd ?? Infinity,
+    );
   }
 
   /**
@@ -290,16 +306,15 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * available.
    * @returns {Boolean}
    */
-  isSegmentStillAvailable() : true {
+  isSegmentStillAvailable(): true {
     return true;
   }
-
 
   /**
    * We do not check for discontinuity in SegmentList-based indexes.
    * @returns {null}
    */
-  checkDiscontinuity() : null {
+  checkDiscontinuity(): null {
     return null;
   }
 
@@ -307,40 +322,40 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
    * SegmentList should not be updated.
    * @returns {Boolean}
    */
-  canBeOutOfSyncError() : false {
+  canBeOutOfSyncError(): false {
     return false;
   }
 
   /**
    * @returns {Boolean}
    */
-  isStillAwaitingFutureSegments() : false {
+  isStillAwaitingFutureSegments(): false {
     return false;
   }
 
   /**
    * @returns {Boolean}
    */
-  isInitialized() : true {
+  isInitialized(): true {
     return true;
   }
 
-  initialize() : void {
+  initialize(): void {
     log.error("A `ListRepresentationIndex` does not need to be initialized");
   }
 
-  addPredictedSegments() : void {
+  addPredictedSegments(): void {
     log.warn("Cannot add predicted segments to a `ListRepresentationIndex`");
   }
 
   /**
    * @param {Object} newIndex
    */
-  _replace(newIndex : ListRepresentationIndex) : void {
+  _replace(newIndex: ListRepresentationIndex): void {
     this._index = newIndex._index;
   }
 
-  _update() : void {
+  _update(): void {
     log.error("A `ListRepresentationIndex` cannot be updated");
   }
 }

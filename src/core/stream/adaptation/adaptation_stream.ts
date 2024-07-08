@@ -1,30 +1,25 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
-import SharedReference, {
-  createMappedReference,
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import RepresentationStream, {
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference, { createMappedReference } from "../../../utils/reference";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   ITerminationOrder,
 } from "../representation";
+import RepresentationStream from "../representation";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
-import {
-  IAdaptationStreamArguments,
-  IAdaptationStreamCallbacks,
-} from "./types";
+import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types";
 
 /**
  * Create new `AdaptationStream` whose task will be to download the media data
@@ -32,7 +27,7 @@ import {
  *
  * It will rely on the IRepresentationEstimator to choose at any time the
  * best Representation for this Adaptation and then run the logic to download
- * and push the corresponding segments in the SegmentBuffer.
+ * and push the corresponding segments in the SegmentSink.
  *
  * @param {Object} args - Various arguments allowing the `AdaptationStream` to
  * determine which Representation to choose and which segments to load from it.
@@ -57,17 +52,19 @@ import {
  * doing.
  */
 export default function AdaptationStream(
-  { playbackObserver,
+  {
+    playbackObserver,
     content,
     options,
     representationEstimator,
-    segmentBuffer,
+    segmentSink,
     segmentFetcherCreator,
     wantedBufferAhead,
-    maxVideoBufferSize } : IAdaptationStreamArguments,
-  callbacks : IAdaptationStreamCallbacks,
-  parentCancelSignal : CancellationSignal
-) : void {
+    maxVideoBufferSize,
+  }: IAdaptationStreamArguments,
+  callbacks: IAdaptationStreamCallbacks,
+  parentCancelSignal: CancellationSignal,
+): void {
   const { manifest, period, adaptation } = content;
 
   /** Allows to cancel everything the `AdaptationStream` is doing. */
@@ -88,88 +85,100 @@ export default function AdaptationStream(
    * Emit the currently chosen `Representation`.
    * `null` if no Representation is chosen for now.
    */
-  const currentRepresentation = new SharedReference<Representation | null>(
+  const currentRepresentation = new SharedReference<IRepresentation | null>(
     null,
-    adapStreamCanceller.signal
+    adapStreamCanceller.signal,
   );
 
   /** Stores the last emitted bitrate. */
-  let previouslyEmittedBitrate : number | undefined;
+  let previouslyEmittedBitrate: number | undefined;
 
   const initialRepIds = content.representations.getValue().representationIds;
   const initialRepresentations = content.adaptation.representations.filter(
-    r => arrayIncludes(initialRepIds, r.id) &&
-    r.decipherable !== false &&
-    r.isSupported !== false
+    (r) =>
+      arrayIncludes(initialRepIds, r.id) &&
+      r.decipherable !== false &&
+      r.isSupported !== false,
   );
 
   /** Emit the list of Representation for the adaptive logic. */
   const representationsList = new SharedReference(
     initialRepresentations,
-    adapStreamCanceller.signal);
+    adapStreamCanceller.signal,
+  );
 
   // Start-up Adaptive logic
-  const { estimates: estimateRef, callbacks: abrCallbacks } =
-    representationEstimator({ manifest, period, adaptation },
-                            currentRepresentation,
-                            representationsList,
-                            playbackObserver,
-                            adapStreamCanceller.signal);
+  const { estimates: estimateRef, callbacks: abrCallbacks } = representationEstimator(
+    { manifest, period, adaptation },
+    currentRepresentation,
+    representationsList,
+    playbackObserver,
+    adapStreamCanceller.signal,
+  );
 
   /** Allows a `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator
-    .createSegmentFetcher(adaptation.type,
-                          /* eslint-disable @typescript-eslint/unbound-method */
-                          { onRequestBegin: abrCallbacks.requestBegin,
-                            onRequestEnd: abrCallbacks.requestEnd,
-                            onProgress: abrCallbacks.requestProgress,
-                            onMetrics: abrCallbacks.metrics });
-                          /* eslint-enable @typescript-eslint/unbound-method */
-
+  const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
+    adaptation.type,
+    /* eslint-disable @typescript-eslint/unbound-method */
+    {
+      onRequestBegin: abrCallbacks.requestBegin,
+      onRequestEnd: abrCallbacks.requestEnd,
+      onProgress: abrCallbacks.requestProgress,
+      onMetrics: abrCallbacks.metrics,
+    },
+  );
+  /* eslint-enable @typescript-eslint/unbound-method */
 
   /** Used to determine when "fast-switching" is possible. */
   const fastSwitchThreshold = new SharedReference<number | undefined>(0);
 
-  estimateRef.onUpdate(({ bitrate, knownStableBitrate }) => {
-    if (options.enableFastSwitching) {
-      fastSwitchThreshold.setValueIfChanged(knownStableBitrate);
-    }
-    if (bitrate === undefined || bitrate === previouslyEmittedBitrate) {
-      return ;
-    }
-    previouslyEmittedBitrate = bitrate;
-    log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-    callbacks.bitrateEstimateChange({ type: adaptation.type, bitrate });
-  }, { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal });
+  estimateRef.onUpdate(
+    ({ bitrate, knownStableBitrate }) => {
+      if (options.enableFastSwitching) {
+        fastSwitchThreshold.setValueIfChanged(knownStableBitrate);
+      }
+      if (bitrate === undefined || bitrate === previouslyEmittedBitrate) {
+        return;
+      }
+      previouslyEmittedBitrate = bitrate;
+      log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
+      callbacks.bitrateEstimateChange({ type: adaptation.type, bitrate });
+    },
+    { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal },
+  );
 
   /**
    * When triggered, cancel all `RepresentationStream`s currently created.
    * Set to `undefined` initially.
    */
-  let cancelCurrentStreams : TaskCanceller | undefined;
+  let cancelCurrentStreams: TaskCanceller | undefined;
 
   // Each time the list of wanted Representations changes, we restart the logic
-  content.representations.onUpdate((val) => {
-    if (cancelCurrentStreams !== undefined) {
-      cancelCurrentStreams.cancel();
-    }
-    const newRepIds = content.representations.getValue().representationIds;
-    const newRepresentations = content.adaptation.representations.filter(
-      r => arrayIncludes(newRepIds, r.id)
-    );
-    representationsList.setValueIfChanged(newRepresentations);
-    cancelCurrentStreams = new TaskCanceller();
-    cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
-    onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
-      if (cancelCurrentStreams?.isUsed() === true &&
-          TaskCanceller.isCancellationError(err))
-      {
-        return;
+  content.representations.onUpdate(
+    (val) => {
+      if (cancelCurrentStreams !== undefined) {
+        cancelCurrentStreams.cancel();
       }
-      adapStreamCanceller.cancel();
-      callbacks.error(err);
-    });
-  }, { clearSignal: adapStreamCanceller.signal, emitCurrentValue: true });
+      const newRepIds = content.representations.getValue().representationIds;
+      const newRepresentations = content.adaptation.representations.filter((r) =>
+        arrayIncludes(newRepIds, r.id),
+      );
+      representationsList.setValueIfChanged(newRepresentations);
+      cancelCurrentStreams = new TaskCanceller();
+      cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
+      onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
+        if (
+          cancelCurrentStreams?.isUsed() === true &&
+          TaskCanceller.isCancellationError(err)
+        ) {
+          return;
+        }
+        adapStreamCanceller.cancel();
+        callbacks.error(err);
+      });
+    },
+    { clearSignal: adapStreamCanceller.signal, emitCurrentValue: true },
+  );
 
   return;
 
@@ -185,16 +194,18 @@ export default function AdaptationStream(
    * everything this function is doing and free all related resources.
    */
   async function onRepresentationsChoiceChange(
-    choice : IRepresentationsChoice,
-    fnCancelSignal : CancellationSignal
-  ) : Promise<void> {
+    choice: IRepresentationsChoice,
+    fnCancelSignal: CancellationSignal,
+  ): Promise<void> {
     // First check if we should perform any action regarding what was previously
     // in the buffer
-    const switchStrat = getRepresentationsSwitchingStrategy(period,
-                                                            adaptation,
-                                                            choice,
-                                                            segmentBuffer,
-                                                            playbackObserver);
+    const switchStrat = getRepresentationsSwitchingStrategy(
+      period,
+      adaptation,
+      choice,
+      segmentSink,
+      playbackObserver,
+    );
 
     switch (switchStrat.type) {
       case "continue":
@@ -205,23 +216,28 @@ export default function AdaptationStream(
         // the next observation (which may reflect very different playback conditions)
         // is actually received.
         return queueMicrotask(() => {
-          playbackObserver.listen(() => {
-            if (fnCancelSignal.isCancelled()) {
-              return;
-            }
-            const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
-            const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-            return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
-                                                        period,
-                                                        timeOffset,
-                                                        stayInPeriod: true });
-          }, { includeLastObservation: true, clearSignal: fnCancelSignal });
+          playbackObserver.listen(
+            () => {
+              if (fnCancelSignal.isCancelled()) {
+                return;
+              }
+              const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
+              const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
+              return callbacks.waitingMediaSourceReload({
+                bufferType: adaptation.type,
+                period,
+                timeOffset,
+                stayInPeriod: true,
+              });
+            },
+            { includeLastObservation: true, clearSignal: fnCancelSignal },
+          );
         });
 
       case "flush-buffer": // Clean + flush
       case "clean-buffer": // Just clean
         for (const range of switchStrat.value) {
-          await segmentBuffer.removeBuffer(range.start, range.end);
+          await segmentSink.removeBuffer(range.start, range.end);
           if (fnCancelSignal.isCancelled()) {
             return;
           }
@@ -249,8 +265,8 @@ export default function AdaptationStream(
    * anything this function is doing and free allocated resources.
    */
   function recursivelyCreateRepresentationStreams(
-    fnCancelSignal : CancellationSignal
-  ) : void {
+    fnCancelSignal: CancellationSignal,
+  ): void {
     /**
      * `TaskCanceller` triggered when the current `RepresentationStream` is
      * terminating and as such the next one might be immediately created
@@ -270,43 +286,55 @@ export default function AdaptationStream(
      */
     const terminateCurrentStream = new SharedReference<ITerminationOrder | null>(
       null,
-      repStreamTerminatingCanceller.signal
+      repStreamTerminatingCanceller.signal,
     );
 
     /** Allows to stop listening to estimateRef on the following line. */
-    estimateRef.onUpdate((estimate) => {
-      if (estimate.representation === null ||
-          estimate.representation.id === representation.id)
+    estimateRef.onUpdate(
+      (estimate) => {
+        if (
+          estimate.representation === null ||
+          estimate.representation.id === representation.id
+        ) {
+          return;
+        }
+        if (estimate.urgent) {
+          log.info("Stream: urgent Representation switch", adaptation.type);
+          return terminateCurrentStream.setValue({ urgent: true });
+        } else {
+          log.info("Stream: slow Representation switch", adaptation.type);
+          return terminateCurrentStream.setValue({ urgent: false });
+        }
+      },
       {
-        return;
-      }
-      if (estimate.urgent) {
-        log.info("Stream: urgent Representation switch", adaptation.type);
-        return terminateCurrentStream.setValue({ urgent: true });
-      } else {
-        log.info("Stream: slow Representation switch", adaptation.type);
-        return terminateCurrentStream.setValue({ urgent: false });
-      }
-    }, { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true });
+        clearSignal: repStreamTerminatingCanceller.signal,
+        emitCurrentValue: true,
+      },
+    );
 
-    const repInfo = { type: adaptation.type, adaptation, period, representation };
+    const repInfo = {
+      type: adaptation.type,
+      adaptation,
+      period,
+      representation,
+    };
     currentRepresentation.setValue(representation);
     if (adapStreamCanceller.isUsed()) {
-      return ; // previous callback has stopped everything by side-effect
+      return; // previous callback has stopped everything by side-effect
     }
     callbacks.representationChange(repInfo);
     if (adapStreamCanceller.isUsed()) {
-      return ; // previous callback has stopped everything by side-effect
+      return; // previous callback has stopped everything by side-effect
     }
 
-    const representationStreamCallbacks : IRepresentationStreamCallbacks = {
+    const representationStreamCallbacks: IRepresentationStreamCallbacks = {
       streamStatusUpdate: callbacks.streamStatusUpdate,
       encryptionDataEncountered: callbacks.encryptionDataEncountered,
       manifestMightBeOufOfSync: callbacks.manifestMightBeOufOfSync,
       needsManifestRefresh: callbacks.needsManifestRefresh,
       inbandEvent: callbacks.inbandEvent,
       warning: callbacks.warning,
-      error(err : unknown) {
+      error(err: unknown) {
         adapStreamCanceller.cancel();
         callbacks.error(err);
       },
@@ -322,10 +350,12 @@ export default function AdaptationStream(
       },
     };
 
-    createRepresentationStream(representation,
-                               terminateCurrentStream,
-                               representationStreamCallbacks,
-                               fnCancelSignal);
+    createRepresentationStream(
+      representation,
+      terminateCurrentStream,
+      representationStreamCallbacks,
+      fnCancelSignal,
+    );
   }
 
   /**
@@ -341,25 +371,30 @@ export default function AdaptationStream(
    * anything this function is doing and free allocated resources.
    */
   function createRepresentationStream(
-    representation : Representation,
-    terminateCurrentStream : IReadOnlySharedReference<ITerminationOrder | null>,
-    representationStreamCallbacks : IRepresentationStreamCallbacks,
-    fnCancelSignal : CancellationSignal
-  ) : void {
+    representation: IRepresentation,
+    terminateCurrentStream: IReadOnlySharedReference<ITerminationOrder | null>,
+    representationStreamCallbacks: IRepresentationStreamCallbacks,
+    fnCancelSignal: CancellationSignal,
+  ): void {
     const bufferGoalCanceller = new TaskCanceller();
     bufferGoalCanceller.linkToSignal(fnCancelSignal);
-    const bufferGoal = createMappedReference(wantedBufferAhead, prev => {
-      return prev * getBufferGoalRatio(representation);
-    }, bufferGoalCanceller.signal);
-    const maxBufferSize = adaptation.type === "video" ?
-      maxVideoBufferSize :
-      new SharedReference(Infinity);
-    log.info("Stream: changing representation",
-             adaptation.type,
-             representation.id,
-             representation.bitrate);
+    const bufferGoal = createMappedReference(
+      wantedBufferAhead,
+      (prev) => {
+        return prev * getBufferGoalRatio(representation);
+      },
+      bufferGoalCanceller.signal,
+    );
+    const maxBufferSize =
+      adaptation.type === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
+    log.info(
+      "Stream: changing representation",
+      adaptation.type,
+      representation.id,
+      representation.bitrate,
+    );
     const updatedCallbacks = objectAssign({}, representationStreamCallbacks, {
-      error(err : unknown) {
+      error(err: unknown) {
         const formattedError = formatError(err, {
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",
@@ -378,12 +413,16 @@ export default function AdaptationStream(
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
-          cancellableSleep(4000, adapStreamCanceller.signal).then(() => {
-            return createRepresentationStream(representation,
-                                              terminateCurrentStream,
-                                              representationStreamCallbacks,
-                                              fnCancelSignal);
-          }).catch(noop);
+          cancellableSleep(4000, adapStreamCanceller.signal)
+            .then(() => {
+              return createRepresentationStream(
+                representation,
+                terminateCurrentStream,
+                representationStreamCallbacks,
+                fnCancelSignal,
+              );
+            })
+            .catch(noop);
         }
       },
       terminating() {
@@ -391,57 +430,63 @@ export default function AdaptationStream(
         representationStreamCallbacks.terminating();
       },
     });
-    RepresentationStream({ playbackObserver,
-                           content: { representation,
-                                      adaptation,
-                                      period,
-                                      manifest },
-                           segmentBuffer,
-                           segmentFetcher,
-                           terminate: terminateCurrentStream,
-                           options: { bufferGoal,
-                                      maxBufferSize,
-                                      drmSystemId: options.drmSystemId,
-                                      fastSwitchThreshold } },
-                         updatedCallbacks,
-                         fnCancelSignal);
+    RepresentationStream(
+      {
+        playbackObserver,
+        content: { representation, adaptation, period, manifest },
+        segmentSink,
+        segmentFetcher,
+        terminate: terminateCurrentStream,
+        options: {
+          bufferGoal,
+          maxBufferSize,
+          drmSystemId: options.drmSystemId,
+          fastSwitchThreshold,
+        },
+      },
+      updatedCallbacks,
+      fnCancelSignal,
+    );
 
     // reload if the Representation disappears from the Manifest
-    manifest.addEventListener("manifestUpdate", updates => {
-      for (const element of updates.updatedPeriods) {
-        if (element.period.id === period.id) {
-          for (const updated of element.result.updatedAdaptations) {
-            if (updated.adaptation === adaptation.id) {
-              for (const rep of updated.removedRepresentations) {
-                if (rep === representation.id) {
-                  if (fnCancelSignal.isCancelled()) {
-                    return;
+    manifest.addEventListener(
+      "manifestUpdate",
+      (updates) => {
+        for (const element of updates.updatedPeriods) {
+          if (element.period.id === period.id) {
+            for (const updated of element.result.updatedAdaptations) {
+              if (updated.adaptation === adaptation.id) {
+                for (const rep of updated.removedRepresentations) {
+                  if (rep === representation.id) {
+                    if (fnCancelSignal.isCancelled()) {
+                      return;
+                    }
+                    return callbacks.waitingMediaSourceReload({
+                      bufferType: adaptation.type,
+                      period,
+                      timeOffset: 0,
+                      stayInPeriod: true,
+                    });
                   }
-                  return callbacks.waitingMediaSourceReload({
-                    bufferType: adaptation.type,
-                    period,
-                    timeOffset: 0,
-                    stayInPeriod: true,
-                  });
                 }
               }
             }
+          } else if (element.period.start > period.start) {
+            break;
           }
-        } else if (element.period.start > period.start) {
-          break;
         }
-      }
-    }, fnCancelSignal);
+      },
+      fnCancelSignal,
+    );
   }
 
   /**
    * @param {Object} representation
    * @returns {number}
    */
-  function getBufferGoalRatio(representation : Representation) : number {
+  function getBufferGoalRatio(representation: IRepresentation): number {
     const oldBufferGoalRatio = bufferGoalRatioMap.get(representation.id);
-    const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio :
-                                                               1;
+    const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio : 1;
     if (oldBufferGoalRatio === undefined) {
       bufferGoalRatioMap.set(representation.id, bufferGoalRatio);
     }

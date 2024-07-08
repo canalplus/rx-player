@@ -15,39 +15,43 @@
  */
 
 import log from "../../../log";
-import {
+import type {
   IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
 } from "../../../manifest";
-import { IRange } from "../../../utils/ranges";
-import { SegmentBuffer } from "../../segment_buffers";
+import type { IRange } from "../../../utils/ranges";
+import type { SegmentSink } from "../../segment_sinks";
 
 /**
  * Returns the buffered ranges which hold the given content.
  * Returns the whole buffered ranges if some of it is unknown.
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @param {Array.<Object>} contents
  * @returns {Array.<Object>}
  */
 export default function getTimeRangesForContent(
-  segmentBuffer : SegmentBuffer,
-  contents : Array<{ adaptation : IAdaptationMetadata;
-                     period : IPeriodMetadata;
-                     representation : IRepresentationMetadata; }>
-) : IRange[] {
+  segmentSink: SegmentSink,
+  contents: Array<{
+    adaptation: IAdaptationMetadata;
+    period: IPeriodMetadata;
+    representation: IRepresentationMetadata;
+  }>,
+): IRange[] {
   if (contents.length === 0) {
     return [];
   }
-  const accumulator : IRange[] = [];
-  const inventory = segmentBuffer.getLastKnownInventory();
+  const accumulator: IRange[] = [];
+  const inventory = segmentSink.getLastKnownInventory();
 
   for (let i = 0; i < inventory.length; i++) {
     const chunk = inventory[i];
-    const hasContent = contents.some(content => {
-      return chunk.infos.period.id === content.period.id &&
+    const hasContent = contents.some((content) => {
+      return (
+        chunk.infos.period.id === content.period.id &&
         chunk.infos.adaptation.id === content.adaptation.id &&
-        chunk.infos.representation.id === content.representation.id;
+        chunk.infos.representation.id === content.representation.id
+      );
     });
     if (hasContent) {
       const { bufferedStart, bufferedEnd } = chunk;
@@ -57,8 +61,10 @@ export default function getTimeRangesForContent(
       }
 
       const previousLastElement = accumulator[accumulator.length - 1];
-      if (previousLastElement !== undefined &&
-          previousLastElement.end === bufferedStart) {
+      if (
+        previousLastElement !== undefined &&
+        previousLastElement.end === bufferedStart
+      ) {
         previousLastElement.end = bufferedEnd;
       } else {
         accumulator.push({ start: bufferedStart, end: bufferedEnd });

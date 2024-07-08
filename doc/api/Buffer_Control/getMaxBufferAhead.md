@@ -15,5 +15,5 @@ This setting can be updated either by:
 const bufferSize = player.getMaxBufferAhead();
 ```
 
-  - **return value** `number`: Maximum kept buffer in front of the  current
-    position, in seconds.
+- **return value** `number`: Maximum kept buffer in front of the current position, in
+  seconds.

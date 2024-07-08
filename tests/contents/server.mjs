@@ -11,14 +11,16 @@ const routeObj = urls.reduce((acc, elt) => {
   return acc;
 }, {});
 
+const DEFAULT_CONTENT_SERVER_PORT = 3000;
+
 /**
  * Create simple HTTP server specifically designed to serve the contents defined
  * in this directory.
  * @param {number} port
  * @returns {Object}
  */
-export default function createContentServer(port) {
-  const server = createServer(function(req, res) {
+export function createContentServer(port = DEFAULT_CONTENT_SERVER_PORT) {
+  const server = createServer(function (req, res) {
     if (routeObj[req.url] == null) {
       res.setHeader("Content-Type", "text/plain");
       answerWithCORS(res, 404, "404 Page Not Found");
@@ -40,14 +42,16 @@ export default function createContentServer(port) {
     if (typeof urlObj.path === "string") {
       try {
         data = fs.readFileSync(urlObj.path);
-      } catch(err) {
+      } catch (err) {
         res.setHeader("Content-Type", "text/plain");
         answerWithCORS(res, 404, "404 Page Not Found");
         return;
       }
     } else {
       data = urlObj.data;
-      try { data = Buffer.from(data); } catch (_e) {}
+      try {
+        data = Buffer.from(data);
+      } catch (_e) {}
       answerWithCORS(res, 200, data);
       return;
     }
@@ -58,9 +62,7 @@ export default function createContentServer(port) {
       const dataLength = data.byteLength;
       const ranges = parseRangeHeader(rangeHeader, dataLength);
       data = data.slice(ranges[0], ranges[1] + 1);
-      res.setHeader(
-        "Content-Range",
-        `bytes ${ranges[0]}-${ranges[1]}/${dataLength}`);
+      res.setHeader("Content-Range", `bytes ${ranges[0]}-${ranges[1]}/${dataLength}`);
       isPartial = true;
     }
     if (typeof urlObj.postProcess === "function") {
@@ -121,12 +123,12 @@ function answerWithCORS(res, status, body) {
 function parseRangeHeader(rangeHeader, dataLength) {
   const rangesStr = rangeHeader.substr(6).split("-");
   if (
-    rangesStr[0] != "" && Number.isNaN(+rangesStr[0]) ||
-    rangesStr[1] != "" && Number.isNaN(+rangesStr[1])
+    (rangesStr[0] != "" && Number.isNaN(+rangesStr[0])) ||
+    (rangesStr[1] != "" && Number.isNaN(+rangesStr[1]))
   ) {
     throw new Error("Invalid range request");
   }
-  const rangesNb = rangesStr.map(x => x === "" ? null : +x);
+  const rangesNb = rangesStr.map((x) => (x === "" ? null : +x));
   if (rangesNb[1] == null) {
     return [rangesNb[0], dataLength - 1];
   }
@@ -141,3 +143,10 @@ function parseRangeHeader(rangeHeader, dataLength) {
   }
   return [rangesNb[0], rangesNb[1]];
 }
+/** Default export that returns a teardown function that is executed by
+ * Vitest on test run
+ * @see https://vitest.dev/config/#globalsetup
+ * */
+export default () => {
+  createContentServer();
+};

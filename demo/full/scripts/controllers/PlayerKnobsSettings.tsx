@@ -31,17 +31,20 @@ function PlayerKnobsSettings({
         <span className="player-knobs-title">Settings</span>
         <span
           className="player-knobs-close"
+          onKeyDown={(evt: React.KeyboardEvent<HTMLDivElement>): void => {
+            if (evt.keyCode === 13 || evt.code === "Enter") {
+              close();
+            }
+          }}
           onClick={close}
         >
           {String.fromCharCode(0xf00d)}
         </span>
       </div>
       <div className="player-knobs-content">
-        {
-          lowLatencyMode ?
-            null : // In lowLatencyMode, we take back control of the rate
-            <PlaybackRateKnob className="black-knob" player={player} />
-        }
+        {lowLatencyMode ? null : ( // In lowLatencyMode, we take back control of the rate
+          <PlaybackRateKnob className="black-knob" player={player} />
+        )}
         <AudioRepresentationKnob className="black-knob" player={player} />
         <VideoRepresentationKnob className="black-knob" player={player} />
         <LanguageKnob className="black-knob" player={player} />

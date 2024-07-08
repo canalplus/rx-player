@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
 import samiParser from "../../parsers/texttracks/sami/html";
-import HTMLTextDisplayer from "../../text_displayer/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse SAMI text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLSAMIFeature(features : IFeaturesObject) : void {
+function addHTMLSAMIFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.sami = samiParser;
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }

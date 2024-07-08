@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+import NativeTextDisplayer from "../../main_thread/text_displayer/native";
 import vttParser from "../../parsers/texttracks/webvtt/native";
-import NativeTextDisplayer from "../../text_displayer/native";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse WebVTT text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeVTTFeature(features : IFeaturesObject) : void {
+function addNativeVTTFeature(features: IFeaturesObject): void {
   features.nativeTextTracksParsers.vtt = vttParser;
   features.nativeTextDisplayer = NativeTextDisplayer;
 }

@@ -15,19 +15,17 @@
  */
 
 import globalScope from "../../../../../utils/global_scope";
-import {
-  IMediaConfiguration,
-  ProberStatus,
-} from "../../types";
+import type { IMediaConfiguration } from "../../types";
+import { ProberStatus } from "../../types";
 
 import formatConfig from "./format";
 
 export interface ITypeWithFeatures {
   keySystem: string;
-  features: string|null;
+  features: string | null;
 }
 
-export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
+export type ISupportWithFeatures = "" | "Maybe" | "Not Supported" | "Probably";
 
 /**
  * @returns {Promise}
@@ -35,16 +33,19 @@ export type ISupportWithFeatures = ""|"Maybe"|"Not Supported"|"Probably";
 function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("MSMediaKeys" in globalScope)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MSMediaKeys API not available");
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " + "MSMediaKeys API not available",
+      );
     }
     /* eslint-disable @typescript-eslint/no-explicit-any */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     if (!("isTypeSupportedWithFeatures" in (globalScope as any).MSMediaKeys)) {
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "isTypeSupportedWithFeatures not available");
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " +
+          "isTypeSupportedWithFeatures not available",
+      );
     }
     resolve();
   });
@@ -55,16 +56,17 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
  * @returns {Promise}
  */
 export default function probeTypeWithFeatures(
-  config: IMediaConfiguration
-) : Promise<[ProberStatus]> {
+  config: IMediaConfiguration,
+): Promise<[ProberStatus]> {
   return isTypeSupportedWithFeaturesAPIAvailable().then(() => {
     const keySystem = config.keySystem;
 
     const type = (() => {
-      if (keySystem === undefined ||
-          keySystem.type === undefined ||
-          keySystem.type.length === 0)
-      {
+      if (
+        keySystem === undefined ||
+        keySystem.type === undefined ||
+        keySystem.type.length === 0
+      ) {
         return "org.w3.clearkey";
       }
       return keySystem.type;
@@ -76,8 +78,9 @@ export default function probeTypeWithFeatures(
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-call */
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    const result: ISupportWithFeatures =
-      (globalScope as any).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
+    const result: ISupportWithFeatures = (
+      globalScope as any
+    ).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
     /* eslint-enable @typescript-eslint/no-explicit-any */
     /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
@@ -85,8 +88,10 @@ export default function probeTypeWithFeatures(
 
     function formatSupport(support: ISupportWithFeatures): [ProberStatus] {
       if (support === "") {
-        throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-          "Bad arguments for calling isTypeSupportedWithFeatures");
+        throw new Error(
+          "MediaCapabilitiesProber >>> API_CALL: " +
+            "Bad arguments for calling isTypeSupportedWithFeatures",
+        );
       } else {
         switch (support) {
           case "Not Supported":

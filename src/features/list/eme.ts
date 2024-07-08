@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import ContentDecryptor from "../../core/decrypt";
-import { IFeaturesObject } from "../types";
+import ContentDecryptor from "../../main_thread/decrypt";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play encrypted contents
  * @param {Object} features
  */
-function addEMEFeature(features : IFeaturesObject) : void {
+function addEMEFeature(features: IFeaturesObject): void {
   features.decrypt = ContentDecryptor;
 }
 

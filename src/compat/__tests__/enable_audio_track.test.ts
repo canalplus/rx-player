@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { describe, beforeEach, it, expect, vi } from "vitest";
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 describe("compat - enableAudioTrack", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should enable the wanted audioTrack", () => {
-    jest.mock("../browser_detection", () => {
+  it("should enable the wanted audioTrack", async () => {
+    vi.doMock("../browser_detection", () => {
       return {
-        __esModule: true as const,
         isTizen: false,
       };
     });
@@ -39,7 +39,7 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = jest.requireActual("../enable_audio_track");
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
     expect(enableAudioTrack.default(fakeAudioTracks, 2)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
@@ -54,10 +54,9 @@ describe("compat - enableAudioTrack", () => {
     expect(fakeAudioTracks[2].enabled).toBe(false);
   });
 
-  it("should enable the wanted audioTrack on Tizen", () => {
-    jest.mock("../browser_detection", () => {
+  it("should enable the wanted audioTrack on Tizen", async () => {
+    vi.doMock("../browser_detection", () => {
       return {
-        __esModule: true as const,
         isTizen: true,
       };
     });
@@ -84,7 +83,7 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = jest.requireActual("../enable_audio_track");
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
     expect(enableAudioTrack.default(fakeAudioTracks, 2)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
@@ -99,10 +98,9 @@ describe("compat - enableAudioTrack", () => {
     expect(fakeAudioTracks[2].enabled).toBe(false);
   });
 
-  it("should return false if the audio track index does not exist", () => {
-    jest.mock("../browser_detection", () => {
+  it("should return false if the audio track index does not exist", async () => {
+    vi.doMock("../browser_detection", () => {
       return {
-        __esModule: true as const,
         isTizen: false,
       };
     });
@@ -129,7 +127,7 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = jest.requireActual("../enable_audio_track");
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
     expect(enableAudioTrack.default(fakeAudioTracks, -1)).toEqual(false);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
@@ -144,10 +142,9 @@ describe("compat - enableAudioTrack", () => {
     expect(fakeAudioTracks[2].enabled).toBe(false);
   });
 
-  it("should return false if the audio track index does not exist on Tizen", () => {
-    jest.mock("../browser_detection", () => {
+  it("should return false if the audio track index does not exist on Tizen", async () => {
+    vi.doMock("../browser_detection", () => {
       return {
-        __esModule: true as const,
         isTizen: false,
       };
     });
@@ -185,10 +182,10 @@ describe("compat - enableAudioTrack", () => {
     ];
     Object.defineProperty(fakeAudioTracks[0], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track1IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track1WasDisabled++;
         } else {
@@ -199,10 +196,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[1], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track2IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track2WasDisabled++;
         } else {
@@ -213,10 +210,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[2], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track3IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track3WasDisabled++;
         } else {
@@ -225,7 +222,7 @@ describe("compat - enableAudioTrack", () => {
         track3IsEnabled = enabled;
       },
     });
-    const enableAudioTrack = jest.requireActual("../enable_audio_track");
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
     expect(enableAudioTrack.default(fakeAudioTracks, 1)).toBe(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);
@@ -241,11 +238,9 @@ describe("compat - enableAudioTrack", () => {
     expect(track3WasEnabled).toBe(0);
   });
 
-  // eslint-disable-next-line max-len
-  it("should first disable all audioTracks except the one wanted by default on Tizen", () => {
-    jest.mock("../browser_detection", () => {
+  it("should first disable all audioTracks except the one wanted by default on Tizen", async () => {
+    vi.doMock("../browser_detection", () => {
       return {
-        __esModule: true as const,
         isTizen: true,
       };
     });
@@ -283,10 +278,10 @@ describe("compat - enableAudioTrack", () => {
     ];
     Object.defineProperty(fakeAudioTracks[0], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track1IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track1WasDisabled++;
         } else {
@@ -297,10 +292,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[1], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track2IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track2WasDisabled++;
         } else {
@@ -311,10 +306,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[2], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track3IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track3WasDisabled++;
         } else {
@@ -323,7 +318,7 @@ describe("compat - enableAudioTrack", () => {
         track3IsEnabled = enabled;
       },
     });
-    const enableAudioTrack = jest.requireActual("../enable_audio_track");
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
     expect(enableAudioTrack.default(fakeAudioTracks, 1)).toBe(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);

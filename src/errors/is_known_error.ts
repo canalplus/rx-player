@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IPlayerError } from "../public_types";
+import type { IPlayerError } from "../public_types";
 import EncryptedMediaError from "./encrypted_media_error";
 import { ErrorTypes } from "./error_codes";
 import MediaError from "./media_error";
@@ -26,10 +26,12 @@ import OtherError from "./other_error";
  * @param {Error} error
  * @returns {Boolean}
  */
-export default function isKnownError(error : unknown) : error is IPlayerError {
-  return (error instanceof EncryptedMediaError ||
-          error instanceof MediaError ||
-          error instanceof OtherError ||
-          error instanceof NetworkError) &&
-         Object.keys(ErrorTypes).indexOf(error.type) >= 0;
+export default function isKnownError(error: unknown): error is IPlayerError {
+  return (
+    (error instanceof EncryptedMediaError ||
+      error instanceof MediaError ||
+      error instanceof OtherError ||
+      error instanceof NetworkError) &&
+    Object.keys(ErrorTypes).indexOf(error.type) >= 0
+  );
 }

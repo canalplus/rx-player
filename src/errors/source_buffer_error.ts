@@ -4,10 +4,9 @@
  * @extends Error
  */
 export default class SourceBufferError extends Error {
-  public readonly name : "SourceBufferError";
-  public readonly errorName : string;
-  public readonly message : string;
-  public readonly isBufferFull : boolean;
+  public readonly name: "SourceBufferError";
+  public readonly errorName: string;
+  public readonly isBufferFull: boolean;
 
   /**
    * @param {string} errorName - The original Error's name.
@@ -15,18 +14,13 @@ export default class SourceBufferError extends Error {
    * @param {boolean} isBufferFull - If `true`, the Error is due to the fact
    * that the `SourceBuffer` was full.
    */
-  constructor(
-    errorName : string,
-    message : string,
-    isBufferFull : boolean
-  ) {
-    super();
+  constructor(errorName: string, message: string, isBufferFull: boolean) {
+    super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, SourceBufferError.prototype);
 
     this.name = "SourceBufferError";
     this.errorName = errorName;
-    this.message = message;
     this.isBufferFull = isBufferFull;
   }
 
@@ -36,10 +30,12 @@ export default class SourceBufferError extends Error {
    * be reconstructed in the other thread.
    * @returns {Object}
    */
-  public serialize() : ISerializedSourceBufferError {
-    return { errorName: this.name,
-             message: this.message,
-             isBufferFull: this.isBufferFull };
+  public serialize(): ISerializedSourceBufferError {
+    return {
+      errorName: this.name,
+      message: this.message,
+      isBufferFull: this.isBufferFull,
+    };
   }
 
   /**
@@ -47,7 +43,7 @@ export default class SourceBufferError extends Error {
    * more informative.
    * @returns {string}
    */
-  public toString() : string {
+  public toString(): string {
     return `${this.errorName}: ${this.message}`;
   }
 }

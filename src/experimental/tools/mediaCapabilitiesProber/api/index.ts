@@ -16,14 +16,15 @@
 
 import arrayFind from "../../../../utils/array_find";
 import log from "../log";
-import {
+import type {
   ICompatibleKeySystem,
   IDisplayConfiguration,
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
-  ProberStatus,
 } from "../types";
-import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration";
+import { ProberStatus } from "../types";
+import type { IBrowserAPIS } from "./probeMediaConfiguration";
+import probeMediaConfiguration from "./probeMediaConfiguration";
 
 /**
  * Probe configuration and get status from result.
@@ -33,18 +34,17 @@ import probeMediaConfiguration, { IBrowserAPIS } from "./probeMediaConfiguration
  */
 function getStatusFromConfiguration(
   config: IMediaConfiguration,
-  browserAPIS: IBrowserAPIS[]
+  browserAPIS: IBrowserAPIS[],
 ): Promise<string> {
-  return probeMediaConfiguration(config, browserAPIS)
-    .then(({ globalStatus }) => {
-      switch (globalStatus) {
-        case ProberStatus.Unknown:
-          return "Unknown";
-        case ProberStatus.Supported:
-          return "Supported";
-      }
-      return "NotSupported";
-    });
+  return probeMediaConfiguration(config, browserAPIS).then(({ globalStatus }) => {
+    switch (globalStatus) {
+      case ProberStatus.Unknown:
+        return "Unknown";
+      case ProberStatus.Supported:
+        return "Supported";
+    }
+    return "NotSupported";
+  });
 }
 
 /**
@@ -53,7 +53,6 @@ function getStatusFromConfiguration(
  * and relies on different browser API to probe capabilites.
  */
 const mediaCapabilitiesProber = {
-
   /**
    * Set logger level
    * @param {string} level
@@ -66,7 +65,7 @@ const mediaCapabilitiesProber = {
    * Get logger level
    * @returns {string}
    */
-  get LogLevel() : string {
+  get LogLevel(): string {
     return log.getLevel();
   },
 
@@ -76,10 +75,11 @@ const mediaCapabilitiesProber = {
    * @param {string} hdcp
    * @returns {Promise}
    */
-  getStatusForHDCP(hdcp: string) : Promise<string> {
+  getStatusForHDCP(hdcp: string): Promise<string> {
     if (hdcp === undefined || hdcp.length === 0) {
-      return Promise.reject("MediaCapabilitiesProbers >>> Bad Arguments: " +
-        "No HDCP Policy specified.");
+      return Promise.reject(
+        "MediaCapabilitiesProbers >>> Bad Arguments: " + "No HDCP Policy specified.",
+      );
     }
     const config = {
       hdcp,
@@ -88,7 +88,7 @@ const mediaCapabilitiesProber = {
       "isTypeSupportedWithFeatures",
       "getStatusForPolicy",
     ];
-    return getStatusFromConfiguration (config, browserAPIS);
+    return getStatusFromConfiguration(config, browserAPIS);
   },
 
   /**
@@ -97,9 +97,7 @@ const mediaCapabilitiesProber = {
    * @param {Object} mediaConfig
    * @returns {Promise}
    */
-  getDecodingCapabilities(
-    mediaConfig: IMediaConfiguration
-  ) : Promise<string> {
+  getDecodingCapabilities(mediaConfig: IMediaConfiguration): Promise<string> {
     const config = {
       type: mediaConfig.type,
       video: mediaConfig.video,
@@ -123,46 +121,59 @@ const mediaCapabilitiesProber = {
     configurations: Array<{
       type: string;
       configuration: IMediaKeySystemConfiguration;
-    }>
-  ) : Promise<ICompatibleKeySystem[]> {
-    const promises: Array<Promise<{ globalStatus: ProberStatus;
-                                    result? : ICompatibleKeySystem | undefined; }>> = [];
+    }>,
+  ): Promise<ICompatibleKeySystem[]> {
+    const promises: Array<
+      Promise<{
+        globalStatus: ProberStatus;
+        result?: ICompatibleKeySystem | undefined;
+      }>
+    > = [];
     configurations.forEach((configuration) => {
       const globalConfig = {
         keySystem: configuration,
       };
       const browserAPIS: IBrowserAPIS[] = ["requestMediaKeySystemAccess"];
-      promises.push(probeMediaConfiguration(globalConfig, browserAPIS)
-        .then(({ globalStatus, resultsFromAPIS }) => {
-          const requestMediaKeySystemAccessResults =
-            arrayFind(resultsFromAPIS,
-                      (result) => result.APIName === "requestMediaKeySystemAccess");
+      promises.push(
+        probeMediaConfiguration(globalConfig, browserAPIS)
+          .then(({ globalStatus, resultsFromAPIS }) => {
+            const requestMediaKeySystemAccessResults = arrayFind(
+              resultsFromAPIS,
+              (result) => result.APIName === "requestMediaKeySystemAccess",
+            );
 
-          return {
-            // As only one API is called, global status is
-            // requestMediaKeySystemAccess status.
-            globalStatus,
-            result: requestMediaKeySystemAccessResults === undefined ? undefined :
-              requestMediaKeySystemAccessResults.result,
-          };
-        })
-        .catch(() => { // API couln't be called.
-          return { globalStatus: ProberStatus.NotSupported };
-        })
+            return {
+              // As only one API is called, global status is
+              // requestMediaKeySystemAccess status.
+              globalStatus,
+              result:
+                requestMediaKeySystemAccessResults === undefined
+                  ? undefined
+                  : requestMediaKeySystemAccessResults.result,
+            };
+          })
+          .catch(() => {
+            // API couln't be called.
+            return { globalStatus: ProberStatus.NotSupported };
+          }),
       );
     });
-    return Promise.all(promises)
-      .then((configs) => {
-        // TODO I added those lines to work-around a type issue but does it
-        // really correspond to the original intent? I find it hard to
-        // understand and shouldn't we also rely on things like `globalStatus`
-        // here?
-        return configs
-          .filter((x) : x is { globalStatus : ProberStatus;
-                               result : ICompatibleKeySystem; } =>
-            x.result !== undefined)
-          .map(({ result }: { result: ICompatibleKeySystem }) => result);
-      });
+    return Promise.all(promises).then((configs) => {
+      // TODO I added those lines to work-around a type issue but does it
+      // really correspond to the original intent? I find it hard to
+      // understand and shouldn't we also rely on things like `globalStatus`
+      // here?
+      return configs
+        .filter(
+          (
+            x,
+          ): x is {
+            globalStatus: ProberStatus;
+            result: ICompatibleKeySystem;
+          } => x.result !== undefined,
+        )
+        .map(({ result }: { result: ICompatibleKeySystem }) => result);
+    });
   },
 
   /**
@@ -171,12 +182,9 @@ const mediaCapabilitiesProber = {
    * @param {Object} displayConfig
    * @returns {Promise}
    */
-  getDisplayCapabilities(displayConfig: IDisplayConfiguration) : Promise<string> {
+  getDisplayCapabilities(displayConfig: IDisplayConfiguration): Promise<string> {
     const config = { display: displayConfig };
-    const browserAPIS: IBrowserAPIS[] = [
-      "matchMedia",
-      "isTypeSupportedWithFeatures",
-    ];
+    const browserAPIS: IBrowserAPIS[] = ["matchMedia", "isTypeSupportedWithFeatures"];
     return getStatusFromConfiguration(config, browserAPIS);
   },
 };

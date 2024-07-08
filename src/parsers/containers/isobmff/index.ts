@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-import takePSSHOut, {
-  getPsshSystemID,
-} from "./take_pssh_out";
+import extractCompleteChunks from "./extract_complete_chunks";
+import findCompleteBox from "./find_complete_box";
+import takePSSHOut, { getPsshSystemID } from "./take_pssh_out";
 
-export {
-  createBox,
-  createBoxWithChildren,
-} from "./create_box";
+export { createBox, createBoxWithChildren } from "./create_box";
 export {
   getBox,
   getBoxContent,
@@ -29,23 +26,15 @@ export {
   getBoxOffsets,
   getUuidContent,
 } from "./get_box";
-export {
-  getMDAT,
-  getMDIA,
-  getTRAF,
-} from "./read";
+export { getMDAT, getMDIA, getTRAF } from "./read";
+export type { IEMSG, ISidxSegment } from "./utils";
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
   getTrackFragmentDecodeTime,
   getDurationFromTrun,
   getSegmentsFromSidx,
-  IEMSG,
-  ISidxSegment,
   patchPssh,
   updateBoxLength,
 } from "./utils";
-export {
-  getPsshSystemID,
-  takePSSHOut,
-};
+export { extractCompleteChunks, findCompleteBox, getPsshSystemID, takePSSHOut };

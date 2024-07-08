@@ -24,23 +24,36 @@
  * @extends Error
  */
 export default class RequestError extends Error {
-  public readonly name : "RequestError";
-  public readonly type : IRequestErrorType;
-  public readonly message : string;
-  public readonly url : string;
-  public readonly status : number;
+  public readonly name: "RequestError";
+  public readonly type: IRequestErrorType;
+  public readonly url: string;
+  public readonly status: number;
 
   /**
    * @param {string} url
    * @param {number} status
    * @param {string} type
    */
-  constructor(
-    url : string,
-    status : number,
-    type : IRequestErrorType
-  ) {
-    super();
+  constructor(url: string, status: number, type: IRequestErrorType) {
+    let message: string;
+    switch (type) {
+      case "TIMEOUT":
+        message = "The request timed out";
+        break;
+      case "ERROR_EVENT":
+        message = "An error prevented the request to be performed successfully";
+        break;
+      case "PARSE_ERROR":
+        message = "An error happened while formatting the response data";
+        break;
+      case "ERROR_HTTP_CODE":
+        message =
+          "An HTTP status code indicating failure was received: " + String(status);
+        break;
+    }
+
+    super(message);
+
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, RequestError.prototype);
 
@@ -48,42 +61,27 @@ export default class RequestError extends Error {
     this.url = url;
     this.status = status;
     this.type = type;
-
-    switch (type) {
-      case "TIMEOUT":
-        this.message = "The request timed out";
-        break;
-      case "ERROR_EVENT":
-        this.message = "An error prevented the request to be performed successfully";
-        break;
-      case "PARSE_ERROR":
-        this.message = "An error happened while formatting the response data";
-        break;
-      case "ERROR_HTTP_CODE":
-        this.message = "An HTTP status code indicating failure was received: " +
-          String(this.status);
-        break;
-    }
   }
 
-  public serialize() : ISerializedRequestError {
+  public serialize(): ISerializedRequestError {
     return { url: this.url, status: this.status, type: this.type };
   }
 }
 
 /** Serializable object which allows to create a `RequestError` later. */
 export interface ISerializedRequestError {
-  url : string;
-  status : number;
-  type : IRequestErrorType;
+  url: string;
+  status: number;
+  type: IRequestErrorType;
 }
 
-export type IRequestErrorType = "TIMEOUT" |
-                                "ERROR_EVENT" |
-                                "PARSE_ERROR" |
-                                "ERROR_HTTP_CODE";
+export type IRequestErrorType =
+  | "TIMEOUT"
+  | "ERROR_EVENT"
+  | "PARSE_ERROR"
+  | "ERROR_HTTP_CODE";
 
-const RequestErrorTypes : Record<IRequestErrorType, IRequestErrorType> = {
+const RequestErrorTypes: Record<IRequestErrorType, IRequestErrorType> = {
   TIMEOUT: "TIMEOUT",
   ERROR_EVENT: "ERROR_EVENT",
   ERROR_HTTP_CODE: "ERROR_HTTP_CODE",

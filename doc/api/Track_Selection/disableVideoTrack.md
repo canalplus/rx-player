@@ -6,10 +6,9 @@ Disable the current video track, if one.
 
 Might enter in `RELOADING` state for a short period after calling this API.
 
-You can also disable the video track for another Period by calling
-`disableVideoTrack` with the corresponding Period's id in argument. Such id can
-be obtained through the `getAvailablePeriods` method, the `newAvailablePeriods`
-event or the `periodChange` event.
+You can also disable the video track for another Period by calling `disableVideoTrack`
+with the corresponding Period's id in argument. Such id can be obtained through the
+`getAvailablePeriods` method, the `newAvailablePeriods` event or the `periodChange` event.
 
 ```js
 // example: disabling the video track for all Periods
@@ -51,8 +50,8 @@ player.disableVideoTrack();
 player.disableVideoTrack(periodId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _periodId_ `string|undefined`: The `id` of the Period for which you want
-      to disable the video track. If not defined, the video track of the
-      currently-playing Period will be disabled.
+  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want to disable
+      the video track. If not defined, the video track of the currently-playing Period
+      will be disabled.

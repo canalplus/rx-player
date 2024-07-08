@@ -21,14 +21,11 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
  * @param {string} timestampString
  * @returns {Number|undefined}
  */
-export default function parseTimestamp(
-  timestampString : string
-) : number|undefined {
+export default function parseTimestamp(timestampString: string): number | undefined {
   const splittedTS = timestampString.split(":").reverse();
 
   if (isNonEmptyString(splittedTS[2]) || isNonEmptyString(splittedTS[1])) {
-    const hours = isNonEmptyString(splittedTS[2]) ? parseInt(splittedTS[2], 10) :
-                                                    0;
+    const hours = isNonEmptyString(splittedTS[2]) ? parseInt(splittedTS[2], 10) : 0;
     const minutes = parseInt(splittedTS[1], 10);
     const seconds = parseFloat(splittedTS[0].replace(",", "."));
 

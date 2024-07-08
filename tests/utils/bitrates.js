@@ -33,8 +33,8 @@ export function lockHighestBitrates(rxPlayer, switchingMode) {
     if (videoTrack !== undefined && videoTrack !== null) {
       const highestVideoBitrate = getHighestBitrate(videoTrack);
       const lockedVideoReps = videoTrack.representations
-        .filter(r => r.bitrate === highestVideoBitrate)
-        .map(r => r.id);
+        .filter((r) => r.bitrate === highestVideoBitrate)
+        .map((r) => r.id);
       rxPlayer.lockVideoRepresentations({
         periodId: period.id,
         representations: lockedVideoReps,
@@ -46,8 +46,8 @@ export function lockHighestBitrates(rxPlayer, switchingMode) {
     if (audioTrack !== undefined && audioTrack !== null) {
       const highestAudioBitrate = getHighestBitrate(audioTrack);
       const lockedAudioReps = audioTrack.representations
-        .filter(r => r.bitrate === highestAudioBitrate)
-        .map(r => r.id);
+        .filter((r) => r.bitrate === highestAudioBitrate)
+        .map((r) => r.id);
       rxPlayer.lockAudioRepresentations({
         periodId: period.id,
         representations: lockedAudioReps,
@@ -76,8 +76,8 @@ export function lockLowestBitrates(rxPlayer, switchingMode) {
     if (videoTrack !== undefined && videoTrack !== null) {
       const lowestVideoBitrate = getLowestBitrate(videoTrack);
       const lockedVideoReps = videoTrack.representations
-        .filter(r => r.bitrate === lowestVideoBitrate)
-        .map(r => r.id);
+        .filter((r) => r.bitrate === lowestVideoBitrate)
+        .map((r) => r.id);
       rxPlayer.lockVideoRepresentations({
         periodId: period.id,
         representations: lockedVideoReps,
@@ -89,8 +89,8 @@ export function lockLowestBitrates(rxPlayer, switchingMode) {
     if (audioTrack !== undefined && audioTrack !== null) {
       const lowestAudioBitrate = getLowestBitrate(audioTrack);
       const lockedAudioReps = audioTrack.representations
-        .filter(r => r.bitrate === lowestAudioBitrate)
-        .map(r => r.id);
+        .filter((r) => r.bitrate === lowestAudioBitrate)
+        .map((r) => r.id);
       rxPlayer.lockAudioRepresentations({
         periodId: period.id,
         representations: lockedAudioReps,
@@ -109,9 +109,7 @@ function getHighestBitrate(track) {
     if (acc === undefined) {
       return representation.bitrate;
     }
-    return acc < representation.bitrate ?
-      representation.bitrate :
-      acc;
+    return acc < representation.bitrate ? representation.bitrate : acc;
   }, undefined);
 }
 
@@ -124,8 +122,6 @@ function getLowestBitrate(track) {
     if (acc === undefined) {
       return representation.bitrate;
     }
-    return acc > representation.bitrate ?
-      representation.bitrate :
-      acc;
+    return acc > representation.bitrate ? representation.bitrate : acc;
   }, undefined);
 }

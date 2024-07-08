@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../text_displayer/html";
-import { IFeaturesObject } from "../types";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to display text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLTextBuffer(features : IFeaturesObject) : void {
+function addHTMLTextBuffer(features: IFeaturesObject): void {
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }
 

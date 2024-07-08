@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-import {
-  ICompatVTTCue,
-  makeVTTCue,
-} from "../../../../compat/index";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
+import makeVTTCue from "../../../../compat/make_vtt_cue";
 
 /**
- * @param {Object} cue Object
+ * @param {Object} cueObj
  * @returns {TextTrackCue|ICompatVTTCue|null}
  */
-export default function toNativeCue(cueObj : {
-  start : number;
-  end : number;
-  payload : string[];
-}) : ICompatVTTCue|TextTrackCue|null {
+export default function toNativeCue(cueObj: {
+  start: number;
+  end: number;
+  payload: string[];
+}): ICompatVTTCue | TextTrackCue | null {
   const { start, end, payload } = cueObj;
   const text = payload.join("\n");
   return makeVTTCue(start, end, text);

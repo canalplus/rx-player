@@ -129,8 +129,8 @@ pub enum AttributeName {
     Codecs = 4, // String
     CodingDependency = 5,
     FrameRate = 6, // f64
-    Height = 7, // f64
-    Width = 8,  // f64
+    Height = 7,    // f64
+    Width = 8,     // f64
     MaxPlayoutRate = 9,
     MaxSAPPeriod = 10,
     MimeType = 11, // f64
@@ -140,6 +140,8 @@ pub enum AttributeName {
     ContentProtectionValue = 13,    // String
     ContentProtectionKeyId = 14,    // ArrayBuffer
     ContentProtectionCencPSSH = 15, // ArrayBuffer
+    ContentProtectionRef = 78,      // String
+    ContentProtectionRefId = 79,    // String
 
     // Various schemes (Accessibility) + EventStream + ContentProtection
     SchemeIdUri = 16, // String
@@ -281,7 +283,7 @@ pub enum AttributeName {
     // SegmentTemplate
     EndNumber = 76, // f64
 
-    SupplementalCodecs = 77 // string
+    SupplementalCodecs = 77, // string
 }
 
 impl TagName {
@@ -332,10 +334,7 @@ impl AttributeName {
         }
     }
 
-    pub fn try_report_as_maybe_division(
-        self,
-        attr : &quick_xml::events::attributes::Attribute
-    ) {
+    pub fn try_report_as_maybe_division(self, attr: &quick_xml::events::attributes::Attribute) {
         match utils::parse_maybe_division(&attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),

@@ -4,44 +4,34 @@
  * multithread situation.
  */
 
-import { IResolutionInfo } from "./core/adaptive/utils/filter_by_resolution";
-import {
-  IFreezingStatus,
-  IRebufferingStatus,
-} from "./core/api";
-import {
-  IContentProtection,
-} from "./core/decrypt";
-import {
+import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_store";
+import type {
+  IResolutionInfo,
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
-} from "./core/fetchers";
-import {
   IInbandEvent,
   IPausedPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
-} from "./core/stream";
-import {
+} from "./core/types";
+import type {
   ISerializedMediaError,
   ISerializedNetworkError,
   ISerializedEncryptedMediaError,
   ISerializedOtherError,
 } from "./errors";
-import { ISerializedSourceBufferError } from "./errors/source_buffer_error";
-import {
-  IManifestMetadata,
-  IPeriodsUpdateResult,
-} from "./manifest";
-import {
+import type { ISerializedSourceBufferError } from "./errors/source_buffer_error";
+import type { IContentProtection, ITextDisplayerData } from "./main_thread/types";
+import type { IManifestMetadata, IPeriodsUpdateResult } from "./manifest";
+import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
 } from "./mse";
-import { ITrackType } from "./public_types";
-import { ITextDisplayerData } from "./text_displayer";
-import { ITransportOptions } from "./transports";
-import { ILoggerLevel } from "./utils/logger";
-import { IRange } from "./utils/ranges";
+import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
+import type { ITrackType } from "./public_types";
+import type { ITransportOptions } from "./transports";
+import type { ILoggerLevel } from "./utils/logger";
+import type { IRange } from "./utils/ranges";
 
 /**
  * First message sent by the main thread to the WebWorker.
@@ -51,10 +41,10 @@ import { IRange } from "./utils/ranges";
  * Allows for WebWorker initialization.
  */
 export interface IInitMessage {
-  type : MainThreadMessageType.Init;
-  value : {
+  type: MainThreadMessageType.Init;
+  value: {
     /** Link to the DASH_WASM's feature WebAssembly file to parse DASH MPDs. */
-    dashWasmUrl: string;
+    dashWasmUrl: string | undefined;
     /**
      * If `true` the final element on the current page displaying the content
      * can display video content.
@@ -106,46 +96,46 @@ export interface IContentInitializationData {
    *
    * Protects against all kind of race conditions or asynchronous issues.
    */
-  contentId : string;
+  contentId: string;
   /**
    * URL at which the content's Manifest is accessible.
    * `undefined` if unknown.
    */
-  url? : string | undefined;
+  url?: string | undefined;
   /** If `true`, text buffer (e.g. for subtitles) is enabled. */
-  hasText : boolean;
+  hasText: boolean;
   /**
    * Options relative to the streaming protocol.
    *
    * Options not yet supported in a WebWorker environment are omitted.
    */
-  transportOptions : Omit<
+  transportOptions: Omit<
     ITransportOptions,
     "manifestLoader" | "segmentLoader" | "representationFilter"
   > & {
     // Unsupported features have to be disabled explicitely
     // TODO support them
-    manifestLoader : undefined;
-    segmentLoader : undefined;
+    manifestLoader: undefined;
+    segmentLoader: undefined;
 
     // Option which has to be set as a Funtion string to work.
-    representationFilter : string | undefined;
+    representationFilter: string | undefined;
   };
   /** Initial video bitrate on which the adaptive logic will base itself. */
-  initialVideoBitrate? : number | undefined;
+  initialVideoBitrate?: number | undefined;
   /** Initial audio bitrate on which the adaptive logic will base itself. */
-  initialAudioBitrate? : number | undefined;
+  initialAudioBitrate?: number | undefined;
   /**
    * Options relative to the fetching and refreshing of the Manifest.
    */
-  manifestRetryOptions : IManifestFetcherSettings;
+  manifestRetryOptions: IManifestFetcherSettings;
   /** Options relative to the fetching of media segments. */
-  segmentRetryOptions : ISegmentFetcherCreatorBackoffOptions;
+  segmentRetryOptions: ISegmentFetcherCreatorBackoffOptions;
 }
 
 export interface ILogLevelUpdateMessage {
-  type : MainThreadMessageType.LogLevelUpdate;
-  value :  {
+  type: MainThreadMessageType.LogLevelUpdate;
+  value: {
     /** The new logger level that should be set. */
     logLevel: ILoggerLevel;
     sendBackLogs: boolean;
@@ -163,8 +153,8 @@ export interface ILogLevelUpdateMessage {
  * can stop the preparation of previous contents.
  */
 export interface IPrepareContentMessage {
-  type : MainThreadMessageType.PrepareContent;
-  value : IContentInitializationData;
+  type: MainThreadMessageType.PrepareContent;
+  value: IContentInitializationData;
 }
 
 /**
@@ -173,7 +163,7 @@ export interface IPrepareContentMessage {
  * associated resources.
  */
 export interface IStopContentMessage {
-  type : MainThreadMessageType.StopContent;
+  type: MainThreadMessageType.StopContent;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    *
@@ -189,7 +179,7 @@ export interface IStopContentMessage {
  * (through a `IPrepareContentMessage`).
  */
 export interface IStartPreparedContentMessage {
-  type : MainThreadMessageType.StartPreparedContent;
+  type: MainThreadMessageType.StartPreparedContent;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    *
@@ -197,28 +187,28 @@ export interface IStartPreparedContentMessage {
    * the one meant by the main thread.
    */
   contentId: string;
-  value : IStartPreparedContentMessageValue;
+  value: IStartPreparedContentMessageValue;
 }
 
 /** Options needed when starting a new content. */
 export interface IStartPreparedContentMessageValue {
   /** The start time at which we should play, in seconds. */
-  initialTime : number;
+  initialTime: number;
   /** The current playback observation. */
-  initialObservation : IWorkerPlaybackObservation;
+  initialObservation: ISerializedPlaybackObservation;
   /**
    * Hex-encoded string identifying the key system used.
    * May be cross-referenced with the content's metadata when performing
    * optimizations.
    */
-  drmSystemId : string | undefined;
+  drmSystemId: string | undefined;
   /**
    * Enable/Disable fastSwitching: allow to replace lower-quality segments by
    * higher-quality ones to have a faster transition.
    */
-  enableFastSwitching : boolean;
+  enableFastSwitching: boolean;
   /** Behavior when a new video and/or audio codec is encountered. */
-  onCodecSwitch : "continue" | "reload";
+  onCodecSwitch: "continue" | "reload";
 
   // TODO prepare chosen Adaptations here?
   // In which case the Period's `id` should probably be given instead of the
@@ -231,8 +221,8 @@ export interface IStartPreparedContentMessageValue {
  * (e.g. their support was not set in a Manifest).
  */
 export interface ICodecSupportUpdateMessage {
-  type : MainThreadMessageType.CodecSupportUpdate;
-  value : Array<{
+  type: MainThreadMessageType.CodecSupportUpdate;
+  value: Array<{
     /** The corresponding codec (e.g. "ec-3"). */
     codec: string;
     /** The mime-type associated (e.g. "audio/mp4"). */
@@ -254,14 +244,14 @@ export interface ICodecSupportUpdateMessage {
  * `contentId`.
  */
 export interface IPlaybackObservationMessage {
-  type : MainThreadMessageType.PlaybackObservation;
+  type: MainThreadMessageType.PlaybackObservation;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    * Allows to prevent race conditions.
    */
   contentId: string;
   /** The media-related metadata that has just been observed now. */
-  value : IWorkerPlaybackObservation;
+  value: ISerializedPlaybackObservation;
 }
 
 /**
@@ -274,14 +264,14 @@ export interface IPlaybackObservationMessage {
  *   - had its decipherability status transition from being known to unknown
  */
 export interface IDecipherabilityStatusChangedMessage {
-  type : MainThreadMessageType.DecipherabilityStatusUpdate;
+  type: MainThreadMessageType.DecipherabilityStatusUpdate;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    * Allows to prevent race conditions.
    */
   contentId: string;
   /** List of the `Representation` which had their decipherability status updated. */
-  value : IDecipherabilityStatusChangedPayload[];
+  value: IDecipherabilityStatusChangedPayload[];
 }
 
 /** Object describing the new decipherability status of a `Representation`. */
@@ -301,14 +291,14 @@ export interface IDecipherabilityStatusChangedPayload {
 
 /** Message allowing to update the URL of the content being played. */
 export interface IUpdateContentUrlsMessage {
-  type : MainThreadMessageType.ContentUrlsUpdate;
+  type: MainThreadMessageType.ContentUrlsUpdate;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    * Allows to prevent race conditions.
    */
   contentId: string;
   /** Information on the new URL to set. */
-  value : IUpdateContentUrlsMessageValue;
+  value: IUpdateContentUrlsMessageValue;
 }
 
 /** Payload of an `IUpdateContentUrlsMessage`. */
@@ -317,66 +307,66 @@ export interface IUpdateContentUrlsMessageValue {
    * URLs to reach that Manifest from the most prioritized URL to the least
    * prioritized URL.
    */
-  urls : string[] | undefined;
+  urls: string[] | undefined;
   /**
    * If `true` the resource in question (e.g. DASH's MPD) will be refreshed
    * immediately.
    */
-  refreshNow : boolean;
+  refreshNow: boolean;
 }
 
 export interface ITrackUpdateMessage {
-  type : MainThreadMessageType.TrackUpdate;
+  type: MainThreadMessageType.TrackUpdate;
   contentId: string;
-  value : {
-    periodId : string;
-    bufferType : ITrackType;
-    choice : ITrackUpdateChoiceObject | null | undefined;
+  value: {
+    periodId: string;
+    bufferType: ITrackType;
+    choice: ITrackUpdateChoiceObject | null | undefined;
   };
 }
 
 export interface ITrackUpdateChoiceObject {
   /** The Adaptation choosen. */
-  adaptationId : string;
+  adaptationId: string;
 
   /** "Switching mode" in which the track switch should happen. */
-  switchingMode : ITrackSwitchingMode;
+  switchingMode: ITrackSwitchingMode;
 
   /**
    * Shared reference allowing to indicate which Representations from
    * that Adaptation are allowed.
    */
-  initialRepresentations : IRepresentationsChoice;
+  initialRepresentations: IRepresentationsChoice;
 
   /** Relative resuming position after a track change */
-  relativeResumingPosition: number | undefined;
+  relativeResumingPosition: number | undefined;
 }
 
 export interface IRepresentationUpdateMessage {
-  type : MainThreadMessageType.RepresentationUpdate;
+  type: MainThreadMessageType.RepresentationUpdate;
   contentId: string;
-  value : {
-    periodId : string;
-    bufferType : ITrackType;
-    adaptationId : string;
-    choice : IRepresentationsChoice;
+  value: {
+    periodId: string;
+    bufferType: ITrackType;
+    adaptationId: string;
+    choice: IRepresentationsChoice;
   };
 }
 
 /** Media-related metadata. */
-export interface IWorkerPlaybackObservation {
+export interface ISerializedPlaybackObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused : IPausedPlaybackObservation;
-  position : [number, number | null];
+  paused: IPausedPlaybackObservation;
+  position: [number, number | null];
   /** `readyState` property of the HTMLMediaElement. */
   readyState: number;
   /** Target playback rate at which we want to play the content. */
   speed: number;
   /** Theoretical maximum position on the content that can currently be played. */
-  maximumPosition : number;
+  maximumPosition: number;
   /**
    * Ranges of buffered data per type of media.
    *
@@ -385,14 +375,14 @@ export interface IWorkerPlaybackObservation {
    * `null` as a `buffered` value if this could not have been obtained on the
    * current environment (e.g. in the main thread).
    */
-  buffered : Record<ITrackType, IRange[] | null>;
-  duration : number;
+  buffered: Record<ITrackType, IRange[] | null>;
+  duration: number;
   /**
    * Set if the player is short on audio and/or video media data and is a such,
    * rebuffering.
    * `null` if not.
    */
-  rebuffering : IRebufferingStatus | null;
+  rebuffering: IRebufferingStatus | null;
   /**
    * Set if the player is frozen, that is, stuck in place for unknown reason.
    * Note that this reason can be a valid one, such as a necessary license not
@@ -400,13 +390,13 @@ export interface IWorkerPlaybackObservation {
    *
    * `null` if the player is not frozen.
    */
-  freezing : IFreezingStatus | null;
+  freezing: IFreezingStatus | null;
   /**
    * Gap between `currentTime` and the next position with un-buffered data.
    * `Infinity` if we don't have buffered data right now.
    * `undefined` if we cannot determine the buffer gap.
    */
-  bufferGap : number | undefined;
+  bufferGap: number | undefined;
 }
 
 /**
@@ -449,13 +439,15 @@ export interface ISourceBufferErrorMainMessage {
   sourceBufferType: SourceBufferType;
   /** Identify the corresponding SourceBuffer operation. */
   operationId: string;
-  value: ISerializedSourceBufferError | {
-    /**
-     * Identify a cancellation-specific error (the corresponding operation
-     * was cancelled.
-     */
-    errorName: "CancellationError";
-  };
+  value:
+    | ISerializedSourceBufferError
+    | {
+        /**
+         * Identify a cancellation-specific error (the corresponding operation
+         * was cancelled.
+         */
+        errorName: "CancellationError";
+      };
 }
 
 /**
@@ -512,18 +504,22 @@ export interface IRemoveTextDataErrorMessage {
  * choosen for it) and `TRefType` is the type of its value.
  */
 export interface IReferenceUpdate<TRefName extends string, TRefType> {
-  type : MainThreadMessageType.ReferenceUpdate;
-  value : { name : TRefName;
-            newVal : TRefType; };
+  type: MainThreadMessageType.ReferenceUpdate;
+  value: { name: TRefName; newVal: TRefType };
 }
 
 export type IReferenceUpdateMessage =
-  IReferenceUpdate<"wantedBufferAhead", number> |
-  IReferenceUpdate<"maxVideoBufferSize", number> |
-  IReferenceUpdate<"maxBufferBehind", number> |
-  IReferenceUpdate<"maxBufferAhead", number> |
-  IReferenceUpdate<"limitVideoResolution", IResolutionInfo> |
-  IReferenceUpdate<"throttleVideoBitrate", number>;
+  | IReferenceUpdate<"wantedBufferAhead", number>
+  | IReferenceUpdate<"maxVideoBufferSize", number>
+  | IReferenceUpdate<"maxBufferBehind", number>
+  | IReferenceUpdate<"maxBufferAhead", number>
+  | IReferenceUpdate<"limitVideoResolution", IResolutionInfo>
+  | IReferenceUpdate<"throttleVideoBitrate", number>;
+
+export interface IPullSegmentSinkStoreInfos {
+  type: MainThreadMessageType.PullSegmentSinkStoreInfos;
+  value: { messageId: number };
+}
 
 export const enum MainThreadMessageType {
   Init = "init",
@@ -545,33 +541,36 @@ export const enum MainThreadMessageType {
   StartPreparedContent = "start",
   StopContent = "stop",
   TrackUpdate = "track-update",
+  PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
 }
 
 export type IMainThreadMessage =
-  IInitMessage |
-  ILogLevelUpdateMessage |
-  IPrepareContentMessage |
-  IStopContentMessage |
-  IStartPreparedContentMessage |
-  IReferenceUpdateMessage |
-  ICodecSupportUpdateMessage |
-  IPlaybackObservationMessage |
-  IDecipherabilityStatusChangedMessage |
-  IUpdateContentUrlsMessage |
-  ISourceBufferErrorMainMessage |
-  ISourceBufferOperationSuccessMainMessage |
-  ITrackUpdateMessage |
-  IRepresentationUpdateMessage |
-  IPushTextDataSuccessMessage |
-  IRemoveTextDataSuccessMessage |
-  IPushTextDataErrorMessage |
-  IRemoveTextDataErrorMessage |
-  IMediaSourceReadyStateChangeMainMessage;
+  | IInitMessage
+  | ILogLevelUpdateMessage
+  | IPrepareContentMessage
+  | IStopContentMessage
+  | IStartPreparedContentMessage
+  | IReferenceUpdateMessage
+  | ICodecSupportUpdateMessage
+  | IPlaybackObservationMessage
+  | IDecipherabilityStatusChangedMessage
+  | IUpdateContentUrlsMessage
+  | ISourceBufferErrorMainMessage
+  | ISourceBufferOperationSuccessMainMessage
+  | ITrackUpdateMessage
+  | IRepresentationUpdateMessage
+  | IPushTextDataSuccessMessage
+  | IRemoveTextDataSuccessMessage
+  | IPushTextDataErrorMessage
+  | IRemoveTextDataErrorMessage
+  | IMediaSourceReadyStateChangeMainMessage
+  | IPullSegmentSinkStoreInfos;
 
-export type ISentError = ISerializedNetworkError |
-                         ISerializedMediaError |
-                         ISerializedEncryptedMediaError |
-                         ISerializedOtherError;
+export type ISentError =
+  | ISerializedNetworkError
+  | ISerializedMediaError
+  | ISerializedEncryptedMediaError
+  | ISerializedOtherError;
 
 /**
  * Message sent by the WebWorker when its initialization, started implicitely
@@ -614,49 +613,51 @@ export interface IInitErrorWorkerMessage {
 export interface INeedsBufferFlushWorkerMessage {
   type: WorkerMessageType.NeedsBufferFlush;
   contentId: string;
-  value: { relativeResumingPosition: number;
-           relativePosHasBeenDefaulted: boolean;
-  } | undefined;
+  value:
+    | { relativeResumingPosition: number; relativePosHasBeenDefaulted: boolean }
+    | undefined;
 }
 
 export interface IActivePeriodChangedWorkerMessage {
-  type : WorkerMessageType.ActivePeriodChanged;
-  contentId : string;
-  value : {
-    periodId : string;
+  type: WorkerMessageType.ActivePeriodChanged;
+  contentId: string;
+  value: {
+    periodId: string;
   };
 }
 
 export interface IWarningWorkerMessage {
-  type : WorkerMessageType.Warning;
-  contentId : string | undefined;
-  value : ISentError;
+  type: WorkerMessageType.Warning;
+  contentId: string | undefined;
+  value: ISentError;
 }
 
 export interface IAttachMediaSourceWorkerMessage {
-  type : WorkerMessageType.AttachMediaSource;
-  contentId : string | undefined;
-  mediaSourceId : string | undefined;
-  value : IAttachMediaSourceWorkerMessagePayload;
+  type: WorkerMessageType.AttachMediaSource;
+  contentId: string | undefined;
+  mediaSourceId: string | undefined;
+  value: IAttachMediaSourceWorkerMessagePayload;
 }
 
-export type IAttachMediaSourceWorkerMessagePayload = {
-  type : "handle";
-  value : MediaProvider;
-} | {
-  type : "url";
-  value : string;
-};
+export type IAttachMediaSourceWorkerMessagePayload =
+  | {
+      type: "handle";
+      value: MediaProvider;
+    }
+  | {
+      type: "url";
+      value: string;
+    };
 
 export interface ICreateMediaSourceWorkerMessage {
-  type : WorkerMessageType.CreateMediaSource;
-  mediaSourceId : string;
-  contentId : string;
+  type: WorkerMessageType.CreateMediaSource;
+  mediaSourceId: string;
+  contentId: string;
 }
 
 export interface IAddSourceBufferWorkerMessage {
-  type : WorkerMessageType.AddSourceBuffer;
-  mediaSourceId : string;
+  type: WorkerMessageType.AddSourceBuffer;
+  mediaSourceId: string;
   value: {
     sourceBufferType: SourceBufferType;
     codec: string;
@@ -664,22 +665,22 @@ export interface IAddSourceBufferWorkerMessage {
 }
 
 export interface IAppendBufferWorkerMessage {
-  type : WorkerMessageType.SourceBufferAppend;
-  mediaSourceId : string;
-  sourceBufferType : SourceBufferType;
+  type: WorkerMessageType.SourceBufferAppend;
+  mediaSourceId: string;
+  sourceBufferType: SourceBufferType;
   operationId: string;
-  value : {
+  value: {
     data: BufferSource;
     params: ISourceBufferInterfaceAppendBufferParameters;
   };
 }
 
 export interface IRemoveBufferWorkerMessage {
-  type : WorkerMessageType.SourceBufferRemove;
-  mediaSourceId : string;
-  sourceBufferType : SourceBufferType;
+  type: WorkerMessageType.SourceBufferRemove;
+  mediaSourceId: string;
+  sourceBufferType: SourceBufferType;
   operationId: string;
-  value : {
+  value: {
     /** Start time we should remove data from, in seconds. */
     start: number;
     /** End time we should remove data at, in seconds. */
@@ -688,49 +689,49 @@ export interface IRemoveBufferWorkerMessage {
 }
 
 export interface IAbortBufferWorkerMessage {
-  type : WorkerMessageType.AbortSourceBuffer;
-  mediaSourceId : string;
-  sourceBufferType : SourceBufferType;
-  value : null;
+  type: WorkerMessageType.AbortSourceBuffer;
+  mediaSourceId: string;
+  sourceBufferType: SourceBufferType;
+  value: null;
 }
 
 export interface IUpdateMediaSourceDurationWorkerMessage {
-  type : WorkerMessageType.UpdateMediaSourceDuration;
-  mediaSourceId : string;
-  value : {
+  type: WorkerMessageType.UpdateMediaSourceDuration;
+  mediaSourceId: string;
+  value: {
     duration: number;
     isRealEndKnown: boolean;
   };
 }
 
 export interface IInterruptMediaSourceDurationWorkerMessage {
-  type : WorkerMessageType.InterruptMediaSourceDurationUpdate;
-  mediaSourceId : string;
-  value : null;
+  type: WorkerMessageType.InterruptMediaSourceDurationUpdate;
+  mediaSourceId: string;
+  value: null;
 }
 
 export interface IEndOfStreamWorkerMessage {
-  type : WorkerMessageType.EndOfStream;
-  mediaSourceId : string;
-  value : null;
+  type: WorkerMessageType.EndOfStream;
+  mediaSourceId: string;
+  value: null;
 }
 
 export interface IStopEndOfStreamWorkerMessage {
-  type : WorkerMessageType.InterruptEndOfStream;
-  mediaSourceId : string;
-  value : null;
+  type: WorkerMessageType.InterruptEndOfStream;
+  mediaSourceId: string;
+  value: null;
 }
 
 export interface IDisposeMediaSourceWorkerMessage {
-  type : WorkerMessageType.DisposeMediaSource;
-  mediaSourceId : string;
-  value : null;
+  type: WorkerMessageType.DisposeMediaSource;
+  mediaSourceId: string;
+  value: null;
 }
 
 export interface IAdaptationChangeWorkerMessage {
-  type : WorkerMessageType.AdaptationChanged;
-  contentId : string;
-  value : {
+  type: WorkerMessageType.AdaptationChanged;
+  contentId: string;
+  value: {
     adaptationId: string | null;
     periodId: string;
     type: ITrackType;
@@ -738,9 +739,9 @@ export interface IAdaptationChangeWorkerMessage {
 }
 
 export interface IRepresentationChangeWorkerMessage {
-  type : WorkerMessageType.RepresentationChanged;
-  contentId : string;
-  value : {
+  type: WorkerMessageType.RepresentationChanged;
+  contentId: string;
+  value: {
     adaptationId: string;
     representationId: string | null;
     periodId: string;
@@ -749,66 +750,68 @@ export interface IRepresentationChangeWorkerMessage {
 }
 
 export interface IManifestReadyWorkerMessage {
-  type : WorkerMessageType.ManifestReady;
-  contentId : string;
-  value : { manifest : IManifestMetadata };
+  type: WorkerMessageType.ManifestReady;
+  contentId: string;
+  value: { manifest: IManifestMetadata };
 }
 
 export interface IManifestUpdateWorkerMessage {
-  type : WorkerMessageType.ManifestUpdate;
-  contentId : string | undefined;
-  value : { manifest: IManifestMetadata; // TODO only subpart that changed?
-            updates : IPeriodsUpdateResult; };
+  type: WorkerMessageType.ManifestUpdate;
+  contentId: string | undefined;
+  value: {
+    manifest: IManifestMetadata; // TODO only subpart that changed?
+    updates: IPeriodsUpdateResult;
+  };
 }
 
 export interface IEncryptionDataEncounteredWorkerMessage {
-  type : WorkerMessageType.EncryptionDataEncountered;
-  contentId : string | undefined;
-  value : IContentProtection;
+  type: WorkerMessageType.EncryptionDataEncountered;
+  contentId: string | undefined;
+  value: IContentProtection;
 }
 
 export interface IErrorWorkerMessage {
-  type : WorkerMessageType.Error;
-  contentId : string | undefined;
-  value : ISentError;
+  type: WorkerMessageType.Error;
+  contentId: string | undefined;
+  value: ISentError;
 }
 
 export interface IUpdatePlaybackRateWorkerMessage {
-  type : WorkerMessageType.UpdatePlaybackRate;
-  contentId : string | undefined;
-  value : number;
+  type: WorkerMessageType.UpdatePlaybackRate;
+  contentId: string | undefined;
+  value: number;
 }
 
 export interface IReloadingMediaSourceWorkerMessage {
-  type : WorkerMessageType.ReloadingMediaSource;
-  contentId : string;
-  value : {
-    timeOffset : number;
-    minimumPosition? : number | undefined;
-    maximumPosition? : number | undefined;
+  type: WorkerMessageType.ReloadingMediaSource;
+  contentId: string;
+  value: {
+    timeOffset: number;
+    minimumPosition?: number | undefined;
+    maximumPosition?: number | undefined;
   };
 }
 
 export interface INeedsDecipherabilityFlushWorkerMessage {
-  type : WorkerMessageType.NeedsDecipherabilityFlush;
-  contentId : string;
-  value : null;
+  type: WorkerMessageType.NeedsDecipherabilityFlush;
+  contentId: string;
+  value: null;
 }
 
 export interface ILockedStreamWorkerMessage {
-  type : WorkerMessageType.LockedStream;
-  contentId : string;
-  value : {
+  type: WorkerMessageType.LockedStream;
+  contentId: string;
+  value: {
     /** Period concerned. */
-    periodId : string;
+    periodId: string;
     /** Buffer type concerned. */
-    bufferType : ITrackType;
+    bufferType: ITrackType;
   };
 }
 
 export interface IBitrateEstimateChangeWorkerMessage {
   type: WorkerMessageType.BitrateEstimateChange;
-  contentId : string;
+  contentId: string;
   value: {
     bitrate: number | undefined;
     bufferType: ITrackType;
@@ -817,78 +820,78 @@ export interface IBitrateEstimateChangeWorkerMessage {
 
 export interface IInbandEventWorkerMessage {
   type: WorkerMessageType.InbandEvent;
-  contentId : string;
+  contentId: string;
   value: IInbandEvent[];
 }
 
 export interface IPeriodStreamReadyWorkerMessage {
-  type : WorkerMessageType.PeriodStreamReady;
-  contentId : string;
-  value : {
+  type: WorkerMessageType.PeriodStreamReady;
+  contentId: string;
+  value: {
     /** Period concerned. */
-    periodId : string;
+    periodId: string;
     /** Buffer type concerned. */
-    bufferType : ITrackType;
+    bufferType: ITrackType;
   };
 }
 
 export interface IPeriodStreamClearedWorkerMessage {
-  type : WorkerMessageType.PeriodStreamCleared;
-  contentId : string;
-  value : {
+  type: WorkerMessageType.PeriodStreamCleared;
+  contentId: string;
+  value: {
     /** `id` of the Period concerned. */
-    periodId : string;
+    periodId: string;
     /** Buffer type concerned. */
-    bufferType : ITrackType;
+    bufferType: ITrackType;
   };
 }
 
 export interface IPushTextDataWorkerMessage {
-  type : WorkerMessageType.PushTextData;
-  contentId : string;
-  value : ITextDisplayerData;
+  type: WorkerMessageType.PushTextData;
+  contentId: string;
+  value: ITextDisplayerData;
 }
 
 export interface IRemoveTextDataWorkerMessage {
-  type : WorkerMessageType.RemoveTextData;
-  contentId : string;
-  value : {
-    start : number;
-    end : number;
+  type: WorkerMessageType.RemoveTextData;
+  contentId: string;
+  value: {
+    start: number;
+    end: number;
   };
 }
 
 export interface IStopTextDisplayerWorkerMessage {
-  type : WorkerMessageType.StopTextDisplayer;
-  contentId : string;
-  value : null;
+  type: WorkerMessageType.StopTextDisplayer;
+  contentId: string;
+  value: null;
 }
 
 export interface IResetTextDisplayerWorkerMessage {
-  type : WorkerMessageType.ResetTextDisplayer;
-  contentId : string;
-  value : null;
+  type: WorkerMessageType.ResetTextDisplayer;
+  contentId: string;
+  value: null;
 }
 
 export interface ILogMessageWorkerMessage {
-  type : WorkerMessageType.LogMessage;
-  value : {
+  type: WorkerMessageType.LogMessage;
+  value: {
     logLevel: ILoggerLevel;
     logs: Array<boolean | string | number | ISentError | null | undefined>;
   };
 }
 
 export interface IDiscontinuityUpdateWorkerMessage {
-  type : WorkerMessageType.DiscontinuityUpdate;
-  contentId : string;
-  value : IDiscontinuityUpdateWorkerMessagePayload;
+  type: WorkerMessageType.DiscontinuityUpdate;
+  contentId: string;
+  value: IDiscontinuityUpdateWorkerMessagePayload;
 }
 
 export interface IDiscontinuityUpdateWorkerMessagePayload {
-  periodId : string;
-  bufferType : ITrackType;
-  discontinuity : IDiscontinuityTimeInfo | null;
-  position : number;
+  periodId: string;
+  bufferType: ITrackType;
+  discontinuity: IDiscontinuityTimeInfo | null;
+  position: number;
 }
 
 /** Information on a found discontinuity. */
@@ -899,12 +902,21 @@ export interface IDiscontinuityTimeInfo {
    * currently encountered at the position we were in when this event was
    * created.
    */
-  start : number | undefined;
+  start: number | undefined;
   /**
    * End time of the discontinuity, in seconds.
    * If `null`, no further segment can be loaded for the corresponding Period.
    */
-  end : number | null;
+  end: number | null;
+}
+
+export interface ISegmentSinkStoreUpdateMessage {
+  type: WorkerMessageType.SegmentSinkStoreUpdate;
+  contentId: string;
+  value: {
+    segmentSinkMetrics: ISegmentSinkMetrics;
+    messageId: number;
+  };
 }
 
 export const enum WorkerMessageType {
@@ -944,41 +956,44 @@ export const enum WorkerMessageType {
   UpdateMediaSourceDuration = "update-media-source-duration",
   UpdatePlaybackRate = "update-playback-rate",
   Warning = "warning",
+  SegmentSinkStoreUpdate = "segment-sink-store-update",
 }
 
-export type IWorkerMessage = IAbortBufferWorkerMessage |
-                             IActivePeriodChangedWorkerMessage |
-                             IAdaptationChangeWorkerMessage |
-                             IAddSourceBufferWorkerMessage |
-                             IPushTextDataWorkerMessage |
-                             IAppendBufferWorkerMessage |
-                             IAttachMediaSourceWorkerMessage |
-                             IBitrateEstimateChangeWorkerMessage |
-                             ICreateMediaSourceWorkerMessage |
-                             IDiscontinuityUpdateWorkerMessage |
-                             IDisposeMediaSourceWorkerMessage |
-                             IEncryptionDataEncounteredWorkerMessage |
-                             IEndOfStreamWorkerMessage |
-                             IErrorWorkerMessage |
-                             IInbandEventWorkerMessage |
-                             IInitSuccessWorkerMessage |
-                             IInitErrorWorkerMessage |
-                             IInterruptMediaSourceDurationWorkerMessage |
-                             ILockedStreamWorkerMessage |
-                             ILogMessageWorkerMessage |
-                             IManifestReadyWorkerMessage |
-                             IManifestUpdateWorkerMessage |
-                             INeedsBufferFlushWorkerMessage |
-                             INeedsDecipherabilityFlushWorkerMessage |
-                             IPeriodStreamClearedWorkerMessage |
-                             IPeriodStreamReadyWorkerMessage |
-                             IReloadingMediaSourceWorkerMessage |
-                             IRemoveBufferWorkerMessage |
-                             IRemoveTextDataWorkerMessage |
-                             IRepresentationChangeWorkerMessage |
-                             IResetTextDisplayerWorkerMessage |
-                             IStopEndOfStreamWorkerMessage |
-                             IStopTextDisplayerWorkerMessage |
-                             IUpdateMediaSourceDurationWorkerMessage |
-                             IUpdatePlaybackRateWorkerMessage |
-                             IWarningWorkerMessage;
+export type IWorkerMessage =
+  | IAbortBufferWorkerMessage
+  | IActivePeriodChangedWorkerMessage
+  | IAdaptationChangeWorkerMessage
+  | IAddSourceBufferWorkerMessage
+  | IPushTextDataWorkerMessage
+  | IAppendBufferWorkerMessage
+  | IAttachMediaSourceWorkerMessage
+  | IBitrateEstimateChangeWorkerMessage
+  | ICreateMediaSourceWorkerMessage
+  | IDiscontinuityUpdateWorkerMessage
+  | IDisposeMediaSourceWorkerMessage
+  | IEncryptionDataEncounteredWorkerMessage
+  | IEndOfStreamWorkerMessage
+  | IErrorWorkerMessage
+  | IInbandEventWorkerMessage
+  | IInitSuccessWorkerMessage
+  | IInitErrorWorkerMessage
+  | IInterruptMediaSourceDurationWorkerMessage
+  | ILockedStreamWorkerMessage
+  | ILogMessageWorkerMessage
+  | IManifestReadyWorkerMessage
+  | IManifestUpdateWorkerMessage
+  | INeedsBufferFlushWorkerMessage
+  | INeedsDecipherabilityFlushWorkerMessage
+  | IPeriodStreamClearedWorkerMessage
+  | IPeriodStreamReadyWorkerMessage
+  | IReloadingMediaSourceWorkerMessage
+  | IRemoveBufferWorkerMessage
+  | IRemoveTextDataWorkerMessage
+  | IRepresentationChangeWorkerMessage
+  | IResetTextDisplayerWorkerMessage
+  | IStopEndOfStreamWorkerMessage
+  | IStopTextDisplayerWorkerMessage
+  | IUpdateMediaSourceDurationWorkerMessage
+  | IUpdatePlaybackRateWorkerMessage
+  | IWarningWorkerMessage
+  | ISegmentSinkStoreUpdateMessage;

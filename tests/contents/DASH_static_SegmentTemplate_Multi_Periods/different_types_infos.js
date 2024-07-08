@@ -1,9 +1,11 @@
-const BASE_URL = "http://" +
-               /* eslint-disable no-undef */
-               __TEST_CONTENT_SERVER__.URL + ":" +
-               __TEST_CONTENT_SERVER__.PORT +
-               /* eslint-enable no-undef */
-               "/DASH_static_SegmentTemplate_Multi_Periods/media/";
+const BASE_URL =
+  "http://" +
+  /* eslint-disable no-undef */
+  __TEST_CONTENT_SERVER__.URL +
+  ":" +
+  __TEST_CONTENT_SERVER__.PORT +
+  /* eslint-enable no-undef */
+  "/DASH_static_SegmentTemplate_Multi_Periods/media/";
 
 export default {
   url: BASE_URL + "different_types_discontinuity.mpd",
@@ -211,7 +213,7 @@ export default {
                       url: "mp4-live-periods-aaclc-13.m4s",
                     },
                     {
-                      time: 120 + (440029 / 44100),
+                      time: 120 + 440029 / 44100,
                       duration: 440029 / 44100,
                       timescale: 1,
                       url: "mp4-live-periods-aaclc-14.m4s",

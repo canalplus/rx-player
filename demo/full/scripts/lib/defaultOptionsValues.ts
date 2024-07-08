@@ -1,4 +1,7 @@
-import type { IConstructorOptions, ILoadVideoOptions } from "../../../../src/public_types";
+import type {
+  IConstructorOptions,
+  ILoadVideoOptions,
+} from "../../../../src/public_types";
 
 const defaultOptionsValues = {
   player: {
@@ -25,7 +28,10 @@ const defaultOptionsValues = {
     },
     onCodecSwitch: "continue",
   },
-} satisfies { player: IConstructorOptions, loadVideo: Omit<ILoadVideoOptions, "transport"> };
+} satisfies {
+  player: IConstructorOptions;
+  loadVideo: Omit<ILoadVideoOptions, "transport">;
+};
 
 export type IConstructorSettings = typeof defaultOptionsValues.player;
 export type ILoadVideoSettings = typeof defaultOptionsValues.loadVideo;

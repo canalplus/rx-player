@@ -23,7 +23,7 @@ function Input({
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       onChange(evt.target.value);
     },
-    [onChange]
+    [onChange],
   );
   return (
     <input

@@ -16,19 +16,20 @@
 
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import features from "./features_object";
-import { IFeature } from "./types";
+import type { IFeature } from "./types";
 
 /**
  * @param {Array.<Object>} featureFuncList
  */
-export default function addFeatures(featureFuncList : IFeature[]) : void {
+export default function addFeatures(featureFuncList: IFeature[]): void {
   for (let i = 0; i < featureFuncList.length; i++) {
     const addFeature = featureFuncList[i];
     if (typeof addFeature === "function") {
       addFeature(features);
-    } else if (!isNullOrUndefined(addFeature) &&
-               typeof addFeature._addFeature === "function")
-    {
+    } else if (
+      !isNullOrUndefined(addFeature) &&
+      typeof addFeature._addFeature === "function"
+    ) {
       addFeature._addFeature(features);
     } else {
       throw new Error("Unrecognized feature");

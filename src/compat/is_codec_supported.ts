@@ -15,6 +15,7 @@
  */
 
 import log from "../log";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
 import isWorker from "../utils/is_worker";
 import { MediaSource_ } from "./browser_compatibility_types";
 
@@ -38,8 +39,8 @@ const supportMap: Map<string, boolean> = new Map();
  * codecs used within the file.
  * @returns {Boolean}
  */
-export default function isCodecSupported(mimeType : string) : boolean {
-  if (MediaSource_ == null) {
+export default function isCodecSupported(mimeType: string): boolean {
+  if (isNullOrUndefined(MediaSource_)) {
     if (isWorker) {
       log.error("Compat: Cannot request codec support in a worker without MSE.");
     }
@@ -48,7 +49,7 @@ export default function isCodecSupported(mimeType : string) : boolean {
 
   /* eslint-disable @typescript-eslint/unbound-method */
   if (typeof MediaSource_.isTypeSupported === "function") {
-  /* eslint-enable @typescript-eslint/unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     const cachedSupport = supportMap.get(mimeType);
     if (cachedSupport !== undefined) {
       return cachedSupport;
@@ -60,7 +61,6 @@ export default function isCodecSupported(mimeType : string) : boolean {
       supportMap.set(mimeType, isSupported);
       return isSupported;
     }
-
   }
 
   return true;

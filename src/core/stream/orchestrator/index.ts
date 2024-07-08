@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import StreamOrchestrator, {
+import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
 } from "./stream_orchestrator";
+import StreamOrchestrator from "./stream_orchestrator";
 
 export default StreamOrchestrator;
-export {
+export type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,

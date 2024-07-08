@@ -16,20 +16,13 @@
 
 import { NetworkError } from "../../../errors";
 import log from "../../../log";
-import {
-  IRepresentationIndex,
-  ISegment,
-} from "../../../manifest";
-import { IPlayerError } from "../../../public_types";
+import type { IRepresentationIndex, ISegment } from "../../../manifest";
+import type { IPlayerError } from "../../../public_types";
 import assert from "../../../utils/assert";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import {
-  checkDiscontinuity,
-  getIndexSegmentEnd,
-} from "../utils/index_helpers";
-import SharedSmoothSegmentTimeline, {
-  IIndexSegment,
-} from "./shared_smooth_segment_timeline";
+import { checkDiscontinuity, getIndexSegmentEnd } from "../utils/index_helpers";
+import type { IIndexSegment } from "./shared_smooth_segment_timeline";
+import type SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
 import { replaceSegmentSmoothTokens } from "./utils/tokens";
 
 /**
@@ -38,14 +31,9 @@ import { replaceSegmentSmoothTokens } from "./utils/tokens";
  * @param {Number} duration
  * @returns {Number}
  */
-function getSegmentNumber(
-  start : number,
-  up : number,
-  duration : number
-) : number {
+function getSegmentNumber(start: number, up: number, duration: number): number {
   const diff = up - start;
-  return diff > 0 ? Math.floor(diff / duration) :
-                    0;
+  return diff > 0 ? Math.floor(diff / duration) : 0;
 }
 
 /**
@@ -59,17 +47,12 @@ function getSegmentNumber(
  *   - to {Number}: timescaled timestamp of the end time (start time + duration)
  */
 function normalizeRange(
-  timescale : number | undefined,
-  start : number,
-  duration : number
-) : { up: number;
-      to: number; }
-{
-  const ts = timescale === undefined ||
-             timescale === 0 ? 1 :
-                               timescale;
-  return { up: start * ts,
-           to: (start + duration) * ts };
+  timescale: number | undefined,
+  start: number,
+  duration: number,
+): { up: number; to: number } {
+  const ts = timescale === undefined || timescale === 0 ? 1 : timescale;
+  return { up: start * ts, to: (start + duration) * ts };
 }
 
 /**
@@ -78,10 +61,7 @@ function normalizeRange(
  * @param {Object} nextSegment
  * @returns {Number}
  */
-function calculateRepeat(
-  segment : IIndexSegment,
-  nextSegment? : IIndexSegment
-) : number {
+function calculateRepeat(segment: IIndexSegment, nextSegment?: IIndexSegment): number {
   let repeatCount = segment.repeatCount;
 
   // A negative value of the @r attribute of the S element indicates
@@ -90,8 +70,7 @@ function calculateRepeat(
   // next MPD update.
   // TODO Also for SMOOTH????
   if (segment.duration !== undefined && repeatCount < 0) {
-    const repeatEnd = nextSegment !== undefined ? nextSegment.start :
-                                                  Infinity;
+    const repeatEnd = nextSegment !== undefined ? nextSegment.start : Infinity;
     repeatCount = Math.ceil((repeatEnd - segment.start) / segment.duration) - 1;
   }
 
@@ -108,31 +87,31 @@ export interface ISmoothRepresentationIndexContextInformation {
    * content.
    * `false` otherwise.
    */
-  isLive : boolean;
+  isLive: boolean;
   /**
    * Generic tokenized (e.g. with placeholders for time information) URL for
    * every segments anounced here.
    */
-  media : string;
+  media: string;
   /**
    * Contains information allowing to generate the corresponding initialization
    * segment.
    */
-  segmentPrivateInfos : ISmoothInitSegmentPrivateInfos;
+  segmentPrivateInfos: ISmoothInitSegmentPrivateInfos;
 
-  sharedSmoothTimeline : SharedSmoothSegmentTimeline;
+  sharedSmoothTimeline: SharedSmoothSegmentTimeline;
 }
 
 /** Information allowing to generate a Smooth initialization segment. */
 interface ISmoothInitSegmentPrivateInfos {
-  bitsPerSample? : number | undefined;
-  channels? : number | undefined;
-  codecPrivateData? : string | undefined;
-  packetSize? : number | undefined;
-  samplingRate? : number | undefined;
-  protection? : { keyId : Uint8Array } | undefined;
-  height? : number | undefined;
-  width? : number | undefined;
+  bitsPerSample?: number | undefined;
+  channels?: number | undefined;
+  codecPrivateData?: string | undefined;
+  packetSize?: number | undefined;
+  samplingRate?: number | undefined;
+  protection?: { keyId: Uint8Array } | undefined;
+  height?: number | undefined;
+  width?: number | undefined;
 }
 
 /**
@@ -147,15 +126,17 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Information needed to generate an initialization segment.
    * Taken from the Manifest.
    */
-  private _initSegmentInfos : { codecPrivateData? : string | undefined;
-                                bitsPerSample? : number | undefined;
-                                channels? : number | undefined;
-                                packetSize? : number | undefined;
-                                samplingRate? : number | undefined;
-                                timescale : number;
-                                height? : number | undefined;
-                                width? : number | undefined;
-                                protection? : { keyId : Uint8Array } | undefined; };
+  private _initSegmentInfos: {
+    codecPrivateData?: string | undefined;
+    bitsPerSample?: number | undefined;
+    channels?: number | undefined;
+    packetSize?: number | undefined;
+    samplingRate?: number | undefined;
+    timescale: number;
+    height?: number | undefined;
+    width?: number | undefined;
+    protection?: { keyId: Uint8Array } | undefined;
+  };
 
   /**
    * Value only calculated for live contents.
@@ -166,56 +147,53 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Useful to know if a segment present in the timeline has actually been
    * generated on the server-side
    */
-  private _scaledLiveGap : number | undefined;
+  private _scaledLiveGap: number | undefined;
 
   /**
    * Defines the end of the latest available segment when this index was known to
    * be valid, in the index's timescale.
    */
-  private _initialScaledLastPosition : number | undefined;
+  private _initialScaledLastPosition: number | undefined;
 
   /**
    * If `true` the corresponding Smooth Manifest was announced as a live
    * content.
    * `false` otherwise.
    */
-  private _isLive : boolean;
+  private _isLive: boolean;
 
   /**
    * Contains information on the list of segments available in this
    * SmoothRepresentationIndex.
    */
-  private _sharedSmoothTimeline : SharedSmoothSegmentTimeline;
+  private _sharedSmoothTimeline: SharedSmoothSegmentTimeline;
 
   /**
    * Generic tokenized (e.g. with placeholders for time information) URL for
    * every segments anounced here.
    */
-  private _media : string;
+  private _media: string;
 
   /**
    * Creates a new `SmoothRepresentationIndex`.
    * @param {Object} index
    * @param {Object} options
    */
-  constructor(
-    options : ISmoothRepresentationIndexContextInformation
-  ) {
-    const { isLive,
-            segmentPrivateInfos,
-            media,
-            sharedSmoothTimeline } = options;
+  constructor(options: ISmoothRepresentationIndexContextInformation) {
+    const { isLive, segmentPrivateInfos, media, sharedSmoothTimeline } = options;
     this._sharedSmoothTimeline = sharedSmoothTimeline;
 
-    this._initSegmentInfos = { bitsPerSample: segmentPrivateInfos.bitsPerSample,
-                               channels: segmentPrivateInfos.channels,
-                               codecPrivateData: segmentPrivateInfos.codecPrivateData,
-                               packetSize: segmentPrivateInfos.packetSize,
-                               samplingRate: segmentPrivateInfos.samplingRate,
-                               timescale: sharedSmoothTimeline.timescale,
-                               height: segmentPrivateInfos.height,
-                               width: segmentPrivateInfos.width,
-                               protection: segmentPrivateInfos.protection };
+    this._initSegmentInfos = {
+      bitsPerSample: segmentPrivateInfos.bitsPerSample,
+      channels: segmentPrivateInfos.channels,
+      codecPrivateData: segmentPrivateInfos.codecPrivateData,
+      packetSize: segmentPrivateInfos.packetSize,
+      samplingRate: segmentPrivateInfos.samplingRate,
+      timescale: sharedSmoothTimeline.timescale,
+      height: segmentPrivateInfos.height,
+      width: segmentPrivateInfos.width,
+      protection: segmentPrivateInfos.protection,
+    };
 
     this._isLive = isLive;
     this._media = media;
@@ -224,8 +202,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
       const { timeline, validityTime } = sharedSmoothTimeline;
       const lastItem = timeline[timeline.length - 1];
       const scaledEnd = getIndexSegmentEnd(lastItem, null);
-      const scaledTimelineValidityTime = (validityTime / 1000) *
-        sharedSmoothTimeline.timescale;
+      const scaledTimelineValidityTime =
+        (validityTime / 1000) * sharedSmoothTimeline.timescale;
       this._scaledLiveGap = scaledTimelineValidityTime - scaledEnd;
     }
   }
@@ -234,16 +212,18 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Construct init Segment compatible with a Smooth Manifest.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
-    return { id: "init",
-             isInit: true,
-             privateInfos: { smoothInitSegment: this._initSegmentInfos },
-             url: null,
-             time: 0,
-             end: 0,
-             duration: 0,
-             timescale: 1,
-             complete: true };
+  getInitSegment(): ISegment {
+    return {
+      id: "init",
+      isInit: true,
+      privateInfos: { smoothInitSegment: this._initSegmentInfos },
+      url: null,
+      time: 0,
+      end: 0,
+      duration: 0,
+      timescale: 1,
+      complete: true,
+    };
   }
 
   /**
@@ -253,20 +233,21 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * @param {Number} dur
    * @returns {Array.<Object>}
    */
-  getSegments(from : number, dur : number) : ISegment[] {
+  getSegments(from: number, dur: number): ISegment[] {
     this._refreshTimeline();
     const { timescale, timeline } = this._sharedSmoothTimeline;
     const { up, to } = normalizeRange(timescale, from, dur);
     const media = this._media;
 
-    let currentNumber : number|undefined;
-    const segments : ISegment[] = [];
+    let currentNumber: number | undefined;
+    const segments: ISegment[] = [];
 
     const timelineLength = timeline.length;
 
-    const maxPosition = this._scaledLiveGap === undefined ?
-      undefined :
-      ((getMonotonicTimeStamp() / 1000) * timescale) - this._scaledLiveGap;
+    const maxPosition =
+      this._scaledLiveGap === undefined
+        ? undefined
+        : (getMonotonicTimeStamp() / 1000) * timescale - this._scaledLiveGap;
 
     for (let i = 0; i < timelineLength; i++) {
       const segmentRange = timeline[i];
@@ -275,26 +256,29 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
       let segmentNumberInCurrentRange = getSegmentNumber(start, up, duration);
       let segmentTime = start + segmentNumberInCurrentRange * duration;
       const timeToAddToCheckMaxPosition = duration;
-      while (segmentTime < to &&
-             segmentNumberInCurrentRange <= repeat &&
-             (maxPosition === undefined ||
-             (segmentTime + timeToAddToCheckMaxPosition) <= maxPosition))
-      {
+      while (
+        segmentTime < to &&
+        segmentNumberInCurrentRange <= repeat &&
+        (maxPosition === undefined ||
+          segmentTime + timeToAddToCheckMaxPosition <= maxPosition)
+      ) {
         const time = segmentTime;
-        const number = currentNumber !== undefined ?
-          currentNumber + segmentNumberInCurrentRange :
-          undefined;
-        const segment = { id: String(segmentTime),
-                          isInit: false,
-                          time: time / timescale,
-                          end: (time + duration) / timescale,
-                          duration: duration / timescale,
-                          timescale: 1 as const,
-                          number,
-                          url: replaceSegmentSmoothTokens(media, time),
-                          complete: true,
-                          privateInfos: { smoothMediaSegment: { time,
-                                                                duration } } };
+        const number =
+          currentNumber !== undefined
+            ? currentNumber + segmentNumberInCurrentRange
+            : undefined;
+        const segment = {
+          id: String(segmentTime),
+          isInit: false,
+          time: time / timescale,
+          end: (time + duration) / timescale,
+          duration: duration / timescale,
+          timescale: 1 as const,
+          number,
+          url: replaceSegmentSmoothTokens(media, time),
+          complete: true,
+          privateInfos: { smoothMediaSegment: { time, duration } },
+        };
         segments.push(segment);
 
         // update segment number and segment time for the next segment
@@ -322,7 +306,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * @param {Number} to
    * @returns {Boolean}
    */
-  shouldRefresh(up : number, to : number) : boolean {
+  shouldRefresh(up: number, to: number): boolean {
     this._refreshTimeline();
     if (!this._isLive) {
       return false;
@@ -336,8 +320,8 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
 
     const repeat = lastSegmentInCurrentTimeline.repeatCount;
     const endOfLastSegmentInCurrentTimeline =
-      lastSegmentInCurrentTimeline.start + (repeat + 1) *
-        lastSegmentInCurrentTimeline.duration;
+      lastSegmentInCurrentTimeline.start +
+      (repeat + 1) * lastSegmentInCurrentTimeline.duration;
 
     if (to * timescale < endOfLastSegmentInCurrentTimeline) {
       return false;
@@ -350,17 +334,16 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     // ----
 
     const startOfLastSegmentInCurrentTimeline =
-      lastSegmentInCurrentTimeline.start + repeat *
-        lastSegmentInCurrentTimeline.duration;
+      lastSegmentInCurrentTimeline.start + repeat * lastSegmentInCurrentTimeline.duration;
 
-    return (up * timescale) > startOfLastSegmentInCurrentTimeline;
+    return up * timescale > startOfLastSegmentInCurrentTimeline;
   }
 
   /**
    * Returns first position available in the index.
    * @returns {Number|null}
    */
-  getFirstAvailablePosition() : number|null {
+  getFirstAvailablePosition(): number | null {
     this._refreshTimeline();
     const { timeline, timescale } = this._sharedSmoothTimeline;
     if (timeline.length === 0) {
@@ -373,7 +356,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Returns last position available in the index.
    * @returns {Number}
    */
-  getLastAvailablePosition() : number|undefined {
+  getLastAvailablePosition(): number | undefined {
     this._refreshTimeline();
     const { timeline, timescale } = this._sharedSmoothTimeline;
 
@@ -387,7 +370,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
       const timescaledNow = (getMonotonicTimeStamp() / 1000) * timescale;
       const { start, duration, repeatCount } = timelineElt;
       for (let j = repeatCount; j >= 0; j--) {
-        const end = start + (duration * (j + 1));
+        const end = start + duration * (j + 1);
         const positionToReach = end;
         if (positionToReach <= timescaledNow - this._scaledLiveGap) {
           return end / timescale;
@@ -402,7 +385,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * all segments are available.
    * @returns {number|null|undefined}
    */
-  getEnd() : number | null | undefined {
+  getEnd(): number | null | undefined {
     if (!this._isLive) {
       return this.getLastAvailablePosition();
     }
@@ -429,8 +412,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
     if (lastAvailablePosition !== undefined && end < lastAvailablePosition) {
       return false;
     }
-    return end > (this.getFirstAvailablePosition() ?? 0) ? undefined :
-                                                           false;
+    return end > (this.getFirstAvailablePosition() ?? 0) ? undefined : false;
   }
 
   /**
@@ -442,7 +424,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * `time`. If this is a number instead, there is one and that number is the
    * position for which a segment is available in seconds.
    */
-  checkDiscontinuity(timeSec : number) : number | null {
+  checkDiscontinuity(timeSec: number): number | null {
     this._refreshTimeline();
     return checkDiscontinuity(this._sharedSmoothTimeline, timeSec, undefined);
   }
@@ -455,7 +437,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean|undefined}
    */
-  isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
+  isSegmentStillAvailable(segment: ISegment): boolean | undefined {
     if (segment.isInit) {
       return true;
     }
@@ -468,10 +450,11 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
         return false; // We went over it without finding it
       } else if (tSegmentTime === segment.time) {
         return true;
-      } else { // tSegment.start < segment.time
+      } else {
+        // tSegment.start < segment.time
         if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
           const timeDiff = tSegmentTime - tSegment.start;
-          const repeat = (timeDiff / tSegment.duration) - 1;
+          const repeat = timeDiff / tSegment.duration - 1;
           return repeat % 1 === 0 && repeat <= tSegment.repeatCount;
         }
       }
@@ -483,12 +466,13 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * @param {Error} error
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : IPlayerError) : boolean {
+  canBeOutOfSyncError(error: IPlayerError): boolean {
     if (!this._isLive) {
       return false;
     }
-    return error instanceof NetworkError &&
-           (error.isHttpError(404) || error.isHttpError(412));
+    return (
+      error instanceof NetworkError && (error.isHttpError(404) || error.isHttpError(412))
+    );
   }
 
   /**
@@ -497,7 +481,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * them if that's the case.
    * @param {Object} newIndex
    */
-  _replace(newIndex : SmoothRepresentationIndex) : void {
+  _replace(newIndex: SmoothRepresentationIndex): void {
     this._initialScaledLastPosition = newIndex._initialScaledLastPosition;
     this._scaledLiveGap = newIndex._scaledLiveGap;
     this._sharedSmoothTimeline.replace(newIndex._sharedSmoothTimeline);
@@ -508,7 +492,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * This method might be use to only add information about new segments.
    * @param {Object} newIndex
    */
-  _update(newIndex : SmoothRepresentationIndex) : void {
+  _update(newIndex: SmoothRepresentationIndex): void {
     this._scaledLiveGap = newIndex._scaledLiveGap;
     this._sharedSmoothTimeline.update(newIndex._sharedSmoothTimeline);
   }
@@ -524,18 +508,18 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * TODO What about Smooth live content that finishes at some point?
    * @returns {boolean}
    */
-  isStillAwaitingFutureSegments() : boolean {
+  isStillAwaitingFutureSegments(): boolean {
     return this._isLive;
   }
 
   /**
    * @returns {Boolean}
    */
-  isInitialized() : true {
+  isInitialized(): true {
     return true;
   }
 
-  initialize() : void {
+  initialize(): void {
     log.error("A `SmoothRepresentationIndex` does not need to be initialized");
   }
 
@@ -547,9 +531,9 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * that new segment information.
    */
   addPredictedSegments(
-    nextSegments : Array<{ duration : number; time : number; timescale : number }>,
-    currentSegment : ISegment
-  ) : void {
+    nextSegments: Array<{ duration: number; time: number; timescale: number }>,
+    currentSegment: ISegment,
+  ): void {
     this._sharedSmoothTimeline.addPredictedSegments(nextSegments, currentSegment);
   }
 
@@ -557,7 +541,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
    * Clean-up timeline to remove segment information which should not be
    * available due to the timeshift window
    */
-  private _refreshTimeline() : void {
+  private _refreshTimeline(): void {
     this._sharedSmoothTimeline.refresh();
   }
 }

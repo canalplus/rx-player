@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { canPatchISOBMFFSegment } from "../../../compat";
+import canPatchISOBMFFSegment from "../../../compat/can_patch_isobmff";
 import {
   createBoxWithChildren,
   getBox,
@@ -24,10 +24,7 @@ import {
   updateBoxLength,
 } from "../../../parsers/containers/isobmff";
 import { itobe4 } from "../../../utils/byte_parsing";
-import {
-  createFreeBox,
-  createTfdtBox,
-} from "./create_boxes";
+import { createFreeBox, createTfdtBox } from "./create_boxes";
 import createTrafBox from "./create_traf_box";
 
 /**
@@ -38,23 +35,23 @@ import createTrafBox from "./create_traf_box";
  * @return {Uint8Array}
  */
 export default function patchSegment(
-  segment : Uint8Array,
-  decodeTime : number
-) : Uint8Array {
-  const oldMoofOffsets = getBoxOffsets(segment, 0x6D6F6F66 /* moof */);
+  segment: Uint8Array,
+  decodeTime: number,
+): Uint8Array {
+  const oldMoofOffsets = getBoxOffsets(segment, 0x6d6f6f66 /* moof */);
   if (oldMoofOffsets === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
   const oldMoofContent = segment.subarray(oldMoofOffsets[1], oldMoofOffsets[2]);
 
-  const mfhdBox = getBox(oldMoofContent, 0x6D666864 /* mfhd */);
+  const mfhdBox = getBox(oldMoofContent, 0x6d666864 /* mfhd */);
   const trafContent = getBoxContent(oldMoofContent, 0x74726166 /* traf */);
   if (trafContent === null || mfhdBox === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
 
   const tfhdOffsets = getBoxOffsets(trafContent, 0x74666864 /* tfhd */);
-  const oldTrunOffsets = getBoxOffsets(trafContent, 0x7472756E /* trun */);
+  const oldTrunOffsets = getBoxOffsets(trafContent, 0x7472756e /* trun */);
   if (tfhdOffsets === null || oldTrunOffsets === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
@@ -66,39 +63,43 @@ export default function patchSegment(
 
   const tfdtBox = createTfdtBox(decodeTime);
 
-  const newTrunBox = updateTrunDataOffset(oldTrunBox,
-                                          oldTrunOffsets[1] - oldTrunOffsets[0]);
-  const sencContent = getUuidContent(trafContent,
-                                     0xA2394F52,
-                                     0x5A9B4F14,
-                                     0xA2446C42,
-                                     0x7C648DF4);
+  const newTrunBox = updateTrunDataOffset(
+    oldTrunBox,
+    oldTrunOffsets[1] - oldTrunOffsets[0],
+  );
+  const sencContent = getUuidContent(
+    trafContent,
+    0xa2394f52,
+    0x5a9b4f14,
+    0xa2446c42,
+    0x7c648df4,
+  );
   const newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
   const newMoof = createBoxWithChildren("moof", [mfhdBox, newTrafBox]);
 
-  const newMoofOffsets = getBoxOffsets(newMoof, 0x6D6F6F66 /* moof */);
+  const newMoofOffsets = getBoxOffsets(newMoof, 0x6d6f6f66 /* moof */);
   const newTrafOffsets = getBoxOffsets(newTrafBox, 0x74726166 /* traf */);
-  const newTrunOffsets = getBoxOffsets(newTrunBox, 0x7472756E /* trun */);
+  const newTrunOffsets = getBoxOffsets(newTrunBox, 0x7472756e /* trun */);
   if (newMoofOffsets === null || newTrafOffsets === null || newTrunOffsets === null) {
     throw new Error("Smooth: Invalid moof, trun or traf generation");
   }
   /** index of the `data_offset` property from the trun box in the whole "moof". */
-  const indexOfTrunDataOffsetInMoof = (newMoofOffsets[1] - newMoofOffsets[0]) +
-                                      mfhdBox.length +
-
-                                      /* new traf size + name */
-                                      (newTrafOffsets[1] - newTrafOffsets[0]) +
-                                      tfhdBox.length +
-                                      tfdtBox.length +
-
-                                      /* new trun size + name */
-                                      (newTrunOffsets[1] - newTrunOffsets[0]) +
-                                      8 /* trun version + flags + `sample_count` */;
+  const indexOfTrunDataOffsetInMoof =
+    newMoofOffsets[1] -
+    newMoofOffsets[0] +
+    mfhdBox.length +
+    /* new traf size + name */
+    (newTrafOffsets[1] - newTrafOffsets[0]) +
+    tfhdBox.length +
+    tfdtBox.length +
+    /* new trun size + name */
+    (newTrunOffsets[1] - newTrunOffsets[0]) +
+    8; /* trun version + flags + `sample_count` */
 
   const oldMoofLength = oldMoofOffsets[2] - oldMoofOffsets[0];
   const newMoofSizeDiff = newMoof.length - oldMoofLength;
 
-  const oldMdatOffset = getBoxOffsets(segment, 0x6D646174 /* "mdat" */);
+  const oldMdatOffset = getBoxOffsets(segment, 0x6d646174 /* "mdat" */);
   if (oldMdatOffset === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
@@ -144,9 +145,9 @@ export default function patchSegment(
  * @returns {Uint8Array}
  */
 function updateTrunDataOffset(
-  oldTrunBox : Uint8Array,
-  initialDataOffset : number
-) : Uint8Array {
+  oldTrunBox: Uint8Array,
+  initialDataOffset: number,
+): Uint8Array {
   const trunHasDataOffset =
     (oldTrunBox[initialDataOffset + 3 /* last flag */] & 0x01) > 0;
   if (trunHasDataOffset) {
@@ -165,7 +166,9 @@ function updateTrunDataOffset(
   newTrunBox.set([0, 0, 0, 0], initialDataOffset + 8); // add data offset
 
   // add the rest
-  newTrunBox.set(oldTrunBox.subarray(initialDataOffset + 8, oldTrunBox.length),
-                 initialDataOffset + 12);
+  newTrunBox.set(
+    oldTrunBox.subarray(initialDataOffset + 8, oldTrunBox.length),
+    initialDataOffset + 12,
+  );
   return updateBoxLength(newTrunBox); // update the trun box's length
 }

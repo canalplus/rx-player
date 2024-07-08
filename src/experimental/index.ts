@@ -1,5 +1,3 @@
 import configHandler from "../config";
 
-export {
-  configHandler as config,
-};
+export { configHandler as config };

@@ -37,6 +37,7 @@ function Button({
     <button
       aria-label={ariaLabel}
       className={className}
+      tabIndex={0}
       onClick={onClick}
       title={title}
     >

@@ -16,8 +16,9 @@ import { pathToFileURL } from "url";
 import esbuild from "esbuild";
 import rootDirectory from "./utils/project_root_directory.mjs";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
-import buildWorker from "./bundle_worker.mjs";
+import runBundler from "./run_bundler.mjs";
 
+const WORKER_IN_FILE = join(rootDirectory, "src/worker_entry_point.ts");
 const DEMO_OUT_FILE = join(rootDirectory, "demo/full/bundle.js");
 const WORKER_OUT_FILE = join(rootDirectory, "demo/full/worker.js");
 const WASM_FILE_DEPENDENCY = join(rootDirectory, "dist/mpd-parser.wasm");
@@ -63,17 +64,17 @@ export default function buildDemo(options) {
     if (err != null && err.code === "ENOENT") {
       console.warn(
         "\x1b[31m[NOTE]\x1b[0m No built WebAssembly file detected. " +
-        "If needed, please build it separately."
+          "If needed, please build it separately.",
       );
     } else {
       console.warn(
         "\x1b[33m[NOTE]\x1b[0m The WebAssembly file won't be re-built by " +
-        "this script. If needed, ensure its build is up-to-date."
+          "this script. If needed, ensure its build is up-to-date.",
       );
     }
   });
 
-  buildWorker({
+  runBundler(WORKER_IN_FILE, {
     watch,
     minify,
     production: !isDevMode,
@@ -86,19 +87,23 @@ export default function buildDemo(options) {
     name: "onEnd",
     setup(build) {
       build.onStart(() => {
-        console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-          "New demo build started");
-      })
-      build.onEnd(result => {
+        console.log(
+          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` + "New demo build started",
+        );
+      });
+      build.onEnd((result) => {
         if (result.errors.length > 0 || result.warnings.length > 0) {
           const { errors, warnings } = result;
-          console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            `Demo re-built with ${errors.length} error(s) and ` +
-            ` ${warnings.length} warning(s) `);
+          console.log(
+            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+              `Demo re-built with ${errors.length} error(s) and ` +
+              ` ${warnings.length} warning(s) `,
+          );
           return;
         }
-        console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-          `Demo updated at ${outfile}!`);
+        console.log(
+          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + `Demo updated at ${outfile}!`,
+        );
       });
     },
   };
@@ -124,7 +129,8 @@ export default function buildDemo(options) {
       __LOGGER_LEVEL__: JSON.stringify({
         CURRENT_LEVEL: "INFO",
       }),
-    }
+      __GLOBAL_SCOPE__: JSON.stringify(true),
+    },
   })
     .then((context) => {
       if (watch) {
@@ -134,7 +140,8 @@ export default function buildDemo(options) {
     .catch((err) => {
       console.error(
         `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
-        err);
+        err,
+      );
       process.exit(1);
     });
 }
@@ -146,14 +153,16 @@ export default function buildDemo(options) {
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node build_demo.mjs [options]
+    /* eslint-disable indent */
+    `Usage: node build_demo.mjs [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
-  -w, --watch            Re-build each time either the demo or library files change`,
-  /* eslint-enable indent */
+  -w, --watch            Re-build each time either the demo or library files change
+  --include-wasm         The demo will be able to request the WebAssembly MPD parser (if available).`,
+
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

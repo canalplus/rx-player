@@ -15,25 +15,21 @@
  */
 
 import log from "../../../../log";
-import { Adaptation } from "../../../../manifest";
-import { IHDRInformation } from "../../../../public_types";
+import type { IAdaptation } from "../../../../manifest";
+import type { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
-import {
-  IContentProtections,
-  IParsedRepresentation,
-} from "../../types";
-import {
+import type { IParsedRepresentation } from "../../types";
+import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   IScheme,
-  IContentProtectionIntermediateRepresentation,
 } from "../node_parser_types";
+import type ContentProtectionParser from "./content_protection_parser";
 import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs";
 import { getWEBMHDRInformation } from "./get_hdr_information";
-import parseRepresentationIndex, {
-  IRepresentationIndexContext,
-} from "./parse_representation_index";
+import type { IRepresentationIndexContext } from "./parse_representation_index";
+import parseRepresentationIndex from "./parse_representation_index";
 import resolveBaseURLs from "./resolve_base_urls";
 
 /**
@@ -45,7 +41,7 @@ import resolveBaseURLs from "./resolve_base_urls";
  */
 function combineInbandEventStreams(
   representation: IRepresentationIntermediateRepresentation,
-  adaptation: IAdaptationSetIntermediateRepresentation
+  adaptation: IAdaptationSetIntermediateRepresentation,
 ): IScheme[] | undefined {
   const newSchemeId = [];
   if (representation.children.inbandEventStreams !== undefined) {
@@ -65,33 +61,29 @@ function combineInbandEventStreams(
  * @param {Object}
  * @returns {Object | undefined}
  */
-function getHDRInformation(
-  { adaptationProfiles,
-    essentialProperties,
-    supplementalProperties,
-    manifestProfiles,
-    codecs,
-  }: { adaptationProfiles?: string | undefined;
-       essentialProperties? : IScheme[] | undefined;
-       supplementalProperties? : IScheme[] | undefined;
-       manifestProfiles?: string | undefined;
-       codecs?: string | undefined; }
-): undefined | IHDRInformation {
+function getHDRInformation({
+  adaptationProfiles,
+  essentialProperties,
+  supplementalProperties,
+  manifestProfiles,
+  codecs,
+}: {
+  adaptationProfiles?: string | undefined;
+  essentialProperties?: IScheme[] | undefined;
+  supplementalProperties?: IScheme[] | undefined;
+  manifestProfiles?: string | undefined;
+  codecs?: string | undefined;
+}): undefined | IHDRInformation {
   const profiles = (adaptationProfiles ?? "") + (manifestProfiles ?? "");
-  if (
-    profiles.indexOf(
-      "http://dashif.org/guidelines/dash-if-uhd#hevc-hdr-pq10") !== -1
-  ) {
-    if (codecs === "hvc1.2.4.L153.B0" ||
-        codecs === "hev1.2.4.L153.B0") {
-      return { colorDepth: 10,
-               eotf: "pq",
-               colorSpace: "rec2020" };
+  if (profiles.indexOf("http://dashif.org/guidelines/dash-if-uhd#hevc-hdr-pq10") !== -1) {
+    if (codecs === "hvc1.2.4.L153.B0" || codecs === "hev1.2.4.L153.B0") {
+      return { colorDepth: 10, eotf: "pq", colorSpace: "rec2020" };
     }
   }
   const transferCharacteristicScheme = arrayFind(
     [...(essentialProperties ?? []), ...(supplementalProperties ?? [])],
-    (p) => p.schemeIdUri === "urn:mpeg:mpegB:cicp:TransferCharacteristics");
+    (p) => p.schemeIdUri === "urn:mpeg:mpegB:cicp:TransferCharacteristics",
+  );
   if (transferCharacteristicScheme !== undefined) {
     switch (transferCharacteristicScheme.value) {
       case "15":
@@ -114,41 +106,41 @@ function getHDRInformation(
  * @returns {Array.<Object>}
  */
 export default function parseRepresentations(
-  representationsIR : IRepresentationIntermediateRepresentation[],
-  adaptation : IAdaptationSetIntermediateRepresentation,
-  context : IRepresentationContext
+  representationsIR: IRepresentationIntermediateRepresentation[],
+  adaptation: IAdaptationSetIntermediateRepresentation,
+  context: IRepresentationContext,
 ): IParsedRepresentation[] {
-  const parsedRepresentations : IParsedRepresentation[] = [];
+  const parsedRepresentations: IParsedRepresentation[] = [];
   for (const representation of representationsIR) {
     // Compute Representation ID
-    let representationID = representation.attributes.id !== undefined ?
-      representation.attributes.id :
-      (String(representation.attributes.bitrate) +
-         (representation.attributes.height !== undefined ?
-            (`-${representation.attributes.height}`) :
-            "") +
-         (representation.attributes.width !== undefined ?
-            (`-${representation.attributes.width}`) :
-            "") +
-         (representation.attributes.mimeType !== undefined ?
-            (`-${representation.attributes.mimeType}`) :
-            "") +
-         (representation.attributes.codecs !== undefined ?
-            (`-${representation.attributes.codecs}`) :
-            ""));
+    let representationID =
+      representation.attributes.id !== undefined
+        ? representation.attributes.id
+        : String(representation.attributes.bitrate) +
+          (representation.attributes.height !== undefined
+            ? `-${representation.attributes.height}`
+            : "") +
+          (representation.attributes.width !== undefined
+            ? `-${representation.attributes.width}`
+            : "") +
+          (representation.attributes.mimeType !== undefined
+            ? `-${representation.attributes.mimeType}`
+            : "") +
+          (representation.attributes.codecs !== undefined
+            ? `-${representation.attributes.codecs}`
+            : "");
 
     // Avoid duplicate IDs
-    while (parsedRepresentations.some(r => r.id === representationID)) {
+    while (parsedRepresentations.some((r) => r.id === representationID)) {
       representationID += "-dup";
     }
 
     // Retrieve previous version of the Representation, if one.
-    const unsafelyBaseOnPreviousRepresentation = context
-      .unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
+    const unsafelyBaseOnPreviousRepresentation =
+      context.unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
       null;
 
-    const inbandEventStreams =
-      combineInbandEventStreams(representation, adaptation);
+    const inbandEventStreams = combineInbandEventStreams(representation, adaptation);
 
     const availabilityTimeComplete =
       representation.attributes.availabilityTimeComplete ??
@@ -159,21 +151,21 @@ export default function parseRepresentations(
       representation.attributes.availabilityTimeOffset !== undefined ||
       context.availabilityTimeOffset !== undefined
     ) {
-      availabilityTimeOffset = (representation.attributes.availabilityTimeOffset ?? 0) +
-                               (context.availabilityTimeOffset ?? 0);
+      availabilityTimeOffset =
+        (representation.attributes.availabilityTimeOffset ?? 0) +
+        (context.availabilityTimeOffset ?? 0);
     }
-    const reprIndexCtxt = objectAssign({},
-                                       context,
-                                       { availabilityTimeOffset,
-                                         availabilityTimeComplete,
-                                         unsafelyBaseOnPreviousRepresentation,
-                                         adaptation,
-                                         inbandEventStreams });
-    const representationIndex = parseRepresentationIndex(representation,
-                                                         reprIndexCtxt);
+    const reprIndexCtxt = objectAssign({}, context, {
+      availabilityTimeOffset,
+      availabilityTimeComplete,
+      unsafelyBaseOnPreviousRepresentation,
+      adaptation,
+      inbandEventStreams,
+    });
+    const representationIndex = parseRepresentationIndex(representation, reprIndexCtxt);
 
     // Find bitrate
-    let representationBitrate : number;
+    let representationBitrate: number;
     if (representation.attributes.bitrate === undefined) {
       log.warn("DASH: No usable bitrate found in the Representation.");
       representationBitrate = 0;
@@ -181,36 +173,45 @@ export default function parseRepresentations(
       representationBitrate = representation.attributes.bitrate;
     }
 
-    const representationBaseURLs = resolveBaseURLs(context.baseURLs,
-                                                   representation.children.baseURLs);
+    const representationBaseURLs = resolveBaseURLs(
+      context.baseURLs,
+      representation.children.baseURLs,
+    );
 
-    const cdnMetadata = representationBaseURLs.length === 0 ?
-      // No BaseURL seems to be associated to this Representation, nor to the MPD,
-      // but underlying segments might have one. To indicate that segments should
-      // still be available through a CDN without giving any root CDN URL here,
-      // we just communicate about an empty `baseUrl`, as documented.
-      [ { baseUrl: "", id: undefined } ] :
-      representationBaseURLs.map(x => ({ baseUrl: x.url, id: x.serviceLocation }));
+    const cdnMetadata =
+      representationBaseURLs.length === 0
+        ? // No BaseURL seems to be associated to this Representation, nor to the MPD,
+          // but underlying segments might have one. To indicate that segments should
+          // still be available through a CDN without giving any root CDN URL here,
+          // we just communicate about an empty `baseUrl`, as documented.
+          [{ baseUrl: "", id: undefined }]
+        : representationBaseURLs.map((x) => ({
+            baseUrl: x.url,
+            id: x.serviceLocation,
+          }));
 
     // Construct Representation Base
-    const parsedRepresentation : IParsedRepresentation =
-      { bitrate: representationBitrate,
-        cdnMetadata,
-        index: representationIndex,
-        id: representationID };
+    const parsedRepresentation: IParsedRepresentation = {
+      bitrate: representationBitrate,
+      cdnMetadata,
+      index: representationIndex,
+      id: representationID,
+    };
 
     if (
       representation.children.supplementalProperties !== undefined &&
-      arrayFind(representation.children.supplementalProperties, r =>
-        r.schemeIdUri === "tag:dolby.com,2018:dash:EC3_ExtensionType:2018" &&
-        r.value === "JOC"
+      arrayFind(
+        representation.children.supplementalProperties,
+        (r) =>
+          r.schemeIdUri === "tag:dolby.com,2018:dash:EC3_ExtensionType:2018" &&
+          r.value === "JOC",
       )
     ) {
       parsedRepresentation.isSpatialAudio = true;
     }
 
     // Add optional attributes
-    let codecs : string|undefined;
+    let codecs: string | undefined;
     if (representation.attributes.codecs !== undefined) {
       codecs = representation.attributes.codecs;
     } else if (adaptation.attributes.codecs !== undefined) {
@@ -233,94 +234,44 @@ export default function parseRepresentations(
     }
 
     if (representation.attributes.frameRate !== undefined) {
-      parsedRepresentation.frameRate =
-        representation.attributes.frameRate;
+      parsedRepresentation.frameRate = representation.attributes.frameRate;
     } else if (adaptation.attributes.frameRate !== undefined) {
-      parsedRepresentation.frameRate =
-        adaptation.attributes.frameRate;
+      parsedRepresentation.frameRate = adaptation.attributes.frameRate;
     }
     if (representation.attributes.height !== undefined) {
-      parsedRepresentation.height =
-        representation.attributes.height;
+      parsedRepresentation.height = representation.attributes.height;
     } else if (adaptation.attributes.height !== undefined) {
-      parsedRepresentation.height =
-        adaptation.attributes.height;
+      parsedRepresentation.height = adaptation.attributes.height;
     }
     if (representation.attributes.mimeType !== undefined) {
-      parsedRepresentation.mimeType =
-        representation.attributes.mimeType;
+      parsedRepresentation.mimeType = representation.attributes.mimeType;
     } else if (adaptation.attributes.mimeType !== undefined) {
-      parsedRepresentation.mimeType =
-        adaptation.attributes.mimeType;
+      parsedRepresentation.mimeType = adaptation.attributes.mimeType;
     }
     if (representation.attributes.width !== undefined) {
-      parsedRepresentation.width =
-        representation.attributes.width;
+      parsedRepresentation.width = representation.attributes.width;
     } else if (adaptation.attributes.width !== undefined) {
-      parsedRepresentation.width =
-        adaptation.attributes.width;
+      parsedRepresentation.width = adaptation.attributes.width;
     }
 
-    const contentProtectionsIr : IContentProtectionIntermediateRepresentation[] =
-      adaptation.children.contentProtections !== undefined ?
-        adaptation.children.contentProtections :
-        [];
-    if (representation.children.contentProtections !== undefined) {
-      contentProtectionsIr.push(...representation.children.contentProtections);
-    }
-
-    if (contentProtectionsIr.length > 0) {
-      const contentProtections = contentProtectionsIr
-        .reduce<IContentProtections>((acc, cp) => {
-          let systemId : string|undefined;
-          if (cp.attributes.schemeIdUri !== undefined &&
-              cp.attributes.schemeIdUri.substring(0, 9) === "urn:uuid:")
-          {
-            systemId = cp.attributes.schemeIdUri.substring(9)
-              .replace(/-/g, "")
-              .toLowerCase();
-          }
-          if (cp.attributes.keyId !== undefined && cp.attributes.keyId.length > 0) {
-            const kidObj = { keyId: cp.attributes.keyId, systemId };
-            if (acc.keyIds === undefined) {
-              acc.keyIds = [kidObj];
-            } else {
-              acc.keyIds.push(kidObj);
-            }
-          }
-          if (systemId !== undefined) {
-            const { cencPssh } = cp.children;
-            const values : Array<{ systemId: string;
-                                   data: Uint8Array; }> = [];
-            for (const data of cencPssh) {
-              values.push({ systemId, data });
-            }
-            if (values.length > 0) {
-              const cencInitData = arrayFind(acc.initData, (i) => i.type === "cenc");
-              if (cencInitData === undefined) {
-                acc.initData.push({ type: "cenc", values });
-              } else {
-                cencInitData.values.push(...values);
-              }
-            }
-          }
-          return acc;
-        }, { keyIds: undefined, initData: [] });
-      if (Object.keys(contentProtections.initData).length > 0 ||
-          (contentProtections.keyIds !== undefined &&
-            contentProtections.keyIds.length > 0))
-      {
-        parsedRepresentation.contentProtections = contentProtections;
+    // Content Protection parsing
+    {
+      const contentProtIrArr = [
+        ...(adaptation.children.contentProtections ?? []),
+        ...(representation.children.contentProtections ?? []),
+      ];
+      for (const contentProtIr of contentProtIrArr) {
+        context.contentProtectionParser.add(parsedRepresentation, contentProtIr);
       }
     }
 
-    parsedRepresentation.hdrInfo =
-      getHDRInformation({ adaptationProfiles: adaptation.attributes.profiles,
-                          supplementalProperties: adaptation.children
-                            .supplementalProperties,
-                          essentialProperties: adaptation.children.essentialProperties,
-                          manifestProfiles: context.manifestProfiles,
-                          codecs });
+    parsedRepresentation.hdrInfo = getHDRInformation({
+      adaptationProfiles: adaptation.attributes.profiles,
+      supplementalProperties: adaptation.children.supplementalProperties,
+      essentialProperties: adaptation.children.essentialProperties,
+      manifestProfiles: context.manifestProfiles,
+      codecs,
+    });
 
     parsedRepresentations.push(parsedRepresentation);
   }
@@ -339,14 +290,16 @@ export interface IRepresentationContext extends IInheritedRepresentationIndexCon
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousAdaptation : Adaptation | null;
+  unsafelyBaseOnPreviousAdaptation: IAdaptation | null;
+  /** Parses contentProtection elements. */
+  contentProtectionParser: ContentProtectionParser;
 }
 
 /**
  * Supplementary context needed to parse a Representation common with
  * `IRepresentationIndexContext`.
  */
-type IInheritedRepresentationIndexContext = Omit<IRepresentationIndexContext,
-                                                 "adaptation" |
-                                                 "unsafelyBaseOnPreviousRepresentation" |
-                                                 "inbandEventStreams">;
+type IInheritedRepresentationIndexContext = Omit<
+  IRepresentationIndexContext,
+  "adaptation" | "unsafelyBaseOnPreviousRepresentation" | "inbandEventStreams"
+>;

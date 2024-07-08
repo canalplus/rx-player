@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-import { IMPDAttributes } from "../node_parser_types";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type { IMPDAttributes } from "../node_parser_types";
 
 /**
  * Returns the base time of the Manifest.
  * @param {Object} rootAttributes
- * @param {number|undefined}
+ * @param {number|undefined} [referenceDateTime]
+ * @returns {number}
  */
 export default function parseAvailabilityStartTime(
-  rootAttributes : IMPDAttributes,
-  referenceDateTime? : number
-) : number {
+  rootAttributes: IMPDAttributes,
+  referenceDateTime?: number,
+): number {
   if (rootAttributes.type !== "dynamic") {
     return 0;
   }
-  if (rootAttributes.availabilityStartTime == null) {
-    return referenceDateTime == null ? 0 : referenceDateTime;
+  if (isNullOrUndefined(rootAttributes.availabilityStartTime)) {
+    return referenceDateTime ?? 0;
   }
   return rootAttributes.availabilityStartTime;
 }

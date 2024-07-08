@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-import {
-  formatError,
-  NetworkError,
-} from "../../../errors";
-import { IPlayerError } from "../../../public_types";
+import { formatError, NetworkError } from "../../../errors";
+import type { IPlayerError } from "../../../public_types";
 import { RequestError } from "../../../utils/request";
 
 /**
  * Generate a new error from the infos given.
- * @param {string} code
  * @param {Error} error
  * @returns {Error}
  */
-export default function errorSelector(error : unknown) : IPlayerError {
+export default function errorSelector(error: unknown): IPlayerError {
   if (error instanceof RequestError) {
     return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }

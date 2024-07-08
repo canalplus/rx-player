@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
 
 This file allows to quickly test if starting a content at a position different
@@ -21,157 +21,165 @@ To do that:
 -->
 <html lang="en">
   <head>
-    <head>
-      <meta charset="UTF-8">
-      <title>RxPlayer Conformance Test - MediaKeySystemAccess support</title>
-    </head>
-    <body>
-      <video />
-      <script charset="utf-8">
+    <meta charset="UTF-8" />
+    <title>RxPlayer Conformance Test - MediaKeySystemAccess support</title>
+  </head>
+  <body>
+    <video />
+    <script charset="utf-8">
+      // =============== CONFIG ===============
 
-// =============== CONFIG ===============
+      /** Initial position you want to seek to. */
+      var initialPosition = 301;
 
-/** Initial position you want to seek to. */
-var initialPosition = 301;
+      /** URL for the video initialization segment */
+      var videoInitUrl =
+        "https://www.bok.net/dash/tears_of_steel/cleartext/video/6/init.mp4";
 
-/** URL for the video initialization segment */
-var videoInitUrl = "https://www.bok.net/dash/tears_of_steel/cleartext/video/6/init.mp4";
+      /** URL for the audio initialization segment */
+      var audioInitUrl =
+        "https://www.bok.net/dash/tears_of_steel/cleartext/audio/en/init.mp4";
 
-/** URL for the audio initialization segment */
-var audioInitUrl = "https://www.bok.net/dash/tears_of_steel/cleartext/audio/en/init.mp4";
+      /** URL for the first video segment available at `initialPosition` */
+      var videoSeg10Min =
+        "https://www.bok.net/dash/tears_of_steel/cleartext/video/6/seg-101.m4f";
 
-/** URL for the first video segment available at `initialPosition` */
-var videoSeg10Min = "https://www.bok.net/dash/tears_of_steel/cleartext/video/6/seg-101.m4f";
+      /** URL for the first audio segment available at `initialPosition` */
+      var audioSeg10Min =
+        "https://www.bok.net/dash/tears_of_steel/cleartext/audio/en/seg-101.m4f";
 
-/** URL for the first audio segment available at `initialPosition` */
-var audioSeg10Min = "https://www.bok.net/dash/tears_of_steel/cleartext/audio/en/seg-101.m4f";
+      // ======================================
 
-// ======================================
+      var videoElement = document.querySelector("video");
+      loadContent();
 
-var videoElement = document.querySelector("video");
-loadContent();
-
-/**
- * Create MediaSource instance, attach it to the video element, push the
- * configured audio and video segments on it.
- * Perform a seek as soon as the "loadedmetadata" event is received.
- * Print logs to report the current operation.
- */
-function loadContent() {
-  console.info("Creating MediaSource");
-  var mediaSource = new MediaSource();
-  var objectURL = URL.createObjectURL(mediaSource);
-  mediaSource.addEventListener("sourceopen", onSourceOpen);
-  mediaSource.addEventListener("webkitsourceopen", onSourceOpen);
-  videoElement.src = objectURL;
-}
-
-/**
- * Actions to perform once the MediaSource has been attached to the video
- * element and opened.
- */
-function onSourceOpen() {
-  var mediaSource = this;
-  console.info("MediaSource opened");
-  console.info("Setting duration on the MediaSource");
-  MediaSource.duration = initialPosition + 60;
-  videoElement.addEventListener("loadedmetadata", setInitialPositionAndCheck);
-
-  var audioSourceBuffer = mediaSource.addSourceBuffer("audio/mp4;codecs=\"mp4a.40.2\"");
-  var videoSourceBuffer = mediaSource.addSourceBuffer("video/mp4;codecs=\"avc1.42C015\"");
-
-
-  // fetch + push audio init segment
-  fetch(audioInitUrl, function (ab) {
-    audioSourceBuffer.addEventListener("updateend", onAudioInitSegmentPushed);
-    audioSourceBuffer.appendBuffer(ab);
-  });
-
-  // fetch + push video init segment
-  fetch(videoInitUrl, function (ab) {
-    videoSourceBuffer.addEventListener("updateend", onVideoInitSegmentPushed);
-    videoSourceBuffer.appendBuffer(ab);
-  })
-
-  function onAudioInitSegmentPushed() {
-    console.info("audio init segment pushed.");
-    audioSourceBuffer.removeEventListener("updateend", onAudioInitSegmentPushed);
-
-    audioSourceBuffer.addEventListener("updateend", function() {
-      console.info("audio media segment pushed.");
-    });
-
-    // fetch audio media segment
-    fetch(audioSeg10Min, function(ab) {
-      audioSourceBuffer.appendBuffer(ab);
-    });
-  }
-
-  function onVideoInitSegmentPushed() {
-    console.info("video init segment pushed.");
-    videoSourceBuffer.removeEventListener("updateend", onVideoInitSegmentPushed);
-
-    videoSourceBuffer.addEventListener("updateend", function() {
-      console.info("video media segment pushed.");
-    });
-
-    // fetch video media segment
-    fetch(videoSeg10Min, function(ab) {
-      videoSourceBuffer.appendBuffer(ab);
-    });
-  }
-}
-
-function setInitialPositionAndCheck() {
-  console.info("Setting initial position", initialPosition);
-  videoElement.currentTime = initialPosition;
-  checkCurrentTime();
-  setInterval(checkCurrentTime, 1000);
-}
-
-/**
- * Check that the video element's `currentTime` property is equal (or close
- * enough) to the configured `initialPosition` property.
- * Print an error log when that's not the case and a regular log when it is.
- */
-function checkCurrentTime() {
-  var currentTime = videoElement.currentTime;
-  if (Math.abs(currentTime  - initialPosition) > 1 / 60) {
-    console.error(
-      "Test failed: current time should be equal to", initialPosition,
-      "but is equal to", currentTime);
-  } else {
-    console.log("Coherent currentTime:", currentTime);
-  }
-}
-
-/**
- * Perform a GET request at the URL given and give the response - in an
- * ArrayBuffer form - to the given callback when done.
- * @param {string} url
- * @param {Function} callback
- */
-function fetch(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", url, true);
-  xhr.responseType = "arraybuffer";
-
-  xhr.onerror = function (evt) {
-    console.error("Request for", url, "failed:", evt);
-  };
-  xhr.onload = function () {
-    if (xhr.readyState === 4) {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        var arrayBuffer = xhr.response; // Note: not xhr.responseText
-        callback(arrayBuffer);
-      } else {
-        console.error("Bad status for request", url, xhr.status);
+      /**
+       * Create MediaSource instance, attach it to the video element, push the
+       * configured audio and video segments on it.
+       * Perform a seek as soon as the "loadedmetadata" event is received.
+       * Print logs to report the current operation.
+       */
+      function loadContent() {
+        console.info("Creating MediaSource");
+        var mediaSource = new MediaSource();
+        var objectURL = URL.createObjectURL(mediaSource);
+        mediaSource.addEventListener("sourceopen", onSourceOpen);
+        mediaSource.addEventListener("webkitsourceopen", onSourceOpen);
+        videoElement.src = objectURL;
       }
-    }
-  };
 
-  xhr.send(null);
-}
-      </script>
-    </body>
+      /**
+       * Actions to perform once the MediaSource has been attached to the video
+       * element and opened.
+       */
+      function onSourceOpen() {
+        var mediaSource = this;
+        console.info("MediaSource opened");
+        console.info("Setting duration on the MediaSource");
+        MediaSource.duration = initialPosition + 60;
+        videoElement.addEventListener("loadedmetadata", setInitialPositionAndCheck);
+
+        var audioSourceBuffer = mediaSource.addSourceBuffer(
+          'audio/mp4;codecs="mp4a.40.2"',
+        );
+        var videoSourceBuffer = mediaSource.addSourceBuffer(
+          'video/mp4;codecs="avc1.42C015"',
+        );
+
+        // fetch + push audio init segment
+        fetch(audioInitUrl, function (ab) {
+          audioSourceBuffer.addEventListener("updateend", onAudioInitSegmentPushed);
+          audioSourceBuffer.appendBuffer(ab);
+        });
+
+        // fetch + push video init segment
+        fetch(videoInitUrl, function (ab) {
+          videoSourceBuffer.addEventListener("updateend", onVideoInitSegmentPushed);
+          videoSourceBuffer.appendBuffer(ab);
+        });
+
+        function onAudioInitSegmentPushed() {
+          console.info("audio init segment pushed.");
+          audioSourceBuffer.removeEventListener("updateend", onAudioInitSegmentPushed);
+
+          audioSourceBuffer.addEventListener("updateend", function () {
+            console.info("audio media segment pushed.");
+          });
+
+          // fetch audio media segment
+          fetch(audioSeg10Min, function (ab) {
+            audioSourceBuffer.appendBuffer(ab);
+          });
+        }
+
+        function onVideoInitSegmentPushed() {
+          console.info("video init segment pushed.");
+          videoSourceBuffer.removeEventListener("updateend", onVideoInitSegmentPushed);
+
+          videoSourceBuffer.addEventListener("updateend", function () {
+            console.info("video media segment pushed.");
+          });
+
+          // fetch video media segment
+          fetch(videoSeg10Min, function (ab) {
+            videoSourceBuffer.appendBuffer(ab);
+          });
+        }
+      }
+
+      function setInitialPositionAndCheck() {
+        console.info("Setting initial position", initialPosition);
+        videoElement.currentTime = initialPosition;
+        checkCurrentTime();
+        setInterval(checkCurrentTime, 1000);
+      }
+
+      /**
+       * Check that the video element's `currentTime` property is equal (or close
+       * enough) to the configured `initialPosition` property.
+       * Print an error log when that's not the case and a regular log when it is.
+       */
+      function checkCurrentTime() {
+        var currentTime = videoElement.currentTime;
+        if (Math.abs(currentTime - initialPosition) > 1 / 60) {
+          console.error(
+            "Test failed: current time should be equal to",
+            initialPosition,
+            "but is equal to",
+            currentTime,
+          );
+        } else {
+          console.log("Coherent currentTime:", currentTime);
+        }
+      }
+
+      /**
+       * Perform a GET request at the URL given and give the response - in an
+       * ArrayBuffer form - to the given callback when done.
+       * @param {string} url
+       * @param {Function} callback
+       */
+      function fetch(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "arraybuffer";
+
+        xhr.onerror = function (evt) {
+          console.error("Request for", url, "failed:", evt);
+        };
+        xhr.onload = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              var arrayBuffer = xhr.response; // Note: not xhr.responseText
+              callback(arrayBuffer);
+            } else {
+              console.error("Bad status for request", url, xhr.status);
+            }
+          }
+        };
+
+        xhr.send(null);
+      }
+    </script>
+  </body>
 </html>

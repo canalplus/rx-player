@@ -15,13 +15,14 @@
  */
 
 import log from "../../../../log";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
 } from "../../../../manifest";
-import { IBufferedChunk } from "../../../segment_buffers";
-import { IBufferDiscontinuity } from "../types";
+import type { IBufferedChunk } from "../../../segment_sinks";
+import type { IBufferDiscontinuity } from "../types";
 
 /**
  * Check if there is a soon-to-be-encountered discontinuity in the buffer that
@@ -50,41 +51,47 @@ import { IBufferDiscontinuity } from "../types";
  * though the array given can be larger.
  */
 export default function checkForDiscontinuity(
-  content : { adaptation : Adaptation;
-              manifest : Manifest;
-              period : Period;
-              representation : Representation; },
-  checkedRange : { start : number; end : number },
-  nextSegmentStart : number | null,
-  hasFinishedLoading : boolean,
-  bufferedSegments : IBufferedChunk[]
-) : IBufferDiscontinuity | null {
+  content: {
+    adaptation: IAdaptation;
+    manifest: IManifest;
+    period: IPeriod;
+    representation: IRepresentation;
+  },
+  checkedRange: { start: number; end: number },
+  nextSegmentStart: number | null,
+  hasFinishedLoading: boolean,
+  bufferedSegments: IBufferedChunk[],
+): IBufferDiscontinuity | null {
   const { period, adaptation, representation } = content;
 
   // `bufferedSegments` might also contains segments which are before
   // `checkedRange`.
   // Here we want the first one that goes over `checkedRange.start`, to  see
   // if there's a discontinuity at the beginning in the buffer
-  const nextBufferedInRangeIdx = getIndexOfFirstChunkInRange(bufferedSegments,
-                                                             checkedRange);
+  const nextBufferedInRangeIdx = getIndexOfFirstChunkInRange(
+    bufferedSegments,
+    checkedRange,
+  );
   if (nextBufferedInRangeIdx === null) {
     // There's no segment currently buffered for the current range.
 
-    if (nextSegmentStart === null) { // No segment to load in that range
+    if (nextSegmentStart === null) {
+      // No segment to load in that range
       // Check if we are in a discontinuity at the end of the current Period
-      if (hasFinishedLoading &&
-          period.end !== undefined &&
-          checkedRange.end >= period.end)
-      {
+      if (
+        hasFinishedLoading &&
+        period.end !== undefined &&
+        checkedRange.end >= period.end
+      ) {
         return { start: undefined, end: null }; // discontinuity to Period's end
       }
 
       // Check that there is a discontinuity announced in the Manifest there
-      const discontinuityEnd = representation.index
-        .checkDiscontinuity(checkedRange.start);
+      const discontinuityEnd = representation.index.checkDiscontinuity(
+        checkedRange.start,
+      );
       if (discontinuityEnd !== null) {
-        return { start: undefined,
-                 end: discontinuityEnd };
+        return { start: undefined, end: discontinuityEnd };
       }
     }
     return null;
@@ -97,29 +104,32 @@ export default function checkForDiscontinuity(
     // Next buffered segment starts after the start of the current range
     nextBufferedSegment.bufferedStart !== undefined &&
     nextBufferedSegment.bufferedStart > checkedRange.start &&
-
     // and no segment will fill in that hole
     (nextSegmentStart === null ||
-     nextBufferedSegment.infos.segment.end <= nextSegmentStart)
+      nextBufferedSegment.infos.segment.end <= nextSegmentStart)
   ) {
     const discontinuityEnd = nextBufferedSegment.bufferedStart;
-    if (!hasFinishedLoading &&
-        representation.index.awaitSegmentBetween(checkedRange.start,
-                                                 discontinuityEnd) !== false)
-    {
+    if (
+      !hasFinishedLoading &&
+      representation.index.awaitSegmentBetween(checkedRange.start, discontinuityEnd) !==
+        false
+    ) {
       return null;
     }
-    log.debug("RS: current discontinuity encountered",
-              adaptation.type, nextBufferedSegment.bufferedStart);
-    return { start: undefined,
-             end: discontinuityEnd };
+    log.debug(
+      "RS: current discontinuity encountered",
+      adaptation.type,
+      nextBufferedSegment.bufferedStart,
+    );
+    return { start: undefined, end: discontinuityEnd };
   }
 
   // Check if there's a discontinuity BETWEEN segments of the current range
-  const nextHoleIdx =
-    getIndexOfFirstDiscontinuityBetweenChunks(bufferedSegments,
-                                              checkedRange,
-                                              nextBufferedInRangeIdx + 1);
+  const nextHoleIdx = getIndexOfFirstDiscontinuityBetweenChunks(
+    bufferedSegments,
+    checkedRange,
+    nextBufferedInRangeIdx + 1,
+  );
 
   // If there was a hole between two consecutives segments, and if this hole
   // comes before the next segment to load, there is a discontinuity (that hole!)
@@ -127,13 +137,17 @@ export default function checkForDiscontinuity(
     const segmentInfoBeforeHole = bufferedSegments[nextHoleIdx - 1];
     const segmentInfoAfterHole = bufferedSegments[nextHoleIdx];
 
-    if (nextSegmentStart === null ||
-        segmentInfoAfterHole.infos.segment.end <= nextSegmentStart)
-    {
-      if (!hasFinishedLoading && representation.index
-        .awaitSegmentBetween(segmentInfoBeforeHole.infos.segment.end,
-                             segmentInfoAfterHole.infos.segment.time) !== false)
-      {
+    if (
+      nextSegmentStart === null ||
+      segmentInfoAfterHole.infos.segment.end <= nextSegmentStart
+    ) {
+      if (
+        !hasFinishedLoading &&
+        representation.index.awaitSegmentBetween(
+          segmentInfoBeforeHole.infos.segment.end,
+          segmentInfoAfterHole.infos.segment.time,
+        ) !== false
+      ) {
         return null;
       }
       const start = segmentInfoBeforeHole.bufferedEnd as number;
@@ -147,24 +161,32 @@ export default function checkForDiscontinuity(
     // If no hole between segments and no segment to load, check for a
     // discontinuity at the end of the Period
 
-    if (hasFinishedLoading && period.end !== undefined) { // Period is finished
-      if (checkedRange.end < period.end) { // We've not reached the Period's end yet
+    if (hasFinishedLoading && period.end !== undefined) {
+      // Period is finished
+      if (checkedRange.end < period.end) {
+        // We've not reached the Period's end yet
         return null;
       }
 
       // Check if the last buffered segment ends before this Period's end
       // In which case there is a discontinuity between those
-      const lastBufferedInPeriodIdx = getIndexOfLastChunkInPeriod(bufferedSegments,
-                                                                  period.end);
+      const lastBufferedInPeriodIdx = getIndexOfLastChunkInPeriod(
+        bufferedSegments,
+        period.end,
+      );
       if (lastBufferedInPeriodIdx !== null) {
         const lastSegment = bufferedSegments[lastBufferedInPeriodIdx];
-        if (lastSegment.bufferedEnd !== undefined &&
-            lastSegment.bufferedEnd < period.end)
-        {
-          log.debug("RS: discontinuity encountered at the end of the current period",
-                    adaptation.type, lastSegment.bufferedEnd, period.end);
-          return { start: lastSegment.bufferedEnd,
-                   end: null };
+        if (
+          lastSegment.bufferedEnd !== undefined &&
+          lastSegment.bufferedEnd < period.end
+        ) {
+          log.debug(
+            "RS: discontinuity encountered at the end of the current period",
+            adaptation.type,
+            lastSegment.bufferedEnd,
+            period.end,
+          );
+          return { start: lastSegment.bufferedEnd, end: null };
         }
       }
     }
@@ -185,11 +207,11 @@ export default function checkForDiscontinuity(
 
       if (bufSeg.bufferedStart < checkedRange.end) {
         if (bufSeg.bufferedEnd !== undefined && bufSeg.bufferedEnd < checkedRange.end) {
-          const discontinuityEnd = representation.index
-            .checkDiscontinuity(checkedRange.end);
+          const discontinuityEnd = representation.index.checkDiscontinuity(
+            checkedRange.end,
+          );
           if (discontinuityEnd !== null) {
-            return { start: bufSeg.bufferedEnd,
-                     end: discontinuityEnd };
+            return { start: bufSeg.bufferedEnd, end: discontinuityEnd };
           }
         }
         return null;
@@ -210,15 +232,16 @@ export default function checkForDiscontinuity(
  * @returns {number|null}
  */
 function getIndexOfFirstChunkInRange(
-  bufferedChunks : IBufferedChunk[],
-  range : { start : number; end : number }
-) : number | null {
+  bufferedChunks: IBufferedChunk[],
+  range: { start: number; end: number },
+): number | null {
   for (let bufIdx = 0; bufIdx < bufferedChunks.length; bufIdx++) {
     const bufSeg = bufferedChunks[bufIdx];
-    if (bufSeg.bufferedStart === undefined ||
-        bufSeg.bufferedEnd === undefined ||
-        bufSeg.bufferedStart >= range.end)
-    {
+    if (
+      bufSeg.bufferedStart === undefined ||
+      bufSeg.bufferedEnd === undefined ||
+      bufSeg.bufferedStart >= range.end
+    ) {
       return null;
     }
     if (bufSeg.bufferedEnd > range.start) {
@@ -246,27 +269,24 @@ function getIndexOfFirstChunkInRange(
  * @returns {number|null}
  */
 function getIndexOfFirstDiscontinuityBetweenChunks(
-  bufferedChunks : IBufferedChunk[],
-  range : { start : number; end : number },
-  startFromIndex : number
-) : number | null {
+  bufferedChunks: IBufferedChunk[],
+  range: { start: number; end: number },
+  startFromIndex: number,
+): number | null {
   if (startFromIndex <= 0) {
     log.error("RS: Asked to check a discontinuity before the first chunk.");
     return null;
   }
-  for (
-    let bufIdx = startFromIndex;
-    bufIdx < bufferedChunks.length;
-    bufIdx++
-  ) {
+  for (let bufIdx = startFromIndex; bufIdx < bufferedChunks.length; bufIdx++) {
     const currSegment = bufferedChunks[bufIdx];
     const prevSegment = bufferedChunks[bufIdx - 1];
 
     // Exit as soon we miss information or when we go further than `checkedRange`
-    if (currSegment.bufferedStart === undefined ||
-        prevSegment.bufferedEnd === undefined ||
-        currSegment.bufferedStart >= range.end)
-    {
+    if (
+      currSegment.bufferedStart === undefined ||
+      prevSegment.bufferedEnd === undefined ||
+      currSegment.bufferedStart >= range.end
+    ) {
       return null;
     }
 
@@ -289,9 +309,9 @@ function getIndexOfFirstDiscontinuityBetweenChunks(
  * @returns {number|null}
  */
 function getIndexOfLastChunkInPeriod(
-  bufferedChunks : IBufferedChunk[],
-  periodEnd : number
-) : number | null {
+  bufferedChunks: IBufferedChunk[],
+  periodEnd: number,
+): number | null {
   for (let bufIdx = bufferedChunks.length - 1; bufIdx >= 0; bufIdx--) {
     const bufSeg = bufferedChunks[bufIdx];
     if (bufSeg.bufferedStart === undefined) {

@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import { ISegment } from "../../../manifest";
+import type { ISegment } from "../../../manifest";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
 import { getIndexSegmentEnd } from "../utils/index_helpers";
@@ -45,10 +45,10 @@ export default class SharedSmoothSegmentTimeline {
    * Note that this same list might be shared by multiple `RepresentationIndex`
    * (as they link to the same timeline in the Manifest).
    */
-  public timeline : IIndexSegment[];
+  public timeline: IIndexSegment[];
 
   /** Timescale allowing to convert time values in `timeline` into seconds. */
-  public timescale : number;
+  public timescale: number;
 
   /**
    * Defines the earliest time - expressed in the RxPlayer's
@@ -60,13 +60,12 @@ export default class SharedSmoothSegmentTimeline {
    *   - else, the time of creation of this SharedSmoothSegmentTimeline, as a
    *     guess
    */
-  public validityTime : number;
+  public validityTime: number;
 
-  private _timeShiftBufferDepth : number | undefined;
-  private _initialScaledLastPosition : number | undefined;
+  private _timeShiftBufferDepth: number | undefined;
+  private _initialScaledLastPosition: number | undefined;
 
-
-  constructor(args : ISharedSmoothSegmentTimelineArguments) {
+  constructor(args: ISharedSmoothSegmentTimelineArguments) {
     const { timeline, timescale, timeShiftBufferDepth, manifestReceivedTime } = args;
     this.timeline = timeline;
     this.timescale = timescale;
@@ -81,25 +80,23 @@ export default class SharedSmoothSegmentTimeline {
     }
   }
 
-
   /**
    * Clean-up timeline to remove segment information which should not be
    * available due to the timeshift window
    */
-  public refresh() : void {
+  public refresh(): void {
     // clean segments before time shift buffer depth
     if (this._initialScaledLastPosition === undefined) {
       return;
     }
     const timeShiftBufferDepth = this._timeShiftBufferDepth;
-    const timeSinceLastRealUpdate = (getMonotonicTimeStamp() -
-                                     this.validityTime) / 1000;
-    const lastPositionEstimate = timeSinceLastRealUpdate +
-                                 this._initialScaledLastPosition / this.timescale;
+    const timeSinceLastRealUpdate = (getMonotonicTimeStamp() - this.validityTime) / 1000;
+    const lastPositionEstimate =
+      timeSinceLastRealUpdate + this._initialScaledLastPosition / this.timescale;
 
     if (timeShiftBufferDepth !== undefined) {
-      const minimumPosition = (lastPositionEstimate - timeShiftBufferDepth) *
-                              this.timescale;
+      const minimumPosition =
+        (lastPositionEstimate - timeShiftBufferDepth) * this.timescale;
       clearTimelineFromPosition(this.timeline, minimumPosition);
     }
   }
@@ -110,7 +107,7 @@ export default class SharedSmoothSegmentTimeline {
    * them if that's the case.
    * @param {Object} newSmoothTimeline
    */
-  public replace(newSmoothTimeline : SharedSmoothSegmentTimeline) : void {
+  public replace(newSmoothTimeline: SharedSmoothSegmentTimeline): void {
     const oldTimeline = this.timeline;
     const newTimeline = newSmoothTimeline.timeline;
     const oldTimescale = this.timescale;
@@ -119,10 +116,11 @@ export default class SharedSmoothSegmentTimeline {
     this._initialScaledLastPosition = newSmoothTimeline._initialScaledLastPosition;
     this.validityTime = newSmoothTimeline.validityTime;
 
-    if (oldTimeline.length === 0 ||
-        newTimeline.length === 0 ||
-        oldTimescale !== newTimescale)
-    {
+    if (
+      oldTimeline.length === 0 ||
+      newTimeline.length === 0 ||
+      oldTimescale !== newTimescale
+    ) {
       return; // don't take risk, if something is off, take the new one
     }
 
@@ -136,20 +134,24 @@ export default class SharedSmoothSegmentTimeline {
     for (let i = 0; i < oldTimeline.length; i++) {
       const oldTimelineRange = oldTimeline[i];
       const oldEnd = getIndexSegmentEnd(oldTimelineRange, null);
-      if (oldEnd === newEnd) { // just add the supplementary segments
+      if (oldEnd === newEnd) {
+        // just add the supplementary segments
         this.timeline = this.timeline.concat(oldTimeline.slice(i + 1));
         return;
       }
 
-      if (oldEnd > newEnd) { // adjust repeatCount + add supplementary segments
+      if (oldEnd > newEnd) {
+        // adjust repeatCount + add supplementary segments
         if (oldTimelineRange.duration !== lastNewTimelineElement.duration) {
           return;
         }
 
         const rangeDuration = newEnd - oldTimelineRange.start;
         if (rangeDuration === 0) {
-          log.warn("Smooth Parser: a discontinuity detected in the previous manifest" +
-            " has been resolved.");
+          log.warn(
+            "Smooth Parser: a discontinuity detected in the previous manifest" +
+              " has been resolved.",
+          );
           this.timeline = this.timeline.concat(oldTimeline.slice(i));
           return;
         }
@@ -157,7 +159,7 @@ export default class SharedSmoothSegmentTimeline {
           return;
         }
 
-        const repeatWithOld = (rangeDuration / oldTimelineRange.duration) - 1;
+        const repeatWithOld = rangeDuration / oldTimelineRange.duration - 1;
         const relativeRepeat = oldTimelineRange.repeatCount - repeatWithOld;
         if (relativeRepeat < 0) {
           return;
@@ -175,7 +177,7 @@ export default class SharedSmoothSegmentTimeline {
    * This method might be use to only add information about new segments.
    * @param {Object} newSmoothTimeline
    */
-  public update(newSmoothTimeline : SharedSmoothSegmentTimeline) : void {
+  public update(newSmoothTimeline: SharedSmoothSegmentTimeline): void {
     updateSegmentTimeline(this.timeline, newSmoothTimeline.timeline);
     this._initialScaledLastPosition = newSmoothTimeline._initialScaledLastPosition;
     this.validityTime = newSmoothTimeline.validityTime;
@@ -189,9 +191,9 @@ export default class SharedSmoothSegmentTimeline {
    * new segment information.
    */
   public addPredictedSegments(
-    nextSegments : Array<{ duration : number; time : number; timescale : number }>,
-    currentSegment : ISegment
-  ) : void {
+    nextSegments: Array<{ duration: number; time: number; timescale: number }>,
+    currentSegment: ISegment,
+  ): void {
     if (currentSegment.privateInfos?.smoothMediaSegment === undefined) {
       log.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
       return;
@@ -199,19 +201,21 @@ export default class SharedSmoothSegmentTimeline {
 
     this.refresh();
     for (let i = 0; i < nextSegments.length; i++) {
-      addSegmentInfos(this.timeline,
-                      this.timescale,
-                      nextSegments[i],
-                      currentSegment.privateInfos.smoothMediaSegment);
+      addSegmentInfos(
+        this.timeline,
+        this.timescale,
+        nextSegments[i],
+        currentSegment.privateInfos.smoothMediaSegment,
+      );
     }
   }
 }
 
 export interface ISharedSmoothSegmentTimelineArguments {
-  timeline : IIndexSegment[];
-  timescale : number;
-  timeShiftBufferDepth : number | undefined;
-  manifestReceivedTime : number | undefined;
+  timeline: IIndexSegment[];
+  timescale: number;
+  timeShiftBufferDepth: number | undefined;
+  manifestReceivedTime: number | undefined;
 }
 
 /**
@@ -220,9 +224,9 @@ export interface ISharedSmoothSegmentTimelineArguments {
  */
 export interface IIndexSegment {
   /** Time (timescaled) at which the segment starts. */
-  start : number;
+  start: number;
   /** Duration (timescaled) of the segment. */
-  duration : number;
+  duration: number;
   /**
    * Amount of consecutive segments with that duration.
    *

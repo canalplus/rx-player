@@ -15,34 +15,34 @@
  */
 
 import globalScope from "../../../utils/global_scope";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 
 type IWebKitMediaKeys = unknown;
 
 interface IWebKitMediaKeysConstructor {
-  new(keySystem: string) : IWebKitMediaKeys;
+  new (keySystem: string): IWebKitMediaKeys;
   isTypeSupported: (keyType: string) => boolean;
 }
 
-let WebKitMediaKeysConstructor: undefined|IWebKitMediaKeysConstructor;
+let WebKitMediaKeysConstructor: undefined | IWebKitMediaKeysConstructor;
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-const { WebKitMediaKeys } = (globalScope as typeof globalThis & {
-  WebKitMediaKeys? : IWebKitMediaKeysConstructor;
-});
+const { WebKitMediaKeys } = globalScope as typeof globalThis & {
+  WebKitMediaKeys?: IWebKitMediaKeysConstructor;
+};
 
-if (WebKitMediaKeys !== undefined &&
-    typeof WebKitMediaKeys.isTypeSupported === "function" &&
-    typeof WebKitMediaKeys.prototype.createSession === "function" &&
-    typeof (HTMLMediaElement.prototype as ICompatHTMLMediaElement)
-      .webkitSetMediaKeys === "function") {
+if (
+  WebKitMediaKeys !== undefined &&
+  typeof WebKitMediaKeys.isTypeSupported === "function" &&
+  typeof WebKitMediaKeys.prototype.createSession === "function" &&
+  typeof (HTMLMediaElement.prototype as ICompatHTMLMediaElement).webkitSetMediaKeys ===
+    "function"
+) {
   WebKitMediaKeysConstructor = WebKitMediaKeys;
 }
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
-export {
-  WebKitMediaKeysConstructor,
-  IWebKitMediaKeys,
-};
+export type { IWebKitMediaKeys };
+export { WebKitMediaKeysConstructor };

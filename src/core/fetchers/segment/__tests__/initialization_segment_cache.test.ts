@@ -1,41 +1,38 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import { Representation } from "../../../../manifest";
+import { describe, it, expect } from "vitest";
+import type { IRepresentation } from "../../../../manifest";
 import InitializationSegmentCache from "../initialization_segment_cache";
 
 const representation1 = {
   bitrate: 12,
   id: "r1",
-  getMimeTypeString() : string { return ""; },
+  getMimeTypeString(): string {
+    return "";
+  },
   isSupported: true,
   index: {},
-  getProtectionsInitializationData() : [] { return []; },
-  _addProtectionData() : never { throw new Error("Not implemented"); },
-} as unknown as Representation;
+  getProtectionsInitializationData(): [] {
+    return [];
+  },
+  _addProtectionData(): never {
+    throw new Error("Not implemented");
+  },
+} as unknown as IRepresentation;
 
 const representation2 = {
   bitrate: 14,
   id: "r2",
-  getMimeTypeString() : string { return ""; },
+  getMimeTypeString(): string {
+    return "";
+  },
   isSupported: true,
   index: {},
-  getProtectionsInitializationData() : [] { return []; },
-  _addProtectionData() : never { throw new Error("Not implemented"); },
-} as unknown as Representation;
+  getProtectionsInitializationData(): [] {
+    return [];
+  },
+  _addProtectionData(): never {
+    throw new Error("Not implemented");
+  },
+} as unknown as IRepresentation;
 
 const initSegment1 = {
   id: "init1",
@@ -129,117 +126,176 @@ const data4 = new Uint8Array([3]);
 describe("utils - InitializationSegmentCache", () => {
   it("should return null when no item is in the cache", () => {
     const initializationSegmentCache = new InitializationSegmentCache<Uint8Array>();
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment1,
-    })).toBe(null);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: segment1,
-    })).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment1,
+      }),
+    ).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: segment1,
+      }),
+    ).toBe(null);
   });
 
   it("should only cache the init segments", () => {
     const initializationSegmentCache = new InitializationSegmentCache<Uint8Array>();
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: segment1,
-    }, data1);
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: initSegment1,
-    }, data2);
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: segment2,
-    }, data3);
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: segment3,
-    }, data4);
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: segment4,
-    }, data1);
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: segment1,
+      },
+      data1,
+    );
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: initSegment1,
+      },
+      data2,
+    );
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: segment2,
+      },
+      data3,
+    );
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: segment3,
+      },
+      data4,
+    );
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: segment4,
+      },
+      data1,
+    );
 
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: segment1,
-    })).toBe(null);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: segment1,
-    })).toBe(null);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: segment2,
-    })).toBe(null);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: segment3,
-    })).toBe(null);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: segment4,
-    })).toBe(null);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment1,
-    })).toBe(data2);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment2,
-    })).toBe(data2); // Note: it doesn't care about the segment ID here
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment3,
-    })).toBe(data2); // Note: it doesn't care about the segment ID here
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: segment1,
+      }),
+    ).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: segment1,
+      }),
+    ).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: segment2,
+      }),
+    ).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: segment3,
+      }),
+    ).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: segment4,
+      }),
+    ).toBe(null);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment1,
+      }),
+    ).toBe(data2);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment2,
+      }),
+    ).toBe(data2); // Note: it doesn't care about the segment ID here
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment3,
+      }),
+    ).toBe(data2); // Note: it doesn't care about the segment ID here
 
-    initializationSegmentCache.add({
-      representation: representation2,
-      segment: initSegment2,
-    }, data1);
+    initializationSegmentCache.add(
+      {
+        representation: representation2,
+        segment: initSegment2,
+      },
+      data1,
+    );
 
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment2,
-    })).toBe(data2);
-    expect(initializationSegmentCache.get({
-      representation: representation2,
-      segment: initSegment1,
-    })).toBe(data1);
-    expect(initializationSegmentCache.get({
-      representation: representation2,
-      segment: initSegment2,
-    })).toBe(data1);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment2,
+      }),
+    ).toBe(data2);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation2,
+        segment: initSegment1,
+      }),
+    ).toBe(data1);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation2,
+        segment: initSegment2,
+      }),
+    ).toBe(data1);
   });
 
   it("should overwrite a previous init segment's data if a new one is set", () => {
     const initializationSegmentCache = new InitializationSegmentCache<Uint8Array>();
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: initSegment1,
-    }, data1);
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: initSegment2,
-    }, data2);
-    initializationSegmentCache.add({
-      representation: representation1,
-      segment: initSegment3,
-    }, data3);
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: initSegment1,
+      },
+      data1,
+    );
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: initSegment2,
+      },
+      data2,
+    );
+    initializationSegmentCache.add(
+      {
+        representation: representation1,
+        segment: initSegment3,
+      },
+      data3,
+    );
 
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment1,
-    })).toBe(data3);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment2,
-    })).toBe(data3);
-    expect(initializationSegmentCache.get({
-      representation: representation1,
-      segment: initSegment3,
-    })).toBe(data3);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment1,
+      }),
+    ).toBe(data3);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment2,
+      }),
+    ).toBe(data3);
+    expect(
+      initializationSegmentCache.get({
+        representation: representation1,
+        segment: initSegment3,
+      }),
+    ).toBe(data3);
   });
 });

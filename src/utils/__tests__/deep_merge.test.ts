@@ -1,5 +1,5 @@
+import { describe, it, expect } from "vitest";
 import deepMerge from "../deep_merge";
-
 
 describe("utils - deep_merge", () => {
   it("should return the first argument if no other arguments", () => {

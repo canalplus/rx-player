@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-import mediaElementTracksStore from "../../core/api/track_management/media_element_tracks_store";
-import directfile from "../../core/init/directfile_content_initializer";
-import { IFeaturesObject } from "../types";
+import directfile from "../../main_thread/init/directfile_content_initializer";
+import mediaElementTracksStore from "../../main_thread/tracks_store/media_element_tracks_store";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play file natively played by the browser
  * (`directfile` transport)
  * @param {Object} features
  */
-function addDirectfileFeature(features : IFeaturesObject) : void {
-  features.directfile = { initDirectFile: directfile,
-                          mediaElementTracksStore };
+function addDirectfileFeature(features: IFeaturesObject): void {
+  features.directfile = { initDirectFile: directfile, mediaElementTracksStore };
 }
 
 export { addDirectfileFeature as DIRECTFILE };

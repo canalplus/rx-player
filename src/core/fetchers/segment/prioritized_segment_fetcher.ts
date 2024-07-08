@@ -15,16 +15,14 @@
  */
 
 import log from "../../../log";
-import { CancellationSignal } from "../../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import type {
   ISegmentFetcher,
   ISegmentFetcherCallbacks,
   ISegmentLoaderContent,
 } from "./segment_fetcher";
-import TaskPrioritizer, {
-  ITaskFn,
-  ITaskPrioritizerCallbacks,
-} from "./task_prioritizer";
+import type { ITaskFn, ITaskPrioritizerCallbacks } from "./task_prioritizer";
+import type TaskPrioritizer from "./task_prioritizer";
 
 /**
  * This function basically put in relation:
@@ -37,9 +35,9 @@ import TaskPrioritizer, {
  * @returns {Object}
  */
 export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
-  prioritizer : TaskPrioritizer<void>,
-  fetcher : ISegmentFetcher<TSegmentDataType>
-) : IPrioritizedSegmentFetcher<TSegmentDataType> {
+  prioritizer: TaskPrioritizer<void>,
+  fetcher: ISegmentFetcher<TSegmentDataType>,
+): IPrioritizedSegmentFetcher<TSegmentDataType> {
   /**
    * Map Promises returned by the `createRequest` method into the actual tasks
    * used by the `TaskPrioritizer`, allowing to update task priorities just by
@@ -58,18 +56,15 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
      * @returns {Promise}
      */
     createRequest(
-      content : ISegmentLoaderContent,
-      priority : number,
-      callbacks : IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
-      cancelSignal : CancellationSignal
-    ) : Promise<void> {
-      const givenTask = (innerCancelSignal : CancellationSignal) => {
+      content: ISegmentLoaderContent,
+      priority: number,
+      callbacks: IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
+      cancelSignal: CancellationSignal,
+    ): Promise<void> {
+      const givenTask = (innerCancelSignal: CancellationSignal) => {
         return fetcher(content, callbacks, innerCancelSignal);
       };
-      const ret = prioritizer.create(givenTask,
-                                     priority,
-                                     callbacks,
-                                     cancelSignal);
+      const ret = prioritizer.create(givenTask, priority, callbacks, cancelSignal);
       taskHandlers.set(ret, givenTask);
       return ret;
     },
@@ -80,10 +75,7 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
      * @param {Promise} task - The Promise returned by `createRequest`.
      * @param {Number} priority - The new priority value.
      */
-    updatePriority(
-      task : Promise<void>,
-      priority : number
-    ) : void {
+    updatePriority(task: Promise<void>, priority: number): void {
       const correspondingTask = taskHandlers.get(task);
       if (correspondingTask === undefined) {
         log.warn("Fetchers: Cannot update the priority of a request: task not found.");
@@ -97,17 +89,17 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
 /** Oject returned by `applyPrioritizerToSegmentFetcher`. */
 export interface IPrioritizedSegmentFetcher<TSegmentDataType> {
   /** Create a new request for a segment with a given priority. */
-  createRequest : (content : ISegmentLoaderContent,
-                   priority : number,
-                   callbacks : IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
-                   cancellationSignal : CancellationSignal
+  createRequest: (
+    content: ISegmentLoaderContent,
+    priority: number,
+    callbacks: IPrioritizedSegmentFetcherCallbacks<TSegmentDataType>,
+    cancellationSignal: CancellationSignal,
   ) => Promise<void>;
 
   /** Update priority of a request created through `createRequest`. */
-  updatePriority : (task : Promise<void>, priority : number) => void;
+  updatePriority: (task: Promise<void>, priority: number) => void;
 }
 
 /** Callbacks awaited by `applyPrioritizerToSegmentFetcher`. */
 export type IPrioritizedSegmentFetcherCallbacks<TSegmentDataType> =
-  ISegmentFetcherCallbacks<TSegmentDataType> &
-  ITaskPrioritizerCallbacks;
+  ISegmentFetcherCallbacks<TSegmentDataType> & ITaskPrioritizerCallbacks;

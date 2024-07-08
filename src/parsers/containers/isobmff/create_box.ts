@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  concat,
-  itobe4,
-  itobe8,
-} from "../../../utils/byte_parsing";
+import { concat, itobe4, itobe8 } from "../../../utils/byte_parsing";
 import { strToUtf8 } from "../../../utils/string_parsing";
 import { MAX_32_BIT_INT } from "./constants";
 
@@ -31,7 +27,7 @@ import { MAX_32_BIT_INT } from "./constants";
  * Used by the boxName method.
  * @type {Object}
  */
-const boxNamesMem : { [boxName: string]: Uint8Array } = {};
+const boxNamesMem: { [boxName: string]: Uint8Array } = {};
 
 /**
  * Convert the string name of an ISOBMFF box into the corresponding bytes.
@@ -40,8 +36,8 @@ const boxNamesMem : { [boxName: string]: Uint8Array } = {};
  * @param {string} str
  * @returns {Uint8Array}
  */
-function boxName(str : string) : Uint8Array {
-  if (boxNamesMem[str] != null) {
+function boxName(str: string): Uint8Array {
+  if (boxNamesMem[str] !== undefined) {
     return boxNamesMem[str];
   }
 
@@ -57,10 +53,11 @@ function boxName(str : string) : Uint8Array {
  * @param {Uint8Array} buff - content of the box
  * @returns {Uint8Array} - The entire ISOBMFF box (length+name+content)
  */
-function createBox(name : string, buff : Uint8Array) : Uint8Array {
+function createBox(name: string, buff: Uint8Array): Uint8Array {
   const len = buff.length + 8;
-  return len <= MAX_32_BIT_INT ? concat(itobe4(len), boxName(name), buff) :
-                                 concat(itobe4(1), boxName(name), itobe8(len + 8), buff);
+  return len <= MAX_32_BIT_INT
+    ? concat(itobe4(len), boxName(name), buff)
+    : concat(itobe4(1), boxName(name), itobe8(len + 8), buff);
 }
 
 /**
@@ -68,14 +65,8 @@ function createBox(name : string, buff : Uint8Array) : Uint8Array {
  * @param {Array.<Uint8Array>} children
  * @returns {Uint8Array}
  */
-function createBoxWithChildren(
-  name : string,
-  children : Uint8Array[]
-) : Uint8Array {
+function createBoxWithChildren(name: string, children: Uint8Array[]): Uint8Array {
   return createBox(name, concat(...children));
 }
 
-export {
-  createBox,
-  createBoxWithChildren,
-};
+export { createBox, createBoxWithChildren };

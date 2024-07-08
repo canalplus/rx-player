@@ -11,10 +11,7 @@ import VolumeBar from "./VolumeBar";
 import type { IPlayerModule } from "../modules/player/index";
 import useModuleState from "../lib/useModuleState";
 
-const {
-  useCallback,
-  useMemo,
-} = React;
+const { useCallback, useMemo } = React;
 
 function ControlBar({
   enableVideoThumbnails,
@@ -27,7 +24,7 @@ function ControlBar({
   player: IPlayerModule;
   stopVideo: () => void;
   toggleSettings: () => void;
-  playerWrapperElementRef:  { current: HTMLElement | null };
+  playerWrapperElementRef: { current: HTMLElement | null };
 }) {
   const currentTime = useModuleState(player, "currentTime");
   const duration = useModuleState(player, "duration");
@@ -43,13 +40,16 @@ function ControlBar({
   const maximumPosition = useModuleState(player, "maximumPosition");
   const playbackRate = useModuleState(player, "playbackRate");
 
-  const changeStickToLiveEdge = useCallback((shouldStick: boolean) => {
-    if (shouldStick) {
-      player.actions.enableLiveCatchUp();
-    } else {
-      player.actions.disableLiveCatchUp();
-    }
-  }, [player]);
+  const changeStickToLiveEdge = useCallback(
+    (shouldStick: boolean) => {
+      if (shouldStick) {
+        player.actions.enableLiveCatchUp();
+      } else {
+        player.actions.disableLiveCatchUp();
+      }
+    },
+    [player],
+  );
 
   let isCloseToLive = undefined;
   if (isLive && lowLatencyMode != null && liveGap != null) {
@@ -62,10 +62,7 @@ function ControlBar({
     } else if (isLive) {
       return <LivePosition />;
     } else {
-      return <PositionInfos
-        position={currentTime}
-        duration={duration}
-      />;
+      return <PositionInfos position={currentTime} duration={duration} />;
     }
   }, [isContentLoaded, isLive, currentTime, duration]);
 
@@ -99,10 +96,7 @@ function ControlBar({
         onSeek={onSeek}
       />
       <div className="controls-bar">
-        <PlayPauseButton
-          className={"control-button"}
-          player={player}
-        />
+        <PlayPauseButton className={"control-button"} player={player} />
         <Button
           className={"control-button"}
           ariaLabel="Stop playback"
@@ -110,43 +104,38 @@ function ControlBar({
           value={String.fromCharCode(0xf04d)}
           disabled={isStopped}
         />
-        {
-          (isContentLoaded && isLive && lowLatencyMode) ?
-            <StickToLiveEdgeButton
-              isStickingToTheLiveEdge={isCatchUpEnabled}
-              changeStickToLiveEdge={toggleSeekToLiveEdge}
-            /> : null
-        }
+        {isContentLoaded && isLive && lowLatencyMode ? (
+          <StickToLiveEdgeButton
+            isStickingToTheLiveEdge={isCatchUpEnabled}
+            changeStickToLiveEdge={toggleSeekToLiveEdge}
+          />
+        ) : null}
         {positionElement}
-        {isLive && isContentLoaded ?
+        {isLive && isContentLoaded ? (
           <Button
             ariaLabel={isAtLiveEdge ? "We're playing live" : "Go back to live"}
             className={"dot" + (isAtLiveEdge ? " live" : "")}
             onClick={onLiveDotClick}
             disabled={!!isAtLiveEdge}
             value=""
-          /> : null}
+          />
+        ) : null}
         <div className="controls-right-side">
-          {!isPaused && isCatchingUp && playbackRate > 1 ?
+          {!isPaused && isCatchingUp && playbackRate > 1 ? (
             <div className="catch-up">
               {"Catch-up playback rate: " + String(playbackRate)}
-            </div> : null
-          }
+            </div>
+          ) : null}
           <Button
             ariaLabel="Display/Hide controls"
             disabled={!isContentLoaded}
-            className='control-button'
+            className="control-button"
             onClick={toggleSettings}
             value={String.fromCharCode(0xf013)}
           />
           <div className="volume">
-            <VolumeButton
-              className="control-button"
-              player={player}
-            />
-            <VolumeBar
-              player={player}
-            />
+            <VolumeButton className="control-button" player={player} />
+            <VolumeBar player={player} />
           </div>
           <FullscreenButton
             className={"control-button"}

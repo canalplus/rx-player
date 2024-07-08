@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
  * From the given array of Representations (sorted by bitrate order ascending),
  * returns the one corresponding to the given optimal, minimum and maximum
  * bitrates.
- * @param {Array.<Representation>} representations - The representations array,
+ * @param {Array.<Object>} representations - The representations array,
  * sorted in bitrate ascending order.
  * @param {Number} wantedBitrate - The optimal bitrate the Representation
  * should have under the current condition.
- * @returns {Representation|undefined}
+ * @returns {Object|undefined}
  */
 export default function selectOptimalRepresentation(
-  representations : Representation[],
-  wantedBitrate : number
-) : Representation {
+  representations: IRepresentation[],
+  wantedBitrate: number,
+): IRepresentation {
   const firstIndexTooHigh = arrayFindIndex(
     representations,
-    (representation) => representation.bitrate > wantedBitrate);
+    (representation) => representation.bitrate > wantedBitrate,
+  );
   if (firstIndexTooHigh === -1) {
     return representations[representations.length - 1];
   } else if (firstIndexTooHigh === 0) {

@@ -1,6 +1,6 @@
-import { ISerializedSourceBufferError } from "../errors/source_buffer_error";
-import EventEmitter from "../utils/event_emitter";
-import { IRange } from "../utils/ranges";
+import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
+import type EventEmitter from "../utils/event_emitter";
+import type { IRange } from "../utils/ranges";
 
 /**
  * Categorize a type of media associated to a `SourceBuffer` (the Media Source
@@ -66,7 +66,7 @@ export interface ISourceBufferInterface {
    */
   appendBuffer(
     data: BufferSource,
-    params: ISourceBufferInterfaceAppendBufferParameters
+    params: ISourceBufferInterfaceAppendBufferParameters,
   ): Promise<IRange[]>;
   /**
    * Remove media data present between the given start time in seconds and the
@@ -118,10 +118,7 @@ export interface ISourceBufferInterface {
    * @param {Array.<Object>} ranges - The new contiguous buffered range
    * linked to the MSE SourceBuffer once the operation succeeded.
    */
-  onOperationSuccess? : (
-    operationId: string,
-    ranges: IRange[]
-  ) => void;
+  onOperationSuccess?: (operationId: string, ranges: IRange[]) => void;
   /**
    * Only set for `ISourceBufferInterface` objects which cannot rely on
    * MediaSource API directly.
@@ -135,10 +132,9 @@ export interface ISourceBufferInterface {
    * @param {Array.<Object>} error - Categorization on the error encountered
    * while doing the operation.
    */
-  onOperationFailure? : (
+  onOperationFailure?: (
     operationId: string,
-    error : ISerializedSourceBufferError |
-            { errorName: "CancellationError" }
+    error: ISerializedSourceBufferError | { errorName: "CancellationError" },
   ) => void;
 }
 
@@ -146,27 +142,29 @@ export interface ISourceBufferInterface {
  * Object allowing to link a MSE's `MediaSource` instance to an
  * `HTMLMediaElement`.
  */
-export type IMediaSourceHandle = {
-  type: "handle";
-  /**
-   * This is a `MediaSourceHandle` which can be sent through a `postMessage` - if
-   * cross-thread communication is needed - in which case it should be transfered
-   * through that call (see `postMessage` browser API documentation).
-   */
-  value: MediaProvider;
-} | {
-  type: "media-source";
-  /**
-   * This is the `MediaSource` instance itself directly, you may want to create
-   * an object URL to it before linking it through an `src` attribute.
-   *
-   * To create an object URL, you can use browser API such as
-   * `URL.createObjectURL`.
-   * Do not forget to revoke such URL (e.g. through `URL.revokeObjectURL`) when
-   * you're done.
-   */
-  value: MediaSource;
-};
+export type IMediaSourceHandle =
+  | {
+      type: "handle";
+      /**
+       * This is a `MediaSourceHandle` which can be sent through a `postMessage` - if
+       * cross-thread communication is needed - in which case it should be transfered
+       * through that call (see `postMessage` browser API documentation).
+       */
+      value: MediaProvider;
+    }
+  | {
+      type: "media-source";
+      /**
+       * This is the `MediaSource` instance itself directly, you may want to create
+       * an object URL to it before linking it through an `src` attribute.
+       *
+       * To create an object URL, you can use browser API such as
+       * `URL.createObjectURL`.
+       * Do not forget to revoke such URL (e.g. through `URL.revokeObjectURL`) when
+       * you're done.
+       */
+      value: MediaSource;
+    };
 
 /**
  * Interface to the Media Source Extension (or MSE) API, that is supposed to
@@ -177,9 +175,7 @@ export type IMediaSourceHandle = {
  * The procedure creating a new `IMediaSourceInterface` object should also
  * trigger the creation of a linked `MediaSource` MSE object.
  */
-export interface IMediaSourceInterface extends EventEmitter<
-  IMediaSourceInterfaceEvents
-> {
+export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfaceEvents> {
   /** `id` uniquely identifying this `IMediaSourceInterface`. */
   id: string;
   /**
@@ -196,7 +192,7 @@ export interface IMediaSourceInterface extends EventEmitter<
    * directly to create a `MediaSource`, in which case it will have sent
    * message by itself to the main thread for MediaSource creation.
    */
-  handle : IMediaSourceHandle | undefined;
+  handle: IMediaSourceHandle | undefined;
   /**
    * List `ISourceBufferInterface` objects linked to this
    * `IMediaSourceInterface`.
@@ -265,7 +261,7 @@ export interface IMediaSourceInterface extends EventEmitter<
    *
    * @param {string} readyState - The new `MediaSource` readyState.
    */
-  onMediaSourceReadyStateChanged? : (readyState: ReadyState) => void;
+  onMediaSourceReadyStateChanged?: (readyState: ReadyState) => void;
 }
 
 /** Events that should be sent by an `IMediaSourceInterface`. */

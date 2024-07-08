@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  ErrorTypes,
-  IOtherErrorCode,
-} from "./error_codes";
+import type { IOtherErrorCode } from "./error_codes";
+import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
 /**
@@ -25,19 +23,18 @@ import errorMessage from "./error_message";
  * @extends Error
  */
 export default class OtherError extends Error {
-  public readonly name : "OtherError";
-  public readonly type : "OTHER_ERROR";
-  public readonly message : string;
-  public readonly code : IOtherErrorCode;
-  public fatal : boolean;
-  private _originalMessage : string;
+  public readonly name: "OtherError";
+  public readonly type: "OTHER_ERROR";
+  public readonly code: IOtherErrorCode;
+  public fatal: boolean;
+  private _originalMessage: string;
 
   /**
    * @param {string} code
    * @param {string} reason
    */
-  constructor(code : IOtherErrorCode, reason : string) {
-    super();
+  constructor(code: IOtherErrorCode, reason: string) {
+    super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, OtherError.prototype);
 
@@ -45,7 +42,6 @@ export default class OtherError extends Error {
     this.type = ErrorTypes.OTHER_ERROR;
 
     this.code = code;
-    this.message = errorMessage(this.code, reason);
     this.fatal = false;
     this._originalMessage = reason;
   }
@@ -57,15 +53,13 @@ export default class OtherError extends Error {
    * @returns {Object}
    */
   public serialize(): ISerializedOtherError {
-    return { name: this.name,
-             code: this.code,
-             reason: this._originalMessage };
+    return { name: this.name, code: this.code, reason: this._originalMessage };
   }
 }
 
 /** Serializable object which allows to create an `OtherError` later. */
 export interface ISerializedOtherError {
-  name : "OtherError";
-  code : IOtherErrorCode;
-  reason : string;
+  name: "OtherError";
+  code: IOtherErrorCode;
+  reason: string;
 }

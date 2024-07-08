@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+import NativeTextDisplayer from "../../main_thread/text_displayer/native";
 import srtParser from "../../parsers/texttracks/srt/native";
-import NativeTextDisplayer from "../../text_displayer/native";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse SRT text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeSRTFeature(features : IFeaturesObject) : void {
+function addNativeSRTFeature(features: IFeaturesObject): void {
   features.nativeTextTracksParsers.srt = srtParser;
   features.nativeTextDisplayer = NativeTextDisplayer;
 }

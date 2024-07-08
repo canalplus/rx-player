@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-import { IInbandEvent } from "../core/stream";
-import Manifest, {
-  ISegment,
-} from "../manifest";
-import { ICdnMetadata } from "../parsers/manifest";
-import {
+import type { IInbandEvent } from "../core/types";
+import type { IManifest, ISegment } from "../manifest";
+import type { ICdnMetadata } from "../parsers/manifest";
+import type {
   ITrackType,
   ILoadedManifestFormat,
   IManifestLoader,
@@ -28,9 +26,8 @@ import {
   IServerSyncInfos,
   IPlayerError,
 } from "../public_types";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../utils/task_canceller";
+import type { CancellationSignal } from "../utils/task_canceller";
+import type TaskCanceller from "../utils/task_canceller";
 
 /**
  * Interface returned by any transport implementation.
@@ -39,8 +36,7 @@ import TaskCanceller, {
  * @returns {Object} - The "transport pipelines". Those are all APIs for this
  * transport implementation.
  */
-export type ITransportFunction = (options : ITransportOptions) =>
-  ITransportPipelines;
+export type ITransportFunction = (options: ITransportOptions) => ITransportPipelines;
 
 /**
  * Every API implemented for a transport implementation, allowing to load and
@@ -48,17 +44,20 @@ export type ITransportFunction = (options : ITransportOptions) =>
  */
 export interface ITransportPipelines {
   /** Functions allowing to load an parse the Manifest for this transport. */
-  manifest : ITransportManifestPipeline;
+  manifest: ITransportManifestPipeline;
 
   /** Functions allowing to load an parse audio segments. */
-  audio : ISegmentPipeline<ILoadedAudioVideoSegmentFormat,
-                           Uint8Array | ArrayBuffer | null>;
+  audio: ISegmentPipeline<
+    ILoadedAudioVideoSegmentFormat,
+    Uint8Array | ArrayBuffer | null
+  >;
   /** Functions allowing to load an parse video segments. */
-  video : ISegmentPipeline<ILoadedAudioVideoSegmentFormat,
-                           Uint8Array | ArrayBuffer | null>;
+  video: ISegmentPipeline<
+    ILoadedAudioVideoSegmentFormat,
+    Uint8Array | ArrayBuffer | null
+  >;
   /** Functions allowing to load an parse text (e.g. subtitles) segments. */
-  text : ISegmentPipeline<ILoadedTextSegmentFormat,
-                          ITextTrackSegmentData | null>;
+  text: ISegmentPipeline<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
 }
 
 /** Functions allowing to load and parse the Manifest. */
@@ -85,10 +84,10 @@ export interface ITransportManifestPipeline {
    *   - The loading operation failed, most likely due to a request error.
    *     In that case, this Promise will reject with the corresponding Error.
    */
-  loadManifest : (
-    url : string | undefined,
-    options : IManifestLoaderOptions,
-    cancelSignal : CancellationSignal,
+  loadManifest: (
+    url: string | undefined,
+    options: IManifestLoaderOptions,
+    cancelSignal: CancellationSignal,
   ) => Promise<IRequestedData<ILoadedManifestFormat>>;
 
   /**
@@ -147,14 +146,13 @@ export interface ITransportManifestPipeline {
    * `cancelSignal` argument), then the rejected error should be the
    * `CancellationError` instance instead.
    */
-  parseManifest : (
-    manifestData : IRequestedData<unknown>,
-    parserOptions : IManifestParserOptions,
-    onWarnings : (warnings : Error[]) => void,
-    cancelSignal : CancellationSignal,
-    scheduleRequest : IManifestParserRequestScheduler
-  ) => IManifestParserResult |
-       Promise<IManifestParserResult>;
+  parseManifest: (
+    manifestData: IRequestedData<unknown>,
+    parserOptions: IManifestParserOptions,
+    onWarnings: (warnings: Error[]) => void,
+    cancelSignal: CancellationSignal,
+    scheduleRequest: IManifestParserRequestScheduler,
+  ) => IManifestParserResult | Promise<IManifestParserResult>;
 }
 
 /**
@@ -168,23 +166,19 @@ export interface IManifestLoaderOptions {
    *
    * `undefined` means that no timeout will be enforced.
    */
-  timeout? : number | undefined;
+  timeout?: number | undefined;
   /**
    * Connection timeout, in milliseconds, after which the request is canceled
    * if the responses headers has not being received.
    * Do not set or set to "undefined" to disable it.
    */
-  connectionTimeout? : number | undefined;
+  connectionTimeout?: number | undefined;
 }
 
 /** Functions allowing to load and parse segments of any type. */
-export interface ISegmentPipeline<
-  TLoadedFormat,
-  TParsedSegmentDataFormat,
-> {
-  loadSegment : ISegmentLoader<TLoadedFormat>;
-  parseSegment : ISegmentParser<TLoadedFormat,
-                                TParsedSegmentDataFormat>;
+export interface ISegmentPipeline<TLoadedFormat, TParsedSegmentDataFormat> {
+  loadSegment: ISegmentLoader<TLoadedFormat>;
+  parseSegment: ISegmentParser<TLoadedFormat, TParsedSegmentDataFormat>;
 }
 
 /**
@@ -205,14 +199,16 @@ export interface ISegmentPipeline<
  * the segment.
  */
 export type ISegmentLoader<TLoadedFormat> = (
-  wantedCdn : ICdnMetadata | null,
-  context : ISegmentContext,
-  options : ISegmentLoaderOptions,
-  cancelSignal : CancellationSignal,
-  callbacks : ISegmentLoaderCallbacks<TLoadedFormat>
-) => Promise<ISegmentLoaderResultSegmentCreated<TLoadedFormat> |
-             ISegmentLoaderResultSegmentLoaded<TLoadedFormat> |
-             ISegmentLoaderResultChunkedComplete>;
+  wantedCdn: ICdnMetadata | null,
+  context: ISegmentContext,
+  options: ISegmentLoaderOptions,
+  cancelSignal: CancellationSignal,
+  callbacks: ISegmentLoaderCallbacks<TLoadedFormat>,
+) => Promise<
+  | ISegmentLoaderResultSegmentCreated<TLoadedFormat>
+  | ISegmentLoaderResultSegmentLoaded<TLoadedFormat>
+  | ISegmentLoaderResultChunkedComplete
+>;
 
 /** Options given to an `ISegmentLoader` to configure its behavior. */
 export interface ISegmentLoaderOptions {
@@ -222,13 +218,13 @@ export interface ISegmentLoaderOptions {
    *
    * `undefined` means that no timeout will be enforced.
    */
-  timeout? : number | undefined;
+  timeout?: number | undefined;
   /**
    * Connection timeout, in milliseconds, after which the request is canceled
    * if the responses headers has not being received.
    * Do not set or set to "undefined" to disable it.
    */
-  connectionTimeout? : number | undefined;
+  connectionTimeout?: number | undefined;
 }
 
 /**
@@ -236,24 +232,31 @@ export interface ISegmentLoaderOptions {
  * of a segment) of any type.
  *
  * This function will throw if it encounters any error it cannot recover from.
+ * @returns - The parsed data.
+ *
+ * Can be of two types:
+ *   - `ISegmentParserParsedInitChunk`: When the parsed chunk was part of an
+ *     initialization segment.
+ *     Such segments only serve to initialize the decoder and do not contain
+ *     any decodable media data.
+ *   - `ISegmentParserParsedMediaChunk`: When the parsed chunk was part of a
+ *     media segment.
+ *     Such segments generally contain decodable media data.
  */
-export type ISegmentParser<
-  TLoadedFormat,
-  TParsedSegmentDataFormat
-> = (
+export type ISegmentParser<TLoadedFormat, TParsedSegmentDataFormat> = (
   /** Attributes of the corresponding loader's response. */
-  loadedSegment : {
+  loadedSegment: {
     /** The loaded segment data. */
-    data : TLoadedFormat;
+    data: TLoadedFormat;
     /**
      * If `true`,`data` is only a "chunk" of the whole segment (which potentially
      * will contain multiple chunks).
      * If `false`, `data` is the data for the whole segment.
      */
-    isChunked : boolean;
+    isChunked: boolean;
   },
   /** Context about the wanted segment. */
-  context : ISegmentContext,
+  context: ISegmentContext,
   /**
    * "Timescale" obtained from parsing the wanted representation's initialization
    * segment.
@@ -263,33 +266,21 @@ export type ISegmentParser<
    *
    * This value can be useful when parsing the loaded segment's data.
    */
-  initTimescale : number | undefined
+  initTimescale: number | undefined,
 ) =>
-  /**
-   * The parsed data.
-   *
-   * Can be of two types:
-   *   - `ISegmentParserParsedInitChunk`: When the parsed chunk was part of an
-   *     initialization segment.
-   *     Such segments only serve to initialize the decoder and do not contain
-   *     any decodable media data.
-   *   - `ISegmentParserParsedMediaChunk`: When the parsed chunk was part of a
-   *     media segment.
-   *     Such segments generally contain decodable media data.
-   */
-  ISegmentParserParsedInitChunk<TParsedSegmentDataFormat> |
-  ISegmentParserParsedMediaChunk<TParsedSegmentDataFormat>;
+  | ISegmentParserParsedInitChunk<TParsedSegmentDataFormat>
+  | ISegmentParserParsedMediaChunk<TParsedSegmentDataFormat>;
 
 export interface IManifestParserOptions {
   /**
    * If set, offset to add to the used monotonically-raising timestamp (common
    * to the RxPlayer's code), to obtain the current server's time.
    */
-  externalClockOffset : number | undefined;
+  externalClockOffset: number | undefined;
   /** Original URL used for the full version of the Manifest. */
-  originalUrl : string | undefined;
+  originalUrl: string | undefined;
   /** The previous value of the Manifest (when updating). */
-  previousManifest : Manifest | null;
+  previousManifest: IManifest | null;
   /**
    * If set to `true`, the Manifest parser can perform advanced optimizations
    * to speed-up the parsing process. Those optimizations might lead to a
@@ -297,11 +288,11 @@ export interface IManifestParserOptions {
    * part.
    * To use with moderation and only when needed.
    */
-  unsafeMode : boolean;
+  unsafeMode: boolean;
 }
 
 export interface IManifestParserCallbacks {
-  onWarning : (warning : Error) => void;
+  onWarning: (warning: Error) => void;
 
   /**
    * @param {Function} performRequest - Function performing the request
@@ -309,10 +300,10 @@ export interface IManifestParserCallbacks {
    * performed by the `performRequest` argument.
    * @returns {Promise.<Object>}
    */
-  scheduleRequest : (
-    performRequest : () => Promise< IRequestedData< Document | string > >,
-    canceller : TaskCanceller
-  ) =>  Promise< IRequestedData< Document | string > >;
+  scheduleRequest: (
+    performRequest: () => Promise<IRequestedData<Document | string>>,
+    canceller: TaskCanceller,
+  ) => Promise<IRequestedData<Document | string>>;
 }
 
 /**
@@ -352,10 +343,9 @@ export interface IManifestParserCallbacks {
  *     In that case, this Promise will reject with the Error corresponding to
  *     the last performed request.
  */
-export type IManifestParserRequestScheduler =
-  (
-    performRequest : () => Promise< IRequestedData< ILoadedManifestFormat > >
-  ) =>  Promise< IRequestedData< ILoadedManifestFormat > >;
+export type IManifestParserRequestScheduler = (
+  performRequest: () => Promise<IRequestedData<ILoadedManifestFormat>>,
+) => Promise<IRequestedData<ILoadedManifestFormat>>;
 
 // Either the Manifest can be parsed directly, in which case a
 // IManifestParserResult is returned, either the Manifest parser needs to
@@ -364,12 +354,12 @@ export type IManifestParserRequestScheduler =
 /** Event emitted when a Manifest has been parsed by a Manifest parser. */
 export interface IManifestParserResult {
   /** The parsed Manifest Object itself. */
-  manifest : Manifest;
+  manifest: IManifest;
   /**
    * Minor issues seen while constructing the Manifest object.
    * Empty if no issue was seen.
    */
-  warnings : IPlayerError[];
+  warnings: IPlayerError[];
   /**
    * "Real" URL (post-redirection) at which the Manifest can be refreshed.
    *
@@ -378,7 +368,7 @@ export interface IManifestParserResult {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string | undefined;
+  url?: string | undefined;
 }
 
 /**
@@ -386,8 +376,8 @@ export interface IManifestParserResult {
  * profiting from the same retries and error management than the loader.
  */
 export interface IManifestParserRequestNeeded {
-  resultType : "request-needed";
-  performRequest : IManifestParserRequest;
+  resultType: "request-needed";
+  performRequest: IManifestParserRequest;
 }
 
 /**
@@ -405,42 +395,40 @@ export interface IChunkTimeInfo {
    *
    * Either `undefined` or set to `0` for an initialization segment.
    */
-  duration : number | undefined;
+  duration: number | undefined;
   /** Earliest presentation time available in that segment, in seconds. */
-  time : number;
+  time: number;
 }
 
 /** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData {
   /** The text track data, in the format indicated in `type`. */
-  data : string;
+  data: string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type : string;
+  type: string;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
-  language? : string | undefined;
+  language?: string | undefined;
   /** start time from which the segment apply, in seconds. */
-  start? : number | undefined;
+  start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
-  end? : number | undefined;
+  end?: number | undefined;
 }
 
 export type IManifestParserRequest1 = (
-  (
-    /**
-     * Cancellation signal which will allow to cancel the request if the
-     * Manifest is not needed anymore.
-     *
-     * When cancelled, this parser should stop any pending operation (such as an
-     * HTTP request) and the Promise returned should reject immediately after with
-     * a `CancellationError`.
-     */
-    cancelSignal : CancellationSignal,
-  ) => Promise< IRequestedData< Document | string > >
-);
+  /**
+   * Cancellation signal which will allow to cancel the request if the
+   * Manifest is not needed anymore.
+   *
+   * When cancelled, this parser should stop any pending operation (such as an
+   * HTTP request) and the Promise returned should reject immediately after with
+   * a `CancellationError`.
+   */
+  cancelSignal: CancellationSignal,
+) => Promise<IRequestedData<Document | string>>;
 export type IManifestParserRequest = (
   /**
    * Cancellation signal which will allow to cancel the request if the
@@ -450,45 +438,45 @@ export type IManifestParserRequest = (
    * HTTP request) and the Promise returned should reject immediately after with
    * a `CancellationError`.
    */
-  cancelSignal : CancellationSignal,
-) => Promise< IManifestParserResult |
-              IManifestParserRequestNeeded >;
+  cancelSignal: CancellationSignal,
+) => Promise<IManifestParserResult | IManifestParserRequestNeeded>;
 
 export interface ITransportAudioVideoSegmentPipeline {
-  loadSegment : ISegmentLoader<ILoadedAudioVideoSegmentFormat>;
-  parseSegment : ISegmentParser<ILoadedAudioVideoSegmentFormat,
-                                Uint8Array | ArrayBuffer | null>;
+  loadSegment: ISegmentLoader<ILoadedAudioVideoSegmentFormat>;
+  parseSegment: ISegmentParser<
+    ILoadedAudioVideoSegmentFormat,
+    Uint8Array | ArrayBuffer | null
+  >;
 }
 
 export interface ITransportTextSegmentPipeline {
-  loadSegment : ISegmentLoader<ILoadedTextSegmentFormat>;
-  parseSegment : ISegmentParser<ILoadedTextSegmentFormat,
-                                ITextTrackSegmentData | null>;
+  loadSegment: ISegmentLoader<ILoadedTextSegmentFormat>;
+  parseSegment: ISegmentParser<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
 }
 
-export type ITransportSegmentPipeline = ITransportAudioVideoSegmentPipeline |
-                                        ITransportTextSegmentPipeline;
+export type ITransportSegmentPipeline =
+  | ITransportAudioVideoSegmentPipeline
+  | ITransportTextSegmentPipeline;
 
-export type ITransportPipeline = ITransportManifestPipeline |
-                                 ITransportSegmentPipeline;
+export type ITransportPipeline = ITransportManifestPipeline | ITransportSegmentPipeline;
 
 export interface ISegmentContext {
   /** Metadata about the wanted segment. */
-  segment : ISegment;
+  segment: ISegment;
   /** Type of the corresponding track. */
-  type : ITrackType;
+  type: ITrackType;
   /** Language of the corresponding track. */
-  language? : string | undefined;
+  language?: string | undefined;
   /** If `true`, the corresponding `Manifest` if for a live content. */
-  isLive : boolean;
+  isLive: boolean;
   /** Start position in seconds of the Period in which that segment plays. */
-  periodStart : number;
+  periodStart: number;
   /** End position in seconds of the Period in which that segment plays. */
-  periodEnd : number | undefined;
+  periodEnd: number | undefined;
   /** Mimetype of the corresponding Representation. */
-  mimeType? : string | undefined;
+  mimeType?: string | undefined;
   /** Codec(s) of the corresponding Representation. */
-  codecs? : string | undefined;
+  codecs?: string | undefined;
   /**
    * Last published time for the Manifest file in which this segment has been
    * defined.
@@ -496,7 +484,7 @@ export interface ISegmentContext {
    * This can be useful in cases where a loaded segment contains metadata that
    * could indicate a newer version of the Manifest.
    */
-  manifestPublishTime? : number | undefined;
+  manifestPublishTime?: number | undefined;
 }
 
 export interface ISegmentLoaderCallbacks<T> {
@@ -506,7 +494,7 @@ export interface ISegmentLoaderCallbacks<T> {
    * The information emitted though this callback can be used to gather
    * metrics on a current, un-terminated, request.
    */
-  onProgress : (info : ISegmentLoadingProgressInformation) => void;
+  onProgress: (info: ISegmentLoadingProgressInformation) => void;
   /**
    * Callback called when a decodable sub-part of the segment is available.
    *
@@ -529,17 +517,17 @@ export interface ISegmentLoaderCallbacks<T> {
    * In both of those other cases, the segment data can be retrieved in the
    * Promise returned by the segment loader instead.
    */
-  onNewChunk : (data : T) => void;
+  onNewChunk: (data: T) => void;
 }
 
 /** Information related to a pending Segment request progressing. */
 export interface ISegmentLoadingProgressInformation {
   /** Time since the beginning of the request so far, in seconds. */
-  duration : number;
+  duration: number;
   /** Size of the data already downloaded, in bytes. */
-  size : number;
+  size: number;
   /** Size of whole data to download (data already-loaded included), in bytes. */
-  totalSize? : number | undefined;
+  totalSize?: number | undefined;
 }
 
 /**
@@ -550,9 +538,9 @@ export interface ISegmentLoadingProgressInformation {
  * loader.
  */
 export interface ISegmentLoaderResultChunkedComplete {
-  resultType : "chunk-complete";
+  resultType: "chunk-complete";
   /** Information on the request performed. */
-  resultData : IChunkCompleteInformation;
+  resultData: IChunkCompleteInformation;
 }
 
 /**
@@ -560,9 +548,9 @@ export interface ISegmentLoaderResultChunkedComplete {
  * by performing a request.
  */
 export interface ISegmentLoaderResultSegmentLoaded<T> {
-  resultType : "segment-loaded";
+  resultType: "segment-loaded";
   /** Segment data and information on the request. */
-  resultData : IRequestedData<T>;
+  resultData: IRequestedData<T>;
 }
 
 /**
@@ -571,15 +559,15 @@ export interface ISegmentLoaderResultSegmentLoaded<T> {
  * TODO merge with ISegmentLoaderResultSegmentLoaded?
  */
 export interface ISegmentLoaderResultSegmentCreated<T> {
-  resultType : "segment-created";
+  resultType: "segment-created";
   /** The data iself. */
-  resultData : T;
+  resultData: T;
 }
 
 /** Data emitted in a `ISegmentLoaderResultChunkedComplete`. */
 export interface IChunkCompleteInformation {
   /** Duration the request took to be performed, in seconds. */
-  requestDuration : number | undefined;
+  requestDuration: number | undefined;
   /**
    * "Real" URL (post-redirection) at which the segment was loaded.
    *
@@ -588,57 +576,52 @@ export interface IChunkCompleteInformation {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string | undefined;
+  url?: string | undefined;
   /**
    * Time at which the request began in terms of the monotonically-raising
    * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
-  sendingTime? : number | undefined;
+  sendingTime?: number | undefined;
   /**
    * Time at which the request ended in terms of the monotonically-raising
    * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
-  receivedTime? : number | undefined;
+  receivedTime?: number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
-  size : number | undefined;
+  size: number | undefined;
 }
 
 /** Format of a loaded audio and video segment before parsing. */
-export type ILoadedAudioVideoSegmentFormat = Uint8Array |
-                                             ArrayBuffer |
-                                             null;
+export type ILoadedAudioVideoSegmentFormat = Uint8Array | ArrayBuffer | null;
 
 /** Format of a loaded text segment before parsing. */
-export type ILoadedTextSegmentFormat = Uint8Array |
-                                       ArrayBuffer |
-                                       string |
-                                       null;
+export type ILoadedTextSegmentFormat = Uint8Array | ArrayBuffer | string | null;
 
 /**
  * Result returned by a segment parser when it parsed a chunk from an init
  * segment (which does not contain media data).
  */
 export interface ISegmentParserParsedInitChunk<DataType> {
-  segmentType : "init";
+  segmentType: "init";
   /**
    * Initialization segment that can be directly pushed to the corresponding
    * buffer.
    */
-  initializationData : DataType | null;
+  initializationData: DataType | null;
   /**
    * Timescale metadata found inside this initialization segment.
    * That timescale might be useful when parsing further merdia segments.
    */
-  initTimescale? : number | undefined;
+  initTimescale?: number | undefined;
   /**
    * Information on encryption that has been found in this segment.
    * Empty array if no such information was found.
    */
-  protectionData : IProtectionDataInfo[];
+  protectionData: IProtectionDataInfo[];
   /**
    * Size in bytes of `initializationData`.
    * `undefined` if unknown.
@@ -649,7 +632,7 @@ export interface ISegmentParserParsedInitChunk<DataType> {
    * to a sensible estimate (e.g. when a JavaScript object wraps large binary
    * data, `initializationDataSize` may refer to that binary data only).
    */
-  initializationDataSize : number | undefined;
+  initializationDataSize: number | undefined;
   /**
    * When this property is set, a list of segments linked to this
    * `Representation` has been obtained when parsing this initialization
@@ -658,7 +641,7 @@ export interface ISegmentParserParsedInitChunk<DataType> {
    * This might then be used to communicate it to the corresponding
    * `RepresentationIndex`.
    */
-  segmentList? : ISegmentInformation[] | undefined;
+  segmentList?: ISegmentInformation[] | undefined;
 }
 
 /**
@@ -666,17 +649,17 @@ export interface ISegmentParserParsedInitChunk<DataType> {
  * segment (which contains media data, unlike an initialization segment).
  */
 export interface ISegmentParserParsedMediaChunk<DataType> {
-  segmentType : "media";
+  segmentType: "media";
   /**
    * Parsed chunk of data that can be decoded.
    * `null` if no data was parsed.
    */
-  chunkData : DataType | null;
+  chunkData: DataType | null;
   /**
    * Time information on this parsed chunk.
    * `null` if unknown.
    */
-  chunkInfos : IChunkTimeInfo | null;
+  chunkInfos: IChunkTimeInfo | null;
   /**
    * Size in bytes of `chunkData`.
    * `undefined` if unknown.
@@ -687,7 +670,7 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    * when a JavaScript object wraps large binary data, `chunkSize` may refer to
    * that binary data only).
    */
-  chunkSize : number | undefined;
+  chunkSize: number | undefined;
   /**
    * time offset, in seconds, to add to the absolute timed data defined in
    * `chunkData` to obtain the "real" wanted effective time.
@@ -700,19 +683,18 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    * Note that `chunkInfos` needs not to be offseted as it should already
    * contain the correct time information.
    */
-  chunkOffset : number;
+  chunkOffset: number;
   /**
    * start and end windows for the chunk (part of the chunk respectively
    * before and after that time will be ignored).
    * `undefined` when their is no such limitation.
    */
-  appendWindow : [ number | undefined,
-                   number | undefined ];
+  appendWindow: [number | undefined, number | undefined];
   /**
    * If set and not empty, then this property contains "events" have been
    * encountered in this parsed chunk.
    */
-  inbandEvents? : IInbandEvent[] | undefined;
+  inbandEvents?: IInbandEvent[] | undefined;
   /**
    * If set to `true`, then parsing this chunk revealed that the current
    * Manifest instance needs to be refreshed.
@@ -722,7 +704,7 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    * Information on encryption that has been found in this chunk.
    * Empty array if no such information was found.
    */
-  protectionData : IProtectionDataInfo[];
+  protectionData: IProtectionDataInfo[];
   /**
    * Some segments might contain information about segments coming after them.
    * Those are called "predicted segments".
@@ -730,7 +712,7 @@ export interface ISegmentParserParsedMediaChunk<DataType> {
    * If set, this array will contain the list of segment predicted to come just
    * after this segment.
    */
-  predictedSegments? : ISegmentInformation[] | undefined;
+  predictedSegments?: ISegmentInformation[] | undefined;
 }
 
 /** Format of protection data found in a segment/chunk. */
@@ -740,7 +722,7 @@ export interface IProtectionDataInfo {
    * "cenc" is the standart format for ISOBMFF-embedded protection information -
    * like in a PSSH box.
    */
-  initDataType : "cenc";
+  initDataType: "cenc";
 
   /** Optional key id found in the segment. */
   keyId: Uint8Array | undefined;
@@ -748,11 +730,11 @@ export interface IProtectionDataInfo {
   /**
    * The protection data.
    */
-  initData : Array<{
+  initData: Array<{
     /** Hex string identifying the key system concerned by this protection data. */
-    systemId : string;
+    systemId: string;
     /** The protection data itself. */
-    data : Uint8Array;
+    data: Uint8Array;
   }>;
 }
 
@@ -765,21 +747,21 @@ export interface IProtectionDataInfo {
  */
 export interface ISegmentInformation {
   /** This segment start time, timescaled. */
-  time : number;
+  time: number;
   /** This segment difference between its end and start time, timescaled. */
-  duration : number;
+  duration: number;
   /** Dividing `time` or `duration` with this value allows to obtain seconds. */
-  timescale : number;
+  timescale: number;
   /** Optional byte-range at which the segment should be loaded. */
-  range? : [number, number];
+  range?: [number, number];
 }
 
 /** Describe data loaded through a request. */
 export interface IRequestedData<T> {
   /** The loaded response data. */
-  responseData : T;
+  responseData: T;
   /** Duration the request took to be performed, in seconds. */
-  requestDuration : number | undefined;
+  requestDuration: number | undefined;
   /**
    * "Real" URL (post-redirection) at which the data can be loaded.
    *
@@ -788,33 +770,33 @@ export interface IRequestedData<T> {
    * This property should only be set when a unique URL is sufficient to
    * retrieve the whole data.
    */
-  url? : string | undefined;
+  url?: string | undefined;
   /**
    * Time at which the request began in terms of the monotonically-raising
    * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the first request made.
    */
-  sendingTime? : number | undefined;
+  sendingTime?: number | undefined;
   /**
    * Time at which the request ended in terms of the monotonically-raising
    * timestamp used by the RxPlayer.
    * If fetching the corresponding data necessitated to perform multiple
    * requests, this time corresponds to the last request to end.
    */
-  receivedTime? : number | undefined;
+  receivedTime?: number | undefined;
   /** Size in bytes of the loaded data.  `undefined` if we don't know.  */
-  size : number | undefined;
+  size: number | undefined;
 }
 
 export interface ITransportOptions {
-  checkMediaSegmentIntegrity? : boolean | undefined;
-  lowLatencyMode : boolean;
+  checkMediaSegmentIntegrity?: boolean | undefined;
+  lowLatencyMode: boolean;
   manifestLoader?: IManifestLoader | undefined;
-  referenceDateTime? : number | undefined;
-  representationFilter? : IRepresentationFilter | undefined;
-  segmentLoader? : ICustomSegmentLoader | undefined;
-  serverSyncInfos? : IServerSyncInfos | undefined;
-  __priv_manifestUpdateUrl? : string | undefined;
-  __priv_patchLastSegmentInSidx? : boolean | undefined;
+  referenceDateTime?: number | undefined;
+  representationFilter?: IRepresentationFilter | undefined;
+  segmentLoader?: ICustomSegmentLoader | undefined;
+  serverSyncInfos?: IServerSyncInfos | undefined;
+  __priv_manifestUpdateUrl?: string | undefined;
+  __priv_patchLastSegmentInSidx?: boolean | undefined;
 }

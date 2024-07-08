@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../manifest";
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ISegment } from "../../manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import resolveURL from "../../utils/resolve_url";
 
 export default function constructSegmentUrl(
-  wantedCdn : ICdnMetadata | null,
-  segment : ISegment
-) : string | null {
-  return wantedCdn === null   ? null :
-         segment.url === null ? wantedCdn.baseUrl :
-                                resolveURL(wantedCdn.baseUrl, segment.url);
+  wantedCdn: ICdnMetadata | null,
+  segment: ISegment,
+): string | null {
+  if (wantedCdn === null) {
+    return null;
+  }
+  if (segment.url === null) {
+    return wantedCdn.baseUrl;
+  }
+  return resolveURL(wantedCdn.baseUrl, segment.url);
 }

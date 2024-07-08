@@ -24,7 +24,7 @@ import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
-import buildWorker from "./bundle_worker.mjs";
+import runBundler from "./run_bundler.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,6 +34,9 @@ const BUILD_ARTEFACTS_TO_REMOVE = [
   "dist/es2017",
   "src/__GENERATED_CODE",
 ];
+
+const WORKER_IN_FILE = path.join(ROOT_DIR, "src/worker_entry_point.ts");
+const WORKER_OUT_FILE = path.join(ROOT_DIR, "dist/worker.js");
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -69,20 +72,24 @@ async function generateBuild(options = {}) {
       await spawnProm(
         "npm run " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
         [],
-        (code) =>
-        new Error(`WebAssembly compilation process exited with code ${code}`)
+        (code) => new Error(`WebAssembly compilation process exited with code ${code}`),
       );
     } else {
-      console.log(" 🏭 Reusing already-generated WebAssembly file (please re-compile it if source changed).");
+      console.log(
+        " 🏭 Reusing already-generated WebAssembly file (please re-compile it if source changed).",
+      );
     }
 
-    console.log(" 👷 Bundling worker code...");
-    await buildWorker({
-      watch: false,
-      minify: !devMode,
-      production: !devMode,
-      silent: true,
-    });
+    console.log(" 👷 Bundling worker files...");
+    await Promise.all([
+      runBundler(WORKER_IN_FILE, {
+        watch: false,
+        minify: !devMode,
+        outfile: WORKER_OUT_FILE,
+        production: !devMode,
+        silent: true,
+      }),
+    ]);
 
     console.log(" 🤖 Generating embedded code...");
     await generateEmbeds();
@@ -106,7 +113,7 @@ async function removePreviousBuildArtefacts() {
     BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
       const relativePath = path.join(ROOT_DIR, name);
       return removeFile(relativePath);
-    })
+    }),
   );
 }
 
@@ -124,18 +131,17 @@ async function compile(devMode) {
     spawnProm(
       "npx tsc -p",
       [path.join(ROOT_DIR, devMode ? "tsconfig.dev.json" : "tsconfig.json")],
-      (code) =>
-        new Error(`CommonJS compilation process exited with code ${code}`)
+      (code) => new Error(`CommonJS compilation process exited with code ${code}`),
     ),
     spawnProm(
       "npx tsc -p",
       [
         path.join(
           ROOT_DIR,
-          devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json"
+          devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
         ),
       ],
-      (code) => new Error(`es2018 compilation process exited with code ${code}`)
+      (code) => new Error(`es2018 compilation process exited with code ${code}`),
     ),
   ]);
 }
@@ -155,15 +161,12 @@ function removeFile(fileName) {
  */
 function spawnProm(command, args, errorOnCode) {
   return new Promise((res, rej) => {
-    spawn(command, args, { shell: true, stdio: "inherit" }).on(
-      "close",
-      (code) => {
-        if (code !== 0) {
-          rej(errorOnCode(code));
-        }
-        res();
+    spawn(command, args, { shell: true, stdio: "inherit" }).on("close", (code) => {
+      if (code !== 0) {
+        rej(errorOnCode(code));
       }
-    );
+      res();
+    });
   });
 }
 
@@ -178,7 +181,7 @@ function displayHelp() {
     `Usage: node build_worker.mjs [options]
 Options:
   -h, --help             Display this help
-  -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)`
+  -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)`,
     /* eslint-enable indent */
   );
   /* eslint-enable no-console */

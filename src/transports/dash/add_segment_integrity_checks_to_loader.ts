@@ -15,7 +15,7 @@
  */
 
 import TaskCanceller from "../../utils/task_canceller";
-import { ISegmentLoader } from "../types";
+import type { ISegmentLoader } from "../types";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import inferSegmentContainer from "../utils/infer_segment_container";
 
@@ -27,8 +27,8 @@ import inferSegmentContainer from "../utils/infer_segment_container";
  * @returns {Function}
  */
 export default function addSegmentIntegrityChecks<T>(
-  segmentLoader : ISegmentLoader<T>
-) : ISegmentLoader<T> {
+  segmentLoader: ISegmentLoader<T>,
+): ISegmentLoader<T> {
   return (url, context, loaderOptions, initialCancelSignal, callbacks) => {
     return new Promise((resolve, reject) => {
       const requestCanceller = new TaskCanceller();
@@ -52,28 +52,27 @@ export default function addSegmentIntegrityChecks<T>(
             reject(err);
           }
         },
-      })
-        .then(
-          (info) => {
-            cleanUpCancellers();
-            if (requestCanceller.isUsed()) {
+      }).then(
+        (info) => {
+          cleanUpCancellers();
+          if (requestCanceller.isUsed()) {
+            return;
+          }
+          if (info.resultType === "segment-loaded") {
+            try {
+              trowOnIntegrityError(info.resultData.responseData);
+            } catch (err) {
+              reject(err);
               return;
             }
-            if (info.resultType === "segment-loaded") {
-              try {
-                trowOnIntegrityError(info.resultData.responseData);
-              } catch (err) {
-                reject(err);
-                return;
-              }
-            }
-            resolve(info);
-          },
-          (err : unknown) => {
-            cleanUpCancellers();
-            reject(err);
           }
-        );
+          resolve(info);
+        },
+        (err: unknown) => {
+          cleanUpCancellers();
+          reject(err);
+        },
+      );
 
       function cleanUpCancellers() {
         requestCanceller.signal.deregister(reject);
@@ -85,10 +84,11 @@ export default function addSegmentIntegrityChecks<T>(
      * If the data's seems to be corrupted, throws an `INTEGRITY_ERROR` error.
      * @param {*} data
      */
-    function trowOnIntegrityError(data : T) : void {
-      if (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array) ||
-          inferSegmentContainer(context.type, context.mimeType) !== "mp4")
-      {
+    function trowOnIntegrityError(data: T): void {
+      if (
+        (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array)) ||
+        inferSegmentContainer(context.type, context.mimeType) !== "mp4"
+      ) {
         return;
       }
       checkISOBMFFIntegrity(new Uint8Array(data), context.segment.isInit);

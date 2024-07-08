@@ -1,31 +1,16 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, it, expect } from "vitest";
+import EventEmitter from "../event_emitter";
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import EventEmitter from "../event_emitter";
-
 describe("utils - EventEmitter", () => {
   it("should be able to call synchronously a callback on a given event", () => {
     const eventEmitter = new EventEmitter<{
-      something : undefined;
-      nope : undefined;
+      something: undefined;
+      nope: undefined;
     }>();
     let wasCalled = 0;
     eventEmitter.addEventListener("something", () => {
@@ -42,20 +27,21 @@ describe("utils - EventEmitter", () => {
 
   it("should communicate the given payload", () => {
     const eventEmitter = new EventEmitter<{
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
+      something: undefined | "a" | { a: string };
+      nope: undefined | "a" | { a: string };
     }>();
     let wasCalledWithString = 0;
     let wasCalledWithObject = 0;
     eventEmitter.addEventListener(
       "something",
-      (payload : undefined|"a"|{ a: string }) => {
+      (payload: undefined | "a" | { a: string }) => {
         if (payload === "a") {
           wasCalledWithString++;
         } else if (payload !== undefined && payload.a === "b") {
           wasCalledWithObject++;
         }
-      });
+      },
+    );
 
     expect(wasCalledWithString).toEqual(0);
     expect(wasCalledWithObject).toEqual(0);
@@ -94,12 +80,12 @@ describe("utils - EventEmitter", () => {
 
   it("should be able to remove the listener for a given event", () => {
     const eventEmitter = new EventEmitter<{
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
+      something: undefined | "a" | { a: string };
+      nope: undefined | "a" | { a: string };
     }>();
     let wasCalledWithString = 0;
     let wasCalledWithObject = 0;
-    const callback = (payload : undefined|"a"|{ a: string }) => {
+    const callback = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString++;
       } else if (payload !== undefined && payload.a === "b") {
@@ -151,8 +137,8 @@ describe("utils - EventEmitter", () => {
 
   it("should be able to register multiple callbacks for the same event", () => {
     const eventEmitter = new EventEmitter<{
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
+      something: undefined | "a" | { a: string };
+      nope: undefined | "a" | { a: string };
     }>();
     let wasCalledWithString1 = 0;
     let wasCalledWithObject1 = 0;
@@ -160,21 +146,21 @@ describe("utils - EventEmitter", () => {
     let wasCalledWithObject2 = 0;
     let wasCalledWithString3 = 0;
     let wasCalledWithObject3 = 0;
-    const callback1 = (payload : undefined|"a"|{ a: string }) => {
+    const callback1 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString1++;
       } else if (payload !== undefined && payload.a === "b") {
         wasCalledWithObject1++;
       }
     };
-    const callback2 = (payload : undefined|"a"|{ a: string }) => {
+    const callback2 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString2++;
       } else if (payload !== undefined && payload.a === "b") {
         wasCalledWithObject2++;
       }
     };
-    const callback3 = (payload : undefined|"a"|{ a: string }) => {
+    const callback3 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString3++;
       } else if (payload !== undefined && payload.a === "b") {
@@ -275,12 +261,10 @@ describe("utils - EventEmitter", () => {
     eventEmitter.removeEventListener();
   });
 
-  /* eslint-disable max-len */
   it("should remove every callback for an event if no callback is provided to removeEventListener", () => {
-  /* eslint-enable max-len */
     const eventEmitter = new EventEmitter<{
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
+      something: undefined | "a" | { a: string };
+      nope: undefined | "a" | { a: string };
     }>();
     let wasCalledWithString1 = 0;
     let wasCalledWithObject1 = 0;
@@ -288,21 +272,21 @@ describe("utils - EventEmitter", () => {
     let wasCalledWithObject2 = 0;
     let wasCalledWithString3 = 0;
     let wasCalledWithObject3 = 0;
-    const callback1 = (payload : undefined|"a"|{ a: string }) => {
+    const callback1 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString1++;
       } else if (payload !== undefined && payload.a === "b") {
         wasCalledWithObject1++;
       }
     };
-    const callback2 = (payload : undefined|"a"|{ a: string }) => {
+    const callback2 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString2++;
       } else if (payload !== undefined && payload.a === "b") {
         wasCalledWithObject2++;
       }
     };
-    const callback3 = (payload : undefined|"a"|{ a: string }) => {
+    const callback3 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString3++;
       } else if (payload !== undefined && payload.a === "b") {
@@ -403,12 +387,10 @@ describe("utils - EventEmitter", () => {
     eventEmitter.removeEventListener();
   });
 
-  /* eslint-disable max-len */
   it("should remove every callback for any event if no callback and no event is provided to removeEventListener", () => {
-  /* eslint-enable max-len */
     const eventEmitter = new EventEmitter<{
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
+      something: undefined | "a" | { a: string };
+      nope: undefined | "a" | { a: string };
     }>();
     let wasCalledWithString1 = 0;
     let wasCalledWithObject1 = 0;
@@ -416,21 +398,21 @@ describe("utils - EventEmitter", () => {
     let wasCalledWithObject2 = 0;
     let wasCalledWithString3 = 0;
     let wasCalledWithObject3 = 0;
-    const callback1 = (payload : undefined|"a"|{ a: string }) => {
+    const callback1 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString1++;
       } else if (payload !== undefined && payload.a === "b") {
         wasCalledWithObject1++;
       }
     };
-    const callback2 = (payload : undefined|"a"|{ a: string }) => {
+    const callback2 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString2++;
       } else if (payload !== undefined && payload.a === "b") {
         wasCalledWithObject2++;
       }
     };
-    const callback3 = (payload : undefined|"a"|{ a: string }) => {
+    const callback3 = (payload: undefined | "a" | { a: string }) => {
       if (payload === "a") {
         wasCalledWithString3++;
       } else if (payload !== undefined && payload.a === "b") {
@@ -533,14 +515,14 @@ describe("utils - EventEmitter", () => {
 
   it("should allow removing event listener that do not exist", () => {
     const eventEmitter = new EventEmitter<{
-      test: undefined|"a"|{ a: string };
-      something: undefined|"a"|{ a: string };
-      nope: undefined|"a"|{ a: string };
+      test: undefined | "a" | { a: string };
+      something: undefined | "a" | { a: string };
+      nope: undefined | "a" | { a: string };
     }>();
-    const cb1 = function() {
+    const cb1 = function () {
       throw new Error("Should not be called");
     };
-    const cb2 = function() {
+    const cb2 = function () {
       throw new Error("Should not be called");
     };
     eventEmitter.addEventListener("test", cb2);

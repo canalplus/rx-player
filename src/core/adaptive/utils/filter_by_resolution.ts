@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 
 /**
@@ -27,9 +27,9 @@ import arrayFind from "../../../utils/array_find";
  * @returns {Array.<Object>}
  */
 export default function filterByResolution(
-  representations : Representation[],
-  resolution : IResolutionInfo
-) : Representation[] {
+  representations: IRepresentation[],
+  resolution: IResolutionInfo,
+): IRepresentation[] {
   if (resolution.width === undefined || resolution.height === undefined) {
     return representations;
   }
@@ -39,25 +39,27 @@ export default function filterByResolution(
     .slice() // clone
     .sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
 
-  const repWithMaxWidth = arrayFind(sortedRepsByWidth, (representation) =>
-    typeof representation.width === "number" &&
-    representation.width >= width &&
-    typeof representation.height === "number" &&
-    representation.height >= height);
+  const repWithMaxWidth = arrayFind(
+    sortedRepsByWidth,
+    (representation) =>
+      typeof representation.width === "number" &&
+      representation.width >= width &&
+      typeof representation.height === "number" &&
+      representation.height >= height,
+  );
 
   if (repWithMaxWidth === undefined) {
     return representations;
   }
 
-  const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width :
-                                                               0;
-  return representations.filter(representation =>
-    typeof representation.width === "number" ? representation.width <= maxWidth :
-                                               true);
+  const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width : 0;
+  return representations.filter((representation) =>
+    typeof representation.width === "number" ? representation.width <= maxWidth : true,
+  );
 }
 
 export interface IResolutionInfo {
-  height : number | undefined;
-  width : number | undefined;
-  pixelRatio : number;
+  height: number | undefined;
+  width: number | undefined;
+  pixelRatio: number;
 }

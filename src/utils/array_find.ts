@@ -22,10 +22,7 @@
 
 // Ugly transitory type to make duck typing work
 type ArrayWithFind<T> = T[] & {
-  find(predicate: (value: T,
-                   index: number,
-                   obj: T[]) => unknown,
-       thisArg?: unknown): T;
+  find(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: unknown): T;
 };
 
 /**
@@ -36,10 +33,10 @@ type ArrayWithFind<T> = T[] & {
  * @returns {boolean}
  */
 export default function arrayFind<T>(
-  arr : T[],
-  predicate : (arg: T, index : number, fullArray : T[]) => boolean,
-  thisArg? : unknown
-) : T | undefined {
+  arr: T[],
+  predicate: (arg: T, index: number, fullArray: T[]) => boolean,
+  thisArg?: unknown,
+): T | undefined {
   if (typeof (Array.prototype as ArrayWithFind<T>).find === "function") {
     return (arr as ArrayWithFind<T>).find(predicate, thisArg);
   }

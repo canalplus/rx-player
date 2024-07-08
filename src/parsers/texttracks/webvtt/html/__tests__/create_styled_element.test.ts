@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect } from "vitest";
 import createStyledElement from "../create_styled_element";
 
 describe("parsers - webvtt - createStyledElement", () => {
@@ -37,11 +22,11 @@ describe("parsers - webvtt - createStyledElement", () => {
     const element = createStyledElement(node, styleElements);
     expect(element.outerHTML).toEqual(
       "<span>" +
-        "<u style=\"color: yellow\"></u>" +
-        "<i style=\"  color: green\"></i>" +
-        "<b style=\"color: red\"></b>" +
-        "<span style=\"color: blue\"></span>" +
-      "</span>"
+        '<u style="color: yellow"></u>' +
+        '<i style="  color: green"></i>' +
+        '<b style="color: red"></b>' +
+        '<span style="color: blue"></span>' +
+        "</span>",
     );
   });
 
@@ -59,12 +44,7 @@ describe("parsers - webvtt - createStyledElement", () => {
 
     const element = createStyledElement(node, styleElements);
     expect(element.outerHTML).toEqual(
-      "<span>" +
-        "<u></u>" +
-        "<i></i>" +
-        "<b></b>" +
-        "<span></span>" +
-      "</span>"
+      "<span>" + "<u></u>" + "<i></i>" + "<b></b>" + "<span></span>" + "</span>",
     );
   });
 
@@ -80,11 +60,7 @@ describe("parsers - webvtt - createStyledElement", () => {
     };
 
     const element = createStyledElement(node, styleElements);
-    expect(element.outerHTML).toEqual(
-      "<span>" +
-        "<span>Hello</span>" +
-      "</span>"
-    );
+    expect(element.outerHTML).toEqual("<span>" + "<span>Hello</span>" + "</span>");
   });
 
   it("should turn empty text node into span", () => {
@@ -94,11 +70,7 @@ describe("parsers - webvtt - createStyledElement", () => {
     node.appendChild(textNode);
 
     const element = createStyledElement(node, {});
-    expect(element.outerHTML).toEqual(
-      "<span>" +
-        "<span></span>" +
-      "</span>"
-    );
+    expect(element.outerHTML).toEqual("<span>" + "<span></span>" + "</span>");
   });
 
   it("should add <br/> tags for text elements", () => {
@@ -108,11 +80,7 @@ describe("parsers - webvtt - createStyledElement", () => {
     node.appendChild(textNode);
     const element = createStyledElement(node, {});
     expect(element.outerHTML).toEqual(
-      "<span>" +
-        "<span>Hello" +
-        "<br>" +
-        "World!</span>" +
-      "</span>"
+      "<span>" + "<span>Hello" + "<br>" + "World!</span>" + "</span>",
     );
   });
 
@@ -131,10 +99,6 @@ describe("parsers - webvtt - createStyledElement", () => {
     const styleElements = {};
 
     const element = createStyledElement(node, styleElements);
-    expect(element.outerHTML).toEqual(
-      "<b>" +
-        "<b></b>" +
-      "</b>"
-    );
+    expect(element.outerHTML).toEqual("<b>" + "<b></b>" + "</b>");
   });
 });

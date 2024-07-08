@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../compat";
-import { resetMediaElement } from "../../../core/init/utils/create_media_source";
+import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import log from "../../../log";
+import { resetMediaElement } from "../../../main_thread/init/utils/create_media_source";
 import { SourceBufferType } from "../../../mse";
-import MainMediaSourceInterface, {
-  MainSourceBufferInterface,
-} from "../../../mse/main_media_source_interface";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
+import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import idGenerator from "../../../utils/id_generator";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 
 const generateMediaSourceId = idGenerator();
 
@@ -38,16 +38,15 @@ const generateMediaSourceId = idGenerator();
 export default function prepareSourceBuffer(
   videoElement: HTMLVideoElement,
   codec: string,
-  cleanUpSignal: CancellationSignal
+  cleanUpSignal: CancellationSignal,
 ): Promise<MainSourceBufferInterface> {
   return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
-    if (MediaSource_ == null) {
+    if (isNullOrUndefined(MediaSource_)) {
       throw new Error("No MediaSource Object was found in the current browser.");
     }
 
     // make sure the media has been correctly reset
-    const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src :
-                                                        null;
+    const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src : null;
     resetMediaElement(videoElement, oldSrc);
 
     log.info("Init: Creating MediaSource");

@@ -31,43 +31,43 @@ export default class ManifestBoundsCalculator {
    * Value of MPD@timeShiftBufferDepth.
    * `null` if not defined.
    */
-  private _timeShiftBufferDepth : number | null;
+  private _timeShiftBufferDepth: number | null;
   /**
    * Value of MPD@availabilityStartTime as an unix timestamp in seconds.
    * `0` if it wasn't defined.
    */
-  private _availabilityStartTime : number;
+  private _availabilityStartTime: number;
   /** `true` if MPD@type is equal to "dynamic". */
-  private _isDynamic : boolean;
+  private _isDynamic: boolean;
   /**
    * Monotonically-raising timestamp (the one used by the RxPlayer) when
    * `lastPosition` was calculated.
    */
-  private _positionTime : number | undefined;
+  private _positionTime: number | undefined;
   /** Last position calculated at a given moment (itself indicated by `_positionTime`. */
-  private _lastPosition : number | undefined;
+  private _lastPosition: number | undefined;
   /**
    * Offset to add to `performance.now` to obtain a good estimation of the
    * server-side unix timestamp.
    *
    * `undefined` if unknown.
    */
-  private _serverTimestampOffset : number | undefined;
+  private _serverTimestampOffset: number | undefined;
 
   /**
    * @param {Object} args
    */
-  constructor(args : {
-    availabilityStartTime : number;
-    timeShiftBufferDepth : number | undefined;
-    isDynamic : boolean;
+  constructor(args: {
+    availabilityStartTime: number;
+    timeShiftBufferDepth: number | undefined;
+    isDynamic: boolean;
     serverTimestampOffset: number | undefined;
   }) {
     this._isDynamic = args.isDynamic;
-    this._timeShiftBufferDepth = !args.isDynamic ||
-                                 args.timeShiftBufferDepth === undefined ?
-                                   null :
-                                   args.timeShiftBufferDepth;
+    this._timeShiftBufferDepth =
+      !args.isDynamic || args.timeShiftBufferDepth === undefined
+        ? null
+        : args.timeShiftBufferDepth;
     this._serverTimestampOffset = args.serverTimestampOffset;
     this._availabilityStartTime = args.availabilityStartTime;
   }
@@ -88,7 +88,7 @@ export default class ManifestBoundsCalculator {
    * @param {number} lastPosition
    * @param {number|undefined} positionTime
    */
-  setLastPosition(lastPosition : number, positionTime?: number) : void {
+  setLastPosition(lastPosition: number, positionTime?: number): void {
     this._lastPosition = lastPosition;
     this._positionTime = positionTime;
   }
@@ -99,11 +99,11 @@ export default class ManifestBoundsCalculator {
    * `false` otherwise.
    * @returns {boolean}
    */
-  lastPositionIsKnown() : boolean {
+  lastPositionIsKnown(): boolean {
     if (this._isDynamic) {
-      return this._positionTime != null && this._lastPosition != null;
+      return this._positionTime !== undefined && this._lastPosition !== undefined;
     }
-    return this._lastPosition != null;
+    return this._lastPosition !== undefined;
   }
 
   /**
@@ -116,8 +116,8 @@ export default class ManifestBoundsCalculator {
     if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
     }
-    const maximumBound = this.getEstimatedLiveEdge() ??
-                         this.getEstimatedMaximumPosition(0);
+    const maximumBound =
+      this.getEstimatedLiveEdge() ?? this.getEstimatedMaximumPosition(0);
     if (maximumBound === undefined) {
       return undefined;
     }
@@ -134,12 +134,14 @@ export default class ManifestBoundsCalculator {
    * requestable.
    * @return {number|undefined}
    */
-  getEstimatedLiveEdge() : number | undefined {
+  getEstimatedLiveEdge(): number | undefined {
     if (!this._isDynamic || this._serverTimestampOffset === undefined) {
       return undefined;
     }
-    return (getMonotonicTimeStamp() + this._serverTimestampOffset) / 1000 -
-      this._availabilityStartTime;
+    return (
+      (getMonotonicTimeStamp() + this._serverTimestampOffset) / 1000 -
+      this._availabilityStartTime
+    );
   }
 
   /**
@@ -153,7 +155,7 @@ export default class ManifestBoundsCalculator {
    * if none exist. It will be applied on live content to deduce the maximum
    * segment time available.
    */
-  getEstimatedMaximumPosition(availabilityTimeOffset: number) : number | undefined {
+  getEstimatedMaximumPosition(availabilityTimeOffset: number): number | undefined {
     if (!this._isDynamic) {
       return this._lastPosition;
     }
@@ -162,9 +164,10 @@ export default class ManifestBoundsCalculator {
     if (liveEdge !== undefined && availabilityTimeOffset !== Infinity) {
       return liveEdge + availabilityTimeOffset;
     } else if (this._positionTime !== undefined && this._lastPosition !== undefined) {
-      return Math.max((this._lastPosition - this._positionTime) +
-                        (getMonotonicTimeStamp() / 1000),
-                      0);
+      return Math.max(
+        this._lastPosition - this._positionTime + getMonotonicTimeStamp() / 1000,
+        0,
+      );
     }
     return this._lastPosition;
   }

@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-import {
-  CustomLoaderError,
-  isKnownError,
-  NetworkErrorTypes,
-} from "../../../errors";
+import { CustomLoaderError, isKnownError, NetworkErrorTypes } from "../../../errors";
 import log from "../../../log";
-import { ICdnMetadata } from "../../../parsers/manifest";
+import type { ICdnMetadata } from "../../../parsers/manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 import getTimestamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
 import { RequestError } from "../../../utils/request";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import CdnPrioritizer from "../cdn_prioritizer";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
+import type CdnPrioritizer from "../cdn_prioritizer";
 
 /**
  * Called on a loader error.
@@ -43,29 +38,35 @@ import CdnPrioritizer from "../cdn_prioritizer";
  * @param {Error} error
  * @returns {Boolean} - If true, the request can be retried.
  */
-function shouldRetry(error : unknown) : boolean {
+function shouldRetry(error: unknown): boolean {
   if (error instanceof RequestError) {
     if (error.type === NetworkErrorTypes.ERROR_HTTP_CODE) {
-      return error.status >= 500 ||
-             error.status === 404 ||
-             error.status === 415 || // some CDN seems to use that code when
-                                     // requesting low-latency segments too much
-                                     // in advance
-             error.status === 412;
+      return (
+        error.status >= 500 ||
+        error.status === 404 ||
+        error.status === 415 || // some CDN seems to use that code when
+        // requesting low-latency segments too much
+        // in advance
+        error.status === 412
+      );
     }
-    return error.type === NetworkErrorTypes.TIMEOUT ||
-           error.type === NetworkErrorTypes.ERROR_EVENT;
+    return (
+      error.type === NetworkErrorTypes.TIMEOUT ||
+      error.type === NetworkErrorTypes.ERROR_EVENT
+    );
   } else if (error instanceof CustomLoaderError) {
     if (typeof error.canRetry === "boolean") {
       return error.canRetry;
     }
     if (error.xhr !== undefined) {
-      return error.xhr.status >= 500 ||
-             error.xhr.status === 404 ||
-             error.xhr.status === 415 || // some CDN seems to use that code when
-                                         // requesting low-latency segments too much
-                                         // in advance
-             error.xhr.status === 412;
+      return (
+        error.xhr.status >= 500 ||
+        error.xhr.status === 404 ||
+        error.xhr.status === 415 || // some CDN seems to use that code when
+        // requesting low-latency segments too much
+        // in advance
+        error.xhr.status === 412
+      );
     }
     return false;
   }
@@ -78,19 +79,19 @@ export interface IBackoffSettings {
    * Initial delay to wait if a request fails before making a new request, in
    * milliseconds.
    */
-  baseDelay : number;
+  baseDelay: number;
   /**
    * Maximum delay to wait if a request fails before making a new request, in
    * milliseconds.
    */
-  maxDelay : number;
+  maxDelay: number;
   /**
    * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
    * status, integrity errors, timeouts...).
    */
-  maxRetry : number;
+  maxRetry: number;
   /** Callback called when a request is retried. */
-  onRetry : (err : unknown) => void;
+  onRetry: (err: unknown) => void;
 }
 
 /**
@@ -145,29 +146,26 @@ export interface IBackoffSettings {
  *   - The resource request(s) failed and will not be retried anymore.
  */
 export async function scheduleRequestWithCdns<T>(
-  cdns : ICdnMetadata[] | null,
-  cdnPrioritizer : CdnPrioritizer | null,
-  performRequest : (
-    cdn : ICdnMetadata | null,
-    cancellationSignal : CancellationSignal
+  cdns: ICdnMetadata[] | null,
+  cdnPrioritizer: CdnPrioritizer | null,
+  performRequest: (
+    cdn: ICdnMetadata | null,
+    cancellationSignal: CancellationSignal,
   ) => Promise<T>,
-  options : IBackoffSettings,
-  cancellationSignal : CancellationSignal
-) : Promise<T> {
+  options: IBackoffSettings,
+  cancellationSignal: CancellationSignal,
+): Promise<T> {
   if (cancellationSignal.cancellationError !== null) {
     return Promise.reject(cancellationSignal.cancellationError);
   }
 
-  const { baseDelay,
-          maxDelay,
-          maxRetry,
-          onRetry } = options;
+  const { baseDelay, maxDelay, maxRetry, onRetry } = options;
 
   if (cdns !== null && cdns.length === 0) {
     log.warn("Fetchers: no CDN given to `scheduleRequestWithCdns`.");
   }
 
-  const missedAttempts : Map<ICdnMetadata | null, ICdnAttemptMetadata> = new Map();
+  const missedAttempts: Map<ICdnMetadata | null, ICdnAttemptMetadata> = new Map();
   const initialCdnToRequest = getCdnToRequest();
   if (initialCdnToRequest === undefined) {
     throw new Error("No CDN to request");
@@ -184,7 +182,7 @@ export async function scheduleRequestWithCdns<T>(
    * the resource.
    * @returns {Object|null|undefined}
    */
-  function getCdnToRequest() : ICdnMetadata | null | undefined {
+  function getCdnToRequest(): ICdnMetadata | null | undefined {
     if (cdns === null) {
       const nullAttemptObject = missedAttempts.get(null);
       if (nullAttemptObject !== undefined && nullAttemptObject.isBlacklisted) {
@@ -210,11 +208,11 @@ export async function scheduleRequestWithCdns<T>(
    * @param {string|null} cdn
    * @returns {Promise}
    */
-  async function requestCdn(cdn : ICdnMetadata | null) : Promise<T> {
+  async function requestCdn(cdn: ICdnMetadata | null): Promise<T> {
     try {
       const res = await performRequest(cdn, cancellationSignal);
       return res;
-    } catch (error : unknown) {
+    } catch (error: unknown) {
       if (TaskCanceller.isCancellationError(error)) {
         throw error;
       }
@@ -227,9 +225,11 @@ export async function scheduleRequestWithCdns<T>(
 
       let missedAttemptsObj = missedAttempts.get(cdn);
       if (missedAttemptsObj === undefined) {
-        missedAttemptsObj = { errorCounter: 1,
-                              blockedUntil: undefined,
-                              isBlacklisted: false };
+        missedAttemptsObj = {
+          errorCounter: 1,
+          blockedUntil: undefined,
+          isBlacklisted: false,
+        };
         missedAttempts.set(cdn, missedAttemptsObj);
       } else {
         missedAttemptsObj.errorCounter++;
@@ -246,8 +246,7 @@ export async function scheduleRequestWithCdns<T>(
         missedAttemptsObj.isBlacklisted = true;
       } else {
         const errorCounter = missedAttemptsObj.errorCounter;
-        const delay = Math.min(baseDelay * Math.pow(2, errorCounter - 1),
-                               maxDelay);
+        const delay = Math.min(baseDelay * Math.pow(2, errorCounter - 1), maxDelay);
         const fuzzedDelay = getFuzzedDelay(delay);
         missedAttemptsObj.blockedUntil = getTimestamp() + fuzzedDelay;
       }
@@ -264,7 +263,7 @@ export async function scheduleRequestWithCdns<T>(
    * @param {*} prevRequestError
    * @returns {Promise}
    */
-  async function retryWithNextCdn(prevRequestError : unknown) : Promise<T> {
+  async function retryWithNextCdn(prevRequestError: unknown): Promise<T> {
     const nextCdn = getCdnToRequest();
 
     if (cancellationSignal.isCancelled()) {
@@ -295,12 +294,10 @@ export async function scheduleRequestWithCdns<T>(
    */
   function waitPotentialBackoffAndRequest(
     nextWantedCdn: ICdnMetadata | null,
-    prevRequestError : unknown
-  ) : Promise<T> {
+    prevRequestError: unknown,
+  ): Promise<T> {
     const nextCdnAttemptObj = missedAttempts.get(nextWantedCdn);
-    if (nextCdnAttemptObj === undefined ||
-        nextCdnAttemptObj.blockedUntil === undefined)
-    {
+    if (nextCdnAttemptObj === undefined || nextCdnAttemptObj.blockedUntil === undefined) {
       return requestCdn(nextWantedCdn);
     }
 
@@ -314,30 +311,37 @@ export async function scheduleRequestWithCdns<T>(
     const unlinkCanceller = canceller.linkToSignal(cancellationSignal);
     return new Promise<T>((res, rej) => {
       /* eslint-disable-next-line @typescript-eslint/no-misused-promises */
-      cdnPrioritizer?.addEventListener("priorityChange", () => {
-        const updatedPrioritaryCdn = getCdnToRequest();
-        if (cancellationSignal.isCancelled()) {
-          throw cancellationSignal.cancellationError;
-        }
-        if (updatedPrioritaryCdn === undefined) {
-          return cleanAndReject(prevRequestError);
-        }
-        if (updatedPrioritaryCdn !== nextWantedCdn) {
-          canceller.cancel();
-          waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError)
-            .then(cleanAndResolve, cleanAndReject);
-        }
-      }, canceller.signal);
+      cdnPrioritizer?.addEventListener(
+        "priorityChange",
+        () => {
+          const updatedPrioritaryCdn = getCdnToRequest();
+          if (cancellationSignal.isCancelled()) {
+            throw cancellationSignal.cancellationError;
+          }
+          if (updatedPrioritaryCdn === undefined) {
+            return cleanAndReject(prevRequestError);
+          }
+          if (updatedPrioritaryCdn !== nextWantedCdn) {
+            canceller.cancel();
+            waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError).then(
+              cleanAndResolve,
+              cleanAndReject,
+            );
+          }
+        },
+        canceller.signal,
+      );
 
-      cancellableSleep(blockedFor, canceller.signal)
-        .then(() => requestCdn(nextWantedCdn)
-          .then(cleanAndResolve, cleanAndReject), noop);
+      cancellableSleep(blockedFor, canceller.signal).then(
+        () => requestCdn(nextWantedCdn).then(cleanAndResolve, cleanAndReject),
+        noop,
+      );
 
-      function cleanAndResolve(response : T) {
+      function cleanAndResolve(response: T) {
         unlinkCanceller();
         res(response);
       }
-      function cleanAndReject(err : unknown) {
+      function cleanAndReject(err: unknown) {
         unlinkCanceller();
         rej(err);
       }
@@ -356,36 +360,39 @@ export async function scheduleRequestWithCdns<T>(
    * @returns {Object|undefined}
    */
   function getPrioritaryRequestableCdnFromSortedList(
-    sortedCdns : ICdnMetadata[]
-  ) : ICdnMetadata | undefined {
+    sortedCdns: ICdnMetadata[],
+  ): ICdnMetadata | undefined {
     if (missedAttempts.size === 0) {
       return sortedCdns[0];
     }
     const now = getTimestamp();
     return sortedCdns
-      .filter(c =>  missedAttempts.get(c)?.isBlacklisted !== true)
-      .reduce((
-        acc : [ICdnMetadata, number | undefined] | undefined,
-        x : ICdnMetadata
-      ) : [ICdnMetadata, number | undefined] => {
-        let blockedUntil = missedAttempts.get(x)?.blockedUntil;
-        if (blockedUntil !== undefined && blockedUntil <= now) {
-          blockedUntil = undefined;
-        }
-        if (acc === undefined) {
-          return [x, blockedUntil];
-        }
-        if (blockedUntil === undefined) {
+      .filter((c) => missedAttempts.get(c)?.isBlacklisted !== true)
+      .reduce(
+        (
+          acc: [ICdnMetadata, number | undefined] | undefined,
+          x: ICdnMetadata,
+        ): [ICdnMetadata, number | undefined] => {
+          let blockedUntil = missedAttempts.get(x)?.blockedUntil;
+          if (blockedUntil !== undefined && blockedUntil <= now) {
+            blockedUntil = undefined;
+          }
+          if (acc === undefined) {
+            return [x, blockedUntil];
+          }
           if (acc[1] === undefined) {
             return acc;
           }
-          return [x, undefined];
-        }
-
-        return acc[1] === undefined  ? acc :
-          blockedUntil < acc[1] ? [x, blockedUntil] :
-          acc;
-      }, undefined)?.[0];
+          if (blockedUntil === undefined) {
+            return [x, undefined];
+          }
+          if (blockedUntil < acc[1]) {
+            return [x, blockedUntil];
+          }
+          return acc;
+        },
+        undefined,
+      )?.[0];
   }
 }
 
@@ -397,16 +404,12 @@ export async function scheduleRequestWithCdns<T>(
  * @returns {Promise}
  */
 export function scheduleRequestPromise<T>(
-  performRequest : () => Promise<T>,
-  options : IBackoffSettings,
-  cancellationSignal : CancellationSignal
-) : Promise<T> {
+  performRequest: () => Promise<T>,
+  options: IBackoffSettings,
+  cancellationSignal: CancellationSignal,
+): Promise<T> {
   // same than for a single unknown CDN
-  return scheduleRequestWithCdns(null,
-                                 null,
-                                 performRequest,
-                                 options,
-                                 cancellationSignal);
+  return scheduleRequestWithCdns(null, null, performRequest, options, cancellationSignal);
 }
 
 /**
@@ -426,7 +429,7 @@ interface ICdnAttemptMetadata {
    * still failed.
    * etc.
    */
-  errorCounter : number;
+  errorCounter: number;
   /**
    * Monotonically-raising timestamp, until which it should be forbidden to
    * request this CDN.
@@ -436,7 +439,7 @@ interface ICdnAttemptMetadata {
    * `undefined` when either there is no enforced delay or when the CDN is
    * blacklisted anyway (@see isBlacklisted)
    */
-  blockedUntil : number | undefined;
+  blockedUntil: number | undefined;
   /** If `true`, that request should not be requested at all anymore. */
-  isBlacklisted : boolean;
+  isBlacklisted: boolean;
 }

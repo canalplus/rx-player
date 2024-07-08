@@ -38,31 +38,33 @@ import getAacesHeader from "./get_aaces_header";
  * @param {string} codecPrivateData
  * @param {Uint8Array} keyId - hex string representing the key Id, 32 chars.
  * eg. a800dbed49c12c4cb8e0b25643844b9b
- * @param {Array.<Object>} [pssList]
  * @returns {Uint8Array}
  */
 export default function createAudioInitSegment(
-  timescale : number,
-  channelsCount : number,
-  sampleSize : number,
-  packetSize : number,
-  sampleRate : number,
-  codecPrivateData : string,
-  keyId? : Uint8Array
-) : Uint8Array {
-  const _codecPrivateData = codecPrivateData.length === 0 ?
-    getAacesHeader(2, sampleRate, channelsCount) :
-    codecPrivateData;
+  timescale: number,
+  channelsCount: number,
+  sampleSize: number,
+  packetSize: number,
+  sampleRate: number,
+  codecPrivateData: string,
+  keyId?: Uint8Array,
+): Uint8Array {
+  const _codecPrivateData =
+    codecPrivateData.length === 0
+      ? getAacesHeader(2, sampleRate, channelsCount)
+      : codecPrivateData;
 
   const esds = createESDSBox(1, _codecPrivateData);
-  const stsd : Uint8Array = (() => {
+  const stsd: Uint8Array = (() => {
     if (keyId === undefined) {
-      const mp4a = createMP4ABox(1,
-                                 channelsCount,
-                                 sampleSize,
-                                 packetSize,
-                                 sampleRate,
-                                 esds);
+      const mp4a = createMP4ABox(
+        1,
+        channelsCount,
+        sampleSize,
+        packetSize,
+        sampleRate,
+        esds,
+      );
       return createSTSDBox([mp4a]);
     }
     const tenc = createTENCBox(1, 8, keyId);
@@ -70,13 +72,15 @@ export default function createAudioInitSegment(
     const schm = createSCHMBox("cenc", 65536);
     const frma = createFRMABox("mp4a");
     const sinf = createBoxWithChildren("sinf", [frma, schm, schi]);
-    const enca = createENCABox(1,
-                               channelsCount,
-                               sampleSize,
-                               packetSize,
-                               sampleRate,
-                               esds,
-                               sinf);
+    const enca = createENCABox(
+      1,
+      channelsCount,
+      sampleSize,
+      packetSize,
+      sampleRate,
+      esds,
+      sinf,
+    );
     return createSTSDBox([enca]);
   })();
 

@@ -19,10 +19,8 @@
  * It always should be imported through the `features` object.
  */
 
-import {
-  ICompatVTTCue,
-  isVTTCue,
-} from "../../../../compat/index";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
+import isVTTCue from "../../../../compat/is_vtt_cue";
 import getCueBlocks from "../get_cue_blocks";
 import parseCueBlock from "../parse_cue_block";
 import { getFirstLineAfterHeader } from "../utils";
@@ -41,24 +39,24 @@ import toNativeCue from "./to_native_cue";
  * @returns {Array.<ICompatVTTCue|TextTrackCue>}
  */
 export default function parseVTTStringToVTTCues(
-  vttStr : string,
-  timeOffset : number
-) : Array<TextTrackCue|ICompatVTTCue> {
+  vttStr: string,
+  timeOffset: number,
+): Array<TextTrackCue | ICompatVTTCue> {
   // WEBVTT authorize CRLF, LF or CR as line terminators
   const lines = vttStr.split(/\r\n|\n|\r/);
 
-  if (!(/^WEBVTT($| |\t)/.test(lines[0]))) {
+  if (!/^WEBVTT($| |\t)/.test(lines[0])) {
     throw new Error("Can't parse WebVTT: Invalid file.");
   }
 
   const firstLineAfterHeader = getFirstLineAfterHeader(lines);
-  const cueBlocks : string[][] = getCueBlocks(lines, firstLineAfterHeader);
-  const cues : Array<ICompatVTTCue|TextTrackCue> = [];
+  const cueBlocks: string[][] = getCueBlocks(lines, firstLineAfterHeader);
+  const cues: Array<ICompatVTTCue | TextTrackCue> = [];
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
-    if (cueObject != null) {
+    if (cueObject !== null) {
       const nativeCue = toNativeCue(cueObject);
-      if (nativeCue != null) {
+      if (nativeCue !== null) {
         if (isVTTCue(nativeCue)) {
           setSettingsOnCue(cueObject.settings, nativeCue);
         }

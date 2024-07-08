@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import NativeTextDisplayer from "../../text_displayer/native";
-import { IFeaturesObject } from "../types";
+import NativeTextDisplayer from "../../main_thread/text_displayer/native";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to display text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeTextBuffer(features : IFeaturesObject) : void {
+function addNativeTextBuffer(features: IFeaturesObject): void {
   features.nativeTextDisplayer = NativeTextDisplayer;
 }
 

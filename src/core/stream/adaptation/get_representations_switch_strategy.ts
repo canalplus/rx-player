@@ -15,62 +15,56 @@
  */
 
 import config from "../../../config";
-import {
-  Adaptation,
-  Period,
-} from "../../../manifest";
+import type { IAdaptation, IPeriod } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import arrayIncludes from "../../../utils/array_includes";
-import {
-  IRange,
-  excludeFromRanges,
-  insertInto,
-} from "../../../utils/ranges";
-import { IReadOnlyPlaybackObserver } from "../../api";
+import type { IRange } from "../../../utils/ranges";
+import { excludeFromRanges, insertInto } from "../../../utils/ranges";
+import type { SegmentSink } from "../../segment_sinks";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-  SegmentBuffer,
-  SegmentBufferOperation,
-} from "../../segment_buffers";
-import {
+  SegmentSinkOperation,
+} from "../../segment_sinks";
+import type {
   IRepresentationsChoice,
   IRepresentationStreamPlaybackObservation,
 } from "../representation";
 
 export default function getRepresentationsSwitchingStrategy(
-  period : Period,
-  adaptation : Adaptation,
-  settings : IRepresentationsChoice,
-  segmentBuffer : SegmentBuffer,
-  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>
-) : IRepresentationSwitchStrategy {
+  period: IPeriod,
+  adaptation: IAdaptation,
+  settings: IRepresentationsChoice,
+  segmentSink: SegmentSink,
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+): IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };
   }
 
-  const inventory = segmentBuffer.getLastKnownInventory();
+  const inventory = segmentSink.getLastKnownInventory();
   const unwantedRange: IRange[] = [];
   for (const elt of inventory) {
     if (
-      elt.infos.period.id === period.id && (
-        elt.infos.adaptation.id !== adaptation.id ||
-        !arrayIncludes(settings.representationIds, elt.infos.representation.id)
-      )
+      elt.infos.period.id === period.id &&
+      (elt.infos.adaptation.id !== adaptation.id ||
+        !arrayIncludes(settings.representationIds, elt.infos.representation.id))
     ) {
-      insertInto(unwantedRange, { start: elt.bufferedStart ?? elt.start,
-                                  end: elt.bufferedEnd ?? elt.end });
+      insertInto(unwantedRange, {
+        start: elt.bufferedStart ?? elt.start,
+        end: elt.bufferedEnd ?? elt.end,
+      });
     }
   }
 
-  const pendingOperations = segmentBuffer.getPendingOperations();
+  const pendingOperations = segmentSink.getPendingOperations();
   for (const operation of pendingOperations) {
-    if (operation.type === SegmentBufferOperation.Push) {
+    if (operation.type === SegmentSinkOperation.Push) {
       const info = operation.value.inventoryInfos;
       if (
-        info.period.id === period.id && (
-          info.adaptation.id !== adaptation.id ||
-          !arrayIncludes(settings.representationIds, info.representation.id)
-        )
+        info.period.id === period.id &&
+        (info.adaptation.id !== adaptation.id ||
+          !arrayIncludes(settings.representationIds, info.representation.id))
       ) {
         const start = info.segment.time;
         const end = start + info.segment.duration;
@@ -101,14 +95,15 @@ export default function getRepresentationsSwitchingStrategy(
 
   /** Last segment before one for the current period. */
   const lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
-  if (lastSegmentBefore !== null &&
+  if (
+    lastSegmentBefore !== null &&
     (lastSegmentBefore.bufferedEnd === undefined ||
-      period.start - lastSegmentBefore.bufferedEnd < 1)) // Close to Period's start
-  {
+      period.start - lastSegmentBefore.bufferedEnd < 1)
+  ) {
+    // Close to Period's start
     // Exclude data close to the period's start to avoid cleaning
     // to much
-    rangesToExclude.push({ start: 0,
-                           end: period.start + 1 });
+    rangesToExclude.push({ start: 0, end: period.start + 1 });
   }
 
   if (!shouldFlush) {
@@ -117,14 +112,8 @@ export default function getRepresentationsSwitchingStrategy(
     const bufferType = adaptation.type;
 
     /** Ranges that won't be cleaned from the current buffer. */
-    let paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before;
-    if (paddingBefore == null) {
-      paddingBefore = 0;
-    }
-    let paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after;
-    if (paddingAfter == null) {
-      paddingAfter = 0;
-    }
+    const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;
+    const paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after ?? 0;
 
     let currentTime = playbackObserver.getCurrentTime();
     if (currentTime === undefined) {
@@ -133,8 +122,10 @@ export default function getRepresentationsSwitchingStrategy(
       currentTime = lastObservation.position.getPolled();
     }
 
-    rangesToExclude.push({ start: currentTime - paddingBefore,
-                           end: currentTime + paddingAfter });
+    rangesToExclude.push({
+      start: currentTime - paddingBefore,
+      end: currentTime + paddingAfter,
+    });
   }
 
   // Now remove possible small range from the end if there is a segment from the
@@ -142,13 +133,13 @@ export default function getRepresentationsSwitchingStrategy(
   if (period.end !== undefined) {
     /** first segment after for the current period. */
     const firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
-    if (firstSegmentAfter !== null &&
-        (firstSegmentAfter.bufferedStart === undefined ||
-         // Close to Period's end
-         (firstSegmentAfter.bufferedStart - period.end) < 1))
-    {
-      rangesToExclude.push({ start: period.end - 1,
-                             end: Number.MAX_VALUE });
+    if (
+      firstSegmentAfter !== null &&
+      (firstSegmentAfter.bufferedStart === undefined ||
+        // Close to Period's end
+        firstSegmentAfter.bufferedStart - period.end < 1)
+    ) {
+      rangesToExclude.push({ start: period.end - 1, end: Number.MAX_VALUE });
     }
   }
 
@@ -158,22 +149,23 @@ export default function getRepresentationsSwitchingStrategy(
     return { type: "continue", value: undefined };
   }
 
-  return shouldFlush ? { type: "flush-buffer", value: toRemove } :
-                       { type: "clean-buffer", value: toRemove };
+  return shouldFlush
+    ? { type: "flush-buffer", value: toRemove }
+    : { type: "clean-buffer", value: toRemove };
 }
 
 export type IRepresentationSwitchStrategy =
   /** Do nothing special. */
-  { type: "continue"; value: undefined } |
+  | { type: "continue"; value: undefined }
   /**
    * Clean the given ranges of time from the buffer, preferably avoiding time
    * around the current position to continue playback smoothly.
    */
-  { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  | { type: "clean-buffer"; value: Array<{ start: number; end: number }> }
   /**
    * Clean the given ranges of time from the buffer and try to flush the buffer
    * so that it is taken in account directly.
    */
-  { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
+  | { type: "flush-buffer"; value: Array<{ start: number; end: number }> }
   /** Reload completely the media buffers. */
-  { type: "needs-reload"; value: undefined };
+  | { type: "needs-reload"; value: undefined };

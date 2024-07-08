@@ -15,10 +15,7 @@
  */
 
 import features from "../../features";
-import {
-  ITransportOptions,
-  ITransportPipelines,
-} from "../types";
+import type { ITransportOptions, ITransportPipelines } from "../types";
 import generateManifestLoader from "../utils/generate_manifest_loader";
 import generateManifestParser from "./manifest_parser";
 import generateSegmentLoader from "./segment_loader";
@@ -32,11 +29,11 @@ import generateTextTrackParser from "./text_parser";
  * implementation. Used for each generated http request.
  * @returns {Object}
  */
-export default function(options : ITransportOptions) : ITransportPipelines {
+export default function (options: ITransportOptions): ITransportPipelines {
   const manifestLoader = generateManifestLoader(
     { customManifestLoader: options.manifestLoader },
-    mightUseDashWasmFeature() ? "text" :
-                                "arraybuffer");
+    mightUseDashWasmFeature() ? "text" : "arraybuffer",
+  );
 
   const manifestParser = generateManifestParser(options);
   const segmentLoader = generateSegmentLoader(options);
@@ -44,14 +41,18 @@ export default function(options : ITransportOptions) : ITransportPipelines {
   const textTrackLoader = generateTextTrackLoader(options);
   const textTrackParser = generateTextTrackParser(options);
 
-  return { manifest: { loadManifest: manifestLoader,
-                       parseManifest: manifestParser },
-           audio: { loadSegment: segmentLoader,
-                    parseSegment: audioVideoSegmentParser },
-           video: { loadSegment: segmentLoader,
-                    parseSegment: audioVideoSegmentParser },
-           text: { loadSegment: textTrackLoader,
-                   parseSegment: textTrackParser } };
+  return {
+    manifest: { loadManifest: manifestLoader, parseManifest: manifestParser },
+    audio: {
+      loadSegment: segmentLoader,
+      parseSegment: audioVideoSegmentParser,
+    },
+    video: {
+      loadSegment: segmentLoader,
+      parseSegment: audioVideoSegmentParser,
+    },
+    text: { loadSegment: textTrackLoader, parseSegment: textTrackParser },
+  };
 }
 
 /**
@@ -59,8 +60,10 @@ export default function(options : ITransportOptions) : ITransportPipelines {
  * initialized.
  * @returns {boolean}
  */
-function mightUseDashWasmFeature() : boolean {
-  return features.dashParsers.wasm !== null &&
-         (features.dashParsers.wasm.status === "initialized" ||
-          features.dashParsers.wasm.status === "initializing");
+function mightUseDashWasmFeature(): boolean {
+  return (
+    features.dashParsers.wasm !== null &&
+    (features.dashParsers.wasm.status === "initialized" ||
+      features.dashParsers.wasm.status === "initializing")
+  );
 }

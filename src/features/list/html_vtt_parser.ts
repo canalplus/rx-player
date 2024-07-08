@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
 import vttParser from "../../parsers/texttracks/webvtt/html";
-import HTMLTextDisplayer from "../../text_displayer/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse WebVTT text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLVTTFeature(features : IFeaturesObject) : void {
+function addHTMLVTTFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.vtt = vttParser;
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }

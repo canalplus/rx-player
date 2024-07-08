@@ -30,9 +30,7 @@ import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
  * @param {string} serverClock
  * @returns {number|undefined}
  */
-export default function getClockOffset(
-  serverClock: string
-): number | undefined {
+export default function getClockOffset(serverClock: string): number | undefined {
   const httpOffset = Date.parse(serverClock) - getMonotonicTimeStamp();
   if (isNaN(httpOffset)) {
     log.warn("DASH Parser: Invalid clock received: ", serverClock);

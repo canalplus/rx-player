@@ -12,7 +12,7 @@ function AudioAdaptiveSettings({
 }: {
   defaultAudioRepresentationsSwitchingMode: IAudioRepresentationsSwitchingMode;
   onDefaultAudioRepresentationsSwitchingModeChange: (
-    mode: IAudioRepresentationsSwitchingMode
+    mode: IAudioRepresentationsSwitchingMode,
   ) => void;
 }) {
   let defaultAudioRepresentationsSwitchingModeDescMsg;
@@ -34,18 +34,17 @@ function AudioAdaptiveSettings({
         "Smooth transition when audio Representations are manually changed";
       break;
     default:
-      defaultAudioRepresentationsSwitchingModeDescMsg =
-        "Unknown value";
+      defaultAudioRepresentationsSwitchingModeDescMsg = "Unknown value";
       break;
   }
 
   const onSwitchModeChange = React.useCallback(
     ({ value }: { value: string }) => {
       onDefaultAudioRepresentationsSwitchingModeChange(
-        value as IAudioRepresentationsSwitchingMode
+        value as IAudioRepresentationsSwitchingMode,
       );
     },
-    [onDefaultAudioRepresentationsSwitchingModeChange]
+    [onDefaultAudioRepresentationsSwitchingModeChange],
   );
   return (
     <>
@@ -62,7 +61,7 @@ function AudioAdaptiveSettings({
           }}
           options={["seamless", "lazy", "direct", "reload"]}
         >
-            Default Audio Representations switching mode
+          Default Audio Representations switching mode
         </Select>
         <span className="option-desc">
           {defaultAudioRepresentationsSwitchingModeDescMsg}

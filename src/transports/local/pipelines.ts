@@ -19,14 +19,13 @@
  * It always should be imported through the `features` object.
  */
 
-import Manifest from "../../manifest";
-import parseLocalManifest, {
-  ILocalManifest,
-} from "../../parsers/manifest/local";
-import { ILoadedManifestFormat, IPlayerError } from "../../public_types";
+import Manifest from "../../manifest/classes";
+import type { ILocalManifest } from "../../parsers/manifest/local";
+import parseLocalManifest from "../../parsers/manifest/local";
+import type { ILoadedManifestFormat, IPlayerError } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IManifestLoaderOptions,
   IManifestParserResult,
   IRequestedData,
@@ -44,48 +43,54 @@ import textTrackParser from "./text_parser";
  * @returns {Object}
  */
 export default function getLocalManifestPipelines(
-  transportOptions : ITransportOptions
-) : ITransportPipelines {
-
+  transportOptions: ITransportOptions,
+): ITransportPipelines {
   const customManifestLoader = transportOptions.manifestLoader;
   const manifestPipeline = {
     loadManifest(
-      url : string | undefined,
-      loaderOptions : IManifestLoaderOptions,
-      cancelSignal : CancellationSignal
-    ) : Promise<IRequestedData<ILoadedManifestFormat>> {
+      url: string | undefined,
+      loaderOptions: IManifestLoaderOptions,
+      cancelSignal: CancellationSignal,
+    ): Promise<IRequestedData<ILoadedManifestFormat>> {
       if (isNullOrUndefined(customManifestLoader)) {
-        throw new Error("A local Manifest is not loadable through regular HTTP(S) " +
-                        " calls. You have to set a `manifestLoader` when calling " +
-                        "`loadVideo`");
+        throw new Error(
+          "A local Manifest is not loadable through regular HTTP(S) " +
+            " calls. You have to set a `manifestLoader` when calling " +
+            "`loadVideo`",
+        );
       }
-      return callCustomManifestLoader(
-        customManifestLoader,
-        () : never => {
-          throw new Error("Cannot fallback from the `manifestLoader` of a " +
-                          "`local` transport");
-        })(url, loaderOptions, cancelSignal);
+      return callCustomManifestLoader(customManifestLoader, (): never => {
+        throw new Error(
+          "Cannot fallback from the `manifestLoader` of a " + "`local` transport",
+        );
+      })(url, loaderOptions, cancelSignal);
     },
 
-    parseManifest(manifestData : IRequestedData<unknown>) : IManifestParserResult {
+    parseManifest(manifestData: IRequestedData<unknown>): IManifestParserResult {
       const loadedManifest = manifestData.responseData;
       if (typeof manifestData !== "object") {
         throw new Error("Wrong format for the manifest data");
       }
       const parsed = parseLocalManifest(loadedManifest as ILocalManifest);
-      const warnings : IPlayerError[] = [];
+      const warnings: IPlayerError[] = [];
       const manifest = new Manifest(parsed, transportOptions, warnings);
       return { manifest, url: undefined, warnings };
     },
   };
 
-  const segmentPipeline = { loadSegment: segmentLoader,
-                            parseSegment: segmentParser };
-  const textTrackPipeline = { loadSegment: segmentLoader,
-                              parseSegment: textTrackParser };
+  const segmentPipeline = {
+    loadSegment: segmentLoader,
+    parseSegment: segmentParser,
+  };
+  const textTrackPipeline = {
+    loadSegment: segmentLoader,
+    parseSegment: textTrackParser,
+  };
 
-  return { manifest: manifestPipeline,
-           audio: segmentPipeline,
-           video: segmentPipeline,
-           text: textTrackPipeline };
+  return {
+    manifest: manifestPipeline,
+    audio: segmentPipeline,
+    video: segmentPipeline,
+    text: textTrackPipeline,
+  };
 }

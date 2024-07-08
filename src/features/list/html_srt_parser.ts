@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
 import srtParser from "../../parsers/texttracks/srt/html";
-import HTMLTextDisplayer from "../../text_displayer/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse SRT text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLSRTFeature(features : IFeaturesObject) : void {
+function addHTMLSRTFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.srt = srtParser;
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }

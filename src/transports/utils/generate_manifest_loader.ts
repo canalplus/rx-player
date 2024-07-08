@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-import {
-  IManifestLoader,
-  ILoadedManifestFormat,
-} from "../../public_types";
+import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types";
 import { assertUnreachable } from "../../utils/assert";
 import request from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
-  IManifestLoaderOptions,
-  IRequestedData,
-} from "../types";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type { IManifestLoaderOptions, IRequestedData } from "../types";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
 /**
@@ -33,18 +27,17 @@ import callCustomManifestLoader from "./call_custom_manifest_loader";
  * @returns {Function}
  */
 function generateRegularManifestLoader(
-  preferredType: "arraybuffer" | "text" | "document"
-) : (
-    url : string | undefined,
-    loaderOptions : IManifestLoaderOptions,
-    cancelSignal : CancellationSignal
-  ) => Promise < IRequestedData<ILoadedManifestFormat> >
-{
+  preferredType: "arraybuffer" | "text" | "document",
+): (
+  url: string | undefined,
+  loaderOptions: IManifestLoaderOptions,
+  cancelSignal: CancellationSignal,
+) => Promise<IRequestedData<ILoadedManifestFormat>> {
   return function regularManifestLoader(
-    url : string | undefined,
-    loaderOptions : IManifestLoaderOptions,
-    cancelSignal : CancellationSignal
-  ) : Promise< IRequestedData<ILoadedManifestFormat> > {
+    url: string | undefined,
+    loaderOptions: IManifestLoaderOptions,
+    cancelSignal: CancellationSignal,
+  ): Promise<IRequestedData<ILoadedManifestFormat>> {
     if (url === undefined) {
       throw new Error("Cannot perform HTTP(s) request. URL not known");
     }
@@ -54,23 +47,29 @@ function generateRegularManifestLoader(
     // So I wrote that instead, temporarily of course ;)
     switch (preferredType) {
       case "arraybuffer":
-        return request({ url,
-                         responseType: "arraybuffer",
-                         timeout: loaderOptions.timeout,
-                         connectionTimeout: loaderOptions.connectionTimeout,
-                         cancelSignal });
+        return request({
+          url,
+          responseType: "arraybuffer",
+          timeout: loaderOptions.timeout,
+          connectionTimeout: loaderOptions.connectionTimeout,
+          cancelSignal,
+        });
       case "text":
-        return request({ url,
-                         responseType: "text",
-                         timeout: loaderOptions.timeout,
-                         connectionTimeout: loaderOptions.connectionTimeout,
-                         cancelSignal });
+        return request({
+          url,
+          responseType: "text",
+          timeout: loaderOptions.timeout,
+          connectionTimeout: loaderOptions.connectionTimeout,
+          cancelSignal,
+        });
       case "document":
-        return request({ url,
-                         responseType: "document",
-                         timeout: loaderOptions.timeout,
-                         connectionTimeout: loaderOptions.connectionTimeout,
-                         cancelSignal });
+        return request({
+          url,
+          responseType: "document",
+          timeout: loaderOptions.timeout,
+          connectionTimeout: loaderOptions.connectionTimeout,
+          cancelSignal,
+        });
       default:
         assertUnreachable(preferredType);
     }
@@ -83,18 +82,16 @@ function generateRegularManifestLoader(
  * @returns {Function}
  */
 export default function generateManifestLoader(
-  { customManifestLoader } : { customManifestLoader?: IManifestLoader | undefined },
-  preferredType: "arraybuffer" | "text" | "document"
-) : (
-    url : string | undefined,
-    loaderOptions : IManifestLoaderOptions,
-    cancelSignal : CancellationSignal
-  ) => Promise<IRequestedData<ILoadedManifestFormat>>
-{
+  { customManifestLoader }: { customManifestLoader?: IManifestLoader | undefined },
+  preferredType: "arraybuffer" | "text" | "document",
+): (
+  url: string | undefined,
+  loaderOptions: IManifestLoaderOptions,
+  cancelSignal: CancellationSignal,
+) => Promise<IRequestedData<ILoadedManifestFormat>> {
   const regularManifestLoader = generateRegularManifestLoader(preferredType);
   if (typeof customManifestLoader !== "function") {
     return regularManifestLoader;
   }
-  return callCustomManifestLoader(customManifestLoader,
-                                  regularManifestLoader);
+  return callCustomManifestLoader(customManifestLoader, regularManifestLoader);
 }

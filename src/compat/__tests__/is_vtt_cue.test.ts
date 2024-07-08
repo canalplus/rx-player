@@ -1,37 +1,21 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect, vi } from "vitest";
 import globalScope from "../../utils/global_scope";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("Compat - isVTTCue", () => {
   interface IFakeWindow {
-    VTTCue? : VTTCue | typeof MockVTTCue;
+    VTTCue?: VTTCue | typeof MockVTTCue;
   }
   class MockVTTCue {
-    public startTime : number;
-    public endTime : number;
-    public text : string;
-    constructor(start : number, end : number, text : string) {
+    public startTime: number;
+    public endTime: number;
+    public text: string;
+    constructor(start: number, end: number, text: string) {
       this.startTime = start;
       this.endTime = end;
       this.text = text;
@@ -39,16 +23,16 @@ describe("Compat - isVTTCue", () => {
   }
   const gs = globalScope as IFakeWindow;
 
-  it("should return true if the given cue is an instance of a vtt cue", () => {
+  it("should return true if the given cue is an instance of a vtt cue", async () => {
     const originalVTTCue = globalScope.VTTCue;
     gs.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
-    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
-    expect(isVTTCue(cue)).toEqual(true);
+    const isVTTCue = (await vi.importActual("../is_vtt_cue")) as any;
+    expect(isVTTCue.default(cue)).toEqual(true);
     globalScope.VTTCue = originalVTTCue;
   });
 
-  it("should return false if the given cue is not an instance of a vtt cue", () => {
+  it("should return false if the given cue is not an instance of a vtt cue", async () => {
     const originalVTTCue = globalScope.VTTCue;
     gs.VTTCue = MockVTTCue;
     const cue = {
@@ -56,20 +40,18 @@ describe("Compat - isVTTCue", () => {
       endTime: 10,
       text: "toto",
     };
-    const isVTTCue = jest.requireActual("../is_vtt_cue").default;
-    expect(isVTTCue(cue)).toEqual(false);
+    const isVTTCue = (await vi.importActual("../is_vtt_cue")) as any;
+    expect(isVTTCue.default(cue)).toEqual(false);
     globalScope.VTTCue = originalVTTCue;
   });
 
-  it(
-    "should return false in any case if the global scope does not define a VTTCue",
-    () => {
-      const originalVTTCue = globalScope.VTTCue;
-      gs.VTTCue = MockVTTCue;
-      const cue = new VTTCue(0, 10, "");
-      delete gs.VTTCue;
-      const isVTTCue = jest.requireActual("../is_vtt_cue").default;
-      expect(isVTTCue(cue)).toEqual(false);
-      globalScope.VTTCue = originalVTTCue;
-    });
+  it("should return false in any case if the global scope does not define a VTTCue", async () => {
+    const originalVTTCue = globalScope.VTTCue;
+    gs.VTTCue = MockVTTCue;
+    const cue = new VTTCue(0, 10, "");
+    delete gs.VTTCue;
+    const isVTTCue = (await vi.importActual("../is_vtt_cue")) as any;
+    expect(isVTTCue.default(cue)).toEqual(false);
+    globalScope.VTTCue = originalVTTCue;
+  });
 });

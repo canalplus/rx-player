@@ -1,31 +1,36 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+import { describe, afterEach, it, expect, vi } from "vitest";
+
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("Compat - canReuseMediaKeys", () => {
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it("should return true on any browser but WebOS", () => {
-    jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isWebOs: false };
+  it("should return true on any browser but WebOS", async () => {
+    vi.doMock("../browser_detection", () => {
+      return { isWebOs: false, isPanasonic: false };
     });
-    const canReuseMediaKeys =
-      jest.requireActual("../can_reuse_media_keys.ts");
+    const canReuseMediaKeys = (await vi.importActual(
+      "../can_reuse_media_keys.ts",
+    )) as any;
     expect(canReuseMediaKeys.default()).toBe(true);
   });
 
-  it("should return false on WebOs", () => {
-    jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isWebOs: true,
-               isWebOs2022: false };
+  it("should return false on WebOs", async () => {
+    vi.doMock("../browser_detection", () => {
+      return {
+        isWebOs: true,
+        isWebOs2022: false,
+        isPanasonic: false,
+      };
     });
-    const canReuseMediaKeys =
-      jest.requireActual("../can_reuse_media_keys.ts");
+    const canReuseMediaKeys = (await vi.importActual(
+      "../can_reuse_media_keys.ts",
+    )) as any;
     expect(canReuseMediaKeys.default()).toBe(false);
   });
 });

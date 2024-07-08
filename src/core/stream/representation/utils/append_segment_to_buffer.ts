@@ -15,54 +15,53 @@
  */
 
 /**
- * This file allows any Stream to push data to a SegmentBuffer.
+ * This file allows any Stream to push data to a SegmentSink.
  */
 
-import {
-  MediaError,
-  SourceBufferError,
-} from "../../../../errors";
+import { MediaError, SourceBufferError } from "../../../../errors";
 import log from "../../../../log";
 import { toTaggedTrack } from "../../../../manifest";
-import { IRange } from "../../../../utils/ranges";
-import { IReadOnlySharedReference } from "../../../../utils/reference";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type { IRange } from "../../../../utils/ranges";
+import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import sleep from "../../../../utils/sleep";
-import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../../api";
-import {
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import { CancellationError } from "../../../../utils/task_canceller";
+import type {
   IInsertedChunkInfos,
   IPushChunkInfos,
-  SegmentBuffer,
-} from "../../../segment_buffers";
-import { IRepresentationStreamPlaybackObservation } from "../types";
+  SegmentSink,
+} from "../../../segment_sinks";
+import type { IRepresentationStreamPlaybackObservation } from "../types";
 
 /**
- * Append a segment to the given segmentBuffer.
+ * Append a segment to the given segmentSink.
  * If it leads to an Error due to a full buffer, try to run our custom range
  * _garbage collector_ then retry.
  * @param {Object} playbackObserver
- * @param {Object} segmentBuffer
+ * @param {Object} segmentSink
  * @param {Object} dataInfos
  * @param {number} bufferGoal
  * @param {Object} cancellationSignal
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
-  segmentBuffer : SegmentBuffer,
-  dataInfos : IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
-  bufferGoal : IReadOnlySharedReference<number>,
-  cancellationSignal : CancellationSignal
-) : Promise<IRange[]> {
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  segmentSink: SegmentSink,
+  dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
+  bufferGoal: IReadOnlySharedReference<number>,
+  cancellationSignal: CancellationSignal,
+): Promise<IRange[]> {
   try {
-    return await segmentBuffer.pushChunk(dataInfos);
-  } catch (appendError : unknown) {
+    return await segmentSink.pushChunk(dataInfos);
+  } catch (appendError: unknown) {
     if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
     } else if (!(appendError instanceof SourceBufferError) || !appendError.isBufferFull) {
-      const reason = appendError instanceof Error ?
-        appendError.toString() :
-        "An unknown error happened when pushing content";
+      const reason =
+        appendError instanceof Error
+          ? appendError.toString()
+          : "An unknown error happened when pushing content";
       throw new MediaError("BUFFER_APPEND_ERROR", reason, {
         tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
       });
@@ -73,19 +72,19 @@ export default async function appendSegmentToBuffer<T>(
       log.warn("Stream: Running garbage collector");
       const start = Math.max(currentPos - 5, 0);
       const end = currentPos + bufferGoal.getValue() + 12;
-      await segmentBuffer.removeBuffer(0, start);
-      await segmentBuffer.removeBuffer(end, Number.MAX_VALUE);
+      await segmentSink.removeBuffer(0, start);
+      await segmentSink.removeBuffer(end, Number.MAX_VALUE);
       await sleep(200);
       if (cancellationSignal.cancellationError !== null) {
         throw cancellationSignal.cancellationError;
       }
-      return await segmentBuffer.pushChunk(dataInfos);
+      return await segmentSink.pushChunk(dataInfos);
     } catch (err2) {
       if (err2 instanceof CancellationError) {
         throw err2;
       }
-      const reason = err2 instanceof Error ? err2.toString() :
-                                             "Could not clean the buffer";
+      const reason =
+        err2 instanceof Error ? err2.toString() : "Could not clean the buffer";
 
       throw new MediaError("BUFFER_FULL_ERROR", reason, {
         tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],

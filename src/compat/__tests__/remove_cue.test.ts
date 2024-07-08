@@ -1,37 +1,22 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import arrayFindIndex from "../../utils/array_find_index";
 
 describe("compat - removeCue", () => {
-  beforeEach(() => {
-    jest.resetModules();
+  beforeEach(() => {
+    vi.resetModules();
   });
 
-  it("should remove cue from track if not on firefox", () => {
+  it("should remove cue from track if not on firefox", async () => {
     const fakeTrackCues = [{ id: "1" }];
 
-    const mockRemoveCue = jest.fn((cue: { id: string }) => {
+    const mockRemoveCue = vi.fn((cue: { id: string }) => {
       const idx = arrayFindIndex(fakeTrackCues, (c) => {
         return c.id === cue.id;
       });
@@ -39,23 +24,26 @@ describe("compat - removeCue", () => {
         fakeTrackCues.splice(idx, 1);
       }
     });
-    const mockGetMode = jest.fn(() => "showing");
-    const mockSetMode = jest.fn(() => null);
+    const mockGetMode = vi.fn(() => "showing");
+    const mockSetMode = vi.fn(() => null);
 
     const fakeTrack = {
-      get mode() { return mockGetMode(); },
-      set mode(_) { mockSetMode(); },
+      get mode() {
+        return mockGetMode();
+      },
+      set mode(_) {
+        mockSetMode();
+      },
       cues: fakeTrackCues,
       activeCues: [],
       removeCue: mockRemoveCue,
     };
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isFirefox: false,
     }));
 
-    const removeCue = jest.requireActual("../remove_cue").default;
+    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
     removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(0);
@@ -66,12 +54,12 @@ describe("compat - removeCue", () => {
     expect(mockRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
   });
 
-  it("should remove cue from track if on firefox and is active cue", () => {
+  it("should remove cue from track if on firefox and is active cue", async () => {
     const fakeCue = { id: "1" };
     const fakeTrackCues = [fakeCue];
     let fakeMode = "showing";
 
-    const mockRemoveCue = jest.fn((cue: { id: string }) => {
+    const mockRemoveCue = vi.fn((cue: { id: string }) => {
       const idx = arrayFindIndex(fakeTrackCues, (c) => {
         return c.id === cue.id;
       });
@@ -79,27 +67,30 @@ describe("compat - removeCue", () => {
         fakeTrackCues.splice(idx, 1);
       }
     });
-    const mockGetMode = jest.fn(() => {
+    const mockGetMode = vi.fn(() => {
       return fakeMode;
     });
-    const mockSetMode = jest.fn((newMode: string) => {
+    const mockSetMode = vi.fn((newMode: string) => {
       fakeMode = newMode;
     });
 
     const fakeTrack = {
-      get mode() { return mockGetMode(); },
-      set mode(newMode: string) { mockSetMode(newMode); },
+      get mode() {
+        return mockGetMode();
+      },
+      set mode(newMode: string) {
+        mockSetMode(newMode);
+      },
       cues: fakeTrackCues,
       activeCues: fakeTrackCues,
       removeCue: mockRemoveCue,
     };
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isFirefox: true,
     }));
 
-    const removeCue = jest.requireActual("../remove_cue").default;
+    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
     removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
@@ -110,12 +101,12 @@ describe("compat - removeCue", () => {
     expect(mockRemoveCue).toHaveBeenLastCalledWith(fakeCue);
   });
 
-  it("should remove cue from track if on firefox and is not active cue", () => {
+  it("should remove cue from track if on firefox and is not active cue", async () => {
     const fakeCue = { id: "1" };
     const fakeTrackCue = [fakeCue];
     let fakeMode = "showing";
 
-    const mockRemoveCue = jest.fn((cue: { id: string }) => {
+    const mockRemoveCue = vi.fn((cue: { id: string }) => {
       const idx = arrayFindIndex(fakeTrackCue, (c) => {
         return c.id === cue.id;
       });
@@ -123,27 +114,30 @@ describe("compat - removeCue", () => {
         fakeTrackCue.splice(idx, 1);
       }
     });
-    const mockGetMode = jest.fn(() => {
+    const mockGetMode = vi.fn(() => {
       return fakeMode;
     });
-    const mockSetMode = jest.fn((newMode: string) => {
+    const mockSetMode = vi.fn((newMode: string) => {
       fakeMode = newMode;
     });
 
     const fakeTrack = {
-      get mode() { return mockGetMode(); },
-      set mode(newMode: string) { mockSetMode(newMode); },
+      get mode() {
+        return mockGetMode();
+      },
+      set mode(newMode: string) {
+        mockSetMode(newMode);
+      },
       cues: fakeTrackCue,
       activeCues: [],
       removeCue: mockRemoveCue,
     };
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isFirefox: true,
     }));
 
-    const removeCue = jest.requireActual("../remove_cue").default;
+    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
     removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(0);
@@ -154,20 +148,18 @@ describe("compat - removeCue", () => {
     expect(mockRemoveCue).toHaveBeenLastCalledWith(fakeCue);
   });
 
-  it("should log if removeCue throws if on firefox and is active cue", () => {
+  it("should log if removeCue throws if on firefox and is active cue", async () => {
     const fakeCue = { id: "1" };
     const fakeTrackCues = [fakeCue];
-    const mockRemoveCue = jest.fn(() => {
+    const mockRemoveCue = vi.fn(() => {
       throw new Error();
     });
-    const mockLog = jest.fn((message) => message);
+    const mockLog = vi.fn((message) => message);
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isFirefox: true,
     }));
-    jest.mock("../../log", () => ({
-      __esModule: true as const,
+    vi.doMock("../../log", () => ({
       default: {
         warn: mockLog,
       },
@@ -180,7 +172,7 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     };
 
-    const removeCue = jest.requireActual("../remove_cue").default;
+    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
     removeCue(fakeTrack, fakeCue);
 
     expect(fakeTrack.cues.length).toBe(1);
@@ -191,18 +183,16 @@ describe("compat - removeCue", () => {
     expect(mockRemoveCue).toHaveBeenLastCalledWith(fakeCue);
   });
 
-  it("should log if removeCue throws if not on firefox", () => {
-    const mockLog = jest.fn((message) => message);
-    const mockRemoveCue = jest.fn(() => {
+  it("should log if removeCue throws if not on firefox", async () => {
+    const mockLog = vi.fn((message) => message);
+    const mockRemoveCue = vi.fn(() => {
       throw new Error();
     });
 
-    jest.mock("../browser_detection", () => ({
-      __esModule: true as const,
+    vi.doMock("../browser_detection", () => ({
       isFirefox: false,
     }));
-    jest.mock("../../log", () => ({
-      __esModule: true as const,
+    vi.doMock("../../log", () => ({
       default: {
         warn: mockLog,
       },
@@ -210,13 +200,11 @@ describe("compat - removeCue", () => {
 
     const fakeTrack = {
       mode: "showing",
-      cues: [
-        { id: "1" },
-      ],
+      cues: [{ id: "1" }],
       removeCue: mockRemoveCue,
     };
 
-    const removeCue = jest.requireActual("../remove_cue").default;
+    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
     removeCue(fakeTrack, { id: "1" });
 
     expect(fakeTrack.cues.length).toBe(1);

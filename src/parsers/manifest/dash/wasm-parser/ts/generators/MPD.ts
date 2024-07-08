@@ -15,24 +15,14 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import {
-  IMPDAttributes,
-  IMPDChildren,
-} from "../../../node_parser_types";
-import ParsersStack, {
-  IAttributeParser,
-  IChildrenParser,
-} from "../parsers_stack";
-import {
-  AttributeName,
-  TagName,
-} from "../types";
+import type { IMPDAttributes, IMPDChildren } from "../../../node_parser_types";
+import type { IAttributeParser, IChildrenParser } from "../parsers_stack";
+import type ParsersStack from "../parsers_stack";
+import { AttributeName, TagName } from "../types";
 import { parseString } from "../utils";
 import { generateBaseUrlAttrParser } from "./BaseURL";
-import {
-  generatePeriodAttrParser,
-  generatePeriodChildrenParser,
-} from "./Period";
+import { generateContentProtectionAttrParser } from "./ContentProtection";
+import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period";
 import { generateSchemeAttrParser } from "./Scheme";
 
 /**
@@ -44,14 +34,13 @@ import { generateSchemeAttrParser } from "./Scheme";
  * @returns {Function}
  */
 export function generateMPDChildrenParser(
-  mpdChildren : IMPDChildren,
-  linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
-)  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  mpdChildren: IMPDChildren,
+  linearMemory: WebAssembly.Memory,
+  parsersStack: ParsersStack,
+  fullMpd: ArrayBuffer,
+): IChildrenParser {
+  return function onRootChildren(nodeId: number) {
     switch (nodeId) {
-
       case TagName.BaseURL: {
         const baseUrl = { value: "", attributes: {} };
         mpdChildren.baseURLs.push(baseUrl);
@@ -63,15 +52,17 @@ export function generateMPDChildrenParser(
       }
 
       case TagName.Period: {
-        const period = { children: { adaptations: [],
-                                     baseURLs: [],
-                                     eventStreams: [] },
-                         attributes: {} };
+        const period = {
+          children: { adaptations: [], baseURLs: [], eventStreams: [] },
+          attributes: {},
+        };
         mpdChildren.periods.push(period);
-        const childrenParser = generatePeriodChildrenParser(period.children,
-                                                            linearMemory,
-                                                            parsersStack,
-                                                            fullMpd);
+        const childrenParser = generatePeriodChildrenParser(
+          period.children,
+          linearMemory,
+          parsersStack,
+          fullMpd,
+        );
         const attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
@@ -87,6 +78,23 @@ export function generateMPDChildrenParser(
         break;
       }
 
+      case TagName.ContentProtection: {
+        const contentProtection = {
+          children: { cencPssh: [] },
+          attributes: {},
+        };
+        if (mpdChildren.contentProtections === undefined) {
+          mpdChildren.contentProtections = [];
+        }
+        mpdChildren.contentProtections.push(contentProtection);
+        const contentProtAttrParser = generateContentProtectionAttrParser(
+          contentProtection,
+          linearMemory,
+        );
+        parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
+        break;
+      }
+
       default:
         // Allows to make sure we're not mistakenly closing a re-opened
         // tag.
@@ -97,13 +105,13 @@ export function generateMPDChildrenParser(
 }
 
 export function generateMPDAttrParser(
-  mpdChildren : IMPDChildren,
-  mpdAttrs : IMPDAttributes,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  mpdChildren: IMPDChildren,
+  mpdAttrs: IMPDAttributes,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   let dataView;
   const textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr : number, ptr : number, len : number) {
+  return function onMPDAttribute(attr: number, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.Id:
         mpdAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);

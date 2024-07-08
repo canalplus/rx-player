@@ -5,25 +5,18 @@
 /sonar-project.properties
 /localhost.crt
 /localhost.key
-/.travis.yml
 /node_modules
-/test-output.xml
-/tslint.json
-/webpack-demo.config.js
-/webpack-tests.config.js
-/webpack.config.js
+/webpack-demo.config.mjs
 
 /demo
 
 /tests
-/coverage
-
-/dist/_esm5.raw
 
 /doc
-/src
 /.github
 /scripts
+# rust build artifacts
+/src/parsers/manifest/dash/wasm-parser/target
 
 /FILES.md
 /CONTRIBUTING.md

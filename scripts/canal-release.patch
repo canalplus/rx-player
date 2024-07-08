@@ -1,16 +1,14 @@
 diff --git a/src/parsers/texttracks/ttml/html/apply_extent.ts b/src/parsers/texttracks/ttml/html/apply_extent.ts
-index 5772fa8fb..eb3a051e4 100644
+index aa173eee7..bba6ad77c 100644
 --- a/src/parsers/texttracks/ttml/html/apply_extent.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_extent.ts
-@@ -54,7 +54,14 @@ export default function applyExtent(
-         secondExtent[2] === "%" ||
-         secondExtent[2] === "em")
-     {
+@@ -45,7 +45,12 @@ export default function applyExtent(element: HTMLElement, extent: string): void
+     }
+ 
+     if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
 -      element.style.height = secondExtent[1] + secondExtent[2];
 +      const toNum = Number(secondExtent[1]);
-+      if (secondExtent[2] === "%" && !isNaN(toNum) &&
-+          (toNum < 0 || toNum > 100))
-+      {
++      if (secondExtent[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
 +        element.style.width = "80%";
 +      } else {
 +        element.style.height = secondExtent[1] + secondExtent[2];
@@ -19,14 +17,14 @@ index 5772fa8fb..eb3a051e4 100644
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-height", secondExtent[1]);
 diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-index 4f727229a..253aa1a72 100644
+index 63c98bbfc..92a8796e0 100644
 --- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-@@ -14,16 +14,15 @@
+@@ -14,15 +14,14 @@
   * limitations under the License.
   */
  
--import { addClassName } from "../../../../compat";
+-import addClassName from "../../../../compat/add_class_name";
  import log from "../../../../log";
  import { REGXP_LENGTH } from "../regexps";
  
@@ -35,16 +33,15 @@ index 4f727229a..253aa1a72 100644
 + * @param {HTMLElement} _element
   * @param {string} lineHeight
   */
- export default function applyLineHeight(
--  element : HTMLElement,
-+  _element : HTMLElement,
-   lineHeight : string
- ) : void {
+-export default function applyLineHeight(element: HTMLElement, lineHeight: string): void {
++export default function applyLineHeight(_element: HTMLElement, lineHeight: string): void {
    const trimmedLineHeight = lineHeight.trim();
-@@ -40,10 +39,10 @@ export default function applyLineHeight(
-       firstLineHeight[2] === "%" ||
-       firstLineHeight[2] === "em")
-   {
+   const splittedLineHeight = trimmedLineHeight.split(" ");
+ 
+@@ -38,10 +37,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
+     firstLineHeight[2] === "%" ||
+     firstLineHeight[2] === "em"
+   ) {
 -    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
 +    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
    } else if (firstLineHeight[2] === "c") {
@@ -56,13 +53,13 @@ index 4f727229a..253aa1a72 100644
      log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
    }
 diff --git a/src/parsers/texttracks/ttml/html/apply_origin.ts b/src/parsers/texttracks/ttml/html/apply_origin.ts
-index 01a205aad..91d69fa3c 100644
+index 856449c2f..b924ed248 100644
 --- a/src/parsers/texttracks/ttml/html/apply_origin.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_origin.ts
-@@ -53,7 +53,15 @@ export default function applyOrigin(
-         secondOrigin[2] === "%" ||
-         secondOrigin[2] === "em")
-     {
+@@ -44,7 +44,15 @@ export default function applyOrigin(element: HTMLElement, origin: string): void
+     }
+ 
+     if (secondOrigin[2] === "px" || secondOrigin[2] === "%" || secondOrigin[2] === "em") {
 -      element.style.top = secondOrigin[1] + secondOrigin[2];
 +      const toNum = Number(secondOrigin[1]);
 +      if (secondOrigin[2] === "%" && !isNaN(toNum) &&
@@ -76,3 +73,35 @@ index 01a205aad..91d69fa3c 100644
      } else if (secondOrigin[2] === "c") {
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-top", secondOrigin[1]);
+diff --git a/src/compat/should_renew_media_key_system_access.ts b/src/compat/should_renew_media_key_system_access.ts
+index aee6041df..0b198959f 100644
+--- a/src/compat/should_renew_media_key_system_access.ts
++++ b/src/compat/should_renew_media_key_system_access.ts
+@@ -14,13 +14,25 @@
+  * limitations under the License.
+  */
+ 
+-import { isIE11 } from "./browser_detection";
++import { isIE11, isPlayStation5 } from "./browser_detection";
+ 
+ /**
+  * Returns true if the current target require the MediaKeySystemAccess to be
+  * renewed on each content.
++ *
++ * On PlayStation 5:
++ * When trying to close a mediaKeySession with sessionType "persistent-license",
++ * the device is not able to close the session (InvalidStateError).
++ * This mean we are not able to close sessions and therefore once we reach the limit
++ * of sessions available on the device we cannot create new ones.
++ * The solution we found is to renew the mediaKeySystemAccess to make the MediaKeys
++ * unavailable, the browser will close by it's own the MediaKeySessions associated
++ * with that MediaKeys.
++ * Notice that we tried to only renew the MediaKeys with
++ * `keySystemAccess.createMediaKeys()`, but the device throw a "Permission Denied" error
++ * when creating too many mediaKeys.
+  * @returns {Boolean}
+  */
+ export default function shouldRenewMediaKeySystemAccess(): boolean {
+-  return isIE11;
++  return isIE11 || isPlayStation5;
+ }

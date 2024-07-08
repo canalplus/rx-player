@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { IIndexSegment } from "../../../../utils/index_helpers";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
+import type { ITNode } from "../../../../../../utils/xml-parser";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 
 /**
  * By comparing two timelines for the same content at different points in time,
@@ -22,59 +24,66 @@ import { IIndexSegment } from "../../../../utils/index_helpers";
  * starting time.
  * Returns `null` if not found.
  * @param {Array.<Object>} prevTimeline
- * @param {HTMLCollection} newElements
+ * @param {Array.<Object>} newElements
  * @returns {Object|null}
  */
 export default function findFirstCommonStartTime(
-  prevTimeline : IIndexSegment[],
-  newElements : HTMLCollection
-) : {
+  prevTimeline: IIndexSegment[],
+  newElements: ITNode[] | HTMLCollection,
+): {
   /** Index in `prevSegments` where the first common segment start is found. */
-  prevSegmentsIdx : number;
+  prevSegmentsIdx: number;
   /** Index in `newElements` where the first common segment start is found. */
-  newElementsIdx : number;
+  newElementsIdx: number;
   /**
    * Value to set `repeatCount` to at `prevSegments[prevSegmentsIdx]` to
    * retrieve the segment with the first common start time
    */
-  repeatNumberInPrevSegments : number;
+  repeatNumberInPrevSegments: number;
   /**
    * Value to set `repeatCount` to at `newElements[newElementsIdx]` to
    * retrieve the segment with the first common start time
    */
-  repeatNumberInNewElements : number;
+  repeatNumberInNewElements: number;
 } | null {
   if (prevTimeline.length === 0 || newElements.length === 0) {
     return null;
   }
   const prevInitialStart = prevTimeline[0].start;
-  const newFirstTAttr = newElements[0].getAttribute("t");
-  const newInitialStart = newFirstTAttr === null ? null :
-                                                   parseInt(newFirstTAttr, 10);
+  const newFirstTAttr = Array.isArray(newElements)
+    ? newElements[0].attributes.t
+    : newElements[0].getAttribute("t");
+  const newInitialStart = isNullOrUndefined(newFirstTAttr)
+    ? null
+    : parseInt(newFirstTAttr, 10);
   if (newInitialStart === null || Number.isNaN(newInitialStart)) {
     return null;
   }
 
   if (prevInitialStart === newInitialStart) {
-    return { prevSegmentsIdx: 0,
-             newElementsIdx: 0,
-             repeatNumberInPrevSegments: 0,
-             repeatNumberInNewElements: 0 };
-
+    return {
+      prevSegmentsIdx: 0,
+      newElementsIdx: 0,
+      repeatNumberInPrevSegments: 0,
+      repeatNumberInNewElements: 0,
+    };
   } else if (prevInitialStart < newInitialStart) {
     let prevElt = prevTimeline[0];
     let prevElementIndex = 0;
     while (true) {
       if (prevElt.repeatCount > 0) {
         const diff = newInitialStart - prevElt.start;
-        if (diff % prevElt.duration === 0 &&
-            diff / prevElt.duration <= prevElt.repeatCount)
-        {
+        if (
+          diff % prevElt.duration === 0 &&
+          diff / prevElt.duration <= prevElt.repeatCount
+        ) {
           const repeatNumberInPrevSegments = diff / prevElt.duration;
-          return { repeatNumberInPrevSegments,
-                   prevSegmentsIdx: prevElementIndex,
-                   newElementsIdx: 0,
-                   repeatNumberInNewElements: 0 };
+          return {
+            repeatNumberInPrevSegments,
+            prevSegmentsIdx: prevElementIndex,
+            newElementsIdx: 0,
+            repeatNumberInNewElements: 0,
+          };
         }
       }
       prevElementIndex++;
@@ -83,28 +92,31 @@ export default function findFirstCommonStartTime(
       }
       prevElt = prevTimeline[prevElementIndex];
       if (prevElt.start === newInitialStart) {
-        return { prevSegmentsIdx: prevElementIndex,
-                 newElementsIdx: 0,
-                 repeatNumberInPrevSegments: 0,
-                 repeatNumberInNewElements: 0 };
+        return {
+          prevSegmentsIdx: prevElementIndex,
+          newElementsIdx: 0,
+          repeatNumberInPrevSegments: 0,
+          repeatNumberInNewElements: 0,
+        };
       } else if (prevElt.start > newInitialStart) {
         return null;
       }
     }
   } else {
     let newElementsIdx = 0;
-    let newElt = newElements[0];
+    let newNodeElt: ITNode | null = Array.isArray(newElements) ? newElements[0] : null;
+    let newDomElt: Element | null = Array.isArray(newElements) ? null : newElements[0];
     let currentTimeOffset = newInitialStart;
     while (true) {
-      const dAttr = newElt.getAttribute("d");
-      const duration = dAttr === null ? null :
-                                        parseInt(dAttr, 10);
+      const dAttr =
+        newNodeElt !== null ? newNodeElt.attributes.d : newDomElt?.getAttribute("d");
+      const duration = isNullOrUndefined(dAttr) ? null : parseInt(dAttr, 10);
       if (duration === null || Number.isNaN(duration)) {
         return null;
       }
-      const rAttr = newElt.getAttribute("r");
-      const repeatCount = rAttr === null ? null :
-                                           parseInt(rAttr, 10);
+      const rAttr =
+        newNodeElt !== null ? newNodeElt.attributes.r : newDomElt?.getAttribute("r");
+      const repeatCount = isNullOrUndefined(rAttr) ? null : parseInt(rAttr, 10);
 
       if (repeatCount !== null) {
         if (Number.isNaN(repeatCount) || repeatCount < 0) {
@@ -112,14 +124,14 @@ export default function findFirstCommonStartTime(
         }
         if (repeatCount > 0) {
           const diff = prevInitialStart - currentTimeOffset;
-          if (diff % duration === 0 &&
-              diff / duration <= repeatCount)
-          {
+          if (diff % duration === 0 && diff / duration <= repeatCount) {
             const repeatNumberInNewElements = diff / duration;
-            return { repeatNumberInPrevSegments: 0,
-                     repeatNumberInNewElements,
-                     prevSegmentsIdx: 0,
-                     newElementsIdx };
+            return {
+              repeatNumberInPrevSegments: 0,
+              repeatNumberInNewElements,
+              prevSegmentsIdx: 0,
+              newElementsIdx,
+            };
           }
         }
         currentTimeOffset += duration * (repeatCount + 1);
@@ -130,10 +142,14 @@ export default function findFirstCommonStartTime(
       if (newElementsIdx >= newElements.length) {
         return null;
       }
-      newElt = newElements[newElementsIdx];
-      const tAttr = newElt.getAttribute("t");
-      const time = tAttr === null ? null :
-                                    parseInt(tAttr, 10);
+      if (Array.isArray(newElements)) {
+        newNodeElt = newElements[newElementsIdx];
+      } else {
+        newDomElt = newElements[newElementsIdx];
+      }
+      const tAttr =
+        newNodeElt !== null ? newNodeElt.attributes.t : newDomElt?.getAttribute("t");
+      const time = isNullOrUndefined(tAttr) ? null : parseInt(tAttr, 10);
       if (time !== null) {
         if (Number.isNaN(time)) {
           return null;
@@ -141,10 +157,12 @@ export default function findFirstCommonStartTime(
         currentTimeOffset = time;
       }
       if (currentTimeOffset === prevInitialStart) {
-        return { newElementsIdx,
-                 prevSegmentsIdx: 0,
-                 repeatNumberInPrevSegments: 0,
-                 repeatNumberInNewElements: 0 };
+        return {
+          newElementsIdx,
+          prevSegmentsIdx: 0,
+          repeatNumberInPrevSegments: 0,
+          repeatNumberInNewElements: 0,
+        };
       } else if (currentTimeOffset > newInitialStart) {
         return null;
       }

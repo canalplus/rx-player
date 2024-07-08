@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -17,58 +18,43 @@
 import inferSegmentContainer from "../infer_segment_container";
 
 describe("Transport utils - inferSegmentContainer", () => {
-  it("should return \"mp4\" for audio and video tracks with a specific mime-type", () => {
+  it('should return "mp4" for audio and video tracks with a specific mime-type', () => {
     expect(inferSegmentContainer("audio", "audio/mp4")).toEqual("mp4");
     expect(inferSegmentContainer("video", "video/mp4")).toEqual("mp4");
     expect(inferSegmentContainer("audio", "video/mp4")).toEqual("mp4");
     expect(inferSegmentContainer("video", "audio/mp4")).toEqual("mp4");
   });
 
-  /* eslint-disable max-len */
   it("should return undefined for non-audio nor video tracks with a mime-type indicating mp4 audio or video", () => {
-  /* eslint-enable max-len */
     expect(inferSegmentContainer("text", "audio/mp4")).toEqual(undefined);
     expect(inferSegmentContainer("text", "video/mp4")).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
-  it("should return \"webm\" for audio and video tracks with a specific mime-type", () => {
-  /* eslint-enable max-len */
+  it('should return "webm" for audio and video tracks with a specific mime-type', () => {
     expect(inferSegmentContainer("audio", "audio/webm")).toEqual("webm");
     expect(inferSegmentContainer("video", "video/webm")).toEqual("webm");
     expect(inferSegmentContainer("audio", "video/webm")).toEqual("webm");
     expect(inferSegmentContainer("video", "audio/webm")).toEqual("webm");
   });
 
-  /* eslint-disable max-len */
   it("should return undefined for non-audio nor video tracks with a mime-type indicating webm audio or video", () => {
-  /* eslint-enable max-len */
     expect(inferSegmentContainer("text", "audio/webm")).toEqual(undefined);
     expect(inferSegmentContainer("text", "video/webm")).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
   it("should return undefined for audio and video tracks with any other mime-type", () => {
-  /* eslint-enable max-len */
-    expect(inferSegmentContainer("audio", "application/mp4"))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video", "application/mp4"))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("audio", ""))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video", ""))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("audio", "foo"))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video", "bar"))
-      .toEqual(undefined);
+    expect(inferSegmentContainer("audio", "application/mp4")).toEqual(undefined);
+    expect(inferSegmentContainer("video", "application/mp4")).toEqual(undefined);
+    expect(inferSegmentContainer("audio", "")).toEqual(undefined);
+    expect(inferSegmentContainer("video", "")).toEqual(undefined);
+    expect(inferSegmentContainer("audio", "foo")).toEqual(undefined);
+    expect(inferSegmentContainer("video", "bar")).toEqual(undefined);
     expect(inferSegmentContainer("audio", undefined)).toEqual(undefined);
   });
 
-  it("should return \"mp4\" for a text track with a specific mime-type", () => {
+  it('should return "mp4" for a text track with a specific mime-type', () => {
     expect(inferSegmentContainer("text", "application/mp4")).toEqual("mp4");
   });
-
 
   it("should return undefined for text tracks with any other mime-type", () => {
     expect(inferSegmentContainer("text", "text/mp4")).toEqual(undefined);

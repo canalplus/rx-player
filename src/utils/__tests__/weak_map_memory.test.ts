@@ -1,26 +1,11 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect } from "vitest";
 import WeakMapMemory from "../weak_map_memory";
 
 describe("utils - WeakMapMemory", () => {
   it("should call the given function when `get` is first called", () => {
     const obj = {};
     let wasCalledCounter = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       expect(arg).toBe(obj);
       return ++wasCalledCounter;
     });
@@ -29,12 +14,10 @@ describe("utils - WeakMapMemory", () => {
     expect(wasCalledCounter).toBe(1);
   });
 
-  /* eslint-disable max-len */
   it("should not call the given function when `get` has already been called on this object", () => {
-  /* eslint-enable max-len */
     const obj = {};
     let wasCalledCounter = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       expect(arg).toBe(obj);
       return ++wasCalledCounter;
     });
@@ -55,12 +38,10 @@ describe("utils - WeakMapMemory", () => {
     expect(wasCalledCounter).toBe(1);
   });
 
-  /* eslint-disable max-len */
   it("should remove from WeakMapMemory when destroy is called", () => {
-  /* eslint-enable max-len */
     const obj = {};
     let wasCalledCounter = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       expect(arg).toBe(obj);
       return ++wasCalledCounter;
     });
@@ -88,7 +69,7 @@ describe("utils - WeakMapMemory", () => {
     let wasCalledCounter = 0;
     let obj1WasCalled = 0;
     let obj2WasCalled = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       if (arg === obj1) {
         obj1WasCalled++;
       } else if (arg === obj2) {
@@ -144,7 +125,7 @@ describe("utils - WeakMapMemory", () => {
     let obj1WasCalled = 0;
     let obj2WasCalled = 0;
 
-    function func(arg : unknown) {
+    function func(arg: unknown) {
       if (arg === obj1) {
         obj1WasCalled++;
       } else if (arg === obj2) {

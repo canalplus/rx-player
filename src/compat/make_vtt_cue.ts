@@ -17,7 +17,7 @@
 import log from "../log";
 import globalScope from "../utils/global_scope";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
-import { ICompatVTTCue } from "./browser_compatibility_types";
+import type { ICompatVTTCue } from "./browser_compatibility_types";
 
 /**
  * Creates a cue using the best platform-specific interface available.
@@ -29,12 +29,11 @@ import { ICompatVTTCue } from "./browser_compatibility_types";
  * were invalid.
  */
 export default function makeCue(
-  startTime : number,
-  endTime : number,
-  payload : string
-) : ICompatVTTCue|TextTrackCue|null {
+  startTime: number,
+  endTime: number,
+  payload: string,
+): ICompatVTTCue | TextTrackCue | null {
   if (startTime >= endTime) {
-
     // IE/Edge will throw in this case.
     // See issue #501
     log.warn(`Compat: Invalid cue times: ${startTime} - ${endTime}`);

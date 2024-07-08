@@ -15,15 +15,10 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import {
-  IMPDIntermediateRepresentation,
-} from "../../../node_parser_types";
-import ParsersStack from "../parsers_stack";
+import type { IMPDIntermediateRepresentation } from "../../../node_parser_types";
+import type ParsersStack from "../parsers_stack";
 import { TagName } from "../types";
-import {
-  generateMPDAttrParser,
-  generateMPDChildrenParser,
-} from "./MPD";
+import { generateMPDAttrParser, generateMPDChildrenParser } from "./MPD";
 
 /**
  * @param {Object} rootObj
@@ -33,26 +28,34 @@ import {
  * @returns {Function}
  */
 export function generateRootChildrenParser(
-  rootObj : { mpd? : IMPDIntermediateRepresentation },
-  linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
-)  : (nodeId : number) => void {
-  return function onRootChildren(nodeId : number) {
+  rootObj: { mpd?: IMPDIntermediateRepresentation },
+  linearMemory: WebAssembly.Memory,
+  parsersStack: ParsersStack,
+  fullMpd: ArrayBuffer,
+): (nodeId: number) => void {
+  return function onRootChildren(nodeId: number) {
     switch (nodeId) {
       case TagName.MPD:
-        rootObj.mpd = { children: { baseURLs: [],
-                                    locations : [],
-                                    periods: [],
-                                    utcTimings: [] },
-                        attributes: {} };
-        const childrenParser = generateMPDChildrenParser(rootObj.mpd.children,
-                                                         linearMemory,
-                                                         parsersStack,
-                                                         fullMpd);
-        const attributeParser = generateMPDAttrParser(rootObj.mpd.children,
-                                                      rootObj.mpd.attributes,
-                                                      linearMemory);
+        rootObj.mpd = {
+          children: {
+            baseURLs: [],
+            locations: [],
+            periods: [],
+            utcTimings: [],
+          },
+          attributes: {},
+        };
+        const childrenParser = generateMPDChildrenParser(
+          rootObj.mpd.children,
+          linearMemory,
+          parsersStack,
+          fullMpd,
+        );
+        const attributeParser = generateMPDAttrParser(
+          rootObj.mpd.children,
+          rootObj.mpd.attributes,
+          linearMemory,
+        );
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
 

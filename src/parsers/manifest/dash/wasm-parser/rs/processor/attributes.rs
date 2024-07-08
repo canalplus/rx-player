@@ -224,6 +224,8 @@ pub fn report_content_protection_attrs(tag_bs: &quick_xml::events::BytesStart) {
             Ok(attr) => match attr.key.as_ref() {
                 b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
                 b"value" => ContentProtectionValue.try_report_as_string(&attr),
+                b"ref" => ContentProtectionRef.try_report_as_string(&attr),
+                b"refId" => ContentProtectionRefId.try_report_as_string(&attr),
 
                 // TODO convert hex to bytes here?
                 b"cenc:default_KID" => ContentProtectionKeyId.try_report_as_string(&attr),

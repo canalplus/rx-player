@@ -30,4 +30,4 @@ export default function displayWebpackErrors(errors, warnings) {
     console.log();
   }
   /* eslint-enable no-console */
-};
+}

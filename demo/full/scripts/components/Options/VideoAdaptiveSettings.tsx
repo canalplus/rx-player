@@ -1,7 +1,5 @@
 import * as React from "react";
-import {
-  IVideoRepresentationsSwitchingMode,
-} from "../../../../../src/public_types";
+import { IVideoRepresentationsSwitchingMode } from "../../../../../src/public_types";
 import Checkbox from "../../components/CheckBox";
 import Select from "../Select";
 
@@ -21,13 +19,11 @@ function VideoAdaptiveSettings({
 }: {
   defaultVideoRepresentationsSwitchingMode: IVideoRepresentationsSwitchingMode;
   onDefaultVideoRepresentationsSwitchingModeChange: (
-    mode: IVideoRepresentationsSwitchingMode
+    mode: IVideoRepresentationsSwitchingMode,
   ) => void;
   videoResolutionLimit: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden: boolean;
-  onVideoResolutionLimitChange: (
-    newVal: { index: number, value: string}
-  ) => void;
+  onVideoResolutionLimitChange: (newVal: { index: number; value: string }) => void;
   onThrottleVideoBitrateWhenHiddenChange: (newVal: boolean) => void;
 }): JSX.Element {
   let defaultVideoRepresentationsSwitchingModeDescMsg;
@@ -49,31 +45,33 @@ function VideoAdaptiveSettings({
         "Smooth transition when video Representations are manually changed";
       break;
     default:
-      defaultVideoRepresentationsSwitchingModeDescMsg =
-        "Unknown value";
+      defaultVideoRepresentationsSwitchingModeDescMsg = "Unknown value";
       break;
   }
 
   let videoResolutionLimitDescMsg;
   switch (videoResolutionLimit) {
     case "none":
-      videoResolutionLimitDescMsg = "No limit on the video Representation’s resolution will be automatically applied.";
+      videoResolutionLimitDescMsg =
+        "No limit on the video Representation’s resolution will be automatically applied.";
       break;
     case "screen":
-      videoResolutionLimitDescMsg = "The loaded video Representation will be throttled according to the screen’s dimensions.";
+      videoResolutionLimitDescMsg =
+        "The loaded video Representation will be throttled according to the screen’s dimensions.";
       break;
     case "videoElement":
-      videoResolutionLimitDescMsg = "The loaded video Representation will be throttled according to the given videoElement’s dimensions.";
+      videoResolutionLimitDescMsg =
+        "The loaded video Representation will be throttled according to the given videoElement’s dimensions.";
       break;
   }
 
   const onSwitchModeChange = React.useCallback(
     ({ value }: { value: string }) => {
       onDefaultVideoRepresentationsSwitchingModeChange(
-        value as IVideoRepresentationsSwitchingMode
+        value as IVideoRepresentationsSwitchingMode,
       );
     },
-    [onDefaultVideoRepresentationsSwitchingModeChange]
+    [onDefaultVideoRepresentationsSwitchingModeChange],
   );
   return (
     <Fragment>
@@ -90,7 +88,7 @@ function VideoAdaptiveSettings({
           }}
           options={["seamless", "lazy", "direct", "reload"]}
         >
-            Default Video Representations switching mode
+          Default Video Representations switching mode
         </Select>
         <span className="option-desc">
           {defaultVideoRepresentationsSwitchingModeDescMsg}
@@ -104,16 +102,14 @@ function VideoAdaptiveSettings({
           name="videoResolutionLimit"
           onChange={onVideoResolutionLimitChange}
           selected={{
-            value: "none",
+            value: videoResolutionLimit,
             index: undefined,
           }}
           options={["videoElement", "screen", "none"]}
         >
-            Limit Video Resolution
+          Limit Video Resolution
         </Select>
-        <span className="option-desc">
-          {videoResolutionLimitDescMsg}
-        </span>
+        <span className="option-desc">{videoResolutionLimitDescMsg}</span>
       </li>
       <li>
         <div className="playerOptionInput">
@@ -127,9 +123,9 @@ function VideoAdaptiveSettings({
             Throttle Video Bitrate When Hidden
           </Checkbox>
           <span className="option-desc">
-            {throttleVideoBitrateWhenHidden ?
-              "Throttling the video bitrate when the page is hidden for a time" :
-              "Not throttling the video bitrate when the page is hidden for a time"}
+            {throttleVideoBitrateWhenHidden
+              ? "Throttling the video bitrate when the page is hidden for a time"
+              : "Not throttling the video bitrate when the page is hidden for a time"}
           </span>
         </div>
       </li>

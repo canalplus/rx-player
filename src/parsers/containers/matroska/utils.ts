@@ -17,19 +17,21 @@
 import log from "../../../log";
 
 const SEGMENT_ID = 0x18538067;
-const INFO_ID = 0x1549A966;
-const TIMECODESCALE_ID = 0x2AD7B1;
+const INFO_ID = 0x1549a966;
+const TIMECODESCALE_ID = 0x2ad7b1;
 const DURATION_ID = 0x4489;
-const CUES_ID = 0x1C53BB6B;
-const CUE_POINT_ID = 0xBB;
-const CUE_TIME_ID = 0xB3;
-const CUE_TRACK_POSITIONS_ID = 0xB7;
-const CUE_CLUSTER_POSITIONS_ID = 0xF1;
+const CUES_ID = 0x1c53bb6b;
+const CUE_POINT_ID = 0xbb;
+const CUE_TIME_ID = 0xb3;
+const CUE_TRACK_POSITIONS_ID = 0xb7;
+const CUE_CLUSTER_POSITIONS_ID = 0xf1;
 
-export interface ICuesSegment { time : number;
-                                duration : number;
-                                timescale : number;
-                                range : [number, number]; }
+export interface ICuesSegment {
+  time: number;
+  duration: number;
+  timescale: number;
+  range: [number, number];
+}
 
 /**
  * Find the offsets of the value linked to the given element ID.
@@ -42,22 +44,22 @@ export interface ICuesSegment { time : number;
  * @returns {Array.<number>|null}
  */
 function findNextElement(
-  elementID : number,
-  parents : number[],
-  buffer : Uint8Array,
-  [ initialOffset, maxOffset ] : [ number, number ]
-) : [number, number]|null {
+  elementID: number,
+  parents: number[],
+  buffer: Uint8Array,
+  [initialOffset, maxOffset]: [number, number],
+): [number, number] | null {
   let currentOffset = initialOffset;
   while (currentOffset < maxOffset) {
     const parsedID = getEBMLID(buffer, currentOffset);
-    if (parsedID == null) {
+    if (parsedID === null) {
       return null;
     }
 
     const { value: ebmlTagID, length: ebmlTagLength } = parsedID;
     const sizeOffset = currentOffset + ebmlTagLength;
     const parsedValue = getEBMLValue(buffer, sizeOffset);
-    if (parsedValue == null) {
+    if (parsedValue === null) {
       return null;
     }
 
@@ -70,8 +72,10 @@ function findNextElement(
       for (let i = 0; i < parents.length; i++) {
         if (ebmlTagID === parents[i]) {
           const newParents = parents.slice(i + 1, parents.length);
-          return findNextElement(
-            elementID, newParents, buffer, [valueOffset, valueEndOffset]);
+          return findNextElement(elementID, newParents, buffer, [
+            valueOffset,
+            valueEndOffset,
+          ]);
         }
       }
     }
@@ -87,12 +91,16 @@ function findNextElement(
  * @returns {number|null}
  */
 export function getTimeCodeScale(
-  buffer : Uint8Array,
-  initialOffset : number
-) : number|null {
+  buffer: Uint8Array,
+  initialOffset: number,
+): number | null {
   const timeCodeScaleOffsets = findNextElement(
-    TIMECODESCALE_ID, [SEGMENT_ID, INFO_ID], buffer, [initialOffset, buffer.length]);
-  if (timeCodeScaleOffsets == null) {
+    TIMECODESCALE_ID,
+    [SEGMENT_ID, INFO_ID],
+    buffer,
+    [initialOffset, buffer.length],
+  );
+  if (timeCodeScaleOffsets === null) {
     return null;
   }
   const length = timeCodeScaleOffsets[1] - timeCodeScaleOffsets[0];
@@ -105,13 +113,14 @@ export function getTimeCodeScale(
  * @param {number} initialOffset
  * @returns {number|null}
  */
-function getDuration(
-  buffer : Uint8Array,
-  initialOffset : number
-) : number|null {
+function getDuration(buffer: Uint8Array, initialOffset: number): number | null {
   const timeCodeScaleOffsets = findNextElement(
-    DURATION_ID, [SEGMENT_ID, INFO_ID], buffer, [initialOffset, buffer.length]);
-  if (timeCodeScaleOffsets == null) {
+    DURATION_ID,
+    [SEGMENT_ID, INFO_ID],
+    buffer,
+    [initialOffset, buffer.length],
+  );
+  if (timeCodeScaleOffsets === null) {
     return null;
   }
 
@@ -130,72 +139,86 @@ function getDuration(
  * @returns {Array.<Object>|null}
  */
 export function getSegmentsFromCues(
-  buffer : Uint8Array,
-  initialOffset : number
-) : ICuesSegment[]|null {
-  const segmentRange = findNextElement(
-    SEGMENT_ID, [], buffer, [initialOffset, buffer.length]);
-  if (segmentRange == null) {
+  buffer: Uint8Array,
+  initialOffset: number,
+): ICuesSegment[] | null {
+  const segmentRange = findNextElement(SEGMENT_ID, [], buffer, [
+    initialOffset,
+    buffer.length,
+  ]);
+  if (segmentRange === null) {
     return null;
   }
 
-  const [ segmentRangeStart, segmentRangeEnd ] = segmentRange;
+  const [segmentRangeStart, segmentRangeEnd] = segmentRange;
 
   const timescale = getTimeCodeScale(buffer, segmentRangeStart);
-  if (timescale == null) {
+  if (timescale === null) {
     return null;
   }
 
   const duration = getDuration(buffer, segmentRangeStart);
-  if (duration == null) {
+  if (duration === null) {
     return null;
   }
 
-  const cuesRange = findNextElement(
-    CUES_ID, [], buffer, [segmentRangeStart, segmentRangeEnd]);
-  if (cuesRange == null) {
+  const cuesRange = findNextElement(CUES_ID, [], buffer, [
+    segmentRangeStart,
+    segmentRangeEnd,
+  ]);
+  if (cuesRange === null) {
     return null;
   }
 
-  const rawInfos : Array<{
-    time : number;
-    duration? : number;
-    rangeStart : number;
+  const rawInfos: Array<{
+    time: number;
+    duration?: number;
+    rangeStart: number;
   }> = [];
 
   let currentOffset = cuesRange[0];
   while (currentOffset < cuesRange[1]) {
-    const cuePointRange = findNextElement(
-      CUE_POINT_ID, [], buffer, [currentOffset, cuesRange[1]]);
+    const cuePointRange = findNextElement(CUE_POINT_ID, [], buffer, [
+      currentOffset,
+      cuesRange[1],
+    ]);
 
-    if (cuePointRange == null) {
+    if (cuePointRange === null) {
       break;
     }
 
-    const cueTimeRange = findNextElement(
-      CUE_TIME_ID, [], buffer, [cuePointRange[0], cuePointRange[1]]);
-    if (cueTimeRange == null) {
+    const cueTimeRange = findNextElement(CUE_TIME_ID, [], buffer, [
+      cuePointRange[0],
+      cuePointRange[1],
+    ]);
+    if (cueTimeRange === null) {
       return null;
     }
     const time = bytesToNumber(
-      buffer, cueTimeRange[0], cueTimeRange[1] - cueTimeRange[0]);
+      buffer,
+      cueTimeRange[0],
+      cueTimeRange[1] - cueTimeRange[0],
+    );
 
     const cueOffsetRange = findNextElement(
-      CUE_CLUSTER_POSITIONS_ID, [CUE_TRACK_POSITIONS_ID],
-      buffer, [cuePointRange[0], cuePointRange[1]]);
-    if (cueOffsetRange == null) {
+      CUE_CLUSTER_POSITIONS_ID,
+      [CUE_TRACK_POSITIONS_ID],
+      buffer,
+      [cuePointRange[0], cuePointRange[1]],
+    );
+    if (cueOffsetRange === null) {
       return null;
     }
 
-    const rangeStart = bytesToNumber(
-      buffer, cueOffsetRange[0], cueOffsetRange[1] - cueOffsetRange[0]) +
+    const rangeStart =
+      bytesToNumber(buffer, cueOffsetRange[0], cueOffsetRange[1] - cueOffsetRange[0]) +
       segmentRangeStart;
     rawInfos.push({ time, rangeStart });
 
     currentOffset = cuePointRange[1];
   }
 
-  const segments : ICuesSegment[] = [];
+  const segments: ICuesSegment[] = [];
 
   for (let i = 0; i < rawInfos.length; i++) {
     const currentSegment = rawInfos[i];
@@ -203,8 +226,7 @@ export function getSegmentsFromCues(
       segments.push({
         time: currentSegment.time,
         timescale,
-        duration: i === 0 ? duration :
-                            duration - currentSegment.time,
+        duration: i === 0 ? duration : duration - currentSegment.time,
         range: [currentSegment.rangeStart, Infinity],
       });
     } else {
@@ -220,7 +242,7 @@ export function getSegmentsFromCues(
   return segments;
 }
 
-function getLength(buffer : Uint8Array, offset : number) : number|undefined {
+function getLength(buffer: Uint8Array, offset: number): number | undefined {
   for (let length = 1; length <= 8; length++) {
     if (buffer[offset] >= Math.pow(2, 8 - length)) {
       return length;
@@ -230,11 +252,11 @@ function getLength(buffer : Uint8Array, offset : number) : number|undefined {
 }
 
 function getEBMLID(
-  buffer : Uint8Array,
-  offset : number
-) : { length : number; value : number }|null {
+  buffer: Uint8Array,
+  offset: number,
+): { length: number; value: number } | null {
   const length = getLength(buffer, offset);
-  if (length == null) {
+  if (length === undefined) {
     log.warn("webm: unrepresentable length");
     return null;
   }
@@ -251,11 +273,11 @@ function getEBMLID(
 }
 
 function getEBMLValue(
-  buffer : Uint8Array,
-  offset : number
-) : { length : number; value : number }|null {
+  buffer: Uint8Array,
+  offset: number,
+): { length: number; value: number } | null {
   const length = getLength(buffer, offset);
-  if (length == null) {
+  if (length === undefined) {
     log.warn("webm: unrepresentable length");
     return null;
   }
@@ -264,8 +286,8 @@ function getEBMLValue(
     return null;
   }
 
-  let value = (buffer[offset] & (1 << (8 - length)) - 1) *
-    Math.pow(2, (length - 1) * 8);
+  let value =
+    (buffer[offset] & ((1 << (8 - length)) - 1)) * Math.pow(2, (length - 1) * 8);
   for (let i = 1; i < length; i++) {
     value = buffer[offset + i] * Math.pow(2, (length - i - 1) * 8) + value;
   }
@@ -279,10 +301,7 @@ function getEBMLValue(
  * @param {number} offset
  * @returns {number}
  */
-function get_IEEE754_32Bits(
-  buffer : Uint8Array,
-  offset : number
-) : number {
+function get_IEEE754_32Bits(buffer: Uint8Array, offset: number): number {
   return new DataView(buffer.buffer).getFloat32(offset);
 }
 
@@ -293,18 +312,11 @@ function get_IEEE754_32Bits(
  * @param {number} offset
  * @returns {number}
  */
-function get_IEEE754_64Bits(
-  buffer : Uint8Array,
-  offset : number
-) : number {
+function get_IEEE754_64Bits(buffer: Uint8Array, offset: number): number {
   return new DataView(buffer.buffer).getFloat64(offset);
 }
 
-function bytesToNumber(
-  buffer : Uint8Array,
-  offset : number,
-  length : number
-) : number {
+function bytesToNumber(buffer: Uint8Array, offset: number, length: number): number {
   let value = 0;
   for (let i = 0; i < length; i++) {
     value = buffer[offset + i] * Math.pow(2, (length - i - 1) * 8) + value;

@@ -15,15 +15,10 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import {
-  ISegmentListIntermediateRepresentation,
-} from "../../../node_parser_types";
-import ParsersStack, {
-  IChildrenParser,
-} from "../parsers_stack";
-import {
-  TagName,
-} from "../types";
+import type { ISegmentListIntermediateRepresentation } from "../../../node_parser_types";
+import type { IChildrenParser } from "../parsers_stack";
+import type ParsersStack from "../parsers_stack";
+import { TagName } from "../types";
 import { generateSegmentUrlAttrParser } from "./SegmentUrl";
 
 /**
@@ -34,11 +29,11 @@ import { generateSegmentUrlAttrParser } from "./SegmentUrl";
  * @returns {Function}
  */
 export function generateSegmentListChildrenParser(
-  segListChildren : ISegmentListIntermediateRepresentation,
-  linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack
-)  : IChildrenParser {
-  return function onRootChildren(nodeId : number) {
+  segListChildren: ISegmentListIntermediateRepresentation,
+  linearMemory: WebAssembly.Memory,
+  parsersStack: ParsersStack,
+): IChildrenParser {
+  return function onRootChildren(nodeId: number) {
     switch (nodeId) {
       case TagName.SegmentUrl: {
         const segmentObj = {};

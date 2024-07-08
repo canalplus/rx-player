@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 
 /** Stores the last estimate made by the `RepresentationEstimator`. */
 export default class LastEstimateStorage {
@@ -23,15 +23,15 @@ export default class LastEstimateStorage {
    * `undefined` either if no estimate has been performed yet or if the
    * bandwidth was unknown during the last estimate.
    */
-  public bandwidth : number | undefined;
+  public bandwidth: number | undefined;
   /**
    * Estimated Representation in the last estimate.
    * `null` if no estimate has been performed yet.
    */
-  public representation : Representation | null;
+  public representation: IRepresentation | null;
 
   /** Algorithm type used to make the last Representation estimate. */
-  public algorithmType : ABRAlgorithmType;
+  public algorithmType: ABRAlgorithmType;
 
   constructor() {
     this.bandwidth = undefined;
@@ -47,10 +47,10 @@ export default class LastEstimateStorage {
    * estimate.
    */
   public update(
-    representation : Representation,
-    bandwidth : number | undefined,
-    algorithmType : ABRAlgorithmType
-  ) : void {
+    representation: IRepresentation,
+    bandwidth: number | undefined,
+    algorithmType: ABRAlgorithmType,
+  ): void {
     this.representation = representation;
     this.bandwidth = bandwidth;
     this.algorithmType = algorithmType;
@@ -59,10 +59,10 @@ export default class LastEstimateStorage {
 
 /** Identify an algorithm used to perform a Representation estimate.  */
 export const enum ABRAlgorithmType {
- /**
-  * Buffer-based algorithm using mostly the size of the buffer to determine the
-  * best Representation.
-  */
+  /**
+   * Buffer-based algorithm using mostly the size of the buffer to determine the
+   * best Representation.
+   */
   BufferBased,
   /**
    * Bandwidth-based algorithm using mostly the speed at which segments are
@@ -74,6 +74,6 @@ export const enum ABRAlgorithmType {
    * try to find the best one empirically.
    */
   GuessBased,
-    /** None of the other or no algorithm was used yet. */
+  /** None of the other or no algorithm was used yet. */
   None,
 }

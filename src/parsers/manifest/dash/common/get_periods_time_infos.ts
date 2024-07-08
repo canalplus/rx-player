@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { IPeriodIntermediateRepresentation } from "../node_parser_types";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
 
 /** Time information from a Period. */
 interface IPeriodTimeInformation {
@@ -29,11 +30,11 @@ interface IPeriodTimeInformation {
 /** Additionnal context needed to retrieve the period time information. */
 export interface IParsedPeriodsContext {
   /** Value of MPD@availabilityStartTime. */
-  availabilityStartTime : number;
+  availabilityStartTime: number;
   /** Value of MPD@mediaPresentationDuration. */
-  duration? : number | undefined;
+  duration?: number | undefined;
   /** `true` if MPD@type is equal to "dynamic". */
-  isDynamic : boolean;
+  isDynamic: boolean;
 }
 
 /**
@@ -44,26 +45,28 @@ export interface IParsedPeriodsContext {
  * @return {Array.<Object>}
  */
 export default function getPeriodsTimeInformation(
-  periodsIR : IPeriodIntermediateRepresentation[],
-  manifestInfos : IParsedPeriodsContext
+  periodsIR: IPeriodIntermediateRepresentation[],
+  manifestInfos: IParsedPeriodsContext,
 ): IPeriodTimeInformation[] {
   const periodsTimeInformation: IPeriodTimeInformation[] = [];
   periodsIR.forEach((currentPeriod, i) => {
-
-    let periodStart : number;
-    if (currentPeriod.attributes.start != null) {
+    let periodStart: number;
+    if (!isNullOrUndefined(currentPeriod.attributes.start)) {
       periodStart = currentPeriod.attributes.start;
     } else {
       if (i === 0) {
-        periodStart = (!manifestInfos.isDynamic ||
-                       manifestInfos.availabilityStartTime == null) ?
-                         0 :
-                         manifestInfos.availabilityStartTime;
+        periodStart =
+          !manifestInfos.isDynamic ||
+          isNullOrUndefined(manifestInfos.availabilityStartTime)
+            ? 0
+            : manifestInfos.availabilityStartTime;
       } else {
         // take time information from previous period
-        const prevPeriodInfos =
-          periodsTimeInformation[periodsTimeInformation.length - 1];
-        if (prevPeriodInfos != null && prevPeriodInfos.periodEnd != null) {
+        const prevPeriodInfos = periodsTimeInformation[periodsTimeInformation.length - 1];
+        if (
+          !isNullOrUndefined(prevPeriodInfos) &&
+          !isNullOrUndefined(prevPeriodInfos.periodEnd)
+        ) {
           periodStart = prevPeriodInfos.periodEnd;
         } else {
           throw new Error("Missing start time when parsing periods.");
@@ -71,21 +74,20 @@ export default function getPeriodsTimeInformation(
       }
     }
 
-    let periodDuration : number | undefined;
+    let periodDuration: number | undefined;
     const nextPeriod = periodsIR[i + 1];
-    if (currentPeriod.attributes.duration != null) {
+    if (!isNullOrUndefined(currentPeriod.attributes.duration)) {
       periodDuration = currentPeriod.attributes.duration;
     } else if (i === periodsIR.length - 1) {
       periodDuration = manifestInfos.duration;
-    } else if (nextPeriod.attributes.start != null) {
+    } else if (!isNullOrUndefined(nextPeriod.attributes.start)) {
       periodDuration = nextPeriod.attributes.start - periodStart;
     }
 
-    const periodEnd = periodDuration != null ? (periodStart + periodDuration) :
-                                               undefined;
-    periodsTimeInformation.push({ periodStart,
-                                  periodDuration,
-                                  periodEnd });
+    const periodEnd = !isNullOrUndefined(periodDuration)
+      ? periodStart + periodDuration
+      : undefined;
+    periodsTimeInformation.push({ periodStart, periodDuration, periodEnd });
   });
   return periodsTimeInformation;
 }

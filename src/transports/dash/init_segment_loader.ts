@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../manifest";
+import type { ISegment } from "../../manifest";
 import { concat } from "../../utils/byte_parsing";
 import request from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
@@ -37,83 +37,89 @@ import byteRange from "../utils/byte_range";
  * @returns {Promise}
  */
 export default function initSegmentLoader(
-  url : string,
-  segment : ISegment,
-  options : ISegmentLoaderOptions,
-  cancelSignal : CancellationSignal,
-  callbacks : ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array>
-) : Promise<ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array> |
-            ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array> |
-            ISegmentLoaderResultChunkedComplete>
-{
+  url: string,
+  segment: ISegment,
+  options: ISegmentLoaderOptions,
+  cancelSignal: CancellationSignal,
+  callbacks: ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array>,
+): Promise<
+  | ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array>
+  | ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array>
+  | ISegmentLoaderResultChunkedComplete
+> {
   if (segment.range === undefined) {
-    return request({ url,
-                     responseType: "arraybuffer",
-                     timeout: options.timeout,
-                     connectionTimeout: options.connectionTimeout,
-                     cancelSignal,
-                     onProgress: callbacks.onProgress })
-      .then(data => ({ resultType: "segment-loaded",
-                       resultData: data }));
+    return request({
+      url,
+      responseType: "arraybuffer",
+      timeout: options.timeout,
+      connectionTimeout: options.connectionTimeout,
+      cancelSignal,
+      onProgress: callbacks.onProgress,
+    }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
   }
 
   if (segment.indexRange === undefined) {
-    return request({ url,
-                     headers: { Range: byteRange(segment.range) },
-                     responseType: "arraybuffer",
-                     timeout: options.timeout,
-                     connectionTimeout: options.connectionTimeout,
-                     cancelSignal,
-                     onProgress: callbacks.onProgress })
-      .then(data => ({ resultType: "segment-loaded",
-                       resultData: data }));
+    return request({
+      url,
+      headers: { Range: byteRange(segment.range) },
+      responseType: "arraybuffer",
+      timeout: options.timeout,
+      connectionTimeout: options.connectionTimeout,
+      cancelSignal,
+      onProgress: callbacks.onProgress,
+    }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
   }
 
   // range and indexRange are contiguous (99% of the cases)
   if (segment.range[1] + 1 === segment.indexRange[0]) {
-    return request({ url,
-                     headers: { Range: byteRange([segment.range[0],
-                                                  segment.indexRange[1] ]) },
-                     responseType: "arraybuffer",
-                     timeout: options.timeout,
-                     connectionTimeout: options.connectionTimeout,
-                     cancelSignal,
-                     onProgress: callbacks.onProgress })
-      .then(data => ({ resultType: "segment-loaded",
-                       resultData: data }));
+    return request({
+      url,
+      headers: { Range: byteRange([segment.range[0], segment.indexRange[1]]) },
+      responseType: "arraybuffer",
+      timeout: options.timeout,
+      connectionTimeout: options.connectionTimeout,
+      cancelSignal,
+      onProgress: callbacks.onProgress,
+    }).then((data) => ({ resultType: "segment-loaded", resultData: data }));
   }
 
-  const rangeRequest$ = request({ url,
-                                  headers: { Range: byteRange(segment.range) },
-                                  responseType: "arraybuffer",
-                                  timeout: options.timeout,
-                                  connectionTimeout: options.connectionTimeout,
-                                  cancelSignal,
-                                  onProgress: callbacks.onProgress });
-  const indexRequest$ = request({ url,
-                                  headers: { Range: byteRange(segment.indexRange) },
-                                  responseType: "arraybuffer",
-                                  timeout: options.timeout,
-                                  connectionTimeout: options.connectionTimeout,
-                                  cancelSignal,
-                                  onProgress: callbacks.onProgress });
+  const rangeRequest$ = request({
+    url,
+    headers: { Range: byteRange(segment.range) },
+    responseType: "arraybuffer",
+    timeout: options.timeout,
+    connectionTimeout: options.connectionTimeout,
+    cancelSignal,
+    onProgress: callbacks.onProgress,
+  });
+  const indexRequest$ = request({
+    url,
+    headers: { Range: byteRange(segment.indexRange) },
+    responseType: "arraybuffer",
+    timeout: options.timeout,
+    connectionTimeout: options.connectionTimeout,
+    cancelSignal,
+    onProgress: callbacks.onProgress,
+  });
 
-  return Promise.all([rangeRequest$, indexRequest$])
-    .then(([ initData, indexData ]) => {
-      const data = concat(new Uint8Array(initData.responseData),
-                          new Uint8Array(indexData.responseData));
+  return Promise.all([rangeRequest$, indexRequest$]).then(([initData, indexData]) => {
+    const data = concat(
+      new Uint8Array(initData.responseData),
+      new Uint8Array(indexData.responseData),
+    );
 
-      const sendingTime = Math.min(initData.sendingTime,
-                                   indexData.sendingTime);
-      const receivedTime = Math.max(initData.receivedTime,
-                                    indexData.receivedTime);
-      return { resultType: "segment-loaded" as const,
-               resultData: { url,
-                             responseData: data,
-                             size: initData.size + indexData.size,
-                             requestDuration: receivedTime - sendingTime,
-                             sendingTime,
-                             receivedTime } };
-
-    });
+    const sendingTime = Math.min(initData.sendingTime, indexData.sendingTime);
+    const receivedTime = Math.max(initData.receivedTime, indexData.receivedTime);
+    return {
+      resultType: "segment-loaded" as const,
+      resultData: {
+        url,
+        responseData: data,
+        size: initData.size + indexData.size,
+        requestDuration: receivedTime - sendingTime,
+        sendingTime,
+        receivedTime,
+      },
+    };
+  });
 }

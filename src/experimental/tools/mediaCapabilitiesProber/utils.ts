@@ -15,10 +15,8 @@
  */
 
 import arrayFind from "../../../utils/array_find";
-import {
-  ICapabilities,
-  IMediaConfiguration,
-} from "./types";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import type { ICapabilities, IMediaConfiguration } from "./types";
 
 /**
  * Extends a capabilities array with others.
@@ -37,13 +35,14 @@ export function extend(target: ICapabilities, objects: ICapabilities[]): ICapabi
         }
       } else {
         const entry = Object.entries(element)[0];
-        const [ key, value ] = entry;
-        const foundTargetElement = arrayFind(target, (targetElement) =>
-          typeof targetElement !== "string" &&
-          targetElement[key] !== undefined &&
-          targetElement[key].length > 0
-        ) as (undefined|
-              { [key: string]: ICapabilities });
+        const [key, value] = entry;
+        const foundTargetElement = arrayFind(
+          target,
+          (targetElement) =>
+            typeof targetElement !== "string" &&
+            targetElement[key] !== undefined &&
+            targetElement[key].length > 0,
+        ) as undefined | { [key: string]: ICapabilities };
         if (foundTargetElement === undefined) {
           const toPush: { [key: string]: ICapabilities } = {};
           toPush[key] = extend([], [value]);
@@ -69,36 +68,42 @@ export function extend(target: ICapabilities, objects: ICapabilities[]): ICapabi
  */
 export function filterConfigurationWithCapabilities(
   capabilities: ICapabilities,
-  configuration: IMediaConfiguration
+  configuration: IMediaConfiguration,
 ): IMediaConfiguration {
   const probedConfig = {};
 
   capabilities.forEach((capability) => {
     if (typeof capability === "string") {
-      if ((configuration as {
-        [id: string]: string|IMediaConfiguration;
-      })[capability] !== undefined) {
-        (probedConfig as {[id: string]: string|IMediaConfiguration})[capability] =
-          (configuration as {[id: string]: string|IMediaConfiguration})[capability];
+      if (
+        (
+          configuration as {
+            [id: string]: string | IMediaConfiguration;
+          }
+        )[capability] !== undefined
+      ) {
+        (probedConfig as { [id: string]: string | IMediaConfiguration })[capability] = (
+          configuration as { [id: string]: string | IMediaConfiguration }
+        )[capability];
       }
     } else {
-      const [ key, value ] = Object.entries(capability)[0];
+      const [key, value] = Object.entries(capability)[0];
       const newConfiguration =
-        (configuration as {[id: string]: IMediaConfiguration})[key] === undefined ?
-          {} :
-          (configuration as {[id: string]: IMediaConfiguration})[key];
+        (configuration as { [id: string]: IMediaConfiguration })[key] === undefined
+          ? {}
+          : (configuration as { [id: string]: IMediaConfiguration })[key];
       const subProbedConfig = filterConfigurationWithCapabilities(
-        value, newConfiguration);
+        value,
+        newConfiguration,
+      );
       if (
         Object.keys(subProbedConfig).length > 0 ||
-        (
-          (configuration as {[id: string]: IMediaConfiguration})[key] != null &&
-          Object.keys(
-            (configuration as {[id: string]: IMediaConfiguration})[key]
-          ).length === 0
-        )
+        (!isNullOrUndefined(
+          (configuration as { [id: string]: IMediaConfiguration })[key],
+        ) &&
+          Object.keys((configuration as { [id: string]: IMediaConfiguration })[key])
+            .length === 0)
       ) {
-        (probedConfig as {[id: string]: IMediaConfiguration})[key] = subProbedConfig;
+        (probedConfig as { [id: string]: IMediaConfiguration })[key] = subProbedConfig;
       }
     }
   });

@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect } from "vitest";
 import ttmlColorToCSSColor from "../ttml_color_to_css_color";
 
 describe("ttmlColorToCSSColor", () => {
@@ -27,36 +12,27 @@ describe("ttmlColorToCSSColor", () => {
   });
 
   it("should translate values based on 8 hexa characters", () => {
-    expect(ttmlColorToCSSColor("#ffffffff"))
-      .toEqual("rgba(255,255,255,1)");
-    expect(ttmlColorToCSSColor("#ffffff00"))
-      .toEqual("rgba(255,255,255,0)");
-    expect(ttmlColorToCSSColor("#8080A000"))
-      .toEqual("rgba(128,128,160,0)");
+    expect(ttmlColorToCSSColor("#ffffffff")).toEqual("rgba(255,255,255,1)");
+    expect(ttmlColorToCSSColor("#ffffff00")).toEqual("rgba(255,255,255,0)");
+    expect(ttmlColorToCSSColor("#8080A000")).toEqual("rgba(128,128,160,0)");
   });
 
   it("should translate values based on 4 hexa characters", () => {
-    expect(ttmlColorToCSSColor("#ffff"))
-      .toEqual("rgba(255,255,255,1)");
-    expect(ttmlColorToCSSColor("#fff0"))
-      .toEqual("rgba(255,255,255,0)");
-    expect(ttmlColorToCSSColor("#88A0"))
-      .toEqual("rgba(136,136,170,0)");
+    expect(ttmlColorToCSSColor("#ffff")).toEqual("rgba(255,255,255,1)");
+    expect(ttmlColorToCSSColor("#fff0")).toEqual("rgba(255,255,255,0)");
+    expect(ttmlColorToCSSColor("#88A0")).toEqual("rgba(136,136,170,0)");
   });
 
   it("should translate values based on rgb characters", () => {
-    expect(ttmlColorToCSSColor("rgb(57, 98, 77)"))
-      .toEqual("rgb(57,98,77)");
-    expect(ttmlColorToCSSColor("rgb(67,8,57)"))
-      .toEqual("rgb(67,8,57)");
+    expect(ttmlColorToCSSColor("rgb(57, 98, 77)")).toEqual("rgb(57,98,77)");
+    expect(ttmlColorToCSSColor("rgb(67,8,57)")).toEqual("rgb(67,8,57)");
   });
 
   it("should translate values based on rgba characters", () => {
-    expect(ttmlColorToCSSColor("rgba(67,8,77,255)"))
-      .toEqual("rgba(67,8,77,1)");
-    expect(ttmlColorToCSSColor("rgba(57, 98, 77, 0)"))
-      .toEqual("rgba(57,98,77,0)");
-    expect(ttmlColorToCSSColor("rgba(57, 98, 77,128)"))
-      .toEqual("rgba(57,98,77,0.5019607843137255)");
+    expect(ttmlColorToCSSColor("rgba(67,8,77,255)")).toEqual("rgba(67,8,77,1)");
+    expect(ttmlColorToCSSColor("rgba(57, 98, 77, 0)")).toEqual("rgba(57,98,77,0)");
+    expect(ttmlColorToCSSColor("rgba(57, 98, 77,128)")).toEqual(
+      "rgba(57,98,77,0.5019607843137255)",
+    );
   });
 });

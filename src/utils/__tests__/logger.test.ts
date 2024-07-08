@@ -1,18 +1,5 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, it, expect, vi } from "vitest";
+import Logger from "../logger";
 
 /**
  * This file contains functions helping with TimeRanges management.
@@ -29,33 +16,31 @@
  * convertToRanges methods.
  */
 
-import Logger from "../logger";
-
 describe("utils - Logger", () => {
-  it("should set a default logger level of \"NONE\"", () => {
+  it('should set a default logger level of "NONE"', () => {
     const logger = new Logger();
     expect(logger.getLevel()).toEqual("NONE");
   });
 
-  it("should be able to change the logger level to \"ERROR\"", () => {
+  it('should be able to change the logger level to "ERROR"', () => {
     const logger = new Logger();
     logger.setLevel("ERROR");
     expect(logger.getLevel()).toEqual("ERROR");
   });
 
-  it("should be able to change the logger level to \"WARNING\"", () => {
+  it('should be able to change the logger level to "WARNING"', () => {
     const logger = new Logger();
     logger.setLevel("WARNING");
     expect(logger.getLevel()).toEqual("WARNING");
   });
 
-  it("should be able to change the logger level to \"INFO\"", () => {
+  it('should be able to change the logger level to "INFO"', () => {
     const logger = new Logger();
     logger.setLevel("INFO");
     expect(logger.getLevel()).toEqual("INFO");
   });
 
-  it("should be able to change the logger level to \"DEBUG\"", () => {
+  it('should be able to change the logger level to "DEBUG"', () => {
     const logger = new Logger();
     logger.setLevel("DEBUG");
     expect(logger.getLevel()).toEqual("DEBUG");
@@ -77,7 +62,7 @@ describe("utils - Logger", () => {
     expect(logger.getLevel()).toEqual("ERROR");
   });
 
-  it("should default unrecognized logger levels to \"NONE\"", () => {
+  it('should default unrecognized logger levels to "NONE"', () => {
     const logger = new Logger();
     logger.setLevel("TOTO");
     expect(logger.getLevel()).toEqual("NONE");
@@ -86,12 +71,12 @@ describe("utils - Logger", () => {
     expect(logger.getLevel()).toEqual("NONE");
   });
 
-  it("should never call console.* functions if logger level is set to \"NONE\"", () => {
-    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+  it('should never call console.* functions if logger level is set to "NONE"', () => {
+    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
+    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
 
     const logger = new Logger();
     logger.error("test");
@@ -110,12 +95,12 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  it("should only call console.error if logger level is set to \"ERROR\"", () => {
-    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+  it('should only call console.error if logger level is set to "ERROR"', () => {
+    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
+    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
 
     const logger = new Logger();
     logger.setLevel("ERROR");
@@ -135,12 +120,12 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  it("should call console.{error,warn} if logger level is set to \"WARNING\"", () => {
-    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+  it('should call console.{error,warn} if logger level is set to "WARNING"', () => {
+    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
+    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
 
     const logger = new Logger();
     logger.setLevel("WARNING");
@@ -160,12 +145,12 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  it("should call console.{error,warn,info} if logger level is set to \"INFO\"", () => {
-    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+  it('should call console.{error,warn,info} if logger level is set to "INFO"', () => {
+    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
+    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
 
     const logger = new Logger();
     logger.setLevel("INFO");
@@ -185,14 +170,12 @@ describe("utils - Logger", () => {
     mockDebug.mockRestore();
   });
 
-  /* eslint-disable max-len */
-  it("should call console.{error,warn,info, log} if logger level is set to \"DEBUG\"", () => {
-  /* eslint-enable max-len */
-    const mockLog = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const mockWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn());
-    const mockInfo = jest.spyOn(console, "info").mockImplementation(jest.fn());
-    const mockDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn());
+  it('should call console.{error,warn,info, log} if logger level is set to "DEBUG"', () => {
+    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
+    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
 
     const logger = new Logger();
     logger.setLevel("DEBUG");

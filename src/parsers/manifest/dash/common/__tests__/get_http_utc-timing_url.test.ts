@@ -1,47 +1,30 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("DASH Parser - getHTTPUTCTimingURL", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  /* eslint-disable max-len */
-  it("should return undefined if the given intermediate representation has no UTCTimings element", () => {
-  /* eslint-enable max-len */
+  it("should return undefined if the given intermediate representation has no UTCTimings element", async () => {
     const mpdIR = {
       children: {
         utcTimings: [],
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = (
+      (await vi.importActual("../get_http_utc-timing_url")) as any
+    ).default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
-  it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", () => {
-  /* eslint-enable max-len */
+  it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", async () => {
     const mpdIR = {
       children: {
         utcTimings: [
@@ -57,13 +40,13 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = (
+      (await vi.importActual("../get_http_utc-timing_url")) as any
+    ).default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
-  it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", () => {
-  /* eslint-enable max-len */
+  it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", async () => {
     const mpdIR = {
       children: {
         utcTimings: [
@@ -81,13 +64,13 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = (
+      (await vi.importActual("../get_http_utc-timing_url")) as any
+    ).default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  /* eslint-disable max-len */
-  it("should return the value of a single http-iso UTCTimings element", () => {
-  /* eslint-enable max-len */
+  it("should return the value of a single http-iso UTCTimings element", async () => {
     const mpdIR = {
       children: {
         utcTimings: [
@@ -99,13 +82,13 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = (
+      (await vi.importActual("../get_http_utc-timing_url")) as any
+    ).default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 
-  /* eslint-disable max-len */
-  it("should return the first value of multiple http-iso UTCTimings elements", () => {
-  /* eslint-enable max-len */
+  it("should return the first value of multiple http-iso UTCTimings elements", async () => {
     const mpdIR = {
       children: {
         utcTimings: [
@@ -125,13 +108,13 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = (
+      (await vi.importActual("../get_http_utc-timing_url")) as any
+    ).default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar1000");
   });
 
-  /* eslint-disable max-len */
-  it("should return the first value of a http-iso UTCTimings element when mixed with other elements", () => {
-  /* eslint-enable max-len */
+  it("should return the first value of a http-iso UTCTimings element when mixed with other elements", async () => {
     const mpdIR = {
       children: {
         utcTimings: [
@@ -159,7 +142,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = jest.requireActual("../get_http_utc-timing_url").default;
+    const getHTTPUTCTimingURL = (
+      (await vi.importActual("../get_http_utc-timing_url")) as any
+    ).default;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 });

@@ -3,18 +3,15 @@ import translateAudioTrackCode from "../../lib/translateLanguageCode";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";
-import type {
-  IAudioTrack,
-  IAvailableAudioTrack,
-} from "../../../../../src/public_types";
+import type { IAudioTrack, IAvailableAudioTrack } from "../../../../../src/public_types";
 
 const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
 
 function findAudioTrackIndex(
   audioTrack: IAudioTrack,
-  audioTracks: IAvailableAudioTrack[]
+  audioTracks: IAvailableAudioTrack[],
 ) {
-  return audioTracks.findIndex(ln => ln.id === audioTrack.id);
+  return audioTracks.findIndex((ln) => ln.id === audioTrack.id);
 }
 
 /**
@@ -37,19 +34,16 @@ function AudioTrackKnob({
       return [["Not available"], 0];
     }
     return [
-      availableAudioTracks
-        .map(audioTrack => {
-          return translateAudioTrackCode(audioTrack.normalized) +
-            (audioTrack.audioDescription ?
-              (" " + AUDIO_DESCRIPTION_ICON) : "");
-        }),
+      availableAudioTracks.map((audioTrack) => {
+        return (
+          translateAudioTrackCode(audioTrack.normalized) +
+          (audioTrack.audioDescription ? " " + AUDIO_DESCRIPTION_ICON : "")
+        );
+      }),
 
-      currentAudioTrack ?
-        Math.max(
-          findAudioTrackIndex(currentAudioTrack, availableAudioTracks),
-          0
-        )
-        : 0
+      currentAudioTrack
+        ? Math.max(findAudioTrackIndex(currentAudioTrack, availableAudioTracks), 0)
+        : 0,
     ];
   }, [availableAudioTracks, currentAudioTrack]);
 
@@ -63,7 +57,7 @@ function AudioTrackKnob({
         console.error("Error: audio track not found");
       }
     },
-    [availableAudioTracks, player]
+    [availableAudioTracks, player],
   );
 
   return (

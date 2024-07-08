@@ -17,43 +17,43 @@
 import globalScope from "../../../utils/global_scope";
 
 export interface MSMediaKeyError {
-    readonly code: number;
-    readonly systemCode: number;
-    readonly MS_MEDIA_KEYERR_CLIENT: number;
-    readonly MS_MEDIA_KEYERR_DOMAIN: number;
-    readonly MS_MEDIA_KEYERR_HARDWARECHANGE: number;
-    readonly MS_MEDIA_KEYERR_OUTPUT: number;
-    readonly MS_MEDIA_KEYERR_SERVICE: number;
-    readonly MS_MEDIA_KEYERR_UNKNOWN: number;
+  readonly code: number;
+  readonly systemCode: number;
+  readonly MS_MEDIA_KEYERR_CLIENT: number;
+  readonly MS_MEDIA_KEYERR_DOMAIN: number;
+  readonly MS_MEDIA_KEYERR_HARDWARECHANGE: number;
+  readonly MS_MEDIA_KEYERR_OUTPUT: number;
+  readonly MS_MEDIA_KEYERR_SERVICE: number;
+  readonly MS_MEDIA_KEYERR_UNKNOWN: number;
 }
 
 export interface MSMediaKeySession extends EventTarget {
-    readonly error: MSMediaKeyError | null;
-    readonly keySystem: string;
-    readonly sessionId: string;
-    close(): void;
-    update(key: Uint8Array): void;
+  readonly error: MSMediaKeyError | null;
+  readonly keySystem: string;
+  readonly sessionId: string;
+  close(): void;
+  update(key: Uint8Array): void;
 }
 
 export interface MSMediaKeys {
-    readonly keySystem: string;
-    createSession(
-      type: string,
-      initData: Uint8Array,
-      cdmData?: Uint8Array | null
-    ): MSMediaKeySession;
+  readonly keySystem: string;
+  createSession(
+    type: string,
+    initData: Uint8Array,
+    cdmData?: Uint8Array | null,
+  ): MSMediaKeySession;
 }
 
 interface IMSMediaKeysConstructor {
-  new(keySystem: string): MSMediaKeys;
+  new (keySystem: string): MSMediaKeys;
   isTypeSupported(keySystem: string, type?: string | null): boolean;
   isTypeSupportedWithFeatures(keySystem: string, type?: string | null): string;
 }
 
-let MSMediaKeysConstructor: IMSMediaKeysConstructor|undefined;
-const { MSMediaKeys } = (globalScope as typeof globalThis & {
-  MSMediaKeys? : IMSMediaKeysConstructor;
-});
+let MSMediaKeysConstructor: IMSMediaKeysConstructor | undefined;
+const { MSMediaKeys } = globalScope as typeof globalThis & {
+  MSMediaKeys?: IMSMediaKeysConstructor;
+};
 if (
   MSMediaKeys !== undefined &&
   MSMediaKeys.prototype !== undefined &&

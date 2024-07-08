@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-import StreamOrchestrator, {
+import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorCallbacks,
 } from "./orchestrator";
-import { IPausedPlaybackObservation } from "./period";
-export {
+import StreamOrchestrator from "./orchestrator";
+import type { IPausedPlaybackObservation } from "./period";
+export type {
   IRepresentationsChoice,
   IInbandEvent,
   IStreamStatusPayload,
 } from "./representation";
-export {
+export type {
   IAdaptationChoice,
+  INeedsBufferFlushPayload,
   ITrackSwitchingMode,
   IWaitingMediaSourceReloadPayload,
 } from "./adaptation";
 
 export default StreamOrchestrator;
-export {
+export type {
   IPausedPlaybackObservation,
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorPlaybackObservation,

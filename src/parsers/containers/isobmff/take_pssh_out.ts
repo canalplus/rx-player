@@ -17,17 +17,14 @@
 import log from "../../../log";
 import sliceUint8Array from "../../../utils/slice_uint8array";
 import { bytesToHex } from "../../../utils/string_parsing";
-import {
-  getBoxContent,
-  getBoxOffsets,
-} from "./get_box";
+import { getBoxContent, getBoxOffsets } from "./get_box";
 
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {
   /** Corresponding DRM's system ID, as an hexadecimal string. */
-  systemId : string;
+  systemId: string;
   /** Additional data contained in the PSSH Box. */
-  data : Uint8Array;
+  data: Uint8Array;
 }
 
 /**
@@ -39,14 +36,14 @@ export interface IISOBMFFPSSHInfo {
  * @returns {Array.<Uint8Array>} - The extracted PSSH boxes. In the order they
  * are encountered.
  */
-export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
+export default function takePSSHOut(data: Uint8Array): IISOBMFFPSSHInfo[] {
   let i = 0;
-  const moov = getBoxContent(data, 0x6D6F6F76 /* moov */);
+  const moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
   if (moov === null) {
     return [];
   }
 
-  const psshBoxes : IISOBMFFPSSHInfo[] = [];
+  const psshBoxes: IISOBMFFPSSHInfo[] = [];
   while (i < moov.length) {
     let psshOffsets;
     try {
@@ -56,7 +53,7 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
       log.warn("Error while removing PSSH from ISOBMFF", err);
       return psshBoxes;
     }
-    if (psshOffsets == null) {
+    if (psshOffsets === null) {
       return psshBoxes;
     }
     const pssh = sliceUint8Array(moov, psshOffsets[0], psshOffsets[2]);
@@ -84,15 +81,14 @@ export default function takePSSHOut(data : Uint8Array) : IISOBMFFPSSHInfo[] {
  * @returns {string|undefined}
  */
 export function getPsshSystemID(
-  buff : Uint8Array,
-  initialDataOffset : number
-) : string | undefined {
+  buff: Uint8Array,
+  initialDataOffset: number,
+): string | undefined {
   if (buff[initialDataOffset] > 1) {
     log.warn("ISOBMFF: un-handled PSSH version");
     return undefined;
   }
-  const offset = initialDataOffset +
-                 4; /* version + flags */
+  const offset = initialDataOffset + 4; /* version + flags */
   if (offset + 16 > buff.length) {
     return undefined;
   }

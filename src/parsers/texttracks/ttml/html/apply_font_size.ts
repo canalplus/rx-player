@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { addClassName } from "../../../../compat";
+import addClassName from "../../../../compat/add_class_name";
 import log from "../../../../log";
 import { REGXP_LENGTH } from "../regexps";
 
@@ -23,10 +23,7 @@ import { REGXP_LENGTH } from "../regexps";
  * @param {HTMLElement} element
  * @param {string} fontSize
  */
-export default function applyFontSize(
-  element : HTMLElement,
-  fontSize : string
-) : void {
+export default function applyFontSize(element: HTMLElement, fontSize: string): void {
   const trimmedFontSize = fontSize.trim();
   const splittedFontSize = trimmedFontSize.split(" ");
   if (splittedFontSize.length === 0) {
@@ -37,9 +34,7 @@ export default function applyFontSize(
     return;
   }
 
-  if (firstFontSize[2] === "px" ||
-      firstFontSize[2] === "em")
-  {
+  if (firstFontSize[2] === "px" || firstFontSize[2] === "em") {
     element.style.fontSize = firstFontSize[1] + firstFontSize[2];
   } else if (firstFontSize[2] === "c") {
     element.style.position = "relative";
@@ -48,9 +43,11 @@ export default function applyFontSize(
   } else if (firstFontSize[2] === "%") {
     const toNum = Number(firstFontSize[1]);
     if (isNaN(toNum)) {
-      log.warn("TTML Parser: could not parse fontSize value \"" +
-               firstFontSize[1] +
-               "\" into a number");
+      log.warn(
+        'TTML Parser: could not parse fontSize value "' +
+          firstFontSize[1] +
+          '" into a number',
+      );
     } else {
       element.style.position = "relative";
       addClassName(element, "proportional-style");

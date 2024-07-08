@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-import { ITaggedTrack } from "../manifest";
-import {
-  ErrorTypes,
-  IMediaErrorCode,
-} from "./error_codes";
+import type { ITaggedTrack } from "../manifest";
+import type { IMediaErrorCode } from "./error_codes";
+import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
-type ICodeWithAdaptationType = "BUFFER_APPEND_ERROR" |
-                               "BUFFER_FULL_ERROR" |
-                               "NO_PLAYABLE_REPRESENTATION" |
-                               "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
+type ICodeWithAdaptationType =
+  | "BUFFER_APPEND_ERROR"
+  | "BUFFER_FULL_ERROR"
+  | "NO_PLAYABLE_REPRESENTATION"
+  | "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
 
 /**
  * Error linked to the media Playback.
@@ -33,13 +32,12 @@ type ICodeWithAdaptationType = "BUFFER_APPEND_ERROR" |
  * @extends Error
  */
 export default class MediaError extends Error {
-  public readonly name : "MediaError";
-  public readonly type : "MEDIA_ERROR";
-  public readonly message : string;
-  public readonly code : IMediaErrorCode;
-  public readonly tracksInfo : ITaggedTrack[] | undefined;
-  public fatal : boolean;
-  private _originalMessage : string;
+  public readonly name: "MediaError";
+  public readonly type: "MEDIA_ERROR";
+  public readonly code: IMediaErrorCode;
+  public readonly tracksInfo: ITaggedTrack[] | undefined;
+  public fatal: boolean;
+  private _originalMessage: string;
 
   /**
    * @param {string} code
@@ -47,27 +45,31 @@ export default class MediaError extends Error {
    * @param {Object|undefined} [context]
    */
   constructor(
-    code : ICodeWithAdaptationType,
-    reason : string,
+    code: ICodeWithAdaptationType,
+    reason: string,
     context: {
-      tracks : ITaggedTrack[] | undefined;
-    }
+      tracks: ITaggedTrack[] | undefined;
+    },
   );
   constructor(
-    code : Exclude<IMediaErrorCode, ICodeWithAdaptationType>,
-    reason : string,
-    context? : {
-      tracks? : undefined;
-    } | undefined
+    code: Exclude<IMediaErrorCode, ICodeWithAdaptationType>,
+    reason: string,
+    context?:
+      | {
+          tracks?: undefined;
+        }
+      | undefined,
   );
   constructor(
-    code : IMediaErrorCode,
-    reason : string,
-    context? : {
-      tracks? : ITaggedTrack[] | undefined;
-    } | undefined
+    code: IMediaErrorCode,
+    reason: string,
+    context?:
+      | {
+          tracks?: ITaggedTrack[] | undefined;
+        }
+      | undefined,
   ) {
-    super();
+    super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, MediaError.prototype);
 
@@ -76,7 +78,6 @@ export default class MediaError extends Error {
     this._originalMessage = reason;
 
     this.code = code;
-    this.message = errorMessage(this.code, reason);
     this.fatal = false;
     if (context?.tracks !== undefined && context?.tracks.length > 0) {
       this.tracksInfo = context.tracks;
@@ -90,17 +91,19 @@ export default class MediaError extends Error {
    * @returns {Object}
    */
   public serialize(): ISerializedMediaError {
-    return { name: this.name,
-             code: this.code,
-             reason: this._originalMessage,
-             tracks: this.tracksInfo };
+    return {
+      name: this.name,
+      code: this.code,
+      reason: this._originalMessage,
+      tracks: this.tracksInfo,
+    };
   }
 }
 
 /** Serializable object which allows to create a `MediaError` later. */
 export interface ISerializedMediaError {
-  name : "MediaError";
-  code : IMediaErrorCode;
-  reason : string;
-  tracks : ITaggedTrack[] | undefined;
+  name: "MediaError";
+  code: IMediaErrorCode;
+  reason: string;
+  tracks: ITaggedTrack[] | undefined;
 }

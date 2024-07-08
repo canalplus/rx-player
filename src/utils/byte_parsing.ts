@@ -21,14 +21,14 @@
  * @param {...(Number|Uint8Array)} args
  * @returns {Uint8Array}
  */
-function concat(...args : Array<Uint8Array|number[]|number>) : Uint8Array {
+function concat(...args: Array<Uint8Array | number[] | number>): Uint8Array {
   const l = args.length;
   let i = -1;
   let len = 0;
   let arg;
   while (++i < l) {
     arg = args[i];
-    len += (typeof arg === "number") ? arg : arg.length;
+    len += typeof arg === "number" ? arg : arg.length;
   }
   const arr = new Uint8Array(len);
   let offset = 0;
@@ -37,8 +37,7 @@ function concat(...args : Array<Uint8Array|number[]|number>) : Uint8Array {
     arg = args[i];
     if (typeof arg === "number") {
       offset += arg;
-    }
-    else if (arg.length > 0) {
+    } else if (arg.length > 0) {
       arr.set(arg, offset);
       offset += arg.length;
     }
@@ -52,9 +51,8 @@ function concat(...args : Array<Uint8Array|number[]|number>) : Uint8Array {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be2toi(bytes : Uint8Array, offset : number) : number {
-  return ((bytes[offset + 0] << 8) +
-          (bytes[offset + 1] << 0));
+function be2toi(bytes: Uint8Array, offset: number): number {
+  return (bytes[offset + 0] << 8) + (bytes[offset + 1] << 0);
 }
 
 /**
@@ -63,10 +61,10 @@ function be2toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be3toi(bytes : Uint8Array, offset : number) : number {
-  return ((bytes[offset + 0] * 0x0010000) +
-          (bytes[offset + 1] * 0x0000100) +
-          (bytes[offset + 2]));
+function be3toi(bytes: Uint8Array, offset: number): number {
+  return (
+    bytes[offset + 0] * 0x0010000 + bytes[offset + 1] * 0x0000100 + bytes[offset + 2]
+  );
 }
 
 /**
@@ -75,11 +73,13 @@ function be3toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be4toi(bytes : Uint8Array, offset : number) : number {
-  return ((bytes[offset + 0] * 0x1000000) +
-          (bytes[offset + 1] * 0x0010000) +
-          (bytes[offset + 2] * 0x0000100) +
-          (bytes[offset + 3]));
+function be4toi(bytes: Uint8Array, offset: number): number {
+  return (
+    bytes[offset + 0] * 0x1000000 +
+    bytes[offset + 1] * 0x0010000 +
+    bytes[offset + 2] * 0x0000100 +
+    bytes[offset + 3]
+  );
 }
 
 /**
@@ -88,16 +88,18 @@ function be4toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function be8toi(bytes : Uint8Array, offset : number) : number {
-  return (((bytes[offset + 0] * 0x1000000) +
-           (bytes[offset + 1] * 0x0010000) +
-           (bytes[offset + 2] * 0x0000100) +
-           (bytes[offset + 3])) * 0x100000000 +
-
-         (bytes[offset + 4] * 0x1000000) +
-         (bytes[offset + 5] * 0x0010000) +
-         (bytes[offset + 6] * 0x0000100) +
-         (bytes[offset + 7]));
+function be8toi(bytes: Uint8Array, offset: number): number {
+  return (
+    (bytes[offset + 0] * 0x1000000 +
+      bytes[offset + 1] * 0x0010000 +
+      bytes[offset + 2] * 0x0000100 +
+      bytes[offset + 3]) *
+      0x100000000 +
+    bytes[offset + 4] * 0x1000000 +
+    bytes[offset + 5] * 0x0010000 +
+    bytes[offset + 6] * 0x0000100 +
+    bytes[offset + 7]
+  );
 }
 
 /**
@@ -106,9 +108,8 @@ function be8toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} num
  * @returns {Uint8Array}
  */
-function itobe2(num : number) : Uint8Array {
-  return new Uint8Array([ (num >>> 8) & 0xFF,
-                          (num)       & 0xFF ]);
+function itobe2(num: number): Uint8Array {
+  return new Uint8Array([(num >>> 8) & 0xff, num & 0xff]);
 }
 
 /**
@@ -117,11 +118,13 @@ function itobe2(num : number) : Uint8Array {
  * @param {Number} num
  * @returns {Uint8Array}
  */
-function itobe4(num : number) : Uint8Array {
-  return new Uint8Array([ (num >>> 24) & 0xFF,
-                          (num >>> 16) & 0xFF,
-                          (num >>>  8) & 0xFF,
-                          (num)        & 0xFF ]);
+function itobe4(num: number): Uint8Array {
+  return new Uint8Array([
+    (num >>> 24) & 0xff,
+    (num >>> 16) & 0xff,
+    (num >>> 8) & 0xff,
+    num & 0xff,
+  ]);
 }
 
 /**
@@ -132,17 +135,19 @@ function itobe4(num : number) : Uint8Array {
  * @param {Number} num
  * @returns {Uint8Array}
  */
-function itobe8(num : number) : Uint8Array {
-  const l = (num % 0x100000000);
+function itobe8(num: number): Uint8Array {
+  const l = num % 0x100000000;
   const h = (num - l) / 0x100000000;
-  return new Uint8Array([ (h >>> 24) & 0xFF,
-                          (h >>> 16) & 0xFF,
-                          (h >>>  8) & 0xFF,
-                          (h)        & 0xFF,
-                          (l >>> 24) & 0xFF,
-                          (l >>> 16) & 0xFF,
-                          (l >>>  8) & 0xFF,
-                          (l)        & 0xFF ]);
+  return new Uint8Array([
+    (h >>> 24) & 0xff,
+    (h >>> 16) & 0xff,
+    (h >>> 8) & 0xff,
+    h & 0xff,
+    (l >>> 24) & 0xff,
+    (l >>> 16) & 0xff,
+    (l >>> 8) & 0xff,
+    l & 0xff,
+  ]);
 }
 
 /**
@@ -151,9 +156,8 @@ function itobe8(num : number) : Uint8Array {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function le2toi(bytes : Uint8Array, offset : number) : number {
-  return ((bytes[offset + 0] << 0) +
-          (bytes[offset + 1] << 8));
+function le2toi(bytes: Uint8Array, offset: number): number {
+  return (bytes[offset + 0] << 0) + (bytes[offset + 1] << 8);
 }
 
 /**
@@ -162,11 +166,13 @@ function le2toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function le4toi(bytes : Uint8Array, offset : number) : number {
-  return ((bytes[offset + 0]) +
-          (bytes[offset + 1] * 0x0000100) +
-          (bytes[offset + 2] * 0x0010000) +
-          (bytes[offset + 3] * 0x1000000));
+function le4toi(bytes: Uint8Array, offset: number): number {
+  return (
+    bytes[offset + 0] +
+    bytes[offset + 1] * 0x0000100 +
+    bytes[offset + 2] * 0x0010000 +
+    bytes[offset + 3] * 0x1000000
+  );
 }
 
 /**
@@ -175,17 +181,18 @@ function le4toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} offset - The offset (from the start of the given array)
  * @returns {Number}
  */
-function le8toi(bytes : Uint8Array, offset : number) : number {
-  return (bytes[offset + 0]) +
-         (bytes[offset + 1] * 0x0000100) +
-         (bytes[offset + 2] * 0x0010000) +
-         (bytes[offset + 3] * 0x1000000) +
-         (
-           (bytes[offset + 4]) +
-           (bytes[offset + 5] * 0x0000100) +
-           (bytes[offset + 6] * 0x0010000) +
-           (bytes[offset + 7] * 0x1000000)
-         ) * 0x100000000;
+function le8toi(bytes: Uint8Array, offset: number): number {
+  return (
+    bytes[offset + 0] +
+    bytes[offset + 1] * 0x0000100 +
+    bytes[offset + 2] * 0x0010000 +
+    bytes[offset + 3] * 0x1000000 +
+    (bytes[offset + 4] +
+      bytes[offset + 5] * 0x0000100 +
+      bytes[offset + 6] * 0x0010000 +
+      bytes[offset + 7] * 0x1000000) *
+      0x100000000
+  );
 }
 
 /**
@@ -194,9 +201,8 @@ function le8toi(bytes : Uint8Array, offset : number) : number {
  * @param {Number} num
  * @returns {Uint8Array}
  */
-function itole2(num : number) : Uint8Array {
-  return new Uint8Array([ (num)       & 0xFF,
-                          (num >>> 8) & 0xFF ]);
+function itole2(num: number): Uint8Array {
+  return new Uint8Array([num & 0xff, (num >>> 8) & 0xff]);
 }
 
 /**
@@ -205,11 +211,13 @@ function itole2(num : number) : Uint8Array {
  * @param {Number} num
  * @returns {Uint8Array}
  */
-function itole4(num : number) : Uint8Array {
-  return new Uint8Array([ (num)        & 0xFF,
-                          (num >>>  8) & 0xFF,
-                          (num >>> 16) & 0xFF,
-                          (num >>> 24) & 0xFF ]);
+function itole4(num: number): Uint8Array {
+  return new Uint8Array([
+    num & 0xff,
+    (num >>> 8) & 0xff,
+    (num >>> 16) & 0xff,
+    (num >>> 24) & 0xff,
+  ]);
 }
 
 /**
@@ -218,7 +226,7 @@ function itole4(num : number) : Uint8Array {
  * @param {Uint8Array} bytes
  * @returns {Boolean}
  */
-function isABEqualBytes(buffer : ArrayBuffer, bytes : Uint8Array) : boolean {
+function isABEqualBytes(buffer: ArrayBuffer, bytes: Uint8Array): boolean {
   const view = new DataView(buffer);
   const len = view.byteLength;
   if (len !== bytes.length) {
@@ -237,20 +245,30 @@ function isABEqualBytes(buffer : ArrayBuffer, bytes : Uint8Array) : boolean {
  * @param {BufferSource} input
  * @returns {Uint8Array}
  */
-function toUint8Array(
-  input : BufferSource
-) : Uint8Array {
-  return input instanceof Uint8Array ? input :
-         input instanceof ArrayBuffer ? new Uint8Array(input) :
-                                        new Uint8Array(input.buffer);
+function toUint8Array(input: BufferSource): Uint8Array {
+  if (input instanceof Uint8Array) {
+    return input;
+  } else if (input instanceof ArrayBuffer) {
+    return new Uint8Array(input);
+  } else {
+    return new Uint8Array(input.buffer);
+  }
 }
 
 export {
   concat,
-  be2toi, be3toi, be4toi, be8toi,
-  le2toi, le4toi, le8toi,
-  itobe2, itobe4, itobe8,
-  itole2, itole4,
+  be2toi,
+  be3toi,
+  be4toi,
+  be8toi,
+  le2toi,
+  le4toi,
+  le8toi,
+  itobe2,
+  itobe4,
+  itobe8,
+  itole2,
+  itole4,
   isABEqualBytes,
   toUint8Array,
 };

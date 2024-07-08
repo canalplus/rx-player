@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { addClassName } from "../../../../compat";
+import addClassName from "../../../../compat/add_class_name";
 import log from "../../../../log";
 import { REGXP_LENGTH } from "../regexps";
 
@@ -23,10 +23,7 @@ import { REGXP_LENGTH } from "../regexps";
  * @param {HTMLElement} element
  * @param {string} extent
  */
-export default function applyExtent(
-  element : HTMLElement,
-  extent : string
-) : void {
+export default function applyExtent(element: HTMLElement, extent: string): void {
   const trimmedExtent = extent.trim();
   if (trimmedExtent === "auto") {
     return;
@@ -38,10 +35,7 @@ export default function applyExtent(
   const firstExtent = REGXP_LENGTH.exec(splittedExtent[0]);
   const secondExtent = REGXP_LENGTH.exec(splittedExtent[1]);
   if (firstExtent !== null && secondExtent !== null) {
-    if (firstExtent[2] === "px" ||
-        firstExtent[2] === "%" ||
-        firstExtent[2] === "em")
-    {
+    if (firstExtent[2] === "px" || firstExtent[2] === "%" || firstExtent[2] === "em") {
       element.style.width = firstExtent[1] + firstExtent[2];
     } else if (firstExtent[2] === "c") {
       addClassName(element, "proportional-style");
@@ -50,10 +44,7 @@ export default function applyExtent(
       log.warn("TTML Parser: unhandled extent unit:", firstExtent[2]);
     }
 
-    if (secondExtent[2] === "px" ||
-        secondExtent[2] === "%" ||
-        secondExtent[2] === "em")
-    {
+    if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
       element.style.height = secondExtent[1] + secondExtent[2];
     } else if (secondExtent[2] === "c") {
       addClassName(element, "proportional-style");

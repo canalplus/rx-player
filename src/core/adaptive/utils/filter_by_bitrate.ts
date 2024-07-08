@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
@@ -26,9 +26,9 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * @returns {Array.<Object>}
  */
 export default function filterByBitrate(
-  representations : Representation[],
-  bitrate : number
-) : Representation[] {
+  representations: IRepresentation[],
+  bitrate: number,
+): IRepresentation[] {
   if (representations.length === 0) {
     return [];
   }
@@ -37,7 +37,7 @@ export default function filterByBitrate(
   const bitrateCeil = Math.max(bitrate, minimumBitrate);
   const firstSuperiorBitrateIndex = arrayFindIndex(
     representations,
-    (representation) => representation.bitrate > bitrateCeil
+    (representation) => representation.bitrate > bitrateCeil,
   );
   if (firstSuperiorBitrateIndex === -1) {
     return representations; // All representations have lower bitrates.

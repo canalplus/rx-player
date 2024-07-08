@@ -1,19 +1,4 @@
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import { describe, it, expect } from "vitest";
 import parseCueBlock from "../parse_cue";
 
 const cueBlock1 = [
@@ -24,34 +9,17 @@ const cueBlock1 = [
   "Je ne peux pas me effroyer",
 ];
 
-const cueBlock2 = [
-  "00:17:55.520-->00:17:57.640",
-  "Je suis le petit chevalier",
-];
+const cueBlock2 = ["00:17:55.520-->00:17:57.640", "Je suis le petit chevalier"];
 
-const cueBlock3 = [
-  "00:18:01--> 00:18:09",
-];
+const cueBlock3 = ["00:18:01--> 00:18:09"];
 
-const cueBlock4 = [
-  "112",
-  "00:18:31.080 -->00:18:32.200",
-];
+const cueBlock4 = ["112", "00:18:31.080 -->00:18:32.200"];
 
-const notCueBlock1 = [
-  "TOTO",
-];
+const notCueBlock1 = ["TOTO"];
 
-const notCueBlock2 = [
-  "TOTO",
-  "TATA",
-];
+const notCueBlock2 = ["TOTO", "TATA"];
 
-const notCueBlock3 = [
-  "TOTO",
-  "TATA",
-  "00:18:31.080 --> 00:18:32.200",
-];
+const notCueBlock3 = ["TOTO", "TATA", "00:18:31.080 --> 00:18:32.200"];
 
 describe("parsers - srt - parseCueBlocks", () => {
   it("should correctly parse regular cue blocks", () => {
@@ -67,9 +35,7 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(cueBlock2, 0)).toEqual({
       start: 1075.52,
       end: 1077.64,
-      payload: [
-        "Je suis le petit chevalier",
-      ],
+      payload: ["Je suis le petit chevalier"],
     });
     expect(parseCueBlock(cueBlock3, 0)).toEqual({
       start: 1081,
@@ -96,9 +62,7 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(cueBlock2, 6)).toEqual({
       start: 1081.52,
       end: 1083.64,
-      payload: [
-        "Je suis le petit chevalier",
-      ],
+      payload: ["Je suis le petit chevalier"],
     });
     expect(parseCueBlock(cueBlock3, -1.5)).toEqual({
       start: 1079.5,

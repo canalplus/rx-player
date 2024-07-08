@@ -1,7 +1,7 @@
 import getFuzzedDelay from "./get_fuzzed_delay";
 import isNullOrUndefined from "./is_null_or_undefined";
 import sleep from "./sleep";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 /**
  * Retry the given Promise (if it rejects) with an exponential
@@ -39,20 +39,16 @@ import { CancellationSignal } from "./task_canceller";
  * calling code via a catch (much simpler to use and to understand).
  */
 export default function retryPromiseWithBackoff<T>(
-  runProm : () => Promise<T>,
-  options : IBackoffOptions,
-  cancelSignal : CancellationSignal
-) : Promise<T> {
-  const { baseDelay,
-          maxDelay,
-          totalRetry,
-          shouldRetry,
-          onRetry } = options;
+  runProm: () => Promise<T>,
+  options: IBackoffOptions,
+  cancelSignal: CancellationSignal,
+): Promise<T> {
+  const { baseDelay, maxDelay, totalRetry, shouldRetry, onRetry } = options;
 
   let retryCount = 0;
 
   return iterate();
-  async function iterate() : Promise<T> {
+  async function iterate(): Promise<T> {
     if (cancelSignal.cancellationError !== null) {
       throw cancelSignal.cancellationError;
     }
@@ -63,32 +59,42 @@ export default function retryPromiseWithBackoff<T>(
       if (cancelSignal.cancellationError !== null) {
         throw cancelSignal.cancellationError;
       }
-      if ((!isNullOrUndefined(shouldRetry) && !shouldRetry(error)) ||
-           retryCount++ >= totalRetry)
-      {
+      if (
+        (!isNullOrUndefined(shouldRetry) && !shouldRetry(error)) ||
+        retryCount++ >= totalRetry
+      ) {
         throw error;
       }
 
       if (typeof onRetry === "function") {
         onRetry(error, retryCount);
       }
-
-      const delay = Math.min(baseDelay * Math.pow(2, retryCount - 1),
-                             maxDelay);
-
-      const fuzzedDelay = getFuzzedDelay(delay);
-      await sleep(fuzzedDelay);
+      const delay = getRetryDelay(baseDelay, retryCount, maxDelay);
+      await sleep(delay);
       const res = iterate();
       return res;
     }
   }
 }
+/**
+ * Get the delay that should be applied to the following retry, it depends on the base delay
+ * and is increaser for with the retry count. The result is ceiled by the maxDelay.
+ * @param baseDelay delay after wich the first request is retried after a failure
+ * @param retryCount count of retries
+ * @param maxDelay maximum delay
+ * @returns the delay that should be applied to the following retry
+ */
+export function getRetryDelay(baseDelay: number, retryCount: number, maxDelay: number) {
+  const delay = baseDelay * Math.pow(2, retryCount - 1);
+  const fuzzedDelay = getFuzzedDelay(delay);
+  return Math.min(fuzzedDelay, maxDelay);
+}
 
 export interface IBackoffOptions {
-  baseDelay : number;
-  maxDelay : number;
-  totalRetry : number;
-  shouldRetry? : (error : unknown) => boolean;
-  errorSelector? : (error : unknown, retryCount : number) => Error;
-  onRetry? : (error : unknown, retryCount : number) => void;
+  baseDelay: number;
+  maxDelay: number;
+  totalRetry: number;
+  shouldRetry?: (error: unknown) => boolean;
+  errorSelector?: (error: unknown, retryCount: number) => Error;
+  onRetry?: (error: unknown, retryCount: number) => void;
 }
