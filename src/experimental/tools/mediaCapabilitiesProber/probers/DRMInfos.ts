@@ -15,7 +15,7 @@
  */
 
 import { canRelyOnRequestMediaKeySystemAccess } from "../../../../compat/can_rely_on_request_media_key_system_access";
-import eme from "../../../../compat/eme";
+import getEmeApiImplementation from "../../../../compat/eme";
 import {
   DUMMY_PLAY_READY_HEADER,
   generatePlayReadyInitData,
@@ -50,7 +50,9 @@ export default function probeDRMInfos(
     keySystem.configuration === undefined ? {} : keySystem.configuration;
   const result: ICompatibleKeySystem = { type, configuration };
 
-  if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
+  const eme = getEmeApiImplementation("auto");
+
+  if (eme === null) {
     log.debug(
       "MediaCapabilitiesProber >>> API_CALL: " +
         "Your browser has no API to request a media key system access.",

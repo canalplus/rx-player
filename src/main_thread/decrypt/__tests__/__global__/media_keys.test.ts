@@ -1,5 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { IKeySystemOption } from "../../../../public_types";
+import assert from "../../../../utils/assert";
 import type IContentDecryptor from "../../content_decryptor";
 import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
 import {
@@ -56,7 +57,15 @@ describe("decrypt - global tests - media key system access", () => {
     // == test ==
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
-    const error = await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
+    const error = await testContentDecryptorError(
+      eme,
+      ContentDecryptor,
+      videoElt,
+      ksConfig,
+    );
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual("CREATE_MEDIA_KEYS_ERROR: No non no");
     expect(error.name).toEqual("EncryptedMediaError");
@@ -84,7 +93,15 @@ describe("decrypt - global tests - media key system access", () => {
     // == test ==
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
-    const error = await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
+    const error = await testContentDecryptorError(
+      eme,
+      ContentDecryptor,
+      videoElt,
+      ksConfig,
+    );
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual("CREATE_MEDIA_KEYS_ERROR: No non no");
     expect(error.name).toEqual("EncryptedMediaError");
@@ -103,8 +120,11 @@ describe("decrypt - global tests - media key system access", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
     return new Promise<void>((res, rej) => {
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange = 0;
       contentDecryptor.addEventListener("stateChange", (newState) => {
         receivedStateChange++;
@@ -140,8 +160,11 @@ describe("decrypt - global tests - media key system access", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
     return new Promise<void>((res, rej) => {
-      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      const contentDecryptor1 = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1) => {
@@ -162,7 +185,7 @@ describe("decrypt - global tests - media key system access", () => {
 
         setTimeout(() => {
           contentDecryptor1.dispose();
-          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2) => {
@@ -207,8 +230,11 @@ describe("decrypt - global tests - media key system access", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
-      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor1 = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1) => {
@@ -229,7 +255,7 @@ describe("decrypt - global tests - media key system access", () => {
 
         setTimeout(() => {
           contentDecryptor1.dispose();
-          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2) => {
@@ -274,9 +300,11 @@ describe("decrypt - global tests - media key system access", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
-
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
     return new Promise<void>((res, rej) => {
-      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      const contentDecryptor1 = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1) => {
@@ -297,7 +325,7 @@ describe("decrypt - global tests - media key system access", () => {
 
         setTimeout(() => {
           contentDecryptor1.dispose();
-          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2) => {
@@ -341,7 +369,10 @@ describe("decrypt - global tests - media key system access", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
     return new Promise<void>((res) => {
       contentDecryptor.addEventListener("stateChange", (newState) => {
         if (newState === ContentDecryptorState.WaitingForAttachment) {

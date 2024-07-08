@@ -1,4 +1,5 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
+import assert from "../../../../utils/assert";
 import type IContentDecryptor from "../../content_decryptor";
 import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
 import {
@@ -37,12 +38,15 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -93,12 +97,15 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -165,6 +172,7 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -174,7 +182,9 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -273,12 +283,15 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -348,12 +361,15 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -408,12 +424,15 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -479,6 +498,7 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -495,7 +515,9 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -585,6 +607,7 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
@@ -595,7 +618,9 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
@@ -667,6 +692,7 @@ describe("decrypt - global tests - init data", () => {
       .ContentDecryptorState as typeof IContentDecryptorState;
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -683,7 +709,9 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener(
         "stateChange",
         (newState: IContentDecryptorState) => {
