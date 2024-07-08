@@ -19,12 +19,12 @@ import type {
   IEmeApiImplementation,
   IPreferredEmeApiType,
 } from "./eme-api-implementation";
-import defaultEmeImplementation from "./eme-api-implementation";
+import getEmeApiImplementation from "./eme-api-implementation";
 import generateKeyRequest from "./generate_key_request";
 import type { IEncryptedEventData } from "./get_init_data";
 import getInitData from "./get_init_data";
 import loadSession from "./load_session";
 
-export default defaultEmeImplementation;
+export default getEmeApiImplementation;
 export type { IEmeApiImplementation, IPreferredEmeApiType, IEncryptedEventData };
 export { closeSession, generateKeyRequest, getInitData, loadSession };
