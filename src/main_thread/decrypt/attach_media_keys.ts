@@ -20,7 +20,6 @@ import type {
   IMediaKeys,
 } from "../../compat/browser_compatibility_types";
 import type { IEmeApiImplementation } from "../../compat/eme";
-import eme from "../../compat/eme";
 import { setMediaKeys } from "../../compat/eme/set_media_keys";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
@@ -32,13 +31,21 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 /**
  * Dispose of the MediaKeys instance attached to the given media element, if
  * one.
+ * @param {Object} defaultEmeImplementation
  * @param {Object} mediaElement
  * @returns {Promise}
  */
-export function disableMediaKeys(mediaElement: IMediaElement): Promise<unknown> {
+export function disableMediaKeys(
+  defaultEmeImplementation: IEmeApiImplementation,
+  mediaElement: IMediaElement,
+): Promise<unknown> {
   const previousState = MediaKeysInfosStore.getState(mediaElement);
   MediaKeysInfosStore.setState(mediaElement, null);
-  return setMediaKeys(previousState?.emeImplementation ?? eme, mediaElement, null);
+  return setMediaKeys(
+    previousState?.emeImplementation ?? defaultEmeImplementation,
+    mediaElement,
+    null,
+  );
 }
 
 /**

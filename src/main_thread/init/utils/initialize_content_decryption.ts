@@ -1,4 +1,5 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import getEmeApiImplementation from "../../../compat/eme";
 import { EncryptedMediaError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
@@ -77,12 +78,13 @@ export default function initializeContentDecryption(
 
   const ContentDecryptor = features.decrypt;
 
-  if (!ContentDecryptor.hasEmeApis()) {
+  const emeApi = getEmeApiImplementation("auto");
+  if (emeApi === null) {
     return createEmeDisabledReference("EME API not available on the current page.");
   }
 
   log.debug("Init: Creating ContentDecryptor");
-  const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+  const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
 
   const onStateChange = (state: ContentDecryptorState) => {
     if (state > ContentDecryptorState.Initializing) {

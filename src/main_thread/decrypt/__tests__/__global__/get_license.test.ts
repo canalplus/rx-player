@@ -1,5 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
 import type { IKeySystemOption, IPlayerError } from "../../../../public_types";
+import assert from "../../../../utils/assert";
 import { concat } from "../../../../utils/byte_parsing";
 import type IContentDecryptor from "../../content_decryptor";
 import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
@@ -339,6 +340,7 @@ async function checkGetLicense({
     .ContentDecryptorState as typeof IContentDecryptorState;
   const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
     .default as typeof IContentDecryptor;
+  const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
   return new Promise((res, rej) => {
     // == vars ==
     /** Default keySystems configuration used in our tests. */
@@ -368,7 +370,9 @@ async function checkGetLicense({
     }
 
     // == test ==
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null);
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
 
     contentDecryptor.addEventListener("stateChange", (newState: number) => {
       if (newState !== ContentDecryptorState.WaitingForAttachment) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import eme from "../../../../compat/eme";
+import getEmeApiImplementation from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IMediaConfiguration } from "../types";
 import { ProberStatus } from "../types";
@@ -35,7 +35,9 @@ export type IMediaKeyStatus =
 export default function probeHDCPPolicy(
   config: IMediaConfiguration,
 ): Promise<[ProberStatus]> {
-  if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
+  const eme = getEmeApiImplementation("auto");
+
+  if (eme === null) {
     return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " + "API not available");
   }
   if (isNullOrUndefined(config.hdcp)) {

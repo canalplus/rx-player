@@ -1,4 +1,5 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import getEmeApiImplementation from "../../compat/eme";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
@@ -1222,11 +1223,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
 
     const ContentDecryptor = features.decrypt;
-    if (!ContentDecryptor.hasEmeApis()) {
+    const emeApi = getEmeApiImplementation("auto");
+    if (emeApi === null) {
       return createEmeDisabledReference("EME API not available on the current page.");
     }
     log.debug("MTCI: Creating ContentDecryptor");
-    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+    const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
     const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
       {
         initializationState: { type: "uninitialized", value: null },
