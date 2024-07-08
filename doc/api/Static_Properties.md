@@ -42,6 +42,27 @@ import RxPlayer from "rx-player";
 RxPlayer.LogLevel = "WARNING";
 ```
 
+## LogFormat
+
+Allows to configure the format log messages will have.
+
+Can be set to either:
+
+- `"standard"`: Regular log messages will be printed, this is the default format.
+
+- `"full"`: Log messages will be enriched with timestamps and namespaces, which allows
+  them to be easier to programatically exploit.
+
+  You may for example prefer that format when reporting issues to the RxPlayer's
+  maintainers, so we are able to extract more information from those logs.
+
+### Example
+
+```js
+import RxPlayer from "rx-player";
+RxPlayer.LogFormat = "full";
+```
+
 ## ErrorTypes
 
 The different "types" of Error you can get on playback error,

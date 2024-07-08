@@ -21,7 +21,7 @@ import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
-import type { ILoggerLevel } from "../../../utils/logger";
+import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
 import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
@@ -91,7 +91,11 @@ export default function initializeWorkerMain() {
         assert(!isInitialized);
         isInitialized = true;
         scaleTimestamp(msg.value);
-        updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
+        updateLoggerLevel(
+          msg.value.logLevel,
+          msg.value.logFormat,
+          msg.value.sendBackLogs,
+        );
         if (msg.value.dashWasmUrl !== undefined && dashWasmParser.isCompatible()) {
           dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
             const error = err instanceof Error ? err.toString() : "Unknown Error";
@@ -115,7 +119,11 @@ export default function initializeWorkerMain() {
         break;
 
       case MainThreadMessageType.LogLevelUpdate:
-        updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
+        updateLoggerLevel(
+          msg.value.logLevel,
+          msg.value.logFormat,
+          msg.value.sendBackLogs,
+        );
         break;
 
       case MainThreadMessageType.PrepareContent:
@@ -883,11 +891,17 @@ function loadOrReloadPreparedContent(
   }
 }
 
-function updateLoggerLevel(logLevel: ILoggerLevel, sendBackLogs: boolean): void {
+function updateLoggerLevel(
+  logLevel: ILoggerLevel,
+  logFormat: ILogFormat,
+  sendBackLogs: boolean,
+): void {
   if (!sendBackLogs) {
-    log.setLevel(logLevel);
+    log.setLevel(logLevel, logFormat);
   } else {
-    log.setLevel(logLevel, (levelStr, logs) => {
+    // Here we force the log format to "standard" as the full formatting will be
+    // performed on main thread.
+    log.setLevel(logLevel, "standard", (levelStr, logs) => {
       const sentLogs = logs.map((e) => {
         if (e instanceof Error) {
           return formatErrorForSender(e);
