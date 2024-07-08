@@ -55,7 +55,9 @@ describe("decrypt - global tests - server certificate", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
 
     return new Promise<void>((res) => {
       contentDecryptor.addEventListener("stateChange", (state: any) => {
@@ -98,7 +100,9 @@ describe("decrypt - global tests - server certificate", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
@@ -139,7 +143,9 @@ describe("decrypt - global tests - server certificate", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
@@ -178,7 +184,9 @@ describe("decrypt - global tests - server certificate", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
@@ -228,7 +236,9 @@ describe("decrypt - global tests - server certificate", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {

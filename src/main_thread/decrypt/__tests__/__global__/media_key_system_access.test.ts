@@ -53,8 +53,11 @@ async function checkIncompatibleKeySystemsErrorMessage(
   const mediaElement = document.createElement("video");
   const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
     .default;
+  const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
 
+  const eme = getEmeApiImplementation("auto");
   const error: any = await testContentDecryptorError(
+    eme,
     ContentDecryptor,
     mediaElement,
     keySystemsConfigs,
@@ -703,11 +706,13 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const config = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
-      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", (error: any) => {
         rej(error);
       });
@@ -737,6 +742,7 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const config = [
         { type: "com.widevine.alpha", getLicense: neverCalledFn },
@@ -744,7 +750,8 @@ describe("decrypt - global tests - media key system access", () => {
       ];
 
       const mediaElement = document.createElement("video");
-      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", (error: any) => {
         rej(error);
       });
@@ -780,6 +787,7 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
@@ -788,7 +796,8 @@ describe("decrypt - global tests - media key system access", () => {
         { type: "bar", getLicense: neverCalledFn },
         { type: "baz", getLicense: neverCalledFn },
       ];
-      contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", (error: any) => {
         rej(error);
       });
@@ -816,11 +825,13 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
       const config = [{ type: "foo", getLicense: neverCalledFn }];
-      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", () => {
         expect(rmksHasBeenCalled).toEqual(true);
         res();

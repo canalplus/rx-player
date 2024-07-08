@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "module": "es2020",
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "typeRoots": ["./src/globals.dev.d.ts", "./node_modules/@types"]

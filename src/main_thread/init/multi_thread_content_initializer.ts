@@ -1,4 +1,5 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import getEmeApiImplementation from "../../compat/eme";
 import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
@@ -1180,11 +1181,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       cancelSignal,
     );
     const ContentDecryptor = features.decrypt;
-    if (!ContentDecryptor.hasEmeApis()) {
+    const emeApi = getEmeApiImplementation("auto");
+    if (emeApi === null) {
       return createEmeDisabledReference("EME API not available on the current page.");
     }
     log.debug("MTCI: Creating ContentDecryptor");
-    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+    const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
 
     contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (updates) => {
       if (

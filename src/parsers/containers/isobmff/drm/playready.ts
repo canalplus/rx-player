@@ -20,7 +20,7 @@ import { bytesToHex, guidToUuid, utf16LEToStr } from "../../../../utils/string_p
 
 /**
  * Parse PlayReady privateData to get its Hexa-coded KeyID.
- * @param {Uint8Array} privateData
+ * @param {Uint8Array} data
  * @returns {string}
  */
 export function getPlayReadyKIDFromPrivateData(data: Uint8Array): string {

@@ -308,27 +308,6 @@ export function mockCompat(
   } = {},
 ) {
   const ee = new MockedDecryptorEventEmitter();
-  const onEncrypted =
-    presets.onEncrypted ??
-    vi
-      .fn()
-      .mockImplementation(
-        (elt: IMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
-          elt.addEventListener("encrypted", fn);
-          signal.register(() => {
-            elt.removeEventListener("encrypted", fn);
-          });
-          ee.addEventListener(
-            "encrypted",
-            (evt) => {
-              if (evt.elt === elt) {
-                fn(evt.value);
-              }
-            },
-            signal,
-          );
-        },
-      );
   const mockEvents: Record<string, MockInstance> = {
     onKeyMessage: vi
       .fn()
@@ -392,6 +371,27 @@ export function mockCompat(
       ),
   };
 
+  const mockOnEncrypted =
+    presets.onEncrypted ??
+    vi
+      .fn()
+      .mockImplementation(
+        (elt: IMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
+          elt.addEventListener("encrypted", fn);
+          signal.register(() => {
+            elt.removeEventListener("encrypted", fn);
+          });
+          ee.addEventListener(
+            "encrypted",
+            (evt) => {
+              if (evt.elt === elt) {
+                fn(evt.value);
+              }
+            },
+            signal,
+          );
+        },
+      );
   const mockRmksa =
     presets.requestMediaKeySystemAccess ??
     vi.fn().mockImplementation(requestMediaKeySystemAccessImpl);
@@ -431,13 +431,13 @@ export function mockCompat(
   }
 
   const emeImplementation = {
-    onEncrypted,
+    onEncrypted: mockOnEncrypted,
     requestMediaKeySystemAccess: mockRmksa,
     setMediaKeys: mockSetMediaKeys,
   } as unknown as IEmeApiImplementation;
 
   vi.doMock("../../../../compat/eme", () => ({
-    default: emeImplementation,
+    default: () => emeImplementation,
     getInitData: mockGetInitData,
     generateKeyRequest: mockGenerateKeyRequest,
   }));
@@ -475,12 +475,13 @@ export function mockCompat(
  * @returns {Promise}
  */
 export function testContentDecryptorError(
+  eme: any,
   ContentDecryptor: any,
   mediaElement: IMediaElement,
   keySystemsConfigs: unknown[],
 ): Promise<unknown> {
   return new Promise((res, rej) => {
-    const contentDecryptor = new ContentDecryptor(mediaElement, keySystemsConfigs);
+    const contentDecryptor = new ContentDecryptor(eme, mediaElement, keySystemsConfigs);
     contentDecryptor.addEventListener("error", (error: any) => {
       res(error);
     });

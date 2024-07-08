@@ -45,12 +45,14 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -97,12 +99,14 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -165,6 +169,7 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -174,7 +179,8 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -269,12 +275,14 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -340,12 +348,14 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -396,12 +406,14 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -463,6 +475,7 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -479,7 +492,8 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -565,6 +579,7 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
@@ -575,7 +590,8 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
@@ -643,6 +659,7 @@ describe("decrypt - global tests - init data", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -659,7 +676,8 @@ describe("decrypt - global tests - init data", () => {
       ];
 
       // == test ==
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));

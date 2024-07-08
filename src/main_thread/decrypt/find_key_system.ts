@@ -19,7 +19,7 @@ import type {
   IMediaKeySystemAccess,
 } from "../../compat/browser_compatibility_types";
 import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
-import eme from "../../compat/eme";
+import type { IEmeApiImplementation } from "../../compat/eme";
 import {
   generatePlayReadyInitData,
   DUMMY_PLAY_READY_HEADER,
@@ -280,12 +280,14 @@ function buildKeySystemConfigurations(
  *     found.
  *   - reject if no compatible key system has been found.
  *
+ * @param {Object} eme - current EME implementation
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystemsConfigs - The keySystems you want to test.
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
 export default function getMediaKeySystemAccess(
+  eme: IEmeApiImplementation,
   mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
@@ -384,7 +386,7 @@ export default function getMediaKeySystemAccess(
     );
 
     try {
-      const keySystemAccess = await testKeySystem(keyType, keySystemConfigurations);
+      const keySystemAccess = await testKeySystem(eme, keyType, keySystemConfigurations);
       log.info("DRM: Found compatible keysystem", keyType, index + 1);
       return {
         type: "create-media-key-system-access" as const,
@@ -405,14 +407,16 @@ export default function getMediaKeySystemAccess(
 /**
  * Test a key system configuration, resolves with the MediaKeySystemAccess
  * or reject if the key system is unsupported.
+ * @param {Object} eme - current EME implementation
  * @param {string} keyType - The KeySystem string to test (ex: com.microsoft.playready.recommendation)
  * @param {Array.<MediaKeySystemMediaCapability>} keySystemConfigurations - Configurations for this keySystem
  * @returns Promise resolving with the MediaKeySystemAccess. Rejects if unsupported.
  */
 export async function testKeySystem(
+  eme: IEmeApiImplementation,
   keyType: string,
   keySystemConfigurations: MediaKeySystemConfiguration[],
-) {
+): Promise<IMediaKeySystemAccess> {
   const keySystemAccess = await eme.requestMediaKeySystemAccess(
     keyType,
     keySystemConfigurations,

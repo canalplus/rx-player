@@ -20,6 +20,7 @@ import type {
   IMediaKeys,
 } from "../../compat/browser_compatibility_types";
 import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
+import type { IEmeApiImplementation } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
@@ -64,6 +65,7 @@ export interface IMediaKeysInfos {
 /**
  * Create a MediaKeys instance and associated structures (or just return the
  * current ones if sufficient) based on a wanted configuration.
+ * @param {Object} eme - current EME implementation
  * @param {HTMLMediaElement} mediaElement - The HTMLMediaElement on which you
  * will attach the MediaKeys instance.
  * This Element is here only used to check if the current MediaKeys and
@@ -75,11 +77,13 @@ export interface IMediaKeysInfos {
  * @returns {Promise.<Object>}
  */
 export default async function getMediaKeysInfos(
+  eme: IEmeApiImplementation,
   mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {
   const evt = await getMediaKeySystemAccess(
+    eme,
     mediaElement,
     keySystemsConfigs,
     cancelSignal,

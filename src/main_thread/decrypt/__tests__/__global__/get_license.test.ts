@@ -345,6 +345,7 @@ async function checkGetLicense({
   const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
   const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
     .default;
+  const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
   return new Promise((res, rej) => {
     // == vars ==
     /** Default keySystems configuration used in our tests. */
@@ -374,7 +375,8 @@ async function checkGetLicense({
     }
 
     // == test ==
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
 
     contentDecryptor.addEventListener("stateChange", (newState: number) => {
       if (newState !== ContentDecryptorState.WaitingForAttachment) {

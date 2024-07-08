@@ -27,16 +27,6 @@ import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
 import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
 
 /**
- * Automatically detect and set which EME implementation should be used in the
- * current platform.
- *
- * You can call `getEmeApiImplementation` for a different implementation.
- */
-const defaultEmeImplementation = getEmeApiImplementation("auto");
-
-export default defaultEmeImplementation;
-
-/**
  * Generic interface harmonizing the structure of the different EME API
  * implementations the RxPlayer could use.
  */
@@ -124,19 +114,21 @@ export type IPreferredEmeApiType = "auto" | "standard" | "webkit";
  * (@see IPreferredEmeApiType).
  * @returns {Object}
  */
-function getEmeApiImplementation(
+export default function getEmeApiImplementation(
   preferredApiType: IPreferredEmeApiType,
-): IEmeApiImplementation {
+): IEmeApiImplementation | null {
   let requestMediaKeySystemAccess: IEmeApiImplementation["requestMediaKeySystemAccess"];
   let onEncrypted: IEmeApiImplementation["onEncrypted"];
   let setMediaKeys: IEmeApiImplementation["setMediaKeys"] = defaultSetMediaKeys;
   let implementation: IEmeApiImplementation["implementation"];
   if (
-    (preferredApiType === "standard" ||
-      (preferredApiType === "auto" && !shouldFavourCustomSafariEME())) &&
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    (isNode || !isNullOrUndefined(navigator.requestMediaKeySystemAccess))
+    preferredApiType === "standard" ||
+    (preferredApiType === "auto" && !shouldFavourCustomSafariEME())
   ) {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    if (isNode || isNullOrUndefined(navigator.requestMediaKeySystemAccess)) {
+      return null;
+    }
     requestMediaKeySystemAccess = (...args) =>
       navigator.requestMediaKeySystemAccess(...args);
     onEncrypted = createCompatibleEventListener(["encrypted"]);

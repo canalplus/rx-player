@@ -59,7 +59,9 @@ describe("decrypt - global tests - media key system access", () => {
     // == test ==
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const error: any = await testContentDecryptorError(
+      getEmeApiImplementation("auto"),
       ContentDecryptor,
       videoElt,
       ksConfig,
@@ -89,7 +91,9 @@ describe("decrypt - global tests - media key system access", () => {
     // == test ==
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const error: any = await testContentDecryptorError(
+      getEmeApiImplementation("auto"),
       ContentDecryptor,
       videoElt,
       ksConfig,
@@ -109,8 +113,10 @@ describe("decrypt - global tests - media key system access", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
-      const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange = 0;
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         receivedStateChange++;
@@ -145,8 +151,10 @@ describe("decrypt - global tests - media key system access", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
-      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor1 = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1: any) => {
@@ -167,7 +175,7 @@ describe("decrypt - global tests - media key system access", () => {
 
         setTimeout(() => {
           contentDecryptor1.dispose();
-          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2: any) => {
@@ -211,8 +219,10 @@ describe("decrypt - global tests - media key system access", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
-      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor1 = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1: any) => {
@@ -233,7 +243,7 @@ describe("decrypt - global tests - media key system access", () => {
 
         setTimeout(() => {
           contentDecryptor1.dispose();
-          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2: any) => {
@@ -277,9 +287,11 @@ describe("decrypt - global tests - media key system access", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
 
     return new Promise<void>((res, rej) => {
-      const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
+      const eme = getEmeApiImplementation("auto");
+      const contentDecryptor1 = new ContentDecryptor(eme, videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1: any) => {
@@ -300,7 +312,7 @@ describe("decrypt - global tests - media key system access", () => {
 
         setTimeout(() => {
           contentDecryptor1.dispose();
-          const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
+          const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2: any) => {
@@ -343,7 +355,9 @@ describe("decrypt - global tests - media key system access", () => {
     const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
     const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
       .default;
-    const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const eme = getEmeApiImplementation("auto");
+    const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
     return new Promise<void>((res) => {
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         if (newState === ContentDecryptorState.WaitingForAttachment) {

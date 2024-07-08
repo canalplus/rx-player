@@ -46,7 +46,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       },
     };
     vi.doMock("../../../../../compat/eme", () => ({
-      default: {},
+      default: () => null,
     }));
     const probeDRMInfos = ((await vi.importActual("../../probers/DRMInfos")) as any)
       .default;
@@ -69,7 +69,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       });
     });
     vi.doMock("../../../../../compat/eme", () => ({
-      default: { requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess },
+      default: () => ({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess }),
     }));
     const probeDRMInfos = ((await vi.importActual("../../probers/DRMInfos")) as any)
       .default;
@@ -96,7 +96,7 @@ describe("MediaCapabilitiesProber probers - DRMInfos", () => {
       return Promise.reject(new Error());
     });
     vi.doMock("../../../../../compat/eme", () => ({
-      default: { requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess },
+      default: () => ({ requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess }),
     }));
 
     const probeDRMInfos = ((await vi.importActual("../../probers/DRMInfos")) as any)
