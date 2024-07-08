@@ -138,16 +138,8 @@ Before each official releases, a list of steps are performed by its maintainers:
 10. Run sanity checks on myCanal's repository, by using this new version instead as a
     dependency.
 
-<<<<<<< HEAD 11. If and only if no problem was seen perform a signed merge without
-fast-forward of the release branch into stable
-(`git merge -S --no-ff release/vXX.XX.XX stable`) ||||||| parent of 16f9945b7 (Allow width
-limit on markdown files with prettier) 11. If and only if no problem was seen perform a
-signed merge without fast-forward of the release branch into master
-(`git merge -S --no-ff release/vXX.XX.XX master`) ======= 11. If and only if no problem
-was seen perform a signed merge without fast-forward of the release branch into master
-(`git merge -S --no-ff release/vXX.XX.XX master`)
-
-> > > > > > > 16f9945b7 (Allow width limit on markdown files with prettier)
+11. If and only if no problem was seen perform a signed merge without fast-forward of the
+    release branch into master
 
 12. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
 
