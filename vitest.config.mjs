@@ -8,6 +8,7 @@ function getBrowserConfig(browser) {
         name: "chrome",
         provider: "webdriverio",
         headless: true,
+        screenshotFailures: false,
         providerOptions: {
           capabilities: {
             "goog:chromeOptions": {
@@ -27,6 +28,7 @@ function getBrowserConfig(browser) {
         name: "firefox",
         provider: "webdriverio",
         headless: true,
+        screenshotFailures: false,
         providerOptions: {
           capabilities: {
             "moz:firefoxOptions": {
