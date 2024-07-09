@@ -574,6 +574,10 @@ export class DummyMediaKeySession
     return Promise.resolve();
   }
 
+  public getPolicyLevel(): number {
+    return this._currentPolicyLevel;
+  }
+
   public updatePolicyLevel(newLevel: number) {
     this._currentPolicyLevel = newLevel;
 
