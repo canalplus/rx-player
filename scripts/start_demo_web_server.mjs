@@ -2,16 +2,16 @@
 /* eslint-env node */
 
 /**
- * Run the full demo server
+ * Run the demo server
  * =========================
  *
- * This script allows to build the full demo locally and start both an HTTP and
+ * This script allows to build the demo locally and start both an HTTP and
  * an HTTPS (only if a certificate and key have been generated) server to serve
  * it, on the port 8000 and 8443 respectively.
  *
  * You can run it as a script through `node start_demo_web_server.mjs`.
  * Be aware that this demo will be built again every time either one of the
- * full demo file or one of the library file is updated.
+ * demo file or one of the library file is updated.
  */
 
 import { join } from "path";
@@ -30,7 +30,7 @@ const shouldMinify = process.argv.includes("--minify");
 
 buildDemo({ watch: true, minify: shouldMinify, production, includeWasmParser });
 
-launchStaticServer(join(projectRootDirectory, "demo/full/"), {
+launchStaticServer(join(projectRootDirectory, "demo/"), {
   certificatePath: join(projectRootDirectory, "localhost.crt"),
   keyPath: join(projectRootDirectory, "localhost.key"),
   verbose: true,

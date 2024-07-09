@@ -1,9 +1,9 @@
 import * as React from "react";
+import type { ITextTrack, IAvailableTextTrack } from "../../../../src/public_types";
 import translateLanguageCode from "../../lib/translateLanguageCode";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";
-import type { ITextTrack, IAvailableTextTrack } from "../../../../../src/public_types";
 
 const CLOSED_CAPTION_ICON = "(CC)"; // String.fromCharCode(0xf2a4);
 

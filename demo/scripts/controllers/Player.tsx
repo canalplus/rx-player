@@ -1,4 +1,9 @@
 import * as React from "react";
+import type {
+  IAudioRepresentationsSwitchingMode,
+  ILoadVideoOptions,
+  IVideoRepresentationsSwitchingMode,
+} from "../../../src/public_types";
 import PlayerModule from "../modules/player";
 import type { IPlayerModule } from "../modules/player";
 import ControlBar from "./ControlBar";
@@ -12,11 +17,6 @@ import type {
   ILoadVideoSettings,
   IConstructorSettings,
 } from "../lib/defaultOptionsValues";
-import type {
-  IAudioRepresentationsSwitchingMode,
-  ILoadVideoOptions,
-  IVideoRepresentationsSwitchingMode,
-} from "../../../../src/public_types";
 
 const { useCallback, useEffect, useRef, useState } = React;
 

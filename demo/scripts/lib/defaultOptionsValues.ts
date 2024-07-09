@@ -2,7 +2,7 @@ import type {
   ICmcdOptions,
   IConstructorOptions,
   ILoadVideoOptions,
-} from "../../../../src/public_types";
+} from "../../../src/public_types";
 
 const defaultOptionsValues = {
   player: {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { IVideoRepresentation } from "../../../../src/public_types";
+import type { IVideoRepresentation } from "../../../src/public_types";
 import capitalizeFirstLetter from "../lib/capitalizeFirstLetter";
 import shuffleArray from "../lib/shuffleArray";
 import ToolTip from "./ToolTip";

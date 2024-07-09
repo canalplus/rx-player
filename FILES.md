@@ -5,15 +5,7 @@ directory or subdirectory, in alphabetical order.
 
 ## `demo/`: Demo applications
 
-The `demo/` directory contains demos of application using the RxPlayer.
-
-At the time of writing, there are two distinct demos:
-
-- _full_: Demo with a graphic interface, written with the React library, to showcase what
-  the player can do
-
-- _standalone_: Just expose the rx-player in `window`, to allow scripted interactions with
-  it in the console. The player is linked to a video tag in the displayed page.
+The `demo/` directory contains the demo page, an example application using the RxPlayer.
 
 ## `dist/`: Builds
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IAudioRepresentation } from "../../../../../src/public_types";
+import { IAudioRepresentation } from "../../../../src/public_types";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";

@@ -141,40 +141,24 @@ And the following methods:
 
 You might want to quickly test your code modification(s) on a real use case.
 
-For those types of need, we developped two demo pages:
+For those types of need, we developped a demo page. This demo has a user-friendly
+interface and allow the most frequent API interactions.
 
-- the _full demo_ page, which is also the one used to showcase the player.
+It also exposes both the RxPlayer class through `window.RxPlayer` and the rxPlayer
+instance through `window.rxPlayer` - both in the global scope. You can thus open a
+debugger/inspector in your favorite browser to exploit directly the player's API.
 
-  This demo has a user-friendly interface and allow the most frequent API interactions.
-
-  It also exposes both the RxPlayer class through `window.RxPlayer` and the rxPlayer
-  instance through `window.rxPlayer` - both in the global scope. You can thus open a
-  debugger/inspector in your favorite browser to exploit directly the player's API.
-
-- the _standalone demo_ page, which is just a `<video />` tag linked to a RxPlayer
-  instance.
-
-  In this demo too, `window.RxPlayer` and `window.rxPlayer` link to the RxPlayer class and
-  the rxPlayer instance respectively.
-
-To use the full demo page, you can build it and run a local HTTP server on the port 8000
-by running the following npm script.
+To use the demo page, you can build it and run a local HTTP server on the port 8000 by
+running the following npm script.
 
 ```sh
 npm run start
 ```
 
-To use the standalone demo page, you can build it and run a local HTTP server on the port
-8001 by running the following npm script.
-
-```sh
-npm run standalone
-```
-
-Both will detect when the RxPlayer's files (or even the demo files) are updated and
-perform a new build when that's the case. In that way, the server will always serve the
-last local version of the code. Note however that hot-reload is not enabled currently,
-you'll have to refresh the page yourself.
+It will detect when the RxPlayer's files (or even the demo files) are updated and perform
+a new build when that's the case. In that way, the server will always serve the last local
+version of the code. Note however that hot-reload is not enabled currently, you'll have to
+refresh the page yourself.
 
 ### Serving the demo page through HTTPS
 
@@ -188,9 +172,8 @@ help of `openssl`:
 npm run certificate
 ```
 
-You can then run the same demo script defined previously. The _full demo_ will now serve
-HTTPS through the port 8443 and the _standalone demo_ through the port 8444. Both still
-serve HTTP on the same ports than before.
+You can then run the same demo script defined previously. The demo will now serve HTTPS
+through the port 8443 (and through HTTP through the usual port).
 
 Note that such self-signed certificates are usually (rightfully) considered suspicious by
 web browsers. As such, you might first encounter a warning screen when going to one of the

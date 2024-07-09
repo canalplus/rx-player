@@ -19,8 +19,8 @@ import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 import runBundler from "./run_bundler.mjs";
 
 const WORKER_IN_FILE = join(rootDirectory, "src/worker_entry_point.ts");
-const DEMO_OUT_FILE = join(rootDirectory, "demo/full/bundle.js");
-const WORKER_OUT_FILE = join(rootDirectory, "demo/full/worker.js");
+const DEMO_OUT_FILE = join(rootDirectory, "demo/bundle.js");
+const WORKER_OUT_FILE = join(rootDirectory, "demo/worker.js");
 const WASM_FILE_DEPENDENCY = join(rootDirectory, "dist/mpd-parser.wasm");
 
 // If true, this script is called directly
@@ -112,7 +112,7 @@ export default function buildDemo(options) {
 
   // Create a context for incremental builds
   esbuild[meth]({
-    entryPoints: [join(rootDirectory, "demo/full/scripts/index.tsx")],
+    entryPoints: [join(rootDirectory, "demo/scripts/index.tsx")],
     bundle: true,
     target: "es2017",
     minify,
