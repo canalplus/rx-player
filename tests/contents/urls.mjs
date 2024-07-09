@@ -13,8 +13,9 @@ import urls8 from "./directfile_webm/urls.mjs";
 import urls9 from "./DASH_dynamic_SegmentTemplate_Multi_Periods/urls.mjs";
 import urls10 from "./DASH_static_broken_cenc_in_MPD/urls.mjs";
 import urls11 from "./DASH_static_number_based_SegmentTimeline/urls.mjs";
-import urls12 from "./imagetracks/urls.mjs";
+import urls12 from "./DASH_DRM_static_SegmentTemplate/urls.mjs";
 import urls13 from "./DASH_dynamic_SegmentTemplate_UnsupportedAudio/urls.mjs";
+import urls14 from "./imagetracks/urls.mjs";
 
 export default [
   ...urls1,
@@ -30,4 +31,5 @@ export default [
   ...urls11,
   ...urls12,
   ...urls13,
+  ...urls14,
 ];
