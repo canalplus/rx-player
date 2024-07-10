@@ -102,6 +102,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
         onBlackListProtectionData: noop,
         onKeyIdsCompatibilityUpdate: noop,
       },
+      { isDirectFile: true },
       cancelSignal,
     );
 

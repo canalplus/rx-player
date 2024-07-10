@@ -15,6 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import { isSafariDesktop } from "../../compat/browser_detection";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
@@ -57,6 +58,10 @@ import {
   areSomeKeyIdsContainedIn,
 } from "./utils/key_id_comparison";
 import type KeySessionRecord from "./utils/key_session_record";
+
+export interface IContext {
+  isDirectFile: boolean;
+}
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -132,6 +137,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _supportedCodecWhenEncrypted: ICodecSupportList;
 
   /**
+   * Context information such a the transport being used.
+   */
+  private _context: IContext;
+  /**
    * `true` if the EME API are available on the current platform according to
    * the default EME implementation used.
    * `false` otherwise.
@@ -155,7 +164,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * configurations. It will choose the appropriate one depending on user
    * settings and browser support.
    */
-  constructor(mediaElement: IMediaElement, ksOptions: IKeySystemOption[]) {
+  constructor(
+    mediaElement: IMediaElement,
+    ksOptions: IKeySystemOption[],
+    context: IContext,
+  ) {
     super();
 
     log.debug("DRM: Starting ContentDecryptor logic.");
@@ -171,6 +184,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       data: null,
     };
     this._supportedCodecWhenEncrypted = [];
+    this._context = context;
     this.error = null;
 
     eme.onEncrypted(
@@ -717,6 +731,19 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     mediaKeysData: IAttachedMediaKeysData,
   ): boolean {
     const { stores, options } = mediaKeysData;
+    /**
+     * On Safari using Directfile, the old EME implementation triggers
+     * the "webkitneedkey" event instead of "encrypted". There's an issue in Safari
+     * where "webkitneedkey" fires too early before all tracks are added from an HLS playlist.
+     * Safari incorrectly assumes some keys are missing for these tracks,
+     * leading to repeated "webkitneedkey" events. Because RxPlayer recognizes
+     * it already has a session for these keys and ignores the events,
+     * the content remains frozen. To resolve this, we handle the event
+     * assuming no session exists for the key.
+     */
+    if (this._context.isDirectFile && isSafariDesktop) {
+      return false;
+    }
 
     /**
      * If set, a currently-used key session is already compatible to this
