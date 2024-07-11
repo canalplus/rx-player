@@ -247,6 +247,14 @@ module.exports = {
     "prefer-spread": "error",
     "prefer-object-spread": "error",
     "prefer-template": "off",
+    "no-restricted-globals": [
+      "error",
+      {
+        name: "DOMParser",
+        message:
+          "`DOMParser` doesn't work in Node.JS and only works when JavaScript is running in the main thread. Please import `parseXml` instead.",
+      },
+    ],
     "no-restricted-properties": [
       "error",
       {
