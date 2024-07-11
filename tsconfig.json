@@ -4,7 +4,7 @@
     "declaration": true,
     "declarationMap": true,
     "target": "es2017",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2017"],
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
@@ -16,7 +16,11 @@
     "noUnusedLocals": true,
     "moduleResolution": "node",
     "module": "es6",
-    "typeRoots": ["./src/globals.prod.d.ts", "./node_modules/@types"],
+    "typeRoots": [
+      "./src/globals.prod.d.ts",
+      "./node_modules/@types",
+      "./src/node.d.ts"
+    ],
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["./src/**/*.test.ts", "./src/**/__tests__/**", "./src/globals.dev.d.ts"],
