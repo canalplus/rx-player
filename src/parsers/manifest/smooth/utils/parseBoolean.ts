@@ -18,7 +18,7 @@
  * @param {*} val
  * @returns {Boolean}
  */
-export default function parseBoolean(val: string | null): boolean {
+export default function parseBoolean(val: string | null | undefined): boolean {
   if (typeof val === "boolean") {
     return val;
   } else if (typeof val === "string") {

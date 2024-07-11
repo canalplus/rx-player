@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+import arrayFind from "../../../utils/array_find";
 import { base64ToBytes } from "../../../utils/base64";
 import { concat } from "../../../utils/byte_parsing";
 import { hexToBytes } from "../../../utils/string_parsing";
+import { toContentString, type ITNode } from "../../../utils/xml-parser";
 import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
 export interface IKeySystem {
@@ -48,24 +50,22 @@ function createWidevineKeySystem(keyIdBytes: Uint8Array): IKeySystem[] {
  * @returns {Object}
  */
 export default function parseProtectionNode(
-  protectionNode: Element,
+  protectionNode: ITNode,
   keySystemCreator: (keyId: Uint8Array) => IKeySystem[] = createWidevineKeySystem,
 ): IContentProtectionSmooth {
-  if (
-    protectionNode.firstElementChild === null ||
-    protectionNode.firstElementChild.nodeName !== "ProtectionHeader"
-  ) {
+  const header = arrayFind(
+    protectionNode.children,
+    (p): p is ITNode => typeof p !== "string",
+  ) as ITNode | undefined;
+  if (header === undefined || header.tagName !== "ProtectionHeader") {
     throw new Error("Protection should have ProtectionHeader child");
   }
-  const header = protectionNode.firstElementChild;
-  const privateData = base64ToBytes(
-    header.textContent === null ? "" : header.textContent,
-  );
+  const privateData = base64ToBytes(toContentString(header.children));
   const keyIdHex = getPlayReadyKIDFromPrivateData(privateData);
   const keyIdBytes = hexToBytes(keyIdHex);
 
   // remove possible braces
-  const systemIdAttr = header.getAttribute("SystemID");
+  const systemIdAttr = header.attributes.SystemID ?? null;
   const systemId = (systemIdAttr !== null ? systemIdAttr : "")
     .toLowerCase()
     .replace(/\{|\}/g, "");

@@ -23,6 +23,7 @@ import type { IPlayerError } from "../../public_types";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
+import { parseXml } from "../../utils/xml-parser";
 import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
@@ -69,10 +70,11 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       const url = manifestData.url ?? parserOptions.originalUrl;
       const { receivedTime: manifestReceivedTime, responseData } = manifestData;
 
-      const documentData =
+      const manifestStr =
         typeof responseData === "string"
-          ? new DOMParser().parseFromString(responseData, "text/xml")
-          : (responseData as Document); // TODO find a way to check if Document?
+          ? responseData
+          : (responseData as Document).documentElement.innerHTML;
+      const documentData = parseXml(manifestStr);
 
       const parserResult = smoothManifestParser(documentData, url, manifestReceivedTime);
 

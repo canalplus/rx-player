@@ -378,19 +378,43 @@ function translateEntities(str: string): string {
     .replace(/&amp;/g, "&");
 }
 
-function getElementById(src: string, id: string): ITNode | string | undefined {
-  const out = parseXml(src, {
-    attrValue: id,
-  });
-  return out[0];
+function getElementsByTagName(src: ITNode, tagname: string): ITNode[] {
+  const elements = [];
+  for (const child of src.children) {
+    if (typeof child === "string") {
+      continue;
+    }
+    if (child.tagName === tagname) {
+      elements.push(child);
+    }
+    const subElements = getElementsByTagName(child, tagname);
+    if (subElements.length > 0) {
+      elements.push(...subElements);
+    }
+  }
+  return elements;
 }
 
-function getElementsByClassName(src: string, classname: string): Array<ITNode | string> {
-  const out = parseXml(src, {
-    attrName: "class",
-    attrValue: "[a-zA-Z0-9- ]*" + classname + "[a-zA-Z0-9- ]*",
-  });
-  return out;
+function getFirstElementByTagName(src: ITNode, tagname: string): ITNode | null {
+  for (const child of src.children) {
+    if (typeof child === "string") {
+      continue;
+    }
+    if (child.tagName === tagname) {
+      return child;
+    }
+    const subElement = getFirstElementByTagName(child, tagname);
+    if (subElement !== null) {
+      return subElement;
+    }
+  }
+  return null;
 }
 
-export { filter, getElementById, getElementsByClassName, parseXml, toContentString };
+export {
+  filter,
+  parseXml,
+  toContentString,
+  getFirstElementByTagName,
+  getElementsByTagName,
+};

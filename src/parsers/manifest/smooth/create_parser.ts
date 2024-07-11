@@ -25,6 +25,7 @@ import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
+import type { ITNode } from "../../../utils/xml-parser";
 import { createBox } from "../../containers/isobmff";
 import type {
   IContentProtectionKID,
@@ -45,7 +46,7 @@ import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
 interface IAdaptationParserArguments {
-  root: Element;
+  root: ITNode;
   baseUrl: string;
   timescale: number;
   protections: IContentProtectionSmooth[];
@@ -109,7 +110,7 @@ interface ISmoothParsedQualityLevel {
 function createSmoothStreamingParser(
   parserOptions: IHSSParserConfiguration = {},
 ): (
-  manifest: Document,
+  manifest: Array<ITNode | string>,
   url?: string | undefined,
   manifestReceivedTime?: number | undefined,
 ) => IParsedManifest {
@@ -129,12 +130,12 @@ function createSmoothStreamingParser(
       : undefined;
 
   /**
-   * @param {Element} q
+   * @param {Object} q
    * @param {string} streamType
    * @return {Object}
    */
   function parseQualityLevel(
-    q: Element,
+    q: ITNode,
     streamType: string,
   ): ISmoothParsedQualityLevel | null {
     const customAttributes = reduceChildren<string[]>(
@@ -146,9 +147,9 @@ function createSmoothStreamingParser(
               qNode,
               (cAttrs, cName, cNode) => {
                 if (cName === "Attribute") {
-                  const name = cNode.getAttribute("Name");
-                  const value = cNode.getAttribute("Value");
-                  if (name !== null && value !== null) {
+                  const name = cNode.attributes.Name;
+                  const value = cNode.attributes.Value;
+                  if (!isNullOrUndefined(name) && !isNullOrUndefined(value)) {
                     cAttrs.push(name + "=" + value);
                   }
                 }
@@ -168,7 +169,7 @@ function createSmoothStreamingParser(
      * @returns {string|undefined}
      */
     function getAttribute(name: string): string | undefined {
-      const attr = q.getAttribute(name);
+      const attr = q.attributes[name];
       return attr === null ? undefined : attr;
     }
 
@@ -283,13 +284,13 @@ function createSmoothStreamingParser(
       manifestReceivedTime,
       isLive,
     } = args;
-    const timescaleAttr = root.getAttribute("Timescale");
+    const timescaleAttr = root.attributes.Timescale ?? null;
     let _timescale = timescaleAttr === null ? timescale : +timescaleAttr;
     if (isNaN(_timescale)) {
       _timescale = timescale;
     }
 
-    const typeAttribute = root.getAttribute("Type");
+    const typeAttribute = root.attributes.Type ?? null;
     if (typeAttribute === null) {
       throw new Error("StreamIndex without type.");
     }
@@ -298,9 +299,9 @@ function createSmoothStreamingParser(
     }
     const adaptationType = typeAttribute as IAdaptationType;
 
-    const subType = root.getAttribute("Subtype");
-    const language = root.getAttribute("Language");
-    const UrlAttr = root.getAttribute("Url");
+    const subType = root.attributes.Subtype ?? null;
+    const language = root.attributes.Language ?? null;
+    const UrlAttr = root.attributes.Url ?? null;
     const UrlPathWithTokens = UrlAttr === null ? "" : UrlAttr;
     if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
       assert(UrlPathWithTokens !== "");
@@ -308,7 +309,7 @@ function createSmoothStreamingParser(
 
     const { qualityLevels, cNodes } = reduceChildren<{
       qualityLevels: ISmoothParsedQualityLevel[];
-      cNodes: Element[];
+      cNodes: Array<ITNode | string>;
     }>(
       root,
       (res, _name, node) => {
@@ -454,30 +455,34 @@ function createSmoothStreamingParser(
   }
 
   function parseFromDocument(
-    doc: Document,
-    url?: string,
-    manifestReceivedTime?: number,
+    doc: Array<ITNode | string>,
+    url?: string | undefined,
+    manifestReceivedTime?: number | undefined,
   ): IParsedManifest {
     let baseUrl: string = "";
     if (url !== undefined) {
       const filenameIdx = getFilenameIndexInUrl(url);
       baseUrl = url.substring(0, filenameIdx);
     }
-    const root = doc.documentElement;
-    if (isNullOrUndefined(root) || root.nodeName !== "SmoothStreamingMedia") {
+    const root = doc[0];
+    if (
+      isNullOrUndefined(root) ||
+      typeof root === "string" ||
+      root.tagName !== "SmoothStreamingMedia"
+    ) {
       throw new Error("document root should be SmoothStreamingMedia");
     }
-    const majorVersionAttr = root.getAttribute("MajorVersion");
-    const minorVersionAttr = root.getAttribute("MinorVersion");
+    const majorVersionAttr = root.attributes.MajorVersion;
+    const minorVersionAttr = root.attributes.MinorVersion;
     if (
-      majorVersionAttr === null ||
-      minorVersionAttr === null ||
+      isNullOrUndefined(majorVersionAttr) ||
+      isNullOrUndefined(minorVersionAttr) ||
       !/^[2]-[0-2]$/.test(majorVersionAttr + "-" + minorVersionAttr)
     ) {
       throw new Error("Version should be 2.0, 2.1 or 2.2");
     }
 
-    const timescaleAttr = root.getAttribute("Timescale");
+    const timescaleAttr = root.attributes.Timescale;
     let timescale = !isNonEmptyString(timescaleAttr) ? 10000000 : +timescaleAttr;
     if (isNaN(timescale)) {
       timescale = 10000000;
@@ -485,7 +490,7 @@ function createSmoothStreamingParser(
 
     const { protections, adaptationNodes } = reduceChildren<{
       protections: IContentProtectionSmooth[];
-      adaptationNodes: Element[];
+      adaptationNodes: Array<ITNode | string>;
     }>(
       root,
       (res, name, node) => {
@@ -508,13 +513,13 @@ function createSmoothStreamingParser(
 
     const initialAdaptations: IParsedAdaptations = {};
 
-    const isLive = parseBoolean(root.getAttribute("IsLive"));
+    const isLive = parseBoolean(root.attributes.IsLive);
 
     let timeShiftBufferDepth: number | undefined;
     if (isLive) {
-      const dvrWindowLength = root.getAttribute("DVRWindowLength");
+      const dvrWindowLength = root.attributes.DVRWindowLength;
       if (
-        dvrWindowLength !== null &&
+        !isNullOrUndefined(dvrWindowLength) &&
         !isNaN(+dvrWindowLength) &&
         +dvrWindowLength !== 0
       ) {
@@ -523,7 +528,10 @@ function createSmoothStreamingParser(
     }
 
     const adaptations: IParsedAdaptations = adaptationNodes.reduce(
-      (acc: IParsedAdaptations, node: Element) => {
+      (acc: IParsedAdaptations, node: ITNode | string) => {
+        if (typeof node === "string") {
+          return acc;
+        }
         const adaptation = parseAdaptation({
           root: node,
           baseUrl,
@@ -623,9 +631,9 @@ function createSmoothStreamingParser(
       }
     }
 
-    const manifestDuration = root.getAttribute("Duration");
+    const manifestDuration = root.attributes.Duration;
     const duration =
-      manifestDuration !== null && +manifestDuration !== 0
+      !isNullOrUndefined(manifestDuration) && +manifestDuration !== 0
         ? +manifestDuration / timescale
         : undefined;
 

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import arrayFind from "../../../utils/array_find";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
+import type { ITNode } from "../../../utils/xml-parser";
 
 interface IHSSManifestSegment {
   start: number;
@@ -26,11 +28,16 @@ interface IHSSManifestSegment {
  * Parse C nodes to build index timeline.
  * @param {Element} nodes
  */
-export default function parseCNodes(nodes: Element[]): IHSSManifestSegment[] {
+export default function parseCNodes(
+  nodes: Array<ITNode | string>,
+): IHSSManifestSegment[] {
   return nodes.reduce<IHSSManifestSegment[]>((timeline, node, i) => {
-    const dAttr = node.getAttribute("d");
-    const tAttr = node.getAttribute("t");
-    const rAttr = node.getAttribute("r");
+    if (typeof node === "string") {
+      return timeline;
+    }
+    const dAttr = node.attributes.d ?? null;
+    const tAttr = node.attributes.t ?? null;
+    const rAttr = node.attributes.r ?? null;
 
     const repeatCount = rAttr !== null ? +rAttr - 1 : 0;
     let start = tAttr !== null ? +tAttr : undefined;
@@ -50,9 +57,11 @@ export default function parseCNodes(nodes: Element[]): IHSSManifestSegment[] {
       }
     }
     if (duration === undefined || isNaN(duration)) {
-      const nextNode = nodes[i + 1];
+      const nextNode = arrayFind(nodes, (n): n is ITNode => typeof n !== "string") as
+        | ITNode
+        | undefined;
       if (nextNode !== undefined) {
-        const nextTAttr = nextNode.getAttribute("t");
+        const nextTAttr = nextNode.attributes.t ?? null;
         const nextStart = isNonEmptyString(nextTAttr) ? +nextTAttr : null;
         if (nextStart === null) {
           throw new Error("Can't build index timeline from Smooth Manifest.");
