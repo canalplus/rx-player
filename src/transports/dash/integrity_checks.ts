@@ -106,52 +106,36 @@ export function addManifestIntegrityChecks(
     function throwOnIntegrityError(data: ILoadedManifestFormat): void {
       if (typeof data === "string") {
         let currOffset = data.length - 1;
-        while (isCharXmlWhiteSpace(data[currOffset])) {
-          currOffset--;
-        }
-        if (data[currOffset] !== ">") {
-          throw new OtherError("INTEGRITY_ERROR", "MPD does not end with </MPD>");
-        }
-        currOffset--;
-        while (isCharXmlWhiteSpace(data[currOffset])) {
-          currOffset--;
-        }
-        if (data.substring(currOffset - 2, currOffset + 1) !== "MPD") {
-          throw new OtherError("INTEGRITY_ERROR", "MPD does not end with </MPD>");
-        }
-        currOffset -= 3;
-        while (isCharXmlWhiteSpace(data[currOffset])) {
-          currOffset--;
-        }
-        if (data.substring(currOffset - 1, currOffset + 1) !== "</") {
-          throw new OtherError("INTEGRITY_ERROR", "MPD does not end with </MPD>");
+        const expectedStrings = ["</", "MPD", ">"];
+        for (let i = expectedStrings.length - 1; i >= 0; i--) {
+          const currentExpectedStr = expectedStrings[i];
+          while (isCharXmlWhiteSpace(data[currOffset])) {
+            currOffset--;
+          }
+          for (let j = currentExpectedStr.length - 1; j >= 0; j--) {
+            if (data[currOffset] !== currentExpectedStr[j]) {
+              throw new Error("INTEGRITY_ERROR MPD does not end with </MPD>");
+            } else {
+              currOffset--;
+            }
+          }
         }
       } else if (data instanceof ArrayBuffer) {
         let currOffset = data.byteLength - 1;
         const dv = new DataView(data);
-        while (isUtf8XmlWhiteSpace(dv.getUint8(currOffset))) {
-          currOffset--;
-        }
-        if (dv.getUint8(currOffset) !== 0x3e) {
-          throw new OtherError("INTEGRITY_ERROR", "MPD does not end with </MPD>");
-        }
-        currOffset--;
-        while (isUtf8XmlWhiteSpace(dv.getUint8(currOffset))) {
-          currOffset--;
-        }
-        if (
-          dv.getUint8(currOffset - 2) !== 0x4d ||
-          dv.getUint8(currOffset - 1) !== 0x50 ||
-          dv.getUint8(currOffset) !== 0x44
-        ) {
-          throw new OtherError("INTEGRITY_ERROR", "MPD does not end with </MPD>");
-        }
-        currOffset -= 3;
-        while (isUtf8XmlWhiteSpace(dv.getUint8(currOffset))) {
-          currOffset--;
-        }
-        if (dv.getUint8(currOffset - 1) !== 0x3c || dv.getUint8(currOffset) !== 0x2f) {
-          throw new OtherError("INTEGRITY_ERROR", "MPD does not end with </MPD>");
+        const expectedCharGroups = [[0x3c, 0x2f], [0x4d, 0x50, 0x44], [0x3e]];
+        for (let i = expectedCharGroups.length - 1; i >= 0; i--) {
+          const currentExpectedCharGroup = expectedCharGroups[i];
+          while (isUtf8XmlWhiteSpace(dv.getUint8(currOffset))) {
+            currOffset--;
+          }
+          for (let j = currentExpectedCharGroup.length - 1; j >= 0; j--) {
+            if (dv.getUint8(currOffset) !== currentExpectedCharGroup[j]) {
+              throw new Error("INTEGRITY_ERROR MPD does not end with </MPD>");
+            } else {
+              currOffset--;
+            }
+          }
         }
       } else if (
         !isNullOrUndefined(globalScope.Document) &&
