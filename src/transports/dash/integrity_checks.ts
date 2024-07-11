@@ -27,7 +27,7 @@ export function addSegmentIntegrityChecks<T>(
         ...callbacks,
         onNewChunk(data) {
           try {
-            trowOnIntegrityError(data);
+            throwOnIntegrityError(data);
             callbacks.onNewChunk(data);
           } catch (err) {
             // Do not reject with a `CancellationError` after cancelling the request
@@ -48,7 +48,7 @@ export function addSegmentIntegrityChecks<T>(
           }
           if (info.resultType === "segment-loaded") {
             try {
-              trowOnIntegrityError(info.resultData.responseData);
+              throwOnIntegrityError(info.resultData.responseData);
             } catch (err) {
               reject(err);
               return;
@@ -72,7 +72,7 @@ export function addSegmentIntegrityChecks<T>(
      * If the data's seems to be corrupted, throws an `INTEGRITY_ERROR` error.
      * @param {*} data
      */
-    function trowOnIntegrityError(data: T): void {
+    function throwOnIntegrityError(data: T): void {
       if (
         (!(data instanceof ArrayBuffer) && !(data instanceof Uint8Array)) ||
         inferSegmentContainer(context.type, context.mimeType) !== "mp4"
@@ -96,14 +96,14 @@ export function addManifestIntegrityChecks(
 ): ITransportManifestPipeline["loadManifest"] {
   return async (url, options, initialCancelSignal) => {
     const res = await manifestLoader(url, options, initialCancelSignal);
-    trowOnIntegrityError(res.responseData);
+    throwOnIntegrityError(res.responseData);
     return res;
 
     /**
      * If the data's seems to be corrupted, throws an `INTEGRITY_ERROR` error.
      * @param {*} data
      */
-    function trowOnIntegrityError(data: ILoadedManifestFormat): void {
+    function throwOnIntegrityError(data: ILoadedManifestFormat): void {
       if (typeof data === "string") {
         let currOffset = data.length - 1;
         while (isCharXmlWhiteSpace(data[currOffset])) {
