@@ -200,6 +200,7 @@ export interface IMediaElementEventMap {
   leavepictureinpicture: Event;
   loadeddata: Event;
   loadedmetadata: Event;
+  needkey: MediaEncryptedEvent;
   pause: Event;
   play: Event;
   playing: Event;
@@ -211,6 +212,7 @@ export interface IMediaElementEventMap {
   visibilitychange: Event;
   volumechange: Event;
   waiting: Event;
+  webkitneedkey: MediaEncryptedEvent;
 }
 
 /**
