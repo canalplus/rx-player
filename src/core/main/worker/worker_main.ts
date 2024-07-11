@@ -12,7 +12,7 @@ import type {
   IReferenceUpdateMessage,
 } from "../../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
-import DashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
+import DashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import { ObservationPosition } from "../../../playback_observer";
 import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
@@ -74,7 +74,7 @@ export default function initializeWorkerMain() {
   // TODO allow worker-side feature-switching? Not sure how
   const dashWasmParser = new DashWasmParser();
   features.dashParsers.wasm = dashWasmParser;
-  features.dashParsers.fastJs = DashFastJsParser;
+  features.dashParsers.js = DashJsParser;
   features.transports.dash = createDashPipelines;
 
   /**

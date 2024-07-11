@@ -41,9 +41,7 @@ function refreshScheduledEventsList(
       }
 
       let element: Element;
-      if (data.value.element !== undefined) {
-        element = data.value.element;
-      } else if (data.value.xmlData !== undefined) {
+      if (data.value.xmlData !== undefined) {
         // First, we will create a parent Element defining all namespaces that
         // should have been encountered until know.
         // This is needed because the DOMParser API might throw when

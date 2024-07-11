@@ -100,9 +100,8 @@ export interface IMPDAttributes {
   /**
    * XML namespaces linked to the `<MPD>` element.
    *
-   * This property is only needed when the EventStream's `<Event>` elements are
-   * not parsed through the browser's DOMParser API, and thus might depend on
-   * parent namespaces to be parsed correctly.
+   * This property is needed when the EventStream's `<Event>` elements depend
+   * on parent namespaces to be parsed / reconstructed correctly.
    */
   namespaces?: Array<{ key: string; value: string }>;
 }
@@ -174,9 +173,8 @@ export interface IPeriodAttributes {
   /**
    * XML namespaces linked to the `<Period>` element.
    *
-   * This property is only needed when the EventStream's `<Event>` elements are
-   * not parsed through the browser's DOMParser API, and thus might depend on
-   * parent namespaces to be parsed correctly.
+   * This property is needed when the EventStream's `<Event>` elements depend
+   * on parent namespaces to be parsed / reconstructed correctly.
    */
   namespaces?: Array<{ key: string; value: string }>;
 }
@@ -411,9 +409,8 @@ export interface IEventStreamAttributes {
   /**
    * XML namespaces linked to the `<EventStream>` element.
    *
-   * This property is only needed when the EventStream's `<Event>` elements are
-   * not parsed through the browser's DOMParser API, and thus might depend on
-   * parent namespaces to be parsed correctly.
+   * This property is needed when the EventStream's `<Event>` elements depend
+   * on parent namespaces to be parsed / reconstructed correctly.
    */
   namespaces?: Array<{ key: string; value: string }> | undefined;
 }
@@ -434,7 +431,7 @@ export interface IEventStreamEventIntermediateRepresentation {
    *   - Either as the Element's UTF-8 textual representation.
    *   - Either as the Element's string representation.
    */
-  eventStreamData?: Element | ArrayBuffer | string;
+  eventStreamData?: ArrayBuffer | string;
 }
 
-export type ITimelineParser = () => ITNode[] | HTMLCollection;
+export type ITimelineParser = () => ITNode[];
