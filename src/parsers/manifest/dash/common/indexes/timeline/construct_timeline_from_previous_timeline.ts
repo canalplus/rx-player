@@ -21,10 +21,10 @@ import constructTimelineFromElements from "./construct_timeline_from_elements";
 import convertElementToIndexSegment from "./convert_element_to_index_segment";
 import findFirstCommonStartTime from "./find_first_common_start_time";
 import type { IParsedS } from "./parse_s_element";
-import { parseSElementNode, parseSHTMLElement } from "./parse_s_element";
+import { parseSElementNode } from "./parse_s_element";
 
 export default function constructTimelineFromPreviousTimeline(
-  newElements: ITNode[] | HTMLCollection,
+  newElements: ITNode[],
   prevTimeline: IIndexSegment[],
 ): IIndexSegment[] {
   // Find first index in both timeline where a common segment is found.
@@ -65,9 +65,7 @@ export default function constructTimelineFromPreviousTimeline(
   }
 
   const prevLastElement = newTimeline[newTimeline.length - 1];
-  const newCommonElt = Array.isArray(newElements)
-    ? parseSElementNode(newElements[lastCommonEltNewEltsIdx])
-    : parseSHTMLElement(newElements[lastCommonEltNewEltsIdx]);
+  const newCommonElt = parseSElementNode(newElements[lastCommonEltNewEltsIdx]);
   const newRepeatCountOffseted =
     (newCommonElt.repeatCount ?? 0) - repeatNumberInNewElements;
   if (
@@ -90,14 +88,8 @@ export default function constructTimelineFromPreviousTimeline(
 
   const newEltsToPush: IIndexSegment[] = [];
   const items: IParsedS[] = [];
-  if (Array.isArray(newElements)) {
-    for (let i = lastCommonEltNewEltsIdx + 1; i < newElements.length; i++) {
-      items.push(parseSElementNode(newElements[i]));
-    }
-  } else {
-    for (let i = lastCommonEltNewEltsIdx + 1; i < newElements.length; i++) {
-      items.push(parseSHTMLElement(newElements[i]));
-    }
+  for (let i = lastCommonEltNewEltsIdx + 1; i < newElements.length; i++) {
+    items.push(parseSElementNode(newElements[i]));
   }
   for (let i = 0; i < items.length; i++) {
     const item = items[i];

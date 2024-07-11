@@ -150,7 +150,7 @@ export interface ITimelineIndexIndexArgument {
    */
   presentationTimeOffset?: number | undefined;
 
-  timelineParser?: (() => ITNode[] | HTMLCollection) | undefined;
+  timelineParser?: (() => ITNode[]) | undefined;
   timeline?: ISegmentTimelineElement[] | undefined;
 }
 
@@ -248,7 +248,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Lazily get the S elements from this timeline.
    * `null` once this call has been done once, to free memory.
    */
-  private _parseTimeline: (() => ITNode[] | HTMLCollection) | null;
+  private _parseTimeline: (() => ITNode[]) | null;
 
   /**
    * This variable represents the same `TimelineRepresentationIndex` at the

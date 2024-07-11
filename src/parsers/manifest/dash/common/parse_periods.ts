@@ -19,7 +19,6 @@ import type { IManifest } from "../../../../manifest";
 import flatMap from "../../../../utils/flat_map";
 import idGenerator from "../../../../utils/id_generator";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import isWorker from "../../../../utils/is_worker";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import objectValues from "../../../../utils/object_values";
 import { utf8ToStr } from "../../../../utils/string_parsing";
@@ -313,23 +312,19 @@ function generateStreamEvents(
 
         let element;
         let xmlData;
-        if (!isWorker && eventIr.eventStreamData instanceof Element) {
-          element = eventIr.eventStreamData;
-        } else {
-          try {
-            xmlData = {
-              namespaces: allNamespaces,
-              data:
-                typeof eventIr.eventStreamData === "string"
-                  ? eventIr.eventStreamData
-                  : utf8ToStr(new Uint8Array(eventIr.eventStreamData as ArrayBuffer)),
-            };
-          } catch (err) {
-            log.error(
-              "DASH: Error while parsing event-stream:",
-              err instanceof Error ? err.message : "Unknown error",
-            );
-          }
+        try {
+          xmlData = {
+            namespaces: allNamespaces,
+            data:
+              typeof eventIr.eventStreamData === "string"
+                ? eventIr.eventStreamData
+                : utf8ToStr(new Uint8Array(eventIr.eventStreamData)),
+          };
+        } catch (err) {
+          log.error(
+            "DASH: Error while parsing event-stream:",
+            err instanceof Error ? err.message : "Unknown error",
+          );
         }
         res.push({
           start,
