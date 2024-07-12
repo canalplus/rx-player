@@ -223,13 +223,21 @@ export default class Adaptation implements IAdaptationMetadata {
    * @param {Array.<Object>} supportList
    */
   refreshCodecSupport(): void {
+    let isAdaptationSupported: boolean | undefined = undefined;
     for (const representation of this.representations) {
       representation.refreshCodecSupport();
-      if (this.isSupported !== true && representation.isSupported === true) {
-        this.isSupported = true;
-      } else if (this.isSupported === undefined && representation.isSupported === false) {
-        this.isSupported = false;
+      if (representation.isSupported === true) {
+        isAdaptationSupported = true;
+      } else if (
+        isAdaptationSupported === undefined &&
+        representation.isSupported === false
+      ) {
+        isAdaptationSupported = false;
       }
+    }
+    if (isAdaptationSupported !== this.isSupported) {
+      // only update if support has changed
+      this.isSupported = isAdaptationSupported;
     }
   }
 

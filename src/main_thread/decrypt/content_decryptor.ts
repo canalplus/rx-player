@@ -374,7 +374,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
   /**
    * Returns the list of supported codecs with the keysystem configuration.
-   * @returns {ICodecSupportList}: The list of supported codecs.
+   * @returns {Array}: The list of supported codecs.
    */
   public getSupportedCodecs(): ICodecSupportList {
     return this._supportedCodecWhenEncrypted;
