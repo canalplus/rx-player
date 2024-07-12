@@ -263,15 +263,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
-          onCodecSupportUpdate: () => {
+          onCodecSupportUpdate: async () => {
             if (this._manifest === null) {
               return;
             }
-            const manifestMetadata = this._manifest.syncValue?.getMetadataSnapshot();
-            if (manifestMetadata === undefined) {
-              return;
-            }
-            this._manifest.syncValue?.refreshCodecSupport();
+            const manifest =
+              this._manifest.syncValue ?? (await this._manifest.getValueAsAsync());
+            manifest.refreshCodecSupport();
           },
         },
         initCanceller.signal,
