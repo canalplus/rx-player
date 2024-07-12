@@ -238,6 +238,7 @@ describe("API - parseLoadVideoOptions", () => {
     __priv_manifestUpdateUrl: undefined,
     __priv_patchLastSegmentInSidx: undefined,
     checkMediaSegmentIntegrity: undefined,
+    checkManifestIntegrity: undefined,
     defaultAudioTrackSwitchingMode: undefined,
     autoPlay: false,
     enableFastSwitching: true,

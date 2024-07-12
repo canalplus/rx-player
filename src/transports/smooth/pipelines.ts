@@ -57,7 +57,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
   const manifestLoaderOptions = {
     customManifestLoader: transportOptions.manifestLoader,
   };
-  const manifestLoader = generateManifestLoader(manifestLoaderOptions, "text");
+  const manifestLoader = generateManifestLoader(manifestLoaderOptions, "text", null);
 
   const manifestPipeline = {
     loadManifest: manifestLoader,

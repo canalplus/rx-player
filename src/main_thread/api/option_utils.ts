@@ -79,6 +79,7 @@ interface IParsedLoadVideoOptionsBase {
   defaultAudioTrackSwitchingMode: IAudioTrackSwitchingMode | undefined;
   onCodecSwitch: "continue" | "reload";
   checkMediaSegmentIntegrity?: boolean | undefined;
+  checkManifestIntegrity?: boolean | undefined;
   manifestLoader?: IManifestLoader | undefined;
   referenceDateTime?: number | undefined;
   representationFilter?: IRepresentationFilter | string | undefined;
@@ -438,6 +439,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     /* eslint-enable @typescript-eslint/no-unsafe-assignment */
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
+    checkManifestIntegrity: options.checkManifestIntegrity,
     autoPlay,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,

@@ -172,6 +172,9 @@ events and so on.
 - [`checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#checkmediasegmentintegrity):
   Enable supplementary checks to retry a request if a segment appears corrupted.
 
+- [`checkManifestIntegrity`](../api/Loading_a_Content.md#checkmanifestintegrity): Enable
+  supplementary checks to retry a request if a Manifest appears corrupted.
+
 - [`serverSyncInfos`](../api/Loading_a_Content.md#serversyncinfos): Provide time
   synchronization mechanism between the client and server.
 

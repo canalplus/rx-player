@@ -758,6 +758,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       startAt,
       transport,
       checkMediaSegmentIntegrity,
+      checkManifestIntegrity,
       manifestLoader,
       referenceDateTime,
       segmentLoader,
@@ -901,6 +902,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const transportPipelines = transportFn({
           lowLatencyMode,
           checkMediaSegmentIntegrity,
+          checkManifestIntegrity,
           manifestLoader,
           referenceDateTime,
           representationFilter,
@@ -942,6 +944,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const transportOptions = {
           lowLatencyMode,
           checkMediaSegmentIntegrity,
+          checkManifestIntegrity,
           referenceDateTime,
           serverSyncInfos,
           manifestLoader: undefined,

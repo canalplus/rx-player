@@ -281,7 +281,6 @@ const PlayerModule = declareModule(
             {
               mode: state.get("relyOnWorker") ? "auto" : "main",
               textTrackElement,
-              transportOptions: { checkMediaSegmentIntegrity: true },
             },
             arg,
           ) as ILoadVideoOptions,

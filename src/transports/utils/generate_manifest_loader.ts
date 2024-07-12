@@ -18,7 +18,11 @@ import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types"
 import { assertUnreachable } from "../../utils/assert";
 import request from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import type { IManifestLoaderOptions, IRequestedData } from "../types";
+import type {
+  IManifestLoaderOptions,
+  IRequestedData,
+  ITransportManifestPipeline,
+} from "../types";
 import addQueryString from "./add_query_string";
 import callCustomManifestLoader from "./call_custom_manifest_loader";
 
@@ -93,19 +97,22 @@ function generateRegularManifestLoader(
 /**
  * Generate a manifest loader for the application
  * @param {Function} [customManifestLoader]
+ * @param {string} preferredType
  * @returns {Function}
  */
 export default function generateManifestLoader(
   { customManifestLoader }: { customManifestLoader?: IManifestLoader | undefined },
   preferredType: "arraybuffer" | "text" | "document",
-): (
-  url: string | undefined,
-  loaderOptions: IManifestLoaderOptions,
-  cancelSignal: CancellationSignal,
-) => Promise<IRequestedData<ILoadedManifestFormat>> {
+  integrityCheck:
+    | ((
+        loader: ITransportManifestPipeline["loadManifest"],
+      ) => ITransportManifestPipeline["loadManifest"])
+    | null,
+): ITransportManifestPipeline["loadManifest"] {
   const regularManifestLoader = generateRegularManifestLoader(preferredType);
-  if (typeof customManifestLoader !== "function") {
-    return regularManifestLoader;
-  }
-  return callCustomManifestLoader(customManifestLoader, regularManifestLoader);
+  const actualLoader =
+    typeof customManifestLoader !== "function"
+      ? regularManifestLoader
+      : callCustomManifestLoader(customManifestLoader, regularManifestLoader);
+  return integrityCheck !== null ? integrityCheck(actualLoader) : actualLoader;
 }
