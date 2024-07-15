@@ -1066,6 +1066,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("manifestUpdate", (updates) =>
       this._priv_onManifestUpdate(contentInfos, updates),
     );
+
+    initializer.addEventListener("manifestCodecChanged", () =>
+      this._priv_onManifestCodecChanged(contentInfos),
+    );
     initializer.addEventListener("decipherabilityUpdate", (updates) =>
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
@@ -2557,6 +2561,22 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
+  private _priv_onManifestCodecChanged(contentInfos: IPublicApiContentInfos) {
+    if (contentInfos === null) {
+      return;
+    }
+
+    const tStore = contentInfos.tracksStore;
+    if (tStore === null) {
+      return;
+    }
+
+    if (contentInfos.manifest === null) {
+      return;
+    }
+    tStore.onManifestCodecUpdate();
+  }
+
   private _priv_onDecipherabilityUpdate(
     contentInfos: IPublicApiContentInfos,
     elts: IDecipherabilityStatusChangedElement[],
@@ -2564,7 +2584,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (contentInfos === null || contentInfos.manifest === null) {
       return;
     }
-
     if (!isNullOrUndefined(contentInfos?.tracksStore)) {
       contentInfos.tracksStore.onDecipherabilityUpdates();
     }

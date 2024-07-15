@@ -25,6 +25,7 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
+import type CodecSupportManager from "./codecSupportList";
 import Representation from "./representation";
 
 /**
@@ -97,12 +98,18 @@ export default class Adaptation implements IAdaptationMetadata {
   public readonly trickModeTracks?: Adaptation[];
 
   /**
+   * Stores the information if a codec is supported or not.
+   */
+  public cachedCodecSupport: CodecSupportManager;
+
+  /**
    * @constructor
    * @param {Object} parsedAdaptation
    * @param {Object|undefined} [options]
    */
   constructor(
     parsedAdaptation: IParsedAdaptation,
+    cachedCodecSupport: CodecSupportManager,
     options: {
       representationFilter?: IRepresentationFilter | undefined;
       isManuallyAdded?: boolean | undefined;
@@ -141,15 +148,23 @@ export default class Adaptation implements IAdaptationMetadata {
       this.label = parsedAdaptation.label;
     }
 
+    this.cachedCodecSupport = cachedCodecSupport;
+
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
-      this.trickModeTracks = trickModeTracks.map((track) => new Adaptation(track));
+      this.trickModeTracks = trickModeTracks.map(
+        (track) => new Adaptation(track, cachedCodecSupport),
+      );
     }
 
     const argsRepresentations = parsedAdaptation.representations;
     const representations: Representation[] = [];
     let isSupported: boolean | undefined;
     for (let i = 0; i < argsRepresentations.length; i++) {
-      const representation = new Representation(argsRepresentations[i], this.type);
+      const representation = new Representation(
+        argsRepresentations[i],
+        this.type,
+        cachedCodecSupport,
+      );
       let shouldAdd = true;
       if (!isNullOrUndefined(representationFilter)) {
         const reprObject: IRepresentationFilterRepresentation = {
@@ -222,10 +237,11 @@ export default class Adaptation implements IAdaptationMetadata {
    *
    * @param {Array.<Object>} supportList
    */
-  refreshCodecSupport(): void {
-    let isAdaptationSupported: boolean | undefined = undefined;
+  refreshCodecSupport(cachedCodecSupport: CodecSupportManager): void {
+    this.cachedCodecSupport = cachedCodecSupport;
+    let isAdaptationSupported: boolean | undefined;
     for (const representation of this.representations) {
-      representation.refreshCodecSupport();
+      representation.refreshCodecSupport(cachedCodecSupport);
       if (representation.isSupported === true) {
         isAdaptationSupported = true;
       } else if (

@@ -17,7 +17,6 @@
 import features from "../../features";
 import log from "../../log";
 import type { IRepresentationMetadata } from "../../manifest";
-import cdmCodecSupportProber from "../../mse/cdm_codec_support_prober";
 import type {
   ICdnMetadata,
   IContentProtections,
@@ -26,6 +25,7 @@ import type {
 import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
+import type CodecSupportManager from "./codecSupportList";
 import type { IRepresentationIndex } from "./representation_index";
 
 const generateRepresentationUniqueId = idGenerator();
@@ -110,7 +110,11 @@ class Representation implements IRepresentationMetadata {
    * @param {Object} args
    * @param {string} trackType
    */
-  constructor(args: IParsedRepresentation, trackType: ITrackType) {
+  constructor(
+    args: IParsedRepresentation,
+    trackType: ITrackType,
+    cachedCodecSupport: CodecSupportManager,
+  ) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
@@ -148,25 +152,22 @@ class Representation implements IRepresentationMetadata {
     this.cdnMetadata = args.cdnMetadata;
     this.index = args.index;
 
+    const isEncrypted = this.contentProtections !== undefined;
+
     if (trackType === "audio" || trackType === "video") {
       if (features.codecSupportProber !== null) {
         // Supplemental codecs are defined as backwards-compatible codecs enhancing
         // the experience of a base layer codec
         if (args.supplementalCodecs !== undefined) {
-          const isSupplementaryCodecSupported = features.codecSupportProber.isSupported(
+          const isSupplementaryCodecSupported = cachedCodecSupport.isSupported(
             this.mimeType ?? "",
             args.supplementalCodecs ?? "",
+            isEncrypted,
           );
 
           if (isSupplementaryCodecSupported !== false) {
             this.codecs = [args.supplementalCodecs];
-            if (isSupplementaryCodecSupported === true) {
-              const isSupportedByCDM = cdmCodecSupportProber.isSupported(
-                this.mimeType ?? "",
-                args.codecs ?? "",
-              );
-              this.isSupported = isSupportedByCDM;
-            }
+            this.isSupported = isSupplementaryCodecSupported;
           }
         }
         if (this.isSupported !== true) {
@@ -177,20 +178,11 @@ class Representation implements IRepresentationMetadata {
             this.codecs.push(args.codecs ?? "");
           } else {
             this.codecs = args.codecs === undefined ? [] : [args.codecs];
-            const isSupportedByMSE = isCodecSupportedByMSE(
+            this.isSupported = cachedCodecSupport.isSupported(
               this.mimeType ?? "",
               args.codecs ?? "",
+              isEncrypted,
             );
-
-            if (isSupportedByMSE !== true) {
-              this.isSupported = isSupportedByMSE;
-            } else {
-              const isSupportedByCDM = isCodecSupportedByCDM(
-                this.mimeType ?? "",
-                args.codecs ?? "",
-              );
-              this.isSupported = isSupportedByCDM;
-            }
           }
         }
       } else {
@@ -219,9 +211,9 @@ class Representation implements IRepresentationMetadata {
    * If the right mimetype+codec combination is found in the provided object,
    * this `Representation`'s `isSupported` property will be updated accordingly.
    *
-   * @param {Array.<Object>} supportList
+   * @param {Array.<Object>} supportList;
    */
-  public refreshCodecSupport() {
+  public refreshCodecSupport(cachedCodecSupport: CodecSupportManager) {
     if (this.trackType === "text") {
       this.isSupported = true;
       return;
@@ -235,17 +227,7 @@ class Representation implements IRepresentationMetadata {
       codecs = [""];
     }
     for (const codec of codecs) {
-      cdmCodecSupportProber.isSupported(mimeType, codec);
-      const isSupportedByMSE = isCodecSupportedByMSE(mimeType, codec);
-      // if MSE supports the codec, and the content is encrypted,
-      // check further if the CDM also supports the codec.
-      if (isSupportedByMSE === true && isEncrypted) {
-        const isSupportedByCDM = isCodecSupportedByCDM(mimeType, codec);
-        isSupported = isSupportedByMSE && isSupportedByCDM;
-      } else {
-        isSupported = isSupportedByMSE;
-      }
-
+      isSupported = cachedCodecSupport.isSupported(mimeType, codec, isEncrypted);
       if (isSupported === true) {
         this.codecs = [codec];
         break;
@@ -503,36 +485,5 @@ export type ICodecSupportList = Array<{
   mimeType: string;
   result: boolean;
 }>;
-
-/**
- * Check if the codec is supported by the CDM (the Content Decryption Module).
- * There can be a disparity between what codecs are supported by MSE and the CDM.
- *
- * Ex: Chrome with Widevine is able to create MediaSource for codec HEVC but
- * Widevine L3 is not able to decipher HEVC because it requires hardware DRM.
- * As a result Chrome is not able to play HEVC when it's encrypted, but it can
- * be played if it's unencrypted.
- * @param {string} mimeType - The mimeType of the codec to test.
- * @param {string} codec - The codec to test.
- * @returns { boolean } True if the codec is supported by the CDM.
- */
-function isCodecSupportedByCDM(mimeType: string, codec: string): boolean {
-  return cdmCodecSupportProber.isSupported(mimeType, codec);
-}
-
-/**
- * Check if the codec is supported by MSE (Media Source Extension).
- * If the codec is supported, the browser should be able to create
- * a media source with the given codec.
- * @param {string} mimeType - The mimeType of the codec to test.
- * @param {string} codec - The codec to test.
- * @returns { boolean } True if the codec is supported by MSE.
- */
-function isCodecSupportedByMSE(mimeType: string, codec: string): boolean | undefined {
-  if (features.codecSupportProber === null) {
-    return true;
-  }
-  return features.codecSupportProber.isSupported(mimeType, codec);
-}
 
 export default Representation;

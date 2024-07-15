@@ -21,6 +21,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
 import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
 import Adaptation from "./adaptation";
+import type CodecSupportManager from "./codecSupportList";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
@@ -56,6 +57,11 @@ export default class Period implements IPeriodMetadata {
   public streamEvents: IManifestStreamEvent[];
 
   /**
+   * Stores the information if a codec is supported or not.
+   */
+  public cachedCodecSupport: CodecSupportManager;
+
+  /**
    * @constructor
    * @param {Object} args
    * @param {Array.<Object>} unsupportedAdaptations - Array on which
@@ -67,9 +73,12 @@ export default class Period implements IPeriodMetadata {
   constructor(
     args: IParsedPeriod,
     unsupportedAdaptations: Adaptation[],
+    cachedCodecSupport: CodecSupportManager,
+
     representationFilter?: IRepresentationFilter | undefined,
   ) {
     this.id = args.id;
+    this.cachedCodecSupport = cachedCodecSupport;
     this.adaptations = (
       Object.keys(args.adaptations) as ITrackType[]
     ).reduce<IManifestAdaptations>((acc, type) => {
@@ -79,7 +88,7 @@ export default class Period implements IPeriodMetadata {
       }
       const filteredAdaptations = adaptationsForType
         .map((adaptation): Adaptation => {
-          const newAdaptation = new Adaptation(adaptation, {
+          const newAdaptation = new Adaptation(adaptation, cachedCodecSupport, {
             representationFilter,
           });
           if (
@@ -143,7 +152,11 @@ export default class Period implements IPeriodMetadata {
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
    */
-  refreshCodecSupport(unsupportedAdaptations: Adaptation[]) {
+  refreshCodecSupport(
+    unsupportedAdaptations: Adaptation[],
+    cachedCodecSupport: CodecSupportManager,
+  ) {
+    this.cachedCodecSupport = cachedCodecSupport;
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
       if (adaptationsForType === undefined) {
@@ -152,7 +165,7 @@ export default class Period implements IPeriodMetadata {
       let hasSupportedAdaptations: boolean | undefined = false;
       for (const adaptation of adaptationsForType) {
         const wasSupported = adaptation.isSupported;
-        adaptation.refreshCodecSupport();
+        adaptation.refreshCodecSupport(cachedCodecSupport);
         if (wasSupported !== false && adaptation.isSupported === false) {
           unsupportedAdaptations.push(adaptation);
         }
