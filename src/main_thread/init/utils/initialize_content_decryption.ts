@@ -1,6 +1,7 @@
 import { EncryptedMediaError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
+import type { ICodecSupportList } from "../../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../../public_types";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
@@ -46,7 +47,7 @@ export default function initializeContentDecryption(
       blacklistedKeyIds: Uint8Array[];
       delistedKeyIds: Uint8Array[];
     }) => void;
-    onCodecSupportUpdate?: () => void;
+    onCodecSupportUpdate?: (arg: ICodecSupportList) => void;
   },
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<IDrmInitializationStatus> {

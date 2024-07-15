@@ -129,6 +129,99 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   /**
+   * Callback executed when the manifest trigger an event to indicates the support
+   * of codecs may have changed. The TracksStore will select a new audio track if there is no
+   * current track.
+   * @returns void
+   */
+  public onManifestCodecUpdate(): void {
+    for (const trackStorePeriod of this._storedPeriodInfo) {
+      if (trackStorePeriod.audio.storedSettings === null) {
+        // No audio is set. We need to set a new default audio
+        const audioAdaptations = getSupportedAdaptations(
+          trackStorePeriod.period,
+          "audio",
+        );
+        if (audioAdaptations.length > 0) {
+          const storedSettings = {
+            adaptation: audioAdaptations[0],
+            switchingMode: this._defaultAudioTrackSwitchingMode,
+            lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+              null,
+            ),
+          };
+          trackStorePeriod.audio.storedSettings = storedSettings;
+          this.trigger("trackUpdate", {
+            period: toExposedPeriod(trackStorePeriod.period),
+            trackType: "audio",
+            reason: "missing",
+          });
+          // The previous event trigger could have had side-effects, so we
+          // re-check if we're still mostly in the same state
+          if (this._isDisposed) {
+            return; // Someone disposed the `TracksStore` on the previous side-effect
+          }
+          const newPeriodItem = getPeriodItem(
+            this._storedPeriodInfo,
+            trackStorePeriod.period.id,
+          );
+          if (
+            newPeriodItem !== undefined &&
+            newPeriodItem.audio.storedSettings === storedSettings
+          ) {
+            newPeriodItem.audio.dispatcher?.updateTrack(storedSettings);
+          }
+        }
+      }
+
+      if (trackStorePeriod.video.storedSettings === null) {
+        // No video is set. We need to set a new default audio
+        const videoAdaptations = getSupportedAdaptations(
+          trackStorePeriod.period,
+          "video",
+        );
+        if (videoAdaptations.length > 0) {
+          const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
+          const adaptationBase = videoAdaptations[0];
+          const adaptation = getRightVideoTrack(
+            adaptationBase,
+            this._isTrickModeTrackEnabled,
+          );
+          const storedSettings = {
+            adaptationBase,
+            adaptation,
+            switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
+            lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+              null,
+            ),
+          };
+          trackStorePeriod.video.storedSettings = storedSettings;
+          this.trigger("trackUpdate", {
+            period: toExposedPeriod(trackStorePeriod.period),
+            trackType: "video",
+            reason: "missing",
+          });
+          // The previous event trigger could have had side-effects, so we
+          // re-check if we're still mostly in the same state
+          if (this._isDisposed) {
+            return; // Someone disposed the `TracksStore` on the previous side-effect
+          }
+          const newPeriodItem = getPeriodItem(
+            this._storedPeriodInfo,
+            trackStorePeriod.period.id,
+          );
+          if (
+            newPeriodItem !== undefined &&
+            newPeriodItem.audio.storedSettings === storedSettings
+          ) {
+            newPeriodItem.audio.dispatcher?.updateTrack(storedSettings);
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Update the list of Periods handled by the TracksStore and make a
    * track choice decision for each of them.
    * @param {Object} manifest - The new Manifest object

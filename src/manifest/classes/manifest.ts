@@ -38,6 +38,8 @@ import {
   toTaggedTrack,
 } from "../utils";
 import type Adaptation from "./adaptation";
+import CodecSupportManager from "./codecSupportList";
+import type { ICodecSupport } from "./codecSupportList";
 import type { IManifestAdaptations } from "./period";
 import Period from "./period";
 import type Representation from "./representation";
@@ -73,6 +75,8 @@ export interface IManifestEvents {
   manifestUpdate: IPeriodsUpdateResult;
   /** Some Representation's decipherability status has been updated */
   decipherabilityUpdate: IDecipherabilityUpdateElement[];
+
+  manifestCodecChanged: null;
 }
 
 /**
@@ -115,6 +119,11 @@ export default class Manifest
    * But it is specified in the Manifest API. Deprecate?
    */
   public transport: string;
+
+  /**
+   * Stores the information if a codec is supported or not.
+   */
+  public cachedCodecSupport: CodecSupportManager;
 
   /**
    * List every Period in that Manifest chronologically (from start to end).
@@ -321,6 +330,7 @@ export default class Manifest
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
+    this.cachedCodecSupport = new CodecSupportManager([]);
 
     const unsupportedAdaptations: Adaptation[] = [];
     this.periods = parsedManifest.periods
@@ -328,6 +338,7 @@ export default class Manifest
         const period = new Period(
           parsedPeriod,
           unsupportedAdaptations,
+          this.cachedCodecSupport,
           representationFilter,
         );
         return period;
@@ -377,11 +388,15 @@ export default class Manifest
    * In that case, an error object will be created and returned, so you can
    * e.g. later emit it as a warning through the RxPlayer API.
    */
-  public refreshCodecSupport(): MediaError | null {
+  public refreshCodecSupport(cachedCodecSupport: CodecSupportManager): MediaError | null {
+    this.cachedCodecSupport = cachedCodecSupport;
+
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(unsupportedAdaptations);
+      period.refreshCodecSupport(unsupportedAdaptations, this.cachedCodecSupport);
     }
+
+    this.trigger("manifestCodecChanged", null);
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
@@ -494,6 +509,10 @@ export default class Manifest
    */
   public getMaximumSafePosition(): number {
     return getMaximumSafePosition(this);
+  }
+
+  public updateCodecSupportList(cachedCodecSupport: CodecSupportManager) {
+    this.cachedCodecSupport = cachedCodecSupport;
   }
 
   /**
@@ -610,6 +629,41 @@ export default class Manifest
   }
 
   /**
+   * Returns a list of all codecs that the support is not known yet.
+   * If a representation with (`isSupported`) is undefined, we consider the
+   * codec support as unknown.
+   *
+   * This function iterates through all periods, adaptations, and representations,
+   * and collects unknown codecs.
+   *
+   * @returns {Array} The list of codecs with unknown support status.
+   */
+  public getAllUnknownCodecs(): ICodecSupport[] {
+    const unknownCodecs: ICodecSupport[] = [];
+    for (const period of this.periods) {
+      const [audio, video] = [
+        period.getAdaptationsForType("audio"),
+        period.getAdaptationsForType("video"),
+      ];
+      for (const adaptationType of [audio, video]) {
+        for (const adaptation of adaptationType) {
+          for (const representation of adaptation.representations) {
+            if (representation.isSupported === undefined) {
+              unknownCodecs.push({
+                mimeType: representation.mimeType ?? "",
+                codec: representation.codecs[0] ?? "",
+                supported: representation.isSupported,
+                supportedIfEncrypted: representation.isSupported,
+              });
+            }
+          }
+        }
+      }
+    }
+    return unknownCodecs;
+  }
+
+  /**
    * @param {Object} newManifest
    * @param {number} updateType
    */
@@ -624,6 +678,7 @@ export default class Manifest
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
+    newManifest.refreshCodecSupport(this.cachedCodecSupport);
 
     let updatedPeriodsResult;
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {

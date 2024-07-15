@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import config from "../../config";
@@ -37,7 +38,9 @@ import type { ITextDisplayerInterface } from "../../core/types";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { IManifest, IPeriodMetadata } from "../../manifest";
+import type { ICodecSupportList, IManifest, IPeriodMetadata } from "../../manifest";
+import CodecSupportManager from "../../manifest/classes/codecSupportList";
+import type { ICodecSupport } from "../../manifest/classes/codecSupportList";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type {
@@ -48,6 +51,7 @@ import type {
 } from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import { isCompatibleCodecSupported } from "../../utils/are_codecs_compatible";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import noop from "../../utils/noop";
@@ -105,6 +109,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
   private _cmcdDataBuilder: CmcdDataBuilder | null;
+  private _codecsInfo: {
+    codecFromCDM: ICodecSupportList | undefined;
+    codecSupportList: CodecSupportManager;
+  };
 
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
@@ -124,6 +132,67 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       lowLatencyMode: settings.lowLatencyMode,
       cmcdDataBuilder: this._cmcdDataBuilder,
     });
+
+    this._codecsInfo = {
+      codecFromCDM: undefined,
+      codecSupportList: new CodecSupportManager([]),
+    };
+  }
+
+  /**
+   * Checks if a codec is supported for the Content Decryption Module (CDM).
+   *
+   * @param {string} mimeType - The MIME type to check.
+   * @param {string} codec - The codec to check.
+   * @returns {boolean | undefined} - True if the codec is supported, false if it is not supported,
+   * or undefined if there is no information about the support.
+   */
+  private isCodecSupportedForCDM(mimeType: string, codec: string): boolean | undefined {
+    if (this._codecsInfo.codecFromCDM === undefined) {
+      // the codecs were not received yet from the contentDecryptor
+      return undefined;
+    }
+    const supportedCodecs = this._codecsInfo.codecFromCDM;
+    const isSupported = isCompatibleCodecSupported(mimeType, codec, supportedCodecs);
+    if (isSupported === undefined) {
+      // No information is available regarding the support status.
+      // Defaulting to assume the codec is supported.
+      return true;
+    }
+    return isSupported;
+  }
+
+  /**
+   * Evaluates a list of codecs to determine their support status.
+   *
+   * @param {Array} codecsToCheck - The list of codecs to check.
+   * @returns {Array} - The list of evaluated codecs with their support status updated.
+   */
+  private checkCodecs(codecsToCheck: ICodecSupport[]): ICodecSupport[] {
+    const evaluatedCodecs: ICodecSupport[] = codecsToCheck.map((codecToCheck) => {
+      const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
+      const isSupported = isCodecSupported(inputCodec);
+      codecToCheck.supported = isSupported;
+      if (!isSupported) {
+        return {
+          mimeType: codecToCheck.mimeType,
+          codec: codecToCheck.codec,
+          supported: false,
+          supportedIfEncrypted: false,
+        };
+      }
+      const supportedIfEncrypted = this.isCodecSupportedForCDM(
+        codecToCheck.mimeType,
+        codecToCheck.codec,
+      );
+      return {
+        mimeType: codecToCheck.mimeType,
+        codec: codecToCheck.codec,
+        supported: isSupported,
+        supportedIfEncrypted,
+      };
+    });
+    return evaluatedCodecs;
   }
 
   /**
@@ -263,13 +332,22 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
-          onCodecSupportUpdate: async () => {
+          onCodecSupportUpdate: async (codecsSupportedByCDM) => {
             if (this._manifest === null) {
               return;
             }
+            this._codecsInfo.codecFromCDM = codecsSupportedByCDM;
             const manifest =
               this._manifest.syncValue ?? (await this._manifest.getValueAsAsync());
-            manifest.refreshCodecSupport();
+
+            const codecsToTest = manifest.getAllUnknownCodecs();
+            if (!codecsToTest.length) {
+              // all codecs are known, no need to update anything
+              return;
+            }
+            const evaluatedCodecs = this.checkCodecs(codecsToTest);
+            this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
+            manifest.refreshCodecSupport(this._codecsInfo.codecSupportList);
           },
         },
         initCanceller.signal,
@@ -368,6 +446,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initCanceller.signal,
     );
 
+    manifest.addEventListener("manifestCodecChanged", () => {
+      this.trigger("manifestCodecChanged", null);
+    });
+
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
@@ -385,6 +467,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentRequestOptions,
       initCanceller.signal,
     );
+
+    const unknownCodecs = manifest.getAllUnknownCodecs();
+    if (unknownCodecs.length > 0) {
+      const evaluatedCodecs = this.checkCodecs(unknownCodecs);
+      this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
+      manifest.refreshCodecSupport(this._codecsInfo.codecSupportList);
+    }
 
     this.trigger("manifestReady", manifest);
     if (initCanceller.isUsed()) {
