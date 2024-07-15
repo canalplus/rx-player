@@ -257,7 +257,11 @@ function parseCompleteIntermediateRepresentation(
     rootAttributes,
     args.referenceDateTime,
   );
-  const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  let timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  if (timeShiftBufferDepth !== undefined) {
+    console.warn("first timeShiftBufferDepth", timeShiftBufferDepth);
+    timeShiftBufferDepth += 0.5;
+  }
   const { externalClockOffset: clockOffset, unsafelyBaseOnPreviousManifest } = args;
 
   const { externalClockOffset } = args;
@@ -381,6 +385,8 @@ function parseCompleteIntermediateRepresentation(
     // can go even lower in terms of depth
     minimumTime = minimumSafePosition;
     timeshiftDepth = timeShiftBufferDepth ?? null;
+    console.warn("MIN TIME",  minimumTime);
+    console.warn("MIN TIME2",  livePosition - (timeshiftDepth ?? Infinity));
     if (
       timeshiftDepth !== null &&
       minimumTime !== undefined &&

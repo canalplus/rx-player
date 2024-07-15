@@ -70,6 +70,9 @@ export default class ManifestBoundsCalculator {
         : args.timeShiftBufferDepth;
     this._serverTimestampOffset = args.serverTimestampOffset;
     this._availabilityStartTime = args.availabilityStartTime;
+    console.warn("TSBD", this._timeShiftBufferDepth);
+    console.warn("SERVER TIMESTAMP", this._serverTimestampOffset);
+    // this._timeShiftBufferDepth = null;
   }
 
   /**

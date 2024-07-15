@@ -68,16 +68,6 @@ export function generateMPDChildrenParser(
         break;
       }
 
-      case TagName.UtcTiming: {
-        const utcTiming = {};
-        mpdChildren.utcTimings.push(utcTiming);
-
-        const childrenParser = noop; // UTCTiming have no sub-element
-        const attributeParser = generateSchemeAttrParser(utcTiming, linearMemory);
-        parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
-        break;
-      }
-
       case TagName.ContentProtection: {
         const contentProtection = {
           children: { cencPssh: [] },

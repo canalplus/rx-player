@@ -144,8 +144,8 @@ export default function initializeContentDecryption(
           return;
         }
         stopListening();
-        const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
-        callbacks.onError(err);
+        // const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
+        // callbacks.onError(err);
       },
       { clearSignal: cancelSignal },
     );

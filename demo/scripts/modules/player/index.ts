@@ -283,6 +283,11 @@ const PlayerModule = declareModule(
               textTrackElement,
               transportOptions: { checkMediaSegmentIntegrity: true },
             },
+            {
+              startAt: {
+                fromFirstPosition: 0,
+              },
+            },
             arg,
           ) as ILoadVideoOptions,
         );

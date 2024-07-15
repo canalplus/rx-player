@@ -80,11 +80,6 @@ function parseMPDChildren(
         warnings = warnings.concat(periodWarnings);
         break;
 
-      case "UTCTiming":
-        const utcTiming = parseScheme(currentNode);
-        utcTimings.push(utcTiming);
-        break;
-
       case "ContentProtection":
         const [contentProtection, contentProtectionWarnings] =
           parseContentProtection(currentNode);
