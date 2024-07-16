@@ -257,7 +257,11 @@ function parseCompleteIntermediateRepresentation(
     rootAttributes,
     args.referenceDateTime,
   );
-  const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  let timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  if (timeShiftBufferDepth !== undefined) {
+    // XXX TODO temporarily adding some tolerance on the `timeShiftBufferDepth`
+    timeShiftBufferDepth += 0.5;
+  }
   const { externalClockOffset: clockOffset, unsafelyBaseOnPreviousManifest } = args;
 
   const { externalClockOffset } = args;
