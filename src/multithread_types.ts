@@ -22,11 +22,8 @@ import type {
 } from "./errors";
 import type { ISerializedSourceBufferError } from "./errors/source_buffer_error";
 import type { IContentProtection, ITextDisplayerData } from "./main_thread/types";
-import type {
-  ICodecSupportList,
-  IManifestMetadata,
-  IPeriodsUpdateResult,
-} from "./manifest";
+import type { IManifestMetadata, IPeriodsUpdateResult } from "./manifest";
+import type { ICodecSupport } from "./manifest/classes/codecSupportList";
 import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
@@ -242,22 +239,7 @@ export interface IStartPreparedContentMessageValue {
  */
 export interface ICodecSupportUpdateMessage {
   type: MainThreadMessageType.CodecSupportUpdate;
-  value: Array<{
-    /** The corresponding codec (e.g. "ec-3"). */
-    codec: string;
-    /** The mime-type associated (e.g. "audio/mp4"). */
-    mimeType: string;
-    /**
-     * If `true`, this `mimeType` and `codec` combination is supported.
-     * If `false`, it is not supported.
-     */
-    result: boolean;
-  }>;
-}
-
-export interface ICdmCodecSupportUpdateMessage {
-  type: MainThreadMessageType.CdmCodecSupportUpdate;
-  value: ICodecSupportList;
+  value: ICodecSupport[];
 }
 
 /**
@@ -553,7 +535,6 @@ export const enum MainThreadMessageType {
   PushTextDataError = "push-text-error",
   RemoveTextDataError = "remove-text-error",
   CodecSupportUpdate = "codec-support-update",
-  CdmCodecSupportUpdate = "eme-codec-support-update",
   ContentUrlsUpdate = "urls-update",
   DecipherabilityStatusUpdate = "decipherability-update",
   LogLevelUpdate = "log-level-update",
@@ -578,7 +559,6 @@ export type IMainThreadMessage =
   | IStartPreparedContentMessage
   | IReferenceUpdateMessage
   | ICodecSupportUpdateMessage
-  | ICdmCodecSupportUpdateMessage
   | IPlaybackObservationMessage
   | IDecipherabilityStatusChangedMessage
   | IUpdateContentUrlsMessage

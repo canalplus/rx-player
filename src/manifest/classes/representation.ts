@@ -226,14 +226,32 @@ class Representation implements IRepresentationMetadata {
     if (codecs.length === 0) {
       codecs = [""];
     }
+    let representationHasUnknownCodecs = false;
     for (const codec of codecs) {
       isSupported = cachedCodecSupport.isSupported(mimeType, codec, isEncrypted);
       if (isSupported === true) {
         this.codecs = [codec];
         break;
       }
+      if (isSupported === undefined) {
+        representationHasUnknownCodecs = true;
+      }
     }
-    this.isSupported = isSupported;
+    /** If any codec is supported, the representation is supported */
+    if (isSupported === true) {
+      this.isSupported = true;
+    } else {
+      /** If some codecs support are not known it's too early to assume
+       *  representation is unsupported */
+      if (representationHasUnknownCodecs) {
+        this.isSupported = undefined;
+      } else {
+        /** If all codecs support are known and none are supported,
+         * the representation is not supported.
+         */
+        this.isSupported = false;
+      }
+    }
   }
 
   /**

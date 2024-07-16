@@ -10,7 +10,6 @@ import TaskCanceller from "../../../utils/task_canceller";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import { ContentDecryptorState } from "../../decrypt";
 import type { IContentProtection, IProcessedProtectionData } from "../../decrypt";
-import cdmCodecSupportProber from "./../../../mse/cdm_codec_support_prober";
 
 /**
  * Initialize content decryption capabilities on the given `HTMLMediaElement`.
@@ -80,12 +79,10 @@ export default function initializeContentDecryption(
   const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
     if (state > ContentDecryptorState.Initializing) {
       const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
-      for (const codec of codecsSupportedByCDM) {
-        cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
-      }
       if (callbacks.onCodecSupportUpdate !== undefined) {
-        callbacks.onCodecSupportUpdate();
+        callbacks.onCodecSupportUpdate(codecsSupportedByCDM);
       }
+
       contentDecryptor.removeEventListener("stateChange", updateCodecSupportedByCDM);
     }
   };

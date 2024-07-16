@@ -2561,6 +2561,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
+  /**
+   * Triggered each times the support for a codec has changed in the manifest.
+   * When triggered, the track store may need to consider selecting a new track.
+   *
+   * @param {Object} contentInfos
+   * @returns {void}
+   */
   private _priv_onManifestCodecChanged(contentInfos: IPublicApiContentInfos) {
     if (contentInfos === null) {
       return;

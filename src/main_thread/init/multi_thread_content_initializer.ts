@@ -16,13 +16,13 @@ import {
 } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { IManifestMetadata } from "../../manifest";
+import type { ICodecSupportList, IManifestMetadata } from "../../manifest";
 import {
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
-import cdmCodecSupportProber from "../../mse/cdm_codec_support_prober";
+import CodecSupportManager from "../../manifest/classes/codecSupportList";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   ICreateMediaSourceWorkerMessage,
@@ -67,7 +67,11 @@ import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
-import { updateManifestCodecSupport } from "./utils/update_manifest_codec_support";
+import {
+  checkCodecs,
+  getAllUnknownCodecs,
+  updateManifestCodecSupport,
+} from "./utils/update_manifest_codec_support";
 
 const generateContentId = idGenerator();
 
@@ -106,6 +110,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     lastMessageId: number;
     resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
+
+  private _codecsInfo: {
+    codecFromCDM: ICodecSupportList | undefined;
+    codecSupportList: CodecSupportManager;
+  };
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -121,6 +130,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._segmentMetrics = {
       lastMessageId: 0,
       resolvers: {},
+    };
+    this._codecsInfo = {
+      codecFromCDM: undefined,
+      codecSupportList: new CodecSupportManager([]),
     };
   }
 
@@ -725,17 +738,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           const manifest = msgData.value.manifest;
-          try {
-            const codecUpdate = updateManifestCodecSupport(manifest);
-            if (codecUpdate.length > 0) {
-              sendMessage(this._settings.worker, {
-                type: MainThreadMessageType.CodecSupportUpdate,
-                value: codecUpdate,
-              });
-            }
-          } catch (err) {
-            this._onFatalError(err);
-          }
+          this._updateAndForwardCodecSupport(manifest);
           this._currentContentInfo.manifest = manifest;
           this._startPlaybackIfReady(playbackStartParams);
           break;
@@ -758,18 +761,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
-          // TODO only on added `Representation`?
-          try {
-            const codecUpdate = updateManifestCodecSupport(manifest);
-            if (codecUpdate.length > 0) {
-              sendMessage(this._settings.worker, {
-                type: MainThreadMessageType.CodecSupportUpdate,
-                value: codecUpdate,
-              });
-            }
-          } catch (err) {
-            this._onFatalError(err);
-          }
+          this._updateAndForwardCodecSupport(manifest);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
 
@@ -1188,14 +1180,17 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
       if (state > ContentDecryptorState.Initializing) {
         const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
-        sendMessage(this._settings.worker, {
-          type: MainThreadMessageType.CdmCodecSupportUpdate,
-          value: codecsSupportedByCDM,
-        });
+        this._codecsInfo.codecFromCDM = codecsSupportedByCDM;
 
-        for (const codec of codecsSupportedByCDM) {
-          cdmCodecSupportProber.addToCache(codec.mimeType, codec.codec, codec.result);
+        if (
+          isNullOrUndefined(this._currentContentInfo) ||
+          isNullOrUndefined(this._currentContentInfo.manifest)
+        ) {
+          return;
         }
+        const manifest = this._currentContentInfo.manifest;
+
+        this._updateAndForwardCodecSupport(manifest);
         contentDecryptor.removeEventListener("stateChange", updateCodecSupportedByCDM);
       }
     };
@@ -1304,6 +1299,31 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
 
     return drmStatusRef;
+  }
+  /**
+   * Retrieves all unknown codecs from the current manifest, checks these unknown codecs
+   * to determine if they are supported, updates the manifest with the support
+   * status of these codecs, and forwards the list of supported codecs to the web worker.
+   * @param manifest
+   */
+  private _updateAndForwardCodecSupport(manifest: IManifestMetadata) {
+    const codecToTest = getAllUnknownCodecs(manifest);
+    if (codecToTest.length > 0) {
+      const evaluatedCodecs = checkCodecs(codecToTest, this._codecsInfo.codecFromCDM);
+      this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
+      try {
+        updateManifestCodecSupport(manifest, this._codecsInfo.codecSupportList);
+        if (evaluatedCodecs.length > 0) {
+          sendMessage(this._settings.worker, {
+            type: MainThreadMessageType.CodecSupportUpdate,
+            value: evaluatedCodecs,
+          });
+          this.trigger("manifestCodecChanged", null);
+        }
+      } catch (err) {
+        this._onFatalError(err);
+      }
+    }
   }
 
   private _hasTextBufferFeature(): boolean {

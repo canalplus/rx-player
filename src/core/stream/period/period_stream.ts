@@ -480,7 +480,6 @@ function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
     );
     throw noRepErr;
   }
-
   const representations = adaptation.representations.filter((r) => {
     return r.isSupported === true && r.decipherable !== false;
   });

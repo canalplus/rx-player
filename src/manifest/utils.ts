@@ -574,6 +574,7 @@ export function replicateUpdatesOnManifestMetadata(
           for (let adapIdx = 0; adapIdx < adaptationsForType.length; adapIdx++) {
             if (adaptationsForType[adapIdx].id === newAdaptation) {
               const baseAdaptation = adaptationsForType[adapIdx];
+              baseAdaptation.isSupported = updatedAdaptation.isSupported;
               for (const removedRepresentation of updatedAdaptation.removedRepresentations) {
                 for (
                   let repIdx = 0;
@@ -602,7 +603,7 @@ export function replicateUpdatesOnManifestMetadata(
                     for (const prop of Object.keys(newRepresentation) as Array<
                       keyof IRepresentationMetadata
                     >) {
-                      if (prop !== "decipherable" && prop !== "isSupported") {
+                      if (prop !== "decipherable") {
                         // eslint-disable-next-line
                         (baseRepresentation as any)[prop] = newRepresentation[prop];
                       }
