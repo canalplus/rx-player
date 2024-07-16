@@ -39,7 +39,6 @@ import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import type { ICodecSupportList, IManifest, IPeriodMetadata } from "../../manifest";
-import CodecSupportManager from "../../manifest/classes/codecSupportList";
 import type { ICodecSupport } from "../../manifest/classes/codecSupportList";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
@@ -111,7 +110,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _cmcdDataBuilder: CmcdDataBuilder | null;
   private _codecsInfo: {
     codecFromCDM: ICodecSupportList | undefined;
-    codecSupportList: CodecSupportManager;
   };
 
   /**
@@ -135,7 +133,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     this._codecsInfo = {
       codecFromCDM: undefined,
-      codecSupportList: new CodecSupportManager([]),
     };
   }
 
@@ -332,22 +329,26 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
-          onCodecSupportUpdate: async (codecsSupportedByCDM) => {
-            if (this._manifest === null) {
-              return;
-            }
-            this._codecsInfo.codecFromCDM = codecsSupportedByCDM;
-            const manifest =
-              this._manifest.syncValue ?? (await this._manifest.getValueAsAsync());
+          onCodecSupportUpdate: (codecsSupportedByCDM) => {
+            (async () => {
+              if (this._manifest === null) {
+                return;
+              }
+              this._codecsInfo.codecFromCDM = codecsSupportedByCDM;
+              const manifest =
+                this._manifest.syncValue ?? (await this._manifest.getValueAsAsync());
 
-            const codecsToTest = manifest.getAllUnknownCodecs();
-            if (!codecsToTest.length) {
-              // all codecs are known, no need to update anything
-              return;
-            }
-            const evaluatedCodecs = this.checkCodecs(codecsToTest);
-            this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
-            manifest.refreshCodecSupport(this._codecsInfo.codecSupportList);
+              const codecsToTest = manifest.getAllUnknownCodecs();
+              if (!codecsToTest.length) {
+                // all codecs are known, no need to update anything
+                return;
+              }
+              const evaluatedCodecs = this.checkCodecs(codecsToTest);
+              const codecSupportList = manifest.cachedCodecSupport;
+              codecSupportList.addCodecs(evaluatedCodecs);
+              manifest.refreshCodecSupport(codecSupportList);
+              this.trigger("manifestCodecChanged", null);
+            })().catch(noop);
           },
         },
         initCanceller.signal,
@@ -434,6 +435,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "manifestUpdate",
       (updates) => {
         this.trigger("manifestUpdate", updates);
+        const unknownCodecs = manifest.getAllUnknownCodecs();
+        if (unknownCodecs.length > 0) {
+          const evaluatedCodecs = this.checkCodecs(unknownCodecs);
+          const codecSupportList = manifest.cachedCodecSupport;
+          codecSupportList.addCodecs(evaluatedCodecs);
+          manifest.refreshCodecSupport(codecSupportList);
+          this.trigger("manifestCodecChanged", null);
+        }
       },
       initCanceller.signal,
     );
@@ -445,10 +454,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       initCanceller.signal,
     );
-
-    manifest.addEventListener("manifestCodecChanged", () => {
-      this.trigger("manifestCodecChanged", null);
-    });
 
     log.debug("Init: Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
@@ -471,8 +476,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const unknownCodecs = manifest.getAllUnknownCodecs();
     if (unknownCodecs.length > 0) {
       const evaluatedCodecs = this.checkCodecs(unknownCodecs);
-      this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
-      manifest.refreshCodecSupport(this._codecsInfo.codecSupportList);
+      const codecSupportList = manifest.cachedCodecSupport;
+      codecSupportList.addCodecs(evaluatedCodecs);
+      manifest.refreshCodecSupport(codecSupportList);
+      this.trigger("manifestCodecChanged", null);
     }
 
     this.trigger("manifestReady", manifest);

@@ -75,8 +75,6 @@ export interface IManifestEvents {
   manifestUpdate: IPeriodsUpdateResult;
   /** Some Representation's decipherability status has been updated */
   decipherabilityUpdate: IDecipherabilityUpdateElement[];
-
-  manifestCodecChanged: null;
 }
 
 /**
@@ -395,8 +393,6 @@ export default class Manifest
     for (const period of this.periods) {
       period.refreshCodecSupport(unsupportedAdaptations, this.cachedCodecSupport);
     }
-
-    this.trigger("manifestCodecChanged", null);
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
