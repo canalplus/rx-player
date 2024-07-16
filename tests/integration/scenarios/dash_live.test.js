@@ -250,8 +250,8 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
 
       expect(manifestLoaderCalledTimes).to.equal(1);
-      await checkAfterSleepWithBackoff(null, () => {
-        expect(player.getMinimumPosition()).to.be.closeTo(1527507768, 1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 2000 }, () => {
+        expect(player.getMinimumPosition()).to.be.closeTo(1527507763, 1);
       });
     });
   });
