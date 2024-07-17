@@ -6,6 +6,7 @@ import type {
   IRepresentationMetadata,
 } from "../../../../manifest";
 import { ManifestMetadataFormat } from "../../../../manifest";
+import CodecSupportManager from "../../../../manifest/classes/codecSupportList";
 import type { IContentProtections } from "../../../../parsers/manifest";
 import { updateManifestCodecSupport } from "../update_manifest_codec_support";
 
@@ -52,30 +53,6 @@ function generateFakeManifestWithRepresentations(
 }
 
 describe("init - utils - updateManifestCodecSupport", () => {
-  // create mocks
-  vi.mock("../../../../compat/is_codec_supported", () => ({
-    default: vi.fn((codec: string) => {
-      const mockSupportedCodec = [
-        'video/mp4;codecs="avc1.4d401e"',
-        'video/mp4;codecs="hvc1.2.4.L153.B0"',
-      ];
-      return mockSupportedCodec.indexOf(codec) !== -1;
-    }),
-  }));
-
-  vi.mock("../../../../mse/cdm_codec_support_prober.ts", () => ({
-    default: {
-      isSupported: vi.fn((mimeType: string, codec: string) => {
-        const mockSupportedCodecByCDM = [
-          'video/mp4;codecs="avc1.4d401e"',
-          /** Notice that hvc1.2.4.L153.B0 is not in the codecs supported by the CDM */
-        ];
-        const fullCodecString = `${mimeType};codecs="${codec}"`;
-        return mockSupportedCodecByCDM.indexOf(fullCodecString) !== -1;
-      }),
-    },
-  }));
-
   it("should return the codecs with result true/false if it's supported by the device", () => {
     const representationAVC: IRepresentationMetadata = {
       bitrate: 1000,
@@ -107,27 +84,24 @@ describe("init - utils - updateManifestCodecSupport", () => {
       representationVP9,
     ]);
 
-    const result = updateManifestCodecSupport(manifest);
-    expect(representationAVC.isSupported).toBe(true);
-    expect(representationHEVC.isSupported).toBe(true);
-    expect(representationVP9.isSupported).toBe(false);
-    expect(result).toStrictEqual([
+    const cache = new CodecSupportManager([
       {
+        mimeType: "video/mp4",
         codec: "avc1.4d401e",
-        mimeType: "video/mp4",
-        result: true, // avc is supported by MSE
+        supported: true,
+        supportedIfEncrypted: true,
       },
       {
+        mimeType: "video/mp4",
         codec: "hvc1.2.4.L153.B0",
-        mimeType: "video/mp4",
-        result: true, // hevc is supported by MSE
-      },
-      {
-        codec: "vp9",
-        mimeType: "video/mp4",
-        result: false, // VP9 is not supported by MSE
+        supported: true,
+        supportedIfEncrypted: false,
       },
     ]);
+    updateManifestCodecSupport(manifest, cache);
+    expect(representationAVC.isSupported).toBe(true);
+    expect(representationHEVC.isSupported).toBe(true);
+    expect(representationVP9.isSupported).toBe(undefined);
   });
 
   it("should take into consideration the supported codecs by the CDM", () => {
@@ -161,20 +135,22 @@ describe("init - utils - updateManifestCodecSupport", () => {
       encryptedRepresentationHEVC,
     ]);
 
-    const result = updateManifestCodecSupport(manifest);
-    expect(encryptedRepresentationAVC.isSupported).toBe(true);
-    expect(encryptedRepresentationHEVC.isSupported).toBe(false);
-    expect(result).toStrictEqual([
+    const cache = new CodecSupportManager([
       {
-        codec: "avc1.4d401e",
         mimeType: "video/mp4",
-        result: true, // avc is supported by MSE
+        codec: "avc1.4d401e",
+        supported: true,
+        supportedIfEncrypted: true,
       },
       {
-        codec: "hvc1.2.4.L153.B0",
         mimeType: "video/mp4",
-        result: true, // hevc is supported by MSE
+        codec: "hvc1.2.4.L153.B0",
+        supported: true,
+        supportedIfEncrypted: false,
       },
     ]);
+    updateManifestCodecSupport(manifest, cache);
+    expect(encryptedRepresentationAVC.isSupported).toBe(true);
+    expect(encryptedRepresentationHEVC.isSupported).toBe(false);
   });
 });
