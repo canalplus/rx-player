@@ -1,7 +1,11 @@
+import isCodecSupported from "../../../compat/is_codec_supported";
 import { MediaError } from "../../../errors";
 import type { IManifestMetadata } from "../../../manifest";
-import type CodecSupportManager from "../../../manifest/classes/codecSupportList";
+import type { ICodecSupportInfo } from "../../../multithread_types";
 import type { ITrackType } from "../../../public_types";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import type ContentDecryptor from "../../decrypt";
+import { ContentDecryptorState } from "../../decrypt";
 
 /**
  * Returns a list of all codecs that the support is not known yet on the given
@@ -24,9 +28,6 @@ export function getCodecsWithUnknownSupport(
       ...(period.adaptations.audio ?? []),
     ];
     for (const adaptation of checkedAdaptations) {
-      if (adaptation.isSupported !== undefined) {
-        continue;
-      }
       for (const representation of adaptation.representations) {
         if (representation.isSupported === undefined) {
           codecsWithUnknownSupport.push({
@@ -49,11 +50,71 @@ export function getCodecsWithUnknownSupport(
  * calling this function ensures that support is now known.
  *
  * @param {Object} manifest
+ * @param {Object|null} contentDecryptor
+ * @returns {boolean}
  */
 export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
-  cachedCodecSupport: CodecSupportManager,
-): void {
+  contentDecryptor: ContentDecryptor | null,
+): ICodecSupportInfo[] {
+  const codecSupportMap: Map<
+    string,
+    {
+      isSupportedClear: boolean;
+      isSupportedEncrypted: boolean | undefined;
+    }
+  > = new Map();
+  const updatedCodecs: ICodecSupportInfo[] = [];
+
+  const efficientlyGetCodecSupport = (
+    mimeType: string | undefined,
+    codec: string | undefined,
+  ): {
+    isSupportedClear: boolean;
+    isSupportedEncrypted: boolean | undefined;
+  } => {
+    const inputCodec = `${mimeType ?? ""};codecs="${codec ?? ""}"`;
+    const baseData = codecSupportMap.get(inputCodec);
+    if (baseData !== undefined) {
+      return baseData;
+    }
+
+    let newData;
+    const isSupported = isCodecSupported(inputCodec);
+    if (!isSupported) {
+      newData = {
+        isSupportedClear: false,
+        isSupportedEncrypted: false,
+      };
+    } else if (isNullOrUndefined(contentDecryptor)) {
+      newData = {
+        isSupportedClear: true,
+        // This is ambiguous. Less assume that with no ContentDecryptor, an
+        // encrypted codec is supported
+        isSupportedEncrypted: true,
+      };
+    } else if (contentDecryptor.getState() === ContentDecryptorState.Initializing) {
+      newData = {
+        isSupportedClear: true,
+        isSupportedEncrypted: undefined,
+      };
+    } else {
+      newData = {
+        isSupportedClear: true,
+        isSupportedEncrypted:
+          contentDecryptor.isCodecSupported(mimeType ?? "", codec ?? "") ?? true,
+      };
+    }
+    codecSupportMap.set(inputCodec, newData);
+    updatedCodecs.push({
+      codec: codec ?? "",
+      mimeType: mimeType ?? "",
+      supported: newData.isSupportedClear,
+      supportedIfEncrypted: newData.isSupportedEncrypted,
+    });
+    return newData;
+  };
+
   manifest.periods.forEach((p) => {
     [
       ...(p.adaptations.audio ?? []),
@@ -78,16 +139,16 @@ export function updateManifestCodecSupport(
         }
         let representationHasUnknownCodecs = false;
         for (const codec of codecs) {
-          isRepresentationSupported = cachedCodecSupport.isSupported(
-            mimeType,
-            codec,
-            isEncrypted,
-          );
-          if (isRepresentationSupported === true) {
-            r.codecs = [codec];
-            break;
+          const codecSupportInfo = efficientlyGetCodecSupport(mimeType, codec);
+          if (!isEncrypted) {
+            r.isSupported = codecSupportInfo.isSupportedClear;
+          } else if (r.isSupported !== codecSupportInfo.isSupportedEncrypted) {
+            r.isSupported = codecSupportInfo.isSupportedEncrypted;
           }
-          if (isRepresentationSupported === undefined) {
+
+          if (r.isSupported === true) {
+            r.codecs = [codec];
+          } else if (r.isSupported === undefined) {
             representationHasUnknownCodecs = true;
           }
         }
@@ -141,4 +202,5 @@ export function updateManifestCodecSupport(
       }
     });
   });
+  return updatedCodecs;
 }

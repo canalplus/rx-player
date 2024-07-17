@@ -38,7 +38,8 @@ import {
   toTaggedTrack,
 } from "../utils";
 import type Adaptation from "./adaptation";
-import CodecSupportManager from "./codecSupportList";
+import CodecSupportCache from "./codec_support_cache";
+import type { ICodecSupportInfo } from "./codec_support_cache";
 import type { IManifestAdaptations } from "./period";
 import Period from "./period";
 import type Representation from "./representation";
@@ -116,11 +117,6 @@ export default class Manifest
    * But it is specified in the Manifest API. Deprecate?
    */
   public transport: string;
-
-  /**
-   * Stores the information if a codec is supported or not.
-   */
-  public cachedCodecSupport: CodecSupportManager;
 
   /**
    * List every Period in that Manifest chronologically (from start to end).
@@ -305,6 +301,12 @@ export default class Manifest
   };
 
   /**
+   * Caches the information if a codec is supported or not in the context of the
+   * current content.
+   */
+  private _cachedCodecSupport: CodecSupportCache;
+
+  /**
    * Construct a Manifest instance from a parsed Manifest object (as returned by
    * Manifest parsers) and options.
    *
@@ -327,7 +329,7 @@ export default class Manifest
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
-    this.cachedCodecSupport = new CodecSupportManager([]);
+    this._cachedCodecSupport = new CodecSupportCache([]);
 
     const unsupportedAdaptations: Adaptation[] = [];
     this.periods = parsedManifest.periods
@@ -335,7 +337,7 @@ export default class Manifest
         const period = new Period(
           parsedPeriod,
           unsupportedAdaptations,
-          this.cachedCodecSupport,
+          this._cachedCodecSupport,
           representationFilter,
         );
         return period;
@@ -377,20 +379,22 @@ export default class Manifest
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * Calling `updateCodecSupport` manually once the codecs supported are known
    * by the current environnement allows to work-around this issue.
    *
+   * @param {Array<Object>} [updatedCodecSupportInfo]
    * @returns {Error|null} - Refreshing codec support might reveal that some
    * `Adaptation` don't have any of their `Representation`s supported.
    * In that case, an error object will be created and returned, so you can
    * e.g. later emit it as a warning through the RxPlayer API.
    */
-  public refreshCodecSupport(cachedCodecSupport: CodecSupportManager): MediaError | null {
-    this.cachedCodecSupport = cachedCodecSupport;
-
+  public updateCodecSupport(
+    updatedCodecSupportInfo: ICodecSupportInfo[] = [],
+  ): MediaError | null {
+    this._cachedCodecSupport.addCodecs(updatedCodecSupportInfo);
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(unsupportedAdaptations, this.cachedCodecSupport);
+      period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
     }
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
@@ -506,8 +510,8 @@ export default class Manifest
     return getMaximumSafePosition(this);
   }
 
-  public updateCodecSupportList(cachedCodecSupport: CodecSupportManager) {
-    this.cachedCodecSupport = cachedCodecSupport;
+  public updateCodecSupportList(cachedCodecSupport: CodecSupportCache) {
+    this._cachedCodecSupport = cachedCodecSupport;
   }
 
   /**
@@ -641,9 +645,6 @@ export default class Manifest
         ...period.getAdaptationsForType("video"),
       ];
       for (const adaptation of checkedAdaptations) {
-        if (adaptation.isSupported !== undefined) {
-          continue;
-        }
         for (const representation of adaptation.representations) {
           if (representation.isSupported === undefined) {
             codecsWithUnknownSupport.push({
@@ -672,7 +673,6 @@ export default class Manifest
     this.suggestedPresentationDelay = newManifest.suggestedPresentationDelay;
     this.transport = newManifest.transport;
     this.publishTime = newManifest.publishTime;
-    newManifest.refreshCodecSupport(this.cachedCodecSupport);
 
     let updatedPeriodsResult;
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
@@ -696,6 +696,8 @@ export default class Manifest
         this.periods.shift();
       }
     }
+
+    this.updateCodecSupport();
 
     // Re-set this.adaptations for retro-compatibility in v3.x.x
     /* eslint-disable import/no-deprecated */

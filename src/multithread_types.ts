@@ -23,7 +23,6 @@ import type {
 import type { ISerializedSourceBufferError } from "./errors/source_buffer_error";
 import type { IContentProtection, ITextDisplayerData } from "./main_thread/types";
 import type { IManifestMetadata, IPeriodsUpdateResult } from "./manifest";
-import type { ICodecSupportInfo } from "./manifest/classes/codecSupportList";
 import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
@@ -240,6 +239,13 @@ export interface IStartPreparedContentMessageValue {
 export interface ICodecSupportUpdateMessage {
   type: MainThreadMessageType.CodecSupportUpdate;
   value: ICodecSupportInfo[];
+}
+
+export interface ICodecSupportInfo {
+  mimeType: string;
+  codec: string;
+  supported?: boolean | undefined;
+  supportedIfEncrypted?: boolean | undefined;
 }
 
 /**

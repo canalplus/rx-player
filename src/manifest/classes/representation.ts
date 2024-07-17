@@ -24,7 +24,7 @@ import type {
 import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
-import type CodecSupportManager from "./codecSupportList";
+import type codecSupportCache from "./codec_support_cache";
 import type { IRepresentationIndex } from "./representation_index";
 
 const generateRepresentationUniqueId = idGenerator();
@@ -112,7 +112,7 @@ class Representation implements IRepresentationMetadata {
   constructor(
     args: IParsedRepresentation,
     trackType: ITrackType,
-    cachedCodecSupport: CodecSupportManager,
+    cachedCodecSupport: codecSupportCache,
   ) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
@@ -201,11 +201,10 @@ class Representation implements IRepresentationMetadata {
    * If the right mimetype+codec combination is found in the provided object,
    * this `Representation`'s `isSupported` property will be updated accordingly.
    *
-   * @param {Array.<Object>} supportList;
+   * @param {Array.<Object>} cachedCodecSupport;
    */
-  public refreshCodecSupport(cachedCodecSupport: CodecSupportManager) {
-    if (this.trackType === "text") {
-      this.isSupported = true;
+  public refreshCodecSupport(cachedCodecSupport: codecSupportCache) {
+    if (this.isSupported !== undefined) {
       return;
     }
 
@@ -488,6 +487,8 @@ export interface IRepresentationProtectionData {
   }>;
 }
 
+// XXX TODO is that shit still needed and why.
+// Shouldn't we replace it with ICodecSupportInfo?
 export type ICodecSupportList = Array<{
   codec: string;
   mimeType: string;
