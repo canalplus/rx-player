@@ -28,7 +28,6 @@ import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 import { ContentInitializer } from "./types";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
@@ -93,17 +92,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     clearElementSrc(mediaElement);
 
-    /**
-     * Create dummy encryption data emitter, as those are not sent from the
-     * RxPlayer for directfile contents.
-     */
-    const decryptionRef = new SharedReference(null);
-    decryptionRef.finish();
-
-    const drmInitRef = initializeContentDecryption(
+    const { statusRef: drmInitRef } = initializeContentDecryption(
       mediaElement,
       keySystems,
-      decryptionRef,
       {
         onError: (err) => this._onFatalError(err),
         onWarning: (err: IPlayerError) => this.trigger("warning", err),
