@@ -36,10 +36,11 @@ import type {
 } from "../../core/stream";
 import StreamOrchestrator from "../../core/stream";
 import type { ITextDisplayerInterface } from "../../core/types";
+import type { EncryptedMediaError } from "../../errors";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { ICodecSupportList, IManifest, IPeriodMetadata } from "../../manifest";
+import type { IManifest, IPeriodMetadata } from "../../manifest";
 import type { ICodecSupport } from "../../manifest/classes/codecSupportList";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
@@ -51,19 +52,19 @@ import type {
 } from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import { isCompatibleCodecSupported } from "../../utils/are_codecs_compatible";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
 import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
-import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
-import { getKeySystemConfiguration } from "../decrypt";
+import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
+import type { IProcessedProtectionData } from "../decrypt";
+import type ContentDecryptor from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
@@ -109,9 +110,34 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
   private _cmcdDataBuilder: CmcdDataBuilder | null;
-  private _codecsInfo: {
-    codecFromCDM: ICodecSupportList | undefined;
-  };
+
+  /**
+   * Describes the decryption capabilities on the current content, discriminated
+   * by a `status` property:
+   *
+   *   - If set to `"uninitialized"`, decryption capabilities have not been
+   *     set up yet.
+   *
+   *   - If set to `"disabled"`, decryption capabilities are explicitely
+   *     disabled. If encrypted content needs to be decrypted, the accompanying
+   *     error `value` describes the reason why decryption is not enabled.
+   *
+   *   - If set to `"enabled"`, decryption capabilities are available, and
+   *     `value` points to the corresponding `ContentDecryptor`.
+   */
+  private _decryptionCapabilities:
+    | {
+        status: "uninitialized";
+        value: null;
+      }
+    | {
+        status: "disabled";
+        value: EncryptedMediaError;
+      }
+    | {
+        status: "enabled";
+        value: ContentDecryptor;
+      };
 
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
@@ -123,6 +149,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
+    this._decryptionCapabilities = { status: "uninitialized", value: null };
     const urls = settings.url === undefined ? undefined : [settings.url];
     this._cmcdDataBuilder =
       settings.cmcd === undefined ? null : new CmcdDataBuilder(settings.cmcd);
@@ -131,10 +158,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       lowLatencyMode: settings.lowLatencyMode,
       cmcdDataBuilder: this._cmcdDataBuilder,
     });
-
-    this._codecsInfo = {
-      codecFromCDM: undefined,
-    };
   }
 
   /**
@@ -145,19 +168,21 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @returns {boolean | undefined} - True if the codec is supported, false if it is not supported,
    * or undefined if there is no information about the support.
    */
-  private isCodecSupportedForCDM(mimeType: string, codec: string): boolean | undefined {
-    if (this._codecsInfo.codecFromCDM === undefined) {
-      // the codecs were not received yet from the contentDecryptor
+  private _isCodecDecipherable(mimeType: string, codec: string): boolean | undefined {
+    if (this._decryptionCapabilities.status === "uninitialized") {
       return undefined;
-    }
-    const supportedCodecs = this._codecsInfo.codecFromCDM;
-    const isSupported = isCompatibleCodecSupported(mimeType, codec, supportedCodecs);
-    if (isSupported === undefined) {
-      // No information is available regarding the support status.
-      // Defaulting to assume the codec is supported.
+    } else if (this._decryptionCapabilities.status === "disabled") {
+      // It's ambiguous here, but let's say that no ContentDecryptor means that
+      // the codec is supported by it.
       return true;
+    } else {
+      const contentDecryptor = this._decryptionCapabilities.value;
+      if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
+        return contentDecryptor.isCodecSupported(mimeType, codec) ?? true;
+      } else {
+        return undefined;
+      }
     }
-    return isSupported;
   }
 
   /**
@@ -179,7 +204,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           supportedIfEncrypted: false,
         };
       }
-      const supportedIfEncrypted = this.isCodecSupportedForCDM(
+      const supportedIfEncrypted = this._isCodecDecipherable(
         codecToCheck.mimeType,
         codecToCheck.codec,
       );
@@ -238,20 +263,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    /** Send content protection initialization data to the decryption logic. */
-    const protectionRef = new SharedReference<IContentProtection | null>(
-      null,
-      this._initCanceller.signal,
-    );
-
-    this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
+    this._initializeMediaSourceAndDecryption(mediaElement)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
           initResult.mediaSource,
           playbackObserver,
           initResult.drmSystemId,
-          protectionRef,
           initResult.unlinkMediaSource,
         ),
       )
@@ -283,10 +301,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this.trigger("error", err);
   }
 
-  private _initializeMediaSourceAndDecryption(
-    mediaElement: IMediaElement,
-    protectionRef: IReadOnlySharedReference<IContentProtection | null>,
-  ): Promise<{
+  private _initializeMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
     unlinkMediaSource: TaskCanceller;
@@ -296,10 +311,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const { keySystems } = this._settings;
 
       /** Initialize decryption capabilities. */
-      const drmInitRef = initializeContentDecryption(
+      const { statusRef: drmInitRef, contentDecryptor } = initializeContentDecryption(
         mediaElement,
         keySystems,
-        protectionRef,
         {
           onWarning: (err: IPlayerError) => this.trigger("warning", err),
           onError: (err: Error) => this._onFatalError(err),
@@ -330,30 +344,37 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
-          onCodecSupportUpdate: (codecsSupportedByCDM) => {
-            (async () => {
-              if (this._manifest === null) {
-                return;
-              }
-              this._codecsInfo.codecFromCDM = codecsSupportedByCDM;
-              const manifest =
-                this._manifest.syncValue ?? (await this._manifest.getValueAsAsync());
-
-              const codecsToTest = manifest.getAllUnknownCodecs();
-              if (!codecsToTest.length) {
-                // all codecs are known, no need to update anything
-                return;
-              }
-              const evaluatedCodecs = this.checkCodecs(codecsToTest);
-              const codecSupportList = manifest.cachedCodecSupport;
-              codecSupportList.addCodecs(evaluatedCodecs);
-              manifest.refreshCodecSupport(codecSupportList);
-              this.trigger("codecSupportUpdate", null);
-            })().catch(noop);
+          onCodecSupportUpdate: () => {
+            const manifest = this._manifest?.syncValue;
+            if (isNullOrUndefined(manifest)) {
+              return;
+            }
+            const codecsToTest = manifest.getAllUnknownCodecs();
+            if (!codecsToTest.length) {
+              // all codecs are known, no need to update anything
+              return;
+            }
+            const evaluatedCodecs = this.checkCodecs(codecsToTest);
+            const codecSupportList = manifest.cachedCodecSupport;
+            codecSupportList.addCodecs(evaluatedCodecs);
+            manifest.refreshCodecSupport(codecSupportList);
+            this.trigger("codecSupportUpdate", null);
           },
         },
         initCanceller.signal,
       );
+
+      if (contentDecryptor.enabled) {
+        this._decryptionCapabilities = {
+          status: "enabled",
+          value: contentDecryptor.value,
+        };
+      } else {
+        this._decryptionCapabilities = {
+          status: "disabled",
+          value: contentDecryptor.value,
+        };
+      }
 
       drmInitRef.onUpdate(
         (drmStatus, stopListeningToDrmUpdates) => {
@@ -409,7 +430,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     initialMediaSource: MainMediaSourceInterface,
     playbackObserver: IMediaElementPlaybackObserver,
     drmSystemId: string | undefined,
-    protectionRef: SharedReference<IContentProtection | null>,
     initialMediaSourceCanceller: TaskCanceller,
   ): Promise<void> {
     const {
@@ -526,7 +546,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         representationEstimator,
         segmentFetcherCreator,
         speed,
-        protectionRef,
         bufferOptions: subBufferOptions,
       };
       bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
@@ -584,7 +603,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaElement,
       mediaSource,
       playbackObserver,
-      protectionRef,
       representationEstimator,
       segmentFetcherCreator,
       speed,
@@ -999,8 +1017,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         },
 
         encryptionDataEncountered: (value) => {
+          if (self._decryptionCapabilities.status === "disabled") {
+            self._onFatalError(self._decryptionCapabilities.value);
+            return;
+          } else if (self._decryptionCapabilities.status === "uninitialized") {
+            // Should never happen
+            log.error(
+              "Init: received encryption data without known decryption capabilities",
+            );
+            return;
+          }
           for (const protectionData of value) {
-            protectionRef.setValue(protectionData);
+            self._decryptionCapabilities.value.onInitializationData(protectionData);
             if (cancelSignal.isCancelled()) {
               return; // Previous call has stopped streams due to a side-effect
             }
@@ -1192,11 +1220,6 @@ interface IBufferingMediaSettings {
   segmentFetcherCreator: SegmentFetcherCreator;
   /** Last wanted playback rate. */
   speed: IReadOnlySharedReference<number>;
-  /**
-   * Reference through which decryption initialization information can be
-   * communicated.
-   */
-  protectionRef: SharedReference<IContentProtection | null>;
   /** `MediaSource` element on which the media will be buffered. */
   mediaSource: MainMediaSourceInterface;
   /** The initial position to seek to in media time, in seconds. */

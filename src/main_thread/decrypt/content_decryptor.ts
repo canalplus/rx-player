@@ -27,6 +27,7 @@ import type {
 } from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
+import { isCompatibleCodecSupported } from "../../utils/are_codecs_compatible";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
@@ -345,8 +346,22 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * Returns the list of supported codecs with the keysystem configuration.
    * @returns {Array}: The list of supported codecs.
    */
-  public getSupportedCodecs(): ICodecSupportList {
-    return this._supportedCodecWhenEncrypted;
+  public isCodecSupported(mimeType: string, codec: string): boolean | undefined {
+    if (this._stateData.state === ContentDecryptorState.Initializing) {
+      log.error(
+        "DRM: Asking for codec support while the ContentDecryptor is still initializing",
+      );
+      return undefined;
+    }
+    if (
+      this._stateData.state === ContentDecryptorState.Error ||
+      this._stateData.state === ContentDecryptorState.Disposed
+    ) {
+      log.error("DRM: Asking for codec support while the ContentDecryptor is disposed");
+    }
+    // No information is available regarding the support status.
+    // Defaulting to assume the codec is supported.
+    return isCompatibleCodecSupported(mimeType, codec, this._supportedCodecWhenEncrypted);
   }
 
   /**

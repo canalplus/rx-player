@@ -1,4 +1,5 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
@@ -16,12 +17,13 @@ import {
 } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { ICodecSupportList, IManifestMetadata } from "../../manifest";
+import type { IManifestMetadata } from "../../manifest";
 import {
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
+import type { ICodecSupport } from "../../manifest/classes/codecSupportList";
 import CodecSupportManager from "../../manifest/classes/codecSupportList";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
@@ -53,6 +55,7 @@ import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
 import type { IContentProtection } from "../decrypt";
+import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
@@ -68,7 +71,6 @@ import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
 import {
-  checkCodecs,
   getAllUnknownCodecs,
   updateManifestCodecSupport,
 } from "./utils/update_manifest_codec_support";
@@ -112,7 +114,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   };
 
   private _codecsInfo: {
-    codecFromCDM: ICodecSupportList | undefined;
     codecSupportList: CodecSupportManager;
   };
   /**
@@ -132,7 +133,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       resolvers: {},
     };
     this._codecsInfo = {
-      codecFromCDM: undefined,
       codecSupportList: new CodecSupportManager([]),
     };
   }
@@ -152,6 +152,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const initialAudioBitrate = adaptiveOptions.initialBitrates.audio;
     this._currentContentInfo = {
       contentId,
+      contentDecryptor: null,
       manifest: null,
       mainThreadMediaSource: null,
       rebufferingController: null,
@@ -278,20 +279,28 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    /** Send content protection initialization data. */
+    /**
+     * Send content protection initialization data.
+     * TODO remove and use ContentDecryptor directly when possible.
+     */
     const lastContentProtection = new SharedReference<IContentProtection | null>(null);
 
     const mediaSourceStatus = new SharedReference<MediaSourceInitializationStatus>(
       MediaSourceInitializationStatus.Nothing,
     );
 
-    const drmInitializationStatus = this._initializeContentDecryption(
-      mediaElement,
-      lastContentProtection,
-      mediaSourceStatus,
-      () => reloadMediaSource(0, undefined, undefined),
-      this._initCanceller.signal,
-    );
+    const { statusRef: drmInitializationStatus, contentDecryptor } =
+      this._initializeContentDecryption(
+        mediaElement,
+        lastContentProtection,
+        mediaSourceStatus,
+        () => reloadMediaSource(0, undefined, undefined),
+        this._initCanceller.signal,
+      );
+    const contentInfo = this._currentContentInfo;
+    if (contentInfo !== null) {
+      contentInfo.contentDecryptor = contentDecryptor;
+    }
 
     const playbackStartParams = {
       mediaElement,
@@ -333,18 +342,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       minimumPosition: number | undefined,
       maximumPosition: number | undefined,
     ): void => {
-      const contentInfo = this._currentContentInfo;
-      if (contentInfo === null) {
+      const reloadingContentInfo = this._currentContentInfo;
+      if (reloadingContentInfo === null) {
         log.warn("MTCI: Asked to reload when no content is loaded.");
         return;
       }
       const lastObservation = playbackObserver.getReference().getValue();
       const currentPosition = lastObservation.position.getWanted();
       const isPaused =
-        contentInfo.initialPlayPerformed?.getValue() === true ||
-        contentInfo.autoPlay === undefined
+        reloadingContentInfo.initialPlayPerformed?.getValue() === true ||
+        reloadingContentInfo.autoPlay === undefined
           ? lastObservation.paused
-          : !contentInfo.autoPlay;
+          : !reloadingContentInfo.autoPlay;
       let position = currentPosition + deltaPosition;
       if (minimumPosition !== undefined) {
         position = Math.max(minimumPosition, position);
@@ -738,7 +747,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           const manifest = msgData.value.manifest;
-          this._updateAndForwardCodecSupport(manifest);
+          this._updateCodecSupport(manifest);
           this._currentContentInfo.manifest = manifest;
           this._startPlaybackIfReady(playbackStartParams);
           break;
@@ -761,7 +770,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
-          this._updateAndForwardCodecSupport(manifest);
+          this._updateCodecSupport(manifest);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
 
@@ -1132,7 +1141,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
     cancelSignal: CancellationSignal,
-  ): IReadOnlySharedReference<IDrmInitializationStatus> {
+  ): {
+    statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
+    contentDecryptor: IContentDecryptor | null;
+  } {
     const { keySystems } = this._settings;
 
     // TODO private?
@@ -1151,11 +1163,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         { clearSignal: cancelSignal },
       );
       const ref = new SharedReference({
-        initializationState: { type: "initialized" as const, value: null },
+        initializationState: {
+          type: "initialized" as const,
+          value: null,
+        },
+        contentDecryptor: null,
         drmSystemId: undefined,
       });
       ref.finish(); // We know that no new value will be triggered
-      return ref;
+      return { statusRef: ref, contentDecryptor: null };
     };
 
     if (keySystems.length === 0) {
@@ -1164,6 +1180,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return createEmeDisabledReference("EME feature not activated.");
     }
 
+    const ContentDecryptor = features.decrypt;
+    if (!ContentDecryptor.hasEmeApis()) {
+      return createEmeDisabledReference("EME API not available on the current page.");
+    }
+    log.debug("MTCI: Creating ContentDecryptor");
+    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
     const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
       {
         initializationState: { type: "uninitialized", value: null },
@@ -1171,30 +1193,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       cancelSignal,
     );
-    const ContentDecryptor = features.decrypt;
-    if (!ContentDecryptor.hasEmeApis()) {
-      return createEmeDisabledReference("EME API not available on the current page.");
-    }
-    log.debug("MTCI: Creating ContentDecryptor");
-    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
-    const updateCodecSupportedByCDM = (state: ContentDecryptorState) => {
-      if (state > ContentDecryptorState.Initializing) {
-        const codecsSupportedByCDM = contentDecryptor.getSupportedCodecs();
-        this._codecsInfo.codecFromCDM = codecsSupportedByCDM;
 
-        if (
-          isNullOrUndefined(this._currentContentInfo) ||
-          isNullOrUndefined(this._currentContentInfo.manifest)
-        ) {
+    const updateCodecSupportOnStateChange = (state: ContentDecryptorState) => {
+      if (state > ContentDecryptorState.Initializing) {
+        const manifest = this._currentContentInfo?.manifest;
+        if (isNullOrUndefined(manifest)) {
           return;
         }
-        const manifest = this._currentContentInfo.manifest;
-
-        this._updateAndForwardCodecSupport(manifest);
-        contentDecryptor.removeEventListener("stateChange", updateCodecSupportedByCDM);
+        this._updateCodecSupport(manifest);
+        contentDecryptor.removeEventListener(
+          "stateChange",
+          updateCodecSupportOnStateChange,
+        );
       }
     };
-    contentDecryptor.addEventListener("stateChange", updateCodecSupportedByCDM);
+    contentDecryptor.addEventListener("stateChange", updateCodecSupportOnStateChange);
 
     contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (updates) => {
       if (
@@ -1298,7 +1311,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       contentDecryptor.dispose();
     });
 
-    return drmStatusRef;
+    return { statusRef: drmStatusRef, contentDecryptor };
   }
   /**
    * Retrieves all unknown codecs from the current manifest, checks these unknown codecs
@@ -1306,10 +1319,39 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * status of these codecs, and forwards the list of supported codecs to the web worker.
    * @param manifest
    */
-  private _updateAndForwardCodecSupport(manifest: IManifestMetadata) {
+  private _updateCodecSupport(manifest: IManifestMetadata) {
     const codecToTest = getAllUnknownCodecs(manifest);
     if (codecToTest.length > 0) {
-      const evaluatedCodecs = checkCodecs(codecToTest, this._codecsInfo.codecFromCDM);
+      const evaluatedCodecs: ICodecSupport[] = codecToTest.map((codecToCheck) => {
+        const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
+        const isSupported = isCodecSupported(inputCodec);
+        codecToCheck.supported = isSupported;
+        if (!isSupported) {
+          return {
+            mimeType: codecToCheck.mimeType,
+            codec: codecToCheck.codec,
+            supported: false,
+            supportedIfEncrypted: false,
+          };
+        }
+        let supportedIfEncrypted: boolean | undefined;
+        const contentDecryptor = this._currentContentInfo?.contentDecryptor;
+        if (isNullOrUndefined(contentDecryptor)) {
+          supportedIfEncrypted = true;
+        } else if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
+          supportedIfEncrypted =
+            contentDecryptor.isCodecSupported(
+              codecToCheck.mimeType,
+              codecToCheck.codec,
+            ) ?? true;
+        }
+        return {
+          mimeType: codecToCheck.mimeType,
+          codec: codecToCheck.codec,
+          supported: isSupported,
+          supportedIfEncrypted,
+        };
+      });
       this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
       try {
         updateManifestCodecSupport(manifest, this._codecsInfo.codecSupportList);
@@ -1793,6 +1835,12 @@ export interface IMultiThreadContentInitializerContentInfos {
    * Set to `null` when those considerations are not taken yet.
    */
   initialPlayPerformed: IReadOnlySharedReference<boolean> | null;
+  /**
+   * Set to the initialized `ContentDecryptor` instance linked to that content.
+   *
+   * Set to `null` when those considerations are not taken.
+   */
+  contentDecryptor: IContentDecryptor | null;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
@@ -2018,13 +2066,18 @@ type IDecryptionInitializationState =
    */
   | {
       type: "awaiting-media-link";
-      value: { isMediaLinked: SharedReference<boolean> };
+      value: {
+        isMediaLinked: SharedReference<boolean>;
+      };
     }
   /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
    */
-  | { type: "initialized"; value: null };
+  | {
+      type: "initialized";
+      value: null;
+    };
 
 function formatSourceBufferError(error: unknown): SourceBufferError {
   if (error instanceof SourceBufferError) {
