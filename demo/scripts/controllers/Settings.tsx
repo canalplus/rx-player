@@ -65,6 +65,8 @@ function Settings({
     cmcd,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,
+    checkMediaSegmentIntegrity,
+    checkManifestIntegrity,
     requestConfig,
     onCodecSwitch,
   } = loadVideoOptions;
@@ -216,6 +218,30 @@ function Settings({
             }),
           }),
         });
+      });
+    },
+    [updateLoadVideoOptions],
+  );
+
+  const onCheckMediaSegmentIntegrityChange = useCallback(
+    (checkMediaSegmentIntegrity: boolean) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (checkMediaSegmentIntegrity === prevOptions.checkMediaSegmentIntegrity) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { checkMediaSegmentIntegrity });
+      });
+    },
+    [updateLoadVideoOptions],
+  );
+
+  const onCheckManifestIntegrityChange = useCallback(
+    (checkManifestIntegrity: boolean) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (checkManifestIntegrity === prevOptions.checkManifestIntegrity) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { checkManifestIntegrity });
       });
     },
     [updateLoadVideoOptions],
@@ -376,11 +402,15 @@ function Settings({
             segmentRetry={segmentRetry}
             segmentRequestTimeout={segmentRequestTimeout}
             manifestRetry={manifestRetry}
+            checkManifestIntegrity={checkManifestIntegrity}
+            checkMediaSegmentIntegrity={checkMediaSegmentIntegrity}
             cmcdCommunicationMethod={cmcdCommunicationMethod}
             onSegmentRetryChange={onSegmentRetryChange}
             onSegmentRequestTimeoutChange={onSegmentRequestTimeoutChange}
             onManifestRetryChange={onManifestRetryChange}
             onManifestRequestTimeoutChange={onManifestRequestTimeoutChange}
+            onCheckManifestIntegrityChange={onCheckManifestIntegrityChange}
+            onCheckMediaSegmentIntegrityChange={onCheckMediaSegmentIntegrityChange}
             onCmcdChange={onCmcdChange}
           />
         </Option>

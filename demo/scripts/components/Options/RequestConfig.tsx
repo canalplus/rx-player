@@ -20,11 +20,15 @@ const DEFAULT_MANIFEST_REQUEST_TIMEOUT =
 function RequestConfig({
   manifestRequestTimeout,
   manifestRetry,
+  checkManifestIntegrity,
+  checkMediaSegmentIntegrity,
   cmcdCommunicationMethod,
   onManifestRequestTimeoutChange,
   onManifestRetryChange,
   onSegmentRequestTimeoutChange,
   onSegmentRetryChange,
+  onCheckManifestIntegrityChange,
+  onCheckMediaSegmentIntegrityChange,
   onCmcdChange,
   segmentRequestTimeout,
   segmentRetry,
@@ -32,6 +36,10 @@ function RequestConfig({
   manifestRequestTimeout: number;
   manifestRetry: number;
   cmcdCommunicationMethod: string;
+  checkMediaSegmentIntegrity: boolean;
+  checkManifestIntegrity: boolean;
+  onCheckMediaSegmentIntegrityChange: (val: boolean) => void;
+  onCheckManifestIntegrityChange: (val: boolean) => void;
   onManifestRequestTimeoutChange: (val: number) => void;
   onManifestRetryChange: (val: number) => void;
   onSegmentRequestTimeoutChange: (val: number) => void;
@@ -315,6 +323,40 @@ function RequestConfig({
           CMCD (Common Media Client Data) communication type
         </Select>
         <span className="option-desc">{cmcdDescMsg}</span>
+      </li>
+
+      <li>
+        <Checkbox
+          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
+          ariaLabel="Check segment integrity"
+          name="checkMediaSegmentIntegrity"
+          checked={checkMediaSegmentIntegrity}
+          onChange={onCheckMediaSegmentIntegrityChange}
+        >
+          Check Media Segment integrity
+        </Checkbox>
+        <span className="option-desc">
+          {checkMediaSegmentIntegrity
+            ? "Retry segment requests if those delivered by the CDN appear truncated."
+            : "Do not retry request if a segment seems truncated."}
+        </span>
+      </li>
+
+      <li>
+        <Checkbox
+          className="playerOptionsCheckBox playerOptionsCheckBoxTitle"
+          ariaLabel="Check Manifest integrity"
+          name="checkManifestIntegrity"
+          checked={checkManifestIntegrity}
+          onChange={onCheckManifestIntegrityChange}
+        >
+          Check Manifest integrity
+        </Checkbox>
+        <span className="option-desc">
+          {checkManifestIntegrity
+            ? "Retry Manifest requests if those delivered by the CDN appear truncated."
+            : "Do not retry request if a Manifest seems truncated."}
+        </span>
       </li>
     </Fragment>
   );

@@ -15,6 +15,8 @@ const defaultOptionsValues = {
   },
   loadVideo: {
     autoPlay: true,
+    checkManifestIntegrity: false,
+    checkMediaSegmentIntegrity: false,
     cmcd: undefined as ICmcdOptions | undefined,
     defaultAudioTrackSwitchingMode: "reload",
     enableFastSwitching: true,
