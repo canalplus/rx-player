@@ -129,94 +129,119 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   /**
-   * Callback executed when the manifest trigger an event to indicates the support
-   * of codecs may have changed. The TracksStore will select a new audio track if there is no
-   * current track.
-   * @returns void
+   * Check or re-check for Periods for which both an initial track can be chosen
+   * and for which the `newAvailablePeriods` event can be triggered.
+   *
+   * This needs to be called as codec support is either first known or updated
+   * on the Manifest.
    */
-  public onManifestCodecUpdate(): void {
+  public onManifestCodecSupportUpdate(): void {
+    const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
+
     for (const trackStorePeriod of this._storedPeriodInfo) {
-      if (trackStorePeriod.audio.storedSettings === null) {
-        // No audio is set. We need to set a new default audio
-        const audioAdaptations = getSupportedAdaptations(
-          trackStorePeriod.period,
-          "audio",
-        );
-        if (audioAdaptations.length > 0) {
-          const storedSettings = {
-            adaptation: audioAdaptations[0],
-            switchingMode: this._defaultAudioTrackSwitchingMode,
-            lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
-              null,
-            ),
-          };
-          trackStorePeriod.audio.storedSettings = storedSettings;
-          this.trigger("trackUpdate", {
-            period: toExposedPeriod(trackStorePeriod.period),
-            trackType: "audio",
-            reason: "missing",
-          });
-          // The previous event trigger could have had side-effects, so we
-          // re-check if we're still mostly in the same state
-          if (this._isDisposed) {
-            return; // Someone disposed the `TracksStore` on the previous side-effect
-          }
-          const newPeriodItem = getPeriodItem(
-            this._storedPeriodInfo,
-            trackStorePeriod.period.id,
+      const { period } = trackStorePeriod;
+      if (
+        trackStorePeriod.audio.storedSettings !== undefined &&
+        trackStorePeriod.video.storedSettings !== undefined &&
+        trackStorePeriod.text.storedSettings !== undefined
+      ) {
+        // already processed, continue
+        continue;
+      }
+      const adaptations: IAdaptationMetadata[] = [
+        ...(period.adaptations.audio ?? []),
+        ...(period.adaptations.video ?? []),
+      ];
+      const isCodecSupportKnown = adaptations.every((a) => a.isSupported !== undefined);
+      if (adaptations.length > 0 && !isCodecSupportKnown) {
+        // Not all codecs for that Period are known yet.
+        // Await until this is the case.
+        continue;
+      }
+
+      const audioAdaptation = getSupportedAdaptations(period, "audio")[0];
+      const audioStoredSettings =
+        audioAdaptation === undefined
+          ? null
+          : {
+              adaptation: audioAdaptation,
+              switchingMode: this._defaultAudioTrackSwitchingMode,
+              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+                null,
+              ),
+            };
+      trackStorePeriod.audio.storedSettings = audioStoredSettings;
+
+      const baseVideoAdaptation = getSupportedAdaptations(period, "video")[0];
+      const videoAdaptation = getRightVideoTrack(
+        baseVideoAdaptation,
+        this._isTrickModeTrackEnabled,
+      );
+      const videoStoredSettings =
+        videoAdaptation === undefined
+          ? null
+          : {
+              adaptation: videoAdaptation,
+              adaptationBase: baseVideoAdaptation,
+              switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
+              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+                null,
+              ),
+            };
+      trackStorePeriod.video.storedSettings = videoStoredSettings;
+
+      let textAdaptation: IAdaptationMetadata | null = null;
+      const forcedSubtitles = (period.adaptations.text ?? []).filter(
+        (ad) => ad.isForcedSubtitles === true,
+      );
+      if (forcedSubtitles.length > 0) {
+        if (audioAdaptation !== null && audioAdaptation !== undefined) {
+          const sameLanguage = arrayFind(
+            forcedSubtitles,
+            (f) => f.normalizedLanguage === audioAdaptation.normalizedLanguage,
           );
-          if (
-            newPeriodItem !== undefined &&
-            newPeriodItem.audio.storedSettings === storedSettings
-          ) {
-            newPeriodItem.audio.dispatcher?.updateTrack(storedSettings);
+          if (sameLanguage !== undefined) {
+            textAdaptation = sameLanguage;
           }
+        }
+        if (textAdaptation === null) {
+          textAdaptation =
+            arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ?? null;
         }
       }
 
-      if (trackStorePeriod.video.storedSettings === null) {
-        // No video is set. We need to set a new default audio
-        const videoAdaptations = getSupportedAdaptations(
-          trackStorePeriod.period,
-          "video",
-        );
-        if (videoAdaptations.length > 0) {
-          const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
-          const adaptationBase = videoAdaptations[0];
-          const adaptation = getRightVideoTrack(
-            adaptationBase,
-            this._isTrickModeTrackEnabled,
-          );
-          const storedSettings = {
-            adaptationBase,
-            adaptation,
-            switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
-            lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
-              null,
-            ),
-          };
-          trackStorePeriod.video.storedSettings = storedSettings;
-          this.trigger("trackUpdate", {
-            period: toExposedPeriod(trackStorePeriod.period),
-            trackType: "video",
-            reason: "missing",
-          });
-          // The previous event trigger could have had side-effects, so we
-          // re-check if we're still mostly in the same state
-          if (this._isDisposed) {
-            return; // Someone disposed the `TracksStore` on the previous side-effect
-          }
-          const newPeriodItem = getPeriodItem(
-            this._storedPeriodInfo,
-            trackStorePeriod.period.id,
-          );
-          if (
-            newPeriodItem !== undefined &&
-            newPeriodItem.audio.storedSettings === storedSettings
-          ) {
-            newPeriodItem.audio.dispatcher?.updateTrack(storedSettings);
-          }
+      let textStoredSettings: {
+        adaptation: IAdaptationMetadata;
+        switchingMode: "direct";
+        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
+      } | null = null;
+      if (textAdaptation !== null) {
+        textStoredSettings = {
+          adaptation: textAdaptation,
+          switchingMode: "direct" as const,
+          lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
+        };
+      }
+      trackStorePeriod.text.storedSettings = textStoredSettings;
+
+      if (!trackStorePeriod.isPeriodAdvertised) {
+        trackStorePeriod.isPeriodAdvertised = true;
+        this.trigger("newAvailablePeriods", [
+          { id: period.id, start: period.start, end: period.end },
+        ]);
+        if (this._isDisposed) {
+          return;
         }
+      }
+
+      if (trackStorePeriod.video.storedSettings === videoStoredSettings) {
+        trackStorePeriod.video.dispatcher?.updateTrack(videoStoredSettings);
+      }
+      if (trackStorePeriod.audio.storedSettings === audioStoredSettings) {
+        trackStorePeriod.audio.dispatcher?.updateTrack(audioStoredSettings);
+      }
+      if (trackStorePeriod.text.storedSettings === textStoredSettings) {
+        trackStorePeriod.text.dispatcher?.updateTrack(textStoredSettings);
       }
     }
   }
@@ -257,7 +282,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         newPListIdx++;
 
         const curWantedTextTrack = this._storedPeriodInfo[i].text.storedSettings;
-        if (curWantedTextTrack !== null) {
+        if (!isNullOrUndefined(curWantedTextTrack)) {
           const textAdaptations = getSupportedAdaptations(newPeriod, "text");
           const stillHere = textAdaptations.some(
             (a) => a.id === curWantedTextTrack.adaptation.id,
@@ -288,7 +313,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         }
 
         const curWantedVideoTrack = this._storedPeriodInfo[i].video.storedSettings;
-        if (curWantedVideoTrack !== null) {
+        if (!isNullOrUndefined(curWantedVideoTrack)) {
           const videoAdaptations = getSupportedAdaptations(newPeriod, "video");
           const stillHere = videoAdaptations.some(
             (a) => a.id === curWantedVideoTrack.adaptation.id,
@@ -340,7 +365,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         }
 
         const curWantedAudioTrack = this._storedPeriodInfo[i].audio.storedSettings;
-        if (curWantedAudioTrack !== null) {
+        if (!isNullOrUndefined(curWantedAudioTrack)) {
           const audioAdaptations = getSupportedAdaptations(newPeriod, "audio");
           const stillHere = audioAdaptations.some(
             (a) => a.id === curWantedAudioTrack.adaptation.id,
@@ -390,12 +415,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           i--;
         }
       } else {
-        const newPeriodInfo = generatePeriodInfo(
-          newPeriod,
-          true,
-          this._isTrickModeTrackEnabled,
-          this._defaultAudioTrackSwitchingMode,
-        );
+        const newPeriodInfo = generatePeriodInfo(newPeriod, true);
         // oldPeriod.start > newPeriod.start: insert newPeriod before
         this._storedPeriodInfo.splice(i, 0, newPeriodInfo);
         addedPeriods.push(newPeriodInfo);
@@ -409,14 +429,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       // Add further new Period
       const periodsToAdd = periods
         .slice(newPListIdx)
-        .map((p) =>
-          generatePeriodInfo(
-            p,
-            true,
-            this._isTrickModeTrackEnabled,
-            this._defaultAudioTrackSwitchingMode,
-          ),
-        );
+        .map((p) => generatePeriodInfo(p, true));
       this._storedPeriodInfo.push(...periodsToAdd);
       addedPeriods.push(...periodsToAdd);
     }
@@ -455,12 +468,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     let periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined) {
       // The Period has not yet been added.
-      periodObj = generatePeriodInfo(
-        period,
-        false,
-        this._isTrickModeTrackEnabled,
-        this._defaultAudioTrackSwitchingMode,
-      );
+      periodObj = generatePeriodInfo(period, false);
       let found = false;
       for (let i = 0; i < this._storedPeriodInfo.length; i++) {
         if (this._storedPeriodInfo[i].period.start > period.start) {
@@ -473,25 +481,16 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       }
     }
 
-    if (!periodObj.isPeriodAdvertised) {
-      periodObj.isPeriodAdvertised = true;
-      this.trigger("newAvailablePeriods", [
-        { id: period.id, start: period.start, end: period.end },
-      ]);
-      if (this._isDisposed) {
-        return;
-      }
-    }
-
     if (periodObj[bufferType].dispatcher !== null) {
       log.error(
         `TS: Subject already added for ${bufferType} ` + `and Period ${period.start}`,
       );
       return;
     }
-    const trackSetting = periodObj[bufferType].storedSettings;
+
     const dispatcher = new TrackDispatcher(adaptationRef);
     periodObj[bufferType].dispatcher = dispatcher;
+
     dispatcher.addEventListener("noPlayableRepresentation", () => {
       const nextAdaptation = arrayFind(period.adaptations[bufferType] ?? [], (a) => {
         if (a.isSupported === false) {
@@ -544,13 +543,16 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     dispatcher.addEventListener("noPlayableLockedRepresentation", () => {
       // TODO check that it doesn't already lead to segment loading or MediaSource
       // reloading
-      trackSetting?.lockedRepresentations.setValue(null);
+      if (periodObj === undefined) {
+        return;
+      }
+      this.unlockVideoRepresentations(periodObj);
       this.trigger("brokenRepresentationsLock", {
         period: { id: period.id, start: period.start, end: period.end },
         trackType: bufferType,
       });
     });
-    dispatcher.start(trackSetting);
+    this.onManifestCodecSupportUpdate();
   }
 
   /**
@@ -656,10 +658,13 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   public resetPeriodObjects(): void {
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
+      storedObj.audio.storedSettings = undefined;
       storedObj.audio.dispatcher?.dispose();
       storedObj.audio.dispatcher = null;
+      storedObj.video.storedSettings = undefined;
       storedObj.video.dispatcher?.dispose();
       storedObj.video.dispatcher = null;
+      storedObj.text.storedSettings = undefined;
       storedObj.text.dispatcher?.dispose();
       storedObj.text.dispatcher = null;
       if (!storedObj.inManifest) {
@@ -755,6 +760,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     lockedRepresentations: string[] | null;
     relativeResumingPosition: number | undefined;
   }): void {
+    if (!periodRef.isPeriodAdvertised) {
+      throw new Error("Wanted Period not yet advertised.");
+    }
     const period = periodRef.period;
     const wantedAdaptation = arrayFind(
       period.adaptations[bufferType] ?? [],
@@ -837,6 +845,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       lockedRepresentations,
       relativeResumingPosition,
     } = payload;
+    if (!periodRef.isPeriodAdvertised) {
+      throw new Error("Wanted Period not yet advertised.");
+    }
     const period = periodRef.period;
     const wantedAdaptation = arrayFind(
       period.adaptations.video ?? [],
@@ -908,6 +919,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj: ITSPeriodObject,
     bufferType: "audio" | "video" | "text",
   ): void {
+    if (!periodObj.isPeriodAdvertised) {
+      throw new Error("Wanted Period not yet advertised.");
+    }
     const trackInfo = periodObj[bufferType];
     if (trackInfo.storedSettings === null) {
       return;
@@ -958,7 +972,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * known.
    */
   public getChosenAudioTrack(periodObj: ITSPeriodObject): IAudioTrack | null {
-    return periodObj.audio.storedSettings === null
+    return isNullOrUndefined(periodObj.audio.storedSettings)
       ? null
       : toAudioTrack(periodObj.audio.storedSettings.adaptation, true);
   }
@@ -974,7 +988,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Object|null} - The text track chosen for this Period
    */
   public getChosenTextTrack(periodObj: ITSPeriodObject): ITextTrack | null {
-    return periodObj.text.storedSettings === null
+    return isNullOrUndefined(periodObj.text.storedSettings)
       ? null
       : toTextTrack(periodObj.text.storedSettings.adaptation);
   }
@@ -990,7 +1004,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @returns {Object|null} - The video track chosen for this Period
    */
   public getChosenVideoTrack(periodObj: ITSPeriodObject): IVideoTrack | null {
-    if (periodObj.video.storedSettings === null) {
+    if (isNullOrUndefined(periodObj.video.storedSettings)) {
       return null;
     }
 
@@ -1010,7 +1024,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj: ITSPeriodObject,
   ): IAvailableAudioTrack[] | undefined {
     const storedSettings = periodObj.audio.storedSettings;
-    const currentId = storedSettings !== null ? storedSettings.adaptation.id : null;
+    const currentId = !isNullOrUndefined(storedSettings)
+      ? storedSettings.adaptation.id
+      : null;
     const adaptations = getSupportedAdaptations(periodObj.period, "audio");
     return adaptations.map((adaptation: IAdaptationMetadata) => {
       const active = currentId === null ? false : currentId === adaptation.id;
@@ -1031,7 +1047,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj: ITSPeriodObject,
   ): IAvailableTextTrack[] | undefined {
     const storedSettings = periodObj.text.storedSettings;
-    const currentId = storedSettings !== null ? storedSettings.adaptation.id : null;
+    const currentId = !isNullOrUndefined(storedSettings)
+      ? storedSettings.adaptation.id
+      : null;
 
     const adaptations = getSupportedAdaptations(periodObj.period, "text");
     return adaptations.map((adaptation) => {
@@ -1053,7 +1071,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj: ITSPeriodObject,
   ): IAvailableVideoTrack[] | undefined {
     const storedSettings = periodObj.video.storedSettings;
-    const currentId = storedSettings === null ? undefined : storedSettings.adaptation.id;
+    const currentId = isNullOrUndefined(storedSettings)
+      ? undefined
+      : storedSettings.adaptation.id;
 
     const adaptations = getSupportedAdaptations(periodObj.period, "video");
     return adaptations.map((adaptation) => {
@@ -1077,7 +1097,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
   public getLockedAudioRepresentations(periodObj: ITSPeriodObject): string[] | null {
     const { storedSettings } = periodObj.audio;
-    if (storedSettings === null) {
+    if (isNullOrUndefined(storedSettings)) {
       return null;
     }
     const lastLockedSettings = storedSettings.lockedRepresentations.getValue();
@@ -1086,7 +1106,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
   public getLockedVideoRepresentations(periodObj: ITSPeriodObject): string[] | null {
     const { storedSettings } = periodObj.video;
-    if (storedSettings === null) {
+    if (isNullOrUndefined(storedSettings)) {
       return null;
     }
     const lastLockedSettings = storedSettings.lockedRepresentations.getValue();
@@ -1098,7 +1118,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     lockSettings: IAudioRepresentationsLockSettings,
   ): void {
     const { storedSettings } = periodObj.audio;
-    if (storedSettings === null) {
+    if (isNullOrUndefined(storedSettings)) {
       return;
     }
     const { DEFAULT_AUDIO_REPRESENTATIONS_SWITCHING_MODE } = config.getCurrent();
@@ -1120,7 +1140,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     lockSettings: IVideoRepresentationsLockSettings,
   ): void {
     const { storedSettings } = periodObj.video;
-    if (storedSettings === null) {
+    if (isNullOrUndefined(storedSettings)) {
       return;
     }
 
@@ -1140,7 +1160,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   public unlockAudioRepresentations(periodObj: ITSPeriodObject): void {
     const { storedSettings } = periodObj.audio;
     if (
-      storedSettings === null ||
+      isNullOrUndefined(storedSettings) ||
       storedSettings.lockedRepresentations.getValue() === null
     ) {
       return;
@@ -1151,7 +1171,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   public unlockVideoRepresentations(periodObj: ITSPeriodObject): void {
     const { storedSettings } = periodObj.video;
     if (
-      storedSettings === null ||
+      isNullOrUndefined(storedSettings) ||
       storedSettings.lockedRepresentations.getValue() === null
     ) {
       return;
@@ -1173,7 +1193,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   private _resetVideoTrackChoices(reason: "trickmode-enabled" | "trickmode-disabled") {
     for (let i = 0; i < this._storedPeriodInfo.length; i++) {
       const periodObj = this._storedPeriodInfo[i];
-      if (periodObj.video.storedSettings !== null) {
+      if (!isNullOrUndefined(periodObj.video.storedSettings)) {
         const chosenBaseTrack = periodObj.video.storedSettings.adaptationBase;
         if (chosenBaseTrack !== null) {
           const chosenTrack = getRightVideoTrack(
@@ -1193,23 +1213,25 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       const period = sliced[i].period;
       const videoItem = sliced[i].video;
       const storedSettings = videoItem.storedSettings;
-      this.trigger("trackUpdate", {
-        period: toExposedPeriod(period),
-        trackType: "video",
-        reason,
-      });
+      if (storedSettings !== undefined) {
+        this.trigger("trackUpdate", {
+          period: toExposedPeriod(period),
+          trackType: "video",
+          reason,
+        });
 
-      // The previous event trigger could have had side-effects, so we
-      // re-check if we're still mostly in the same state
-      if (this._isDisposed) {
-        return; // Someone disposed the `TracksStore` on the previous side-effect
-      }
-      const newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
-      if (
-        newPeriodItem !== undefined &&
-        newPeriodItem.video.storedSettings === storedSettings
-      ) {
-        newPeriodItem.video.dispatcher?.updateTrack(storedSettings);
+        // The previous event trigger could have had side-effects, so we
+        // re-check if we're still mostly in the same state
+        if (this._isDisposed) {
+          return; // Someone disposed the `TracksStore` on the previous side-effect
+        }
+        const newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+        if (
+          newPeriodItem !== undefined &&
+          newPeriodItem.video.storedSettings === storedSettings
+        ) {
+          newPeriodItem.video.dispatcher?.updateTrack(storedSettings);
+        }
       }
     }
   }
@@ -1326,70 +1348,15 @@ function getRightVideoTrack(
 function generatePeriodInfo(
   period: IPeriodMetadata,
   inManifest: boolean,
-  isTrickModeTrackEnabled: boolean,
-  defaultAudioTrackSwitchingMode: IAudioTrackSwitchingMode,
 ): ITSPeriodObject {
-  const audioAdaptation = getSupportedAdaptations(period, "audio")[0];
-  const baseVideoAdaptation = getSupportedAdaptations(period, "video")[0];
-  const videoAdaptation = getRightVideoTrack(
-    baseVideoAdaptation,
-    isTrickModeTrackEnabled,
-  );
-  const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
-  const audioSettings =
-    audioAdaptation !== undefined
-      ? {
-          adaptation: audioAdaptation,
-          switchingMode: defaultAudioTrackSwitchingMode,
-          lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
-        }
-      : null;
-  const videoSettings =
-    videoAdaptation !== undefined
-      ? {
-          adaptation: videoAdaptation,
-          adaptationBase: baseVideoAdaptation,
-          switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
-          lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
-        }
-      : null;
-
-  let textAdaptation: IAdaptationMetadata | null = null;
-  const forcedSubtitles = (period.adaptations.text ?? []).filter(
-    (ad) => ad.isForcedSubtitles === true,
-  );
-  if (forcedSubtitles.length > 0) {
-    if (audioAdaptation !== null && audioAdaptation !== undefined) {
-      const sameLanguage = arrayFind(
-        forcedSubtitles,
-        (f) => f.normalizedLanguage === audioAdaptation.normalizedLanguage,
-      );
-      if (sameLanguage !== undefined) {
-        textAdaptation = sameLanguage;
-      }
-    }
-    if (textAdaptation === null) {
-      textAdaptation =
-        arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ?? null;
-    }
-  }
-
-  let textSettings = null;
-  if (textAdaptation !== null) {
-    textSettings = {
-      adaptation: textAdaptation,
-      switchingMode: "direct" as const,
-      lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
-    };
-  }
   return {
     period,
     inManifest,
     isPeriodAdvertised: false,
     isRemoved: false,
-    audio: { storedSettings: audioSettings, dispatcher: null },
-    video: { storedSettings: videoSettings, dispatcher: null },
-    text: { storedSettings: textSettings, dispatcher: null },
+    audio: { storedSettings: undefined, dispatcher: null },
+    video: { storedSettings: undefined, dispatcher: null },
+    text: { storedSettings: undefined, dispatcher: null },
   };
 }
 
@@ -1440,19 +1407,23 @@ interface IAudioPeriodInfo {
   /**
    * Information on the last audio track settings wanted by the user.
    * `null` if no audio track is wanted.
+   * `undefined` if not set yet.
    */
-  storedSettings: {
-    /** Contains the last `Adaptation` wanted by the user. */
-    adaptation: IAdaptationMetadata;
-    /** "Switching mode" in which the track switch should happen. */
-    switchingMode: IAudioTrackSwitchingMode;
-    /**
-     * Contains the last locked `Representation`s for this `Adaptation` wanted
-     * by the user.
-     * `null` if no Representation is locked.
-     */
-    lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
-  } | null;
+  storedSettings:
+    | {
+        /** Contains the last `Adaptation` wanted by the user. */
+        adaptation: IAdaptationMetadata;
+        /** "Switching mode" in which the track switch should happen. */
+        switchingMode: IAudioTrackSwitchingMode;
+        /**
+         * Contains the last locked `Representation`s for this `Adaptation` wanted
+         * by the user.
+         * `null` if no Representation is locked.
+         */
+        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
+      }
+    | null
+    | undefined;
   /**
    * Tracks are internally emitted through RxJS's `Subject`s.
    * A `TrackDispatcher` allows to facilitate and centralize the management of
@@ -1473,19 +1444,23 @@ export interface ITextPeriodInfo {
   /**
    * Information on the last text track settings wanted.
    * `null` if no text track is wanted.
+   * `undefined` if not set yet.
    */
-  storedSettings: {
-    /** Contains the last `Adaptation` wanted by the user. */
-    adaptation: IAdaptationMetadata;
-    /** "Switching mode" in which the track switch should happen. */
-    switchingMode: "direct";
-    /**
-     * Contains the last locked `Representation`s for this `Adaptation` wanted
-     * by the user.
-     * `null` if no Representation is locked.
-     */
-    lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
-  } | null;
+  storedSettings:
+    | {
+        /** Contains the last `Adaptation` wanted by the user. */
+        adaptation: IAdaptationMetadata;
+        /** "Switching mode" in which the track switch should happen. */
+        switchingMode: "direct";
+        /**
+         * Contains the last locked `Representation`s for this `Adaptation` wanted
+         * by the user.
+         * `null` if no Representation is locked.
+         */
+        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
+      }
+    | null
+    | undefined;
   /**
    * Tracks are internally emitted through RxJS's `Subject`s.
    * A `TrackDispatcher` allows to facilitate and centralize the management of
@@ -1506,30 +1481,9 @@ export interface IVideoPeriodInfo {
   /**
    * Information on the `id` of the last video track settings wanted.
    * `null` if no video track is wanted.
+   * `undefined` if not set yet.
    */
-  storedSettings: {
-    /**
-     * The wanted Adaptation itself (may be different from `adaptationBase`
-     * when a trickmode track is chosen, in which case `adaptationBase` is
-     * the Adaptation the trickmode track is linked to and `adaptation` is
-     * the trickmode track).
-     */
-    adaptation: IAdaptationMetadata;
-    /** "Switching mode" in which the track switch should happen. */
-    switchingMode: IVideoTrackSwitchingMode;
-    /**
-     * The "base" Adaptation for `storedSettings` (if a trickmode track was
-     * chosen, this is the Adaptation the trickmode track is linked to, and not
-     * the trickmode track itself).
-     */
-    adaptationBase: IAdaptationMetadata;
-    /**
-     * Contains the last locked `Representation`s for this `Adaptation` wanted
-     * by the user.
-     * `null` if no Representation is locked.
-     */
-    lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
-  } | null;
+  storedSettings: IVideoStoredSettings | null | undefined;
   /**
    * Tracks are internally emitted through RxJS's `Subject`s.
    * A `TrackDispatcher` allows to facilitate and centralize the management of

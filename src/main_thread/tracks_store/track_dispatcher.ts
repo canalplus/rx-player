@@ -91,36 +91,8 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     this._canceller = new TaskCanceller();
     this._adaptationRef = adaptationRef;
     this._updateToken = false;
+    this._lastEmitted = undefined;
     this.refresh = noop;
-  }
-
-  /**
-   * @param {Object|null} initialTrackInfo
-   */
-  public start(initialTrackInfo: ITrackSetting | null): void {
-    this._updateToken = true;
-    if (initialTrackInfo === null) {
-      this._lastEmitted = null;
-      this._updateToken = false;
-      this._adaptationRef.setValue(null);
-      return;
-    }
-    const reference = this._constructLockedRepresentationsReference(initialTrackInfo);
-    if (!this._updateToken) {
-      return;
-    }
-    this._lastEmitted = {
-      adaptation: initialTrackInfo.adaptation,
-      switchingMode: initialTrackInfo.switchingMode,
-      lockedRepresentations: null,
-    };
-    this._updateToken = false;
-    this._adaptationRef.setValue({
-      adaptationId: initialTrackInfo.adaptation.id,
-      switchingMode: initialTrackInfo.switchingMode,
-      representations: reference,
-      relativeResumingPosition: undefined,
-    });
   }
 
   /**

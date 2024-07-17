@@ -2562,22 +2562,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * When triggered, the track store may need to consider selecting a new track.
    *
    * @param {Object} contentInfos
-   * @returns {void}
    */
   private _priv_onCodecSupportUpdate(contentInfos: IPublicApiContentInfos) {
-    if (contentInfos === null) {
+    const tStore = contentInfos?.tracksStore;
+    if (isNullOrUndefined(tStore)) {
       return;
     }
-
-    const tStore = contentInfos.tracksStore;
-    if (tStore === null) {
-      return;
-    }
-
-    if (contentInfos.manifest === null) {
-      return;
-    }
-    tStore.onManifestCodecUpdate();
+    tStore.onManifestCodecSupportUpdate();
   }
 
   private _priv_onDecipherabilityUpdate(
