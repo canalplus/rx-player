@@ -18,6 +18,7 @@ import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
+import type { ICodecSupportList } from "../../manifest";
 import type { IKeySystemOption } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -55,6 +56,8 @@ export interface IMediaKeysInfos {
   stores: IMediaKeySessionStores;
   /** IKeySystemOption compatible to the created MediaKeys instance. */
   options: IKeySystemOption;
+  /** The codecs support */
+  codecSupport: ICodecSupportList;
 }
 
 /**
@@ -84,7 +87,7 @@ export default async function getMediaKeysInfos(
     throw cancelSignal.cancellationError;
   }
 
-  const { options, mediaKeySystemAccess } = evt.value;
+  const { options, mediaKeySystemAccess, codecSupport } = evt.value;
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   const persistentSessionsStore = createPersistentSessionsStorage(options);
 
@@ -108,6 +111,7 @@ export default async function getMediaKeysInfos(
         mediaKeySystemAccess,
         stores: { loadedSessionsStore, persistentSessionsStore },
         options,
+        codecSupport,
       };
     }
   }
@@ -120,6 +124,7 @@ export default async function getMediaKeysInfos(
     mediaKeySystemAccess,
     stores: { loadedSessionsStore, persistentSessionsStore },
     options,
+    codecSupport,
   };
 }
 

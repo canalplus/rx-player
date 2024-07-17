@@ -116,7 +116,7 @@ export interface IContentInitializerEvents {
   /**
    * The codecs support for some tracks may have changed.
    */
-  manifestCodecChanged: null;
+  codecSupportUpdate: null;
   /**
    * Event sent after the decipherability status of at least one Representation
    * in the Manifest has been updated.

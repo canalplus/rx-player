@@ -26,7 +26,6 @@ import type {
 } from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import { parseCodec } from "../../utils/are_codecs_compatible";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
@@ -190,8 +189,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     initMediaKeys(mediaElement, ksOptions, canceller.signal)
       .then((mediaKeysInfo) => {
         const { options, mediaKeySystemAccess } = mediaKeysInfo;
-
-        this.findSupportedCodecForMediaKeys(mediaKeysInfo);
+        this._supportedCodecWhenEncrypted = mediaKeysInfo.codecSupport;
         /**
          * String identifying the key system, allowing the rest of the code to
          * only advertise the required initialization data for license requests.
@@ -225,63 +223,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       .catch((err) => {
         this._onFatalError(err);
       });
-  }
-
-  /**
-   * Extract from the current mediaKeys the supported Codecs.
-   */
-  private findSupportedCodecForMediaKeys(mediaKeys: IMediaKeysInfos): void {
-    const { EME_DEFAULT_AUDIO_CODECS, EME_DEFAULT_VIDEO_CODECS } = config.getCurrent();
-
-    const testedAudioCodecs =
-      mediaKeys.options.audioCapabilitiesConfig?.type === "contentType"
-        ? mediaKeys.options.audioCapabilitiesConfig?.value
-        : EME_DEFAULT_AUDIO_CODECS;
-
-    const testedVideoCodecs =
-      mediaKeys.options.videoCapabilitiesConfig?.type === "contentType"
-        ? mediaKeys.options.videoCapabilitiesConfig.value
-        : EME_DEFAULT_VIDEO_CODECS;
-
-    const testedCodecs = testedAudioCodecs.concat(testedVideoCodecs);
-    const supportedConfiguration = mediaKeys.mediaKeySystemAccess.getConfiguration();
-
-    const supportedVideoCodecs = supportedConfiguration.videoCapabilities?.map(
-      (entry) => entry.contentType,
-    );
-    const supportedAudioCodecs = supportedConfiguration.audioCapabilities?.map(
-      (entry) => entry.contentType,
-    );
-
-    const supportedCodecs = [
-      ...(supportedVideoCodecs ?? []),
-      ...(supportedAudioCodecs ?? []),
-    ].filter((contentType): contentType is string => contentType !== undefined);
-
-    if (supportedCodecs.length === 0) {
-      // Some legacy implementations have issues with `audioCapabilities` and
-      // `videoCapabilities` in requestMediaKeySystemAccess so the codecs are not provided.
-      // In this case, we can't tell which codec is supported or not.
-      // Let's instead provide an empty list.
-
-      // Note: on a correct EME implementation, if a list of codec is provided
-      // with `audioCapabilities` or `videoCapabilities`, but none of them is supported,
-      // requestMediaKeySystemAccess should yield an error "NotSupported" and we should
-      // never reach this code.
-      this._supportedCodecWhenEncrypted = [];
-      return;
-    }
-
-    const codecSupportList: ICodecSupportList = testedCodecs.map((codec) => {
-      const { codecs, mimeType } = parseCodec(codec);
-      const isSupported = arrayIncludes(supportedCodecs, codec);
-      return {
-        codec: codecs,
-        mimeType,
-        result: isSupported,
-      };
-    });
-    this._supportedCodecWhenEncrypted = codecSupportList;
   }
 
   /**

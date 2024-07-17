@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import features from "../../features";
 import log from "../../log";
 import type { IRepresentationMetadata } from "../../manifest";
 import type {
