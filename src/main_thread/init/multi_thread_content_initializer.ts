@@ -22,7 +22,7 @@ import {
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
-import type { ICodecSupport } from "../../manifest/classes/codecSupportList";
+import type { ICodecSupportInfo } from "../../manifest/classes/codecSupportList";
 import CodecSupportManager from "../../manifest/classes/codecSupportList";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
@@ -70,7 +70,7 @@ import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
 import {
-  getAllUnknownCodecs,
+  getCodecsWithUnknownSupport,
   updateManifestCodecSupport,
 } from "./utils/update_manifest_codec_support";
 
@@ -746,8 +746,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           const manifest = msgData.value.manifest;
-          this._updateCodecSupport(manifest);
           this._currentContentInfo.manifest = manifest;
+          this._updateCodecSupport(manifest);
           this._startPlaybackIfReady(playbackStartParams);
           break;
         }
@@ -1319,12 +1319,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * @param manifest
    */
   private _updateCodecSupport(manifest: IManifestMetadata) {
-    const codecToTest = getAllUnknownCodecs(manifest);
+    const codecToTest = getCodecsWithUnknownSupport(manifest);
     if (codecToTest.length > 0) {
-      const evaluatedCodecs: ICodecSupport[] = codecToTest.map((codecToCheck) => {
+      const evaluatedCodecs: ICodecSupportInfo[] = codecToTest.map((codecToCheck) => {
         const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
         const isSupported = isCodecSupported(inputCodec);
-        codecToCheck.supported = isSupported;
         if (!isSupported) {
           return {
             mimeType: codecToCheck.mimeType,

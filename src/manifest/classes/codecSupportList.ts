@@ -1,14 +1,14 @@
 /**
  * Interface representing codec and support information.
  */
-export interface ICodecSupport extends ISupportInfo {
+export interface ICodecSupportInfo extends ICodecSupportMatrix {
   mimeType: string;
   codec: string;
 }
 /**
  * Interface representing support information.
  */
-interface ISupportInfo {
+interface ICodecSupportMatrix {
   supported: boolean | undefined;
   supportedIfEncrypted: boolean | undefined;
 }
@@ -16,13 +16,13 @@ interface ISupportInfo {
  * Class to manage codec support information.
  */
 export default class CodecSupportManager {
-  public supportMap: Map<string, Map<string, ISupportInfo>>;
+  public supportMap: Map<string, Map<string, ICodecSupportMatrix>>;
 
   /**
    * Constructs an instance of CodecSupportManager.
    * @param {Array} codecList - List of codec support information.
    */
-  constructor(codecList: ICodecSupport[]) {
+  constructor(codecList: ICodecSupportInfo[]) {
     this.supportMap = new Map();
     this.addCodecs(codecList);
   }
@@ -31,7 +31,7 @@ export default class CodecSupportManager {
    * Adds codec support information to the manager.
    * @param {Array} codecList - List of codec support information.
    */
-  public addCodecs(codecList: ICodecSupport[]) {
+  public addCodecs(codecList: ICodecSupportInfo[]) {
     for (const codec of codecList) {
       let mimeTypeMap = this.supportMap.get(codec.mimeType);
       if (mimeTypeMap === undefined) {
