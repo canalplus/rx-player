@@ -152,7 +152,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         ...(period.adaptations.audio ?? []),
         ...(period.adaptations.video ?? []),
       ];
-      const isCodecSupportKnown = adaptations.every((a) => a.isSupported !== undefined);
+      const isCodecSupportKnown = adaptations.every((a) =>
+        a.representations.every((r) => r.isSupported !== undefined),
+      );
       if (adaptations.length > 0 && !isCodecSupportKnown) {
         // Not all codecs for that Period are known yet.
         // Await until this is the case.

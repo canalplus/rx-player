@@ -25,7 +25,7 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
-import type CodecSupportManager from "./codecSupportList";
+import type CodecSupportCache from "./codec_support_cache";
 import Representation from "./representation";
 
 /**
@@ -98,18 +98,13 @@ export default class Adaptation implements IAdaptationMetadata {
   public readonly trickModeTracks?: Adaptation[];
 
   /**
-   * Stores the information if a codec is supported or not.
-   */
-  public cachedCodecSupport: CodecSupportManager;
-
-  /**
    * @constructor
    * @param {Object} parsedAdaptation
    * @param {Object|undefined} [options]
    */
   constructor(
     parsedAdaptation: IParsedAdaptation,
-    cachedCodecSupport: CodecSupportManager,
+    cachedCodecSupport: CodecSupportCache,
     options: {
       representationFilter?: IRepresentationFilter | undefined;
       isManuallyAdded?: boolean | undefined;
@@ -147,8 +142,6 @@ export default class Adaptation implements IAdaptationMetadata {
     if (parsedAdaptation.label !== undefined) {
       this.label = parsedAdaptation.label;
     }
-
-    this.cachedCodecSupport = cachedCodecSupport;
 
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
       this.trickModeTracks = trickModeTracks.map(
@@ -235,10 +228,9 @@ export default class Adaptation implements IAdaptationMetadata {
    * this `Adaptation`'s `isSupported` property will be updated accordingly as
    * well as all of its inner `Representation`'s `isSupported` attributes.
    *
-   * @param {Array.<Object>} supportList
+   * @param {Array.<Object>} cachedCodecSupport
    */
-  refreshCodecSupport(cachedCodecSupport: CodecSupportManager): void {
-    this.cachedCodecSupport = cachedCodecSupport;
+  refreshCodecSupport(cachedCodecSupport: CodecSupportCache): void {
     let isAdaptationSupported: boolean | undefined;
     for (const representation of this.representations) {
       representation.refreshCodecSupport(cachedCodecSupport);

@@ -15,6 +15,7 @@
  */
 
 import Adaptation from "./adaptation";
+import type { ICodecSupportInfo } from "./codec_support_cache";
 import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
 import Manifest from "./manifest";
 import Period from "./period";
@@ -36,6 +37,7 @@ export type { IPeriodsUpdateResult } from "./update_periods";
 export type {
   IBufferedChunkInfos,
   ICodecSupportList,
+  ICodecSupportInfo,
   IDecipherabilityUpdateElement,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,

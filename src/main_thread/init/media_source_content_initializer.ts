@@ -40,8 +40,7 @@ import type { EncryptedMediaError } from "../../errors";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { IManifest, IPeriodMetadata } from "../../manifest";
-import type { ICodecSupportInfo } from "../../manifest/classes/codecSupportList";
+import type { IManifest, IPeriodMetadata, ICodecSupportInfo } from "../../manifest";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type {
@@ -286,21 +285,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
+
           onCodecSupportUpdate: () => {
+            // XXX TODO maybe we should await here
             const manifest = this._manifest?.syncValue;
             if (isNullOrUndefined(manifest)) {
+              // The Manifest is not yet fetched, but we will be able to check
+              // the codecs once it is the case
               return;
             }
             const codecsToTest = manifest.getCodecsWithUnknownSupport();
-            if (!codecsToTest.length) {
-              // all codecs are known, no need to update anything
-              return;
-            }
             const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-            const cachedCodecSupport = manifest.cachedCodecSupport;
-            cachedCodecSupport.addCodecs(codecsSupportInfo);
-            manifest.refreshCodecSupport(cachedCodecSupport);
-            this.trigger("codecSupportUpdate", null);
+            if (codecsSupportInfo.length > 0) {
+              manifest.updateCodecSupport(codecsSupportInfo);
+
+              // XXX TODO event from the Manifest would be more just and would
+              // copy `decipherabilityUpdate`'s behavior - which is similar
+              this.trigger("codecSupportUpdate", null);
+            }
           },
         },
         initCanceller.signal,
@@ -399,11 +401,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       (updates) => {
         this.trigger("manifestUpdate", updates);
         const codecsToTest = manifest.getCodecsWithUnknownSupport();
-        if (codecsToTest.length > 0) {
-          const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-          const cachedCodecSupport = manifest.cachedCodecSupport;
-          cachedCodecSupport.addCodecs(codecsSupportInfo);
-          manifest.refreshCodecSupport(cachedCodecSupport);
+        const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+        if (codecsSupportInfo.length > 0) {
+          manifest.updateCodecSupport(codecsSupportInfo);
+
+          // XXX TODO event from the Manifest would be more just and would
+          // copy `decipherabilityUpdate`'s behavior - which is similar
           this.trigger("codecSupportUpdate", null);
         }
       },
@@ -439,10 +442,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const codecsToTest = manifest.getCodecsWithUnknownSupport();
     if (codecsToTest.length > 0) {
       const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-      const cachedCodecSupport = manifest.cachedCodecSupport;
-      cachedCodecSupport.addCodecs(codecsSupportInfo);
-      manifest.refreshCodecSupport(cachedCodecSupport);
-      this.trigger("codecSupportUpdate", null);
+      if (codecsSupportInfo.length > 0) {
+        manifest.updateCodecSupport(codecsSupportInfo);
+
+        // XXX TODO event from the Manifest would be more just and would
+        // copy `decipherabilityUpdate`'s behavior - which is similar
+        this.trigger("codecSupportUpdate", null);
+      }
     }
 
     this.trigger("manifestReady", manifest);
@@ -1092,6 +1098,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       } else {
         const contentDecryptor = this._decryptionCapabilities.value;
         if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
+          // No information is available regarding the support status.
+          // Defaulting to assume the codec is supported.
           supportedIfEncrypted =
             contentDecryptor.isCodecSupported(
               codecToCheck.mimeType,

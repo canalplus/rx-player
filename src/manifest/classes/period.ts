@@ -21,7 +21,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
 import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
 import Adaptation from "./adaptation";
-import type CodecSupportManager from "./codecSupportList";
+import type CodecSupportCache from "./codec_support_cache";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
@@ -57,11 +57,6 @@ export default class Period implements IPeriodMetadata {
   public streamEvents: IManifestStreamEvent[];
 
   /**
-   * Stores the information if a codec is supported or not.
-   */
-  public cachedCodecSupport: CodecSupportManager;
-
-  /**
    * @constructor
    * @param {Object} args
    * @param {Array.<Object>} unsupportedAdaptations - Array on which
@@ -73,12 +68,11 @@ export default class Period implements IPeriodMetadata {
   constructor(
     args: IParsedPeriod,
     unsupportedAdaptations: Adaptation[],
-    cachedCodecSupport: CodecSupportManager,
+    cachedCodecSupport: CodecSupportCache,
 
     representationFilter?: IRepresentationFilter | undefined,
   ) {
     this.id = args.id;
-    this.cachedCodecSupport = cachedCodecSupport;
     this.adaptations = (
       Object.keys(args.adaptations) as ITrackType[]
     ).reduce<IManifestAdaptations>((acc, type) => {
@@ -146,17 +140,16 @@ export default class Period implements IPeriodMetadata {
    * Calling `refreshCodecSupport` manually once the codecs supported are known
    * by the current environnement allows to work-around this issue.
    *
-   * @param {Array.<Object>} supportList
    * @param {Array.<Object>} unsupportedAdaptations - Array on which
    * `Adaptation`s objects which are now known to have no supported
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
+   * @param {Array.<Object>} cachedCodecSupport
    */
   refreshCodecSupport(
     unsupportedAdaptations: Adaptation[],
-    cachedCodecSupport: CodecSupportManager,
+    cachedCodecSupport: CodecSupportCache,
   ) {
-    this.cachedCodecSupport = cachedCodecSupport;
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
       if (adaptationsForType === undefined) {

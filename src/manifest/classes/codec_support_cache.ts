@@ -9,17 +9,21 @@ export interface ICodecSupportInfo extends ICodecSupportMatrix {
  * Interface representing support information.
  */
 interface ICodecSupportMatrix {
-  supported: boolean | undefined;
-  supportedIfEncrypted: boolean | undefined;
+  supported?: boolean | undefined;
+  supportedIfEncrypted?: boolean | undefined;
 }
 /**
- * Class to manage codec support information.
+ * Class setting up a cache of which codec is currently known to be supported or
+ * not.
+ *
+ * We keep this only at the Manifest level because external conditions can change
+ * from Manifest to Manifest (e.g. not the same decryption cabalities used etc.).
  */
-export default class CodecSupportManager {
+export default class CodecSupportCache {
   public supportMap: Map<string, Map<string, ICodecSupportMatrix>>;
 
   /**
-   * Constructs an instance of CodecSupportManager.
+   * Constructs an CodecSupportCache instance.
    * @param {Array} codecList - List of codec support information.
    */
   constructor(codecList: ICodecSupportInfo[]) {

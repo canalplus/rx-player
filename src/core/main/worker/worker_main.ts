@@ -286,10 +286,8 @@ export default function initializeWorkerMain() {
           return;
         }
         const newEvaluatedCodecs = msg.value;
-        const codecSupportCache = preparedContent.manifest.cachedCodecSupport;
-        codecSupportCache.addCodecs(newEvaluatedCodecs);
         try {
-          const warning = preparedContent.manifest.refreshCodecSupport(codecSupportCache);
+          const warning = preparedContent.manifest.updateCodecSupport(newEvaluatedCodecs);
           if (warning !== null) {
             sendMessage({
               type: WorkerMessageType.Warning,

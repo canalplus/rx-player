@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { IParsedRepresentation } from "../../../parsers/manifest";
-import CodecSupportManager from "../codecSupportList";
+import CodecSupportCache from "../codec_support_cache";
 import Representation from "../representation";
 import type { IRepresentationIndex } from "../representation_index";
 
@@ -56,7 +56,7 @@ const minimalIndex: IRepresentationIndex = {
 };
 
 describe("Manifest - Representation", () => {
-  const cache = new CodecSupportManager([]);
+  const cache = new CodecSupportCache([]);
   it("should be able to create Representation with the minimum arguments given", () => {
     const args = {
       bitrate: 12,
@@ -315,7 +315,7 @@ describe("Manifest - Representation", () => {
       codecs: "mp4a.40.2",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    const customCache = new CodecSupportManager([
+    const customCache = new CodecSupportCache([
       {
         mimeType: "audio/mp4",
         codec: "mp4a.40.2",

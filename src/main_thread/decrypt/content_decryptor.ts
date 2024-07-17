@@ -359,8 +359,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     ) {
       log.error("DRM: Asking for codec support while the ContentDecryptor is disposed");
     }
-    // No information is available regarding the support status.
-    // Defaulting to assume the codec is supported.
     return isCompatibleCodecSupported(mimeType, codec, this._supportedCodecWhenEncrypted);
   }
 

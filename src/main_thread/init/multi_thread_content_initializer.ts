@@ -1,5 +1,4 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
@@ -23,8 +22,6 @@ import {
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
-import type { ICodecSupportInfo } from "../../manifest/classes/codecSupportList";
-import CodecSupportManager from "../../manifest/classes/codecSupportList";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   ICreateMediaSourceWorkerMessage,
@@ -70,10 +67,7 @@ import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
-import {
-  getCodecsWithUnknownSupport,
-  updateManifestCodecSupport,
-} from "./utils/update_manifest_codec_support";
+import { updateManifestCodecSupport } from "./utils/update_manifest_codec_support";
 
 const generateContentId = idGenerator();
 
@@ -113,9 +107,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
 
-  private _codecsInfo: {
-    codecSupportList: CodecSupportManager;
-  };
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -131,9 +122,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._segmentMetrics = {
       lastMessageId: 0,
       resolvers: {},
-    };
-    this._codecsInfo = {
-      codecSupportList: new CodecSupportManager([]),
     };
   }
 
@@ -1320,50 +1308,20 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * @param manifest
    */
   private _updateCodecSupport(manifest: IManifestMetadata) {
-    const codecToTest = getCodecsWithUnknownSupport(manifest);
-    if (codecToTest.length > 0) {
-      const evaluatedCodecs: ICodecSupportInfo[] = codecToTest.map((codecToCheck) => {
-        const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
-        const isSupported = isCodecSupported(inputCodec);
-        if (!isSupported) {
-          return {
-            mimeType: codecToCheck.mimeType,
-            codec: codecToCheck.codec,
-            supported: false,
-            supportedIfEncrypted: false,
-          };
-        }
-        let supportedIfEncrypted: boolean | undefined;
-        const contentDecryptor = this._currentContentInfo?.contentDecryptor;
-        if (isNullOrUndefined(contentDecryptor)) {
-          supportedIfEncrypted = true;
-        } else if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
-          supportedIfEncrypted =
-            contentDecryptor.isCodecSupported(
-              codecToCheck.mimeType,
-              codecToCheck.codec,
-            ) ?? true;
-        }
-        return {
-          mimeType: codecToCheck.mimeType,
-          codec: codecToCheck.codec,
-          supported: isSupported,
-          supportedIfEncrypted,
-        };
-      });
-      this._codecsInfo.codecSupportList.addCodecs(evaluatedCodecs);
-      try {
-        updateManifestCodecSupport(manifest, this._codecsInfo.codecSupportList);
-        if (evaluatedCodecs.length > 0) {
-          sendMessage(this._settings.worker, {
-            type: MainThreadMessageType.CodecSupportUpdate,
-            value: evaluatedCodecs,
-          });
-          this.trigger("codecSupportUpdate", null);
-        }
-      } catch (err) {
-        this._onFatalError(err);
+    try {
+      const updatedCodecs = updateManifestCodecSupport(
+        manifest,
+        this._currentContentInfo?.contentDecryptor ?? null,
+      );
+      if (updatedCodecs.length > 0) {
+        sendMessage(this._settings.worker, {
+          type: MainThreadMessageType.CodecSupportUpdate,
+          value: updatedCodecs,
+        });
+        this.trigger("codecSupportUpdate", null);
       }
+    } catch (err) {
+      this._onFatalError(err);
     }
   }
 
