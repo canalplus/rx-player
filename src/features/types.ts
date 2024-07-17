@@ -23,7 +23,6 @@ import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
 import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
 import type MediaElementTracksStore from "../main_thread/tracks_store/media_element_tracks_store";
 import type { IRxPlayer } from "../main_thread/types";
-import type { ICodecSupportProber } from "../mse";
 import type {
   IDashParserResponse,
   IMPDParserArguments,
@@ -93,14 +92,6 @@ export type IDebugElementFn = (
  * an application.
  */
 export interface IFeaturesObject {
-  /**
-   * Interface checking for codec support in an MSE (Media Source Extensions)
-   * context.
-   *
-   * Works both for environments with and without the necessary MSE API such
-   * as WebWorkers.
-   */
-  codecSupportProber: ICodecSupportProber | null;
   /**
    * Feature allowing to load so-called "directfile" contents, which are
    * contents natively decodable by the browser.

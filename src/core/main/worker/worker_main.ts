@@ -3,8 +3,6 @@ import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
-import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
-import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
   IContentInitializationData,
   IDiscontinuityUpdateWorkerMessagePayload,
@@ -110,10 +108,6 @@ export default function initializeWorkerMain() {
             hasVideo: msg.value.hasVideo,
           });
         }
-
-        features.codecSupportProber = msg.value.hasMseInWorker
-          ? MainCodecSupportProber
-          : WorkerCodecSupportProber;
 
         sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
         break;

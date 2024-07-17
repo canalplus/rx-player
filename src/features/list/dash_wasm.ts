@@ -16,7 +16,6 @@
 
 import type { IFeaturesObject } from "../../features/types";
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
-import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import type { IDashWasmParserOptions } from "../../parsers/manifest/dash/wasm-parser";
 import DashWasmParser from "../../parsers/manifest/dash/wasm-parser";
 import dash from "../../transports/dash";
@@ -29,7 +28,6 @@ const dashWasmFeature = {
     }
     features.dashParsers.wasm = dashWasmParser;
     features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
-    features.codecSupportProber = mainCodecSupportProber;
   },
 
   initialize(opts: IDashWasmParserOptions): Promise<void> {

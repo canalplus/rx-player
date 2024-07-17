@@ -360,7 +360,7 @@ describe("Manifest - Representation", () => {
     expect(spyCodecCache).toHaveBeenCalledTimes(0);
   });
 
-  it("should not set isSupported if support prober returns undefined", () => {
+  it("should not set isSupported if codec cache returns undefined", () => {
     const args = {
       bitrate: 12,
       id: "test",
@@ -379,7 +379,7 @@ describe("Manifest - Representation", () => {
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
   });
 
-  it("should have both supplementalCodecs and codecs if support prober returns undefined", () => {
+  it("should have both supplementalCodecs and codecs if codec cache returns undefined", () => {
     const args = {
       bitrate: 12,
       id: "test",
@@ -399,7 +399,7 @@ describe("Manifest - Representation", () => {
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
   });
 
-  it("should only have codecs if support prober returns false for the supplementalCodecs and true for the codecs", () => {
+  it("should only have codecs if codec cache returns false for the supplementalCodecs and true for the codecs", () => {
     const spyCodecCache = vi
       .spyOn(cache, "isSupported")
       .mockImplementation((_mimeType: string, codec: string, _encrypted: boolean) => {
@@ -424,7 +424,7 @@ describe("Manifest - Representation", () => {
     expect(spyCodecCache).toHaveBeenCalled();
   });
 
-  it("should have both supplementalCodecs and codecs if support prober returns undefined for the former and true for the latter", () => {
+  it("should have both supplementalCodecs and codecs if codec cache returns undefined for the former and true for the latter", () => {
     const spyCodecCache = vi
       .spyOn(cache, "isSupported")
       .mockImplementation((_mimeType: string, codec: string, _encrypted: boolean) => {
@@ -449,7 +449,7 @@ describe("Manifest - Representation", () => {
     expect(spyCodecCache).toHaveBeenCalled();
   });
 
-  it("should only have supplementalCodecs if support prober returns true for the former", () => {
+  it("should only have supplementalCodecs if codec cache returns true for the former", () => {
     const args = {
       bitrate: 12,
       id: "test",

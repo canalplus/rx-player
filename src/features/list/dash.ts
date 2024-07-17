@@ -15,7 +15,6 @@
  */
 
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
-import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import dashJsParser from "../../parsers/manifest/dash/native-parser";
 import dash from "../../transports/dash";
 import type { IFeaturesObject } from "../types";
@@ -30,7 +29,6 @@ function addDASHFeature(features: IFeaturesObject): void {
   }
   features.dashParsers.native = dashJsParser;
   features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
-  features.codecSupportProber = mainCodecSupportProber;
 }
 
 export { addDASHFeature as DASH };
