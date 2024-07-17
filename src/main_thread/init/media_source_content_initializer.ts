@@ -160,64 +160,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
-   * Checks if a codec is supported for the Content Decryption Module (CDM).
-   *
-   * @param {string} mimeType - The MIME type to check.
-   * @param {string} codec - The codec to check.
-   * @returns {boolean | undefined} - True if the codec is supported, false if it is not supported,
-   * or undefined if there is no information about the support.
-   */
-  private _isCodecDecipherable(mimeType: string, codec: string): boolean | undefined {
-    if (this._decryptionCapabilities.status === "uninitialized") {
-      return undefined;
-    } else if (this._decryptionCapabilities.status === "disabled") {
-      // It's ambiguous here, but let's say that no ContentDecryptor means that
-      // the codec is supported by it.
-      return true;
-    } else {
-      const contentDecryptor = this._decryptionCapabilities.value;
-      if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
-        return contentDecryptor.isCodecSupported(mimeType, codec) ?? true;
-      } else {
-        return undefined;
-      }
-    }
-  }
-
-  /**
-   * Evaluates a list of codecs to determine their support status.
-   *
-   * @param {Array} codecsToCheck - The list of codecs to check.
-   * @returns {Array} - The list of evaluated codecs with their support status updated.
-   */
-  private checkCodecs(codecsToCheck: ICodecSupport[]): ICodecSupport[] {
-    const evaluatedCodecs: ICodecSupport[] = codecsToCheck.map((codecToCheck) => {
-      const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
-      const isSupported = isCodecSupported(inputCodec);
-      codecToCheck.supported = isSupported;
-      if (!isSupported) {
-        return {
-          mimeType: codecToCheck.mimeType,
-          codec: codecToCheck.codec,
-          supported: false,
-          supportedIfEncrypted: false,
-        };
-      }
-      const supportedIfEncrypted = this._isCodecDecipherable(
-        codecToCheck.mimeType,
-        codecToCheck.codec,
-      );
-      return {
-        mimeType: codecToCheck.mimeType,
-        codec: codecToCheck.codec,
-        supported: isSupported,
-        supportedIfEncrypted,
-      };
-    });
-    return evaluatedCodecs;
-  }
-
-  /**
    * Perform non-destructive preparation steps, to prepare a future content.
    * For now, this mainly mean loading the Manifest document.
    */
@@ -353,7 +295,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               // all codecs are known, no need to update anything
               return;
             }
-            const evaluatedCodecs = this.checkCodecs(codecsToTest);
+            const evaluatedCodecs = this.getCodecSupportInfo(codecsToTest);
             const codecSupportList = manifest.cachedCodecSupport;
             codecSupportList.addCodecs(evaluatedCodecs);
             manifest.refreshCodecSupport(codecSupportList);
@@ -457,7 +399,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         this.trigger("manifestUpdate", updates);
         const unknownCodecs = manifest.getAllUnknownCodecs();
         if (unknownCodecs.length > 0) {
-          const evaluatedCodecs = this.checkCodecs(unknownCodecs);
+          const evaluatedCodecs = this.getCodecSupportInfo(unknownCodecs);
           const codecSupportList = manifest.cachedCodecSupport;
           codecSupportList.addCodecs(evaluatedCodecs);
           manifest.refreshCodecSupport(codecSupportList);
@@ -495,7 +437,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const unknownCodecs = manifest.getAllUnknownCodecs();
     if (unknownCodecs.length > 0) {
-      const evaluatedCodecs = this.checkCodecs(unknownCodecs);
+      const evaluatedCodecs = this.getCodecSupportInfo(unknownCodecs);
       const codecSupportList = manifest.cachedCodecSupport;
       codecSupportList.addCodecs(evaluatedCodecs);
       manifest.refreshCodecSupport(codecSupportList);
@@ -1113,6 +1055,56 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     cancelSignal.register(() => rebufferingController.destroy());
     rebufferingController.start();
     return rebufferingController;
+  }
+
+  /**
+   * Evaluates a list of codecs to determine their support status.
+   *
+   * @param {Array} codecsToCheck - The list of codecs to check.
+   * @returns {Array} - The list of evaluated codecs with their support status updated.
+   */
+  private getCodecSupportInfo(codecsToCheck: ICodecSupport[]): ICodecSupport[] {
+    const evaluatedCodecs: ICodecSupport[] = codecsToCheck.map((codecToCheck) => {
+      const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
+      const isSupported = isCodecSupported(inputCodec);
+      codecToCheck.supported = isSupported;
+      if (!isSupported) {
+        return {
+          mimeType: codecToCheck.mimeType,
+          codec: codecToCheck.codec,
+          supported: false,
+          supportedIfEncrypted: false,
+        };
+      }
+      /**
+       * `true` if the codec is supported when encrypted, `false` if it is not
+       * supported, or `undefined` if we cannot obtain that information.
+       */
+      let supportedIfEncrypted: boolean | undefined;
+      if (this._decryptionCapabilities.status === "uninitialized") {
+        supportedIfEncrypted = undefined;
+      } else if (this._decryptionCapabilities.status === "disabled") {
+        // It's ambiguous here, but let's say that no ContentDecryptor means that
+        // the codec is supported by it.
+        supportedIfEncrypted = true;
+      } else {
+        const contentDecryptor = this._decryptionCapabilities.value;
+        if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
+          supportedIfEncrypted =
+            contentDecryptor.isCodecSupported(
+              codecToCheck.mimeType,
+              codecToCheck.codec,
+            ) ?? true;
+        }
+      }
+      return {
+        mimeType: codecToCheck.mimeType,
+        codec: codecToCheck.codec,
+        supported: isSupported,
+        supportedIfEncrypted,
+      };
+    });
+    return evaluatedCodecs;
   }
 }
 
