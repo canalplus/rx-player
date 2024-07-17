@@ -155,42 +155,33 @@ class Representation implements IRepresentationMetadata {
     const isEncrypted = this.contentProtections !== undefined;
 
     if (trackType === "audio" || trackType === "video") {
-      if (features.codecSupportProber !== null) {
-        // Supplemental codecs are defined as backwards-compatible codecs enhancing
-        // the experience of a base layer codec
-        if (args.supplementalCodecs !== undefined) {
-          const isSupplementaryCodecSupported = cachedCodecSupport.isSupported(
+      // Supplemental codecs are defined as backwards-compatible codecs enhancing
+      // the experience of a base layer codec
+      if (args.supplementalCodecs !== undefined) {
+        const isSupplementaryCodecSupported = cachedCodecSupport.isSupported(
+          this.mimeType ?? "",
+          args.supplementalCodecs ?? "",
+          isEncrypted,
+        );
+
+        if (isSupplementaryCodecSupported !== false) {
+          this.codecs = [args.supplementalCodecs];
+          this.isSupported = isSupplementaryCodecSupported;
+        }
+      }
+      if (this.isSupported !== true) {
+        if (this.codecs.length > 0) {
+          // We couldn't check for support of another supplemental codec.
+          // Just push that codec without testing support yet, we'll check
+          // support later.
+          this.codecs.push(args.codecs ?? "");
+        } else {
+          this.codecs = args.codecs === undefined ? [] : [args.codecs];
+          this.isSupported = cachedCodecSupport.isSupported(
             this.mimeType ?? "",
-            args.supplementalCodecs ?? "",
+            args.codecs ?? "",
             isEncrypted,
           );
-
-          if (isSupplementaryCodecSupported !== false) {
-            this.codecs = [args.supplementalCodecs];
-            this.isSupported = isSupplementaryCodecSupported;
-          }
-        }
-        if (this.isSupported !== true) {
-          if (this.codecs.length > 0) {
-            // We couldn't check for support of another supplemental codec.
-            // Just push that codec without testing support yet, we'll check
-            // support later.
-            this.codecs.push(args.codecs ?? "");
-          } else {
-            this.codecs = args.codecs === undefined ? [] : [args.codecs];
-            this.isSupported = cachedCodecSupport.isSupported(
-              this.mimeType ?? "",
-              args.codecs ?? "",
-              isEncrypted,
-            );
-          }
-        }
-      } else {
-        if (args.supplementalCodecs !== undefined) {
-          this.codecs.push(args.supplementalCodecs);
-        }
-        if (args.codecs !== undefined) {
-          this.codecs.push(args.codecs);
         }
       }
     } else {
