@@ -62,33 +62,11 @@ export default class DecipherabilityFreezeDetector {
    */
   public needToReload(observation: IDecipherabilityFreezeDetectorObservation): boolean {
     const { readyState, rebuffering, freezing } = observation;
-
-    if (rebuffering === null && freezing === null) {
-      this._currentFreezeTimestamp = null;
-      return false;
-    }
-
-    const statusAudio = this._segmentSinksStore.getStatus("audio");
-    const statusVideo = this._segmentSinksStore.getStatus("video");
-
-    for (const status of [statusAudio, statusVideo]) {
-      if (status.type === "initialized") {
-        for (const segment of status.value.getLastKnownInventory()) {
-          const { representation } = segment.infos;
-          if (representation.isSupported === false) {
-            log.warn("Init: we have unsupported segments left in the buffer, reloading");
-            this._currentFreezeTimestamp = null;
-            return true;
-          }
-        }
-      }
-    }
-
     const bufferGap =
       observation.bufferGap !== undefined && isFinite(observation.bufferGap)
         ? observation.bufferGap
         : 0;
-    if (bufferGap < 6 || readyState > 1) {
+    if (bufferGap < 6 || (rebuffering === null && freezing === null) || readyState > 1) {
       this._currentFreezeTimestamp = null;
       return false;
     }
@@ -105,6 +83,8 @@ export default class DecipherabilityFreezeDetector {
       (rebufferingForTooLong || frozenForTooLong) &&
       getMonotonicTimeStamp() - this._currentFreezeTimestamp > 4000
     ) {
+      const statusAudio = this._segmentSinksStore.getStatus("audio");
+      const statusVideo = this._segmentSinksStore.getStatus("video");
       let hasOnlyDecipherableSegments = true;
       let isClear = true;
       for (const status of [statusAudio, statusVideo]) {
@@ -122,6 +102,14 @@ export default class DecipherabilityFreezeDetector {
               if (representation.decipherable !== true) {
                 hasOnlyDecipherableSegments = false;
               }
+            }
+
+            if (representation.isSupported === false) {
+              log.warn(
+                "Init: we have unsupported segments left in the buffer, reloading",
+              );
+              this._currentFreezeTimestamp = null;
+              return true;
             }
           }
         }

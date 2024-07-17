@@ -1067,8 +1067,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onManifestUpdate(contentInfos, updates),
     );
 
-    initializer.addEventListener("manifestCodecChanged", () =>
-      this._priv_onManifestCodecChanged(contentInfos),
+    initializer.addEventListener("codecSupportUpdate", () =>
+      this._priv_onCodecSupportUpdate(contentInfos),
     );
     initializer.addEventListener("decipherabilityUpdate", (updates) =>
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
@@ -2568,7 +2568,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param {Object} contentInfos
    * @returns {void}
    */
-  private _priv_onManifestCodecChanged(contentInfos: IPublicApiContentInfos) {
+  private _priv_onCodecSupportUpdate(contentInfos: IPublicApiContentInfos) {
     if (contentInfos === null) {
       return;
     }

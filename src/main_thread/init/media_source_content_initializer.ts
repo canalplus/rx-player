@@ -348,7 +348,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               const codecSupportList = manifest.cachedCodecSupport;
               codecSupportList.addCodecs(evaluatedCodecs);
               manifest.refreshCodecSupport(codecSupportList);
-              this.trigger("manifestCodecChanged", null);
+              this.trigger("codecSupportUpdate", null);
             })().catch(noop);
           },
         },
@@ -442,7 +442,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const codecSupportList = manifest.cachedCodecSupport;
           codecSupportList.addCodecs(evaluatedCodecs);
           manifest.refreshCodecSupport(codecSupportList);
-          this.trigger("manifestCodecChanged", null);
+          this.trigger("codecSupportUpdate", null);
         }
       },
       initCanceller.signal,
@@ -480,7 +480,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const codecSupportList = manifest.cachedCodecSupport;
       codecSupportList.addCodecs(evaluatedCodecs);
       manifest.refreshCodecSupport(codecSupportList);
-      this.trigger("manifestCodecChanged", null);
+      this.trigger("codecSupportUpdate", null);
     }
 
     this.trigger("manifestReady", manifest);

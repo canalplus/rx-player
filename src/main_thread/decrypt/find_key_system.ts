@@ -26,7 +26,13 @@ import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import type { IKeySystemOption } from "../../public_types";
+import type { ICodecSupportList } from "../../manifest";
+import type {
+  IAudioCapabilitiesConfiguration,
+  IKeySystemOption,
+  IVideoCapabilitiesConfiguration,
+} from "../../public_types";
+import { parseCodec } from "../../utils/are_codecs_compatible";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -38,6 +44,7 @@ type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 export interface IMediaKeySystemAccessInfos {
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
   options: IKeySystemOption;
+  codecSupport: ICodecSupportList;
 }
 
 export interface IReuseMediaKeySystemAccessEvent {
@@ -266,7 +273,67 @@ function buildKeySystemConfigurations(
     } as unknown as MediaKeySystemConfiguration,
   ];
 }
+/**
+ * Extract from the current mediaKeys the supported Codecs.
+ * @param {Object | undefined} audioCapabilitiesConfig - The audio capabilities provided to the KeySystem.
+ * @param {Object | undefined} videoCapabilitiesConfig - The video capabilities provided to the KeySystem.
+ * @param {Object | undefined} mksConfiguration - The result of getConfiguration() of the media keys.
+ * @return {Array} The list of supported codec by the CDM.
+ */
+export function extractCodecSupportListFromConfiguration(
+  audioCapabilitiesConfig: IAudioCapabilitiesConfiguration | undefined,
+  videoCapabilitiesConfig: IVideoCapabilitiesConfiguration | undefined,
+  mksConfiguration: MediaKeySystemConfiguration,
+): ICodecSupportList {
+  const { EME_DEFAULT_AUDIO_CODECS, EME_DEFAULT_VIDEO_CODECS } = config.getCurrent();
 
+  const testedAudioCodecs =
+    audioCapabilitiesConfig?.type === "contentType"
+      ? audioCapabilitiesConfig?.value
+      : EME_DEFAULT_AUDIO_CODECS;
+
+  const testedVideoCodecs =
+    videoCapabilitiesConfig?.type === "contentType"
+      ? videoCapabilitiesConfig.value
+      : EME_DEFAULT_VIDEO_CODECS;
+
+  const testedCodecs = testedAudioCodecs.concat(testedVideoCodecs);
+  const supportedVideoCodecs = mksConfiguration.videoCapabilities?.map(
+    (entry) => entry.contentType,
+  );
+  const supportedAudioCodecs = mksConfiguration.audioCapabilities?.map(
+    (entry) => entry.contentType,
+  );
+
+  const supportedCodecs = [
+    ...(supportedVideoCodecs ?? []),
+    ...(supportedAudioCodecs ?? []),
+  ].filter((contentType): contentType is string => contentType !== undefined);
+
+  if (supportedCodecs.length === 0) {
+    // Some legacy implementations have issues with `audioCapabilities` and
+    // `videoCapabilities` in requestMediaKeySystemAccess so the codecs are not provided.
+    // In this case, we can't tell which codec is supported or not.
+    // Let's instead provide an empty list.
+
+    // Note: on a correct EME implementation, if a list of codec is provided
+    // with `audioCapabilities` or `videoCapabilities`, but none of them is supported,
+    // requestMediaKeySystemAccess should yield an error "NotSupported" and we should
+    // never reach this code.
+    return [];
+  }
+
+  const codecSupportList: ICodecSupportList = testedCodecs.map((codec) => {
+    const { codecs, mimeType } = parseCodec(codec);
+    const isSupported = arrayIncludes(supportedCodecs, codec);
+    return {
+      codec: codecs,
+      mimeType,
+      result: isSupported,
+    };
+  });
+  return codecSupportList;
+}
 /**
  * Try to find a compatible key system from the keySystems array given.
  *
@@ -306,6 +373,11 @@ export default function getMediaKeySystemAccess(
           value: {
             mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
             options: cachedKeySystemAccess.keySystemOptions,
+            codecSupport: extractCodecSupportListFromConfiguration(
+              cachedKeySystemAccess.keySystemOptions.audioCapabilitiesConfig,
+              cachedKeySystemAccess.keySystemOptions.videoCapabilitiesConfig,
+              cachedKeySystemAccess.keySystemAccess.getConfiguration(),
+            ),
           },
         });
       }
@@ -389,6 +461,11 @@ export default function getMediaKeySystemAccess(
         value: {
           options: keySystemOptions,
           mediaKeySystemAccess: keySystemAccess,
+          codecSupport: extractCodecSupportListFromConfiguration(
+            keySystemOptions.audioCapabilitiesConfig,
+            keySystemOptions.videoCapabilitiesConfig,
+            keySystemAccess.getConfiguration(),
+          ),
         },
       };
     } catch (_) {

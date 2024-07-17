@@ -1318,7 +1318,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             type: MainThreadMessageType.CodecSupportUpdate,
             value: evaluatedCodecs,
           });
-          this.trigger("manifestCodecChanged", null);
+          this.trigger("codecSupportUpdate", null);
         }
       } catch (err) {
         this._onFatalError(err);
