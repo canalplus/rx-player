@@ -41,7 +41,7 @@ import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import type { IManifest, IPeriodMetadata } from "../../manifest";
-import type { ICodecSupport } from "../../manifest/classes/codecSupportList";
+import type { ICodecSupportInfo } from "../../manifest/classes/codecSupportList";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type {
@@ -291,15 +291,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (isNullOrUndefined(manifest)) {
               return;
             }
-            const codecsToTest = manifest.getAllUnknownCodecs();
+            const codecsToTest = manifest.getCodecsWithUnknownSupport();
             if (!codecsToTest.length) {
               // all codecs are known, no need to update anything
               return;
             }
-            const evaluatedCodecs = this.getCodecSupportInfo(codecsToTest);
-            const codecSupportList = manifest.cachedCodecSupport;
-            codecSupportList.addCodecs(evaluatedCodecs);
-            manifest.refreshCodecSupport(codecSupportList);
+            const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+            const cachedCodecSupport = manifest.cachedCodecSupport;
+            cachedCodecSupport.addCodecs(codecsSupportInfo);
+            manifest.refreshCodecSupport(cachedCodecSupport);
             this.trigger("codecSupportUpdate", null);
           },
         },
@@ -398,12 +398,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "manifestUpdate",
       (updates) => {
         this.trigger("manifestUpdate", updates);
-        const unknownCodecs = manifest.getAllUnknownCodecs();
-        if (unknownCodecs.length > 0) {
-          const evaluatedCodecs = this.getCodecSupportInfo(unknownCodecs);
-          const codecSupportList = manifest.cachedCodecSupport;
-          codecSupportList.addCodecs(evaluatedCodecs);
-          manifest.refreshCodecSupport(codecSupportList);
+        const codecsToTest = manifest.getCodecsWithUnknownSupport();
+        if (codecsToTest.length > 0) {
+          const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+          const cachedCodecSupport = manifest.cachedCodecSupport;
+          cachedCodecSupport.addCodecs(codecsSupportInfo);
+          manifest.refreshCodecSupport(cachedCodecSupport);
           this.trigger("codecSupportUpdate", null);
         }
       },
@@ -436,12 +436,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initCanceller.signal,
     );
 
-    const unknownCodecs = manifest.getAllUnknownCodecs();
-    if (unknownCodecs.length > 0) {
-      const evaluatedCodecs = this.getCodecSupportInfo(unknownCodecs);
-      const codecSupportList = manifest.cachedCodecSupport;
-      codecSupportList.addCodecs(evaluatedCodecs);
-      manifest.refreshCodecSupport(codecSupportList);
+    const codecsToTest = manifest.getCodecsWithUnknownSupport();
+    if (codecsToTest.length > 0) {
+      const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+      const cachedCodecSupport = manifest.cachedCodecSupport;
+      cachedCodecSupport.addCodecs(codecsSupportInfo);
+      manifest.refreshCodecSupport(cachedCodecSupport);
       this.trigger("codecSupportUpdate", null);
     }
 
@@ -1064,11 +1064,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {Array} codecsToCheck - The list of codecs to check.
    * @returns {Array} - The list of evaluated codecs with their support status updated.
    */
-  private getCodecSupportInfo(codecsToCheck: ICodecSupport[]): ICodecSupport[] {
-    const evaluatedCodecs: ICodecSupport[] = codecsToCheck.map((codecToCheck) => {
+  private getCodecsSupportInfo(
+    codecsToCheck: Array<{ mimeType: string; codec: string }>,
+  ): ICodecSupportInfo[] {
+    const codecsSupportInfo: ICodecSupportInfo[] = codecsToCheck.map((codecToCheck) => {
       const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
       const isSupported = isCodecSupported(inputCodec);
-      codecToCheck.supported = isSupported;
       if (!isSupported) {
         return {
           mimeType: codecToCheck.mimeType,
@@ -1105,7 +1106,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         supportedIfEncrypted,
       };
     });
-    return evaluatedCodecs;
+    return codecsSupportInfo;
   }
 }
 

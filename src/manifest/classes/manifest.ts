@@ -39,7 +39,6 @@ import {
 } from "../utils";
 import type Adaptation from "./adaptation";
 import CodecSupportManager from "./codecSupportList";
-import type { ICodecSupport } from "./codecSupportList";
 import type { IManifestAdaptations } from "./period";
 import Period from "./period";
 import type Representation from "./representation";
@@ -634,29 +633,28 @@ export default class Manifest
    *
    * @returns {Array} The list of codecs with unknown support status.
    */
-  public getAllUnknownCodecs(): ICodecSupport[] {
-    const unknownCodecs: ICodecSupport[] = [];
+  public getCodecsWithUnknownSupport(): Array<{ mimeType: string; codec: string }> {
+    const codecsWithUnknownSupport: Array<{ mimeType: string; codec: string }> = [];
     for (const period of this.periods) {
-      const [audio, video] = [
-        period.getAdaptationsForType("audio"),
-        period.getAdaptationsForType("video"),
+      const checkedAdaptations = [
+        ...period.getAdaptationsForType("audio"),
+        ...period.getAdaptationsForType("video"),
       ];
-      for (const adaptationType of [audio, video]) {
-        for (const adaptation of adaptationType) {
-          for (const representation of adaptation.representations) {
-            if (representation.isSupported === undefined) {
-              unknownCodecs.push({
-                mimeType: representation.mimeType ?? "",
-                codec: representation.codecs[0] ?? "",
-                supported: representation.isSupported,
-                supportedIfEncrypted: representation.isSupported,
-              });
-            }
+      for (const adaptation of checkedAdaptations) {
+        if (adaptation.isSupported !== undefined) {
+          continue;
+        }
+        for (const representation of adaptation.representations) {
+          if (representation.isSupported === undefined) {
+            codecsWithUnknownSupport.push({
+              mimeType: representation.mimeType ?? "",
+              codec: representation.codecs[0] ?? "",
+            });
           }
         }
       }
     }
-    return unknownCodecs;
+    return codecsWithUnknownSupport;
   }
 
   /**

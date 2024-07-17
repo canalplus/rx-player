@@ -1,35 +1,43 @@
 import { MediaError } from "../../../errors";
 import type { IManifestMetadata } from "../../../manifest";
 import type CodecSupportManager from "../../../manifest/classes/codecSupportList";
-import type { ICodecSupport } from "../../../manifest/classes/codecSupportList";
 import type { ITrackType } from "../../../public_types";
 
-export function getAllUnknownCodecs(manifest: IManifestMetadata) {
-  const unknownCodecs: ICodecSupport[] = [];
+/**
+ * Returns a list of all codecs that the support is not known yet on the given
+ * Manifest.
+ * If a representation with (`isSupported`) is undefined, we consider the
+ * codec support as unknown.
+ *
+ * This function iterates through all periods, adaptations, and representations,
+ * and collects unknown codecs.
+ *
+ * @returns {Array} The list of codecs with unknown support status.
+ */
+export function getCodecsWithUnknownSupport(
+  manifest: IManifestMetadata,
+): Array<{ mimeType: string; codec: string }> {
+  const codecsWithUnknownSupport: Array<{ mimeType: string; codec: string }> = [];
   for (const period of manifest.periods) {
-    const audioAndVideoAdaptations = [
+    const checkedAdaptations = [
       ...(period.adaptations.video ?? []),
       ...(period.adaptations.audio ?? []),
     ];
-    for (const adaptation of audioAndVideoAdaptations) {
+    for (const adaptation of checkedAdaptations) {
+      if (adaptation.isSupported !== undefined) {
+        continue;
+      }
       for (const representation of adaptation.representations) {
-        if (representation.codecs === undefined) {
-          break;
-        }
         if (representation.isSupported === undefined) {
-          for (const codec of representation.codecs) {
-            unknownCodecs.push({
-              mimeType: representation.mimeType ?? "",
-              codec,
-              supported: representation.isSupported,
-              supportedIfEncrypted: representation.isSupported,
-            });
-          }
+          codecsWithUnknownSupport.push({
+            mimeType: representation.mimeType ?? "",
+            codec: representation.codecs?.[0] ?? "",
+          });
         }
       }
     }
   }
-  return unknownCodecs;
+  return codecsWithUnknownSupport;
 }
 
 /**
