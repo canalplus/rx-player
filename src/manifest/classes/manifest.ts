@@ -647,10 +647,12 @@ export default class Manifest
       for (const adaptation of checkedAdaptations) {
         for (const representation of adaptation.representations) {
           if (representation.isSupported === undefined) {
-            codecsWithUnknownSupport.push({
-              mimeType: representation.mimeType ?? "",
-              codec: representation.codecs[0] ?? "",
-            });
+            for (const codec of representation.codecs) {
+              codecsWithUnknownSupport.push({
+                mimeType: representation.mimeType ?? "",
+                codec: codec ?? "",
+              });
+            }
           }
         }
       }
