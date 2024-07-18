@@ -87,7 +87,7 @@ export default class Period implements IPeriodMetadata {
           });
           if (
             newAdaptation.representations.length > 0 &&
-            newAdaptation.isSupported === false
+            newAdaptation.supportStatus.hasSupportedCodec === false
           ) {
             unsupportedAdaptations.push(newAdaptation);
           }
@@ -97,7 +97,9 @@ export default class Period implements IPeriodMetadata {
           (adaptation): adaptation is Adaptation => adaptation.representations.length > 0,
         );
       if (
-        filteredAdaptations.every((adaptation) => adaptation.isSupported === false) &&
+        filteredAdaptations.every(
+          (adaptation) => adaptation.supportStatus.hasSupportedCodec === false,
+        ) &&
         adaptationsForType.length > 0 &&
         (type === "video" || type === "audio")
       ) {
@@ -157,17 +159,20 @@ export default class Period implements IPeriodMetadata {
       }
       let hasSupportedAdaptations: boolean | undefined = false;
       for (const adaptation of adaptationsForType) {
-        const wasSupported = adaptation.isSupported;
+        const wasSupported = adaptation.supportStatus.hasSupportedCodec;
         adaptation.refreshCodecSupport(cachedCodecSupport);
-        if (wasSupported !== false && adaptation.isSupported === false) {
+        if (
+          wasSupported !== false &&
+          adaptation.supportStatus.hasSupportedCodec === false
+        ) {
           unsupportedAdaptations.push(adaptation);
         }
 
         if (hasSupportedAdaptations === false) {
-          hasSupportedAdaptations = adaptation.isSupported;
+          hasSupportedAdaptations = adaptation.supportStatus.hasSupportedCodec;
         } else if (
           hasSupportedAdaptations === undefined &&
-          adaptation.isSupported === true
+          adaptation.supportStatus.hasSupportedCodec === true
         ) {
           hasSupportedAdaptations = true;
         }

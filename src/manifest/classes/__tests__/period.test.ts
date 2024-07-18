@@ -507,8 +507,8 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).toHaveReturnedWith(period.adaptations.video[0]);
 
     const [adap] = unsupportedAdaptations;
-    expect((adap as { id: string }).id).toBe("55");
-    expect((adap as { isSupported: boolean }).isSupported).toBe(false);
+    expect(adap.id).toBe("55");
+    expect(adap.supportStatus.hasSupportedCodec).toBe(false);
   });
 
   it("should not set a parsing error if an empty unsupported adaptation is given", async () => {

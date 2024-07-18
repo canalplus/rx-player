@@ -494,15 +494,21 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj[bufferType].dispatcher = dispatcher;
 
     dispatcher.addEventListener("noPlayableRepresentation", () => {
-      const nextAdaptation = arrayFind(period.adaptations[bufferType] ?? [], (a) => {
-        if (a.isSupported === false) {
-          return false;
-        }
-        const playableRepresentations = a.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        );
-        return playableRepresentations.length > 0;
-      });
+      const nextAdaptation = arrayFind(
+        period.adaptations[bufferType] ?? [],
+        (adaptation) => {
+          if (
+            adaptation.supportStatus.hasSupportedCodec === false ||
+            adaptation.supportStatus.isDecipherable === false
+          ) {
+            return false;
+          }
+          const playableRepresentations = adaptation.representations.filter(
+            (r) => r.isSupported === true && r.decipherable !== false,
+          );
+          return playableRepresentations.length > 0;
+        },
+      );
       if (nextAdaptation === undefined) {
         const noRepErr = new MediaError(
           "NO_PLAYABLE_REPRESENTATION",
@@ -768,7 +774,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const period = periodRef.period;
     const wantedAdaptation = arrayFind(
       period.adaptations[bufferType] ?? [],
-      ({ id, isSupported }) => isSupported === true && id === trackId,
+      ({ id, supportStatus }) =>
+        supportStatus.hasSupportedCodec !== false &&
+        supportStatus.isDecipherable !== false &&
+        id === trackId,
     );
 
     if (wantedAdaptation === undefined) {
@@ -853,7 +862,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const period = periodRef.period;
     const wantedAdaptation = arrayFind(
       period.adaptations.video ?? [],
-      ({ id, isSupported }) => isSupported === true && id === trackId,
+      ({ id, supportStatus }) =>
+        supportStatus.isDecipherable !== false &&
+        supportStatus.hasSupportedCodec !== false &&
+        id === trackId,
     );
 
     if (wantedAdaptation === undefined) {

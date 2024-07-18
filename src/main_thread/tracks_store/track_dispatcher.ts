@@ -200,7 +200,6 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
         }
       }
       if (playableRepresentations.length <= 0) {
-        trackInfo.adaptation.isSupported = false;
         self.trigger("noPlayableRepresentation", null);
         return;
       }

@@ -256,6 +256,36 @@ export interface IPeriodMetadata {
   streamEvents: IManifestStreamEvent[];
 }
 
+/**
+ * Object describing the global support state for an Adaptation's
+ * Representations.
+ */
+export interface IAdaptationSupportStatus {
+  /**
+   * `true` if at least one of its Representation has a codecs currently
+   * supported.
+   * `false` if this is not the case.
+   * `undefined` if this is not known yet.
+   */
+  hasSupportedCodec: boolean | undefined;
+  /**
+   * `true` if some of its Representation's codec support is `undefined` - and
+   * thus needs to be checked.
+   *
+   * `false` if support is known for all codecs associated to this Adaptation's
+   * Representations.
+   */
+  hasCodecWithUndefinedSupport: boolean;
+  /**
+   * `true` if at least one of its Representation is known to be decipherable.
+   *
+   * `false` if none of its Representation are decipherable.
+   *
+   * `undefined` if this is unknown.
+   */
+  isDecipherable: boolean | undefined;
+}
+
 export interface IAdaptationMetadata {
   /** ID uniquely identifying the Adaptation in the Period. */
   id: string;
@@ -277,12 +307,10 @@ export interface IAdaptationMetadata {
    */
   isForcedSubtitles?: boolean | undefined;
   /**
-   * `true` if at least one Representation is in a supported codec. `false` otherwise.
-   *
-   * `undefined` for when this is not yet known (we're still in the process of
-   * probing for support).
+   * Object describing the global support state for that Adaptation's
+   * Representations.
    */
-  isSupported?: boolean | undefined;
+  supportStatus: IAdaptationSupportStatus;
   /** Language this Adaptation is in, when translated into an ISO639-3 code. */
   normalizedLanguage?: string | undefined;
   /**

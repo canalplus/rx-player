@@ -15,7 +15,6 @@
  */
 
 import log from "../../log";
-import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
 import type { IParsedAdaptation } from "../../parsers/manifest";
 import type {
   ITrackType,
@@ -25,6 +24,11 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
+import type {
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+  IAdaptationSupportStatus,
+} from "../types";
 import type CodecSupportCache from "./codec_support_cache";
 import Representation from "./representation";
 
@@ -83,7 +87,7 @@ export default class Adaptation implements IAdaptationMetadata {
   /**
    * @see IRepresentationMetadata
    */
-  public isSupported: boolean | undefined;
+  public supportStatus: IAdaptationSupportStatus;
   /**
    * @see IRepresentationMetadata
    */
@@ -151,7 +155,11 @@ export default class Adaptation implements IAdaptationMetadata {
 
     const argsRepresentations = parsedAdaptation.representations;
     const representations: Representation[] = [];
-    let isSupported: boolean | undefined;
+    this.supportStatus = {
+      hasSupportedCodec: false,
+      hasCodecWithUndefinedSupport: false,
+      isDecipherable: false,
+    };
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(
         argsRepresentations[i],
@@ -190,12 +198,20 @@ export default class Adaptation implements IAdaptationMetadata {
       }
       if (shouldAdd) {
         representations.push(representation);
-        if (isSupported === undefined) {
-          if (representation.isSupported === true) {
-            isSupported = true;
-          } else if (representation.isSupported === false) {
-            isSupported = false;
+        if (representation.isSupported === undefined) {
+          this.supportStatus.hasCodecWithUndefinedSupport = true;
+          if (this.supportStatus.hasSupportedCodec === false) {
+            this.supportStatus.hasSupportedCodec = undefined;
           }
+        } else if (representation.isSupported) {
+          this.supportStatus.hasSupportedCodec = true;
+        }
+        if (representation.decipherable === undefined) {
+          if (this.supportStatus.isDecipherable === false) {
+            this.supportStatus.isDecipherable = undefined;
+          }
+        } else if (representation.decipherable) {
+          this.supportStatus.isDecipherable = true;
         }
       } else {
         log.debug(
@@ -209,8 +225,6 @@ export default class Adaptation implements IAdaptationMetadata {
     }
     representations.sort((a, b) => a.bitrate - b.bitrate);
     this.representations = representations;
-
-    this.isSupported = isSupported;
 
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = isManuallyAdded === true;
@@ -231,21 +245,16 @@ export default class Adaptation implements IAdaptationMetadata {
    * @param {Array.<Object>} cachedCodecSupport
    */
   refreshCodecSupport(cachedCodecSupport: CodecSupportCache): void {
-    let isAdaptationSupported: boolean | undefined;
     for (const representation of this.representations) {
       representation.refreshCodecSupport(cachedCodecSupport);
-      if (representation.isSupported === true) {
-        isAdaptationSupported = true;
-      } else if (
-        isAdaptationSupported === undefined &&
-        representation.isSupported === false
-      ) {
-        isAdaptationSupported = false;
+      if (representation.isSupported === undefined) {
+        this.supportStatus.hasCodecWithUndefinedSupport = true;
+        if (this.supportStatus.hasSupportedCodec === false) {
+          this.supportStatus.hasSupportedCodec = undefined;
+        }
+      } else if (representation.isSupported) {
+        this.supportStatus.hasSupportedCodec = true;
       }
-    }
-    if (isAdaptationSupported !== this.isSupported) {
-      // only update if support has changed
-      this.isSupported = isAdaptationSupported;
     }
   }
 
@@ -281,7 +290,7 @@ export default class Adaptation implements IAdaptationMetadata {
     return {
       id: this.id,
       type: this.type,
-      isSupported: this.isSupported,
+      supportStatus: this.supportStatus,
       language: this.language,
       isForcedSubtitles: this.isForcedSubtitles,
       isClosedCaption: this.isClosedCaption,
