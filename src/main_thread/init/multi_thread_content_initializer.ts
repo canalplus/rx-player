@@ -1317,6 +1317,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           type: MainThreadMessageType.CodecSupportUpdate,
           value: updatedCodecs,
         });
+        // TODO what if one day the worker updates codec support by itself?
+        // We wouldn't know...
         this.trigger("codecSupportUpdate", null);
       }
     } catch (err) {

@@ -293,10 +293,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
               if (codecsSupportInfo.length > 0) {
                 manifest.updateCodecSupport(codecsSupportInfo);
-
-                // XXX TODO event from the Manifest would be more just and would
-                // copy `decipherabilityUpdate`'s behavior - which is similar
-                this.trigger("codecSupportUpdate", null);
               }
             };
 
@@ -410,10 +406,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
         if (codecsSupportInfo.length > 0) {
           manifest.updateCodecSupport(codecsSupportInfo);
-
-          // XXX TODO event from the Manifest would be more just and would
-          // copy `decipherabilityUpdate`'s behavior - which is similar
-          this.trigger("codecSupportUpdate", null);
         }
       },
       initCanceller.signal,
@@ -423,6 +415,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "decipherabilityUpdate",
       (elts) => {
         this.trigger("decipherabilityUpdate", elts);
+      },
+      initCanceller.signal,
+    );
+
+    manifest.addEventListener(
+      "supportUpdate",
+      () => {
+        this.trigger("codecSupportUpdate", null);
       },
       initCanceller.signal,
     );
@@ -450,10 +450,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
       if (codecsSupportInfo.length > 0) {
         manifest.updateCodecSupport(codecsSupportInfo);
-
-        // XXX TODO event from the Manifest would be more just and would
-        // copy `decipherabilityUpdate`'s behavior - which is similar
-        this.trigger("codecSupportUpdate", null);
       }
     }
 
