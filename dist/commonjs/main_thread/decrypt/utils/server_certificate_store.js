@@ -1,0 +1,123 @@
+"use strict";
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var hash_buffer_1 = require("../../../utils/hash_buffer");
+/**
+ * Keep track of server certificate which have been set for a MediaKeys.
+ * As it is impossible for a MediaKeys to have his server certificate reset
+ * or updated, we consider that once it has been set, it will remain set until
+ * the MediaKeys instance is killed.
+ *
+ * So, a WeakMap helps keeping a trace of which server certificate (identified
+ * with a unique hash) is set on a MediaKeys.
+ * `null` indicate that we don't know (and not `undefined`, because this is the
+ * default value for when a WeakMap has no value for a key) which server
+ * certificate is attached to a MediaKeys instance (most likely because related
+ * EME APIs failed or had an unexpected behavior).
+ */
+var serverCertificateHashesMap = new WeakMap();
+/** ServerCertificateStore */
+exports.default = {
+    /**
+     * Tells the ServerCertificateStore that you begin to call the APIs to set a
+     * ServerCertificate on `mediaKeys`.
+     *
+     * Calling this function is necessary due to how server certificate work
+     * currently in EME APIs:
+     * Because right now, it is impossible to tell if a MediaKeys instance has an
+     * attached ServerCertificate or not when the corresponding API fails or if it
+     * never answers, we prefer to announce through this function that the current
+     * server certificate attached to this MediaKeys is for now invalid.
+     * @param {MediaKeys | Object} mediaKeys
+     */
+    prepare: function (mediaKeys) {
+        serverCertificateHashesMap.set(mediaKeys, null);
+    },
+    /**
+     * Attach a new server certificate to a MediaKeys in the
+     * ServerCertificateStore.
+     *
+     * Only one server certificate should ever be attached to a MediaKeys
+     * instance and the `prepare` function should have been called before any
+     * action to update the server certificate took place (this function does not
+     * enforce either of those behaviors).
+     * @param {MediaKeys | Object} mediaKeys
+     * @param {ArrayBufferView | BufferSource} serverCertificate
+     */
+    set: function (mediaKeys, serverCertificate) {
+        var formattedServerCertificate = serverCertificate instanceof Uint8Array
+            ? serverCertificate
+            : new Uint8Array(serverCertificate instanceof ArrayBuffer
+                ? serverCertificate
+                : serverCertificate.buffer);
+        var hash = (0, hash_buffer_1.default)(formattedServerCertificate);
+        serverCertificateHashesMap.set(mediaKeys, {
+            hash: hash,
+            serverCertificate: formattedServerCertificate,
+        });
+    },
+    /**
+     * Returns `true` if the MediaKeys instance has an attached ServerCertificate.
+     * Returns `false` if it doesn't.
+     *
+     * Returns `undefined` if we cannot know, most likely because related EME APIs
+     * failed or had an unexpected behavior.
+     * @param {MediaKeys} mediaKeys
+     * @returns {Boolean|undefined}
+     */
+    hasOne: function (mediaKeys) {
+        var currentServerCertificate = serverCertificateHashesMap.get(mediaKeys);
+        if (currentServerCertificate === undefined) {
+            return false;
+        }
+        if (currentServerCertificate === null) {
+            return undefined;
+        }
+        return true;
+    },
+    /**
+     * Returns `true` if the given `mediaKeys` has `serverCertificate` attached to
+     * it.
+     * Returns `false` either if it doesn't of if we doesn't know if it does.
+     * @param {MediaKeys | Object} mediaKeys
+     * @param {ArrayBufferView | BufferSource} serverCertificate
+     * @returns {boolean}
+     */
+    has: function (mediaKeys, serverCertificate) {
+        var serverCertificateHash = serverCertificateHashesMap.get(mediaKeys);
+        if (serverCertificateHash === undefined || serverCertificateHash === null) {
+            return false;
+        }
+        var oldHash = serverCertificateHash.hash, oldServerCertificate = serverCertificateHash.serverCertificate;
+        var newServerCertificate = serverCertificate instanceof Uint8Array
+            ? serverCertificate
+            : new Uint8Array(serverCertificate instanceof ArrayBuffer
+                ? serverCertificate
+                : serverCertificate.buffer);
+        var newHash = (0, hash_buffer_1.default)(newServerCertificate);
+        if (newHash !== oldHash ||
+            oldServerCertificate.length !== newServerCertificate.length) {
+            return false;
+        }
+        for (var i = 0; i < oldServerCertificate.length; i++) {
+            if (oldServerCertificate[i] !== newServerCertificate[i]) {
+                return false;
+            }
+        }
+        return true;
+    },
+};

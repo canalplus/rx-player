@@ -1,0 +1,57 @@
+"use strict";
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var request_1 = require("../../utils/request");
+var add_query_string_1 = require("../utils/add_query_string");
+var call_custom_manifest_loader_1 = require("../utils/call_custom_manifest_loader");
+/**
+ * Manifest loader triggered if there was no custom-defined one in the API.
+ * @param {string} initialUrl
+ * @param {Object} loaderOptions
+ * @param {Object} cancelSignal
+ */
+function regularManifestLoader(initialUrl, loaderOptions, cancelSignal) {
+    var _a, _b;
+    if (initialUrl === undefined) {
+        throw new Error("Cannot perform HTTP(s) request. URL not known");
+    }
+    var url = ((_a = loaderOptions.cmcdPayload) === null || _a === void 0 ? void 0 : _a.type) === "query"
+        ? (0, add_query_string_1.default)(initialUrl, loaderOptions.cmcdPayload.value)
+        : initialUrl;
+    return (0, request_1.default)({
+        url: url,
+        headers: ((_b = loaderOptions.cmcdPayload) === null || _b === void 0 ? void 0 : _b.type) === "headers"
+            ? loaderOptions.cmcdPayload.value
+            : undefined,
+        responseType: "text",
+        timeout: loaderOptions.timeout,
+        connectionTimeout: loaderOptions.connectionTimeout,
+        cancelSignal: cancelSignal,
+    });
+}
+/**
+ * Generate a manifest loader for the application
+ * @param {Function} [customManifestLoader]
+ * @returns {Function}
+ */
+function generateManifestLoader(_a) {
+    var customManifestLoader = _a.customManifestLoader;
+    return typeof customManifestLoader !== "function"
+        ? regularManifestLoader
+        : (0, call_custom_manifest_loader_1.default)(customManifestLoader, regularManifestLoader);
+}
+exports.default = generateManifestLoader;
