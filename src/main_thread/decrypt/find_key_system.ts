@@ -25,7 +25,6 @@ import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import type { ICodecSupportList } from "../../manifest";
 import type {
   IAudioCapabilitiesConfiguration,
   IKeySystemOption,
@@ -39,6 +38,12 @@ import type { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
+
+export type ICodecSupportList = Array<{
+  codec: string;
+  mimeType: string;
+  result: boolean;
+}>;
 
 export interface IMediaKeySystemAccessInfos {
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;

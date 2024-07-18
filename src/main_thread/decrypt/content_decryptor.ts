@@ -19,14 +19,9 @@ import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
-import type {
-  IAdaptationMetadata,
-  ICodecSupportList,
-  IPeriodMetadata,
-} from "../../manifest";
+import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import { isCompatibleCodecSupported } from "../../utils/are_codecs_compatible";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
@@ -36,6 +31,7 @@ import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
 import createOrLoadSession from "./create_or_load_session";
+import type { ICodecSupportList } from "./find_key_system";
 import type { IMediaKeysInfos } from "./get_media_keys";
 import initMediaKeys from "./init_media_keys";
 import type { IKeyUpdateValue } from "./session_events_listener";
@@ -54,6 +50,7 @@ import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataValuesContainer from "./utils/init_data_values_container";
+import isCompatibleCodecSupported from "./utils/is_compatible_codec_supported";
 import {
   areAllKeyIdsContainedIn,
   areSomeKeyIdsContainedIn,

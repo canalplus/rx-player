@@ -1,7 +1,6 @@
 import type {
   IDecipherabilityUpdateElement,
   ICodecSupportInfo,
-  ICodecSupportList,
   Period,
   Adaptation,
   Representation,
@@ -28,7 +27,6 @@ export type IRepresentation = Representation;
 
 export type {
   IDecipherabilityUpdateElement,
-  ICodecSupportList,
   ICodecSupportInfo,
   IPeriodsUpdateResult,
   IRepresentationIndex,
