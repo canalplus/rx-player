@@ -245,10 +245,11 @@ export default class Adaptation implements IAdaptationMetadata {
    * @param {Array.<Object>} cachedCodecSupport
    */
   refreshCodecSupport(cachedCodecSupport: CodecSupportCache): void {
+    let hasCodecWithUndefinedSupport = false;
     for (const representation of this.representations) {
       representation.refreshCodecSupport(cachedCodecSupport);
       if (representation.isSupported === undefined) {
-        this.supportStatus.hasCodecWithUndefinedSupport = true;
+        hasCodecWithUndefinedSupport = true;
         if (this.supportStatus.hasSupportedCodec === false) {
           this.supportStatus.hasSupportedCodec = undefined;
         }
@@ -256,6 +257,7 @@ export default class Adaptation implements IAdaptationMetadata {
         this.supportStatus.hasSupportedCodec = true;
       }
     }
+    this.supportStatus.hasCodecWithUndefinedSupport = hasCodecWithUndefinedSupport;
   }
 
   /**
