@@ -120,80 +120,54 @@ export function updateManifestCodecSupport(
       ...(p.adaptations.audio ?? []),
       ...(p.adaptations.video ?? []),
       ...(p.adaptations.text ?? []),
-    ].forEach((a) => {
-      let adaptationHasSupportedRepresentation: boolean;
-      let adaptationHasUnknownRepresentation: boolean;
-      a.representations.forEach((r) => {
-        if (r.isSupported !== undefined) {
-          if (!adaptationHasSupportedRepresentation && r.isSupported) {
-            adaptationHasSupportedRepresentation = true;
+    ].forEach((adaptation) => {
+      let hasSupportedCodec: boolean | undefined = false;
+      let hasCodecWithUndefinedSupport: boolean = false;
+      adaptation.representations.forEach((representation) => {
+        if (representation.isSupported !== undefined) {
+          if (representation.isSupported) {
+            hasSupportedCodec = true;
           }
+          // We already knew the support for that one, continue to next one
           return;
         }
-        const isEncrypted = r.contentProtections !== undefined;
-        let isRepresentationSupported: boolean | undefined;
-        const mimeType = r.mimeType ?? "";
-        let codecs = r.codecs ?? [];
+
+        const isEncrypted = representation.contentProtections !== undefined;
+        const mimeType = representation.mimeType ?? "";
+        let codecs = representation.codecs ?? [];
         if (codecs.length === 0) {
           codecs = [""];
         }
-        let representationHasUnknownCodecs = false;
         for (const codec of codecs) {
           const codecSupportInfo = efficientlyGetCodecSupport(mimeType, codec);
           if (!isEncrypted) {
-            r.isSupported = codecSupportInfo.isSupportedClear;
-          } else if (r.isSupported !== codecSupportInfo.isSupportedEncrypted) {
-            r.isSupported = codecSupportInfo.isSupportedEncrypted;
+            representation.isSupported = codecSupportInfo.isSupportedClear;
+          } else if (
+            representation.isSupported !== codecSupportInfo.isSupportedEncrypted
+          ) {
+            representation.isSupported = codecSupportInfo.isSupportedEncrypted;
           }
 
-          if (r.isSupported === true) {
-            r.codecs = [codec];
-          } else if (r.isSupported === undefined) {
-            representationHasUnknownCodecs = true;
-          }
-        }
-        if (isRepresentationSupported === true) {
-          /** There is a codec that is supported, the representation is supported */
-          r.isSupported = true;
-          adaptationHasSupportedRepresentation = true;
-        } else {
-          if (representationHasUnknownCodecs) {
-            /**
-             * There are codecs for which support is not yet determined.
-             * Therefore, it cannot be confirmed that the representation is unsupported.
-             */
-            r.isSupported = undefined;
-            adaptationHasUnknownRepresentation = true;
-          } else {
-            /**
-             * There are no codecs supported. The representation is unsupported.
-             */
-            r.isSupported = false;
-          }
-        }
-
-        if (adaptationHasSupportedRepresentation) {
-          /** There is a representation that is supported, the adapatation is supported */
-          a.isSupported = true;
-        } else {
-          if (adaptationHasUnknownRepresentation) {
-            /**
-             * There are representations with codecs for which support is not yet determined.
-             * Therefore, it cannot be confirmed that the adaptation is unsupported.
-             * */
-            a.isSupported = undefined;
-          } else {
-            /**
-             * There are no representations supported. The adaptation is unsupported.
-             */
-            a.isSupported = false;
+          if (representation.isSupported === undefined) {
+            hasCodecWithUndefinedSupport = true;
+            hasSupportedCodec = undefined;
+          } else if (representation.isSupported) {
+            hasSupportedCodec = true;
+            representation.codecs = [codec];
           }
         }
       });
+      adaptation.supportStatus.hasCodecWithUndefinedSupport =
+        hasCodecWithUndefinedSupport;
+      adaptation.supportStatus.hasSupportedCodec = hasSupportedCodec;
     });
+
     ["audio" as const, "video" as const].forEach((ttype: ITrackType) => {
       const forType = p.adaptations[ttype];
-      if (forType !== undefined && forType.every((a) => a.isSupported === false)) {
+      if (
+        forType !== undefined &&
+        forType.every((a) => a.supportStatus.hasSupportedCodec === false)
+      ) {
         throw new MediaError(
           "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
           "No supported " + ttype + " adaptations",

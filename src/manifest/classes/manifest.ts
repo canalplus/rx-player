@@ -736,18 +736,33 @@ function updateDeciperability(
   const updates: IDecipherabilityUpdateElement[] = [];
   for (const period of manifest.periods) {
     for (const adaptation of period.getAdaptations()) {
+      let hasOnlyUndecipherableRepresentations = true;
       for (const representation of adaptation.representations) {
         const content = { manifest, period, adaptation, representation };
         const result = isDecipherable(content);
+        if (result !== false) {
+          hasOnlyUndecipherableRepresentations = false;
+        }
         if (result !== representation.decipherable) {
           updates.push(content);
           representation.decipherable = result;
+          if (result === true) {
+            adaptation.supportStatus.isDecipherable = true;
+          } else if (
+            result === undefined &&
+            adaptation.supportStatus.isDecipherable === false
+          ) {
+            adaptation.supportStatus.isDecipherable = undefined;
+          }
           log.debug(
             `Decipherability changed for "${representation.id}"`,
             `(${representation.bitrate})`,
             String(representation.decipherable),
           );
         }
+      }
+      if (hasOnlyUndecipherableRepresentations) {
+        adaptation.supportStatus.isDecipherable = false;
       }
     }
   }

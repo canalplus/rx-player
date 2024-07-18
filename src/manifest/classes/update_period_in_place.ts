@@ -72,7 +72,6 @@ export default function updatePeriodInPlace(
       res.updatedAdaptations.push({
         adaptation: oldAdaptation.id,
         trackType: oldAdaptation.type,
-        isSupported: newAdaptation.isSupported,
         updatedRepresentations,
         addedRepresentations,
         removedRepresentations,
@@ -147,8 +146,6 @@ export interface IUpdatedPeriodResult {
     trackType: ITrackType;
     /** The concerned Adaptation. */
     adaptation: string;
-    /** Wheter the adaptation is suported */
-    isSupported: boolean | undefined;
     /** Representations that have been updated. */
     updatedRepresentations: IRepresentationMetadata[];
     /** Representations that have been removed from the Adaptation. */
