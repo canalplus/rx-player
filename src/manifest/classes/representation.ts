@@ -487,12 +487,4 @@ export interface IRepresentationProtectionData {
   }>;
 }
 
-// XXX TODO is that shit still needed and why.
-// Shouldn't we replace it with ICodecSupportInfo?
-export type ICodecSupportList = Array<{
-  codec: string;
-  mimeType: string;
-  result: boolean;
-}>;
-
 export default Representation;

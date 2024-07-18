@@ -287,22 +287,29 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           },
 
           onCodecSupportUpdate: () => {
-            // XXX TODO maybe we should await here
-            const manifest = this._manifest?.syncValue;
-            if (isNullOrUndefined(manifest)) {
+            const syncManifest = this._manifest?.syncValue;
+
+            const checkCodecs = (manifest: IManifest) => {
+              const codecsToTest = manifest.getCodecsWithUnknownSupport();
+              const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+              if (codecsSupportInfo.length > 0) {
+                manifest.updateCodecSupport(codecsSupportInfo);
+
+                // XXX TODO event from the Manifest would be more just and would
+                // copy `decipherabilityUpdate`'s behavior - which is similar
+                this.trigger("codecSupportUpdate", null);
+              }
+            };
+
+            if (isNullOrUndefined(syncManifest)) {
               // The Manifest is not yet fetched, but we will be able to check
               // the codecs once it is the case
+              this._manifest
+                ?.getValueAsAsync()
+                .then((loadedManifest) => checkCodecs(loadedManifest), noop);
               return;
             }
-            const codecsToTest = manifest.getCodecsWithUnknownSupport();
-            const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-            if (codecsSupportInfo.length > 0) {
-              manifest.updateCodecSupport(codecsSupportInfo);
-
-              // XXX TODO event from the Manifest would be more just and would
-              // copy `decipherabilityUpdate`'s behavior - which is similar
-              this.trigger("codecSupportUpdate", null);
-            }
+            checkCodecs(syncManifest);
           },
         },
         initCanceller.signal,

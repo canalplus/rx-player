@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
-import areCodecsCompatible, {
-  isCompatibleCodecSupported,
-} from "../are_codecs_compatible";
+import areCodecsCompatible from "../are_codecs_compatible";
 
 describe("are_codecs_compatible", () => {
   it("should return false as one is different from the other", () => {
