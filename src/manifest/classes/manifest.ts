@@ -75,6 +75,8 @@ export interface IManifestEvents {
   manifestUpdate: IPeriodsUpdateResult;
   /** Some Representation's decipherability status has been updated */
   decipherabilityUpdate: IDecipherabilityUpdateElement[];
+  /** Some Representation's support status has been updated */
+  supportUpdate: null;
 }
 
 /**
@@ -391,11 +393,17 @@ export default class Manifest
   public updateCodecSupport(
     updatedCodecSupportInfo: ICodecSupportInfo[] = [],
   ): MediaError | null {
+    if (updatedCodecSupportInfo.length === 0) {
+      return null;
+    }
+
     this._cachedCodecSupport.addCodecs(updatedCodecSupportInfo);
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
       period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
     }
+    this.trigger("supportUpdate", null);
+    // XXX TODO actually error if no audio or video
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
