@@ -290,15 +290,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (isNullOrUndefined(syncManifest)) {
               // The Manifest is not yet fetched, but we will be able to check
               // the codecs once it is the case
-              this._manifest
-                ?.getValueAsAsync()
-                .then(
-                  (loadedManifest) => this._refreshManifestCodecSupport(loadedManifest),
-                  noop,
-                );
-              return;
+              this._manifest?.getValueAsAsync().then((loadedManifest) => {
+                if (this._initCanceller.isUsed()) {
+                  return;
+                }
+                this._refreshManifestCodecSupport(loadedManifest);
+              }, noop);
+            } else {
+              this._refreshManifestCodecSupport(syncManifest);
             }
-            this._refreshManifestCodecSupport(syncManifest);
           },
         },
         initCanceller.signal,
