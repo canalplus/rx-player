@@ -472,14 +472,6 @@ function createOrReuseSegmentSink(
  * @returns {string}
  */
 function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
-  if (adaptation.representations.length === 0) {
-    const noRepErr = new MediaError(
-      "NO_PLAYABLE_REPRESENTATION",
-      "No Representation in the chosen " + adaptation.type + " Adaptation can be played",
-      { tracks: [toTaggedTrack(adaptation)] },
-    );
-    throw noRepErr;
-  }
   const representations = adaptation.representations.filter((r) => {
     return r.isSupported === true && r.decipherable !== false;
   });
