@@ -287,24 +287,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
           onCodecSupportUpdate: () => {
             const syncManifest = this._manifest?.syncValue;
-
-            const checkCodecs = (manifest: IManifest) => {
-              const codecsToTest = manifest.getCodecsWithUnknownSupport();
-              const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-              if (codecsSupportInfo.length > 0) {
-                manifest.updateCodecSupport(codecsSupportInfo);
-              }
-            };
-
             if (isNullOrUndefined(syncManifest)) {
               // The Manifest is not yet fetched, but we will be able to check
               // the codecs once it is the case
               this._manifest
                 ?.getValueAsAsync()
-                .then((loadedManifest) => checkCodecs(loadedManifest), noop);
+                .then(
+                  (loadedManifest) => this._refreshManifestCodecSupport(loadedManifest),
+                  noop,
+                );
               return;
             }
-            checkCodecs(syncManifest);
+            this._refreshManifestCodecSupport(syncManifest);
           },
         },
         initCanceller.signal,
@@ -402,11 +396,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "manifestUpdate",
       (updates) => {
         this.trigger("manifestUpdate", updates);
-        const codecsToTest = manifest.getCodecsWithUnknownSupport();
-        const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-        if (codecsSupportInfo.length > 0) {
-          manifest.updateCodecSupport(codecsSupportInfo);
-        }
+        this._refreshManifestCodecSupport(manifest);
       },
       initCanceller.signal,
     );
@@ -445,14 +435,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initCanceller.signal,
     );
 
-    const codecsToTest = manifest.getCodecsWithUnknownSupport();
-    if (codecsToTest.length > 0) {
-      const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
-      if (codecsSupportInfo.length > 0) {
-        manifest.updateCodecSupport(codecsSupportInfo);
-      }
-    }
-
+    this._refreshManifestCodecSupport(manifest);
     this.trigger("manifestReady", manifest);
     if (initCanceller.isUsed()) {
       return;
@@ -1117,6 +1100,25 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       };
     });
     return codecsSupportInfo;
+  }
+
+  /**
+   * Update the support status of all Representations in the Manifest.
+   *
+   * To call anytime either the Manifest is linked to new codecs or new means
+   * to test for codec support are available.
+   * @param {Object} manifest
+   */
+  private _refreshManifestCodecSupport(manifest: IManifest): void {
+    const codecsToTest = manifest.getCodecsWithUnknownSupport();
+    const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+    if (codecsSupportInfo.length > 0) {
+      try {
+        manifest.updateCodecSupport(codecsSupportInfo);
+      } catch (err) {
+        this._onFatalError(err);
+      }
+    }
   }
 }
 
