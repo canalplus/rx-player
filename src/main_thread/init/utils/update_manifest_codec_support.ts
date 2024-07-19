@@ -121,7 +121,7 @@ export function updateManifestCodecSupport(
       ...(p.adaptations.video ?? []),
       ...(p.adaptations.text ?? []),
     ].forEach((adaptation) => {
-      let hasSupportedCodec: boolean | undefined = false;
+      let hasSupportedCodec: boolean = false;
       let hasCodecWithUndefinedSupport: boolean = false;
       adaptation.representations.forEach((representation) => {
         if (representation.isSupported !== undefined) {
@@ -150,7 +150,6 @@ export function updateManifestCodecSupport(
 
           if (representation.isSupported === undefined) {
             hasCodecWithUndefinedSupport = true;
-            hasSupportedCodec = undefined;
           } else if (representation.isSupported) {
             hasSupportedCodec = true;
             representation.codecs = [codec];
@@ -159,7 +158,11 @@ export function updateManifestCodecSupport(
       });
       adaptation.supportStatus.hasCodecWithUndefinedSupport =
         hasCodecWithUndefinedSupport;
-      adaptation.supportStatus.hasSupportedCodec = hasSupportedCodec;
+      if (hasCodecWithUndefinedSupport && !hasSupportedCodec) {
+        adaptation.supportStatus.hasSupportedCodec = undefined;
+      } else {
+        adaptation.supportStatus.hasSupportedCodec = hasSupportedCodec;
+      }
     });
 
     ["audio" as const, "video" as const].forEach((ttype: ITrackType) => {
