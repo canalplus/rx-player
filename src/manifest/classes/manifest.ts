@@ -16,6 +16,7 @@
 
 import { MediaError } from "../../errors";
 import log from "../../log";
+import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support";
 import type { IParsedManifest } from "../../parsers/manifest";
 import type { ITrackType, IRepresentationFilter, IPlayerError } from "../../public_types";
 import arrayFind from "../../utils/array_find";
@@ -403,7 +404,6 @@ export default class Manifest
       period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
     }
     this.trigger("supportUpdate", null);
-    // XXX TODO actually error if no audio or video
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
@@ -646,26 +646,7 @@ export default class Manifest
    * @returns {Array} The list of codecs with unknown support status.
    */
   public getCodecsWithUnknownSupport(): Array<{ mimeType: string; codec: string }> {
-    const codecsWithUnknownSupport: Array<{ mimeType: string; codec: string }> = [];
-    for (const period of this.periods) {
-      const checkedAdaptations = [
-        ...period.getAdaptationsForType("audio"),
-        ...period.getAdaptationsForType("video"),
-      ];
-      for (const adaptation of checkedAdaptations) {
-        for (const representation of adaptation.representations) {
-          if (representation.isSupported === undefined) {
-            for (const codec of representation.codecs) {
-              codecsWithUnknownSupport.push({
-                mimeType: representation.mimeType ?? "",
-                codec: codec ?? "",
-              });
-            }
-          }
-        }
-      }
-    }
-    return codecsWithUnknownSupport;
+    return getCodecsWithUnknownSupport(this);
   }
 
   /**
