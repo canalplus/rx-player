@@ -44,7 +44,7 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
     expect(() => {
       findDefaultVideoCodec();
     }).toThrowError("No default video codec found.");
-    expect(mockIsTypeSupported).toHaveBeenCalledTimes(3);
+    expect(mockIsTypeSupported).toHaveBeenCalledTimes(4);
   });
 
   it("should throw because no MediaSource", async () => {

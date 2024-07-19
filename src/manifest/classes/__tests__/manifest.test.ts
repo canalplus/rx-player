@@ -1,6 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IPlayerError } from "../../../public_types";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+import CodecSupportCache from "../codec_support_cache";
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -118,8 +119,18 @@ describe("Manifest - Manifest", () => {
     const Manifest = ((await vi.importActual("../manifest")) as any).default;
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, [], undefined);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, [], undefined);
+    expect(fakePeriod).toHaveBeenCalledWith(
+      period1,
+      [],
+      new CodecSupportCache([]),
+      undefined,
+    );
+    expect(fakePeriod).toHaveBeenCalledWith(
+      period2,
+      [],
+      new CodecSupportCache([]),
+      undefined,
+    );
 
     expect(manifest.periods).toEqual([
       { id: "foo0", adaptations: period1.adaptations },
@@ -170,8 +181,18 @@ describe("Manifest - Manifest", () => {
     /* eslint-enable @typescript-eslint/no-unused-expressions */
 
     expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, [], representationFilter);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, [], representationFilter);
+    expect(fakePeriod).toHaveBeenCalledWith(
+      period1,
+      [],
+      new CodecSupportCache([]),
+      representationFilter,
+    );
+    expect(fakePeriod).toHaveBeenCalledWith(
+      period2,
+      [],
+      new CodecSupportCache([]),
+      representationFilter,
+    );
     expect(fakeIdGenerator).toHaveBeenCalled();
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
@@ -210,8 +231,18 @@ describe("Manifest - Manifest", () => {
 
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(period1, [], undefined);
-    expect(fakePeriod).toHaveBeenCalledWith(period2, [], undefined);
+    expect(fakePeriod).toHaveBeenCalledWith(
+      period1,
+      [],
+      new CodecSupportCache([]),
+      undefined,
+    );
+    expect(fakePeriod).toHaveBeenCalledWith(
+      period2,
+      [],
+      new CodecSupportCache([]),
+      undefined,
+    );
 
     expect(manifest.periods).toEqual([
       { id: "foo0", start: 4, adaptations: adapP1 },
