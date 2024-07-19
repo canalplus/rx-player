@@ -1348,7 +1348,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       !periodObj.isPeriodAdvertised &&
       periodObj.text.dispatcher !== null &&
       periodObj.video.dispatcher !== null &&
-      periodObj.audio !== null
+      periodObj.audio.dispatcher !== null
     );
   }
 }
