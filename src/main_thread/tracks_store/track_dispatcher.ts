@@ -96,6 +96,16 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
   }
 
   /**
+   * Returns `true` if the initial track choice has been sent by this
+   * `TrackDispatcher`.
+   * Returns `false` if that's not the case yet.
+   * @returns {boolean}
+   */
+  public hasSetTrack(): boolean {
+    return this._adaptationRef.getValue() !== undefined;
+  }
+
+  /**
    * Update the wanted track on the Reference linked to this `TrackDispatcher`.
    * @param {Object|null} newTrackInfo
    */
