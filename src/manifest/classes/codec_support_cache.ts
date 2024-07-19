@@ -32,7 +32,7 @@ export default class CodecSupportCache {
   }
 
   /**
-   * Adds codec support information to the manager.
+   * Adds codec support information to this `CodecSupportCache`.
    * @param {Array} codecList - List of codec support information.
    */
   public addCodecs(codecList: ICodecSupportInfo[]) {
@@ -55,8 +55,8 @@ export default class CodecSupportCache {
    * @param {string} mimeType - The MIME type to check.
    * @param {string} codec - The codec to check.
    * @param {boolean} isEncrypted - Whether the content is encrypted.
-   * @returns {boolean | undefined} - True if the codec is supported, false if not,
-   * or undefined if no support information is found.
+   * @returns {boolean | undefined} - `true` if the codec is supported, `false`
+   * if not, or `undefined` if no support information is found.
    */
   public isSupported(
     mimeType: string,
