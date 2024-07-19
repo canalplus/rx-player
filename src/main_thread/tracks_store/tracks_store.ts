@@ -49,6 +49,7 @@ import type {
   IVideoTrack,
   IVideoTrackSwitchingMode,
   IPlayerError,
+  ITrackType,
 } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import assert from "../../utils/assert";
@@ -196,7 +197,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
               this._storedPeriodInfo,
               periodInfo.period.id,
             );
-            if (periodItem !== undefined && periodItem.text.storedSettings === null) {
+            if (
+              periodItem !== undefined &&
+              periodItem.isPeriodAdvertised &&
+              periodItem.text.storedSettings === null
+            ) {
               periodItem.text.dispatcher?.updateTrack(null);
             }
           }
@@ -247,6 +252,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             );
             if (
               newPeriodItem !== undefined &&
+              newPeriodItem.isPeriodAdvertised &&
               newPeriodItem.video.storedSettings === storedSettings
             ) {
               newPeriodItem.video.dispatcher?.updateTrack(storedSettings);
@@ -290,6 +296,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             );
             if (
               newPeriodItem !== undefined &&
+              newPeriodItem.isPeriodAdvertised &&
               newPeriodItem.audio.storedSettings === storedSettings
             ) {
               newPeriodItem.audio.dispatcher?.updateTrack(storedSettings);
@@ -451,14 +458,36 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
     this._selectInitialTrackIfNeeded();
 
-    // Ensure the initial track is set
-    const settings = periodObj[bufferType].storedSettings;
-    if (
-      periodObj[bufferType].dispatcher === dispatcher &&
-      !dispatcher.hasSetTrack() &&
-      settings !== undefined
-    ) {
-      dispatcher.updateTrack(settings);
+    // Ensure `newAvailablePeriods` is sent
+    if (this._shouldAdvertisePeriod(periodObj)) {
+      periodObj.isPeriodAdvertised = true;
+      this.trigger("newAvailablePeriods", [
+        {
+          id: period.id,
+          start: period.start,
+          end: period.end,
+        },
+      ]);
+      if (this._isDisposed) {
+        return;
+      }
+    }
+
+    // Ensure the initial track is set for each type now)
+    const trackTypes: ITrackType[] = ["audio", "video", "text"];
+    for (const ttype of trackTypes) {
+      const trackObj = periodObj[ttype];
+      if (
+        periodObj.isPeriodAdvertised &&
+        trackObj.dispatcher !== null &&
+        !trackObj.dispatcher.hasSetTrack() &&
+        trackObj.storedSettings !== undefined
+      ) {
+        trackObj.dispatcher.updateTrack(trackObj.storedSettings);
+      }
+      if (this._isDisposed) {
+        return;
+      }
     }
   }
 
@@ -565,13 +594,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   public resetPeriodObjects(): void {
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
-      storedObj.audio.storedSettings = undefined;
+      storedObj.isPeriodAdvertised = false;
       storedObj.audio.dispatcher?.dispose();
       storedObj.audio.dispatcher = null;
-      storedObj.video.storedSettings = undefined;
       storedObj.video.dispatcher?.dispose();
       storedObj.video.dispatcher = null;
-      storedObj.text.storedSettings = undefined;
       storedObj.text.dispatcher?.dispose();
       storedObj.text.dispatcher = null;
       if (!storedObj.inManifest) {
@@ -1141,6 +1168,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         const newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
         if (
           newPeriodItem !== undefined &&
+          newPeriodItem.isPeriodAdvertised &&
           newPeriodItem.video.storedSettings === storedSettings
         ) {
           newPeriodItem.video.dispatcher?.updateTrack(storedSettings);
@@ -1191,6 +1219,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   private _selectInitialTrackIfNeeded(): void {
     const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
 
+    const periodsToAdvertise: IPeriod[] = [];
+    const toDispatchTrack: ITSPeriodObject[] = [];
     for (const trackStorePeriod of this._storedPeriodInfo) {
       const { period } = trackStorePeriod;
       if (
@@ -1205,17 +1235,17 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         ...(period.adaptations.audio ?? []),
         ...(period.adaptations.video ?? []),
       ];
-      const isCodecSupportKnown = adaptations.every((a) =>
-        a.representations.every((r) => r.isSupported !== undefined),
+      const hasCodecWithUndefinedSupport = adaptations.every(
+        (a) => a.supportStatus.hasCodecWithUndefinedSupport,
       );
-      if (adaptations.length > 0 && !isCodecSupportKnown) {
+      if (adaptations.length > 0 && hasCodecWithUndefinedSupport) {
         // Not all codecs for that Period are known yet.
         // Await until this is the case.
         continue;
       }
 
       const audioAdaptation = getSupportedAdaptations(period, "audio")[0];
-      const audioStoredSettings =
+      trackStorePeriod.audio.storedSettings =
         audioAdaptation === undefined
           ? null
           : {
@@ -1225,14 +1255,13 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                 null,
               ),
             };
-      trackStorePeriod.audio.storedSettings = audioStoredSettings;
 
       const baseVideoAdaptation = getSupportedAdaptations(period, "video")[0];
       const videoAdaptation = getRightVideoTrack(
         baseVideoAdaptation,
         this._isTrickModeTrackEnabled,
       );
-      const videoStoredSettings =
+      trackStorePeriod.video.storedSettings =
         videoAdaptation === undefined
           ? null
           : {
@@ -1243,7 +1272,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
                 null,
               ),
             };
-      trackStorePeriod.video.storedSettings = videoStoredSettings;
 
       let textAdaptation: IAdaptationMetadata | null = null;
       const forcedSubtitles = (period.adaptations.text ?? []).filter(
@@ -1264,41 +1292,65 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ?? null;
         }
       }
+      trackStorePeriod.text.storedSettings =
+        textAdaptation === null
+          ? null
+          : {
+              adaptation: textAdaptation,
+              switchingMode: "direct" as const,
+              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+                null,
+              ),
+            };
 
-      let textStoredSettings: {
-        adaptation: IAdaptationMetadata;
-        switchingMode: "direct";
-        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
-      } | null = null;
-      if (textAdaptation !== null) {
-        textStoredSettings = {
-          adaptation: textAdaptation,
-          switchingMode: "direct" as const,
-          lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
-        };
-      }
-      trackStorePeriod.text.storedSettings = textStoredSettings;
-
-      if (!trackStorePeriod.isPeriodAdvertised) {
+      toDispatchTrack.push(trackStorePeriod);
+      if (this._shouldAdvertisePeriod(trackStorePeriod)) {
         trackStorePeriod.isPeriodAdvertised = true;
-        this.trigger("newAvailablePeriods", [
-          { id: period.id, start: period.start, end: period.end },
-        ]);
-        if (this._isDisposed) {
-          return;
-        }
-      }
-
-      if (trackStorePeriod.video.storedSettings === videoStoredSettings) {
-        trackStorePeriod.video.dispatcher?.updateTrack(videoStoredSettings);
-      }
-      if (trackStorePeriod.audio.storedSettings === audioStoredSettings) {
-        trackStorePeriod.audio.dispatcher?.updateTrack(audioStoredSettings);
-      }
-      if (trackStorePeriod.text.storedSettings === textStoredSettings) {
-        trackStorePeriod.text.dispatcher?.updateTrack(textStoredSettings);
+        periodsToAdvertise.push({ id: period.id, start: period.start, end: period.end });
       }
     }
+
+    if (periodsToAdvertise.length > 0) {
+      this.trigger("newAvailablePeriods", periodsToAdvertise);
+      if (this._isDisposed) {
+        return;
+      }
+    }
+
+    for (const trackStorePeriod of toDispatchTrack) {
+      if (!trackStorePeriod.isPeriodAdvertised) {
+        continue;
+      }
+      const bufferTypes: ITrackType[] = ["audio", "video", "text"];
+      for (const bufferType of bufferTypes) {
+        const trackInfo = trackStorePeriod[bufferType];
+        if (
+          trackInfo.dispatcher !== null &&
+          trackInfo.storedSettings !== undefined &&
+          !trackInfo.dispatcher.hasSetTrack()
+        ) {
+          trackInfo.dispatcher.updateTrack(trackInfo.storedSettings);
+          if (this._isDisposed) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns `true` once a Period can be advertised through a `newAvailablePeriods`
+   * event, after which track can begin to be set and updated.
+   * @param {Object} periodObj
+   * @returns {boolean}
+   */
+  private _shouldAdvertisePeriod(periodObj: ITSPeriodObject): boolean {
+    return (
+      !periodObj.isPeriodAdvertised &&
+      periodObj.text.dispatcher !== null &&
+      periodObj.video.dispatcher !== null &&
+      periodObj.audio !== null
+    );
   }
 }
 
@@ -1372,7 +1424,6 @@ function getRightVideoTrack(
  * default track for each type.
  * @param {Object} period
  * @param {boolean} inManifest
- * @param {boolean} isTrickModeTrackEnabled
  * @returns {object}
  */
 function generatePeriodInfo(
@@ -1409,6 +1460,9 @@ export interface ITSPeriodObject {
   /**
    * Set to `true` once a `newAvailablePeriods` event has been sent for this
    * particular Period.
+   *
+   * Once this event has been sent, we can begin to select a audio, video and
+   * text track for that Period (but **NOT** before).
    */
   isPeriodAdvertised: boolean;
   /**
