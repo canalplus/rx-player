@@ -129,123 +129,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   /**
-   * Check or re-check for Periods for which both an initial track can be chosen
-   * and for which the `newAvailablePeriods` event can be triggered.
-   *
-   * This needs to be called as codec support is either first known or updated
-   * on the Manifest.
+   * Callack that needs to be called as codec support is either first known or
+   * updated on the Manifest.
    */
   public onManifestCodecSupportUpdate(): void {
-    const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
-
-    for (const trackStorePeriod of this._storedPeriodInfo) {
-      const { period } = trackStorePeriod;
-      if (
-        trackStorePeriod.audio.storedSettings !== undefined &&
-        trackStorePeriod.video.storedSettings !== undefined &&
-        trackStorePeriod.text.storedSettings !== undefined
-      ) {
-        // already processed, continue
-        continue;
-      }
-      const adaptations: IAdaptationMetadata[] = [
-        ...(period.adaptations.audio ?? []),
-        ...(period.adaptations.video ?? []),
-      ];
-      const isCodecSupportKnown = adaptations.every((a) =>
-        a.representations.every((r) => r.isSupported !== undefined),
-      );
-      if (adaptations.length > 0 && !isCodecSupportKnown) {
-        // Not all codecs for that Period are known yet.
-        // Await until this is the case.
-        continue;
-      }
-
-      const audioAdaptation = getSupportedAdaptations(period, "audio")[0];
-      const audioStoredSettings =
-        audioAdaptation === undefined
-          ? null
-          : {
-              adaptation: audioAdaptation,
-              switchingMode: this._defaultAudioTrackSwitchingMode,
-              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
-                null,
-              ),
-            };
-      trackStorePeriod.audio.storedSettings = audioStoredSettings;
-
-      const baseVideoAdaptation = getSupportedAdaptations(period, "video")[0];
-      const videoAdaptation = getRightVideoTrack(
-        baseVideoAdaptation,
-        this._isTrickModeTrackEnabled,
-      );
-      const videoStoredSettings =
-        videoAdaptation === undefined
-          ? null
-          : {
-              adaptation: videoAdaptation,
-              adaptationBase: baseVideoAdaptation,
-              switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
-              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
-                null,
-              ),
-            };
-      trackStorePeriod.video.storedSettings = videoStoredSettings;
-
-      let textAdaptation: IAdaptationMetadata | null = null;
-      const forcedSubtitles = (period.adaptations.text ?? []).filter(
-        (ad) => ad.isForcedSubtitles === true,
-      );
-      if (forcedSubtitles.length > 0) {
-        if (audioAdaptation !== null && audioAdaptation !== undefined) {
-          const sameLanguage = arrayFind(
-            forcedSubtitles,
-            (f) => f.normalizedLanguage === audioAdaptation.normalizedLanguage,
-          );
-          if (sameLanguage !== undefined) {
-            textAdaptation = sameLanguage;
-          }
-        }
-        if (textAdaptation === null) {
-          textAdaptation =
-            arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ?? null;
-        }
-      }
-
-      let textStoredSettings: {
-        adaptation: IAdaptationMetadata;
-        switchingMode: "direct";
-        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
-      } | null = null;
-      if (textAdaptation !== null) {
-        textStoredSettings = {
-          adaptation: textAdaptation,
-          switchingMode: "direct" as const,
-          lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
-        };
-      }
-      trackStorePeriod.text.storedSettings = textStoredSettings;
-
-      if (!trackStorePeriod.isPeriodAdvertised) {
-        trackStorePeriod.isPeriodAdvertised = true;
-        this.trigger("newAvailablePeriods", [
-          { id: period.id, start: period.start, end: period.end },
-        ]);
-        if (this._isDisposed) {
-          return;
-        }
-      }
-
-      if (trackStorePeriod.video.storedSettings === videoStoredSettings) {
-        trackStorePeriod.video.dispatcher?.updateTrack(videoStoredSettings);
-      }
-      if (trackStorePeriod.audio.storedSettings === audioStoredSettings) {
-        trackStorePeriod.audio.dispatcher?.updateTrack(audioStoredSettings);
-      }
-      if (trackStorePeriod.text.storedSettings === textStoredSettings) {
-        trackStorePeriod.text.dispatcher?.updateTrack(textStoredSettings);
-      }
-    }
+    this._selectInitialTrackIfNeeded();
   }
 
   /**
@@ -560,7 +448,18 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         trackType: bufferType,
       });
     });
-    this.onManifestCodecSupportUpdate();
+
+    this._selectInitialTrackIfNeeded();
+
+    // Ensure the initial track is set
+    const settings = periodObj[bufferType].storedSettings;
+    if (
+      periodObj[bufferType].dispatcher === dispatcher &&
+      !dispatcher.hasSetTrack() &&
+      settings !== undefined
+    ) {
+      dispatcher.updateTrack(settings);
+    }
   }
 
   /**
@@ -1283,6 +1182,123 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     }
 
     return filtered;
+  }
+
+  /**
+   * Check or re-check all Periods for which both an initial track can be chosen
+   * and for which the `newAvailablePeriods` event can be triggered.
+   */
+  private _selectInitialTrackIfNeeded(): void {
+    const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
+
+    for (const trackStorePeriod of this._storedPeriodInfo) {
+      const { period } = trackStorePeriod;
+      if (
+        trackStorePeriod.audio.storedSettings !== undefined &&
+        trackStorePeriod.video.storedSettings !== undefined &&
+        trackStorePeriod.text.storedSettings !== undefined
+      ) {
+        // already processed, continue
+        continue;
+      }
+      const adaptations: IAdaptationMetadata[] = [
+        ...(period.adaptations.audio ?? []),
+        ...(period.adaptations.video ?? []),
+      ];
+      const isCodecSupportKnown = adaptations.every((a) =>
+        a.representations.every((r) => r.isSupported !== undefined),
+      );
+      if (adaptations.length > 0 && !isCodecSupportKnown) {
+        // Not all codecs for that Period are known yet.
+        // Await until this is the case.
+        continue;
+      }
+
+      const audioAdaptation = getSupportedAdaptations(period, "audio")[0];
+      const audioStoredSettings =
+        audioAdaptation === undefined
+          ? null
+          : {
+              adaptation: audioAdaptation,
+              switchingMode: this._defaultAudioTrackSwitchingMode,
+              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+                null,
+              ),
+            };
+      trackStorePeriod.audio.storedSettings = audioStoredSettings;
+
+      const baseVideoAdaptation = getSupportedAdaptations(period, "video")[0];
+      const videoAdaptation = getRightVideoTrack(
+        baseVideoAdaptation,
+        this._isTrickModeTrackEnabled,
+      );
+      const videoStoredSettings =
+        videoAdaptation === undefined
+          ? null
+          : {
+              adaptation: videoAdaptation,
+              adaptationBase: baseVideoAdaptation,
+              switchingMode: DEFAULT_VIDEO_TRACK_SWITCHING_MODE,
+              lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
+                null,
+              ),
+            };
+      trackStorePeriod.video.storedSettings = videoStoredSettings;
+
+      let textAdaptation: IAdaptationMetadata | null = null;
+      const forcedSubtitles = (period.adaptations.text ?? []).filter(
+        (ad) => ad.isForcedSubtitles === true,
+      );
+      if (forcedSubtitles.length > 0) {
+        if (audioAdaptation !== null && audioAdaptation !== undefined) {
+          const sameLanguage = arrayFind(
+            forcedSubtitles,
+            (f) => f.normalizedLanguage === audioAdaptation.normalizedLanguage,
+          );
+          if (sameLanguage !== undefined) {
+            textAdaptation = sameLanguage;
+          }
+        }
+        if (textAdaptation === null) {
+          textAdaptation =
+            arrayFind(forcedSubtitles, (f) => f.normalizedLanguage === undefined) ?? null;
+        }
+      }
+
+      let textStoredSettings: {
+        adaptation: IAdaptationMetadata;
+        switchingMode: "direct";
+        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
+      } | null = null;
+      if (textAdaptation !== null) {
+        textStoredSettings = {
+          adaptation: textAdaptation,
+          switchingMode: "direct" as const,
+          lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
+        };
+      }
+      trackStorePeriod.text.storedSettings = textStoredSettings;
+
+      if (!trackStorePeriod.isPeriodAdvertised) {
+        trackStorePeriod.isPeriodAdvertised = true;
+        this.trigger("newAvailablePeriods", [
+          { id: period.id, start: period.start, end: period.end },
+        ]);
+        if (this._isDisposed) {
+          return;
+        }
+      }
+
+      if (trackStorePeriod.video.storedSettings === videoStoredSettings) {
+        trackStorePeriod.video.dispatcher?.updateTrack(videoStoredSettings);
+      }
+      if (trackStorePeriod.audio.storedSettings === audioStoredSettings) {
+        trackStorePeriod.audio.dispatcher?.updateTrack(audioStoredSettings);
+      }
+      if (trackStorePeriod.text.storedSettings === textStoredSettings) {
+        trackStorePeriod.text.dispatcher?.updateTrack(textStoredSettings);
+      }
+    }
   }
 }
 
