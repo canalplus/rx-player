@@ -340,8 +340,15 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   }
 
   /**
-   * Returns the list of supported codecs with the keysystem configuration.
-   * @returns {Array}: The list of supported codecs.
+   * Returns `true` if the given mimeType and codec couple should be supported
+   * by the current key system.
+   * Returns `false` if it isn't.
+   *
+   * Returns `undefined` if we cannot determine if it is supported.
+   *
+   * @param {string} mimeType
+   * @param {string} codec
+   * @returns {boolean}
    */
   public isCodecSupported(mimeType: string, codec: string): boolean | undefined {
     if (this._stateData.state === ContentDecryptorState.Initializing) {
