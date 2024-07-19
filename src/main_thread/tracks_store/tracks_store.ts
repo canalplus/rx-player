@@ -594,7 +594,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   public resetPeriodObjects(): void {
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
-      storedObj.isPeriodAdvertised = false;
       storedObj.audio.dispatcher?.dispose();
       storedObj.audio.dispatcher = null;
       storedObj.video.dispatcher?.dispose();
