@@ -91,8 +91,6 @@ jobs:
           ubuntu-restricted-extras
       - run: npm install
       - run: npm run build
-      # Firefox seems to have issue with integration tests on GitHub actions only
-      # TODO to check
       - run: npm run test:integration
 
   memory_linux:
@@ -115,6 +113,4 @@ jobs:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
       - run: npm install
-      # Firefox seems to have issue with integration tests on GitHub actions only
-      # TODO to check
       - run: npm run test:memory
