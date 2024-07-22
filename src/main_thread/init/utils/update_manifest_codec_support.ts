@@ -160,6 +160,9 @@ export function updateManifestCodecSupport(
           } else if (representation.isSupported) {
             hasSupportedCodec = true;
             representation.codecs = [codec];
+
+            // Don't test subsequent codecs for that Representation
+            break;
           }
         }
       });
