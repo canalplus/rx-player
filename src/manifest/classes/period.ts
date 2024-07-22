@@ -163,6 +163,10 @@ export default class Period implements IPeriodMetadata {
           // Go to next adaptation as an optimisation measure.
           // NOTE this only is true if we never change a codec from supported
           // to unsuported and its opposite.
+
+          if (adaptation.supportStatus.hasSupportedCodec === true) {
+            hasSupportedAdaptations = true;
+          }
           continue;
         }
         const wasSupported = adaptation.supportStatus.hasSupportedCodec;
