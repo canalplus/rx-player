@@ -1,0 +1,1 @@
+{"version":3,"file":"parse_ttml_to_vtt.d.ts","sourceRoot":"","sources":["../../../../../../src/parsers/texttracks/ttml/native/parse_ttml_to_vtt.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAEH,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,gDAAgD,CAAC;AAIpF;;;GAGG;AACH,MAAM,CAAC,OAAO,UAAU,iBAAiB,CACvC,GAAG,EAAE,MAAM,EACX,UAAU,EAAE,MAAM,GACjB,KAAK,CAAC,YAAY,GAAG,aAAa,CAAC,CAWrC"}

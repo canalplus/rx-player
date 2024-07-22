@@ -1,0 +1,1 @@
+{"version":3,"file":"send_message.d.ts","sourceRoot":"","sources":["../../../../../src/core/main/worker/send_message.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,UAAU,EAAE,cAAc,EAAE,MAAM,4BAA4B,CAAC;AAE7E,MAAM,CAAC,OAAO,UAAU,WAAW,CACjC,GAAG,EAAE,cAAc,EACnB,aAAa,CAAC,EAAE,YAAY,EAAE,GAC7B,IAAI,CASN;AAED,wBAAgB,oBAAoB,CAAC,KAAK,EAAE,OAAO,GAAG,UAAU,CAO/D"}

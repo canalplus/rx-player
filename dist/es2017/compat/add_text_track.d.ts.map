@@ -1,0 +1,1 @@
+{"version":3,"file":"add_text_track.d.ts","sourceRoot":"","sources":["../../../src/compat/add_text_track.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAEH,OAAO,KAAK,EAAE,gBAAgB,EAAE,MAAM,+BAA+B,CAAC;AAGtE;;;;;;;;;;GAUG;AACH,MAAM,CAAC,OAAO,UAAU,YAAY,CAAC,YAAY,EAAE,gBAAgB,GAAG;IACpE,KAAK,EAAE,gBAAgB,CAAC;IACxB,YAAY,EAAE,gBAAgB,GAAG,SAAS,CAAC;CAC5C,CAsBA"}

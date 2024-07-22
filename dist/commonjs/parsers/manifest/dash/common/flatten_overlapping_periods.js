@@ -1,0 +1,82 @@
+"use strict";
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+var log_1 = require("../../../../log");
+/**
+ * Avoid periods to overlap.
+ *
+ * According to DASH guidelines, if a period has media duration longer than
+ * the distance between the start of this period and the start of the next period,
+ * use of start times implies that the client will start the playout of the next
+ * period at the time stated, rather than finishing the playout of the last period.
+ *
+ * Even if that case if defined when period last(s) segment(s) is/are a bit longer,
+ * it can be meaningful when two periods are overlapping. We will always shorten
+ * the first period, and even erase it if its duration is equal to zero.
+ *
+ * Example (Periods are numbered under their manifest order) :
+ *
+ * [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][ Period 3 ]
+ *             [ Period 3 ]
+ *
+ * [ Period 1 ][ Period 2 ]       ------>  [ Period 1 ][  2  ][ Period 3 ]
+ *                  [ Period 3 ]
+ *
+ * [ Period 1 ][ Period 2 ]       ------>  [  1  ][      Period 3     ]
+ *        [      Period 3     ]
+ *
+ * @param {Array.<Object>} parsedPeriods
+ * @return {Array.<Object>}
+ */
+function flattenOverlappingPeriods(parsedPeriods) {
+    if (parsedPeriods.length === 0) {
+        return [];
+    }
+    var flattenedPeriods = [parsedPeriods[0]];
+    for (var i = 1; i < parsedPeriods.length; i++) {
+        var parsedPeriod = parsedPeriods[i];
+        var lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
+        while (lastFlattenedPeriod.duration === undefined ||
+            lastFlattenedPeriod.start + lastFlattenedPeriod.duration > parsedPeriod.start) {
+            log_1.default.warn("DASH: Updating overlapping Periods.", lastFlattenedPeriod === null || lastFlattenedPeriod === void 0 ? void 0 : lastFlattenedPeriod.start, parsedPeriod.start);
+            lastFlattenedPeriod.duration = parsedPeriod.start - lastFlattenedPeriod.start;
+            lastFlattenedPeriod.end = parsedPeriod.start;
+            if (lastFlattenedPeriod.duration > 0) {
+                // Note: Calling `break` to quit the while loop should theoritically be
+                // unnecessary as the previous operations should ensure we do not re-enter
+                // the loop's condition.
+                // Yet we dit encounter infinite loops without it because of float-related
+                // rounding errors.
+                break;
+            }
+            else {
+                // `lastFlattenedPeriod` has now a negative or `0` duration.
+                // Remove it, consider the next Period in its place, and re-start the loop.
+                flattenedPeriods.pop();
+                if (flattenedPeriods.length === 0) {
+                    // There's no remaining Period to compare to `parsedPeriod`
+                    break;
+                }
+                // Take the previous Period as reference and compare it now to `parsedPeriod`
+                lastFlattenedPeriod = flattenedPeriods[flattenedPeriods.length - 1];
+            }
+        }
+        flattenedPeriods.push(parsedPeriod);
+    }
+    return flattenedPeriods;
+}
+exports.default = flattenOverlappingPeriods;
