@@ -27,6 +27,7 @@ import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { objectValues } from "../../utils/object_values";
+import sleep from "../../utils/sleep";
 import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
@@ -292,6 +293,10 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         }
 
         const prevState = this._stateData.state;
+        await sleep(window.SLEEP ?? 5000);
+        if (this._isStopped()) {
+          return;
+        }
         this._stateData = {
           state: ContentDecryptorState.ReadyForContent,
           isMediaKeysAttached: MediaKeyAttachmentStatus.Attached,
