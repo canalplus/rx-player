@@ -378,6 +378,31 @@ function translateEntities(str: string): string {
     .replace(/&amp;/g, "&");
 }
 
+function findXmlElementByName(
+  rootNode: ITNode | string | Array<ITNode | string>,
+  name: string,
+): ITNode | null {
+  if (Array.isArray(rootNode)) {
+    for (const subNode of rootNode) {
+      const res = findXmlElementByName(subNode, name);
+      if (res !== null) {
+        return res;
+      }
+    }
+  } else if (typeof rootNode !== "string") {
+    if (rootNode.tagName === name) {
+      return rootNode;
+    }
+    for (const child of rootNode.children) {
+      const res = findXmlElementByName(child, name);
+      if (res !== null) {
+        return res;
+      }
+    }
+  }
+  return null;
+}
+
 function getElementById(src: string, id: string): ITNode | string | undefined {
   const out = parseXml(src, {
     attrValue: id,
@@ -393,4 +418,11 @@ function getElementsByClassName(src: string, classname: string): Array<ITNode | 
   return out;
 }
 
-export { filter, getElementById, getElementsByClassName, parseXml, toContentString };
+export {
+  filter,
+  getElementById,
+  getElementsByClassName,
+  parseXml,
+  toContentString,
+  findXmlElementByName,
+};

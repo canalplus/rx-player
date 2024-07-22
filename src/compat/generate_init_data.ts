@@ -1,5 +1,22 @@
-import { itole4, itobe4, itole2, concat } from "../utils/byte_parsing";
-import { strToUtf8, strToUtf16LE, hexToBytes } from "../utils/string_parsing";
+import { base64ToBytes, bytesToBase64 } from "../utils/base64";
+import {
+  itole4,
+  itobe4,
+  itole2,
+  concat,
+  le2toi,
+  be4toi,
+  be2toi,
+} from "../utils/byte_parsing";
+import isNullOrUndefined from "../utils/is_null_or_undefined";
+import {
+  strToUtf8,
+  strToUtf16LE,
+  hexToBytes,
+  bytesToHex,
+  utf16LEToStr,
+} from "../utils/string_parsing";
+import { findXmlElementByName, parseXml, toContentString } from "../utils/xml-parser";
 
 /**
  * The PlayReadyHeader sample that will be used to test if the CDM is supported.
@@ -66,4 +83,113 @@ function generateInitData(data: Uint8Array, systemId: Uint8Array): Uint8Array {
     sizeOfData, // 4 bytes for the data size
     data, // X bytes for data
   );
+}
+
+export function extractPlayReadyKidAndChecksumFromInitData(initData: Uint8Array): Array<{
+  keyId: Uint8Array;
+  checksum?: Uint8Array | undefined;
+}> | null {
+  try {
+    let offset = 0;
+    while (offset < initData.length) {
+      const boxSize = be4toi(initData, offset);
+      const boxEnd = offset + boxSize;
+      offset += 4 /* pssh size */ + 4 /* box name */ + 4 /* version + flags */;
+      if (
+        bytesToHex(initData.subarray(offset, offset + 16)).toLowerCase() !==
+        "9a04f07998404286ab92e65be0885f95"
+      ) {
+        offset = boxEnd;
+        continue;
+      }
+      offset += 16 /* systemId */ + 4 /* data size */ + 4 /* PlayReady Object length */;
+      const objectRecordCount = le2toi(initData, offset);
+      offset += 2 /* 2 bytes for the number of PlayReady objects */;
+      const ret = [];
+      for (let i = 0; i < objectRecordCount; i++) {
+        const recordType = le2toi(initData, offset);
+        offset += 2 /* 2 bytes for record type */;
+        const recordLength = be2toi(initData, offset);
+        offset += 2 /* 2 bytes for record length */;
+        if (recordType !== 1) {
+          offset += recordLength;
+          continue;
+        }
+        const xmlDataStr = utf16LEToStr(initData.subarray(offset, offset + recordLength));
+        offset += recordLength;
+        const xmlDoc = parseXml(xmlDataStr);
+        const kidXml = findXmlElementByName(xmlDoc, "KID");
+        const checksumXml = findXmlElementByName(xmlDoc, "CHECKSUM");
+        if (kidXml === null) {
+          continue;
+        }
+        if (isNullOrUndefined(kidXml.attributes.VALUE)) {
+          const kidContent = toContentString(kidXml);
+          if (kidContent.length === 0) {
+            continue;
+          }
+          // TODO GUID to UUID?
+          const kidGuidBytes = base64ToBytes(kidContent);
+          if (checksumXml !== null) {
+            const checksum = base64ToBytes(toContentString(checksumXml));
+            ret.push({
+              keyId: kidGuidBytes,
+              checksum: checksum.byteLength > 0 ? checksum : undefined,
+            });
+          } else {
+            ret.push({
+              keyId: kidGuidBytes,
+            });
+          }
+        } else {
+          // TODO GUID to UUID?
+          const kidGuidBytes = base64ToBytes(kidXml.attributes.VALUE);
+          if (checksumXml !== null) {
+            const checksum = base64ToBytes(toContentString(checksumXml));
+            ret.push({
+              keyId: kidGuidBytes,
+              checksum: checksum.byteLength > 0 ? checksum : undefined,
+            });
+          } else {
+            if (!isNullOrUndefined(kidXml.attributes.CHECKSUM)) {
+              const checksum = base64ToBytes(kidXml.attributes.CHECKSUM);
+              ret.push({
+                keyId: kidGuidBytes,
+                checksum: checksum.byteLength > 0 ? checksum : undefined,
+              });
+            } else {
+              ret.push({
+                keyId: kidGuidBytes,
+              });
+            }
+          }
+        }
+      }
+      return ret;
+    }
+  } catch (_) {
+    // do nothing
+  }
+  return null;
+}
+
+export function generatePlayReadyInitDataForKeyId({
+  keyId,
+  checksum,
+}: {
+  keyId: Uint8Array;
+  checksum?: Uint8Array | undefined;
+}): Uint8Array {
+  const playreadyHeader =
+    '<WRMHEADER xmlns="http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader" version="4.0.0.0">' +
+    "<DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>" +
+    bytesToBase64(keyId) +
+    "</KID>" +
+    "<DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID>" +
+    '<CUSTOMATTRIBUTES xmlns=""><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES>' +
+    (checksum !== undefined
+      ? "<CHECKSUM>" + bytesToBase64(checksum) + "</CHECKSUM>"
+      : "") +
+    "</DATA></WRMHEADER>";
+  return generatePlayReadyInitData(playreadyHeader);
 }
