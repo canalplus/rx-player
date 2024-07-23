@@ -16,6 +16,7 @@
 
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
+import { DUMMY_PLAY_READY_HEADER, generatePlayReadyInitData } from "../../compat/generate_init_data";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
@@ -285,6 +286,15 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             this.trigger("warning", resSsc.value);
           }
         }
+
+        if (this._isStopped()) {
+          // We might be stopped since then
+          return;
+        }
+
+        const session = mediaKeys.createSession();
+        const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+        await session.generateRequest("cenc", initData);
 
         if (this._isStopped()) {
           // We might be stopped since then
