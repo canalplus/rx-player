@@ -1,0 +1,1 @@
+{"version":3,"file":"local.d.ts","sourceRoot":"","sources":["../../../../src/experimental/features/local.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAEH,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,sBAAsB,CAAC;AAK5D,iBAAS,uBAAuB,CAAC,QAAQ,EAAE,eAAe,GAAG,IAAI,CAIhE;AAED,OAAO,EAAE,uBAAuB,IAAI,cAAc,EAAE,CAAC;AACrD,eAAe,uBAAuB,CAAC"}

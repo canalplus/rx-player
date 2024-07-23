@@ -1,0 +1,108 @@
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import { assertUnreachable } from "../../../../utils/assert";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import parseMpdIr from "../common";
+import { createMPDIntermediateRepresentation } from "./node_parsers/MPD";
+import { createPeriodIntermediateRepresentation } from "./node_parsers/Period";
+/**
+ * Parse MPD through the JS parser, on a `Document` instance.
+ * @param {Document} document - Original manifest as returned by the server
+ * @param {Object} args - Various parsing options and information.
+ * @returns {Object} - Response returned by the DASH-JS parser.
+ */
+export default function parseFromDocument(document, args) {
+    const root = document.documentElement;
+    if (isNullOrUndefined(root) || root.nodeName !== "MPD") {
+        throw new Error("DASH Parser: document root should be MPD");
+    }
+    const [mpdIR, warnings] = createMPDIntermediateRepresentation(root);
+    const ret = parseMpdIr(mpdIR, args, warnings);
+    return processReturn(ret);
+    /**
+     * Handle `parseMpdIr` return values, asking for resources if they are needed
+     * and pre-processing them before continuing parsing.
+     *
+     * @param {Object} initialRes
+     * @returns {Object}
+     */
+    function processReturn(initialRes) {
+        if (initialRes.type === "done") {
+            return initialRes;
+        }
+        else if (initialRes.type === "needs-clock") {
+            return {
+                type: "needs-resources",
+                value: {
+                    urls: [initialRes.value.url],
+                    format: "string",
+                    continue(loadedClock) {
+                        if (loadedClock.length !== 1) {
+                            throw new Error("DASH parser: wrong number of loaded ressources.");
+                        }
+                        const newRet = initialRes.value.continue(loadedClock[0].responseData);
+                        return processReturn(newRet);
+                    },
+                },
+            };
+        }
+        else if (initialRes.type === "needs-xlinks") {
+            return {
+                type: "needs-resources",
+                value: {
+                    urls: initialRes.value.xlinksUrls,
+                    format: "string",
+                    continue(loadedXlinks) {
+                        const resourceInfos = [];
+                        for (let i = 0; i < loadedXlinks.length; i++) {
+                            const { responseData: xlinkResp, receivedTime, sendingTime, url, } = loadedXlinks[i];
+                            if (!xlinkResp.success) {
+                                throw xlinkResp.error;
+                            }
+                            const wrappedData = "<root>" + xlinkResp.data + "</root>";
+                            const dataAsXML = new DOMParser().parseFromString(wrappedData, "text/xml");
+                            if (isNullOrUndefined(dataAsXML) || dataAsXML.children.length === 0) {
+                                throw new Error("DASH parser: Invalid external ressources");
+                            }
+                            const periods = dataAsXML.children[0].children;
+                            const periodsIR = [];
+                            const periodsIRWarnings = [];
+                            for (let j = 0; j < periods.length; j++) {
+                                if (periods[j].nodeType === Node.ELEMENT_NODE) {
+                                    const [periodIR, periodWarnings] = createPeriodIntermediateRepresentation(periods[j]);
+                                    periodsIRWarnings.push(...periodWarnings);
+                                    periodsIR.push(periodIR);
+                                }
+                            }
+                            resourceInfos.push({
+                                url,
+                                receivedTime,
+                                sendingTime,
+                                parsed: periodsIR,
+                                warnings: periodsIRWarnings,
+                            });
+                        }
+                        const newRet = initialRes.value.continue(resourceInfos);
+                        return processReturn(newRet);
+                    },
+                },
+            };
+        }
+        else {
+            assertUnreachable(initialRes);
+        }
+    }
+}

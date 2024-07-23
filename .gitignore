@@ -1,25 +1,29 @@
-/tmp
+/*.keys
+/*.log
+/.eslintignore
+/.scannerwork
+/sonar-project.properties
 /localhost.crt
 /localhost.key
 /node_modules
+/webpack-demo.config.mjs
 
-/demo/full/bundle.js
-/demo/full/worker.js
-/demo/standalone/lib.js
+/demo
 
-/tests/performance/node_modules
-/tests/performance/bundle1.js
-/tests/performance/bundle2.js
-/tests/performance/package.json
-/tests/performance/package-lock.json
+/tests
 
-/dist/
-
-/doc/generated
-
-/src/__GENERATED_CODE
+/doc
+/.github
+/scripts
+# rust build artifacts
 /src/parsers/manifest/dash/wasm-parser/target
 
-# IDE files
-/.idea
-/.vscode
+/FILES.md
+/CONTRIBUTING.md
+
+# tools config
+/.editorconfig
+/.eslintrc*
+/jest.config.js
+/tsconfig*.json
+/webpack.config.mjs
