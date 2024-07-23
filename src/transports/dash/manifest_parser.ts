@@ -123,12 +123,50 @@ export default function generateManifestParser(
     function runDefaultJsParser():
       | IManifestParserResult
       | Promise<IManifestParserResult> {
+      let input = getManifestAsString(responseData);
+      const indexOfPeriodXml = input.indexOf("<Period ");
+
+      if (indexOfPeriodXml === -1) {
+        throw new Error("No found Period");
+      }
+      const indexOfPeriodEndTag = input.substring(indexOfPeriodXml).indexOf(">");
+      if (indexOfPeriodEndTag === -1) {
+        throw new Error("No found Period tag closure");
+      }
+
+      const indexOfPeriodEndXml = input.indexOf("</Period>");
+      if (indexOfPeriodEndXml === -1) {
+        throw new Error("No found Period end");
+      }
+
+      input =
+        input.substring(0, indexOfPeriodXml) +
+        '<Period duration="PT30S" ' +
+        input.substring(indexOfPeriodXml + "<Period ".length, indexOfPeriodXml + indexOfPeriodEndTag + 1) +
+        `<BaseURL>https://www.bok.net/dash/tears_of_steel/cleartext/</BaseURL>
+      <AdaptationSet lang="en" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1">
+      <SegmentTemplate duration="3000" initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/seg-$Number$.m4f" startNumber="1" endNumber="10" timescale="1000"/>
+      <Representation audioSamplingRate="44100" bandwidth="132348" codecs="mp4a.40.2" id="audio/en">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1">
+      <SegmentTemplate duration="3000" initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/seg-$Number$.m4f" startNumber="1" endNumber="10" timescale="1000"/>
+      <Representation bandwidth="686685" codecs="avc1.42C015" frameRate="24" height="214" id="video/1" scanType="progressive" width="512"/>
+      <Representation bandwidth="1116150" codecs="avc1.42C016" frameRate="24" height="294" id="video/2" scanType="progressive" width="704"/>
+      <Representation bandwidth="686685" codecs="avc1.42C015" frameRate="24" height="214" id="video/3" scanType="progressive" width="512"/>
+      <Representation bandwidth="1929169" codecs="avc1.42C01F" frameRate="24" height="428" id="video/4" scanType="progressive" width="1024"/>
+      <Representation bandwidth="2362822" codecs="avc1.42C01F" frameRate="24" height="482" id="video/5" scanType="progressive" width="1152"/>
+      <Representation bandwidth="2470094" codecs="avc1.4D401F" frameRate="24" height="534" id="video/6" scanType="progressive" width="1280"/>
+    </AdaptationSet>` +
+        input.substring(indexOfPeriodEndXml, input.length);
+
       if (parsers.fastJs !== null) {
-        const manifestStr = getManifestAsString(responseData);
+        const manifestStr = getManifestAsString(input);
         const parsedManifest = parsers.fastJs(manifestStr, dashParserOpts);
         return processMpdParserResponse(parsedManifest);
       } else if (parsers.native !== null) {
-        const manifestDocument = getManifestAsDocument(responseData);
+        const manifestDocument = getManifestAsDocument(input);
         const parsedManifest = parsers.native(manifestDocument, dashParserOpts);
         return processMpdParserResponse(parsedManifest);
       } else {
