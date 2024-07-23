@@ -650,7 +650,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       sb._performNextOperation();
     });
     window.actuallyPush
-
     if (sessionRes.type === MediaKeySessionLoadingType.Created) {
       const requestData = initializationData.values.constructRequestData();
       try {

@@ -57,7 +57,7 @@ export default class MainMediaSourceInterface
   private _endOfStreamCanceller: TaskCanceller | null;
   /**
    * Allows to clean-up long-running operation when the `IMediaSourceInterface`
-   * is dispossed
+   * is disposed
    */
   private _canceller: TaskCanceller;
 
@@ -160,6 +160,12 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public dispose() {
     this.sourceBuffers.forEach((s) => s.dispose());
+    if (window.sbArr !== undefined) {
+      const indexOf = window.sbArr.indexOf(this);
+      if (indexOf >= 0) {
+        window.sbArr.splice(indexOf, 1);
+      }
+    }
     this._canceller.cancel();
     resetMediaSource(this._mediaSource);
   }
@@ -209,6 +215,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
+    if (window.sbArr === undefined) {
+      window.sbArr = [];
+    }
     window.sbArr.push(this);
 
     const onError = (evt: Event) => {
