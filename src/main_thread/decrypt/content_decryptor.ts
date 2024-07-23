@@ -16,6 +16,7 @@
 
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
+import shouldCallGenerateRequestBeforeBufferingMedia from "../../compat/should_call_generate_request_before_buffering_media";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
@@ -54,6 +55,7 @@ import {
   areSomeKeyIdsContainedIn,
 } from "./utils/key_id_comparison";
 import type KeySessionRecord from "./utils/key_session_record";
+import performFakeGenerateRequest from "./utils/perform_fake_generate_request";
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -283,6 +285,22 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           const resSsc = await setServerCertificate(mediaKeys, serverCertificate);
           if (resSsc.type === "error") {
             this.trigger("warning", resSsc.value);
+          }
+        }
+
+        if (this._isStopped()) {
+          // We might be stopped since then
+          return;
+        }
+
+        if (
+          shouldCallGenerateRequestBeforeBufferingMedia(mediaKeySystemAccess.keySystem)
+        ) {
+          try {
+            await performFakeGenerateRequest(mediaKeys);
+          } catch (err) {
+            const error = err instanceof Error ? err : new Error("Unknown Error");
+            log.warn("DRM: unable to fully perform fake generateRequest call", error);
           }
         }
 
