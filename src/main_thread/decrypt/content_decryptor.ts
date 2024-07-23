@@ -149,6 +149,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    */
   constructor(mediaElement: HTMLMediaElement, ksOptions: IKeySystemOption[]) {
     super();
+    window.CAN_PUSH = false;
 
     log.debug("DRM: Starting ContentDecryptor logic.");
 
@@ -643,6 +644,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     ) {
       this._unlockInitDataQueue();
     }
+
+    window.CAN_PUSH = true;
+    window.sbArr?.forEach(sb => {
+      sb._performNextOperation();
+    });
+    window.actuallyPush
 
     if (sessionRes.type === MediaKeySessionLoadingType.Created) {
       const requestData = initializationData.values.constructRequestData();

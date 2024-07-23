@@ -209,6 +209,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
+    window.sbArr.push(this);
 
     const onError = (evt: Event) => {
       let error: Error;
@@ -356,6 +357,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _performNextOperation(): void {
+    if (window.CAN_PUSH === false) {
+      return;
+    }
     if (this._currentOperations.length !== 0 || this._sourceBuffer.updating) {
       return;
     }
