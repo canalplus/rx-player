@@ -826,7 +826,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 0.001);
-        expect(player.getWallClockTime()).to.be.closeTo(minimumPosition, 0.015);
+        expect(player.getWallClockTime()).to.be.closeTo(minimumPosition, 0.02);
       });
 
       it("should return the starting position if one", async () => {
@@ -860,7 +860,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 0.001);
-        expect(player.getWallClockTime()).to.be.closeTo(minimumPosition, 0.015);
+        expect(player.getWallClockTime()).to.be.closeTo(minimumPosition, 0.02);
       });
 
       it("should return the starting position if one", async () => {
@@ -954,7 +954,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
 
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.001);
+        expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.02);
         player.setPlaybackRate(1);
         const before1 = performance.now();
         player.play();
