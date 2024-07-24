@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { describe, it, expect } from "vitest";
 import findCompleteBox from "../find_complete_box";
 
 describe("transports utils - findCompleteBox", () => {
