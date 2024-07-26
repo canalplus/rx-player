@@ -195,8 +195,8 @@ export default function generateAudioVideoSegmentParser({
     const parsedTimescale = isNullOrUndefined(timescale) ? undefined : timescale;
 
     if (segment.isInit) {
-      log.warn("DASH: !!!!!!!!!!!! FAKE ENCRYPTION");
-      chunkData = fakeEncryptionDataInInitSegment(chunkData);
+      // log.warn("DASH: !!!!!!!!!!!! FAKE ENCRYPTION");
+      // chunkData = fakeEncryptionDataInInitSegment(chunkData);
     }
 
     return {
