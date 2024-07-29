@@ -30,6 +30,7 @@ import type {
   ITransportName,
   ITransportPipelines,
 } from "../../../transports";
+import loadManifestAndDetectTransport from "../../../transports/generic_manifest_loader";
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import noop from "../../../utils/noop";
@@ -57,12 +58,12 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
   /** URLs through which the Manifest may be reached, by order of priority. */
   private _manifestUrls: string[] | undefined;
   /** Name of the current transport pipeline used. */
-  private _transportName: ITransportName;
+  private _transportName: ITransportName | undefined;
   /**
    * Manifest loading and parsing pipelines linked to the current transport
    * protocol used.
    */
-  private _pipelines: ITransportManifestPipeline;
+  private _pipelines: ITransportManifestPipeline | null;
   /**
    * `TaskCanceller` called when this `ManifestFetcher` is disposed, to clean
    * resources.
@@ -99,14 +100,14 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    */
   constructor(
     urls: string[] | undefined,
-    pipelines: ITransportPipelines,
+    pipelines: ITransportPipelines | null,
     settings: IManifestFetcherSettings,
   ) {
     super();
     this.scheduleManualRefresh = noop;
     this._manifestUrls = urls;
-    this._pipelines = pipelines.manifest;
-    this._transportName = pipelines.transportName;
+    this._pipelines = pipelines?.manifest ?? null;
+    this._transportName = pipelines?.transportName ?? undefined;
     this._settings = settings;
     this._canceller = new TaskCanceller();
     this._isStarted = false;
@@ -232,7 +233,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     function callLoaderWithRetries(
       manifestUrl: string | undefined,
     ): Promise<IRequestedData<ILoadedManifestFormat>> {
-      const { loadManifest } = pipelines;
+      const loadManifest = pipelines?.loadManifest;
       let requestTimeout: number | undefined =
         settings.requestTimeout === undefined
           ? config.getCurrent().DEFAULT_REQUEST_TIMEOUT
@@ -255,7 +256,18 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         connectionTimeout,
         cmcdPayload: settings.cmcdDataBuilder?.getCmcdDataForManifest(transportName),
       };
-      const callLoader = () => loadManifest(manifestUrl, requestOptions, cancelSignal);
+      const callLoader = () => {
+        if (loadManifest === undefined) {
+          return loadManifestAndDetectTransport().then(res => {
+            if (res.responseData.transport === "dash") {
+              // ...
+            }
+          });
+        } else {
+          return loadManifest(manifestUrl, requestOptions, cancelSignal);
+        }
+      };
+
       return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
     }
   }
