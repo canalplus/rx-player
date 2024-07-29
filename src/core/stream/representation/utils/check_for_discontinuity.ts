@@ -17,9 +17,9 @@
 import log from "../../../../log";
 import type {
   IManifest,
-  IAdaptation,
   IPeriod,
   IRepresentation,
+  ITrackMetadata,
 } from "../../../../manifest";
 import type { IBufferedChunk } from "../../../segment_sinks";
 import type { IBufferDiscontinuity } from "../types";
@@ -52,7 +52,7 @@ import type { IBufferDiscontinuity } from "../types";
  */
 export default function checkForDiscontinuity(
   content: {
-    adaptation: IAdaptation;
+    track: ITrackMetadata;
     manifest: IManifest;
     period: IPeriod;
     representation: IRepresentation;
@@ -62,7 +62,7 @@ export default function checkForDiscontinuity(
   hasFinishedLoading: boolean,
   bufferedSegments: IBufferedChunk[],
 ): IBufferDiscontinuity | null {
-  const { period, adaptation, representation } = content;
+  const { period, track, representation } = content;
 
   // `bufferedSegments` might also contains segments which are before
   // `checkedRange`.
@@ -118,7 +118,7 @@ export default function checkForDiscontinuity(
     }
     log.debug(
       "RS: current discontinuity encountered",
-      adaptation.type,
+      track.trackType,
       nextBufferedSegment.bufferedStart,
     );
     return { start: undefined, end: discontinuityEnd };
@@ -152,7 +152,7 @@ export default function checkForDiscontinuity(
       }
       const start = segmentInfoBeforeHole.bufferedEnd as number;
       const end = segmentInfoAfterHole.bufferedStart as number;
-      log.debug("RS: future discontinuity encountered", adaptation.type, start, end);
+      log.debug("RS: future discontinuity encountered", track.trackType, start, end);
       return { start, end };
     }
   }
@@ -182,7 +182,7 @@ export default function checkForDiscontinuity(
         ) {
           log.debug(
             "RS: discontinuity encountered at the end of the current period",
-            adaptation.type,
+            track.trackType,
             lastSegment.bufferedEnd,
             period.end,
           );

@@ -1,4 +1,9 @@
-import type { IManifest, IAdaptation, IPeriod } from "../../../manifest";
+import type { IManifest, IPeriod } from "../../../manifest";
+import type {
+  IAudioTrackMetadata,
+  ITextTrackMetadata,
+  IVideoTrackMetadata,
+} from "../../../manifest/types";
 import type {
   ObservationPosition,
   IReadOnlyPlaybackObserver,
@@ -14,7 +19,7 @@ import type { SegmentFetcherCreator } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import type SegmentSinksStore from "../../segment_sinks";
 import type {
-  IAdaptationChoice,
+  ITrackChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamOptions,
 } from "../adaptation";
@@ -25,29 +30,33 @@ export type { IPausedPlaybackObservation };
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends IAdaptationStreamCallbacks {
   /**
-   * Called when a new `PeriodStream` is ready to start but needs an Adaptation
-   * (i.e. track) to be chosen first.
+   * Called when a new `PeriodStream` is ready to start but needs an track
+   * to be chosen first.
    */
   periodStreamReady(payload: IPeriodStreamReadyPayload): void;
   /**
-   * Called when a new `AdaptationStream` is created to load segments from an
-   * `Adaptation`.
+   * Called when a new `AdaptationStream` is created to load segments from a
+   * track.
    */
-  adaptationChange(payload: IAdaptationChangePayload): void;
+  trackChange(payload: ITrackChangeEventPayload): void;
 }
 
-/** Payload for the `adaptationChange` callback. */
-export interface IAdaptationChangePayload {
-  /** The type of buffer for which the Representation is changing. */
-  type: IBufferType;
-  /** The `Period` linked to the `RepresentationStream` we're creating. */
-  period: IPeriod;
-  /**
-   * The `Adaptation` linked to the `AdaptationStream` we're creating.
-   * `null` when we're choosing no Adaptation at all.
-   */
-  adaptation: IAdaptation | null;
-}
+export type ITrackChangeEventPayload =
+  | {
+      type: "video";
+      track: IVideoTrackMetadata | null;
+      period: IPeriod;
+    }
+  | {
+      type: "audio";
+      track: IAudioTrackMetadata | null;
+      period: IPeriod;
+    }
+  | {
+      type: "text";
+      track: ITextTrackMetadata | null;
+      period: IPeriod;
+    };
 
 /** Payload for the `periodStreamReady` callback. */
 export interface IPeriodStreamReadyPayload {
@@ -58,17 +67,17 @@ export interface IPeriodStreamReadyPayload {
   /** The `Period` linked to the `PeriodStream` we have created. */
   period: IPeriod;
   /**
-   * The reference through which any Adaptation (i.e. track) choice should be
-   * emitted for that `PeriodStream`.
+   * The reference through which any track choice should be emitted for that
+   * `PeriodStream`.
    *
    * The `PeriodStream` will not do anything until this Reference has emitted
    * at least one to give its initial choice.
    * You can send `null` through it to tell this `PeriodStream` that you don't
-   * want any `Adaptation` for now.
+   * want any track for now.
    * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
    * yourself.
    */
-  adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
+  trackRef: SharedReference<ITrackChoice | null | undefined>;
 }
 
 /** Playback observation required by the `PeriodStream`. */

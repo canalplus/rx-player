@@ -266,7 +266,9 @@ describe("Manifest - Manifest", () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0].type).toEqual("MEDIA_ERROR");
     expect(warnings[0].code).toEqual("MANIFEST_INCOMPATIBLE_CODECS_ERROR");
-    expect((warnings[0] as unknown as { tracksInfo: unknown }).tracksInfo).toEqual([
+    expect(
+      (warnings[0] as unknown as { tracksMetadata: unknown }).tracksMetadata,
+    ).toEqual([
       {
         track: {
           language: "",

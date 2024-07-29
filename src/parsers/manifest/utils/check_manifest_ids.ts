@@ -16,10 +16,10 @@
 
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array_includes";
-import type { IParsedAdaptationType, IParsedManifest } from "../types";
+import type { IParsedManifest } from "../types";
 
 /**
- * Ensure that no two periods, adaptations from the same period and
+ * Ensure that no two periods, variants and tracks from the same period and
  * representations from the same adaptation, have the same ID.
  *
  * Log and mutate their ID if not until this is verified.
@@ -39,41 +39,42 @@ export default function checkManifestIDs(manifest: IParsedManifest): void {
     } else {
       periodIDS.push(periodID);
     }
-    const { adaptations } = period;
-    const adaptationIDs: string[] = [];
-    (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
-      const adaptationsForType = adaptations[type];
-      if (adaptationsForType === undefined) {
-        return;
-      }
-      adaptationsForType.forEach((adaptation) => {
-        const adaptationID = adaptation.id;
-        if (arrayIncludes(adaptationIDs, adaptationID)) {
-          log.warn("Two adaptations with the same ID found. Updating.", adaptationID);
-          const newID = adaptationID + "-dup";
-          adaptation.id = newID;
-          checkManifestIDs(manifest);
-          adaptationIDs.push(newID);
-        } else {
-          adaptationIDs.push(adaptationID);
-        }
-        const representationIDs: Array<number | string> = [];
-        adaptation.representations.forEach((representation) => {
-          const representationID = representation.id;
-          if (arrayIncludes(representationIDs, representationID)) {
-            log.warn(
-              "Two representations with the same ID found. Updating.",
-              representationID,
-            );
-            const newID = `${representationID}-dup`;
-            representation.id = newID;
-            checkManifestIDs(manifest);
-            representationIDs.push(newID);
-          } else {
-            representationIDs.push(representationID);
-          }
-        });
-      });
-    });
+    // XXX TODO
+    // const { variantStreams } = period;
+    // const adaptationIDs: string[] = [];
+    // (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
+    //   const adaptationsForType = adaptations[type];
+    //   if (adaptationsForType === undefined) {
+    //     return;
+    //   }
+    //   adaptationsForType.forEach((adaptation) => {
+    //     const adaptationID = adaptation.id;
+    //     if (arrayIncludes(adaptationIDs, adaptationID)) {
+    //       log.warn("Two adaptations with the same ID found. Updating.", adaptationID);
+    //       const newID = adaptationID + "-dup";
+    //       adaptation.id = newID;
+    //       checkManifestIDs(manifest);
+    //       adaptationIDs.push(newID);
+    //     } else {
+    //       adaptationIDs.push(adaptationID);
+    //     }
+    //     const representationIDs: Array<number | string> = [];
+    //     adaptation.representations.forEach((representation) => {
+    //       const representationID = representation.id;
+    //       if (arrayIncludes(representationIDs, representationID)) {
+    //         log.warn(
+    //           "Two representations with the same ID found. Updating.",
+    //           representationID,
+    //         );
+    //         const newID = `${representationID}-dup`;
+    //         representation.id = newID;
+    //         checkManifestIDs(manifest);
+    //         representationIDs.push(newID);
+    //       } else {
+    //         representationIDs.push(representationID);
+    //       }
+    //     });
+    //   });
+    // });
   });
 }

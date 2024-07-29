@@ -1,32 +1,36 @@
+import log from "../log";
 import type { IProcessedProtectionData } from "../main_thread/types";
-import type { IManifest, IPeriod, IAdaptation, IPeriodsUpdateResult } from "../manifest";
+import type { IManifest, IPeriod, IPeriodsUpdateResult } from "../manifest";
 import type {
-  IAudioRepresentation,
+  // IAudioRepresentation,
   IAudioTrack,
   IRepresentationFilter,
   ITextTrack,
   ITrackType,
-  IVideoRepresentation,
+  // IVideoRepresentation,
   IVideoTrack,
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../utils/array_find";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
+// import isNullOrUndefined from "../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
-import { objectValues } from "../utils/object_values";
+// import { objectValues } from "../utils/object_values";
 import type {
-  IAdaptationMetadata,
+  IAudioTrackMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  ITextTrackMetadata,
+  ITrackMetadata,
+  IVideoTrackMetadata,
 } from "./types";
 
-/** List in an array every possible value for the Adaptation's `type` property. */
-export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text"];
+/** List in an array every possible value for the track's `trackType` property. */
+export const SUPPORTED_TRACK_TYPE: ITrackType[] = ["audio", "video", "text"];
 
 /**
  * Returns the theoretical minimum playable position on the content
- * regardless of the current Adaptation chosen, as estimated at parsing
+ * regardless of the current track chosen, as estimated at parsing
  * time.
  * @param {Object} manifest
  * @returns {number}
@@ -69,7 +73,7 @@ export function getLivePosition(manifest: IManifestMetadata): number | undefined
 
 /**
  * Returns the theoretical maximum playable position on the content
- * regardless of the current Adaptation chosen, as estimated at parsing
+ * regardless of the current track chosen, as estimated at parsing
  * time.
  * @param {Object} manifest
  * @returns {number}
@@ -83,37 +87,37 @@ export function getMaximumSafePosition(manifest: IManifestMetadata): number {
   return maximumTimeData.maximumSafePosition + timeDiff / 1000;
 }
 
-/**
- * Returns Adaptations that contain Representations in supported codecs.
- * @param {string|undefined} type - If set filter on a specific Adaptation's
- * type. Will return for all types if `undefined`.
- * @returns {Array.<Adaptation>}
- */
-export function getSupportedAdaptations(
-  period: IPeriod,
-  type?: ITrackType | undefined,
-): IAdaptation[];
-export function getSupportedAdaptations(
-  period: IPeriodMetadata,
-  type?: ITrackType | undefined,
-): IAdaptationMetadata[];
-export function getSupportedAdaptations(
-  period: IPeriod | IPeriodMetadata,
-  type?: ITrackType | undefined,
-): IAdaptationMetadata[] | IAdaptation[] {
-  if (type === undefined) {
-    return getAdaptations(period).filter((ada) => {
-      return ada.isSupported === true;
-    });
-  }
-  const adaptationsForType = period.adaptations[type];
-  if (adaptationsForType === undefined) {
-    return [];
-  }
-  return adaptationsForType.filter((ada) => {
-    return ada.isSupported === true;
-  });
-}
+// /**
+//  * Returns tracks that contain Representations in supported codecs.
+//  * @param {string|undefined} type - If set filter on a specific track's
+//  * type. Will return for all types if `undefined`.
+//  * @returns {Array.<Adaptation>}
+//  */
+// export function getSupportedAdaptations(
+//   period: IPeriod,
+//   type?: ITrackType | undefined,
+// ): IAdaptation[];
+// export function getSupportedAdaptations(
+//   period: IPeriodMetadata,
+//   type?: ITrackType | undefined,
+// ): IAdaptationMetadata[];
+// export function getSupportedAdaptations(
+//   period: IPeriod | IPeriodMetadata,
+//   type?: ITrackType | undefined,
+// ): IAdaptationMetadata[] | IAdaptation[] {
+//   if (type === undefined) {
+//     return getAdaptations(period).filter((ada) => {
+//       return ada.isSupported === true;
+//     });
+//   }
+//   const adaptationsForType = period.adaptations[type];
+//   if (adaptationsForType === undefined) {
+//     return [];
+//   }
+//   return adaptationsForType.filter((ada) => {
+//     return ada.isSupported === true;
+//   });
+// }
 
 /**
  * Returns the Period encountered at the given time.
@@ -196,118 +200,124 @@ export function periodContainsTime(
   return false;
 }
 
-/**
- * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
- * Array.
- * @returns {Array.<Object>}
- */
-export function getAdaptations(period: IPeriod): IAdaptation[];
-export function getAdaptations(period: IPeriodMetadata): IAdaptationMetadata[];
-export function getAdaptations(
-  period: IPeriodMetadata | IPeriod,
-): IAdaptationMetadata[] | IAdaptation[] {
-  const adaptationsByType = period.adaptations;
-  return objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
-    // Note: the second case cannot happen. TS is just being dumb here
-    (acc, adaptations) =>
-      !isNullOrUndefined(adaptations) ? acc.concat(adaptations) : acc,
-    [],
-  );
-}
+// /**
+//  * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
+//  * Array.
+//  * @returns {Array.<Object>}
+//  */
+// export function getAdaptations(period: IPeriod): IAdaptation[];
+// export function getAdaptations(period: IPeriodMetadata): IAdaptationMetadata[];
+// export function getAdaptations(
+//   period: IPeriodMetadata | IPeriod,
+// ): IAdaptationMetadata[] | IAdaptation[] {
+//   const adaptationsByType = period.adaptations;
+//   return objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
+//     // Note: the second case cannot happen. TS is just being dumb here
+//     (acc, adaptations) =>
+//       !isNullOrUndefined(adaptations) ? acc.concat(adaptations) : acc,
+//     [],
+//   );
+// }
 
 /**
- * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
- * @param {Object} adaptation
+ * Format an audio track as an `IAudioTrack`.
+ * @param {Object} track
  * @param {boolean} filterPlayable - If `true` only "playable" Representation
  * will be returned.
  * @returns {Object}
  */
 export function toAudioTrack(
-  adaptation: IAdaptationMetadata,
-  filterPlayable: boolean,
+  track: IAudioTrackMetadata,
+  _filterPlayable: boolean,
 ): IAudioTrack {
   const formatted: IAudioTrack = {
-    language: adaptation.language ?? "",
-    normalized: adaptation.normalizedLanguage ?? "",
-    audioDescription: adaptation.isAudioDescription === true,
-    id: adaptation.id,
-    representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
-      : adaptation.representations
-    ).map(toAudioRepresentation),
-    label: adaptation.label,
+    language: track.language ?? "",
+    normalized: track.normalizedLanguage ?? "",
+    audioDescription: track.isAudioDescription === true,
+    id: track.id,
+    representations: [],
+    // XXX TODO
+    // representations: (filterPlayable
+    //   ? track.representations.filter(
+    //       (r) => r.isSupported === true && r.decipherable !== false,
+    //     )
+    //   : track.representations
+    // ).map(toAudioRepresentation),
+    label: track.label,
   };
-  if (adaptation.isDub === true) {
+  if (track.isDub === true) {
     formatted.dub = true;
   }
   return formatted;
 }
 
 /**
- * Format an `Adaptation`, generally of type `"audio"`, as an `IAudioTrack`.
- * @param {Object} adaptation
+ * Format a text track as an `ITextTrack`.
+ * @param {Object} track
  * @returns {Object}
  */
-export function toTextTrack(adaptation: IAdaptationMetadata): ITextTrack {
+export function toTextTrack(track: ITextTrackMetadata): ITextTrack {
   return {
-    language: adaptation.language ?? "",
-    normalized: adaptation.normalizedLanguage ?? "",
-    closedCaption: adaptation.isClosedCaption === true,
-    id: adaptation.id,
-    label: adaptation.label,
-    forced: adaptation.isForcedSubtitles,
+    language: track.language ?? "",
+    normalized: track.normalizedLanguage ?? "",
+    closedCaption: track.isClosedCaption === true,
+    id: track.id,
+    label: track.label,
+    forced: track.isForcedSubtitles,
   };
 }
 
 /**
- * Format an `Adaptation`, generally of type `"video"`, as an `IAudioTrack`.
- * @param {Object} adaptation
+ * Format a video track as an `IVideoTrack`.
+ * @param {Object} track
  * @param {boolean} filterPlayable - If `true` only "playable" Representation
  * will be returned.
  * @returns {Object}
  */
 export function toVideoTrack(
-  adaptation: IAdaptationMetadata,
-  filterPlayable: boolean,
+  track: IVideoTrackMetadata,
+  _filterPlayable: boolean,
 ): IVideoTrack {
-  const trickModeTracks =
-    adaptation.trickModeTracks !== undefined
-      ? adaptation.trickModeTracks.map((trickModeAdaptation) => {
-          const representations = (
-            filterPlayable
-              ? trickModeAdaptation.representations.filter(
-                  (r) => r.isSupported === true && r.decipherable !== false,
-                )
-              : trickModeAdaptation.representations
-          ).map(toVideoRepresentation);
-          const trickMode: IVideoTrack = {
-            id: trickModeAdaptation.id,
-            representations,
-            isTrickModeTrack: true,
-          };
-          if (trickModeAdaptation.isSignInterpreted === true) {
-            trickMode.signInterpreted = true;
-          }
-          return trickMode;
-        })
-      : undefined;
+  const trickModeTracks: IVideoTrack[] = [];
+  // XXX TODO
+  // const trickModeTracks =
+  //   track.trickModeTracks !== undefined
+  //     ? track.trickModeTracks.map((trickModeAdaptation) => {
+  //         const representations = (
+  //           filterPlayable
+  //             ? trickModeAdaptation.representations.filter(
+  //                 (r) => r.isSupported === true && r.decipherable !== false,
+  //               )
+  //             : trickModeAdaptation.representations
+  //         ).map(toVideoRepresentation);
+  //         const trickMode: IVideoTrack = {
+  //           id: trickModeAdaptation.id,
+  //           representations,
+  //           isTrickModeTrack: true,
+  //         };
+  //         if (trickModeAdaptation.isSignInterpreted === true) {
+  //           trickMode.signInterpreted = true;
+  //         }
+  //         return trickMode;
+  //       })
+  //     : undefined;
 
   const videoTrack: IVideoTrack = {
-    id: adaptation.id,
-    representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
-      : adaptation.representations
-    ).map(toVideoRepresentation),
-    label: adaptation.label,
+    id: track.id,
+    representations: [],
+    // XXX TODO
+    // representations: (filterPlayable
+    //   ? track.representations.filter(
+    //       (r) => r.isSupported === true && r.decipherable !== false,
+    //     )
+    //   : track.representations
+    // ).map(toVideoRepresentation),
+    label: track.label,
   };
-  if (adaptation.isSignInterpreted === true) {
+  if (track.isSignInterpreted === true) {
     videoTrack.signInterpreted = true;
   }
-  if (adaptation.isTrickModeTrack === true) {
+  if (track.isTrickModeTrack === true) {
     videoTrack.isTrickModeTrack = true;
   }
   if (trickModeTracks !== undefined) {
@@ -316,64 +326,64 @@ export function toVideoTrack(
   return videoTrack;
 }
 
-/**
- * Format Representation as an `IAudioRepresentation`.
- * @returns {Object}
- */
-function toAudioRepresentation(
-  representation: IRepresentationMetadata,
-): IAudioRepresentation {
-  const { id, bitrate, codecs, isSpatialAudio, isSupported, decipherable } =
-    representation;
-  return {
-    id,
-    bitrate,
-    codec: codecs?.[0],
-    isSpatialAudio,
-    isCodecSupported: isSupported,
-    decipherable,
-  };
-}
+// /**
+//  * Format Representation as an `IAudioRepresentation`.
+//  * @returns {Object}
+//  */
+// function toAudioRepresentation(
+//   representation: IRepresentationMetadata,
+// ): IAudioRepresentation {
+//   const { id, bitrate, codecs, isSpatialAudio, isSupported, decipherable } =
+//     representation;
+//   return {
+//     id,
+//     bitrate,
+//     codec: codecs?.[0],
+//     isSpatialAudio,
+//     isCodecSupported: isSupported,
+//     decipherable,
+//   };
+// }
 
-/**
- * Format Representation as an `IVideoRepresentation`.
- * @returns {Object}
- */
-function toVideoRepresentation(
-  representation: IRepresentationMetadata,
-): IVideoRepresentation {
-  const {
-    id,
-    bitrate,
-    frameRate,
-    width,
-    height,
-    codecs,
-    hdrInfo,
-    isSupported,
-    decipherable,
-  } = representation;
-  return {
-    id,
-    bitrate,
-    frameRate,
-    width,
-    height,
-    codec: codecs?.[0],
-    hdrInfo,
-    isCodecSupported: isSupported,
-    decipherable,
-  };
-}
+// /**
+//  * Format Representation as an `IVideoRepresentation`.
+//  * @returns {Object}
+//  */
+// function toVideoRepresentation(
+//   representation: IRepresentationMetadata,
+// ): IVideoRepresentation {
+//   const {
+//     id,
+//     bitrate,
+//     frameRate,
+//     width,
+//     height,
+//     codecs,
+//     hdrInfo,
+//     isSupported,
+//     decipherable,
+//   } = representation;
+//   return {
+//     id,
+//     bitrate,
+//     frameRate,
+//     width,
+//     height,
+//     codec: codecs?.[0],
+//     hdrInfo,
+//     isCodecSupported: isSupported,
+//     decipherable,
+//   };
+// }
 
-export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
-  switch (adaptation.type) {
+export function toTaggedTrack(track: ITrackMetadata): ITaggedTrack {
+  switch (track.trackType) {
     case "audio":
-      return { type: "audio", track: toAudioTrack(adaptation, false) };
+      return { type: "audio", track: toAudioTrack(track, false) };
     case "video":
-      return { type: "video", track: toVideoTrack(adaptation, false) };
+      return { type: "video", track: toVideoTrack(track, false) };
     case "text":
-      return { type: "text", track: toTextTrack(adaptation) };
+      return { type: "text", track: toTextTrack(track) };
   }
 }
 
@@ -383,7 +393,7 @@ export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
 export interface IDecipherabilityStatusChangedElement {
   manifest: IManifestMetadata;
   period: IPeriodMetadata;
-  adaptation: IAdaptationMetadata;
+  track: ITrackMetadata;
   representation: IRepresentationMetadata;
 }
 
@@ -496,18 +506,27 @@ function updateRepresentationsDeciperability(
 ): IDecipherabilityStatusChangedElement[] {
   const updates: IDecipherabilityStatusChangedElement[] = [];
   for (const period of manifest.periods) {
-    const adaptationsByType = period.adaptations;
-    const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
-      // Note: the second case cannot happen. TS is just being dumb here
-      (acc, adaps) => (!isNullOrUndefined(adaps) ? acc.concat(adaps) : acc),
-      [],
-    );
-    for (const adaptation of adaptations) {
-      for (const representation of adaptation.representations) {
-        const result = isDecipherable(representation);
-        if (result !== representation.decipherable) {
-          updates.push({ manifest, period, adaptation, representation });
-          representation.decipherable = result;
+    for (const variantStream of period.variantStreams) {
+      for (const trackType of ["audio", "video", "text"] as const) {
+        for (const media of variantStream.media[trackType]) {
+          for (const representation of media.representations) {
+            const track = period.tracksMetadata[trackType][media.linkedTrackId];
+            if (track === undefined) {
+              log.warn("Manifest: Track linked to Representation not found");
+              continue;
+            }
+            const content = { manifest, period, track, representation };
+            const result = isDecipherable(representation);
+            if (result !== representation.decipherable) {
+              updates.push(content);
+              representation.decipherable = result;
+              log.debug(
+                `Decipherability changed for "${representation.id}"`,
+                `(${representation.bitrate})`,
+                String(representation.decipherable),
+              );
+            }
+          }
         }
       }
     }
@@ -524,125 +543,118 @@ function updateRepresentationsDeciperability(
  * @param {Array.<Object>} updates
  */
 export function replicateUpdatesOnManifestMetadata(
-  baseManifest: IManifestMetadata,
-  newManifest: Omit<IManifestMetadata, "periods">,
-  updates: IPeriodsUpdateResult,
+  _baseManifest: IManifestMetadata,
+  _newManifest: Omit<IManifestMetadata, "periods">,
+  _updates: IPeriodsUpdateResult,
 ) {
-  for (const prop of Object.keys(newManifest)) {
-    if (prop !== "periods") {
-      // eslint-disable-next-line
-      (baseManifest as any)[prop] = (newManifest as any)[prop];
-    }
-  }
-
-  for (const removedPeriod of updates.removedPeriods) {
-    for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
-      if (baseManifest.periods[periodIdx].id === removedPeriod.id) {
-        baseManifest.periods.splice(periodIdx, 1);
-        break;
-      }
-    }
-  }
-
-  for (const updatedPeriod of updates.updatedPeriods) {
-    for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
-      const newPeriod = updatedPeriod.period;
-      if (baseManifest.periods[periodIdx].id === updatedPeriod.period.id) {
-        const basePeriod = baseManifest.periods[periodIdx];
-        for (const prop of Object.keys(newPeriod)) {
-          if (prop !== "adaptations") {
-            // eslint-disable-next-line
-            (basePeriod as any)[prop] = (newPeriod as any)[prop];
-          }
-        }
-
-        for (const removedAdaptation of updatedPeriod.result.removedAdaptations) {
-          const ttype = removedAdaptation.trackType;
-          const adaptationsForType = basePeriod.adaptations[ttype] ?? [];
-          for (let adapIdx = 0; adapIdx < adaptationsForType.length; adapIdx++) {
-            if (adaptationsForType[adapIdx].id === removedAdaptation.id) {
-              adaptationsForType.splice(adapIdx, 1);
-              break;
-            }
-          }
-        }
-
-        for (const updatedAdaptation of updatedPeriod.result.updatedAdaptations) {
-          const newAdaptation = updatedAdaptation.adaptation;
-          const ttype = updatedAdaptation.trackType;
-          const adaptationsForType = basePeriod.adaptations[ttype] ?? [];
-          for (let adapIdx = 0; adapIdx < adaptationsForType.length; adapIdx++) {
-            if (adaptationsForType[adapIdx].id === newAdaptation) {
-              const baseAdaptation = adaptationsForType[adapIdx];
-              for (const removedRepresentation of updatedAdaptation.removedRepresentations) {
-                for (
-                  let repIdx = 0;
-                  repIdx < baseAdaptation.representations.length;
-                  repIdx++
-                ) {
-                  if (
-                    baseAdaptation.representations[repIdx].id === removedRepresentation
-                  ) {
-                    baseAdaptation.representations.splice(repIdx, 1);
-                    break;
-                  }
-                }
-              }
-
-              for (const newRepresentation of updatedAdaptation.updatedRepresentations) {
-                for (
-                  let repIdx = 0;
-                  repIdx < baseAdaptation.representations.length;
-                  repIdx++
-                ) {
-                  if (
-                    baseAdaptation.representations[repIdx].id === newRepresentation.id
-                  ) {
-                    const baseRepresentation = baseAdaptation.representations[repIdx];
-                    for (const prop of Object.keys(newRepresentation) as Array<
-                      keyof IRepresentationMetadata
-                    >) {
-                      if (prop !== "decipherable" && prop !== "isSupported") {
-                        // eslint-disable-next-line
-                        (baseRepresentation as any)[prop] = newRepresentation[prop];
-                      }
-                    }
-                    break;
-                  }
-                }
-              }
-
-              for (const addedRepresentation of updatedAdaptation.addedRepresentations) {
-                baseAdaptation.representations.push(addedRepresentation);
-              }
-              break;
-            }
-          }
-        }
-
-        for (const addedAdaptation of updatedPeriod.result.addedAdaptations) {
-          const ttype = addedAdaptation.type;
-          const adaptationsForType = basePeriod.adaptations[ttype];
-          if (adaptationsForType === undefined) {
-            basePeriod.adaptations[ttype] = [addedAdaptation];
-          } else {
-            adaptationsForType.push(addedAdaptation);
-          }
-        }
-        break;
-      }
-    }
-  }
-
-  for (const addedPeriod of updates.addedPeriods) {
-    for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
-      if (baseManifest.periods[periodIdx].start > addedPeriod.start) {
-        baseManifest.periods.splice(periodIdx, 0, addedPeriod);
-        break;
-      }
-    }
-    baseManifest.periods.push(addedPeriod);
-  }
+  // XXX TODO
+  // for (const prop of Object.keys(newManifest)) {
+  //   if (prop !== "periods") {
+  //     // eslint-disable-next-line
+  //     (baseManifest as any)[prop] = (newManifest as any)[prop];
+  //   }
+  // }
+  // for (const removedPeriod of updates.removedPeriods) {
+  //   for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
+  //     if (baseManifest.periods[periodIdx].id === removedPeriod.id) {
+  //       baseManifest.periods.splice(periodIdx, 1);
+  //       break;
+  //     }
+  //   }
+  // }
+  // for (const updatedPeriod of updates.updatedPeriods) {
+  //   for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
+  //     const newPeriod = updatedPeriod.period;
+  //     if (baseManifest.periods[periodIdx].id === updatedPeriod.period.id) {
+  //       const basePeriod = baseManifest.periods[periodIdx];
+  //       for (const prop of Object.keys(newPeriod)) {
+  //         if (prop !== "adaptations") {
+  //           // eslint-disable-next-line
+  //           (basePeriod as any)[prop] = (newPeriod as any)[prop];
+  //         }
+  //       }
+  //       for (const removedAdaptation of updatedPeriod.result.removedAdaptations) {
+  //         const ttype = removedAdaptation.trackType;
+  //         const adaptationsForType = basePeriod.adaptations[ttype] ?? [];
+  //         for (let adapIdx = 0; adapIdx < adaptationsForType.length; adapIdx++) {
+  //           if (adaptationsForType[adapIdx].id === removedAdaptation.id) {
+  //             adaptationsForType.splice(adapIdx, 1);
+  //             break;
+  //           }
+  //         }
+  //       }
+  //       for (const updatedAdaptation of updatedPeriod.result.updatedAdaptations) {
+  //         const newAdaptation = updatedAdaptation.adaptation;
+  //         const ttype = updatedAdaptation.trackType;
+  //         const adaptationsForType = basePeriod.adaptations[ttype] ?? [];
+  //         for (let adapIdx = 0; adapIdx < adaptationsForType.length; adapIdx++) {
+  //           if (adaptationsForType[adapIdx].id === newAdaptation) {
+  //             const baseAdaptation = adaptationsForType[adapIdx];
+  //             for (const removedRepresentation of updatedAdaptation.removedRepresentations) {
+  //               for (
+  //                 let repIdx = 0;
+  //                 repIdx < baseAdaptation.representations.length;
+  //                 repIdx++
+  //               ) {
+  //                 if (
+  //                   baseAdaptation.representations[repIdx].id === removedRepresentation
+  //                 ) {
+  //                   baseAdaptation.representations.splice(repIdx, 1);
+  //                   break;
+  //                 }
+  //               }
+  //             }
+  //             for (const newRepresentation of updatedAdaptation.updatedRepresentations) {
+  //               for (
+  //                 let repIdx = 0;
+  //                 repIdx < baseAdaptation.representations.length;
+  //                 repIdx++
+  //               ) {
+  //                 if (
+  //                   baseAdaptation.representations[repIdx].id === newRepresentation.id
+  //                 ) {
+  //                   const baseRepresentation = baseAdaptation.representations[repIdx];
+  //                   for (const prop of Object.keys(newRepresentation) as Array<
+  //                     keyof IRepresentationMetadata
+  //                   >) {
+  //                     if (prop !== "decipherable" && prop !== "isSupported") {
+  //                       // eslint-disable-next-line
+  //                       (baseRepresentation as any)[prop] = newRepresentation[prop];
+  //                     }
+  //                   }
+  //                   break;
+  //                 }
+  //               }
+  //             }
+  //             for (const addedRepresentation of updatedAdaptation.addedRepresentations) {
+  //               baseAdaptation.representations.push(addedRepresentation);
+  //             }
+  //             break;
+  //           }
+  //         }
+  //       }
+  //       for (const addedAdaptation of updatedPeriod.result.addedAdaptations) {
+  //         const ttype = addedAdaptation.type;
+  //         const adaptationsForType = basePeriod.adaptations[ttype];
+  //         if (adaptationsForType === undefined) {
+  //           basePeriod.adaptations[ttype] = [addedAdaptation];
+  //         } else {
+  //           adaptationsForType.push(addedAdaptation);
+  //         }
+  //       }
+  //       break;
+  //     }
+  //   }
+  // }
+  // for (const addedPeriod of updates.addedPeriods) {
+  //   for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
+  //     if (baseManifest.periods[periodIdx].start > addedPeriod.start) {
+  //       baseManifest.periods.splice(periodIdx, 0, addedPeriod);
+  //       break;
+  //     }
+  //   }
+  //   baseManifest.periods.push(addedPeriod);
+  // }
 }
 
 export function createRepresentationFilterFromFnString(

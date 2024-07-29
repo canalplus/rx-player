@@ -299,7 +299,7 @@ export default function StreamOrchestrator(
     ): Promise<void> {
       const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
       const ofCurrentType = updates.filter(
-        (update) => update.adaptation.type === bufferType,
+        (update) => update.track.trackType === bufferType,
       );
       if (
         // No update concerns the current type of data

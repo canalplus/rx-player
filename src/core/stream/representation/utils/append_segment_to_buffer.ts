@@ -63,7 +63,7 @@ export default async function appendSegmentToBuffer<T>(
           ? appendError.toString()
           : "An unknown error happened when pushing content";
       throw new MediaError("BUFFER_APPEND_ERROR", reason, {
-        tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
+        tracks: [toTaggedTrack(dataInfos.inventoryInfos.track)],
       });
     }
     const { position } = playbackObserver.getReference().getValue();
@@ -87,7 +87,7 @@ export default async function appendSegmentToBuffer<T>(
         err2 instanceof Error ? err2.toString() : "Could not clean the buffer";
 
       throw new MediaError("BUFFER_FULL_ERROR", reason, {
-        tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
+        tracks: [toTaggedTrack(dataInfos.inventoryInfos.track)],
       });
     }
   }

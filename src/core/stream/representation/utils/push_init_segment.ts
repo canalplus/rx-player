@@ -16,10 +16,10 @@
 
 import type {
   IManifest,
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
+  ITrackMetadata,
 } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import objectAssign from "../../../../utils/object_assign";
@@ -49,7 +49,7 @@ export default async function pushInitSegment<T>(
   }: {
     playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
     content: {
-      adaptation: IAdaptation;
+      track: ITrackMetadata;
       manifest: IManifest;
       period: IPeriod;
       representation: IRepresentation;

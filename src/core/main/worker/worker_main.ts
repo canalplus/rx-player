@@ -2,7 +2,7 @@ import config from "../../../config";
 import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
-import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
+import Manifest, { Period, Representation } from "../../../manifest/classes";
 import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
@@ -347,7 +347,7 @@ export default function initializeWorkerMain() {
         }
         preparedContent.trackChoiceSetter.updateRepresentations(
           msg.value.periodId,
-          msg.value.adaptationId,
+          msg.value.trackId,
           msg.value.bufferType,
           msg.value.choice,
         );
@@ -673,19 +673,20 @@ function loadOrReloadPreparedContent(
       },
 
       adaptationChange(value) {
-        contentTimeBoundariesObserver.onAdaptationChange(
-          value.type,
-          value.period,
-          value.adaptation,
-        );
+        // XXX TODO
+        // contentTimeBoundariesObserver.onAdaptationChange(
+        //   value.type,
+        //   value.period,
+        //   value.adaptation,
+        // );
         if (currentLoadCanceller.signal.isCancelled()) {
           return;
         }
         sendMessage({
-          type: WorkerMessageType.AdaptationChanged,
+          type: WorkerMessageType.TrackChanged,
           contentId,
           value: {
-            adaptationId: value.adaptation?.id ?? null,
+            trackId: value.track?.id ?? null,
             periodId: value.period.id,
             type: value.type,
           },
@@ -701,7 +702,7 @@ function loadOrReloadPreparedContent(
           type: WorkerMessageType.RepresentationChanged,
           contentId,
           value: {
-            adaptationId: value.adaptation.id,
+            trackId: value.track.id,
             representationId: value.representation?.id ?? null,
             periodId: value.period.id,
             type: value.type,
@@ -732,7 +733,7 @@ function loadOrReloadPreparedContent(
         preparedContent.trackChoiceSetter.addTrackSetter(
           value.period.id,
           value.type,
-          value.adaptationRef,
+          value.trackRef,
         );
         sendMessage({
           type: WorkerMessageType.PeriodStreamReady,
@@ -805,9 +806,10 @@ function loadOrReloadPreparedContent(
           if (content.period instanceof Period) {
             content.period = content.period.getMetadataSnapshot();
           }
-          if (content.adaptation instanceof Adaptation) {
-            content.adaptation = content.adaptation.getMetadataSnapshot();
-          }
+          // XXX TODO
+          // if (content.track instanceof Adaptation) {
+          //   content.adaptation = content.adaptation.getMetadataSnapshot();
+          // }
           if (content.representation instanceof Representation) {
             content.representation = content.representation.getMetadataSnapshot();
           }

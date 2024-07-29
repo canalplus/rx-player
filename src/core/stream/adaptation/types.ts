@@ -1,4 +1,9 @@
-import type { IManifest, IAdaptation, IPeriod, IRepresentation } from "../../../manifest";
+import type {
+  IManifest,
+  IPeriod,
+  IRepresentation,
+  ITrackMetadata,
+} from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type {
   IAudioTrackSwitchingMode,
@@ -59,8 +64,8 @@ export interface IRepresentationChangePayload {
   type: IBufferType;
   /** The `Period` linked to the `RepresentationStream` we're creating. */
   period: IPeriod;
-  /** The `Adaptation` linked to the `RepresentationStream` we're creating. */
-  adaptation: IAdaptation;
+  /** The track linked to the `RepresentationStream` we're creating. */
+  track: ITrackMetadata;
   /**
    * The `Representation` linked to the `RepresentationStream` we're creating.
    * `null` when we're choosing no Representation at all.
@@ -132,8 +137,8 @@ export interface IAdaptationStreamArguments {
   content: {
     manifest: IManifest;
     period: IPeriod;
-    adaptation: IAdaptation;
-    representations: IReadOnlySharedReference<IRepresentationsChoice>;
+    track: ITrackMetadata;
+    representationsChoice: IReadOnlySharedReference<IRepresentationsChoice>;
   };
   options: IAdaptationStreamOptions;
   /** Estimate the right Representation to play. */
@@ -190,10 +195,10 @@ export interface IAdaptationStreamOptions {
   enableFastSwitching: boolean;
 }
 
-/** Object indicating a choice of Adaptation made by the user. */
-export interface IAdaptationChoice {
-  /** The Adaptation choosen. */
-  adaptationId: string;
+/** Object indicating a choice of track made by the user. */
+export interface ITrackChoice {
+  /** The track choosen. */
+  trackId: string;
 
   /** "Switching mode" in which the track switch should happen. */
   switchingMode: ITrackSwitchingMode;
@@ -202,7 +207,7 @@ export interface IAdaptationChoice {
   relativeResumingPosition: number | undefined;
   /**
    * Shared reference allowing to indicate which Representations from
-   * that Adaptation are allowed.
+   * that track are allowed.
    */
   representations: IReadOnlySharedReference<IRepresentationsChoice>;
 }

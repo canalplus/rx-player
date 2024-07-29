@@ -38,7 +38,8 @@ export { areSameContent, getLoggableSegmentId };
 export type {
   IManifestMetadata,
   IPeriodMetadata,
-  IAdaptationMetadata,
+  IVariantStreamMetadata,
+  ITrackMetadata,
   IRepresentationMetadata,
 } from "./types";
 export { ManifestMetadataFormat } from "./types";

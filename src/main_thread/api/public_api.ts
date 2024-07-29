@@ -34,7 +34,7 @@ import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
-  IAdaptationChoice,
+  ITrackChoice,
   IInbandEvent,
   IABRThrottlers,
   IBufferType,
@@ -47,7 +47,6 @@ import features, { addFeatures } from "../../features";
 import log from "../../log";
 import type {
   IDecipherabilityStatusChangedElement,
-  IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
@@ -61,6 +60,11 @@ import {
   ManifestMetadataFormat,
   createRepresentationFilterFromFnString,
 } from "../../manifest";
+import type {
+  IAudioTrackMetadata,
+  ITextTrackMetadata,
+  IVideoTrackMetadata,
+} from "../../manifest/types";
 import type { IWorkerMessage } from "../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
 import type { IPlaybackObservation } from "../../playback_observer";
@@ -1007,7 +1011,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       isDirectFile,
       manifest: null,
       currentPeriod: null,
-      activeAdaptations: null,
+      activeTracks: null,
       activeRepresentations: null,
       tracksStore: null,
       mediaElementTracksStore,
@@ -1054,8 +1058,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("representationChange", (representationInfo) =>
       this._priv_onRepresentationChange(contentInfos, representationInfo),
     );
-    initializer.addEventListener("adaptationChange", (adaptationInfo) =>
-      this._priv_onAdaptationChange(contentInfos, adaptationInfo),
+    initializer.addEventListener("trackChange", (trackInfo) =>
+      this._priv_onTrackChange(contentInfos, trackInfo),
     );
     initializer.addEventListener("bitrateEstimateChange", (bitrateEstimateInfo) =>
       this._priv_onBitrateEstimateChange(bitrateEstimateInfo),
@@ -2384,21 +2388,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   // TODO remove the need for that public method
-  __priv_getCurrentAdaptation(): Partial<
-    Record<IBufferType, IAdaptationMetadata | null>
-  > | null {
+  __priv_getCurrentTracks(): {
+    audio: IAudioTrackMetadata | null | undefined;
+    video: IVideoTrackMetadata | null | undefined;
+    text: ITextTrackMetadata | null | undefined;
+  } | null {
     if (this._priv_contentInfos === null) {
       return null;
     }
-    const { currentPeriod, activeAdaptations } = this._priv_contentInfos;
+    const { currentPeriod, activeTracks } = this._priv_contentInfos;
     if (
       currentPeriod === null ||
-      activeAdaptations === null ||
-      isNullOrUndefined(activeAdaptations[currentPeriod.id])
+      activeTracks === null ||
+      isNullOrUndefined(activeTracks[currentPeriod.id])
     ) {
       return null;
     }
-    return activeAdaptations[currentPeriod.id];
+    return activeTracks[currentPeriod.id];
   }
 
   // TODO remove the need for that public method
@@ -2542,8 +2548,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     for (const update of updates.updatedPeriods) {
       if (update.period.id === currentPeriod.id) {
         if (
-          update.result.addedAdaptations.length > 0 ||
-          update.result.removedAdaptations.length > 0
+          update.result.addedTracks.length > 0 ||
+          update.result.removedTracks.length > 0
         ) {
           // We might have new (or less) tracks, send events just to be sure
           const periodRef = currTracksStore.getPeriodObjectFromPeriod(currentPeriod);
@@ -2579,7 +2585,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const isFound =
           arrayFind(
             acc,
-            (x) => x[0].id === elt.period.id && x[1] === elt.adaptation.type,
+            (x) => x[0].id === elt.period.id && x[1] === elt.track.trackType,
           ) !== undefined;
 
         if (!isFound) {
@@ -2594,19 +2600,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           if (periodRef === undefined) {
             return acc;
           }
-          switch (elt.adaptation.type) {
+          switch (elt.track.trackType) {
             case "audio":
-              isCurrent = tStore.getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent = tStore.getChosenAudioTrack(periodRef)?.id === elt.track.id;
               break;
             case "video":
-              isCurrent = tStore.getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent = tStore.getChosenVideoTrack(periodRef)?.id === elt.track.id;
               break;
             case "text":
-              isCurrent = tStore.getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent = tStore.getChosenTextTrack(periodRef)?.id === elt.track.id;
               break;
           }
           if (isCurrent) {
-            acc.push([elt.period, elt.adaptation.type]);
+            acc.push([elt.period, elt.track.trackType]);
           }
         }
         return acc;
@@ -2703,7 +2709,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Triggered each times a new "PeriodStream" is ready.
-   * Choose the right Adaptation for the Period and emit it.
+   * Choose the right track for the Period and emit it.
    * @param {Object} contentInfos
    * @param {Object} value
    */
@@ -2712,13 +2718,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     value: {
       type: IBufferType;
       period: IPeriodMetadata;
-      adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
+      trackRef: SharedReference<ITrackChoice | null | undefined>;
     },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const { type, period, adaptationRef } = value;
+    const { type, period, trackRef } = value;
     const tracksStore = contentInfos.tracksStore;
 
     switch (type) {
@@ -2727,9 +2733,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "text":
         if (isNullOrUndefined(tracksStore)) {
           log.error(`API: TracksStore not instanciated for a new ${type} period`);
-          adaptationRef.setValue(null);
+          trackRef.setValue(null);
         } else {
-          tracksStore.addTrackReference(type, period, adaptationRef);
+          tracksStore.addTrackReference(type, period, trackRef);
         }
         break;
       default:
@@ -2763,16 +2769,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         break;
     }
 
-    // Clean-up stored Representation and Adaptation information
-    const { activeAdaptations, activeRepresentations } = contentInfos;
-    if (
-      !isNullOrUndefined(activeAdaptations) &&
-      !isNullOrUndefined(activeAdaptations[period.id])
-    ) {
-      const activePeriodAdaptations = activeAdaptations[period.id];
-      delete activePeriodAdaptations[type];
-      if (Object.keys(activePeriodAdaptations).length === 0) {
-        delete activeAdaptations[period.id];
+    // Clean-up stored Representation and track information
+    const { activeTracks, activeRepresentations } = contentInfos;
+    if (!isNullOrUndefined(activeTracks) && !isNullOrUndefined(activeTracks[period.id])) {
+      const activePeriodTracks = activeTracks[period.id];
+      if (activePeriodTracks !== null) {
+        delete activePeriodTracks[type];
+        if (Object.keys(activePeriodTracks).length === 0) {
+          delete activeTracks[period.id];
+        }
       }
     }
 
@@ -2789,41 +2794,73 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each times a new Adaptation is considered for the current
+   * Triggered each times a new track is considered for the current
    * content.
-   * Store given Adaptation and emit it if from the current Period.
+   * Store given track and emit it if from the current Period.
    * @param {Object} contentInfos
-   * @param {Object} value
+   * @param {Object} trackChangeObj
    */
-  private _priv_onAdaptationChange(
+  private _priv_onTrackChange(
     contentInfos: IPublicApiContentInfos,
-    {
-      type,
-      adaptation,
-      period,
-    }: {
-      type: IBufferType;
-      adaptation: IAdaptationMetadata | null;
-      period: IPeriodMetadata;
-    },
+    trackChangeObj:
+      | {
+          type: "video";
+          track: IVideoTrackMetadata | null;
+          period: IPeriodMetadata;
+        }
+      | {
+          type: "audio";
+          track: IAudioTrackMetadata | null;
+          period: IPeriodMetadata;
+        }
+      | {
+          type: "text";
+          track: ITextTrackMetadata | null;
+          period: IPeriodMetadata;
+        },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
 
-    // lazily create contentInfos.activeAdaptations
-    if (contentInfos.activeAdaptations === null) {
-      contentInfos.activeAdaptations = {};
+    // lazily create contentInfos.activeTracks
+    if (contentInfos.activeTracks === null) {
+      contentInfos.activeTracks = {};
     }
 
-    const { activeAdaptations, currentPeriod } = contentInfos;
-    const activePeriodAdaptations = activeAdaptations[period.id];
-    if (isNullOrUndefined(activePeriodAdaptations)) {
-      activeAdaptations[period.id] = { [type]: adaptation };
+    const { activeTracks, currentPeriod } = contentInfos;
+    const activePeriodTracks = activeTracks[trackChangeObj.period.id];
+    if (isNullOrUndefined(activePeriodTracks)) {
+      if (trackChangeObj.type === "video") {
+        activeTracks[trackChangeObj.period.id] = {
+          video: trackChangeObj.track,
+          audio: undefined,
+          text: undefined,
+        };
+      } else if (trackChangeObj.type === "audio") {
+        activeTracks[trackChangeObj.period.id] = {
+          audio: trackChangeObj.track,
+          video: undefined,
+          text: undefined,
+        };
+      } else if (trackChangeObj.type === "text") {
+        activeTracks[trackChangeObj.period.id] = {
+          text: trackChangeObj.track,
+          audio: undefined,
+          video: undefined,
+        };
+      }
     } else {
-      activePeriodAdaptations[type] = adaptation;
+      if (trackChangeObj.type === "video") {
+        activePeriodTracks[trackChangeObj.type] = trackChangeObj.track;
+      } else if (trackChangeObj.type === "audio") {
+        activePeriodTracks[trackChangeObj.type] = trackChangeObj.track;
+      } else if (trackChangeObj.type === "text") {
+        activePeriodTracks[trackChangeObj.type] = trackChangeObj.track;
+      }
     }
 
+    const { period } = trackChangeObj;
     const { tracksStore } = contentInfos;
     const cancelSignal = contentInfos.currentContentCanceller.signal;
     if (
@@ -2836,7 +2873,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (periodRef === undefined) {
         return;
       }
-      switch (type) {
+      switch (trackChangeObj.type) {
         case "audio":
           const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
           this._priv_triggerEventIfNotStopped(
@@ -3286,11 +3323,15 @@ interface IPublicApiContentInfos {
    */
   currentPeriod: IPeriodMetadata | null;
   /**
-   * Store currently considered adaptations, per active period.
-   * `null` if no Adaptation is active
+   * Store currently considered tracks, per active period.
+   * `null` if no track is active
    */
-  activeAdaptations: {
-    [periodId: string]: Partial<Record<IBufferType, IAdaptationMetadata | null>>;
+  activeTracks: {
+    [periodId: string]: {
+      audio: IAudioTrackMetadata | null | undefined;
+      video: IVideoTrackMetadata | null | undefined;
+      text: ITextTrackMetadata | null | undefined;
+    } | null;
   } | null;
   /**
    * Store currently considered representations, per active period.

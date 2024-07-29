@@ -17,10 +17,10 @@
 import log from "../../../../log";
 import type {
   IManifest,
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
+  ITrackMetadata,
 } from "../../../../manifest";
 import type { IPlayerError } from "../../../../public_types";
 import type {
@@ -177,7 +177,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
           }
           log.debug(
             "Stream: no more media segment to request. Cancelling queue.",
-            this._content.adaptation.type,
+            this._content.track.trackType,
           );
           this._restartMediaSegmentDownloadingQueue();
           return;
@@ -185,7 +185,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
           // There's no request although there are needed segments: start requests
           log.debug(
             "Stream: Media segments now need to be requested. Starting queue.",
-            this._content.adaptation.type,
+            this._content.track.trackType,
             segmentQueue.length,
           );
           this._restartMediaSegmentDownloadingQueue();
@@ -196,7 +196,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
             // The most important request if for another segment, request it
             log.debug(
               "Stream: Next media segment changed, cancelling previous",
-              this._content.adaptation.type,
+              this._content.track.trackType,
             );
             this._restartMediaSegmentDownloadingQueue();
             return;
@@ -205,7 +205,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
             // The priority of the most important request has changed, update it
             log.debug(
               "Stream: Priority of next media segment changed, updating",
-              this._content.adaptation.type,
+              this._content.track.trackType,
               currentSegmentRequest.priority,
               nextItem.priority,
             );
@@ -238,7 +238,7 @@ export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueE
         if (next.initSegment === null) {
           log.debug(
             "Stream: no more init segment to request. Cancelling queue.",
-            this._content.adaptation.type,
+            this._content.track.trackType,
           );
         }
         this._restartInitSegmentDownloadingQueue(next.initSegment);
@@ -633,8 +633,8 @@ interface ISegmentRequestObject {
 
 /** Context for segments downloaded through the DownloadingQueue. */
 export interface IDownloadingQueueContext {
-  /** Adaptation linked to the segments you want to load. */
-  adaptation: IAdaptation;
+  /** Track linked to the segments you want to load. */
+  track: ITrackMetadata;
   /** Manifest linked to the segments you want to load. */
   manifest: IManifest;
   /** Period linked to the segments you want to load. */

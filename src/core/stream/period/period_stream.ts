@@ -17,11 +17,10 @@
 import config from "../../../config";
 import { formatError, MediaError } from "../../../errors";
 import log from "../../../log";
-import type { IAdaptation, IPeriod } from "../../../manifest";
+import type { IPeriod, ITrackMetadata } from "../../../manifest";
 import { toTaggedTrack } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { ITrackType } from "../../../public_types";
-import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
@@ -32,7 +31,7 @@ import TaskCanceller, { CancellationError } from "../../../utils/task_canceller"
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import SegmentSinksStore from "../../segment_sinks";
 import type {
-  IAdaptationChoice,
+  ITrackChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamPlaybackObservation,
 } from "../adaptation";
@@ -48,13 +47,13 @@ import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy"
 /**
  * Create a single PeriodStream:
  *   - Lazily create (or reuse) a SegmentSink for the given type.
- *   - Create a Stream linked to an Adaptation each time it changes, to
+ *   - Create a Stream linked to a track each time it changes, to
  *     download and append the corresponding segments to the SegmentSink.
  *   - Announce when the Stream is full or is awaiting new Segments through
  *     events
  *
  * @param {Object} args - Various arguments allowing the `PeriodStream` to
- * determine which Adaptation and which Representation to choose, as well as
+ * determine which track and which Representation to choose, as well as
  * which segments to load from it.
  * You can check the corresponding type for more information.
  * @param {Object} callbacks - The `PeriodStream` relies on a system of
@@ -95,11 +94,11 @@ export default function PeriodStream(
   const { manifest, period } = content;
 
   /**
-   * Emits the chosen Adaptation and Representations for the current type.
-   * `null` when no Adaptation is chosen (e.g. no subtitles)
+   * Emits the chosen track and Representations for the current type.
+   * `null` when no track is chosen (e.g. no subtitles)
    * `undefined` at the beginning (it can be ignored.).
    */
-  const adaptationRef = new SharedReference<IAdaptationChoice | null | undefined>(
+  const trackRef = new SharedReference<ITrackChoice | null | undefined>(
     undefined,
     parentCancelSignal,
   );
@@ -108,17 +107,17 @@ export default function PeriodStream(
     type: bufferType,
     manifest,
     period,
-    adaptationRef,
+    trackRef,
   });
   if (parentCancelSignal.isCancelled()) {
     return;
   }
 
   let currentStreamCanceller: TaskCanceller | undefined;
-  let isFirstAdaptationSwitch = true;
+  let isFirstTrackSwitch = true;
 
-  adaptationRef.onUpdate(
-    (choice: IAdaptationChoice | null | undefined) => {
+  trackRef.onUpdate(
+    (choice: ITrackChoice | null | undefined) => {
       // As an IIFE to profit from async/await while respecting onUpdate's signature
       (async (): Promise<void> => {
         if (choice === undefined) {
@@ -132,7 +131,7 @@ export default function PeriodStream(
 
         if (choice === null) {
           // Current type is disabled for that Period
-          log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
+          log.info(`Stream: Set no ${bufferType} track. P:`, period.start);
           const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
 
           if (segmentSinkStatus.type === "initialized") {
@@ -157,9 +156,9 @@ export default function PeriodStream(
             }
           }
 
-          callbacks.adaptationChange({
+          callbacks.trackChange({
             type: bufferType,
-            adaptation: null,
+            track: null,
             period,
           });
           if (streamCanceller.isUsed()) {
@@ -176,28 +175,24 @@ export default function PeriodStream(
           );
         }
 
-        const adaptations = period.adaptations[bufferType];
-        const adaptation = arrayFind(
-          adaptations ?? [],
-          (a) => a.id === choice.adaptationId,
-        );
-        if (adaptation === undefined) {
+        const track = period.tracksMetadata[bufferType][choice.trackId];
+        if (track === undefined) {
           currentStreamCanceller.cancel();
-          log.warn("Stream: Unfound chosen Adaptation choice", choice.adaptationId);
+          log.warn("Stream: Unfound chosen track choice", choice.trackId);
           return;
         }
 
         /**
-         * If this is not the first Adaptation choice, we might want to apply a
+         * If this is not the first track choice, we might want to apply a
          * delta to the current position so we can re-play back some media in the
-         * new Adaptation to give some context back.
+         * new track to give some context back.
          * This value contains this relative position, in seconds.
          * @see createMediaSourceReloadRequester
          */
         const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
         let relativePosHasBeenDefaulted: boolean = false;
         let relativePosAfterSwitch: number;
-        if (isFirstAdaptationSwitch) {
+        if (isFirstTrackSwitch) {
           relativePosAfterSwitch = 0;
         } else if (choice.relativeResumingPosition !== undefined) {
           relativePosAfterSwitch = choice.relativeResumingPosition;
@@ -215,7 +210,7 @@ export default function PeriodStream(
               break;
           }
         }
-        isFirstAdaptationSwitch = false;
+        isFirstTrackSwitch = false;
 
         if (
           SegmentSinksStore.isNative(bufferType) &&
@@ -228,15 +223,15 @@ export default function PeriodStream(
           );
         }
 
-        // Reload if the Adaptation disappears from the manifest
+        // Reload if the track disappears from the manifest
         manifest.addEventListener(
           "manifestUpdate",
           (updates) => {
             // If current period has been unexpectedly removed, ask to reload
             for (const element of updates.updatedPeriods) {
               if (element.period.id === period.id) {
-                for (const adap of element.result.removedAdaptations) {
-                  if (adap.id === adaptation.id) {
+                for (const trak of element.result.removedTracks) {
+                  if (trak.id === track.id) {
                     return askForMediaSourceReload(
                       relativePosAfterSwitch,
                       true,
@@ -254,12 +249,20 @@ export default function PeriodStream(
 
         const { representations } = choice;
         log.info(
-          `Stream: Updating ${bufferType} adaptation`,
-          `A: ${adaptation.id}`,
+          `Stream: Updating ${bufferType} track`,
+          `A: ${track.id}`,
           `P: ${period.start}`,
         );
 
-        callbacks.adaptationChange({ type: bufferType, adaptation, period });
+        // Conditions to make TypeScript happy
+        if (track.trackType === "video") {
+          callbacks.trackChange({ type: "video", track, period });
+        } else if (track.trackType === "audio") {
+          callbacks.trackChange({ type: "audio", track, period });
+        } else {
+          callbacks.trackChange({ type: "text", track, period });
+        }
+
         if (streamCanceller.isUsed()) {
           return; // Previous call has provoken cancellation by side-effect
         }
@@ -267,12 +270,12 @@ export default function PeriodStream(
         const segmentSink = createOrReuseSegmentSink(
           segmentSinksStore,
           bufferType,
-          adaptation,
+          track,
         );
         const strategy = getAdaptationSwitchStrategy(
           segmentSink,
           period,
-          adaptation,
+          track,
           choice.switchingMode,
           playbackObserver,
           options,
@@ -311,7 +314,7 @@ export default function PeriodStream(
 
         garbageCollectors.get(segmentSink)(streamCanceller.signal);
         createAdaptationStream(
-          adaptation,
+          track,
           representations,
           segmentSink,
           streamCanceller.signal,
@@ -328,25 +331,25 @@ export default function PeriodStream(
   );
 
   /**
-   * @param {Object} adaptation
-   * @param {Object} representations
+   * @param {Object} track
+   * @param {Object} representationsChoice
    * @param {Object} segmentSink
    * @param {Object} cancelSignal
    */
   function createAdaptationStream(
-    adaptation: IAdaptation,
-    representations: IReadOnlySharedReference<IRepresentationsChoice>,
+    track: ITrackMetadata,
+    representationsChoice: IReadOnlySharedReference<IRepresentationsChoice>,
     segmentSink: SegmentSink,
     cancelSignal: CancellationSignal,
   ): void {
     const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(
       playbackObserver,
-      adaptation.type,
+      track.trackType,
     );
 
     AdaptationStream(
       {
-        content: { manifest, period, adaptation, representations },
+        content: { manifest, period, track, representationsChoice },
         options,
         playbackObserver: adaptationPlaybackObserver,
         representationEstimator,
@@ -446,13 +449,13 @@ export default function PeriodStream(
 
 /**
  * @param {string} bufferType
- * @param {Object} adaptation
+ * @param {Object} track
  * @returns {Object}
  */
 function createOrReuseSegmentSink(
   segmentSinksStore: SegmentSinksStore,
   bufferType: IBufferType,
-  adaptation: IAdaptation,
+  track: ITrackMetadata,
 ): SegmentSink {
   const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
   if (segmentSinkStatus.type === "initialized") {
@@ -460,30 +463,34 @@ function createOrReuseSegmentSink(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return segmentSinkStatus.value;
   }
-  const codec = getFirstDeclaredMimeType(adaptation);
+  const codec = getFirstDeclaredMimeType(track);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return segmentSinksStore.createSegmentSink(bufferType, codec);
 }
 
 /**
  * Get mime-type string of the first representation declared in the given
- * adaptation.
- * @param {Adaptation} adaptation
+ * track
+ * @param {Object} track
  * @returns {string}
  */
-function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
-  const representations = adaptation.representations.filter((r) => {
-    return r.isSupported === true && r.decipherable !== false;
-  });
-  if (representations.length === 0) {
+function getFirstDeclaredMimeType(track: ITrackMetadata): string {
+  if (track.trackType === "text") {
+    // XXX TODO just text mime-type for now
+    return "text";
+  }
+  if (track.representations.length === 0) {
     const noRepErr = new MediaError(
       "NO_PLAYABLE_REPRESENTATION",
-      "No Representation in the chosen " + adaptation.type + " Adaptation can be played",
-      { tracks: [toTaggedTrack(adaptation)] },
+      "No Representation in the chosen " + track.trackType + " track can be played",
+      { tracks: [toTaggedTrack(track)] },
     );
     throw noRepErr;
   }
-  return representations[0].getMimeTypeString();
+  return getMimeTypeString(
+    track.representations[0].mimeType,
+    track.representations[0].codec,
+  );
 }
 
 /**
@@ -576,4 +583,12 @@ function createEmptyAdaptationStream(
       neededSegments: [],
     });
   }
+}
+
+// XXX TODO move as util?
+function getMimeTypeString(
+  mimeType: string | undefined,
+  codec: string | undefined,
+): string {
+  return `${mimeType ?? ""};codecs="${codec ?? ""}"`;
 }

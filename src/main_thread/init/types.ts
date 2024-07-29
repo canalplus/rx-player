@@ -16,15 +16,19 @@
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
-import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
+import type { IBufferType, ITrackChoice, IInbandEvent } from "../../core/types";
 import type {
   IPeriodsUpdateResult,
-  IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
   IDecipherabilityStatusChangedElement,
 } from "../../manifest";
+import type {
+  IAudioTrackMetadata,
+  ITextTrackMetadata,
+  IVideoTrackMetadata,
+} from "../../manifest/types";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
@@ -151,27 +155,24 @@ export interface IContentInitializerEvents {
     /** The Period we're now playing. */
     period: IPeriodMetadata;
   };
-  /**
-   * A new `PeriodStream` is ready to start but needs an Adaptation (i.e. track)
-   * to be chosen first.
-   */
+  /** A new `PeriodStream` is ready to start but needs a track to be chosen first. */
   periodStreamReady: {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
     type: IBufferType;
     /** The `Period` linked to the `PeriodStream` we have created. */
     period: IPeriodMetadata;
     /**
-     * The Reference through which any Adaptation (i.e. track) choice should be
-     * emitted for that `PeriodStream`.
+     * The Reference through which any track choice should be emitted for that
+     * `PeriodStream`.
      *
      * The `PeriodStream` will not do anything until this Reference has emitted
      * at least one to give its initial choice.
      * You can send `null` through it to tell this `PeriodStream` that you don't
-     * want any `Adaptation`.
+     * want any `track`.
      * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
      * yourself.
      */
-    adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
+    trackRef: SharedReference<ITrackChoice | null | undefined>;
   };
   /**
    * A `PeriodStream` has been removed.
@@ -195,8 +196,8 @@ export interface IContentInitializerEvents {
      */
     period: IPeriodMetadata;
   };
-  /** Emitted when a new `Adaptation` is being considered. */
-  adaptationChange: IAdaptationChangeEventPayload;
+  /** Emitted when a new `track` is being considered. */
+  trackChange: ITrackChangeEventPayload;
   /** Emitted as new bitrate estimates are done. */
   bitrateEstimateChange: {
     /** The type of buffer for which the estimation is done. */
@@ -226,17 +227,22 @@ export interface IContentInitializerEvents {
   inbandEvents: IInbandEvent[];
 }
 
-export interface IAdaptationChangeEventPayload {
-  /** The type of buffer for which the Representation is changing. */
-  type: IBufferType;
-  /** The `Period` linked to the `RepresentationStream` we're creating. */
-  period: IPeriodMetadata;
-  /**
-   * The `Adaptation` linked to the `AdaptationStream` we're creating.
-   * `null` when we're choosing no Adaptation at all.
-   */
-  adaptation: IAdaptationMetadata | null;
-}
+export type ITrackChangeEventPayload =
+  | {
+      type: "video";
+      track: IVideoTrackMetadata | null;
+      period: IPeriodMetadata;
+    }
+  | {
+      type: "audio";
+      track: IAudioTrackMetadata | null;
+      period: IPeriodMetadata;
+    }
+  | {
+      type: "text";
+      track: ITextTrackMetadata | null;
+      period: IPeriodMetadata;
+    };
 
 export type IStallingSituation =
   | "seeking" // Rebuffering after seeking

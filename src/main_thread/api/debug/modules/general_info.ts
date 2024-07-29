@@ -172,9 +172,9 @@ export default function constructDebugGeneralInfo(
         ]);
         adaptationsElt.appendChild(textAdaps);
       }
-      const adaptations = instance.__priv_getCurrentAdaptation();
+      const tracks = instance.__priv_getCurrentTracks();
       const videoBitratesStr =
-        adaptations?.video?.representations.map((r) => {
+        tracks?.video?.representations.map((r) => {
           return (
             String(r.bitrate ?? "N/A") +
             (r.isSupported !== false ? "" : " U!") +
@@ -182,7 +182,7 @@ export default function constructDebugGeneralInfo(
           );
         }) ?? [];
       const audioBitratesStr =
-        adaptations?.audio?.representations.map((r) => {
+        tracks?.audio?.representations.map((r) => {
           return (
             String(r.bitrate ?? "N/A") +
             (r.isSupported !== false ? "" : " U!") +

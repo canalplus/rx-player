@@ -20,14 +20,13 @@ import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
-import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
+import type { IPeriodMetadata } from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { objectValues } from "../../utils/object_values";
 import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
@@ -377,7 +376,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     if (log.hasLevel("DEBUG")) {
       log.debug(
         "DRM: processing init data",
-        initializationData.content?.adaptation.type,
+        initializationData.content?.track.trackType,
         initializationData.content?.representation.bitrate,
         (initializationData.keyIds ?? []).map((k) => bytesToHex(k)).join(", "),
       );
@@ -1098,20 +1097,21 @@ function mergeKeyIdSetIntoArray(set: Set<Uint8Array>, arr: Uint8Array[]) {
  * @param {Object} period
  */
 function addKeyIdsFromPeriod(set: Set<Uint8Array>, period: IPeriodMetadata) {
-  const adaptationsByType = period.adaptations;
-  const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
-    // Note: the second case cannot happen. TS is just being dumb here
-    (acc, adaps) => (!isNullOrUndefined(adaps) ? acc.concat(adaps) : acc),
-    [],
-  );
-  for (const adaptation of adaptations) {
-    for (const representation of adaptation.representations) {
-      if (
-        representation.contentProtections !== undefined &&
-        representation.contentProtections.keyIds !== undefined
-      ) {
-        for (const kidInf of representation.contentProtections.keyIds) {
-          set.add(kidInf.keyId);
+  for (const variantStream of period.variantStreams) {
+    const medias = [
+      ...variantStream.media.audio,
+      ...variantStream.media.video,
+      ...variantStream.media.text,
+    ];
+    for (const media of medias) {
+      for (const representation of media.representations) {
+        if (
+          representation.contentProtections !== undefined &&
+          representation.contentProtections.keyIds !== undefined
+        ) {
+          for (const kidInf of representation.contentProtections.keyIds) {
+            set.add(kidInf.keyId);
+          }
         }
       }
     }

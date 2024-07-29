@@ -16,6 +16,7 @@
 
 import type { IRepresentation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
+import type { IRepresentationListItem } from "../adaptive_representation_selector";
 
 /**
  * From the given array of Representations (sorted by bitrate order ascending),
@@ -28,17 +29,17 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * @returns {Object|undefined}
  */
 export default function selectOptimalRepresentation(
-  representations: IRepresentation[],
+  representations: IRepresentationListItem[],
   wantedBitrate: number,
 ): IRepresentation {
   const firstIndexTooHigh = arrayFindIndex(
     representations,
-    (representation) => representation.bitrate > wantedBitrate,
+    (representation) => representation.bandwidth > wantedBitrate,
   );
   if (firstIndexTooHigh === -1) {
-    return representations[representations.length - 1];
+    return representations[representations.length - 1].representation;
   } else if (firstIndexTooHigh === 0) {
-    return representations[0];
+    return representations[0].representation;
   }
-  return representations[firstIndexTooHigh - 1];
+  return representations[firstIndexTooHigh - 1].representation;
 }

@@ -226,7 +226,7 @@ export interface IStartPreparedContentMessageValue {
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch: "continue" | "reload";
 
-  // TODO prepare chosen Adaptations here?
+  // TODO prepare chosen tracks here?
   // In which case the Period's `id` should probably be given instead of the
   // `initialTime`
 }
@@ -342,15 +342,15 @@ export interface ITrackUpdateMessage {
 }
 
 export interface ITrackUpdateChoiceObject {
-  /** The Adaptation choosen. */
-  adaptationId: string;
+  /** The track choosen. */
+  trackId: string;
 
   /** "Switching mode" in which the track switch should happen. */
   switchingMode: ITrackSwitchingMode;
 
   /**
    * Shared reference allowing to indicate which Representations from
-   * that Adaptation are allowed.
+   * that track are allowed.
    */
   initialRepresentations: IRepresentationsChoice;
 
@@ -364,7 +364,7 @@ export interface IRepresentationUpdateMessage {
   value: {
     periodId: string;
     bufferType: ITrackType;
-    adaptationId: string;
+    trackId: string;
     choice: IRepresentationsChoice;
   };
 }
@@ -744,11 +744,11 @@ export interface IDisposeMediaSourceWorkerMessage {
   value: null;
 }
 
-export interface IAdaptationChangeWorkerMessage {
-  type: WorkerMessageType.AdaptationChanged;
+export interface ITrackChangeWorkerMessage {
+  type: WorkerMessageType.TrackChanged;
   contentId: string;
   value: {
-    adaptationId: string | null;
+    trackId: string | null;
     periodId: string;
     type: ITrackType;
   };
@@ -758,7 +758,7 @@ export interface IRepresentationChangeWorkerMessage {
   type: WorkerMessageType.RepresentationChanged;
   contentId: string;
   value: {
-    adaptationId: string;
+    trackId: string;
     representationId: string | null;
     periodId: string;
     type: ITrackType;
@@ -938,7 +938,7 @@ export interface ISegmentSinkStoreUpdateMessage {
 export const enum WorkerMessageType {
   AbortSourceBuffer = "abort-source-buffer",
   ActivePeriodChanged = "active-period-changed",
-  AdaptationChanged = "adaptation-changed",
+  TrackChanged = "track-changed",
   AddSourceBuffer = "add-source-buffer",
   AttachMediaSource = "attach-media-source",
   BitrateEstimateChange = "bitrate-estimate-change",
@@ -978,7 +978,7 @@ export const enum WorkerMessageType {
 export type IWorkerMessage =
   | IAbortBufferWorkerMessage
   | IActivePeriodChangedWorkerMessage
-  | IAdaptationChangeWorkerMessage
+  | ITrackChangeWorkerMessage
   | IAddSourceBufferWorkerMessage
   | IPushTextDataWorkerMessage
   | IAppendBufferWorkerMessage

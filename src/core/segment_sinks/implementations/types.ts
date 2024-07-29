@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
+import type {
+  ISegment,
+  IPeriod,
+  IRepresentation,
+  ITrackMetadata,
+} from "../../../manifest";
 import type { IRange } from "../../../utils/ranges";
 import type {
   IBufferedChunk,
@@ -265,8 +270,8 @@ export interface IPushedChunkData<T> {
  * `signalSegmentComplete` method.
  */
 export interface ICompleteSegmentInfo {
-  /** Adaptation object linked to the chunk. */
-  adaptation: IAdaptation;
+  /** track object linked to the chunk. */
+  track: ITrackMetadata;
   /** Period object linked to the chunk. */
   period: IPeriod;
   /** Representation object linked to the chunk. */

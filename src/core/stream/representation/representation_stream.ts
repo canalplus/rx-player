@@ -93,9 +93,9 @@ export default function RepresentationStream<TSegmentDataType>(
   callbacks: IRepresentationStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
-  const { period, adaptation, representation } = content;
+  const { period, track, representation } = content;
   const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
-  const bufferType = adaptation.type;
+  const bufferType = track.trackType;
 
   /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
   const globalCanceller = new TaskCanceller();

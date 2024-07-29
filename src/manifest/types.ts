@@ -1,5 +1,5 @@
 import type { IContentProtections, IManifestStreamEvent } from "../parsers/manifest";
-import type { IHDRInformation, ITrackType } from "../public_types";
+import type { IHDRInformation } from "../public_types";
 
 /**
  * Various formats an `IManifestMetadata` object can take.
@@ -250,57 +250,80 @@ export interface IPeriodMetadata {
    * `undefined` for still-running Periods.
    */
   duration?: number | undefined;
-  /** Every 'Adaptation' in that Period, per type of Adaptation. */
-  adaptations: Partial<Record<ITrackType, IAdaptationMetadata[]>>;
   /** Array containing every stream event happening on the period */
   streamEvents: IManifestStreamEvent[];
+  /**
+   * Complete information about all tracks combinations available for that
+   * Period.
+   * This is the object you want to exploit to actually load content
+   * corresponding to that Period.
+   *
+   * Each element in that array is an object which describes a particular
+   * track combination that should be considered under given conditions (the
+   * main one being the user's bandwidth).
+   *
+   * If what you want is a description of the available tracks for that content,
+   * look at `tracksMetadata` instead.
+   *
+   * Note that many transport protocols do not have that variant stream concept
+   * at this level and as such have only a single object in that array. This is
+   * for example the case with DASH and Smooth (which both rely on the user's
+   * bandwidth **AFTER** a track combination has already been selected), in
+   * contrast with HLS under which you have a high chance of having several
+   * objects in that array.
+   */
+  variantStreams: IVariantStreamMetadata[];
+  /**
+   * Description of all "tracks" available in this Period.
+   *
+   * To actually exploit those tracks for playback, you probably want to rely on
+   * `variantStreams` instead.
+   */
+  tracksMetadata: {
+    audio: Record<string, IAudioTrackMetadata>;
+    video: Record<string, IVideoTrackMetadata>;
+    text: Record<string, ITextTrackMetadata>;
+  };
 }
 
-export interface IAdaptationMetadata {
-  /** ID uniquely identifying the Adaptation in the Period. */
-  id: string;
-  /** Type of this Adaptation. */
-  type: ITrackType;
-  /** Language this Adaptation is in, as announced in the original Manifest. */
-  language?: string | undefined;
-  /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
-  isClosedCaption?: boolean | undefined;
-  /** Whether this track contains an audio description for the visually impaired. */
-  isAudioDescription?: boolean | undefined;
-  /** If true this Adaptation contains sign interpretation. */
-  isSignInterpreted?: boolean | undefined;
-  /**
-   * If `true` this Adaptation are subtitles Meant for display when no other text
-   * Adaptation is selected. It is used to clarify dialogue, alternate
-   * languages, texted graphics or location/person IDs that are not otherwise
-   * covered in the dubbed/localized audio Adaptation.
-   */
-  isForcedSubtitles?: boolean | undefined;
-  /**
-   * `true` if at least one Representation is in a supported codec. `false` otherwise.
-   *
-   * `undefined` for when this is not yet known (we're still in the process of
-   * probing for support).
-   */
-  isSupported?: boolean | undefined;
-  /** Language this Adaptation is in, when translated into an ISO639-3 code. */
-  normalizedLanguage?: string | undefined;
-  /**
-   * Different `Representations` (e.g. qualities) this Adaptation is available
-   * in.
-   */
-  representations: IRepresentationMetadata[];
-  /** Label of the adaptionSet */
-  label?: string | undefined;
-  /**
-   * If `true`, this Adaptation is a "dub", meaning it was recorded in another
-   * language than the original one.
-   */
-  isDub?: boolean | undefined;
+export type ITrackMetadata =
+  | IAudioTrackMetadata
+  | IVideoTrackMetadata
+  | ITextTrackMetadata;
+
+export interface IAudioTrackMetadata extends ITrackMetadataBase {
+  trackType: "audio";
+  inVariantStreams: string[] | undefined;
+  representations: Array<{
+    id: string;
+    bitrate: number | undefined;
+    mimeType: string | undefined;
+    codec: string | undefined;
+    isSpatialAudio: boolean | undefined;
+  }>;
+}
+
+export interface IVideoTrackMetadata extends ITrackMetadataBase {
+  trackType: "video";
+  inVariantStreams: string[] | undefined;
   /** Tells if the track is a trick mode track. */
-  trickModeTracks?: IAdaptationMetadata[] | undefined;
+  trickModeTracks?: IVideoTrackMetadata[] | undefined;
   /** Tells if the track is a trick mode track. */
   isTrickModeTrack?: boolean | undefined;
+  representations: Array<{
+    id: string;
+    bitrate: number | undefined;
+    width: number | undefined;
+    height: number | undefined;
+    mimeType: string | undefined;
+    codec: string | undefined;
+    frameRate: number | undefined;
+  }>;
+}
+
+export interface ITextTrackMetadata extends ITrackMetadataBase {
+  trackType: "text";
+  inVariantStreams: string[] | undefined;
 }
 
 export interface IRepresentationMetadata {
@@ -404,4 +427,77 @@ export interface IRepresentationMetadata {
   decipherable?: boolean | undefined;
   /** Encryption information for this Representation. */
   contentProtections?: IContentProtections | undefined;
+}
+
+export interface IVariantStreamMetadata {
+  /** Identifier which identify that variant stream. */
+  id: string;
+  /**
+   * Identify a bandwidth floor from which that variant stream should be selected.
+   * `undefined` if no such consideration needs to be done for that variant stream.
+   *
+   * Note: bandwidth considerations may also exist at the Representation-level
+   */
+  bandwidth: number | undefined;
+  media: {
+    /** Audio media existing for that variant stream. */
+    audio: IMediaMetadata[];
+    /** Video media existing for that variant stream. */
+    video: IMediaMetadata[];
+    /** Text media existing for that variant stream. */
+    text: IMediaMetadata[];
+  };
+}
+
+export interface IMediaMetadata {
+  /** Indentify that media. */
+  id: string;
+  /**
+   * Id of the "track" to which that audio media is a part of.
+   *
+   * A given audio "track" might for example provide an audio media to various
+   * variant streams.
+   */
+  linkedTrackId: string;
+  /**
+   * Different `Representations` (e.g. qualities) this media is available
+   * in.
+   */
+  representations: IRepresentationMetadata[];
+}
+
+export interface ITrackMetadataBase {
+  /** ID uniquely identifying this track. */
+  id: string;
+  /** Language this Adaptation is in, as announced in the original Manifest. */
+  language?: string | undefined;
+  /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
+  isClosedCaption?: boolean | undefined;
+  /** Whether this track contains an audio description for the visually impaired. */
+  isAudioDescription?: boolean | undefined;
+  /** If true this Adaptation contains sign interpretation. */
+  isSignInterpreted?: boolean | undefined;
+  /**
+   * If `true` this Adaptation are subtitles Meant for display when no other text
+   * Adaptation is selected. It is used to clarify dialogue, alternate
+   * languages, texted graphics or location/person IDs that are not otherwise
+   * covered in the dubbed/localized audio Adaptation.
+   */
+  isForcedSubtitles?: boolean | undefined;
+  /**
+   * `true` if at least one Representation is in a supported codec. `false` otherwise.
+   *
+   * `undefined` for when this is not yet known (we're still in the process of
+   * probing for support).
+   */
+  isSupported?: boolean | undefined;
+  /** Language this Adaptation is in, when translated into an ISO639-3 code. */
+  normalizedLanguage?: string | undefined;
+  /** Label of the adaptionSet */
+  label?: string | undefined;
+  /**
+   * If `true`, this Adaptation is a "dub", meaning it was recorded in another
+   * language than the original one.
+   */
+  isDub?: boolean | undefined;
 }

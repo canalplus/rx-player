@@ -1,11 +1,6 @@
 import log from "../../log";
-import type {
-  IAdaptation,
-  IManifest,
-  IPeriod,
-  IRepresentation,
-  ISegment,
-} from "../../manifest";
+import type { IManifest, IPeriod, IRepresentation, ISegment } from "../../manifest";
+import type { ITrackMetadata } from "../../manifest/types";
 import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
@@ -39,7 +34,7 @@ export interface ICmcdSegmentInfo {
   /** Period metadata linked to the wanted segment. */
   period: IPeriod;
   /** Adaptation metadata linked to the wanted segment. */
-  adaptation: IAdaptation;
+  track: ITrackMetadata;
   /** Representation metadata linked to the wanted segment. */
   representation: IRepresentation;
   /** Segment metadata linked to the wanted segment. */
@@ -218,12 +213,12 @@ export default class CmcdDataBuilder {
   public getCmcdDataForSegmentRequest(content: ICmcdSegmentInfo): ICmcdPayload {
     const lastObservation = this._playbackObserver?.getReference().getValue();
 
-    const props = this._getCommonCmcdData(this._lastThroughput[content.adaptation.type]);
+    const props = this._getCommonCmcdData(this._lastThroughput[content.track.trackType]);
     props.br = Math.round(content.representation.bitrate / 1000);
     props.d = Math.round(content.segment.duration * 1000);
     // TODO nor (next object request) and nrr (next range request)
 
-    switch (content.adaptation.type) {
+    switch (content.track.trackType) {
       case "video":
         props.ot = "v";
         break;
@@ -243,7 +238,7 @@ export default class CmcdDataBuilder {
       lastObservation !== undefined &&
       (props.ot === "v" || props.ot === "a" || props.ot === "av")
     ) {
-      const bufferedForType = lastObservation.buffered[content.adaptation.type];
+      const bufferedForType = lastObservation.buffered[content.track.trackType];
       if (!isNullOrUndefined(bufferedForType)) {
         // TODO more precize position estimate?
         const position =
@@ -292,21 +287,22 @@ export default class CmcdDataBuilder {
         break;
     }
     props.st = content.manifest.isDynamic ? "l" : "v";
-    props.tb = content.adaptation.representations.reduce(
-      (acc: number | undefined, representation: IRepresentation) => {
-        if (
-          representation.isSupported !== true ||
-          representation.decipherable === false
-        ) {
-          return acc;
-        }
-        if (acc === undefined) {
-          return Math.round(representation.bitrate / 1000);
-        }
-        return Math.max(acc, Math.round(representation.bitrate / 1000));
-      },
-      undefined,
-    );
+    // XXX TODO
+    // props.tb = content.adaptation.representations.reduce(
+    //   (acc: number | undefined, representation: IRepresentation) => {
+    //     if (
+    //       representation.isSupported !== true ||
+    //       representation.decipherable === false
+    //     ) {
+    //       return acc;
+    //     }
+    //     if (acc === undefined) {
+    //       return Math.round(representation.bitrate / 1000);
+    //     }
+    //     return Math.max(acc, Math.round(representation.bitrate / 1000));
+    //   },
+    //   undefined,
+    // );
     return this._producePayload(props);
   }
 
