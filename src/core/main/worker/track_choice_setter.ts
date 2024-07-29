@@ -4,7 +4,7 @@ import type { ITrackType } from "../../../public_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
 import SharedReference from "../../../utils/reference";
-import type { IAdaptationChoice, IRepresentationsChoice } from "../../stream";
+import type { ITrackChoice, IRepresentationsChoice } from "../../stream";
 
 export default class TrackChoiceSetter {
   /**
@@ -21,7 +21,7 @@ export default class TrackChoiceSetter {
         ITrackType,
         {
           /** Object through which track choices will be emitted. */
-          trackReference: SharedReference<IAdaptationChoice | null | undefined>;
+          trackReference: SharedReference<ITrackChoice | null | undefined>;
           /**
            * Object through which Representation choices will be emitted.
            *
@@ -60,7 +60,7 @@ export default class TrackChoiceSetter {
   public addTrackSetter(
     periodId: string,
     bufferType: ITrackType,
-    ref: SharedReference<IAdaptationChoice | null | undefined>,
+    ref: SharedReference<ITrackChoice | null | undefined>,
   ) {
     let obj = this._refs.get(periodId);
     if (obj === undefined) {
@@ -119,7 +119,7 @@ export default class TrackChoiceSetter {
     } else {
       ref.representations = new SharedReference(choice.initialRepresentations);
       ref.trackReference.setValue({
-        adaptationId: choice.adaptationId,
+        trackId: choice.trackId,
         switchingMode: choice.switchingMode,
         representations: ref.representations,
         relativeResumingPosition: choice.relativeResumingPosition,
@@ -130,7 +130,7 @@ export default class TrackChoiceSetter {
 
   public updateRepresentations(
     periodId: string,
-    adaptationId: string,
+    trackId: string,
     bufferType: ITrackType,
     choice: IRepresentationsChoice,
   ): boolean {
@@ -140,8 +140,8 @@ export default class TrackChoiceSetter {
       return false;
     }
     const val = ref.trackReference.getValue();
-    if (isNullOrUndefined(val) || val.adaptationId !== adaptationId) {
-      log.debug("WP: Desynchronized Adaptation id", val?.adaptationId, adaptationId);
+    if (isNullOrUndefined(val) || val.trackId !== trackId) {
+      log.debug("WP: Desynchronized track id", val?.trackId, trackId);
       return false;
     }
     ref.representations.setValue(choice);

@@ -14,47 +14,52 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
+import type { IRepresentationListItem } from "../adaptive_representation_selector";
 
 /**
  * Filter representations based on their resolution.
  *   - the highest resolution considered will be the one linked to the first
  *     representation which has a superior resolution or equal to the one
  *     given.
- * @param {Array.<Object>} representations - The representations array
+ * @param {Array.<Object>} representationList - The representations array
  * @param {Object} resolution
  * @returns {Array.<Object>}
  */
 export default function filterByResolution(
-  representations: IRepresentation[],
+  representationList: IRepresentationListItem[],
   resolution: IResolutionInfo,
-): IRepresentation[] {
+): IRepresentationListItem[] {
   if (resolution.width === undefined || resolution.height === undefined) {
-    return representations;
+    return representationList;
   }
   const width = resolution.width * resolution.pixelRatio;
   const height = resolution.height * resolution.pixelRatio;
-  const sortedRepsByWidth = representations
+  const sortedRepsByWidth = representationList
     .slice() // clone
-    .sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+    .sort((a, b) => (a.representation.width ?? 0) - (b.representation.width ?? 0));
 
-  const repWithMaxWidth = arrayFind(
+  const itemWithMaxWidth = arrayFind(
     sortedRepsByWidth,
-    (representation) =>
-      typeof representation.width === "number" &&
-      representation.width >= width &&
-      typeof representation.height === "number" &&
-      representation.height >= height,
+    (item) =>
+      typeof item.representation.width === "number" &&
+      item.representation.width >= width &&
+      typeof item.representation.height === "number" &&
+      item.representation.height >= height,
   );
 
-  if (repWithMaxWidth === undefined) {
-    return representations;
+  if (itemWithMaxWidth === undefined) {
+    return representationList;
   }
 
-  const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width : 0;
-  return representations.filter((representation) =>
-    typeof representation.width === "number" ? representation.width <= maxWidth : true,
+  const maxWidth =
+    typeof itemWithMaxWidth.representation.width === "number"
+      ? itemWithMaxWidth.representation.width
+      : 0;
+  return representationList.filter((item) =>
+    typeof item.representation.width === "number"
+      ? item.representation.width <= maxWidth
+      : true,
   );
 }
 

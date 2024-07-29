@@ -1,7 +1,7 @@
 import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_buffers_store";
 import type { IBufferType } from "../../../../core/types";
 import type {
-  IAdaptationMetadata,
+  ITrackMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
 } from "../../../../manifest";
@@ -120,9 +120,9 @@ export default function createSegmentSinkGraph(
 
       loadingRangeRepInfoElt.innerHTML = "";
       const rep = instance.__priv_getCurrentRepresentations()?.[bufferType];
-      const adap = instance.__priv_getCurrentAdaptation()?.[bufferType];
+      const track = instance.__priv_getCurrentTracks()?.[bufferType];
       const manifest = instance.__priv_getManifest();
-      if (manifest !== null && !isNullOrUndefined(rep) && !isNullOrUndefined(adap)) {
+      if (manifest !== null && !isNullOrUndefined(rep) && !isNullOrUndefined(track)) {
         const period = getPeriodForTime(manifest, currentTime);
         if (period !== undefined) {
           loadingRangeRepInfoElt.appendChild(createMetricTitle("load"));
@@ -130,7 +130,7 @@ export default function createSegmentSinkGraph(
             createElement("span", {
               textContent: constructRepresentationInfo({
                 period,
-                adaptation: adap,
+                track,
                 representation: rep,
               }),
             }),
@@ -143,19 +143,11 @@ export default function createSegmentSinkGraph(
 
 function constructRepresentationInfo(content: {
   period: IPeriodMetadata;
-  adaptation: IAdaptationMetadata;
+  track: ITrackMetadata;
   representation: IRepresentationMetadata;
 }): string {
-  const period = content.period;
-  const {
-    language,
-    isAudioDescription,
-    isClosedCaption,
-    isTrickModeTrack,
-    isSignInterpreted,
-    type: bufferType,
-  } = content.adaptation;
-  const { id, height, width, bitrate, codecs } = content.representation;
+  const { period, track, representation } = content;
+  const { id, height, width, bitrate, codecs } = representation;
   let representationInfo = `"${id}" `;
   if (height !== undefined && width !== undefined) {
     representationInfo += `${width}x${height} `;
@@ -166,20 +158,20 @@ function constructRepresentationInfo(content: {
   if (codecs !== undefined && codecs.length > 0) {
     representationInfo += `c:"${codecs.join(" / ")}" `;
   }
-  if (language !== undefined) {
-    representationInfo += `l:"${language}" `;
+  if (track.language !== undefined) {
+    representationInfo += `l:"${track.language}" `;
   }
-  if (bufferType === "video" && typeof isSignInterpreted === "boolean") {
-    representationInfo += `si:${isSignInterpreted ? 1 : 0} `;
+  if (track.trackType === "video" && typeof track.isSignInterpreted === "boolean") {
+    representationInfo += `si:${track.isSignInterpreted ? 1 : 0} `;
   }
-  if (bufferType === "video" && typeof isTrickModeTrack === "boolean") {
-    representationInfo += `tm:${isTrickModeTrack ? 1 : 0} `;
+  if (track.trackType === "video" && typeof track.isTrickModeTrack === "boolean") {
+    representationInfo += `tm:${track.isTrickModeTrack ? 1 : 0} `;
   }
-  if (bufferType === "audio" && typeof isAudioDescription === "boolean") {
-    representationInfo += `ad:${isAudioDescription ? 1 : 0} `;
+  if (track.trackType === "audio" && typeof track.isAudioDescription === "boolean") {
+    representationInfo += `ad:${track.isAudioDescription ? 1 : 0} `;
   }
-  if (bufferType === "text" && typeof isClosedCaption === "boolean") {
-    representationInfo += `cc:${isClosedCaption ? 1 : 0} `;
+  if (track.trackType === "text" && typeof track.isClosedCaption === "boolean") {
+    representationInfo += `cc:${track.isClosedCaption ? 1 : 0} `;
   }
   representationInfo += `p:${period.start}-${period.end ?? "?"}`;
   return representationInfo;

@@ -1,10 +1,10 @@
 import type { IContentProtection } from "../../../main_thread/types";
 import type {
   IManifest,
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
+  ITrack,
 } from "../../../manifest";
 import type { IEMSG } from "../../../parsers/containers/isobmff";
 import type {
@@ -133,7 +133,7 @@ export interface IStreamEventAddedSegmentPayload {
   /** Context about the content that has been added. */
   content: {
     period: IPeriod;
-    adaptation: IAdaptation;
+    track: ITrack;
     representation: IRepresentation;
   };
   /** The concerned Segment. */
@@ -249,7 +249,7 @@ export interface ITerminationOrder {
 export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** The context of the Representation you want to load. */
   content: {
-    adaptation: IAdaptation;
+    track: ITrack;
     manifest: IManifest;
     period: IPeriod;
     representation: IRepresentation;

@@ -16,7 +16,12 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
+import type {
+  ITrackMetadata,
+  ISegment,
+  IPeriod,
+  IRepresentation,
+} from "../../../manifest";
 import { areSameContent } from "../../../manifest";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
@@ -137,8 +142,8 @@ export interface IBufferedChunk {
 
 /** information to provide when "inserting" a new chunk into the SegmentInventory. */
 export interface IInsertedChunkInfos {
-  /** The Adaptation that chunk is linked to */
-  adaptation: IAdaptation;
+  /** The track that chunk is linked to */
+  track: ITrackMetadata;
   /** The Period that chunk is linked to */
   period: IPeriod;
   /** The Representation that chunk is linked to. */
@@ -219,7 +224,7 @@ export default class SegmentInventory {
     let thisSegment = inventory[0]; // Current segmentInfos considered
     const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
     /** Type of buffer considered, used for logs */
-    const bufferType: string | undefined = thisSegment?.infos.adaptation.type;
+    const bufferType: string | undefined = thisSegment?.infos.track.trackType;
 
     if (log.hasLevel("DEBUG")) {
       const prettyPrintedRanges = ranges.map((r) => `${r.start}-${r.end}`).join(",");
@@ -429,7 +434,7 @@ export default class SegmentInventory {
   public insertChunk(
     {
       period,
-      adaptation,
+      track,
       representation,
       segment,
       chunkSize,
@@ -443,7 +448,7 @@ export default class SegmentInventory {
       return;
     }
 
-    const bufferType = adaptation.type;
+    const bufferType = track.trackType;
     if (start >= end) {
       log.warn(
         "SI: Invalid chunked inserted: starts before it ends",
@@ -466,7 +471,7 @@ export default class SegmentInventory {
       precizeEnd: false,
       bufferedStart: undefined,
       bufferedEnd: undefined,
-      infos: { segment, period, adaptation, representation },
+      infos: { segment, period, track, representation },
     };
 
     // begin by the end as in most use cases this will be faster
@@ -881,7 +886,7 @@ export default class SegmentInventory {
    */
   public completeSegment(content: {
     period: IPeriod;
-    adaptation: IAdaptation;
+    track: ITrackMetadata;
     representation: IRepresentation;
     segment: ISegment;
   }): void {

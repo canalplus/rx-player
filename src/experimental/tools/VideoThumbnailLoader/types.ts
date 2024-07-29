@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import type { IManifest, IAdaptation, IPeriod, IRepresentation } from "../../../manifest";
+import type { IManifest, IPeriod, IRepresentation, ITrack } from "../../../manifest";
 import type { ISegmentParser, ITransportPipelines } from "../../../transports";
 
 export interface IContentInfo {
   manifest: IManifest;
   period: IPeriod;
-  adaptation: IAdaptation;
+  track: ITrack;
   representation: IRepresentation;
 }
 

@@ -14,38 +14,34 @@
  * limitations under the License.
  */
 
-import type { IParsedAdaptation } from "../types";
+import type { IParsedRepresentation } from "../types";
 
 /**
- * Returns "last time of reference" from the adaptation given, considering a
- * dynamic content.
+ * Returns "first time of reference" from the Representations given, considering
+ * a dynamic content.
  * Undefined if a time could not be found.
- * Null if the Adaptation has no segments (it could be that it didn't started or
- * that it already finished for example).
  *
- * We consider the earliest last time from every representations in the given
- * adaptation.
- * @param {Object} adaptation
- * @returns {Number|undefined|null}
+ * We consider the latest first time from every representations.
+ * @param {Object} representations
+ * @returns {Number|undefined}
  */
-export default function getLastPositionFromAdaptation(
-  adaptation: IParsedAdaptation,
+export default function getFirstPositionFromRepresentations(
+  representations: IParsedRepresentation[],
 ): number | undefined | null {
-  const { representations } = adaptation;
-  let min: null | number = null;
+  let max: null | number = null;
   for (let i = 0; i < representations.length; i++) {
-    const lastPosition = representations[i].index.getLastAvailablePosition();
-    if (lastPosition === undefined) {
+    const firstPosition = representations[i].index.getFirstAvailablePosition();
+    if (firstPosition === undefined) {
       // we cannot tell
       return undefined;
     }
-    if (lastPosition !== null) {
-      min = min === null ? lastPosition : Math.min(min, lastPosition);
+    if (firstPosition !== null) {
+      max = max === null ? firstPosition : Math.max(max, firstPosition);
     }
   }
-  if (min === null) {
+  if (max === null) {
     // It means that all positions were null === no segments (yet?)
     return null;
   }
-  return min;
+  return max;
 }

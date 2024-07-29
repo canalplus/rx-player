@@ -14,7 +14,7 @@ import type {
 } from "./segment_sinks";
 import type SegmentSinksStore from "./segment_sinks";
 import type {
-  IAdaptationChoice,
+  ITrackChoice,
   IPausedPlaybackObservation,
   IInbandEvent,
   IRepresentationsChoice,
@@ -44,7 +44,7 @@ export type {
   ITextDisplayerInterface,
 
   // Stream Metadata
-  IAdaptationChoice,
+  ITrackChoice,
   IInbandEvent,
   IPausedPlaybackObservation,
   IStreamOrchestratorPlaybackObservation,

@@ -15,7 +15,7 @@
  */
 
 import log from "../../../../log";
-import type { IAdaptation } from "../../../../manifest";
+import type { ITrack } from "../../../../manifest";
 import type { IHDRInformation } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import objectAssign from "../../../../utils/object_assign";
@@ -137,8 +137,7 @@ export default function parseRepresentations(
 
     // Retrieve previous version of the Representation, if one.
     const unsafelyBaseOnPreviousRepresentation =
-      context.unsafelyBaseOnPreviousAdaptation?.getRepresentation(representationID) ??
-      null;
+      context.unsafelyBaseOnPreviousAdaptation?.representations[representationID] ?? null;
 
     const inbandEventStreams = combineInbandEventStreams(representation, adaptation);
 
@@ -290,7 +289,7 @@ export interface IRepresentationContext extends IInheritedRepresentationIndexCon
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousAdaptation: IAdaptation | null;
+  unsafelyBaseOnPreviousAdaptation: ITrack | null;
   /** Parses contentProtection elements. */
   contentProtectionParser: ContentProtectionParser;
 }

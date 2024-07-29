@@ -16,14 +16,14 @@
 
 import log from "../../../../log";
 import type { IPeriod } from "../../../../manifest";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
+import { SUPPORTED_TRACK_TYPE } from "../../../../manifest";
 import type { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IParsedAdaptation, IParsedAdaptations } from "../../types";
+import type { IParsedTrack } from "../../types";
 import type {
   IAdaptationSetIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
@@ -259,14 +259,14 @@ function getAdaptationSetSwitchingIDs(
 export default function parseAdaptationSets(
   adaptationsIR: IAdaptationSetIntermediateRepresentation[],
   context: IAdaptationSetContext,
-): IParsedAdaptations {
+): Record<"audio" | "video" | "text", IParsedTrack[]> {
   const parsedAdaptations: Record<
     ITrackType,
-    Array<[IParsedAdaptation, IAdaptationSetOrderingData]>
+    Array<[IParsedTrack, IAdaptationSetOrderingData]>
   > = { video: [], audio: [], text: [] };
-  const trickModeAdaptations: Array<{
-    adaptation: IParsedAdaptation;
-    trickModeAttachedAdaptationIds: string[];
+  const trickModeTracks: Array<{
+    track: IParsedTrack;
+    trickModeAttachedTrackIds: string[];
   }> = [];
   const adaptationSwitchingInfos: IAdaptationSwitchingInfos = {};
 
@@ -342,10 +342,10 @@ export default function parseAdaptationSets(
         })
       : undefined;
 
-    const trickModeAttachedAdaptationIds: string[] | undefined =
+    const trickModeAttachedTrackIds: string[] | undefined =
       trickModeProperty?.value?.split(" ");
 
-    const isTrickModeTrack = trickModeAttachedAdaptationIds !== undefined;
+    const isTrickModeTrack = trickModeAttachedTrackIds !== undefined;
 
     const { accessibilities } = adaptationChildren;
 
@@ -404,29 +404,29 @@ export default function parseAdaptationSets(
     parsedAdaptationsIDs.push(adaptationID);
 
     reprCtxt.unsafelyBaseOnPreviousAdaptation =
-      context.unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
+      context.unsafelyBaseOnPreviousPeriod?.getTrack(adaptationID) ?? null;
 
     const representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
-    const parsedAdaptationSet: IParsedAdaptation = {
+    const parsedAdaptationSet: IParsedTrack = {
       id: adaptationID,
       representations,
-      type,
+      trackType: type,
       isTrickModeTrack,
     };
     if (!isNullOrUndefined(adaptation.attributes.language)) {
       parsedAdaptationSet.language = adaptation.attributes.language;
     }
     if (!isNullOrUndefined(isClosedCaption)) {
-      parsedAdaptationSet.closedCaption = isClosedCaption;
+      parsedAdaptationSet.isClosedCaption = isClosedCaption;
     }
     if (!isNullOrUndefined(isAudioDescription)) {
-      parsedAdaptationSet.audioDescription = isAudioDescription;
+      parsedAdaptationSet.isAudioDescription = isAudioDescription;
     }
     if (isDub === true) {
       parsedAdaptationSet.isDub = true;
     }
     if (isForcedSubtitle !== undefined) {
-      parsedAdaptationSet.forcedSubtitles = isForcedSubtitle;
+      parsedAdaptationSet.isForcedSubtitles = isForcedSubtitle;
     }
     if (isSignInterpreted === true) {
       parsedAdaptationSet.isSignInterpreted = true;
@@ -436,10 +436,10 @@ export default function parseAdaptationSets(
       parsedAdaptationSet.label = label;
     }
 
-    if (trickModeAttachedAdaptationIds !== undefined) {
-      trickModeAdaptations.push({
-        adaptation: parsedAdaptationSet,
-        trickModeAttachedAdaptationIds,
+    if (trickModeAttachedTrackIds !== undefined) {
+      trickModeTracks.push({
+        track: parsedAdaptationSet,
+        trickModeAttachedTrackIds,
       });
     } else {
       // look if we have to merge this into another Adaptation
@@ -455,8 +455,8 @@ export default function parseAdaptationSets(
           const mergedInto = parsedAdaptations[type][mergedIntoIdx];
           if (
             mergedInto !== undefined &&
-            mergedInto[0].audioDescription === parsedAdaptationSet.audioDescription &&
-            mergedInto[0].closedCaption === parsedAdaptationSet.closedCaption &&
+            mergedInto[0].isAudioDescription === parsedAdaptationSet.isAudioDescription &&
+            mergedInto[0].isClosedCaption === parsedAdaptationSet.isClosedCaption &&
             mergedInto[0].language === parsedAdaptationSet.language
           ) {
             log.info('DASH Parser: merging "switchable" AdaptationSets', originalID, id);
@@ -490,21 +490,24 @@ export default function parseAdaptationSets(
     }
   }
 
-  const adaptationsPerType = SUPPORTED_ADAPTATIONS_TYPE.reduce(
-    (acc: IParsedAdaptations, adaptationType: ITrackType) => {
+  const adaptationsPerType = SUPPORTED_TRACK_TYPE.reduce(
+    (
+      acc: Record<"audio" | "video" | "text", IParsedTrack[]>,
+      adaptationType: ITrackType,
+    ) => {
       const adaptationsParsedForType = parsedAdaptations[adaptationType];
       if (adaptationsParsedForType.length > 0) {
         adaptationsParsedForType.sort(compareAdaptations);
-        acc[adaptationType] = adaptationsParsedForType.map(
-          ([parsedAdaptation]) => parsedAdaptation,
-        );
+        for (const [adap] of adaptationsParsedForType) {
+          acc[adaptationType].push(adap);
+        }
       }
       return acc;
     },
-    {},
+    { audio: [], video: [], text: [] },
   );
   parsedAdaptations.video.sort(compareAdaptations);
-  attachTrickModeTrack(adaptationsPerType, trickModeAdaptations);
+  attachTrickModeTrack(adaptationsPerType, trickModeTracks);
   return adaptationsPerType;
 }
 
@@ -533,8 +536,8 @@ interface IAdaptationSetOrderingData {
  * @returns {number}
  */
 function compareAdaptations(
-  a: [IParsedAdaptation, IAdaptationSetOrderingData],
-  b: [IParsedAdaptation, IAdaptationSetOrderingData],
+  a: [IParsedTrack, IAdaptationSetOrderingData],
+  b: [IParsedTrack, IAdaptationSetOrderingData],
 ): number {
   const priorityDiff = b[1].priority - a[1].priority;
   if (priorityDiff !== 0) {

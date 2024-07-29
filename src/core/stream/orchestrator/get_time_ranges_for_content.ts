@@ -16,9 +16,9 @@
 
 import log from "../../../log";
 import type {
-  IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  ITrackMetadata,
 } from "../../../manifest";
 import type { IRange } from "../../../utils/ranges";
 import type { SegmentSink } from "../../segment_sinks";
@@ -33,8 +33,8 @@ import type { SegmentSink } from "../../segment_sinks";
 export default function getTimeRangesForContent(
   segmentSink: SegmentSink,
   contents: Array<{
-    adaptation: IAdaptationMetadata;
     period: IPeriodMetadata;
+    track: ITrackMetadata;
     representation: IRepresentationMetadata;
   }>,
 ): IRange[] {
@@ -49,7 +49,7 @@ export default function getTimeRangesForContent(
     const hasContent = contents.some((content) => {
       return (
         chunk.infos.period.id === content.period.id &&
-        chunk.infos.adaptation.id === content.adaptation.id &&
+        chunk.infos.track.id === content.track.id &&
         chunk.infos.representation.id === content.representation.id
       );
     });

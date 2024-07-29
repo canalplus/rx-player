@@ -18,10 +18,10 @@ import config from "../../../../config";
 import log from "../../../../log";
 import type {
   IManifest,
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
+  ITrackMetadata,
 } from "../../../../manifest";
 import { areSameContent } from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
@@ -34,7 +34,7 @@ import type {
 import { ChunkStatus } from "../../../segment_sinks/inventory/segment_inventory";
 
 interface IContentContext {
-  adaptation: IAdaptation;
+  track: ITrackMetadata;
   manifest: IManifest;
   period: IPeriod;
   representation: IRepresentation;
@@ -116,7 +116,7 @@ export default function getNeededSegments({
   segmentsBeingPushed,
   maxBufferSize,
 }: IGetNeededSegmentsArguments): INeededSegments {
-  const { adaptation, representation } = content;
+  const { track, representation } = content;
   let availableBufferSize = getAvailableBufferSize(
     bufferedSegments,
     segmentsBeingPushed,
@@ -187,7 +187,7 @@ export default function getNeededSegments({
       const waitForPushedSegment = segmentsBeingPushed.some((pendingSegment) => {
         if (
           pendingSegment.period.id !== content.period.id ||
-          pendingSegment.adaptation.id !== content.adaptation.id
+          pendingSegment.track.id !== content.track.id
         ) {
           return false;
         }
@@ -220,7 +220,7 @@ export default function getNeededSegments({
       const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
       // Check if content are from same period, as there can't be overlapping
       // periods, we should consider a segment as already downloaded if
-      // it is from same period (but can be from different adaptation or
+      // it is from same period (but can be from different track or
       // representation)
       if (completeSeg.status === ChunkStatus.FullyLoaded && areFromSamePeriod) {
         const completeSegInfos = completeSeg.infos.segment;
@@ -263,7 +263,7 @@ export default function getNeededSegments({
             "is emitted, you might want to update the RxPlayer's settings (" +
             "`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used " +
             "by regular media data buffering." +
-            adaptation.type,
+            track.trackType,
           representation.id,
           segment.time,
         );
@@ -362,7 +362,7 @@ function getLastContiguousSegment(
 function shouldContentBeReplaced(
   oldContent: ICompleteSegmentInfo,
   currentContent: {
-    adaptation: IAdaptation;
+    track: ITrackMetadata;
     period: IPeriod;
     representation: IRepresentation;
   },
@@ -379,8 +379,8 @@ function shouldContentBeReplaced(
     return false;
   }
 
-  if (oldContent.adaptation.id !== currentContent.adaptation.id) {
-    return true; // replace segments from another Adaptation
+  if (oldContent.track.id !== currentContent.track.id) {
+    return true; // replace segments from another track
   }
 
   return canFastSwitch(
@@ -408,7 +408,7 @@ function canFastSwitch(
   const oldContentBitrate = oldSegmentRepresentation.bitrate;
   const { BITRATE_REBUFFERING_RATIO } = config.getCurrent();
   if (fastSwitchThreshold === undefined) {
-    // only re-load comparatively-poor bitrates for the same Adaptation.
+    // only re-load comparatively-poor bitrates for the same track.
     const bitrateCeil = oldContentBitrate * BITRATE_REBUFFERING_RATIO;
     return newSegmentRepresentation.bitrate > bitrateCeil;
   }

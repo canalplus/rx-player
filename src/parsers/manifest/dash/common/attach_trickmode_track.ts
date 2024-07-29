@@ -14,35 +14,35 @@
  * limitations under the License.
  */
 
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
-import type { IParsedAdaptation, IParsedAdaptations } from "../../types";
+import { SUPPORTED_TRACK_TYPE } from "../../../../manifest";
+import type { IParsedTrack } from "../../types";
 
 /**
- * Attach trick mode tracks to adaptations by assigning to the trickModeTracks
- * property an array of trick mode track adaptations.
- * @param {Object} adaptations
+ * Attach trick mode tracks to regular tracks by assigning to the trickModeTracks
+ * property an array of trick mode tracks.
+ * @param {Object} allTracks
  * @param {Array.<Object>} trickModeTracks
  * @returns {void}
  */
 function attachTrickModeTrack(
-  adaptations: IParsedAdaptations,
+  allTracks: Record<"audio" | "video" | "text", IParsedTrack[]>,
   trickModeTracks: Array<{
-    adaptation: IParsedAdaptation;
-    trickModeAttachedAdaptationIds: string[];
+    track: IParsedTrack;
+    trickModeAttachedTrackIds: string[];
   }>,
 ): void {
-  for (const track of trickModeTracks) {
-    const { adaptation, trickModeAttachedAdaptationIds } = track;
-    for (const trickModeAttachedAdaptationId of trickModeAttachedAdaptationIds) {
-      for (const adaptationType of SUPPORTED_ADAPTATIONS_TYPE) {
-        const adaptationsByType = adaptations[adaptationType];
-        if (adaptationsByType !== undefined) {
-          for (const adaptationByType of adaptationsByType) {
-            if (adaptationByType.id === trickModeAttachedAdaptationId) {
-              if (adaptationByType.trickModeTracks === undefined) {
-                adaptationByType.trickModeTracks = [];
+  for (const tmTrack of trickModeTracks) {
+    const { track, trickModeAttachedTrackIds } = tmTrack;
+    for (const trickModeAttachedTrackId of trickModeAttachedTrackIds) {
+      for (const trackType of SUPPORTED_TRACK_TYPE) {
+        const tracksByType = allTracks[trackType];
+        if (tracksByType !== undefined) {
+          for (const trackByType of tracksByType) {
+            if (trackByType.id === trickModeAttachedTrackId) {
+              if (trackByType.trickModeTracks === undefined) {
+                trackByType.trickModeTracks = [];
               }
-              adaptationByType.trickModeTracks.push(adaptation);
+              trackByType.trickModeTracks.push(track);
             }
           }
         }

@@ -15,20 +15,21 @@
  */
 
 import log from "../../../log";
-import type { IManifest } from "../../../manifest";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
+import type { IManifest, ITrack } from "../../../manifest";
+import { SUPPORTED_TRACK_TYPE } from "../../../manifest";
 import { StaticRepresentationIndex } from "../../../manifest/classes";
 import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+import { objectValues } from "../../../utils/object_values";
 import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import type {
-  IParsedAdaptation,
-  IParsedAdaptations,
+  IParsedTrack,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
+  IParsedVariantStreamMetadata,
 } from "../types";
 import MetaRepresentationIndex from "./representation_index";
 
@@ -170,7 +171,7 @@ function createManifest(
     serverSyncInfos !== undefined
       ? serverSyncInfos.serverTimestamp - serverSyncInfos.clientTime
       : undefined;
-  const generateAdaptationID = idGenerator();
+  const generateTrackID = idGenerator();
   const generateRepresentationID = idGenerator();
   const { contents } = mplData;
   const minimumTime = contents.length > 0 ? contents[0].startTime : 0;
@@ -196,20 +197,24 @@ function createManifest(
     const manifestPeriods = [];
     for (let iPer = 0; iPer < currentManifest.periods.length; iPer++) {
       const currentPeriod = currentManifest.periods[iPer];
-      const adaptations = SUPPORTED_ADAPTATIONS_TYPE.reduce<IParsedAdaptations>(
-        (acc, type: ITrackType) => {
-          const currentAdaptations = currentPeriod.adaptations[type];
-          if (isNullOrUndefined(currentAdaptations)) {
-            return acc;
-          }
+      const tracks = SUPPORTED_TRACK_TYPE.reduce(
+        (
+          acc: {
+            audio: IParsedTrack[];
+            video: IParsedTrack[];
+            text: IParsedTrack[];
+          },
+          type: ITrackType,
+        ) => {
+          const trackRecord: Record<string, ITrack> = currentPeriod.tracksMetadata[type];
+          const currentTracks: ITrack[] = objectValues(trackRecord);
+          for (let iTrk = 0; iTrk < currentTracks.length; iTrk++) {
+            const currentTrack = currentTracks[iTrk];
 
-          const adaptationsForCurrentType: IParsedAdaptation[] = [];
-          for (let iAda = 0; iAda < currentAdaptations.length; iAda++) {
-            const currentAdaptation = currentAdaptations[iAda];
-
+            const trackReps = objectValues(currentTrack.representations);
             const representations: IParsedRepresentation[] = [];
-            for (let iRep = 0; iRep < currentAdaptation.representations.length; iRep++) {
-              const currentRepresentation = currentAdaptation.representations[iRep];
+            for (let iRep = 0; iRep < trackReps.length; iRep++) {
+              const currentRepresentation = trackReps[iRep];
 
               const baseContentMetadata = {
                 isLive: currentManifest.isLive,
@@ -251,35 +256,35 @@ function createManifest(
                 contentProtections: currentRepresentation.contentProtections,
               });
             }
-            adaptationsForCurrentType.push({
-              id: currentAdaptation.id,
+            const track: IParsedTrack = {
+              id: currentTrack.id,
               representations,
-              type: currentAdaptation.type,
-              audioDescription: currentAdaptation.isAudioDescription,
-              closedCaption: currentAdaptation.isClosedCaption,
-              isDub: currentAdaptation.isDub,
-              language: currentAdaptation.language,
-              isSignInterpreted: currentAdaptation.isSignInterpreted,
-            });
-            acc[type] = adaptationsForCurrentType;
+              trackType: currentTrack.trackType,
+              isAudioDescription: currentTrack.isAudioDescription,
+              isClosedCaption: currentTrack.isClosedCaption,
+              isDub: currentTrack.isDub,
+              language: currentTrack.language,
+              isSignInterpreted: currentTrack.isSignInterpreted,
+            };
+            acc[type].push(track);
           }
           return acc;
         },
-        {},
+        { audio: [], video: [], text: [] },
       );
 
       // TODO only first period?
       const textTracks: IMetaPlaylistTextTrack[] =
         content.textTracks === undefined ? [] : content.textTracks;
-      const newTextAdaptations: IParsedAdaptation[] = textTracks.map((track) => {
-        const adaptationID = "gen-text-ada-" + generateAdaptationID();
+      const newTextTracks: IParsedTrack[] = textTracks.map((track) => {
+        const trackID = "gen-text-ada-" + generateTrackID();
         const representationID = "gen-text-rep-" + generateRepresentationID();
         const indexOfFilename = getFilenameIndexInUrl(track.url);
         const cdnUrl = track.url.substring(0, indexOfFilename);
         const filename = track.url.substring(indexOfFilename);
         return {
-          id: adaptationID,
-          type: "text",
+          id: trackID,
+          trackType: "text",
           language: track.language,
           closedCaption: track.closedCaption,
           manuallyAdded: true,
@@ -296,17 +301,32 @@ function createManifest(
         };
       }, []);
 
-      if (newTextAdaptations.length > 0) {
-        if (isNullOrUndefined(adaptations.text)) {
-          adaptations.text = newTextAdaptations;
-        } else {
-          adaptations.text.push(...newTextAdaptations);
-        }
+      for (const newTextTrack of newTextTracks) {
+        tracks.text.push(newTextTrack);
       }
 
+      const getMediaForType = (type: ITrackType) => {
+        return tracks[type].map((a) => {
+          return {
+            id: a.id,
+            linkedTrack: a.id,
+            representations: a.representations.map((r) => r.id),
+          };
+        });
+      };
+      const variantStream: IParsedVariantStreamMetadata = {
+        id: "0",
+        bandwidth: undefined,
+        media: {
+          audio: getMediaForType("audio"),
+          video: getMediaForType("video"),
+          text: getMediaForType("text"),
+        },
+      };
       const newPeriod: IParsedPeriod = {
         id: formatId(currentManifest.id) + "_" + formatId(currentPeriod.id),
-        adaptations,
+        tracksMetadata: tracks,
+        variantStreams: [variantStream],
         duration: currentPeriod.duration,
         start: contentOffset + currentPeriod.start,
       };

@@ -3,8 +3,9 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import type { IRepresentation } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
-import { assertUnreachable } from "../../../utils/assert";
+import assert, { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
@@ -12,6 +13,7 @@ import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference, { createMappedReference } from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
+import type { IRepresentationListItem } from "../../adaptive";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
@@ -65,7 +67,31 @@ export default function AdaptationStream(
   callbacks: IAdaptationStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
-  const { manifest, period, adaptation } = content;
+  const { manifest, period, track, representationsChoice } = content;
+
+  /** All Representations linked to the given track id in all variant streams. */
+  const allRepresentations = period.variantStreams.flatMap((variantStream) => {
+    return variantStream.media[track.trackType].flatMap((media) => {
+      return media.linkedTrack === track.id
+        ? media.representations.map((representationId) => {
+            const representation = track.representations[representationId];
+            assert(
+              !isNullOrUndefined(representation),
+              "Representation from variant not found.",
+            );
+            return {
+              // Take the highest ceil between variant bandwidth and
+              // Representation bitrate
+              bandwidth: Math.max(
+                variantStream.bandwidth ?? 0,
+                representation.bitrate ?? 0,
+              ),
+              representation,
+            };
+          })
+        : [];
+    });
+  });
 
   /** Allows to cancel everything the `AdaptationStream` is doing. */
   const adapStreamCanceller = new TaskCanceller();
@@ -93,23 +119,23 @@ export default function AdaptationStream(
   /** Stores the last emitted bitrate. */
   let previouslyEmittedBitrate: number | undefined;
 
-  const initialRepIds = content.representations.getValue().representationIds;
-  const initialRepresentations = content.adaptation.representations.filter(
-    (r) =>
-      arrayIncludes(initialRepIds, r.id) &&
-      r.decipherable !== false &&
-      r.isSupported !== false,
+  const initialRepIds = representationsChoice.getValue().representationIds;
+  const initialRepresentations = allRepresentations.filter(
+    ({ representation }) =>
+      arrayIncludes(initialRepIds, representation.id) &&
+      representation.decipherable !== false &&
+      representation.isSupported !== false,
   );
 
   /** Emit the list of Representation for the adaptive logic. */
-  const representationsList = new SharedReference(
+  const representationsList = new SharedReference<IRepresentationListItem[]>(
     initialRepresentations,
     adapStreamCanceller.signal,
   );
 
   // Start-up Adaptive logic
   const { estimates: estimateRef, callbacks: abrCallbacks } = representationEstimator(
-    { manifest, period, adaptation },
+    { manifest, period, track },
     currentRepresentation,
     representationsList,
     playbackObserver,
@@ -118,7 +144,7 @@ export default function AdaptationStream(
 
   /** Allows a `RepresentationStream` to easily fetch media segments. */
   const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
-    adaptation.type,
+    track.trackType,
     /* eslint-disable @typescript-eslint/unbound-method */
     {
       onRequestBegin: abrCallbacks.requestBegin,
@@ -141,8 +167,8 @@ export default function AdaptationStream(
         return;
       }
       previouslyEmittedBitrate = bitrate;
-      log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-      callbacks.bitrateEstimateChange({ type: adaptation.type, bitrate });
+      log.debug(`Stream: new ${track.trackType} bitrate estimate`, bitrate);
+      callbacks.bitrateEstimateChange({ type: track.trackType, bitrate });
     },
     { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal },
   );
@@ -154,14 +180,14 @@ export default function AdaptationStream(
   let cancelCurrentStreams: TaskCanceller | undefined;
 
   // Each time the list of wanted Representations changes, we restart the logic
-  content.representations.onUpdate(
+  representationsChoice.onUpdate(
     (val) => {
       if (cancelCurrentStreams !== undefined) {
         cancelCurrentStreams.cancel();
       }
-      const newRepIds = content.representations.getValue().representationIds;
-      const newRepresentations = content.adaptation.representations.filter((r) =>
-        arrayIncludes(newRepIds, r.id),
+      const newRepIds = representationsChoice.getValue().representationIds;
+      const newRepresentations = allRepresentations.filter(({ representation }) =>
+        arrayIncludes(newRepIds, representation.id),
       );
       representationsList.setValueIfChanged(newRepresentations);
       cancelCurrentStreams = new TaskCanceller();
@@ -201,7 +227,7 @@ export default function AdaptationStream(
     // in the buffer
     const switchStrat = getRepresentationsSwitchingStrategy(
       period,
-      adaptation,
+      track,
       choice,
       segmentSink,
       playbackObserver,
@@ -224,7 +250,7 @@ export default function AdaptationStream(
               const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
               const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
               return callbacks.waitingMediaSourceReload({
-                bufferType: adaptation.type,
+                bufferType: track.trackType,
                 period,
                 timeOffset,
                 stayInPeriod: true,
@@ -299,10 +325,10 @@ export default function AdaptationStream(
           return;
         }
         if (estimate.urgent) {
-          log.info("Stream: urgent Representation switch", adaptation.type);
+          log.info("Stream: urgent Representation switch", track.trackType);
           return terminateCurrentStream.setValue({ urgent: true });
         } else {
-          log.info("Stream: slow Representation switch", adaptation.type);
+          log.info("Stream: slow Representation switch", track.trackType);
           return terminateCurrentStream.setValue({ urgent: false });
         }
       },
@@ -313,8 +339,8 @@ export default function AdaptationStream(
     );
 
     const repInfo = {
-      type: adaptation.type,
-      adaptation,
+      type: track.trackType,
+      track,
       period,
       representation,
     };
@@ -386,10 +412,10 @@ export default function AdaptationStream(
       bufferGoalCanceller.signal,
     );
     const maxBufferSize =
-      adaptation.type === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
+      track.trackType === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
     log.info(
       "Stream: changing representation",
-      adaptation.type,
+      track.trackType,
       representation.id,
       representation.bitrate,
     );
@@ -433,7 +459,7 @@ export default function AdaptationStream(
     RepresentationStream(
       {
         playbackObserver,
-        content: { representation, adaptation, period, manifest },
+        content: { representation, track, period, manifest },
         segmentSink,
         segmentFetcher,
         terminate: terminateCurrentStream,
@@ -454,15 +480,15 @@ export default function AdaptationStream(
       (updates) => {
         for (const element of updates.updatedPeriods) {
           if (element.period.id === period.id) {
-            for (const updated of element.result.updatedAdaptations) {
-              if (updated.adaptation === adaptation.id) {
+            for (const updated of element.result.updatedTracks) {
+              if (updated.track === track.id) {
                 for (const rep of updated.removedRepresentations) {
                   if (rep === representation.id) {
                     if (fnCancelSignal.isCancelled()) {
                       return;
                     }
                     return callbacks.waitingMediaSourceReload({
-                      bufferType: adaptation.type,
+                      bufferType: track.trackType,
                       period,
                       timeOffset: 0,
                       stayInPeriod: true,

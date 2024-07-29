@@ -17,11 +17,11 @@
 import config from "../../config";
 import log from "../../log";
 import type {
-  IAdaptation,
   IManifest,
   IPeriod,
   IRepresentation,
   ISegment,
+  ITrack,
 } from "../../manifest";
 import type {
   ObservationPosition,
@@ -87,24 +87,24 @@ export default function createAdaptiveRepresentationSelector(
    * @see IRepresentationEstimator
    * @param {Object} context
    * @param {Object} currentRepresentation
-   * @param {Object} representations
+   * @param {Object} representationList
    * @param {Object} playbackObserver
    * @param {Object} stopAllEstimates
    * @returns {Array.<Object>}
    */
   return function getEstimates(
-    context: { manifest: IManifest; period: IPeriod; adaptation: IAdaptation },
+    context: { manifest: IManifest; period: IPeriod; track: ITrack },
     currentRepresentation: IReadOnlySharedReference<IRepresentation | null>,
-    representations: IReadOnlySharedReference<IRepresentation[]>,
+    representationList: IReadOnlySharedReference<IRepresentationListItem[]>,
     playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
     stopAllEstimates: CancellationSignal,
   ): IRepresentationEstimatorResponse {
-    const { type } = context.adaptation;
-    const bandwidthEstimator = _getBandwidthEstimator(type);
-    const initialBitrate = initialBitrates[type] ?? 0;
+    const { trackType } = context.track;
+    const bandwidthEstimator = _getBandwidthEstimator(trackType);
+    const initialBitrate = initialBitrates[trackType] ?? 0;
     const filters = {
-      limitResolution: throttlers.limitResolution[type] ?? limitResolutionDefaultRef,
-      throttleBitrate: throttlers.throttleBitrate[type] ?? throttleBitrateDefaultRef,
+      limitResolution: throttlers.limitResolution[trackType] ?? limitResolutionDefaultRef,
+      throttleBitrate: throttlers.throttleBitrate[trackType] ?? throttleBitrateDefaultRef,
     };
     return getEstimateReference(
       {
@@ -114,7 +114,7 @@ export default function createAdaptiveRepresentationSelector(
         filters,
         initialBitrate,
         playbackObserver,
-        representations,
+        representationList,
         lowLatencyMode,
       },
       stopAllEstimates,
@@ -166,7 +166,7 @@ function getEstimateReference(
     initialBitrate,
     lowLatencyMode,
     playbackObserver,
-    representations: representationsRef,
+    representationList: representationsRef,
   }: IRepresentationEstimatorArguments,
   stopAllEstimates: CancellationSignal,
 ): IRepresentationEstimatorResponse {
@@ -222,14 +222,14 @@ function getEstimateReference(
    * produced.
    */
   function createEstimateReference(
-    unsortedRepresentations: IRepresentation[],
+    unsortedRepresentations: IRepresentationListItem[],
     innerCancellationSignal: CancellationSignal,
   ): SharedReference<IABREstimate> {
     if (unsortedRepresentations.length <= 1) {
       // There's only a single Representation. Just choose it.
       return new SharedReference<IABREstimate>({
         bitrate: undefined,
-        representation: unsortedRepresentations[0],
+        representation: unsortedRepresentations[0]?.representation,
         urgent: true,
         knownStableBitrate: undefined,
       });
@@ -240,7 +240,7 @@ function getEstimateReference(
 
     /** Ensure `Representation` objects are sorted by bitrates and only rely on this. */
     const sortedRepresentations = unsortedRepresentations.sort(
-      (ra, rb) => ra.bitrate - rb.bitrate,
+      (ra, rb) => ra.bandwidth - rb.bandwidth,
     );
 
     /**
@@ -249,7 +249,7 @@ function getEstimateReference(
      * buffer size etc.).
      */
     const bufferBasedChooser = new BufferBasedChooser(
-      sortedRepresentations.map((r) => r.bitrate),
+      sortedRepresentations.map((r) => r.bandwidth),
     );
 
     /** Store the previous estimate made here. */
@@ -560,10 +560,10 @@ function getEstimateReference(
  * @returns {Array.<Representation>}
  */
 function getFilteredRepresentations(
-  representations: IRepresentation[],
+  representations: IRepresentationListItem[],
   resolutionLimit: IResolutionInfo | undefined,
   bitrateThrottle: number | undefined,
-): IRepresentation[] {
+): IRepresentationListItem[] {
   let filteredReps = representations;
 
   if (bitrateThrottle !== undefined && bitrateThrottle < Infinity) {
@@ -670,7 +670,7 @@ export interface IMetricsCallbackPayload {
   /** Context about the segment downloaded. */
   content: {
     representation: IRepresentation;
-    adaptation: IAdaptation;
+    track: ITrack;
     segment: ISegment;
   };
 }
@@ -773,15 +773,15 @@ export interface IRepresentationEstimatorArguments {
    */
   lowLatencyMode: boolean;
   /** The list of Representations `getEstimateReference` can choose from. */
-  representations: IReadOnlySharedReference<IRepresentation[]>;
+  representationList: IReadOnlySharedReference<IRepresentationListItem[]>;
   /** Context for the list of Representations to choose. */
   context: {
     /** In which Manifest the Representations are. */
     manifest: IManifest;
     /** In which Period the Representations are. */
     period: IPeriod;
-    /** In which Adaptation the Representations are. */
-    adaptation: IAdaptation;
+    /** In which track the Representations are. */
+    track: ITrack;
   };
 }
 
@@ -791,11 +791,11 @@ export interface IRepresentationEstimatorArguments {
  */
 export type IRepresentationEstimator = (
   /** Information on the content for which a Representation will be chosen */
-  context: { manifest: IManifest; period: IPeriod; adaptation: IAdaptation },
+  context: { manifest: IManifest; period: IPeriod; track: ITrack },
   /** Reference emitting the Representation currently loaded. */
   currentRepresentation: IReadOnlySharedReference<IRepresentation | null>,
   /** Reference emitting the list of available Representations to choose from. */
-  representations: IReadOnlySharedReference<IRepresentation[]>,
+  representationList: IReadOnlySharedReference<IRepresentationListItem[]>,
   /** Regularly emits playback conditions */
   playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
   /**
@@ -845,6 +845,16 @@ export interface IRepresentationEstimatorThrottlers {
   >;
   /** Limit Representations based on maximum authorized bitrate. */
   throttleBitrate: Partial<Record<IBufferType, IReadOnlySharedReference<number>>>;
+}
+
+export interface IRepresentationListItem {
+  /**
+   * The advised minimum bandwidth estimate at which the Representation
+   * should be selected.
+   */
+  bandwidth: number;
+  /** The Representation itself. */
+  representation: IRepresentation;
 }
 
 export type { IResolutionInfo };

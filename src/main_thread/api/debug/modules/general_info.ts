@@ -1,4 +1,5 @@
 import hasMseInWorker from "../../../../compat/has_mse_in_worker";
+import { objectValues } from "../../../../utils/object_values";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type RxPlayer from "../../public_api";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
@@ -172,9 +173,9 @@ export default function constructDebugGeneralInfo(
         ]);
         adaptationsElt.appendChild(textAdaps);
       }
-      const adaptations = instance.__priv_getCurrentAdaptation();
+      const tracks = instance.__priv_getCurrentTracks();
       const videoBitratesStr =
-        adaptations?.video?.representations.map((r) => {
+        objectValues(tracks?.video?.representations ?? {}).map((r) => {
           return (
             String(r.bitrate ?? "N/A") +
             (r.isSupported !== false ? "" : " U!") +
@@ -182,7 +183,7 @@ export default function constructDebugGeneralInfo(
           );
         }) ?? [];
       const audioBitratesStr =
-        adaptations?.audio?.representations.map((r) => {
+        objectValues(tracks?.audio?.representations ?? {}).map((r) => {
           return (
             String(r.bitrate ?? "N/A") +
             (r.isSupported !== false ? "" : " U!") +

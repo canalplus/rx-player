@@ -2,7 +2,7 @@ import type {
   IDecipherabilityUpdateElement,
   ICodecSupportInfo,
   Period,
-  Adaptation,
+  Track,
   Representation,
   ISegment,
   IPeriodsUpdateResult,
@@ -19,8 +19,8 @@ export type IManifest = Manifest;
 /** Type of a `Period` class. */
 export type IPeriod = Period;
 
-/** Type of an `Adaptation` class. */
-export type IAdaptation = Adaptation;
+/** Type of an `Track` class. */
+export type ITrack = Track;
 
 /** Type of a `Representation` class. */
 export type IRepresentation = Representation;
@@ -38,7 +38,8 @@ export { areSameContent, getLoggableSegmentId };
 export type {
   IManifestMetadata,
   IPeriodMetadata,
-  IAdaptationMetadata,
+  IVariantStreamMetadata,
+  ITrackMetadata,
   IRepresentationMetadata,
 } from "./types";
 export { ManifestMetadataFormat } from "./types";

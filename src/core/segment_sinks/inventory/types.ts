@@ -15,19 +15,18 @@
  */
 
 import type {
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-  IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  ITrackMetadata,
 } from "../../../manifest";
 
 /** Content information for a single buffered chunk */
 export interface IChunkContext {
   /** Adaptation this chunk is related to. */
-  adaptation: IAdaptation;
+  track: ITrackMetadata;
   /** Period this chunk is related to. */
   period: IPeriod;
   /** Representation this chunk is related to. */
@@ -37,7 +36,7 @@ export interface IChunkContext {
 }
 
 export interface IChunkContextSnapshot {
-  adaptation: IAdaptationMetadata;
+  track: ITrackMetadata;
   period: IPeriodMetadata;
   representation: IRepresentationMetadata;
 }

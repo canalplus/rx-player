@@ -16,15 +16,12 @@
 import { MediaError } from "../../errors";
 import type { IManifestStreamEvent, IParsedPeriod } from "../../parsers/manifest";
 import type { ITrackType, IRepresentationFilter } from "../../public_types";
-import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
-import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
-import Adaptation from "./adaptation";
+import { objectValues } from "../../utils/object_values";
+import type { IPeriodMetadata, ITrackMetadata } from "../types";
+import { getTrackList, getTrackListForType, periodContainsTime } from "../utils";
+import Track from "./adaptation";
 import type CodecSupportCache from "./codec_support_cache";
-
-/** Structure listing every `Adaptation` in a Period. */
-export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
 
 /**
  * Class representing the tracks and qualities available from a given time
@@ -34,9 +31,6 @@ export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
 export default class Period implements IPeriodMetadata {
   /** ID uniquely identifying the Period in the Manifest. */
   public readonly id: string;
-
-  /** Every 'Adaptation' in that Period, per type of Adaptation. */
-  public adaptations: IManifestAdaptations;
 
   /** Absolute start time of the Period, in seconds. */
   public start: number;
@@ -56,75 +50,54 @@ export default class Period implements IPeriodMetadata {
   /** Array containing every stream event happening on the period */
   public streamEvents: IManifestStreamEvent[];
 
+  public variantStreams: Array<{
+    id: string;
+    bandwidth: number | undefined;
+    media: Record<
+      ITrackType,
+      Array<{
+        id: string;
+        /**
+         * Id of the "track" to which that audio media is a part of.
+         *
+         * A given audio "track" might for example provide an audio media to various
+         * variant streams.
+         */
+        linkedTrack: string;
+        /**
+         * Different `Representations` (e.g. qualities) this media is available
+         * in.
+         */
+        representations: string[];
+      }>
+    >;
+  }>;
+
+  public tracksMetadata: Record<ITrackType, Record<string, Track>>;
+
   /**
    * @constructor
    * @param {Object} args
-   * @param {Array.<Object>} unsupportedAdaptations - Array on which
-   * `Adaptation`s objects which have no supported `Representation` will be
+   * @param {Array.<Object>} unsupportedTracks - Array on which
+   * `track`s objects which have no supported `Representation` will be
    * pushed.
    * This array might be useful for minor error reporting.
    * @param {function|undefined} [representationFilter]
    */
   constructor(
     args: IParsedPeriod,
-    unsupportedAdaptations: Adaptation[],
+    unsupportedTracks: ITrackMetadata[],
     cachedCodecSupport: CodecSupportCache,
-
     representationFilter?: IRepresentationFilter | undefined,
   ) {
     this.id = args.id;
-    this.adaptations = (
-      Object.keys(args.adaptations) as ITrackType[]
-    ).reduce<IManifestAdaptations>((acc, type) => {
-      const adaptationsForType = args.adaptations[type];
-      if (isNullOrUndefined(adaptationsForType)) {
-        return acc;
-      }
-      const filteredAdaptations = adaptationsForType
-        .map((adaptation): Adaptation => {
-          const newAdaptation = new Adaptation(adaptation, cachedCodecSupport, {
-            representationFilter,
-          });
-          if (
-            newAdaptation.representations.length > 0 &&
-            newAdaptation.supportStatus.hasSupportedCodec === false
-          ) {
-            unsupportedAdaptations.push(newAdaptation);
-          }
-          return newAdaptation;
-        })
-        .filter(
-          (adaptation): adaptation is Adaptation => adaptation.representations.length > 0,
-        );
-      if (
-        filteredAdaptations.every(
-          (adaptation) => adaptation.supportStatus.hasSupportedCodec === false,
-        ) &&
-        adaptationsForType.length > 0 &&
-        (type === "video" || type === "audio")
-      ) {
-        throw new MediaError(
-          "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-          "No supported " + type + " adaptations",
-          { tracks: undefined },
-        );
-      }
 
-      if (filteredAdaptations.length > 0) {
-        acc[type] = filteredAdaptations;
-      }
-      return acc;
-    }, {});
-
-    if (
-      !Array.isArray(this.adaptations.video) &&
-      !Array.isArray(this.adaptations.audio)
-    ) {
-      throw new MediaError(
-        "MANIFEST_PARSE_ERROR",
-        "No supported audio and video tracks.",
-      );
-    }
+    this.variantStreams = [];
+    this.tracksMetadata = {
+      audio: {},
+      video: {},
+      text: {},
+    };
 
     this.duration = args.duration;
     this.start = args.start;
@@ -133,6 +106,56 @@ export default class Period implements IPeriodMetadata {
       this.end = this.start + this.duration;
     }
     this.streamEvents = args.streamEvents === undefined ? [] : args.streamEvents;
+
+    this.variantStreams = args.variantStreams;
+    this.tracksMetadata = {
+      audio: {},
+      video: {},
+      text: {},
+    };
+    for (const tType of ["audio", "video", "text"] as const) {
+      const tracks: Record<string, Track> = {};
+      let hasSupportedTrack = false;
+      for (const trackMetadata of args.tracksMetadata[tType]) {
+        const newTrack = new Track(trackMetadata, cachedCodecSupport, {
+          representationFilter,
+        });
+        const representationsNb = objectValues(newTrack.representations).length;
+        if (representationsNb > 0 && newTrack.supportStatus.hasSupportedCodec === false) {
+          unsupportedTracks.push(newTrack);
+        }
+
+        if (representationsNb > 0) {
+          tracks[newTrack.id] = newTrack;
+          if (newTrack.supportStatus.hasSupportedCodec !== false) {
+            hasSupportedTrack = true;
+          }
+        }
+      }
+
+      if (
+        !hasSupportedTrack &&
+        args.tracksMetadata[tType].length > 0 &&
+        (tType === "video" || tType === "audio")
+      ) {
+        throw new MediaError(
+          "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+          "No supported " + tType + " tracks",
+          { tracks: undefined },
+        );
+      }
+
+      this.tracksMetadata[tType] = tracks;
+    }
+    if (
+      objectValues(this.tracksMetadata.video).length === 0 &&
+      objectValues(this.tracksMetadata.audio).length === 0
+    ) {
+      throw new MediaError(
+        "MANIFEST_PARSE_ERROR",
+        "No supported audio and video tracks.",
+      );
+    }
   }
 
   /**
@@ -142,55 +165,47 @@ export default class Period implements IPeriodMetadata {
    * Calling `refreshCodecSupport` manually once the codecs supported are known
    * by the current environnement allows to work-around this issue.
    *
-   * @param {Array.<Object>} unsupportedAdaptations - Array on which
-   * `Adaptation`s objects which are now known to have no supported
+   * @param {Array.<Object>} unsupportedTracks - Array on which track objects which
+   * are now known to have no supported
+   * @param {Object} cachedCodecSupport
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
    * @param {Array.<Object>} cachedCodecSupport
    */
-  refreshCodecSupport(
-    unsupportedAdaptations: Adaptation[],
-    cachedCodecSupport: CodecSupportCache,
-  ) {
-    (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
-      const adaptationsForType = this.adaptations[ttype];
-      if (adaptationsForType === undefined) {
-        return;
-      }
-      let hasSupportedAdaptations: boolean | undefined = false;
-      for (const adaptation of adaptationsForType) {
-        if (!adaptation.supportStatus.hasCodecWithUndefinedSupport) {
-          // Go to next adaptation as an optimisation measure.
+  refreshCodecSupport(unsupportedTracks: Track[], cachedCodecSupport: CodecSupportCache) {
+    (Object.keys(this.tracksMetadata) as ITrackType[]).forEach((ttype) => {
+      const tracksForType = getTrackListForType(this, ttype);
+      let hasSupportedTracks: boolean | undefined = false;
+      for (const track of tracksForType) {
+        if (!track.supportStatus.hasCodecWithUndefinedSupport) {
+          // Go to next track as an optimisation measure.
           // NOTE this only is true if we never change a codec from supported
           // to unsuported and its opposite.
 
-          if (adaptation.supportStatus.hasSupportedCodec === true) {
-            hasSupportedAdaptations = true;
+          if (track.supportStatus.hasSupportedCodec === true) {
+            hasSupportedTracks = true;
           }
           continue;
         }
-        const wasSupported = adaptation.supportStatus.hasSupportedCodec;
-        adaptation.refreshCodecSupport(cachedCodecSupport);
-        if (
-          wasSupported !== false &&
-          adaptation.supportStatus.hasSupportedCodec === false
-        ) {
-          unsupportedAdaptations.push(adaptation);
+        const wasSupported = track.supportStatus.hasSupportedCodec;
+        track.refreshCodecSupport(cachedCodecSupport);
+        if (wasSupported !== false && track.supportStatus.hasSupportedCodec === false) {
+          unsupportedTracks.push(track);
         }
 
-        if (hasSupportedAdaptations === false) {
-          hasSupportedAdaptations = adaptation.supportStatus.hasSupportedCodec;
+        if (hasSupportedTracks === false) {
+          hasSupportedTracks = track.supportStatus.hasSupportedCodec;
         } else if (
-          hasSupportedAdaptations === undefined &&
-          adaptation.supportStatus.hasSupportedCodec === true
+          hasSupportedTracks === undefined &&
+          track.supportStatus.hasSupportedCodec === true
         ) {
-          hasSupportedAdaptations = true;
+          hasSupportedTracks = true;
         }
       }
-      if ((ttype === "video" || ttype === "audio") && hasSupportedAdaptations === false) {
+      if ((ttype === "video" || ttype === "audio") && hasSupportedTracks === false) {
         throw new MediaError(
           "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-          "No supported " + ttype + " adaptations",
+          "No supported " + ttype + " tracks",
           { tracks: undefined },
         );
       }
@@ -198,43 +213,47 @@ export default class Period implements IPeriodMetadata {
   }
 
   /**
-   * Returns every `Adaptations` (or `tracks`) linked to that Period, in an
+   * Returns a track associated with this Period by giving its id.
+   * Returns `null` if the track is not found.
+   * @param {string} id
+   * @returns {Object|null}
+   */
+  getTrack(id: string): Track | null {
+    return (
+      this.tracksMetadata.audio[id] ??
+      this.tracksMetadata.video[id] ??
+      this.tracksMetadata.text[id] ??
+      null
+    );
+  }
+
+  /**
+   * Returns every tracks linked to that Period, in an
    * Array.
    * @returns {Array.<Object>}
    */
-  getAdaptations(): Adaptation[] {
-    return getAdaptations(this);
+  getTrackList(): Track[] {
+    return getTrackList(this);
   }
 
   /**
-   * Returns every `Adaptations` (or `tracks`) linked to that Period for a
-   * given type.
-   * @param {string} adaptationType
+   * Returns every `Tracks` linked to that Period for a given type.
+   * @param {string} trackType
    * @returns {Array.<Object>}
    */
-  getAdaptationsForType(adaptationType: ITrackType): Adaptation[] {
-    const adaptationsForType = this.adaptations[adaptationType];
-    return adaptationsForType ?? [];
+  getTrackListForType(trackType: ITrackType): Track[] {
+    return getTrackListForType(this, trackType);
   }
 
-  /**
-   * Returns the Adaptation linked to the given ID.
-   * @param {number|string} wantedId
-   * @returns {Object|undefined}
-   */
-  getAdaptation(wantedId: string): Adaptation | undefined {
-    return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-  }
-
-  /**
-   * Returns Adaptations that contain Representations in supported codecs.
-   * @param {string|undefined} type - If set filter on a specific Adaptation's
-   * type. Will return for all types if `undefined`.
-   * @returns {Array.<Adaptation>}
-   */
-  getSupportedAdaptations(type?: ITrackType | undefined): Adaptation[] {
-    return getSupportedAdaptations(this, type);
-  }
+  // /**
+  //  * Returns Tracks that contain Representations in supported codecs.
+  //  * @param {string|undefined} type - If set filter on a specific Track's
+  //  * type. Will return for all types if `undefined`.
+  //  * @returns {Array.<Track>}
+  //  */
+  // getSupportedTracks(type?: ITrackType | undefined): Track[] {
+  //   return getSupportedTracks(this, type);
+  // }
 
   /**
    * Returns true if the give time is in the time boundaries of this `Period`.
@@ -262,22 +281,14 @@ export default class Period implements IPeriodMetadata {
    * @returns {Object}
    */
   public getMetadataSnapshot(): IPeriodMetadata {
-    const adaptations: Partial<Record<ITrackType, IAdaptationMetadata[]>> = {};
-    const baseAdaptations = this.getAdaptations();
-    for (const adaptation of baseAdaptations) {
-      let currentAdaps: IAdaptationMetadata[] | undefined = adaptations[adaptation.type];
-      if (currentAdaps === undefined) {
-        currentAdaps = [];
-        adaptations[adaptation.type] = currentAdaps;
-      }
-      currentAdaps.push(adaptation.getMetadataSnapshot());
-    }
     return {
       start: this.start,
       end: this.end,
       id: this.id,
+      duration: this.duration,
       streamEvents: this.streamEvents,
-      adaptations,
+      variantStreams: this.variantStreams,
+      tracksMetadata: this.tracksMetadata,
     };
   }
 }

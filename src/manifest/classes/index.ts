@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Adaptation from "./adaptation";
+import Track from "./adaptation";
 import type { ICodecSupportInfo } from "./codec_support_cache";
 import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
 import Manifest from "./manifest";
@@ -47,7 +47,7 @@ export {
   areSameContent,
   getLoggableSegmentId,
   Period,
-  Adaptation,
+  Track,
   Representation,
   StaticRepresentationIndex,
 };

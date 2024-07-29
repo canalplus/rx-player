@@ -18,16 +18,16 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support";
 import type { IParsedManifest } from "../../parsers/manifest";
-import type { ITrackType, IRepresentationFilter, IPlayerError } from "../../public_types";
+import type { IRepresentationFilter, IPlayerError } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import EventEmitter from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
-import warnOnce from "../../utils/warn_once";
+import { objectValues } from "../../utils/object_values";
 import type {
-  IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  ITrackMetadata,
 } from "../types";
 import { ManifestMetadataFormat } from "../types";
 import {
@@ -38,10 +38,9 @@ import {
   getPeriodAfter,
   toTaggedTrack,
 } from "../utils";
-import type Adaptation from "./adaptation";
+import type Track from "./adaptation";
 import CodecSupportCache from "./codec_support_cache";
 import type { ICodecSupportInfo } from "./codec_support_cache";
-import type { IManifestAdaptations } from "./period";
 import Period from "./period";
 import type Representation from "./representation";
 import { MANIFEST_UPDATE_TYPE } from "./types";
@@ -66,7 +65,7 @@ interface IManifestParsingOptions {
 export interface IDecipherabilityUpdateElement {
   manifest: IManifestMetadata;
   period: IPeriodMetadata;
-  adaptation: IAdaptationMetadata;
+  track: ITrackMetadata;
   representation: IRepresentationMetadata;
 }
 
@@ -133,12 +132,6 @@ export default class Manifest
    * so it can be refreshed.
    */
   public expired: Promise<void> | null;
-
-  /**
-   * Deprecated. Equivalent to `manifest.periods[0].adaptations`.
-   * @deprecated
-   */
-  public adaptations: IManifestAdaptations;
 
   /**
    * If true, the Manifest can evolve over time:
@@ -219,12 +212,12 @@ export default class Manifest
   public timeBounds: {
     /**
      * This is the theoretical minimum playable position on the content
-     * regardless of the current Adaptation chosen, as estimated at parsing
+     * regardless of the current tracks chosen, as estimated at parsing
      * time.
      * `undefined` if unknown.
      *
      * More technically, the `minimumSafePosition` is the maximum between all
-     * the minimum positions reachable in any of the audio and video Adaptation.
+     * the minimum positions reachable in any of the audio and video tracks.
      *
      * Together with `timeshiftDepth` and the `maximumTimeData` object, this
      * value allows to compute at any time the minimum seekable time:
@@ -278,7 +271,7 @@ export default class Manifest
       isLinear: boolean;
       /**
        * This is the theoretical maximum playable position on the content,
-       * regardless of the current Adaptation chosen, as estimated at parsing
+       * regardless of the current tracks chosen, as estimated at parsing
        * time.
        *
        * More technically, the `maximumSafePosition` is the minimum between all
@@ -334,12 +327,12 @@ export default class Manifest
     this.clockOffset = parsedManifest.clockOffset;
     this._cachedCodecSupport = new CodecSupportCache([]);
 
-    const unsupportedAdaptations: Adaptation[] = [];
+    const unsupportedTracks: Track[] = [];
     this.periods = parsedManifest.periods
       .map((parsedPeriod) => {
         const period = new Period(
           parsedPeriod,
-          unsupportedAdaptations,
+          unsupportedTracks,
           this._cachedCodecSupport,
           representationFilter,
         );
@@ -347,22 +340,14 @@ export default class Manifest
       })
       .sort((a, b) => a.start - b.start);
 
-    if (unsupportedAdaptations.length > 0) {
+    if (unsupportedTracks.length > 0) {
       const error = new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-        "An Adaptation contains only incompatible codecs.",
-        { tracks: unsupportedAdaptations.map(toTaggedTrack) },
+        "A track contains only incompatible codecs.",
+        { tracks: unsupportedTracks.map(toTaggedTrack) },
       );
       warnings.push(error);
     }
-
-    /**
-     * @deprecated It is here to ensure compatibility with the way the
-     * v3.x.x manages adaptations at the Manifest level
-     */
-    /* eslint-disable import/no-deprecated */
-    this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
 
     this.timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
@@ -387,7 +372,7 @@ export default class Manifest
    *
    * @param {Array<Object>} [updatedCodecSupportInfo]
    * @returns {Error|null} - Refreshing codec support might reveal that some
-   * `Adaptation` don't have any of their `Representation`s supported.
+   * `tracks` don't have any of their `Representation`s supported.
    * In that case, an error object will be created and returned, so you can
    * e.g. later emit it as a warning through the RxPlayer API.
    */
@@ -399,16 +384,16 @@ export default class Manifest
     }
 
     this._cachedCodecSupport.addCodecs(updatedCodecSupportInfo);
-    const unsupportedAdaptations: Adaptation[] = [];
+    const unsupportedTracks: Track[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
+      period.refreshCodecSupport(unsupportedTracks, this._cachedCodecSupport);
     }
     this.trigger("supportUpdate", null);
-    if (unsupportedAdaptations.length > 0) {
+    if (unsupportedTracks.length > 0) {
       return new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-        "An Adaptation contains only incompatible codecs.",
-        { tracks: unsupportedAdaptations.map(toTaggedTrack) },
+        "A track contains only incompatible codecs.",
+        { tracks: unsupportedTracks.map(toTaggedTrack) },
       );
     }
     return null;
@@ -492,7 +477,7 @@ export default class Manifest
 
   /**
    * Returns the theoretical minimum playable position on the content
-   * regardless of the current Adaptation chosen, as estimated at parsing
+   * regardless of the current tracks chosen, as estimated at parsing
    * time.
    * @returns {number}
    */
@@ -511,7 +496,7 @@ export default class Manifest
 
   /**
    * Returns the theoretical maximum playable position on the content
-   * regardless of the current Adaptation chosen, as estimated at parsing
+   * regardless of the current tracks chosen, as estimated at parsing
    * time.
    */
   public getMaximumSafePosition(): number {
@@ -533,7 +518,7 @@ export default class Manifest
     isDecipherableCb: (content: {
       manifest: Manifest;
       period: Period;
-      adaptation: Adaptation;
+      track: ITrackMetadata;
       representation: Representation;
     }) => boolean | undefined,
   ): void {
@@ -541,63 +526,6 @@ export default class Manifest
     if (updates.length > 0) {
       this.trigger("decipherabilityUpdate", updates);
     }
-  }
-
-  /**
-   * @deprecated only returns adaptations for the first period
-   * @returns {Array.<Object>}
-   */
-  public getAdaptations(): Adaptation[] {
-    warnOnce(
-      "manifest.getAdaptations() is deprecated." +
-        " Please use manifest.period[].getAdaptations() instead",
-    );
-    const firstPeriod = this.periods[0];
-    if (firstPeriod === undefined) {
-      return [];
-    }
-    const adaptationsByType = firstPeriod.adaptations;
-    const adaptationsList: Adaptation[] = [];
-    for (const adaptationType in adaptationsByType) {
-      if (adaptationsByType.hasOwnProperty(adaptationType)) {
-        const adaptations = adaptationsByType[
-          adaptationType as ITrackType
-        ] as Adaptation[];
-        adaptationsList.push(...adaptations);
-      }
-    }
-    return adaptationsList;
-  }
-
-  /**
-   * @deprecated only returns adaptations for the first period
-   * @returns {Array.<Object>}
-   */
-  public getAdaptationsForType(adaptationType: ITrackType): Adaptation[] {
-    warnOnce(
-      "manifest.getAdaptationsForType(type) is deprecated." +
-        " Please use manifest.period[].getAdaptationsForType(type) instead",
-    );
-    const firstPeriod = this.periods[0];
-    if (firstPeriod === undefined) {
-      return [];
-    }
-    const adaptationsForType = firstPeriod.adaptations[adaptationType];
-    return adaptationsForType === undefined ? [] : adaptationsForType;
-  }
-
-  /**
-   * @deprecated only returns adaptations for the first period
-   * @returns {Array.<Object>}
-   */
-  public getAdaptation(wantedId: number | string): Adaptation | undefined {
-    warnOnce(
-      "manifest.getAdaptation(id) is deprecated." +
-        " Please use manifest.period[].getAdaptation(id) instead",
-    );
-    /* eslint-disable import/no-deprecated */
-    return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-    /* eslint-enable import/no-deprecated */
   }
 
   /**
@@ -640,7 +568,7 @@ export default class Manifest
    * If a representation with (`isSupported`) is undefined, we consider the
    * codec support as unknown.
    *
-   * This function iterates through all periods, adaptations, and representations,
+   * This function iterates through all periods, tracks, and representations,
    * and collects unknown codecs.
    *
    * @returns {Array} The list of codecs with unknown support status.
@@ -690,11 +618,6 @@ export default class Manifest
 
     this.updateCodecSupport();
 
-    // Re-set this.adaptations for retro-compatibility in v3.x.x
-    /* eslint-disable import/no-deprecated */
-    this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
-
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those
     // happen.
@@ -718,16 +641,16 @@ function updateDeciperability(
   isDecipherable: (content: {
     manifest: Manifest;
     period: Period;
-    adaptation: Adaptation;
+    track: ITrackMetadata;
     representation: Representation;
   }) => boolean | undefined,
 ): IDecipherabilityUpdateElement[] {
   const updates: IDecipherabilityUpdateElement[] = [];
   for (const period of manifest.periods) {
-    for (const adaptation of period.getAdaptations()) {
+    for (const track of period.getTrackList()) {
       let hasOnlyUndecipherableRepresentations = true;
-      for (const representation of adaptation.representations) {
-        const content = { manifest, period, adaptation, representation };
+      for (const representation of objectValues(track.representations)) {
+        const content = { manifest, period, track, representation };
         const result = isDecipherable(content);
         if (result !== false) {
           hasOnlyUndecipherableRepresentations = false;
@@ -736,12 +659,12 @@ function updateDeciperability(
           updates.push(content);
           representation.decipherable = result;
           if (result === true) {
-            adaptation.supportStatus.isDecipherable = true;
+            track.supportStatus.isDecipherable = true;
           } else if (
             result === undefined &&
-            adaptation.supportStatus.isDecipherable === false
+            track.supportStatus.isDecipherable === false
           ) {
-            adaptation.supportStatus.isDecipherable = undefined;
+            track.supportStatus.isDecipherable = undefined;
           }
           log.debug(
             `Decipherability changed for "${representation.id}"`,
@@ -751,7 +674,7 @@ function updateDeciperability(
         }
       }
       if (hasOnlyUndecipherableRepresentations) {
-        adaptation.supportStatus.isDecipherable = false;
+        track.supportStatus.isDecipherable = false;
       }
     }
   }

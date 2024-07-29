@@ -1,10 +1,12 @@
 import isCodecSupported from "../../../compat/is_codec_supported";
 import { MediaError } from "../../../errors";
+import { getTrackList, getTrackListForType } from "../../../manifest";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
 import type { ICodecSupportInfo } from "../../../multithread_types";
 import type { ITrackType } from "../../../public_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import { objectValues } from "../../../utils/object_values";
 import type ContentDecryptor from "../../decrypt";
 import { ContentDecryptorState } from "../../decrypt";
 
@@ -14,7 +16,7 @@ import { ContentDecryptorState } from "../../decrypt";
  * If a representation with (`isSupported`) is undefined, we consider the
  * codec support as unknown.
  *
- * This function iterates through all periods, adaptations, and representations,
+ * This function iterates through all periods, tracks, and representations,
  * and collects unknown codecs.
  *
  * @returns {Array} The list of codecs with unknown support status.
@@ -27,15 +29,15 @@ export function getCodecsWithUnknownSupport(
 ): Array<{ mimeType: string; codec: string }> {
   const codecsWithUnknownSupport: Array<{ mimeType: string; codec: string }> = [];
   for (const period of manifest.periods) {
-    const checkedAdaptations = [
-      ...(period.adaptations.video ?? []),
-      ...(period.adaptations.audio ?? []),
+    const checkedtracks = [
+      ...getTrackListForType(period, "video"),
+      ...getTrackListForType(period, "audio"),
     ];
-    for (const adaptation of checkedAdaptations) {
-      if (!adaptation.supportStatus.hasCodecWithUndefinedSupport) {
+    for (const track of checkedtracks) {
+      if (!track.supportStatus.hasCodecWithUndefinedSupport) {
         continue;
       }
-      for (const representation of adaptation.representations) {
+      for (const representation of objectValues(track.representations)) {
         if (representation.isSupported === undefined) {
           codecsWithUnknownSupport.push({
             mimeType: representation.mimeType ?? "",
@@ -49,7 +51,7 @@ export function getCodecsWithUnknownSupport(
 }
 
 /**
- * Ensure that all `Representation` and `Adaptation` have a known status
+ * Ensure that all `Representation` and `track` have a known status
  * for their codec support and probe it for cases where that's not the
  * case.
  *
@@ -123,14 +125,10 @@ export function updateManifestCodecSupport(
   };
 
   manifest.periods.forEach((p) => {
-    [
-      ...(p.adaptations.audio ?? []),
-      ...(p.adaptations.video ?? []),
-      ...(p.adaptations.text ?? []),
-    ].forEach((adaptation) => {
+    getTrackList(p).forEach((track) => {
       let hasSupportedCodec: boolean = false;
       let hasCodecWithUndefinedSupport: boolean = false;
-      adaptation.representations.forEach((representation) => {
+      objectValues(track.representations).forEach((representation) => {
         if (representation.isSupported !== undefined) {
           if (representation.isSupported) {
             hasSupportedCodec = true;
@@ -166,24 +164,20 @@ export function updateManifestCodecSupport(
           }
         }
       });
-      adaptation.supportStatus.hasCodecWithUndefinedSupport =
-        hasCodecWithUndefinedSupport;
+      track.supportStatus.hasCodecWithUndefinedSupport = hasCodecWithUndefinedSupport;
       if (hasCodecWithUndefinedSupport && !hasSupportedCodec) {
-        adaptation.supportStatus.hasSupportedCodec = undefined;
+        track.supportStatus.hasSupportedCodec = undefined;
       } else {
-        adaptation.supportStatus.hasSupportedCodec = hasSupportedCodec;
+        track.supportStatus.hasSupportedCodec = hasSupportedCodec;
       }
     });
 
     ["audio" as const, "video" as const].forEach((ttype: ITrackType) => {
-      const forType = p.adaptations[ttype];
-      if (
-        forType !== undefined &&
-        forType.every((a) => a.supportStatus.hasSupportedCodec === false)
-      ) {
+      const forType = getTrackListForType(p, ttype);
+      if (forType.every((a) => a.supportStatus.hasSupportedCodec === false)) {
         throw new MediaError(
           "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-          "No supported " + ttype + " adaptations",
+          "No supported " + ttype + " tracks",
           { tracks: undefined },
         );
       }

@@ -15,14 +15,14 @@
  */
 
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type Adaptation from "./adaptation";
+import type { ITrackMetadata } from "../types";
 import type Period from "./period";
 import type Representation from "./representation";
 import type { ISegment } from "./representation_index";
 
 /** All information needed to identify a given segment. */
 export interface IBufferedChunkInfos {
-  adaptation: Adaptation;
+  track: ITrackMetadata;
   period: Period;
   representation: Representation;
   segment: ISegment;
@@ -55,7 +55,7 @@ export function getLoggableSegmentId(
   if (isNullOrUndefined(content)) {
     return "";
   }
-  const { period, adaptation, representation, segment } = content;
+  const { period, track, representation, segment } = content;
   let segmentString;
   if (segment.isInit) {
     segmentString = "init";
@@ -65,7 +65,7 @@ export function getLoggableSegmentId(
     segmentString = `${segment.time}`;
   }
   return (
-    `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
+    `${track.trackType} P: ${period.id} A: ${track.id} ` +
     `R: ${representation.id} S: ${segmentString}`
   );
 }

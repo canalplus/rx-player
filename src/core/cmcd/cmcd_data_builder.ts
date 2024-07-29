@@ -1,11 +1,6 @@
 import log from "../../log";
-import type {
-  IAdaptation,
-  IManifest,
-  IPeriod,
-  IRepresentation,
-  ISegment,
-} from "../../manifest";
+import type { IManifest, IPeriod, IRepresentation, ISegment } from "../../manifest";
+import type { IRepresentationMetadata, ITrackMetadata } from "../../manifest/types";
 import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
@@ -14,6 +9,7 @@ import type {
 import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types";
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import { objectValues } from "../../utils/object_values";
 import type { IRange } from "../../utils/ranges";
 import TaskCanceller from "../../utils/task_canceller";
 
@@ -39,7 +35,7 @@ export interface ICmcdSegmentInfo {
   /** Period metadata linked to the wanted segment. */
   period: IPeriod;
   /** Adaptation metadata linked to the wanted segment. */
-  adaptation: IAdaptation;
+  track: ITrackMetadata;
   /** Representation metadata linked to the wanted segment. */
   representation: IRepresentation;
   /** Segment metadata linked to the wanted segment. */
@@ -218,12 +214,12 @@ export default class CmcdDataBuilder {
   public getCmcdDataForSegmentRequest(content: ICmcdSegmentInfo): ICmcdPayload {
     const lastObservation = this._playbackObserver?.getReference().getValue();
 
-    const props = this._getCommonCmcdData(this._lastThroughput[content.adaptation.type]);
+    const props = this._getCommonCmcdData(this._lastThroughput[content.track.trackType]);
     props.br = Math.round(content.representation.bitrate / 1000);
     props.d = Math.round(content.segment.duration * 1000);
     // TODO nor (next object request) and nrr (next range request)
 
-    switch (content.adaptation.type) {
+    switch (content.track.trackType) {
       case "video":
         props.ot = "v";
         break;
@@ -243,7 +239,7 @@ export default class CmcdDataBuilder {
       lastObservation !== undefined &&
       (props.ot === "v" || props.ot === "a" || props.ot === "av")
     ) {
-      const bufferedForType = lastObservation.buffered[content.adaptation.type];
+      const bufferedForType = lastObservation.buffered[content.track.trackType];
       if (!isNullOrUndefined(bufferedForType)) {
         // TODO more precize position estimate?
         const position =
@@ -292,8 +288,8 @@ export default class CmcdDataBuilder {
         break;
     }
     props.st = content.manifest.isDynamic ? "l" : "v";
-    props.tb = content.adaptation.representations.reduce(
-      (acc: number | undefined, representation: IRepresentation) => {
+    props.tb = objectValues(content.track.representations).reduce(
+      (acc: number | undefined, representation: IRepresentationMetadata) => {
         if (
           representation.isSupported !== true ||
           representation.decipherable === false

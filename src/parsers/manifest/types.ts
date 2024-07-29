@@ -15,7 +15,7 @@
  */
 
 import type { IRepresentationIndex } from "../../manifest";
-import type { IHDRInformation } from "../../public_types";
+import type { IHDRInformation, ITrackType } from "../../public_types";
 
 export interface IManifestStreamEvent {
   start: number;
@@ -168,73 +168,44 @@ export interface IParsedRepresentation {
   supplementalCodecs?: string | undefined;
 }
 
-/** Every possible types an Adaptation can have. */
-export type IParsedAdaptationType = "audio" | "video" | "text";
-
-/**
- * Collection of multiple `Adaptation`, regrouped by type, as used by a
- * `Period`.
- */
-export type IParsedAdaptations = Partial<
-  Record<IParsedAdaptationType, IParsedAdaptation[]>
->;
-
-/** Representation of a "track" available in any Period. */
-export interface IParsedAdaptation {
-  /**
-   * Unique ID that should not change between Manifest updates for this
-   * Adaptation but which should be different than any other Adaptation
-   * in the same Period.
-   */
+export interface IParsedVariantStreamMetadata {
+  /** Identifier which identify that track group. */
   id: string;
-  /** Describes every qualities this Adaptation is in. */
-  representations: IParsedRepresentation[];
-  /** The type of track (e.g. "video", "audio" or "text"). */
-  type: IParsedAdaptationType;
   /**
-   * Whether this Adaptation is an audio-track for the visually impaired.
-   * Not set if unknown or if it makes no sense for the current track (e.g. for
-   * a video track).
+   * Identify a bandwidth floor from which that track group should be selected.
+   * `undefined` if no such consideration needs to be done for that track group.
+   *
+   * Note: bandwidth considerations may also exist at the Representation-level
    */
-  audioDescription?: boolean | undefined;
-  /**
-   * Whether this Adaptation are closed captions for the hard of hearing.
-   * Not set if unknown or if it makes no sense for the current track (e.g. for
-   * a video track).
-   */
-  closedCaption?: boolean | undefined;
-  /**
-   * If `true` this Adaptation are subtitles Meant for display when no other text
-   * Adaptation is selected. It is used to clarify dialogue, alternate
-   * languages, texted graphics or location/person IDs that are not otherwise
-   * covered in the dubbed/localized audio Adaptation.
-   */
-  forcedSubtitles?: boolean;
-  /**
-   * If true this Adaptation is in a dub: it was recorded in another language
-   * than the original(s) one(s).
-   */
-  isDub?: boolean | undefined;
-  /**
-   * If true this Adaptation is in a sign interpreted: which is a variant of the
-   * video with sign language.
-   */
-  isSignInterpreted?: boolean | undefined;
-  /** Tells if the track is a trick mode track. */
-  isTrickModeTrack?: boolean | undefined;
-  /**
-   * Language the `Adaptation` is in.
-   * Not set if unknown or if it makes no sense for the current track.
-   */
-  language?: string | undefined;
-  /**
-   * Label of the `Adaptation` if it exists.
-   */
-  label?: string;
-  /**
-   * TrickMode tracks attached to the adaptation.
-   */
-  trickModeTracks?: IParsedAdaptation[] | undefined;
+  bandwidth: number | undefined;
+
+  /** List of track and qualities combination in that variant stream. */
+  media: {
+    /** Audio media existing for that track group. */
+    audio: Array<{
+      /** Indentify that media. */
+      id: string;
+      /** `id` of the track this media is linked to */
+      linkedTrack: string;
+      /** `id`s of the different `Representations` (e.g. qualities) available */
+      representations: string[];
+    }>;
+    video: Array<{
+      id: string;
+      /** `id` of the track this media is linked to */
+      linkedTrack: string;
+      /** `id`s of the different `Representations` (e.g. qualities) available */
+      representations: string[];
+    }>;
+    text: Array<{
+      /** Indentify that media. */
+      id: string;
+      /** `id` of the track this media is linked to */
+      linkedTrack: string;
+      /** `id` of the different `Representations` (e.g. qualities) available */
+      representations: string[];
+    }>;
+  };
 }
 
 /** Information on a given period of time in the Manifest */
@@ -251,8 +222,15 @@ export interface IParsedPeriod {
    * corresponds to the time of the first available segment
    */
   start: number;
-  /** Available tracks for this Period.  */
-  adaptations: IParsedAdaptations;
+  /** Available variant streams for this Period.  */
+  variantStreams: IParsedVariantStreamMetadata[];
+  /**
+   * Description of all "tracks" available in this Period.
+   *
+   * To actually exploit those tracks for playback, you probably want to rely on
+   * `variantStreams` instead.
+   */
+  tracksMetadata: Record<ITrackType, IParsedTrack[]>;
   /**
    * Duration of the Period (from the start to the end), in seconds.
    * `undefined` if the Period is the last one and is still being updated.
@@ -394,4 +372,48 @@ export interface IParsedManifest {
   suggestedPresentationDelay?: number | undefined;
   /** URIs where the manifest can be refreshed by order of importance. */
   uris?: string[] | undefined;
+}
+
+export interface IParsedTrack {
+  /** ID uniquely identifying this track. */
+  id: string;
+  /** The "type" for that track. */
+  trackType: ITrackType;
+  /** Language this Adaptation is in, as announced in the original Manifest. */
+  language?: string | undefined;
+  /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
+  isClosedCaption?: boolean | undefined;
+  /** Whether this track contains an audio description for the visually impaired. */
+  isAudioDescription?: boolean | undefined;
+  /** If true this Adaptation contains sign interpretation. */
+  isSignInterpreted?: boolean | undefined;
+  /**
+   * If `true` this Adaptation are subtitles Meant for display when no other text
+   * Adaptation is selected. It is used to clarify dialogue, alternate
+   * languages, texted graphics or location/person IDs that are not otherwise
+   * covered in the dubbed/localized audio Adaptation.
+   */
+  isForcedSubtitles?: boolean | undefined;
+  /**
+   * `true` if at least one Representation is in a supported codec. `false` otherwise.
+   *
+   * `undefined` for when this is not yet known (we're still in the process of
+   * probing for support).
+   */
+  isSupported?: boolean | undefined;
+  /** Language this Adaptation is in, when translated into an ISO639-3 code. */
+  normalizedLanguage?: string | undefined;
+  /** Label of the adaptionSet */
+  label?: string | undefined;
+  /**
+   * If `true`, this Adaptation is a "dub", meaning it was recorded in another
+   * language than the original one.
+   */
+  isDub?: boolean | undefined;
+  /** Tells if the track is a trick mode track. */
+  trickModeTracks?: IParsedTrack[] | undefined;
+  /** Tells if the track is a trick mode track. */
+  isTrickModeTrack?: boolean | undefined;
+  /** Qualities that track is available in. */
+  representations: IParsedRepresentation[];
 }

@@ -422,7 +422,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
     log.debug("Init: Initial time calculated:", initialTime);
 
-    /** Choose the right "Representation" for a given "Adaptation". */
+    /** Choose the right "Representation" for a given "track". */
     const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
     const subBufferOptions = objectAssign(
       { textTrackOptions, drmSystemId },
@@ -876,15 +876,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         lockedStream: (value) =>
           rebufferingController.onLockedStream(value.bufferType, value.period),
 
-        adaptationChange: (value) => {
-          self.trigger("adaptationChange", value);
+        trackChange: (value) => {
+          self.trigger("trackChange", value);
           if (cancelSignal.isCancelled()) {
             return; // Previous call has stopped streams due to a side-effect
           }
-          contentTimeBoundariesObserver.onAdaptationChange(
+          contentTimeBoundariesObserver.onTrackChange(
             value.type,
             value.period,
-            value.adaptation,
+            value.track,
           );
         },
 
