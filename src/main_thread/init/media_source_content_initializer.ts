@@ -38,10 +38,10 @@ import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
 import type {
-  // IAdaptation,
+  IAdaptation,
   IManifest,
   IPeriodMetadata,
-  // IRepresentation,
+  IRepresentation,
 } from "../../manifest";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
@@ -49,13 +49,13 @@ import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
-// import { base64ToBytes } from "../../utils/base64";
+import { base64ToBytes } from "../../utils/base64";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
-// import { hexToBytes } from "../../utils/string_parsing";
+import { hexToBytes } from "../../utils/string_parsing";
 import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";

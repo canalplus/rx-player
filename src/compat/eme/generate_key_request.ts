@@ -17,7 +17,6 @@
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import { be4toi, concat } from "../../utils/byte_parsing";
-import sleep from "../../utils/sleep";
 import { PSSH_TO_INTEGER } from "./constants";
 import type { ICustomMediaKeySession } from "./custom_media_keys";
 
@@ -129,7 +128,7 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
  * the "encrypted" event for the corresponding request.
  * @returns {Promise} - Emit when done. Errors if fails.
  */
-export default async function generateKeyRequest(
+export default function generateKeyRequest(
   session: MediaKeySession | ICustomMediaKeySession,
   initializationDataType: string | undefined,
   initializationData: Uint8Array,

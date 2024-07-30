@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-// import log from "../../log";
+import log from "../../log";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
 import {
-  // fakeEncryptionDataInInitSegment,
+  fakeEncryptionDataInInitSegment,
   getKeyIdFromInitSegment,
   parseEmsgBoxes,
 } from "../../parsers/containers/isobmff/utils";

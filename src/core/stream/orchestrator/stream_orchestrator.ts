@@ -47,7 +47,6 @@ import PeriodStream from "../period";
 import type { IStreamStatusPayload } from "../representation";
 import getTimeRangesForContent from "./get_time_ranges_for_content";
 
-window.loadedTimes = 0;
 /**
  * Create and manage the various "Streams" needed for the content to
  * play:
@@ -100,7 +99,6 @@ export default function StreamOrchestrator(
   callbacks: IStreamOrchestratorCallbacks,
   orchestratorCancelSignal: CancellationSignal,
 ): void {
-  window.loadedTimes++;
   const { manifest, initialPeriod } = content;
   const { maxBufferAhead, maxBufferBehind, wantedBufferAhead, maxVideoBufferSize } =
     options;
@@ -236,19 +234,19 @@ export default function StreamOrchestrator(
         waitingMediaSourceReload(payload: IWaitingMediaSourceReloadPayload): void {
           // Only reload the MediaSource when the more immediately required
           // Period is the one it is asked for
-          // const firstPeriod = periodList.head();
-          // if (firstPeriod === undefined || firstPeriod.id !== payload.period.id) {
-          //   callbacks.lockedStream({
-          //     bufferType: payload.bufferType,
-          //     period: payload.period,
-          //   });
-          // } else {
+          const firstPeriod = periodList.head();
+          if (firstPeriod === undefined || firstPeriod.id !== payload.period.id) {
+            callbacks.lockedStream({
+              bufferType: payload.bufferType,
+              period: payload.period,
+            });
+          } else {
             callbacks.needsMediaSourceReload({
               timeOffset: payload.timeOffset,
               minimumPosition: payload.stayInPeriod ? payload.period.start : undefined,
               maximumPosition: payload.stayInPeriod ? payload.period.end : undefined,
             });
-          // }
+          }
         },
         periodStreamReady(payload: IPeriodStreamReadyPayload): void {
           enableOutOfBoundsCheck = true;
@@ -515,20 +513,7 @@ export default function StreamOrchestrator(
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod !== null) {
             // current Stream is full, create the next one if not
-            // checkOrCreateNextPeriodStream(nextPeriod);
-            const observation = playbackObserver.getReference().getValue();
-            const lastPosition =
-              playbackObserver.getCurrentTime() ??
-              observation.position.getWanted() ??
-              observation.position.getPolled();
-            if (lastPosition + 6 > nextPeriod.start) {
-              consecutivePeriodStreamCb.waitingMediaSourceReload({
-                period: nextPeriod,
-                bufferType,
-                timeOffset: nextPeriod.start - lastPosition,
-                stayInPeriod: true,
-              });
-            }
+            checkOrCreateNextPeriodStream(nextPeriod);
           }
         } else if (nextStreamInfo !== null) {
           // current Stream is active, destroy next Stream if created
