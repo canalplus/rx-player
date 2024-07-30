@@ -26,6 +26,7 @@ export default async function parseDRMConfigurations(
 
       const type = drm.toLowerCase();
       const keySystem: IKeySystemOption = {
+        disableMediaKeysAttachmentLock: true,
         type,
         getLicense: generateGetLicense(licenseServerUrl, type, !!fallbackLicenseRequest),
         onKeyInternalError: fallbackKeyError ? "fallback" : "error",
