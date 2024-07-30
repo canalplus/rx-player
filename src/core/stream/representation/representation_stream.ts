@@ -213,6 +213,11 @@ export default function RepresentationStream<TSegmentDataType>(
     clearSignal: segmentsLoadingCanceller.signal,
   });
   content.manifest.addEventListener(
+    "decipherabilityUpdate",
+    checkStatus,
+    segmentsLoadingCanceller.signal,
+  );
+  content.manifest.addEventListener(
     "manifestUpdate",
     checkStatus,
     segmentsLoadingCanceller.signal,
@@ -256,6 +261,12 @@ export default function RepresentationStream<TSegmentDataType>(
 
     let neededInitSegment: IQueuedSegment | null = null;
 
+    // We'll load encrypted media segments only if we're sure they are
+    // decipherable.
+    const shouldLoadMediaSegments =
+      representation.contentProtections === undefined ||
+      representation.decipherable === true;
+
     // Add initialization segment if required
     if (!representation.index.isInitialized()) {
       if (initSegmentState.segment === null) {
@@ -284,11 +295,13 @@ export default function RepresentationStream<TSegmentDataType>(
       };
     }
 
+    const mediaSegmentsToRequest = shouldLoadMediaSegments ? neededSegments : [];
+
     const terminateVal = terminate.getValue();
     if (terminateVal === null) {
       lastSegmentQueue.setValue({
         initSegment: neededInitSegment,
-        segmentQueue: neededSegments,
+        segmentQueue: mediaSegmentsToRequest,
       });
     } else if (terminateVal.urgent) {
       log.debug("Stream: Urgent switch, terminate now.", bufferType);
@@ -303,7 +316,7 @@ export default function RepresentationStream<TSegmentDataType>(
       // terminate once either that request is finished or another segment
       // is wanted instead, whichever comes first.
 
-      const mostNeededSegment = neededSegments[0];
+      const mostNeededSegment = mediaSegmentsToRequest[0];
       const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
       const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
 
