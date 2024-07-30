@@ -17,6 +17,10 @@
 import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
 import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
+import {
+  generatePlayReadyInitData,
+  DUMMY_PLAY_READY_HEADER,
+} from "../../compat/generate_init_data";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
@@ -27,7 +31,6 @@ import flatMap from "../../utils/flat_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
-import performFakeGenerateRequest from "./utils/perform_fake_generate_request";
 
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 
@@ -415,7 +418,9 @@ export async function testKeySystem(
   if (!canRelyOnRequestMediaKeySystemAccess(keyType)) {
     try {
       const mediaKeys = await keySystemAccess.createMediaKeys();
-      await performFakeGenerateRequest(mediaKeys);
+      const session = mediaKeys.createSession();
+      const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+      await session.generateRequest("cenc", initData);
     } catch (err) {
       log.debug("DRM: KeySystemAccess was granted but it is not usable");
       throw err;
