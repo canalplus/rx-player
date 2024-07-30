@@ -82,8 +82,14 @@ function eventPrefixed(eventNames: string[], prefixes?: string[]): string[] {
 }
 
 export interface IEventEmitterLike {
-  addEventListener: (eventName: string, handler: () => void) => void;
-  removeEventListener: (eventName: string, handler: () => void) => void;
+  addEventListener: (
+    eventName: string,
+    handler: EventListenerOrEventListenerObject,
+  ) => void;
+  removeEventListener: (
+    eventName: string,
+    handler: EventListenerOrEventListenerObject,
+  ) => void;
 }
 
 export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<unknown>;
@@ -102,9 +108,10 @@ export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<u
 function createCompatibleEventListener(
   eventNames: string[],
   prefixes?: string[],
+  patchFn?: (event: Event) => Event,
 ): (
   element: IEventTargetLike,
-  listener: (event?: unknown) => void,
+  listener: (event?: Event) => void,
   cancelSignal: CancellationSignal,
 ) => void {
   let mem: string | undefined;
@@ -112,11 +119,20 @@ function createCompatibleEventListener(
 
   return (
     element: IEventTargetLike,
-    listener: (event?: unknown) => void,
+    listener: (event?: Event) => void,
     cancelSignal: CancellationSignal,
   ) => {
     if (cancelSignal.isCancelled()) {
       return;
+    }
+    let patchedListener: EventListener;
+    if (patchFn !== undefined) {
+      patchedListener = (event: Event) => {
+        const patchedEvent = patchFn(event);
+        listener(patchedEvent);
+      };
+    } else {
+      patchedListener = listener;
     }
 
     // if the element is a HTMLElement we can detect
@@ -127,10 +143,10 @@ function createCompatibleEventListener(
       }
 
       if (isNonEmptyString(mem)) {
-        element.addEventListener(mem, listener);
+        element.addEventListener(mem, patchedListener);
         cancelSignal.register(() => {
           if (mem !== undefined) {
-            element.removeEventListener(mem, listener);
+            element.removeEventListener(mem, patchedListener);
           }
         });
       } else {
@@ -148,7 +164,7 @@ function createCompatibleEventListener(
     prefixedEvents.forEach((eventName) => {
       let hasSetOnFn = false;
       if (typeof element.addEventListener === "function") {
-        (element as IEventEmitterLike).addEventListener(eventName, listener);
+        (element as IEventEmitterLike).addEventListener(eventName, patchedListener);
       } else {
         hasSetOnFn = true;
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -158,7 +174,7 @@ function createCompatibleEventListener(
       }
       cancelSignal.register(() => {
         if (typeof element.removeEventListener === "function") {
-          (element as IEventEmitterLike).removeEventListener(eventName, listener);
+          (element as IEventEmitterLike).removeEventListener(eventName, patchedListener);
         }
         if (hasSetOnFn) {
           /* eslint-disable @typescript-eslint/no-unsafe-member-access */

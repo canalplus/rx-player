@@ -122,6 +122,8 @@ export interface IProtectionData {
   content?: IContent;
   /** Every initialization data for that type. */
   values: IInitDataValue[];
+
+  forceSessionRecreation?: boolean | undefined;
 }
 
 /** Protection initialization data actually processed by the `ContentDecryptor`. */

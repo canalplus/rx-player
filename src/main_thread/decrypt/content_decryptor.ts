@@ -62,6 +62,10 @@ export interface IContext {
   isDirectFile: boolean;
 }
 
+export interface ICustomMediaEncryptedEvent extends MediaEncryptedEvent {
+  forceSessionRecreation?: boolean;
+}
+
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
  * to decrypt contents.
@@ -190,7 +194,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       mediaElement,
       (evt) => {
         log.debug("DRM: Encrypted event received from media element.");
-        const initData = getInitData(evt as MediaEncryptedEvent);
+        const initData = getInitData(evt as ICustomMediaEncryptedEvent);
         if (initData !== null) {
           this.onInitializationData(initData);
         }
@@ -752,9 +756,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
      * it already has a session for these keys and ignores the events,
      * the content remains frozen. To resolve this, the session is re-created.
      */
-    const forceSessionRecreation =
-      eme.implementation === "webkit" && this._context.isDirectFile;
-    if (forceSessionRecreation) {
+    const forceSessionRecreation = initializationData.forceSessionRecreation;
+    if (forceSessionRecreation === true) {
       this.removeSessionForInitData(initializationData, mediaKeysData);
       return false;
     }
