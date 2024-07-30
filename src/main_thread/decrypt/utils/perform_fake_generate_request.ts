@@ -26,6 +26,10 @@ export default async function performFakeGenerateRequest(
   const session = mediaKeys.createSession();
   const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
   await session.generateRequest("cenc", initData);
+  const session2 = mediaKeys.createSession();
+  await session2.generateRequest("cenc", initData);
+  const session3 = mediaKeys.createSession();
+  await session3.generateRequest("cenc", initData);
   closeSession(session).catch((err) => {
     const error = err instanceof Error ? err : new Error("Unknown Error");
     log.warn("DRM: unable to close fake MediaKeySession", error);

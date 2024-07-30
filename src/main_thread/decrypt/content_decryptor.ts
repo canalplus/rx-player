@@ -180,6 +180,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     initMediaKeys(mediaElement, ksOptions, canceller.signal)
       .then((mediaKeysInfo) => {
+          // try {
+          //   performFakeGenerateRequest(mediaKeysInfo.mediaKeys);
+          // } catch (err) {
+          //   const error = err instanceof Error ? err : new Error("Unknown Error");
+          //   log.warn("DRM: unable to fully perform fake generateRequest call", error);
+          // }
         const { options, mediaKeySystemAccess } = mediaKeysInfo;
 
         /**
@@ -293,16 +299,16 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           return;
         }
 
-        if (
-          shouldCallGenerateRequestBeforeBufferingMedia(mediaKeySystemAccess.keySystem)
-        ) {
-          try {
-            await performFakeGenerateRequest(mediaKeys);
-          } catch (err) {
-            const error = err instanceof Error ? err : new Error("Unknown Error");
-            log.warn("DRM: unable to fully perform fake generateRequest call", error);
-          }
-        }
+        // if (
+        //   shouldCallGenerateRequestBeforeBufferingMedia(mediaKeySystemAccess.keySystem)
+        // ) {
+        //   try {
+        //     await performFakeGenerateRequest(mediaKeys);
+        //   } catch (err) {
+        //     const error = err instanceof Error ? err : new Error("Unknown Error");
+        //     log.warn("DRM: unable to fully perform fake generateRequest call", error);
+        //   }
+        // }
 
         if (this._isStopped()) {
           // We might be stopped since then

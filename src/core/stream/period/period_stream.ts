@@ -94,6 +94,46 @@ export default function PeriodStream(
 ): void {
   const { manifest, period } = content;
 
+//   if (
+//     window.loadedTimes < 2 &&
+//     bufferType === "video" &&
+//     period.adaptations.video?.[0].representations[0].contentProtections !== undefined
+//   ) {
+//     window.totoVideo = true;
+//     const blabla = setInterval(() => {
+//       callbacks.waitingMediaSourceReload({
+//         bufferType,
+//         period,
+//         timeOffset: 5,
+//         stayInPeriod: true,
+//       });
+//     }, 500);
+//     parentCancelSignal.register(() => {
+//       clearInterval(blabla);
+//     });
+//     return;
+//   }
+
+//   if (
+//     window.loadedTimes < 2 &&
+//     bufferType === "audio" &&
+//     period.adaptations.audio?.[0].representations[0].contentProtections !== undefined
+//   ) {
+//     window.totoAudio = true;
+//     const blabla = setInterval(() => {
+//       callbacks.waitingMediaSourceReload({
+//         bufferType,
+//         period,
+//         timeOffset: 5,
+//         stayInPeriod: true,
+//       });
+//     }, 500);
+//     parentCancelSignal.register(() => {
+//       clearInterval(blabla);
+//     });
+//     return;
+//   }
+
   /**
    * Emits the chosen Adaptation and Representations for the current type.
    * `null` when no Adaptation is chosen (e.g. no subtitles)
