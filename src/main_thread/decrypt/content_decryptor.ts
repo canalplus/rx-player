@@ -17,7 +17,6 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
-import type { ICustomMediaEncryptedEvent } from "../../compat/eme/custom_media_keys/types";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
@@ -178,7 +177,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       mediaElement,
       (evt) => {
         log.debug("DRM: Encrypted event received from media element.");
-        const initData = getInitData(evt as ICustomMediaEncryptedEvent);
+        const initData = getInitData(evt);
         if (initData !== null) {
           this.onInitializationData(initData);
         }
