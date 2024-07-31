@@ -60,3 +60,7 @@ export interface IMediaKeySessionEvents {
   // "keyerror"
   /* "error" */
 }
+
+export interface ICustomMediaEncryptedEvent extends MediaEncryptedEvent {
+  forceSessionRecreation?: boolean | undefined;
+}
