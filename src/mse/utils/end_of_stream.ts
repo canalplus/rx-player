@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import type {
+  IMediaSource,
+  ISourceBuffer,
+  ISourceBufferList,
+} from "../../compat/browser_compatibility_types";
 import {
   onRemoveSourceBuffers,
   onSourceOpen,
@@ -28,8 +33,8 @@ import TaskCanceller from "../../utils/task_canceller";
  * @param {SourceBufferList} sourceBuffers
  * @returns {Array.<SourceBuffer>}
  */
-function getUpdatingSourceBuffers(sourceBuffers: SourceBufferList): SourceBuffer[] {
-  const updatingSourceBuffers: SourceBuffer[] = [];
+function getUpdatingSourceBuffers(sourceBuffers: ISourceBufferList): ISourceBuffer[] {
+  const updatingSourceBuffers: ISourceBuffer[] = [];
   for (let i = 0; i < sourceBuffers.length; i++) {
     const SourceBuffer = sourceBuffers[i];
     if (SourceBuffer.updating) {
@@ -49,7 +54,7 @@ function getUpdatingSourceBuffers(sourceBuffers: SourceBufferList): SourceBuffer
  * @param {Object} cancelSignal
  */
 export default function triggerEndOfStream(
-  mediaSource: MediaSource,
+  mediaSource: IMediaSource,
   cancelSignal: CancellationSignal,
 ): void {
   log.debug("Init: Trying to call endOfStream");
@@ -106,7 +111,7 @@ export default function triggerEndOfStream(
  * @param {Object} cancelSignal
  */
 export function maintainEndOfStream(
-  mediaSource: MediaSource,
+  mediaSource: IMediaSource,
   cancelSignal: CancellationSignal,
 ): void {
   let endOfStreamCanceller = new TaskCanceller();

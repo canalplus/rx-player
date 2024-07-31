@@ -58,6 +58,7 @@ export interface IConstructorOptions {
   videoResolutionLimit?: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden?: boolean;
 
+  /* eslint-disable-next-line @typescript-eslint/ban-types */
   videoElement?: HTMLMediaElement;
   baseBandwidth?: number;
 }

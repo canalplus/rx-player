@@ -12,6 +12,7 @@ import { vi } from "vitest";
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-restricted-properties */
 
+import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
 import type { IEmeApiImplementation, IEncryptedEventData } from "../../../../compat/eme";
 import { base64ToBytes, bytesToBase64 } from "../../../../utils/base64";
 import EventEmitter from "../../../../utils/event_emitter";
@@ -274,12 +275,12 @@ export function requestMediaKeySystemAccessImpl(
 }
 
 class MockedDecryptorEventEmitter extends EventEmitter<{
-  encrypted: { elt: HTMLMediaElement; value: unknown };
+  encrypted: { elt: IMediaElement; value: unknown };
   keymessage: { session: MediaKeySessionImpl; value: unknown };
   keyerror: { session: MediaKeySessionImpl; value: unknown };
   keystatuseschange: { session: MediaKeySessionImpl; value: unknown };
 }> {
-  public triggerEncrypted(elt: HTMLMediaElement, value: unknown) {
+  public triggerEncrypted(elt: IMediaElement, value: unknown) {
     this.trigger("encrypted", { elt, value });
   }
   public triggerKeyError(session: MediaKeySessionImpl, value: unknown) {
@@ -312,7 +313,7 @@ export function mockCompat(
     vi
       .fn()
       .mockImplementation(
-        (elt: HTMLMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
+        (elt: IMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
           elt.addEventListener("encrypted", fn);
           signal.register(() => {
             elt.removeEventListener("encrypted", fn);
@@ -444,7 +445,7 @@ export function mockCompat(
   return {
     mockEvents,
     eventTriggers: {
-      triggerEncrypted(elt: HTMLMediaElement, value: unknown) {
+      triggerEncrypted(elt: IMediaElement, value: unknown) {
         ee.triggerEncrypted(elt, value);
       },
       triggerKeyMessage(session: MediaKeySessionImpl, value: unknown) {
@@ -475,7 +476,7 @@ export function mockCompat(
  */
 export function testContentDecryptorError(
   ContentDecryptor: any,
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   keySystemsConfigs: unknown[],
 ): Promise<unknown> {
   return new Promise((res, rej) => {

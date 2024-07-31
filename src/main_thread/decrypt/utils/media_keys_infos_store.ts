@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import type {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
@@ -47,7 +48,7 @@ export interface IMediaElementMediaKeysInfos {
 
 // Store the MediaKeys infos attached to a media element.
 const currentMediaState = new WeakMap<
-  HTMLMediaElement,
+  IMediaElement,
   IMediaElementMediaKeysInfos | null
 >();
 
@@ -57,10 +58,7 @@ export default {
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} state
    */
-  setState(
-    mediaElement: HTMLMediaElement,
-    state: IMediaElementMediaKeysInfos | null,
-  ): void {
+  setState(mediaElement: IMediaElement, state: IMediaElementMediaKeysInfos | null): void {
     currentMediaState.set(mediaElement, state);
   },
 
@@ -69,7 +67,7 @@ export default {
    * @param {HTMLMediaElement} mediaElement
    * @returns {Object}
    */
-  getState(mediaElement: HTMLMediaElement): IMediaElementMediaKeysInfos | null {
+  getState(mediaElement: IMediaElement): IMediaElementMediaKeysInfos | null {
     const currentState = currentMediaState.get(mediaElement);
     return currentState === undefined ? null : currentState;
   },
@@ -78,7 +76,7 @@ export default {
    * Remove MediaKeys infos currently set on a HMTLMediaElement
    * @param {HTMLMediaElement} mediaElement
    */
-  clearState(mediaElement: HTMLMediaElement): void {
+  clearState(mediaElement: IMediaElement): void {
     currentMediaState.set(mediaElement, null);
   },
 };

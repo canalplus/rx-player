@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IListener } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 
@@ -70,17 +71,218 @@ interface ICompatDocument extends Document {
 }
 
 /**
- * HTMLMediaElement with added optional vendored functions used by "old"
- * browsers.
- * And TypeScript forgot to add assiociated AudioTrackList and VideoTrackList
- * (and yes apparently a HTMLAudioElement can have an assiociated
- * VideoTrackList).
- *
- * Note: I prefer to define my own `ICompatHTMLMediaElement` rather to extend
- * the original definition to better detect which types have been extended and
- * are not actually valid TypeScript types.
+ * Simpler re-definition of an `EventTarget`, allowing more straightforward
+ * TypeScript exploitation in the RxPlayer.
  */
-interface ICompatHTMLMediaElement extends HTMLMediaElement {
+export interface IEventTarget<TEventMap> {
+  addEventListener<TEventName extends keyof TEventMap>(
+    evt: TEventName,
+    fn: IListener<TEventMap, TEventName>,
+  ): void;
+  removeEventListener<TEventName extends keyof TEventMap>(
+    evt?: TEventName,
+    fn?: IListener<TEventMap, TEventName>,
+  ): void;
+}
+
+/** Events potentially dispatched by an `ISourceBufferList` */
+export interface ISourceBufferListEventMap {
+  addsourcebuffer: Event;
+  removesourcebuffer: Event;
+}
+
+/**
+ * Type-compatible with the `SourceBufferList` type (i.e. a `SourceBufferList`
+ * is a valid `ISourceBufferList`), the `ISourceBufferList` type allows to:
+ *
+ *   - re-define some attributes or methods in cases where we detected that some
+ *     platforms have a different implementation.
+ *
+ *   - list all `SourceBufferList` attributes, methods and events that are
+ *     relied on by the RxPlayer.
+ *
+ *   - Allow an easier re-definition of that API for tests or for platforms
+ *     which do not implement it.
+ */
+export interface ISourceBufferList extends IEventTarget<ISourceBufferListEventMap> {
+  readonly length: number;
+  onaddsourcebuffer: ((evt: Event) => void) | null;
+  onremovesourcebuffer: ((evt: Event) => void) | null;
+  [index: number]: ISourceBuffer;
+}
+
+/** Events potentially dispatched by an `IMediaSource` */
+export interface IMediaSourceEventMap {
+  sourceopen: Event;
+  sourceended: Event;
+  sourceclose: Event;
+}
+
+/**
+ * Type-compatible with the `MediaSource` type (i.e. a `MediaSource` is a valid
+ * `IMediaSource`), the `IMediaSource` type allows to:
+ *
+ *   - re-define some attributes or methods in cases where we detected that some
+ *     platforms have a different implementation.
+ *
+ *   - list all `MediaSource` attributes, methods and events that are relied on
+ *     by the RxPlayer.
+ *
+ *   - Allow an easier re-definition of that API for tests or for platforms
+ *     which do not implement it.
+ */
+export interface IMediaSource extends IEventTarget<IMediaSourceEventMap> {
+  duration: number;
+  handle?: MediaProvider | IMediaSource | undefined;
+  readyState: "closed" | "open" | "ended";
+  sourceBuffers: ISourceBufferList;
+
+  addSourceBuffer(type: string): ISourceBuffer;
+  clearLiveSeekableRange(): void;
+  endOfStream(): void;
+  removeSourceBuffer(sb: ISourceBuffer): void;
+  setLiveSeekableRange(start: number, end: number): void;
+
+  onsourceopen: ((evt: Event) => void) | null;
+  onsourceended: ((evt: Event) => void) | null;
+  onsourceclose: ((evt: Event) => void) | null;
+}
+
+/** Events potentially dispatched by an `ISourceBuffer` */
+export interface ISourceBufferEventMap {
+  abort: Event;
+  error: Event;
+  update: Event;
+  updateend: Event;
+  updatestart: Event;
+}
+
+/**
+ * Type-compatible with the `SourceBuffer` type (i.e. a `SourceBuffer` is a valid
+ * `ISourceBuffer`), the `ISourceBuffer` type allows to:
+ *
+ *   - re-define some attributes or methods in cases where we detected that some
+ *     platforms have a different implementation.
+ *
+ *   - list all `SourceBuffer` attributes, methods and events that are relied on
+ *     by the RxPlayer.
+ *
+ *   - Allow an easier re-definition of that API for tests or for platforms
+ *     which do not implement it.
+ */
+export interface ISourceBuffer extends IEventTarget<ISourceBufferEventMap> {
+  appendWindowEnd: number;
+  appendWindowStart: number;
+  buffered: TimeRanges;
+  timestampOffset: number;
+  updating: boolean;
+
+  abort(): void;
+  appendBuffer(data: BufferSource): void;
+  changeType(type: string): void;
+  remove(start: number, end: number): void;
+
+  onabort: ((evt: Event) => void) | null;
+  onerror: ((evt: Event) => void) | null;
+  onupdate: ((evt: Event) => void) | null;
+  onupdateend: ((evt: Event) => void) | null;
+  onupdatestart: ((evt: Event) => void) | null;
+}
+
+/** Events potentially dispatched by an `IMediaElement` */
+export interface IMediaElementEventMap {
+  canplay: Event;
+  canplaythrough: Event;
+  encrypted: MediaEncryptedEvent;
+  ended: Event;
+  enterpictureinpicture: Event;
+  error: Event;
+  leavepictureinpicture: Event;
+  loadeddata: Event;
+  loadedmetadata: Event;
+  needkey: MediaEncryptedEvent;
+  pause: Event;
+  play: Event;
+  playing: Event;
+  ratechange: Event;
+  seeked: Event;
+  seeking: Event;
+  stalled: Event;
+  timeupdate: Event;
+  visibilitychange: Event;
+  volumechange: Event;
+  waiting: Event;
+  webkitneedkey: MediaEncryptedEvent;
+}
+
+/**
+ * Type-compatible with the `HTMLMediaElement` type (i.e. a `HTMLMediaElement` is
+ * a valid `IMediaElement`), the `IMediaElement` type allows to:
+ *
+ *   - re-define some attributes or methods in cases where we detected that some
+ *     platforms have a different implementation.
+ *
+ *   - list all `HTMLMediaElement` attributes, methods and events that are
+ *     relied on by the RxPlayer.
+ *
+ *   - Allow a re-definition of that API for tests or for platforms which do not
+ *     implement it.
+ */
+export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
+  /* From `HTMLMediaElement`: */
+  autoplay: boolean;
+  buffered: TimeRanges;
+  childNodes: NodeList | never[];
+  clientHeight: number | undefined;
+  clientWidth: number | undefined;
+  currentTime: number;
+  duration: number;
+  ended: boolean;
+  error: MediaError | null;
+  mediaKeys: null | MediaKeys;
+  muted: boolean;
+  nodeName: string;
+  paused: boolean;
+  playbackRate: number;
+  preload: "none" | "metadata" | "auto" | "";
+  readyState: number;
+  seekable: TimeRanges;
+  seeking: boolean;
+  src: string;
+  srcObject?: undefined | null | MediaProvider;
+  textTracks: TextTrackList | never[];
+  volume: number;
+
+  addTextTrack: (kind: TextTrackKind) => TextTrack;
+  appendChild<T extends Node>(x: T): void;
+  hasAttribute(attr: string): boolean;
+  hasChildNodes(): boolean;
+  pause(): void;
+  play(): Promise<void>;
+  removeAttribute(attr: string): void;
+  removeChild(x: unknown): void;
+  setMediaKeys(x: MediaKeys | null): Promise<void>;
+
+  onencrypted: ((evt: MediaEncryptedEvent) => void) | null;
+  oncanplay: ((evt: Event) => void) | null;
+  oncanplaythrough: ((evt: Event) => void) | null;
+  onended: ((evt: Event) => void) | null;
+  onenterpictureinpicture?: ((evt: Event) => void) | null;
+  onleavepictureinpicture?: ((evt: Event) => void) | null;
+  onerror: ((evt: Event) => void) | null;
+  onloadeddata: ((evt: Event) => void) | null;
+  onloadedmetadata: ((evt: Event) => void) | null;
+  onpause: ((evt: Event) => void) | null;
+  onplay: ((evt: Event) => void) | null;
+  onplaying: ((evt: Event) => void) | null;
+  onratechange: ((evt: Event) => void) | null;
+  onseeked: ((evt: Event) => void) | null;
+  onseeking: ((evt: Event) => void) | null;
+  onstalled: ((evt: Event) => void) | null;
+  ontimeupdate: ((evt: Event) => void) | null;
+  onvolumechange: ((evt: Event) => void) | null;
+  onwaiting: ((evt: Event) => void) | null;
+
   mozRequestFullScreen?: () => void;
   msRequestFullscreen?: () => void;
   webkitRequestFullscreen?: () => void;
@@ -93,9 +295,40 @@ interface ICompatHTMLMediaElement extends HTMLMediaElement {
   webkitKeys?: {
     createSession?: (mimeType: string, initData: BufferSource) => MediaKeySession;
   };
-  readonly audioTracks?: ICompatAudioTrackList;
-  readonly videoTracks?: ICompatVideoTrackList;
+  audioTracks?: ICompatAudioTrackList;
+  videoTracks?: ICompatVideoTrackList;
 }
+
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testMediaElement(x: HTMLMediaElement) {
+  assertCompatibleIMediaElement(x);
+}
+function assertCompatibleIMediaElement(_x: IMediaElement) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testMediaSource(x: MediaSource) {
+  assertCompatibleIMediaSource(x);
+}
+function assertCompatibleIMediaSource(_x: IMediaSource) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testSourceBuffer(x: SourceBuffer) {
+  assertCompatibleISourceBuffer(x);
+}
+function assertCompatibleISourceBuffer(_x: ISourceBuffer) {
+  // Noop
+}
+// @ts-expect-error unused function, just used for compile-time typechecking
+function testSourceBufferList(x: SourceBufferList) {
+  assertCompatibleISourceBufferList(x);
+}
+function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
+  // Noop
+}
+/* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
 
 /**
  * AudioTrackList implementation (that TS forgot).
@@ -169,7 +402,9 @@ export interface ICompatPictureInPictureWindow extends EventTarget {
 /* eslint-disable */
 /** MediaSource implementation, including vendored implementations. */
 const gs = globalScope as any;
-const MediaSource_: typeof MediaSource | undefined =
+const MediaSource_:
+  | { new (): IMediaSource; isTypeSupported(type: string): boolean }
+  | undefined =
   gs === undefined
     ? undefined
     : !isNullOrUndefined(gs.MediaSource)
@@ -202,7 +437,6 @@ export interface ICompatTextTrackList extends TextTrackList {
 
 export type {
   ICompatDocument,
-  ICompatHTMLMediaElement,
   ICompatAudioTrackList,
   ICompatVideoTrackList,
   ICompatAudioTrack,

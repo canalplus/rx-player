@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
@@ -147,7 +148,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * configurations. It will choose the appropriate one depending on user
    * settings and browser support.
    */
-  constructor(mediaElement: HTMLMediaElement, ksOptions: IKeySystemOption[]) {
+  constructor(mediaElement: IMediaElement, ksOptions: IKeySystemOption[]) {
     super();
 
     log.debug("DRM: Starting ContentDecryptor logic.");
@@ -1174,7 +1175,7 @@ type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
   true, // isInitDataQueueLocked
   MediaKeyAttachmentStatus.NotAttached, // isMediaKeysAttached
   // data
-  { mediaKeysInfo: IMediaKeysInfos; mediaElement: HTMLMediaElement }
+  { mediaKeysInfo: IMediaKeysInfos; mediaElement: IMediaElement }
 >;
 
 /**
@@ -1185,7 +1186,7 @@ type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
   ContentDecryptorState.ReadyForContent,
   true, // isInitDataQueueLocked
   MediaKeyAttachmentStatus.NotAttached | MediaKeyAttachmentStatus.Pending, // isMediaKeysAttached
-  { mediaKeysInfo: IMediaKeysInfos; mediaElement: HTMLMediaElement } // data
+  { mediaKeysInfo: IMediaKeysInfos; mediaElement: IMediaElement } // data
 >;
 
 /**

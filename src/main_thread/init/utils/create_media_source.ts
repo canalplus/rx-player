@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import clearElementSrc from "../../../compat/clear_element_src";
 import log from "../../../log";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
@@ -33,7 +34,7 @@ const generateMediaSourceId = idGenerator();
  * @param {string|null} mediaSourceURL
  */
 export function resetMediaElement(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   mediaSourceURL: string | null,
 ): void {
   if (mediaSourceURL !== null && mediaElement.src === mediaSourceURL) {
@@ -68,7 +69,7 @@ export function resetMediaElement(
  * @returns {MediaSource}
  */
 function createMediaSource(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   unlinkSignal: CancellationSignal,
 ): MainMediaSourceInterface {
   // make sure the media has been correctly reset
@@ -92,7 +93,7 @@ function createMediaSource(
  * @returns {Promise}
  */
 export default function openMediaSource(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   unlinkSignal: CancellationSignal,
 ): Promise<MainMediaSourceInterface> {
   return createCancellablePromise(unlinkSignal, (resolve) => {
