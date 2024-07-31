@@ -22,9 +22,9 @@ import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
 import runBundler from "./run_bundler.mjs";
+import removeDir from "./remove_dir.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -112,7 +112,7 @@ async function removePreviousBuildArtefacts() {
   await Promise.all(
     BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
       const relativePath = path.join(ROOT_DIR, name);
-      return removeFile(relativePath);
+      return removeDir(relativePath);
     }),
   );
 }
@@ -144,14 +144,6 @@ async function compile(devMode) {
       (code) => new Error(`es2018 compilation process exited with code ${code}`),
     ),
   ]);
-}
-
-/**
- * @param {string} fileName
- * @returns {Promise}
- */
-function removeFile(fileName) {
-  return rimraf(fileName);
 }
 
 /**
