@@ -17,6 +17,7 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
+import type { ICustomMediaEncryptedEvent } from "../../compat/eme/custom_media_keys/types";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
@@ -57,14 +58,6 @@ import {
   areSomeKeyIdsContainedIn,
 } from "./utils/key_id_comparison";
 import type KeySessionRecord from "./utils/key_session_record";
-
-export interface IContext {
-  isDirectFile: boolean;
-}
-
-export interface ICustomMediaEncryptedEvent extends MediaEncryptedEvent {
-  forceSessionRecreation?: boolean;
-}
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -140,10 +133,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _supportedCodecWhenEncrypted: ICodecSupportList;
 
   /**
-   * Context information such a the transport being used.
-   */
-  private _context: IContext;
-  /**
    * `true` if the EME API are available on the current platform according to
    * the default EME implementation used.
    * `false` otherwise.
@@ -167,11 +156,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * configurations. It will choose the appropriate one depending on user
    * settings and browser support.
    */
-  constructor(
-    mediaElement: IMediaElement,
-    ksOptions: IKeySystemOption[],
-    context: IContext,
-  ) {
+  constructor(mediaElement: IMediaElement, ksOptions: IKeySystemOption[]) {
     super();
 
     log.debug("DRM: Starting ContentDecryptor logic.");
@@ -187,7 +172,6 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       data: null,
     };
     this._supportedCodecWhenEncrypted = [];
-    this._context = context;
     this.error = null;
 
     eme.onEncrypted(

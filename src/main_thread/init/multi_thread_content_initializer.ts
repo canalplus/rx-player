@@ -1173,9 +1173,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return createEmeDisabledReference("EME API not available on the current page.");
     }
     log.debug("MTCI: Creating ContentDecryptor");
-    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems, {
-      isDirectFile: false,
-    });
+    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
     const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
       {
         initializationState: { type: "uninitialized", value: null },

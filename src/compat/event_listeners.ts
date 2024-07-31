@@ -108,7 +108,6 @@ export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<u
 function createCompatibleEventListener(
   eventNames: string[],
   prefixes?: string[],
-  patchFn?: (event: Event) => Event,
 ): (
   element: IEventTargetLike,
   listener: (event?: Event) => void,
@@ -125,16 +124,6 @@ function createCompatibleEventListener(
     if (cancelSignal.isCancelled()) {
       return;
     }
-    let patchedListener: EventListener;
-    if (patchFn !== undefined) {
-      patchedListener = (event: Event) => {
-        const patchedEvent = patchFn(event);
-        listener(patchedEvent);
-      };
-    } else {
-      patchedListener = listener;
-    }
-
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (typeof HTMLElement !== "undefined" && element instanceof HTMLElement) {
@@ -143,10 +132,10 @@ function createCompatibleEventListener(
       }
 
       if (isNonEmptyString(mem)) {
-        element.addEventListener(mem, patchedListener);
+        element.addEventListener(mem, listener);
         cancelSignal.register(() => {
           if (mem !== undefined) {
-            element.removeEventListener(mem, patchedListener);
+            element.removeEventListener(mem, listener);
           }
         });
       } else {
@@ -164,7 +153,7 @@ function createCompatibleEventListener(
     prefixedEvents.forEach((eventName) => {
       let hasSetOnFn = false;
       if (typeof element.addEventListener === "function") {
-        (element as IEventEmitterLike).addEventListener(eventName, patchedListener);
+        (element as IEventEmitterLike).addEventListener(eventName, listener);
       } else {
         hasSetOnFn = true;
         /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -174,7 +163,7 @@ function createCompatibleEventListener(
       }
       cancelSignal.register(() => {
         if (typeof element.removeEventListener === "function") {
-          (element as IEventEmitterLike).removeEventListener(eventName, patchedListener);
+          (element as IEventEmitterLike).removeEventListener(eventName, listener);
         }
         if (hasSetOnFn) {
           /* eslint-disable @typescript-eslint/no-unsafe-member-access */

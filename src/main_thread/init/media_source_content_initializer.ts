@@ -302,7 +302,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             }
           },
         },
-        { isDirectFile: false },
         initCanceller.signal,
       );
 
