@@ -1,0 +1,1 @@
+{"version":3,"file":"native_text_buffer.d.ts","sourceRoot":"","sources":["../../../../src/features/list/native_text_buffer.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAGH,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,UAAU,CAAC;AAEhD;;;GAGG;AACH,iBAAS,mBAAmB,CAAC,QAAQ,EAAE,eAAe,GAAG,IAAI,CAE5D;AAED,OAAO,EAAE,mBAAmB,IAAI,kBAAkB,EAAE,CAAC;AACrD,eAAe,mBAAmB,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"html.d.ts","sourceRoot":"","sources":["../../../../../src/parsers/texttracks/srt/html.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAeH,MAAM,WAAW,WAAW;IAC1B,KAAK,EAAE,MAAM,CAAC;IACd,GAAG,EAAE,MAAM,CAAC;IACZ,OAAO,EAAE,WAAW,CAAC;CACtB;AAED;;;;GAIG;AACH,MAAM,CAAC,OAAO,UAAU,oBAAoB,CAC1C,MAAM,EAAE,MAAM,EACd,UAAU,EAAE,MAAM,GACjB,WAAW,EAAE,CAmBf"}

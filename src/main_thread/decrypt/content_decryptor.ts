@@ -254,7 +254,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           payload: {
             systemId: this.systemId,
             canFilterProtectionData,
-            failOnEncryptedAfterClear: options.failOnEncryptedAfterClear === true,
+            failOnEncryptedAfterClear: true,
           },
         },
         isInitDataQueueLocked: true,
@@ -302,7 +302,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             payload: {
               systemId: this.systemId,
               canFilterProtectionData,
-              failOnEncryptedAfterClear: options.failOnEncryptedAfterClear === true,
+              failOnEncryptedAfterClear: true,
             },
           },
           isMediaKeysAttached: MediaKeyAttachmentStatus.Attached,

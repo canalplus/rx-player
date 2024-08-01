@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WebKitMediaKeysConstructor = exports.getWebKitMediaKeysCallbacks = exports.isOldWebkitMediaElement = exports.getOldKitWebKitMediaKeyCallbacks = exports.MozMediaKeysConstructor = exports.getMozMediaKeysCallbacks = exports.MSMediaKeysConstructor = exports.getIE11MediaKeysCallbacks = void 0;
+var ie11_media_keys_1 = require("./ie11_media_keys");
+exports.getIE11MediaKeysCallbacks = ie11_media_keys_1.default;
+Object.defineProperty(exports, "MSMediaKeysConstructor", { enumerable: true, get: function () { return ie11_media_keys_1.MSMediaKeysConstructor; } });
+var moz_media_keys_constructor_1 = require("./moz_media_keys_constructor");
+exports.getMozMediaKeysCallbacks = moz_media_keys_constructor_1.default;
+Object.defineProperty(exports, "MozMediaKeysConstructor", { enumerable: true, get: function () { return moz_media_keys_constructor_1.MozMediaKeysConstructor; } });
+var old_webkit_media_keys_1 = require("./old_webkit_media_keys");
+exports.getOldKitWebKitMediaKeyCallbacks = old_webkit_media_keys_1.default;
+Object.defineProperty(exports, "isOldWebkitMediaElement", { enumerable: true, get: function () { return old_webkit_media_keys_1.isOldWebkitMediaElement; } });
+var webkit_media_keys_1 = require("./webkit_media_keys");
+exports.getWebKitMediaKeysCallbacks = webkit_media_keys_1.default;
+var webkit_media_keys_constructor_1 = require("./webkit_media_keys_constructor");
+Object.defineProperty(exports, "WebKitMediaKeysConstructor", { enumerable: true, get: function () { return webkit_media_keys_constructor_1.WebKitMediaKeysConstructor; } });
