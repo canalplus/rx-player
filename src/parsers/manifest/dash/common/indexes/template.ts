@@ -542,7 +542,9 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
     }
 
     const { duration, timescale } = this._index;
-    const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
+    const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(
+      duration / timescale
+    );
     if (firstPosition === undefined) {
       return undefined;
     }
