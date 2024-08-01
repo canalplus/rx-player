@@ -8,8 +8,7 @@
 
 ### Bug fixes
 
-- DASH: support absolute path in URL resolution with RFC 3986 implementation [#1443,
-  #1440]
+- DASH: support absolute path in URL resolution with RFC 3986 implementation [#1443, #1440]
 - DASH: fix cases of blinking subtitles [#1416, #1424]
 - Fix precision issues of the `maxVideoBufferSize` API [#1421]
 - DASH: Prevent multiple loading of the same segment for some DASH low-latency contents
@@ -23,8 +22,7 @@
 - MULTI_THREAD: Perform several actions so that our `MULTI_THREAD` experimental feature
   now works on older browser and on the Playstation 4 [#1401, #1402]
 - Directfile/Compat: On safari on iOS no longer stay stuck in buffering when `autoPlay` is
-  set to `false` or not set and the video element has the attribute "playsinline" [#1408,
-  #1390]
+  set to `false` or not set and the video element has the attribute "playsinline" [#1408, #1390]
 - Directfile/compat: On safari mobile in directfile mode, do not stay in an infinite
   `LOADING` state if the `duration` is set to `NaN` (rare issue in a normally-unsupported
   multiple RxPlayer-per-media-element scenario) [#1393]
@@ -663,8 +661,7 @@
 - TypeScript: Add IBitrateEstimate, IPositionUpdate and IPlayerState types to the exported
   types [#1084]
 - Remove dependency on pinkie's promise ponyfill [#1058, #1090]
-- tests: add performance tests, to better catch and avoid performance regressions [#1053,
-  #1062]
+- tests: add performance tests, to better catch and avoid performance regressions [#1053, #1062]
 - DRM: Refactor DRM logic for better maintainability. DRM-linked logs are now prefixed by
   `DRM:` instead of `EME:` like previously [#1042]
 
@@ -808,8 +805,7 @@
 - Update used RxJS version to 7.0.0, which might bring with it a smaller size and better
   performances [#954]
 - demo: remove Chart.js dependency (we found that its new API documentation and errors
-  were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955,
-  #957]
+  were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955, #957]
 
 ## v3.24.0 (2021-04-01)
 
@@ -817,8 +813,7 @@
 
 - Add `inbandEvent` event for when an event is encountered in a media segment [#892]
 - DRM: Add `singleLicensePer` `keySystems` option to be able to signal in advance that the
-  current content has a single license, even if it has multiple encryption keys [#863,
-  #904]
+  current content has a single license, even if it has multiple encryption keys [#863, #904]
 - DRM: Add `keySystems[].licenseStorage.disableRetroCompatibility` boolean to unlock
   optimizations when compatibility with EME sessions persisted in older RxPlayer versions
   is not important [#919]
