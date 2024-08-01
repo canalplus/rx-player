@@ -1353,7 +1353,7 @@ function prettyPrintInventory(inventory: IBufferedChunk[]): string {
         currentLetter = generateNewLetter(chunk.infos);
         encounteredPeriod[representationId] = currentLetter;
       } else {
-        currentLetter = encounteredPeriod[representationId] as string;
+        currentLetter = encounteredPeriod[representationId];
       }
 
       if (lastChunk === null) {

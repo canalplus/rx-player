@@ -52,7 +52,7 @@
  * ```
  * @class WeakMapMemory
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-restricted-types
 export default class WeakMapMemory<T extends object, U> {
   private readonly _fn: (obj: T) => U;
   private _weakMap: WeakMap<T, U>;

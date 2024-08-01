@@ -169,26 +169,26 @@ function generateFakeAdaptation({
 }
 
 describe("Manifest - updatePeriodInPlace", () => {
-  let mockOldVideoRepresentation1Replace: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation2Replace: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation3Replace: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation4Replace: MockInstance<[], void> | undefined;
-  let mockOldAudioRepresentationReplace: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation1Update: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation2Update: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation3Update: MockInstance<[], void> | undefined;
-  let mockOldVideoRepresentation4Update: MockInstance<[], void> | undefined;
-  let mockOldAudioRepresentationUpdate: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation1Replace: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation2Replace: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation3Replace: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation4Replace: MockInstance<[], void> | undefined;
-  let mockNewAudioRepresentationReplace: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation1Update: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation2Update: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation3Update: MockInstance<[], void> | undefined;
-  let mockNewVideoRepresentation4Update: MockInstance<[], void> | undefined;
-  let mockNewAudioRepresentationUpdate: MockInstance<[], void> | undefined;
+  let mockOldVideoRepresentation1Replace: MockInstance | undefined;
+  let mockOldVideoRepresentation2Replace: MockInstance | undefined;
+  let mockOldVideoRepresentation3Replace: MockInstance | undefined;
+  let mockOldVideoRepresentation4Replace: MockInstance | undefined;
+  let mockOldAudioRepresentationReplace: MockInstance | undefined;
+  let mockOldVideoRepresentation1Update: MockInstance | undefined;
+  let mockOldVideoRepresentation2Update: MockInstance | undefined;
+  let mockOldVideoRepresentation3Update: MockInstance | undefined;
+  let mockOldVideoRepresentation4Update: MockInstance | undefined;
+  let mockOldAudioRepresentationUpdate: MockInstance | undefined;
+  let mockNewVideoRepresentation1Replace: MockInstance | undefined;
+  let mockNewVideoRepresentation2Replace: MockInstance | undefined;
+  let mockNewVideoRepresentation3Replace: MockInstance | undefined;
+  let mockNewVideoRepresentation4Replace: MockInstance | undefined;
+  let mockNewAudioRepresentationReplace: MockInstance | undefined;
+  let mockNewVideoRepresentation1Update: MockInstance | undefined;
+  let mockNewVideoRepresentation2Update: MockInstance | undefined;
+  let mockNewVideoRepresentation3Update: MockInstance | undefined;
+  let mockNewVideoRepresentation4Update: MockInstance | undefined;
+  let mockNewAudioRepresentationUpdate: MockInstance | undefined;
 
   beforeEach(() => {
     mockOldVideoRepresentation1Replace = vi.spyOn(

@@ -5,7 +5,7 @@ import arrayFind from "../array_find";
 /* eslint-disable no-restricted-properties */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-restricted-types */
 
 /* eslint-disable @typescript-eslint/unbound-method */
 const initialArrayFind = (Array.prototype as { find: unknown }).find;
@@ -92,9 +92,9 @@ describe("utils - arrayFind", () => {
       let currentIndex = 0;
       const predicate = function (
         this: unknown,
-        obj: {},
+        obj: unknown,
         index: number,
-        cArr: Array<{}>,
+        cArr: unknown[],
       ): boolean {
         expect(this).toBe(context);
         expect(index).toBe(currentIndex++);

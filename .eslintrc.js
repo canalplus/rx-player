@@ -32,7 +32,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/ban-types": [
+    "@typescript-eslint/no-restricted-types": [
       "error",
       {
         types: {
@@ -81,6 +81,8 @@ module.exports = {
         objectLiteralTypeAssertions: "allow",
       },
     ],
+    "@typescript-eslint/prefer-promise-reject-errors": "off",
+    "@typescript-eslint/only-throw-error": "off",
     "@typescript-eslint/consistent-type-definitions": "error",
     "@typescript-eslint/dot-notation": "error",
     "@typescript-eslint/explicit-member-accessibility": [
@@ -171,18 +173,14 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
+        "args": "all",
         argsIgnorePattern: "^_",
+        caughtErrors: "none",
+        destructuredArrayIgnorePattern: "^_",
         varsIgnorePattern: "^_",
       },
     ],
     "@typescript-eslint/no-shadow": ["error"],
-    "@typescript-eslint/quotes": [
-      "error",
-      "double",
-      {
-        avoidEscape: true,
-      },
-    ],
     "@typescript-eslint/restrict-plus-operands": "error",
     "@typescript-eslint/strict-boolean-expressions": "error",
     "@typescript-eslint/triple-slash-reference": [

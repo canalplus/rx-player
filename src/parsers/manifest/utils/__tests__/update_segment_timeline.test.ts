@@ -9,7 +9,7 @@ import type { IIndexSegment } from "../index_helpers";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("Manifest Parsers utils - updateSegmentTimeline", () => {
-  let mockLogWarn: MockInstance<unknown[], void> | undefined;
+  let mockLogWarn: MockInstance | undefined;
   let updateSegmentTimeline:
     | ((a: IIndexSegment[], b: IIndexSegment[]) => boolean)
     | undefined;
