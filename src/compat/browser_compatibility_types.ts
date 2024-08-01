@@ -321,62 +321,20 @@ export interface IMediaKeySession extends IEventTarget<MediaKeySessionEventMap> 
   update(response: BufferSource): Promise<void>;
 }
 
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaElement(x: HTMLMediaElement) {
-  assertCompatibleIMediaElement(x);
+// Trick to ensure our own types are compatible to TypeScript's
+function assertTypeCompatibility<T, _U extends T>(): void {
+  // noop
 }
-function assertCompatibleIMediaElement(_x: IMediaElement) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaSource(x: MediaSource) {
-  assertCompatibleIMediaSource(x);
-}
-function assertCompatibleIMediaSource(_x: IMediaSource) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testSourceBuffer(x: SourceBuffer) {
-  assertCompatibleISourceBuffer(x);
-}
-function assertCompatibleISourceBuffer(_x: ISourceBuffer) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testSourceBufferList(x: SourceBufferList) {
-  assertCompatibleISourceBufferList(x);
-}
-function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaKeySystemAccess(x: MediaKeySystemAccess) {
-  assertCompatibleIMediaKeySystemAccess(x);
-}
-function assertCompatibleIMediaKeySystemAccess(_x: IMediaKeySystemAccess) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaKeys(x: MediaKeys) {
-  assertCompatibleIMediaKeys(x);
-}
-function assertCompatibleIMediaKeys(_x: IMediaKeys) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaKeySession(x: MediaKeySession) {
-  assertCompatibleIMediaKeySession(x);
-}
-function assertCompatibleIMediaKeySession(_x: IMediaKeySession) {
-  // Noop
-}
+
+/* eslint-disable @typescript-eslint/no-restricted-types */
+assertTypeCompatibility<IMediaElement, HTMLMediaElement>();
+assertTypeCompatibility<IMediaSource, MediaSource>();
+assertTypeCompatibility<ISourceBuffer, SourceBuffer>();
+assertTypeCompatibility<ISourceBufferList, SourceBufferList>();
+assertTypeCompatibility<IMediaKeySystemAccess, MediaKeySystemAccess>();
+assertTypeCompatibility<IMediaKeys, MediaKeys>();
+assertTypeCompatibility<IMediaKeySession, MediaKeySession>();
+/* eslint-enable @typescript-eslint/no-restricted-types */
 
 /**
  * AudioTrackList implementation (that TS forgot).
