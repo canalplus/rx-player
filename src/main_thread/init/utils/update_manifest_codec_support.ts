@@ -100,7 +100,7 @@ export function updateManifestCodecSupport(
         // encrypted codec is supported
         isSupportedEncrypted: true,
       };
-    } else if (contentDecryptor.getState() === ContentDecryptorState.Initializing) {
+    } else if (contentDecryptor.getState().name === ContentDecryptorState.Initializing) {
       newData = {
         isSupportedClear: true,
         isSupportedEncrypted: undefined,
