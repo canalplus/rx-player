@@ -167,7 +167,9 @@ describe("Global TTML HTML parsing tests", () => {
       for (let i = 0; i < textNodes.length; i++) {
         const parentElement = textNodes[i].parentElement;
         if (parentElement !== null) {
-          expect(globalScope.getComputedStyle(parentElement).color).toEqual("yellow");
+          expect(globalScope.getComputedStyle(parentElement).color).toEqual(
+            "rgb(255, 255, 0)",
+          );
           nbTextNodes++;
         }
       }
@@ -177,7 +179,9 @@ describe("Global TTML HTML parsing tests", () => {
       for (let i = 0; i < textNodes.length; i++) {
         const parentElement = textNodes[i].parentElement;
         if (parentElement !== null) {
-          expect(globalScope.getComputedStyle(parentElement).color).toEqual("white");
+          expect(globalScope.getComputedStyle(parentElement).color).toEqual(
+            "rgb(255, 255, 255)",
+          );
           nbTextNodes++;
         }
       }
