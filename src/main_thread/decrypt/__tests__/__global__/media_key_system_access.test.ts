@@ -2,6 +2,8 @@ import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
 import type { IKeySystemOption } from "../../../../public_types";
 import type IContentDecryptor from "../../content_decryptor";
+import type { IContentDecryptorStateData } from "../../types";
+import { ContentDecryptorState } from "../../types";
 import {
   defaultKSConfig,
   defaultPRRecommendationKSConfig,
@@ -971,9 +973,14 @@ describe("decrypt - global tests - media key system access", () => {
 
       const mediaElement = document.createElement("video");
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error) => {
-        rej(error);
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (state: IContentDecryptorStateData) => {
+          if (state.name === ContentDecryptorState.Error) {
+            rej(state.payload);
+          }
+        },
+      );
       setTimeout(() => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
@@ -1007,9 +1014,14 @@ describe("decrypt - global tests - media key system access", () => {
 
       const mediaElement = document.createElement("video");
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error) => {
-        rej(error);
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (state: IContentDecryptorStateData) => {
+          if (state.name === ContentDecryptorState.Error) {
+            rej(state.payload);
+          }
+        },
+      );
       setTimeout(() => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(3);
         expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
@@ -1056,9 +1068,14 @@ describe("decrypt - global tests - media key system access", () => {
         { type: "baz", getLicense: neverCalledFn },
       ];
       contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error) => {
-        rej(error);
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (state: IContentDecryptorStateData) => {
+          if (state.name === ContentDecryptorState.Error) {
+            rej(state.payload);
+          }
+        },
+      );
       setTimeout(() => {
         expect(rmksHasBeenCalled).toEqual(true);
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
@@ -1088,10 +1105,15 @@ describe("decrypt - global tests - media key system access", () => {
 
       const config = [{ type: "foo", getLicense: neverCalledFn }];
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", () => {
-        expect(rmksHasBeenCalled).toEqual(true);
-        res();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (state: IContentDecryptorStateData) => {
+          if (state.name === ContentDecryptorState.Error) {
+            expect(rmksHasBeenCalled).toEqual(true);
+            res();
+          }
+        },
+      );
       setTimeout(() => {
         rej(new Error("timeout exceeded"));
       }, 10);

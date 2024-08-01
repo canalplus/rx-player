@@ -188,6 +188,14 @@ export interface IAdaptationStreamOptions {
    * those devices.
    */
   enableFastSwitching: boolean;
+  /**
+   * If `true`, protection data as found in the content can be manipulated so
+   * e.g. only the data linked to the given systemId may be communicated.
+   *
+   * If `false` the full extent of the protection data, in exactly the way it
+   * has been found in the content, should be communicated.
+   */
+  canFilterProtectionData: boolean;
 }
 
 /** Object indicating a choice of Adaptation made by the user. */

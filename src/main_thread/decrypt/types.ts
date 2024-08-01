@@ -28,14 +28,6 @@ import type PersistentSessionsStore from "./utils/persistent_sessions_store";
 /** Events sent by the `ContentDecryptor`, in a `{ event: payload }` format. */
 export interface IContentDecryptorEvent {
   /**
-   * Event emitted when a major error occured which made the ContentDecryptor
-   * stopped.
-   * When that event is sent, the `ContentDecryptor` is in the `Error` state and
-   * cannot be used anymore.
-   */
-  error: Error;
-
-  /**
    * Event emitted when a minor error occured which the ContentDecryptor can
    * recover from.
    */
@@ -46,7 +38,7 @@ export interface IContentDecryptorEvent {
    * States are a central aspect of the `ContentDecryptor`, be sure to check the
    * ContentDecryptorState type.
    */
-  stateChange: ContentDecryptorState;
+  stateChange: IContentDecryptorStateData;
 
   blackListProtectionData: IProcessedProtectionData;
 
@@ -57,6 +49,64 @@ export interface IContentDecryptorEvent {
   };
 }
 
+/** Describes the current "state" the `ContentDecryptor` is in. */
+export type IContentDecryptorStateData =
+  | IInitializingContentDecryptorState
+  | IWaitingForAttachmentContentDecryptorState
+  | IReadyForContentContentDecryptorState
+  | IErrorContentDecryptorState
+  | IDisposedContentDecryptorState;
+
+/** Object sent when the `ContentDecryptorState` switches to `Initializing`. */
+export interface IInitializingContentDecryptorState {
+  name: ContentDecryptorState.Initializing;
+  payload: null;
+}
+
+/** Object sent when the `ContentDecryptorState` switches to `WaitingForAttachment`. */
+export interface IWaitingForAttachmentContentDecryptorState {
+  name: ContentDecryptorState.WaitingForAttachment;
+  payload: null;
+}
+
+/** Object sent when the `ContentDecryptorState` switches to `ReadyForContent`. */
+export interface IReadyForContentContentDecryptorState {
+  name: ContentDecryptorState.ReadyForContent;
+  payload: {
+    /**
+     * Hexa characters identifying the "system id" of the content protection
+     * technology.
+     * `undefined` if unknown.
+     */
+    systemId: string | undefined;
+    /**
+     * If `true`, protection data as found in the content can be manipulated so
+     * e.g. only the data linked to the given systemId may be communicated.
+     *
+     * If `false` the full extent of the protection data, in exactly the way it
+     * has been found in the content, should be communicated.
+     */
+    canFilterProtectionData: boolean;
+    /**
+     * If `true`, the current device is known to not be able to begin playback of
+     * encrypted content if there's already clear content playing.
+     */
+    failOnEncryptedAfterClear: boolean;
+  };
+}
+
+/** Object sent when the `ContentDecryptorState` switches to `Error`. */
+export interface IErrorContentDecryptorState {
+  name: ContentDecryptorState.Error;
+  payload: Error;
+}
+
+/** Object sent when the `ContentDecryptorState` switches to `Disposed`. */
+export interface IDisposedContentDecryptorState {
+  name: ContentDecryptorState.Disposed;
+  payload: null;
+}
+
 /** Enumeration of the various "state" the `ContentDecryptor` can be in. */
 export enum ContentDecryptorState {
   /**
@@ -65,7 +115,6 @@ export enum ContentDecryptorState {
    * This is is the initial state of the ContentDecryptor.
    */
   Initializing,
-
   /**
    * The `ContentDecryptor` has been initialized.
    * You should now called the `attach` method when you want to add decryption

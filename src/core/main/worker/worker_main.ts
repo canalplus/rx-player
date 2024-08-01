@@ -473,6 +473,19 @@ interface IBufferingInitializationInformation {
    */
   drmSystemId: string | undefined;
   /**
+   * If `true`, protection data as found in the content can be manipulated so
+   * e.g. only the data linked to the given systemId may be communicated.
+   *
+   * If `false` the full extent of the protection data, in exactly the way it
+   * has been found in the content, should be communicated.
+   */
+  canFilterProtectionData: boolean;
+  /**
+   * If `true`, the current device is known to not be able to begin playback of
+   * encrypted content if there's already clear content playing.
+   */
+  failOnEncryptedAfterClear: boolean;
+  /**
    * Enable/Disable fastSwitching: allow to replace lower-quality segments by
    * higher-quality ones to have a faster transition.
    */
@@ -522,7 +535,14 @@ function loadOrReloadPreparedContent(
     segmentSinksStore,
     segmentQueueCreator,
   } = preparedContent;
-  const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
+  const {
+    canFilterProtectionData,
+    failOnEncryptedAfterClear,
+    drmSystemId,
+    enableFastSwitching,
+    initialTime,
+    onCodecSwitch,
+  } = val;
   playbackObservationRef.onUpdate(
     (observation) => {
       if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
@@ -604,6 +624,8 @@ function loadOrReloadPreparedContent(
       maxVideoBufferSize,
       maxBufferAhead,
       maxBufferBehind,
+      canFilterProtectionData,
+      failOnEncryptedAfterClear,
       drmSystemId,
       enableFastSwitching,
       onCodecSwitch,
@@ -887,6 +909,8 @@ function loadOrReloadPreparedContent(
           {
             initialTime: newInitialTime,
             drmSystemId: val.drmSystemId,
+            canFilterProtectionData: val.canFilterProtectionData,
+            failOnEncryptedAfterClear: val.failOnEncryptedAfterClear,
             enableFastSwitching: val.enableFastSwitching,
             onCodecSwitch: val.onCodecSwitch,
           },

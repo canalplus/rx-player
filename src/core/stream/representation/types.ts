@@ -323,6 +323,14 @@ export interface IRepresentationStreamOptions {
    * `0` can be emitted to disable any kind of fast-switching.
    */
   fastSwitchThreshold: IReadOnlySharedReference<undefined | number>;
+  /**
+   * If `true`, protection data as found in the content can be manipulated so
+   * e.g. only the data linked to the given systemId may be communicated.
+   *
+   * If `false` the full extent of the protection data, in exactly the way it
+   * has been found in the content, should be communicated.
+   */
+  canFilterProtectionData: boolean;
 }
 
 /** Object indicating a choice of allowed Representations made by the user. */

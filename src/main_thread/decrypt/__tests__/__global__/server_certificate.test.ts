@@ -1,7 +1,10 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IKeySystemOption } from "../../../../public_types";
 import type IContentDecryptor from "../../content_decryptor";
-import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
+import type {
+  ContentDecryptorState as IContentDecryptorState,
+  IContentDecryptorStateData,
+} from "../../types";
 import { MediaKeysImpl, MediaKeySystemAccessImpl, mockCompat } from "./utils";
 
 describe("decrypt - global tests - server certificate", () => {
@@ -40,7 +43,7 @@ describe("decrypt - global tests - server certificate", () => {
     const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
     const mockSetServerCertificate = vi
       .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-      .mockImplementation((_serverCertificate: BufferSource) => {
+      .mockImplementation((_serverCertificate: BufferSource): Promise<true> => {
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockCreateSession).not.toHaveBeenCalled();
         return Promise.resolve(true);
@@ -53,24 +56,27 @@ describe("decrypt - global tests - server certificate", () => {
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     return new Promise<void>((res) => {
-      contentDecryptor.addEventListener("stateChange", (state) => {
-        if (state === ContentDecryptorState.WaitingForAttachment) {
-          contentDecryptor.removeEventListener("stateChange");
-          setTimeout(() => {
-            expect(mockSetMediaKeys).not.toHaveBeenCalled();
-            expect(mockCreateSession).not.toHaveBeenCalled();
-            expect(mockSetServerCertificate).not.toHaveBeenCalled();
-            contentDecryptor.attach();
-          }, 5);
-          setTimeout(() => {
-            contentDecryptor.dispose();
-            expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-            expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
-            expect(mockCreateSession).not.toHaveBeenCalled();
-            res();
-          }, 10);
-        }
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (state: IContentDecryptorStateData) => {
+          if (state.name === ContentDecryptorState.WaitingForAttachment) {
+            contentDecryptor.removeEventListener("stateChange");
+            setTimeout(() => {
+              expect(mockSetMediaKeys).not.toHaveBeenCalled();
+              expect(mockCreateSession).not.toHaveBeenCalled();
+              expect(mockSetServerCertificate).not.toHaveBeenCalled();
+              contentDecryptor.attach();
+            }, 5);
+            setTimeout(() => {
+              contentDecryptor.dispose();
+              expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
+              expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
+              expect(mockCreateSession).not.toHaveBeenCalled();
+              res();
+            }, 10);
+          }
+        },
+      );
     });
   });
 
@@ -84,7 +90,7 @@ describe("decrypt - global tests - server certificate", () => {
     const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
     const mockSetServerCertificate = vi
       .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
-      .mockImplementation((_serverCertificate: BufferSource) => {
+      .mockImplementation((_serverCertificate: BufferSource): Promise<true> => {
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockCreateSession).not.toHaveBeenCalled();
         return Promise.resolve(true);
@@ -96,22 +102,25 @@ describe("decrypt - global tests - server certificate", () => {
       .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
-        contentDecryptor.removeEventListener("stateChange");
-        setTimeout(() => {
-          expect(mockSetMediaKeys).not.toHaveBeenCalled();
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          expect(mockSetServerCertificate).not.toHaveBeenCalled();
-          const initData = new Uint8Array([54, 55, 75]);
-          contentDecryptor.onInitializationData({
-            type: "cenc2",
-            values: [{ systemId: "15", data: initData }],
-          });
-          contentDecryptor.attach();
-        }, 5);
-      }
-    });
+    contentDecryptor.addEventListener(
+      "stateChange",
+      (state: IContentDecryptorStateData) => {
+        if (state.name === ContentDecryptorState.WaitingForAttachment) {
+          contentDecryptor.removeEventListener("stateChange");
+          setTimeout(() => {
+            expect(mockSetMediaKeys).not.toHaveBeenCalled();
+            expect(mockCreateSession).not.toHaveBeenCalled();
+            expect(mockSetServerCertificate).not.toHaveBeenCalled();
+            const initData = new Uint8Array([54, 55, 75]);
+            contentDecryptor.onInitializationData({
+              type: "cenc2",
+              values: [{ systemId: "15", data: initData }],
+            });
+            contentDecryptor.attach();
+          }, 5);
+        }
+      },
+    );
     return new Promise<void>((res) => {
       setTimeout(() => {
         contentDecryptor.dispose();
@@ -138,12 +147,15 @@ describe("decrypt - global tests - server certificate", () => {
       .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      }
-    });
+    contentDecryptor.addEventListener(
+      "stateChange",
+      (state: IContentDecryptorStateData) => {
+        if (state.name === ContentDecryptorState.WaitingForAttachment) {
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        }
+      },
+    );
 
     let warningsReceived = 0;
     contentDecryptor.addEventListener("warning", (w) => {
@@ -178,12 +190,15 @@ describe("decrypt - global tests - server certificate", () => {
       .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      }
-    });
+    contentDecryptor.addEventListener(
+      "stateChange",
+      (state: IContentDecryptorStateData) => {
+        if (state.name === ContentDecryptorState.WaitingForAttachment) {
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        }
+      },
+    );
 
     let warningsReceived = 0;
     contentDecryptor.addEventListener("warning", (w) => {
@@ -229,23 +244,26 @@ describe("decrypt - global tests - server certificate", () => {
       .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
-        contentDecryptor.removeEventListener("stateChange");
-        setTimeout(() => {
-          expect(mockSetMediaKeys).not.toHaveBeenCalled();
-          expect(mockCreateSession).not.toHaveBeenCalled();
-          expect(mockSetServerCertificate).not.toHaveBeenCalled();
-          const initData = new Uint8Array([54, 55, 75]);
-          contentDecryptor.onInitializationData({
-            type: "cenc2",
-            values: [{ systemId: "15", data: initData }],
-          });
+    contentDecryptor.addEventListener(
+      "stateChange",
+      (state: IContentDecryptorStateData) => {
+        if (state.name === ContentDecryptorState.WaitingForAttachment) {
+          contentDecryptor.removeEventListener("stateChange");
+          setTimeout(() => {
+            expect(mockSetMediaKeys).not.toHaveBeenCalled();
+            expect(mockCreateSession).not.toHaveBeenCalled();
+            expect(mockSetServerCertificate).not.toHaveBeenCalled();
+            const initData = new Uint8Array([54, 55, 75]);
+            contentDecryptor.onInitializationData({
+              type: "cenc2",
+              values: [{ systemId: "15", data: initData }],
+            });
 
-          contentDecryptor.attach();
-        }, 5);
-      }
-    });
+            contentDecryptor.attach();
+          }, 5);
+        }
+      },
+    );
     return new Promise<void>((res) => {
       setTimeout(() => {
         contentDecryptor.dispose();
