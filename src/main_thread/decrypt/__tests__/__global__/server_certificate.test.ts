@@ -59,7 +59,7 @@ describe("decrypt - global tests - server certificate", () => {
 
     return new Promise<void>((res) => {
       contentDecryptor.addEventListener("stateChange", (state: any) => {
-        if (state === ContentDecryptorState.WaitingForAttachment) {
+        if (state.name === ContentDecryptorState.WaitingForAttachment) {
           contentDecryptor.removeEventListener("stateChange");
           setTimeout(() => {
             expect(mockSetMediaKeys).not.toHaveBeenCalled();
@@ -101,7 +101,7 @@ describe("decrypt - global tests - server certificate", () => {
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
+      if (state.name === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         setTimeout(() => {
           expect(mockSetMediaKeys).not.toHaveBeenCalled();
@@ -142,7 +142,7 @@ describe("decrypt - global tests - server certificate", () => {
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
+      if (state.name === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
       }
@@ -181,7 +181,7 @@ describe("decrypt - global tests - server certificate", () => {
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
+      if (state.name === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
       }
@@ -231,7 +231,7 @@ describe("decrypt - global tests - server certificate", () => {
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     contentDecryptor.addEventListener("stateChange", (state: any) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
+      if (state.name === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         setTimeout(() => {
           expect(mockSetMediaKeys).not.toHaveBeenCalled();

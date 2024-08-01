@@ -52,7 +52,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -104,7 +104,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -176,7 +176,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -276,7 +276,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -347,7 +347,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -403,7 +403,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -481,7 +481,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -577,7 +577,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");
@@ -661,7 +661,7 @@ describe("decrypt - global tests - init data", () => {
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
           rej(new Error(`Unexpected state: ${newState}`));
         }
         contentDecryptor.removeEventListener("stateChange");

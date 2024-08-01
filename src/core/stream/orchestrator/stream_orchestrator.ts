@@ -109,6 +109,22 @@ export default function StreamOrchestrator(
     MAXIMUM_MAX_BUFFER_BEHIND,
   } = config.getCurrent();
 
+  // Some DRM issues force us to check whether we're initially pushing clear
+  // segments.
+  //
+  // NOTE: Theoretically `initialPeriod` may not be the first Period for
+  // which we push segments (e.g. we may have a small seek which lead to
+  // another Period being streamed instead).
+  // This means that we could have an issue if `initialPeriod` leads to encrypted
+  // content, but the actually first-pushed segments do not. Here
+  // `shouldReloadOnEncryptedContent` would be set to `false` despiste the fact
+  // that it should be set to `true`.
+  // Yet, checking the first Period for which we pushed segments seems very hard,
+  // and all that for what is now (2024-07-31) a PlayReady bug, I don't have the
+  // will.
+  const shouldReloadOnEncryptedContent =
+    options.failOnEncryptedAfterClear && !hasEncryptedContentInPeriod(initialPeriod);
+
   // Keep track of a unique BufferGarbageCollector created per
   // SegmentSink.
   const garbageCollectors = new WeakMapMemory((segmentSink: SegmentSink) => {
@@ -449,6 +465,26 @@ export default function StreamOrchestrator(
   ): void {
     log.info("Stream: Creating new Stream for", bufferType, basePeriod.start);
 
+    if (shouldReloadOnEncryptedContent) {
+      if (hasEncryptedContentInPeriod(basePeriod)) {
+        playbackObserver.listen((pos) => {
+          if (pos.position.getWanted() > basePeriod.start - 0.01) {
+            callbacks.needsMediaSourceReload({
+              timeOffset: 0,
+              minimumPosition: basePeriod.start,
+              maximumPosition: basePeriod.end,
+            });
+          } else {
+            callbacks.lockedStream({
+              period: basePeriod,
+              bufferType,
+            });
+          }
+        });
+        return;
+      }
+    }
+
     /**
      * Contains properties linnked to the next chronological `PeriodStream` that
      * may be created here.
@@ -656,6 +692,11 @@ export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
   maxVideoBufferSize: IReadOnlySharedReference<number>;
   maxBufferAhead: IReadOnlySharedReference<number>;
   maxBufferBehind: IReadOnlySharedReference<number>;
+  /**
+   * If `true`, the current device is known to not be able to begin playback of
+   * encrypted content if there's already clear content playing.
+   */
+  failOnEncryptedAfterClear: boolean;
 };
 
 /** Callbacks called by the `StreamOrchestrator` on various events. */
@@ -758,6 +799,24 @@ export interface ILockedStreamPayload {
   period: IPeriod;
   /** Buffer type concerned. */
   bufferType: IBufferType;
+}
+
+/**
+ * Return `true` if the given Period has at least one Representation which is
+ * known to be encrypted.
+ *
+ * @param {Object} period
+ * @returns {boolean}
+ */
+function hasEncryptedContentInPeriod(period: IPeriod): boolean {
+  for (const adaptation of period.getAdaptations()) {
+    for (const representation of adaptation.representations) {
+      if (representation.contentProtections !== undefined) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**

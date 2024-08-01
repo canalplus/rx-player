@@ -19,6 +19,7 @@ import EventEmitter from "../../../../utils/event_emitter";
 import flatMap from "../../../../utils/flat_map";
 import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
+import { ContentDecryptorState } from "../../types";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultKSConfig = [
@@ -481,8 +482,10 @@ export function testContentDecryptorError(
 ): Promise<unknown> {
   return new Promise((res, rej) => {
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystemsConfigs);
-    contentDecryptor.addEventListener("error", (error: any) => {
-      res(error);
+    contentDecryptor.addEventListener("stateChange", (state: any) => {
+      if (state.name === ContentDecryptorState.Error) {
+        res(state.payload);
+      }
     });
     setTimeout(() => {
       rej(new Error("Timeout exceeded"));

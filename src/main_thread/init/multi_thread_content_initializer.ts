@@ -298,7 +298,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     );
     drmInitializationStatus.onUpdate(
       (initializationStatus, stopListeningDrm) => {
-        if (initializationStatus.initializationState.type === "initialized") {
+        if (initializationStatus.type === "initialized") {
           stopListeningDrm();
           this._startPlaybackIfReady(playbackStartParams);
         }
@@ -1140,7 +1140,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
     cancelSignal: CancellationSignal,
-  ): IReadOnlySharedReference<IDrmInitializationStatus> {
+  ): IReadOnlySharedReference<IDecryptionInitializationState> {
     const { keySystems } = this._settings;
 
     // TODO private?
@@ -1159,8 +1159,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         { clearSignal: cancelSignal },
       );
       const ref = new SharedReference({
-        initializationState: { type: "initialized" as const, value: null },
-        drmSystemId: undefined,
+        type: "initialized" as const,
+        value: {
+          drmSystemId: undefined,
+          canFilterProtectionData: true,
+          failOnEncryptedAfterClear: false,
+        },
       });
       ref.finish(); // We know that no new value will be triggered
       return ref;
@@ -1172,11 +1176,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return createEmeDisabledReference("EME feature not activated.");
     }
 
-    const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
-      {
-        initializationState: { type: "uninitialized", value: null },
-        drmSystemId: undefined,
-      },
+    const drmStatusRef = new SharedReference<IDecryptionInitializationState>(
+      { type: "uninitialized", value: null },
       cancelSignal,
     );
     const ContentDecryptor = features.decrypt;
@@ -1243,31 +1244,38 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       this.trigger("decipherabilityUpdate", manUpdates);
     });
     contentDecryptor.addEventListener("stateChange", (state) => {
-      if (state === ContentDecryptorState.WaitingForAttachment) {
-        mediaSourceStatus.onUpdate(
-          (currStatus, stopListening) => {
-            if (currStatus === MediaSourceInitializationStatus.Nothing) {
-              mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
-            } else if (currStatus === MediaSourceInitializationStatus.Attached) {
-              stopListening();
-              if (state === ContentDecryptorState.WaitingForAttachment) {
-                contentDecryptor.attach();
-              }
-            }
-          },
-          { clearSignal: cancelSignal, emitCurrentValue: true },
-        );
-      } else if (state === ContentDecryptorState.ReadyForContent) {
-        drmStatusRef.setValue({
-          initializationState: { type: "initialized", value: null },
-          drmSystemId: contentDecryptor.systemId,
-        });
-        contentDecryptor.removeEventListener("stateChange");
-      }
-    });
+      switch (state.name) {
+        case ContentDecryptorState.Error:
+          this._onFatalError(state.payload);
+          break;
 
-    contentDecryptor.addEventListener("error", (error) => {
-      this._onFatalError(error);
+        case ContentDecryptorState.WaitingForAttachment:
+          mediaSourceStatus.onUpdate(
+            (currStatus, stopListening) => {
+              if (currStatus === MediaSourceInitializationStatus.Nothing) {
+                mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
+              } else if (currStatus === MediaSourceInitializationStatus.Attached) {
+                stopListening();
+                if (state.name === ContentDecryptorState.WaitingForAttachment) {
+                  contentDecryptor.attach();
+                }
+              }
+            },
+            { clearSignal: cancelSignal, emitCurrentValue: true },
+          );
+          break;
+
+        case ContentDecryptorState.ReadyForContent:
+          drmStatusRef.setValue({
+            type: "initialized",
+            value: {
+              drmSystemId: state.payload.systemId,
+              canFilterProtectionData: state.payload.canFilterProtectionData,
+              failOnEncryptedAfterClear: state.payload.failOnEncryptedAfterClear,
+            },
+          });
+          break;
+      }
     });
 
     contentDecryptor.addEventListener("warning", (error) => {
@@ -1557,16 +1565,17 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     mediaElement: IMediaElement;
     textDisplayer: ITextDisplayer | null;
     playbackObserver: IMediaElementPlaybackObserver;
-    drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
+    drmInitializationStatus: IReadOnlySharedReference<IDecryptionInitializationState>;
     mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
   }): boolean {
     if (this._currentContentInfo === null || this._currentContentInfo.manifest === null) {
       return false;
     }
     const drmInitStatus = parameters.drmInitializationStatus.getValue();
-    if (drmInitStatus.initializationState.type !== "initialized") {
+    if (drmInitStatus.type !== "initialized") {
       return false;
     }
+    const drmPayload = drmInitStatus.value;
     const msInitStatus = parameters.mediaSourceStatus.getValue();
     if (msInitStatus !== MediaSourceInitializationStatus.Attached) {
       return false;
@@ -1605,7 +1614,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       value: {
         initialTime,
         initialObservation: sentInitialObservation,
-        drmSystemId: drmInitStatus.drmSystemId,
+        drmSystemId: drmPayload.drmSystemId,
+        canFilterProtectionData: drmPayload.canFilterProtectionData,
+        failOnEncryptedAfterClear: drmPayload.failOnEncryptedAfterClear,
         enableFastSwitching,
         onCodecSwitch,
       },
@@ -1950,17 +1961,6 @@ const enum MediaSourceInitializationStatus {
   Attached,
 }
 
-interface IDrmInitializationStatus {
-  /** Current initialization state the decryption logic is in. */
-  initializationState: IDecryptionInitializationState;
-  /**
-   * If set, corresponds to the hex string describing the current key system
-   * used.
-   * `undefined` if unknown or if it does not apply.
-   */
-  drmSystemId: string | undefined;
-}
-
 /** Initialization steps to add decryption capabilities to an `HTMLMediaElement`. */
 type IDecryptionInitializationState =
   /**
@@ -1989,7 +1989,30 @@ type IDecryptionInitializationState =
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
    */
-  | { type: "initialized"; value: null };
+  | {
+      type: "initialized";
+      value: {
+        /**
+         * If set, corresponds to the hex string describing the current key system
+         * used.
+         * `undefined` if unknown.
+         */
+        drmSystemId: string | undefined;
+        /**
+         * If `true`, protection data as found in the content can be manipulated so
+         * e.g. only the data linked to the given systemId may be communicated.
+         *
+         * If `false` the full extent of the protection data, in exactly the way it
+         * has been found in the content, should be communicated.
+         */
+        canFilterProtectionData: boolean;
+        /**
+         * if `true`, the current device is known to not be able to begin playback of
+         * encrypted content if there's already clear content playing.
+         */
+        failOnEncryptedAfterClear: boolean;
+      };
+    };
 
 /**
  * Ensure that all `Representation` and `Adaptation` have a known status

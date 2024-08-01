@@ -9,6 +9,7 @@ import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 /* eslint-disable no-restricted-properties */
 
 import type { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
+import { ContentDecryptorState } from "../../types";
 import {
   defaultKSConfig,
   defaultPRRecommendationKSConfig,
@@ -708,8 +709,10 @@ describe("decrypt - global tests - media key system access", () => {
 
       const mediaElement = document.createElement("video");
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error: any) => {
-        rej(error);
+      contentDecryptor.addEventListener("stateChange", (state: any) => {
+        if (state.name === ContentDecryptorState.Error) {
+          rej(state.payload);
+        }
       });
       setTimeout(() => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
@@ -745,8 +748,10 @@ describe("decrypt - global tests - media key system access", () => {
 
       const mediaElement = document.createElement("video");
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error: any) => {
-        rej(error);
+      contentDecryptor.addEventListener("stateChange", (state: any) => {
+        if (state.name === ContentDecryptorState.Error) {
+          rej(state.payload);
+        }
       });
       setTimeout(() => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
@@ -789,8 +794,10 @@ describe("decrypt - global tests - media key system access", () => {
         { type: "baz", getLicense: neverCalledFn },
       ];
       contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error: any) => {
-        rej(error);
+      contentDecryptor.addEventListener("stateChange", (state: any) => {
+        if (state.name === ContentDecryptorState.Error) {
+          rej(state.payload);
+        }
       });
       setTimeout(() => {
         expect(rmksHasBeenCalled).toEqual(true);
@@ -821,9 +828,11 @@ describe("decrypt - global tests - media key system access", () => {
 
       const config = [{ type: "foo", getLicense: neverCalledFn }];
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", () => {
-        expect(rmksHasBeenCalled).toEqual(true);
-        res();
+      contentDecryptor.addEventListener("stateChange", (state: any) => {
+        if (state.name === ContentDecryptorState.Error) {
+          expect(rmksHasBeenCalled).toEqual(true);
+          res();
+        }
       });
       setTimeout(() => {
         rej(new Error("timeout exceeded"));

@@ -441,6 +441,7 @@ export default function AdaptationStream(
           bufferGoal,
           maxBufferSize,
           drmSystemId: options.drmSystemId,
+          canFilterProtectionData: options.canFilterProtectionData,
           fastSwitchThreshold,
         },
       },

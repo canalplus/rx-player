@@ -94,7 +94,13 @@ export default function RepresentationStream<TSegmentDataType>(
   parentCancelSignal: CancellationSignal,
 ): void {
   const { period, adaptation, representation } = content;
-  const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
+  const {
+    bufferGoal,
+    maxBufferSize,
+    drmSystemId,
+    canFilterProtectionData,
+    fastSwitchThreshold,
+  } = options;
   const bufferType = adaptation.type;
 
   /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
@@ -148,7 +154,7 @@ export default function RepresentationStream<TSegmentDataType>(
   // If the DRM system id is already known, and if we already have encryption data
   // for it, we may not need to wait until the initialization segment is loaded to
   // signal required protection data, thus performing License negotiations sooner
-  if (drmSystemId !== undefined) {
+  if (canFilterProtectionData && drmSystemId !== undefined) {
     const encryptionData = representation.getEncryptionData(drmSystemId);
 
     // If some key ids are not known yet, it may be safer to wait for this initialization

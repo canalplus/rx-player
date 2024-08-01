@@ -10,6 +10,7 @@ import { describe, afterEach, it, expect, vi } from "vitest";
 
 import type { IPlayerError } from "../../../../public_types";
 import { concat } from "../../../../utils/byte_parsing";
+import type { IContentDecryptorStateData } from "../../types";
 import {
   formatFakeChallengeFromInitData,
   MediaKeySessionImpl,
@@ -376,37 +377,44 @@ async function checkGetLicense({
     // == test ==
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
 
-    contentDecryptor.addEventListener("stateChange", (newState: number) => {
-      if (newState !== ContentDecryptorState.WaitingForAttachment) {
-        rej(new Error(`Unexpected state: ${newState}`));
+    const waitForAttachmentCallback = (newState: IContentDecryptorStateData) => {
+      if (newState.name !== ContentDecryptorState.WaitingForAttachment) {
+        rej(new Error(`Unexpected state: ${newState.name}`));
       }
-      contentDecryptor.removeEventListener("stateChange");
+      contentDecryptor.removeEventListener("stateChange", waitForAttachmentCallback);
       contentDecryptor.attach();
-    });
-
-    contentDecryptor.addEventListener("error", (error: unknown) => {
-      if (shouldFail) {
-        try {
-          checkKeyLoadError(error);
-          expect(mockGetLicense).toHaveBeenCalledTimes(maxRetries + 1);
-          for (let i = 1; i <= maxRetries + 1; i++) {
-            // TODO there's seem to be an issue with how vitest check Uint8Array
-            // equality
-            expect(mockGetLicense).toHaveBeenNthCalledWith(
-              i,
-              challenge,
-              "license-request",
-            );
-          }
-          expect(mockUpdate).toHaveBeenCalledTimes(0);
-          res();
-        } catch (e) {
-          rej(e);
+    };
+    contentDecryptor.addEventListener("stateChange", waitForAttachmentCallback);
+    contentDecryptor.addEventListener(
+      "stateChange",
+      (state: IContentDecryptorStateData) => {
+        if (state.name !== ContentDecryptorState.Error) {
+          return;
         }
-      } else {
-        rej(new Error(`Unexpected error: ${error}`));
-      }
-    });
+        const error = state.payload;
+        if (shouldFail) {
+          try {
+            checkKeyLoadError(error);
+            expect(mockGetLicense).toHaveBeenCalledTimes(maxRetries + 1);
+            for (let i = 1; i <= maxRetries + 1; i++) {
+              // TODO there's seem to be an issue with how vitest check Uint8Array
+              // equality
+              expect(mockGetLicense).toHaveBeenNthCalledWith(
+                i,
+                challenge,
+                "license-request",
+              );
+            }
+            expect(mockUpdate).toHaveBeenCalledTimes(0);
+            res();
+          } catch (e) {
+            rej(e);
+          }
+        } else {
+          rej(new Error(`Unexpected error: ${error}`));
+        }
+      },
+    );
 
     contentDecryptor.addEventListener("warning", (warning: Error) => {
       if (warningsLeft-- > 0) {

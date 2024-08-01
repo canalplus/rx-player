@@ -115,7 +115,7 @@ describe("decrypt - global tests - media key system access", () => {
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
         receivedStateChange++;
         try {
-          expect(newState).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(newState.name).toEqual(ContentDecryptorState.WaitingForAttachment);
           expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
         } catch (err) {
           rej(err);
@@ -123,9 +123,10 @@ describe("decrypt - global tests - media key system access", () => {
         setTimeout(() => {
           try {
             expect(receivedStateChange).toEqual(1);
-            expect(contentDecryptor.getState()).toEqual(
-              ContentDecryptorState.WaitingForAttachment,
-            );
+            expect(contentDecryptor.getState()).toEqual({
+              name: ContentDecryptorState.WaitingForAttachment,
+              payload: null,
+            });
             contentDecryptor.dispose();
           } catch (err) {
             rej(err);
@@ -148,17 +149,19 @@ describe("decrypt - global tests - media key system access", () => {
     return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
-      contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1: any) => {
         receivedStateChange1++;
+        if (state1.name === ContentDecryptorState.Error) {
+          rej(state1.payload);
+        }
         try {
           if (receivedStateChange1 === 2) {
-            expect(state1).toEqual(ContentDecryptorState.ReadyForContent);
+            expect(state1.name).toEqual(ContentDecryptorState.ReadyForContent);
             return;
           } else if (receivedStateChange1 !== 1) {
             throw new Error("Unexpected stateChange event.");
           }
-          expect(state1).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(state1.name).toEqual(ContentDecryptorState.WaitingForAttachment);
           expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
           contentDecryptor1.attach();
         } catch (err) {
@@ -169,17 +172,19 @@ describe("decrypt - global tests - media key system access", () => {
           contentDecryptor1.dispose();
           const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
           let receivedStateChange2 = 0;
-          contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2: any) => {
             receivedStateChange2++;
+            if (state2.name === ContentDecryptorState.Error) {
+              rej(state2.payload);
+            }
             try {
               if (receivedStateChange2 === 2) {
-                expect(state2).toEqual(ContentDecryptorState.ReadyForContent);
+                expect(state2.name).toEqual(ContentDecryptorState.ReadyForContent);
                 return;
               } else if (receivedStateChange2 !== 1) {
                 throw new Error("Unexpected stateChange event.");
               }
-              expect(state2).toEqual(ContentDecryptorState.WaitingForAttachment);
+              expect(state2.name).toEqual(ContentDecryptorState.WaitingForAttachment);
               expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
               contentDecryptor2.attach();
               setTimeout(() => {
@@ -214,17 +219,19 @@ describe("decrypt - global tests - media key system access", () => {
     return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
-      contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1: any) => {
         receivedStateChange1++;
+        if (state1.name === ContentDecryptorState.Error) {
+          rej(state1.payload);
+        }
         try {
           if (receivedStateChange1 === 2) {
-            expect(state1).toEqual(ContentDecryptorState.ReadyForContent);
+            expect(state1.name).toEqual(ContentDecryptorState.ReadyForContent);
             return;
           } else if (receivedStateChange1 !== 1) {
             throw new Error("Unexpected stateChange event.");
           }
-          expect(state1).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(state1.name).toEqual(ContentDecryptorState.WaitingForAttachment);
           expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
           contentDecryptor1.attach();
         } catch (err) {
@@ -235,17 +242,19 @@ describe("decrypt - global tests - media key system access", () => {
           contentDecryptor1.dispose();
           const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
           let receivedStateChange2 = 0;
-          contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2: any) => {
             receivedStateChange2++;
+            if (state2.name === ContentDecryptorState.Error) {
+              rej(state2.payload);
+            }
             try {
               if (receivedStateChange2 === 2) {
-                expect(state2).toEqual(ContentDecryptorState.ReadyForContent);
+                expect(state2.name).toEqual(ContentDecryptorState.ReadyForContent);
                 return;
               } else if (receivedStateChange2 !== 1) {
                 throw new Error("Unexpected stateChange event.");
               }
-              expect(state2).toEqual(ContentDecryptorState.WaitingForAttachment);
+              expect(state2.name).toEqual(ContentDecryptorState.WaitingForAttachment);
               expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
               contentDecryptor2.attach();
               setTimeout(() => {
@@ -281,17 +290,19 @@ describe("decrypt - global tests - media key system access", () => {
     return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
-      contentDecryptor1.addEventListener("error", rej);
       contentDecryptor1.addEventListener("stateChange", (state1: any) => {
         receivedStateChange1++;
+        if (state1.name === ContentDecryptorState.Error) {
+          rej(state1.payload);
+        }
         try {
           if (receivedStateChange1 === 2) {
-            expect(state1).toEqual(ContentDecryptorState.ReadyForContent);
+            expect(state1.name).toEqual(ContentDecryptorState.ReadyForContent);
             return;
           } else if (receivedStateChange1 !== 1) {
             throw new Error("Unexpected stateChange event.");
           }
-          expect(state1).toEqual(ContentDecryptorState.WaitingForAttachment);
+          expect(state1.name).toEqual(ContentDecryptorState.WaitingForAttachment);
           expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
           contentDecryptor1.attach();
         } catch (err) {
@@ -302,17 +313,19 @@ describe("decrypt - global tests - media key system access", () => {
           contentDecryptor1.dispose();
           const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
           let receivedStateChange2 = 0;
-          contentDecryptor2.addEventListener("error", rej);
           contentDecryptor2.addEventListener("stateChange", (state2: any) => {
             receivedStateChange2++;
+            if (state2.name === ContentDecryptorState.Error) {
+              rej(state2.payload);
+            }
             try {
               if (receivedStateChange2 === 2) {
-                expect(state2).toEqual(ContentDecryptorState.ReadyForContent);
+                expect(state2.name).toEqual(ContentDecryptorState.ReadyForContent);
                 return;
               } else if (receivedStateChange2 !== 1) {
                 throw new Error("Unexpected stateChange event.");
               }
-              expect(state2).toEqual(ContentDecryptorState.WaitingForAttachment);
+              expect(state2.name).toEqual(ContentDecryptorState.WaitingForAttachment);
               expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
               contentDecryptor2.attach();
               setTimeout(() => {
@@ -346,7 +359,7 @@ describe("decrypt - global tests - media key system access", () => {
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
     return new Promise<void>((res) => {
       contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState === ContentDecryptorState.WaitingForAttachment) {
+        if (newState.name === ContentDecryptorState.WaitingForAttachment) {
           contentDecryptor.removeEventListener("stateChange");
           contentDecryptor.attach();
           setTimeout(() => {

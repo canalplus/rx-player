@@ -184,8 +184,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           mediaElement,
           initResult.mediaSource,
           playbackObserver,
-          initResult.drmSystemId,
-          protectionRef,
+          {
+            protectionRef,
+            drmSystemId: initResult.drmSystemId,
+            canFilterProtectionData: initResult.canFilterProtectionData,
+            failOnEncryptedAfterClear: initResult.failOnEncryptedAfterClear,
+          },
           initResult.unlinkMediaSource,
         ),
       )
@@ -223,6 +227,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   ): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
+    canFilterProtectionData: boolean;
+    failOnEncryptedAfterClear: boolean;
     unlinkMediaSource: TaskCanceller;
   }> {
     const initCanceller = this._initCanceller;
@@ -270,7 +276,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
       drmInitRef.onUpdate(
         (drmStatus, stopListeningToDrmUpdates) => {
-          if (drmStatus.initializationState.type === "uninitialized") {
+          if (drmStatus.type === "uninitialized") {
             return;
           }
           stopListeningToDrmUpdates();
@@ -280,15 +286,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           createMediaSource(mediaElement, mediaSourceCanceller.signal)
             .then((mediaSource) => {
               const lastDrmStatus = drmInitRef.getValue();
-              if (lastDrmStatus.initializationState.type === "awaiting-media-link") {
-                lastDrmStatus.initializationState.value.isMediaLinked.setValue(true);
+              if (lastDrmStatus.type === "awaiting-media-link") {
+                lastDrmStatus.value.isMediaLinked.setValue(true);
                 drmInitRef.onUpdate(
                   (newDrmStatus, stopListeningToDrmUpdatesAgain) => {
-                    if (newDrmStatus.initializationState.type === "initialized") {
+                    if (newDrmStatus.type === "initialized") {
                       stopListeningToDrmUpdatesAgain();
                       resolve({
                         mediaSource,
-                        drmSystemId: newDrmStatus.drmSystemId,
+                        drmSystemId: newDrmStatus.value.drmSystemId,
+                        canFilterProtectionData:
+                          newDrmStatus.value.canFilterProtectionData,
+                        failOnEncryptedAfterClear:
+                          newDrmStatus.value.failOnEncryptedAfterClear,
                         unlinkMediaSource: mediaSourceCanceller,
                       });
                       return;
@@ -296,10 +306,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                   },
                   { emitCurrentValue: true, clearSignal: initCanceller.signal },
                 );
-              } else if (drmStatus.initializationState.type === "initialized") {
+              } else if (drmStatus.type === "initialized") {
                 resolve({
                   mediaSource,
-                  drmSystemId: drmStatus.drmSystemId,
+                  drmSystemId: drmStatus.value.drmSystemId,
+                  canFilterProtectionData: drmStatus.value.canFilterProtectionData,
+                  failOnEncryptedAfterClear: drmStatus.value.failOnEncryptedAfterClear,
                   unlinkMediaSource: mediaSourceCanceller,
                 });
                 return;
@@ -321,8 +333,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     mediaElement: IMediaElement,
     initialMediaSource: MainMediaSourceInterface,
     playbackObserver: IMediaElementPlaybackObserver,
-    drmSystemId: string | undefined,
-    protectionRef: SharedReference<IContentProtection | null>,
+    decryptionParameters: {
+      protectionRef: SharedReference<IContentProtection | null>;
+      drmSystemId: string | undefined;
+      canFilterProtectionData: boolean;
+      failOnEncryptedAfterClear: boolean;
+    },
     initialMediaSourceCanceller: TaskCanceller,
   ): Promise<void> {
     const {
@@ -368,7 +384,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     /** Choose the right "Representation" for a given "Adaptation". */
     const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
     const subBufferOptions = objectAssign(
-      { textTrackOptions, drmSystemId },
+      {
+        textTrackOptions,
+        drmSystemId: decryptionParameters.drmSystemId,
+        canFilterProtectionData: decryptionParameters.canFilterProtectionData,
+        failOnEncryptedAfterClear: decryptionParameters.failOnEncryptedAfterClear,
+      },
       bufferOptions,
     );
 
@@ -422,7 +443,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         representationEstimator,
         segmentFetcherCreator,
         speed,
-        protectionRef,
+        protectionRef: decryptionParameters.protectionRef,
         bufferOptions: subBufferOptions,
       };
       bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
