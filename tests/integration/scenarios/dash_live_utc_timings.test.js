@@ -31,7 +31,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521446, 3);
             expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 3);
           },
           untilSuccess() {
@@ -56,7 +56,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
             expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
           },
           untilSuccess() {
@@ -95,7 +95,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1558791848, 3);
+            expect(player.getMinimumPosition()).to.be.closeTo(1558791846, 3);
           },
           untilSuccess() {
             expect(player.getMinimumPosition()).to.equal(null);
@@ -119,7 +119,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
             expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
           },
           untilSuccess() {
@@ -158,7 +158,7 @@ describe("DASH live - UTCTimings", () => {
               Date.now() / 1000 - manifestInfos.availabilityStartTime;
             const minimumPosition = maximumPosition - timeShiftBufferDepth;
 
-            expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 3);
+            expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition - 2, 3);
             expect(player.getMaximumPosition()).to.be.closeTo(maximumPosition, 3);
           },
           untilSuccess() {
@@ -184,7 +184,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
             expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
           },
           untilSuccess() {
@@ -218,7 +218,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1553521448, 3);
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521446, 3);
           },
           untilSuccess() {
             expect(player.getMinimumPosition()).to.equal(null);
@@ -242,7 +242,7 @@ describe("DASH live - UTCTimings", () => {
         { maxTimeMs: 1000 },
         {
           resolveWhen() {
-            expect(player.getMinimumPosition()).to.be.closeTo(1553521748, 1);
+            expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
             expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
           },
           untilSuccess() {

@@ -796,7 +796,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!this._isDynamic) {
       return;
     }
-    const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
+    const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(
+      (this._index.timeline[0]?.duration ?? 0) / this._index.timescale,
+    );
     if (isNullOrUndefined(firstPosition)) {
       return; // we don't know yet
     }
