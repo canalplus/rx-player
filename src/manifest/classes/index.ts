@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Adaptation from "./adaptation";
+import Track from "./adaptation";
 import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
 import Manifest from "./manifest";
 import Period from "./period";
@@ -47,7 +47,7 @@ export {
   areSameContent,
   getLoggableSegmentId,
   Period,
-  Adaptation,
+  Track,
   Representation,
   StaticRepresentationIndex,
 };

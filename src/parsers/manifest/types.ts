@@ -15,7 +15,7 @@
  */
 
 import type { IRepresentationIndex } from "../../manifest";
-import type { IHDRInformation } from "../../public_types";
+import type { IHDRInformation, ITrackType } from "../../public_types";
 
 export interface IManifestStreamEvent {
   start: number;
@@ -184,41 +184,34 @@ export interface IParsedVariantStreamMetadata {
    * Note: bandwidth considerations may also exist at the Representation-level
    */
   bandwidth: number | undefined;
-  /** Audio media existing for that track group. */
-  audio: Array<{
-    /** Indentify that media. */
-    id: string;
-    /**
-     * Metadata of the "track" to which that audio media is a part of.
-     *
-     * A given audio "track" might for example provide an audio media to various
-     * track groups.
-     */
-    linkedTrack: IParsedTrackMetadata;
-    /**
-     * Different `Representations` (e.g. qualities) this media is available
-     * in.
-     */
-    representations: IParsedRepresentation[];
-  }>;
-  video: Array<{
-    id: string;
-    linkedTrack: IParsedTrackMetadata;
-    /**
-     * Different `Representations` (e.g. qualities) this Adaptation is available
-     * in.
-     */
-    representations: IParsedRepresentation[];
-  }>;
-  text: Array<{
-    id: string;
-    linkedTrack: IParsedTrackMetadata;
-    /**
-     * Different `Representations` (e.g. qualities) this Adaptation is available
-     * in.
-     */
-    representations: IParsedRepresentation[];
-  }>;
+
+  /** List of track and qualities combination in that variant stream. */
+  media: {
+    /** Audio media existing for that track group. */
+    audio: Array<{
+      /** Indentify that media. */
+      id: string;
+      /** `id` of the track this media is linked to */
+      linkedTrack: string;
+      /** `id`s of the different `Representations` (e.g. qualities) available */
+      representations: string[];
+    }>;
+    video: Array<{
+      id: string;
+      /** `id` of the track this media is linked to */
+      linkedTrack: string;
+      /** `id`s of the different `Representations` (e.g. qualities) available */
+      representations: string[];
+    }>;
+    text: Array<{
+      /** Indentify that media. */
+      id: string;
+      /** `id` of the track this media is linked to */
+      linkedTrack: string;
+      /** `id` of the different `Representations` (e.g. qualities) available */
+      representations: string[];
+    }>;
+  };
 }
 
 /** Information on a given period of time in the Manifest */
@@ -237,6 +230,13 @@ export interface IParsedPeriod {
   start: number;
   /** Available variant streams for this Period.  */
   variantStreams: IParsedVariantStreamMetadata[];
+  /**
+   * Description of all "tracks" available in this Period.
+   *
+   * To actually exploit those tracks for playback, you probably want to rely on
+   * `variantStreams` instead.
+   */
+  tracksMetadata: Record<ITrackType, IParsedTrack[]>;
   /**
    * Duration of the Period (from the start to the end), in seconds.
    * `undefined` if the Period is the last one and is still being updated.
@@ -380,9 +380,11 @@ export interface IParsedManifest {
   uris?: string[] | undefined;
 }
 
-export interface IParsedTrackMetadata {
+export interface IParsedTrack {
   /** ID uniquely identifying this track. */
   id: string;
+  /** The "type" for that track. */
+  trackType: ITrackType;
   /** Language this Adaptation is in, as announced in the original Manifest. */
   language?: string | undefined;
   /** Whether this Adaptation contains closed captions for the hard-of-hearing. */
@@ -415,7 +417,9 @@ export interface IParsedTrackMetadata {
    */
   isDub?: boolean | undefined;
   /** Tells if the track is a trick mode track. */
-  trickModeTracks?: IParsedTrackMetadata[] | undefined;
+  trickModeTracks?: IParsedTrack[] | undefined;
   /** Tells if the track is a trick mode track. */
   isTrickModeTrack?: boolean | undefined;
+  /** Qualities that track is available in. */
+  representations: IParsedRepresentation[];
 }

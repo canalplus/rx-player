@@ -1,6 +1,7 @@
 import type {
   IManifest,
   IPeriod,
+  ITrack,
   IRepresentation,
   ITrackMetadata,
 } from "../../../manifest";
@@ -137,7 +138,7 @@ export interface IAdaptationStreamArguments {
   content: {
     manifest: IManifest;
     period: IPeriod;
-    track: ITrackMetadata;
+    track: ITrack;
     representationsChoice: IReadOnlySharedReference<IRepresentationsChoice>;
   };
   options: IAdaptationStreamOptions;

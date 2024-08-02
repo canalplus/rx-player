@@ -1,9 +1,4 @@
-import type { IManifest, IPeriod } from "../../../manifest";
-import type {
-  IAudioTrackMetadata,
-  ITextTrackMetadata,
-  IVideoTrackMetadata,
-} from "../../../manifest/types";
+import type { IManifest, IPeriod, ITrack } from "../../../manifest";
 import type {
   ObservationPosition,
   IReadOnlyPlaybackObserver,
@@ -41,22 +36,11 @@ export interface IPeriodStreamCallbacks extends IAdaptationStreamCallbacks {
   trackChange(payload: ITrackChangeEventPayload): void;
 }
 
-export type ITrackChangeEventPayload =
-  | {
-      type: "video";
-      track: IVideoTrackMetadata | null;
-      period: IPeriod;
-    }
-  | {
-      type: "audio";
-      track: IAudioTrackMetadata | null;
-      period: IPeriod;
-    }
-  | {
-      type: "text";
-      track: ITextTrackMetadata | null;
-      period: IPeriod;
-    };
+export interface ITrackChangeEventPayload {
+  type: ITrackType;
+  track: ITrack | null;
+  period: IPeriod;
+}
 
 /** Payload for the `periodStreamReady` callback. */
 export interface IPeriodStreamReadyPayload {

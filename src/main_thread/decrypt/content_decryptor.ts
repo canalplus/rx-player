@@ -20,6 +20,7 @@ import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
+import { getTrackList } from "../../manifest";
 import type { IPeriodMetadata } from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
@@ -27,6 +28,7 @@ import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import { objectValues } from "../../utils/object_values";
 import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
@@ -1097,21 +1099,14 @@ function mergeKeyIdSetIntoArray(set: Set<Uint8Array>, arr: Uint8Array[]) {
  * @param {Object} period
  */
 function addKeyIdsFromPeriod(set: Set<Uint8Array>, period: IPeriodMetadata) {
-  for (const variantStream of period.variantStreams) {
-    const medias = [
-      ...variantStream.media.audio,
-      ...variantStream.media.video,
-      ...variantStream.media.text,
-    ];
-    for (const media of medias) {
-      for (const representation of media.representations) {
-        if (
-          representation.contentProtections !== undefined &&
-          representation.contentProtections.keyIds !== undefined
-        ) {
-          for (const kidInf of representation.contentProtections.keyIds) {
-            set.add(kidInf.keyId);
-          }
+  for (const track of getTrackList(period)) {
+    for (const representation of objectValues(track.representations)) {
+      if (
+        representation.contentProtections !== undefined &&
+        representation.contentProtections.keyIds !== undefined
+      ) {
+        for (const kidInf of representation.contentProtections.keyIds) {
+          set.add(kidInf.keyId);
         }
       }
     }

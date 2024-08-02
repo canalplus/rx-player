@@ -24,13 +24,9 @@ import type {
   IRepresentationMetadata,
   IDecipherabilityStatusChangedElement,
 } from "../../manifest";
-import type {
-  IAudioTrackMetadata,
-  ITextTrackMetadata,
-  IVideoTrackMetadata,
-} from "../../manifest/types";
+import type { ITrackMetadata } from "../../manifest/types";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
-import type { IPlayerError } from "../../public_types";
+import type { IPlayerError, ITrackType } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
 import type SharedReference from "../../utils/reference";
 import type {
@@ -227,22 +223,11 @@ export interface IContentInitializerEvents {
   inbandEvents: IInbandEvent[];
 }
 
-export type ITrackChangeEventPayload =
-  | {
-      type: "video";
-      track: IVideoTrackMetadata | null;
-      period: IPeriodMetadata;
-    }
-  | {
-      type: "audio";
-      track: IAudioTrackMetadata | null;
-      period: IPeriodMetadata;
-    }
-  | {
-      type: "text";
-      track: ITextTrackMetadata | null;
-      period: IPeriodMetadata;
-    };
+export interface ITrackChangeEventPayload {
+  type: ITrackType;
+  track: ITrackMetadata | null;
+  period: IPeriodMetadata;
+}
 
 export type IStallingSituation =
   | "seeking" // Rebuffering after seeking

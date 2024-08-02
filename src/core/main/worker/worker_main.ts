@@ -2,7 +2,7 @@ import config from "../../../config";
 import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
-import Manifest, { Period, Representation } from "../../../manifest/classes";
+import Manifest, { Period, Representation, Track } from "../../../manifest/classes";
 import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
 import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
@@ -672,13 +672,12 @@ function loadOrReloadPreparedContent(
         });
       },
 
-      adaptationChange(value) {
-        // XXX TODO
-        // contentTimeBoundariesObserver.onAdaptationChange(
-        //   value.type,
-        //   value.period,
-        //   value.adaptation,
-        // );
+      trackChange(value) {
+        contentTimeBoundariesObserver.onTrackChange(
+          value.type,
+          value.period,
+          value.track,
+        );
         if (currentLoadCanceller.signal.isCancelled()) {
           return;
         }
@@ -806,10 +805,9 @@ function loadOrReloadPreparedContent(
           if (content.period instanceof Period) {
             content.period = content.period.getMetadataSnapshot();
           }
-          // XXX TODO
-          // if (content.track instanceof Adaptation) {
-          //   content.adaptation = content.adaptation.getMetadataSnapshot();
-          // }
+          if (content.track instanceof Track) {
+            content.track = content.track.getMetadataSnapshot();
+          }
           if (content.representation instanceof Representation) {
             content.representation = content.representation.getMetadataSnapshot();
           }

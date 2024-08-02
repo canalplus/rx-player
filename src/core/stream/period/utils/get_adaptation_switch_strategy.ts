@@ -15,9 +15,11 @@
  */
 
 import config from "../../../../config";
+import { getMimeTypeString } from "../../../../manifest";
 import type { IPeriod, ITrackMetadata } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
+import { objectValues } from "../../../../utils/object_values";
 import type { IRange } from "../../../../utils/ranges";
 import { excludeFromRanges, insertInto } from "../../../../utils/ranges";
 import type { SegmentSink } from "../../../segment_sinks";
@@ -187,18 +189,7 @@ export default function getAdaptationSwitchStrategy(
  * @returns {boolean}
  */
 function hasCompatibleCodec(track: ITrackMetadata, segmentSinkCodec: string): boolean {
-  if (track.trackType === "text") {
-    return true;
-  }
-  return track.representations.some((rep) =>
-    areCodecsCompatible(getMimeTypeString(rep.mimeType, rep.codec), segmentSinkCodec),
+  return objectValues(track.representations).some((rep) =>
+    areCodecsCompatible(getMimeTypeString(rep), segmentSinkCodec),
   );
-}
-
-// XXX TODO move as util?
-function getMimeTypeString(
-  mimeType: string | undefined,
-  codec: string | undefined,
-): string {
-  return `${mimeType ?? ""};codecs="${codec ?? ""}"`;
 }

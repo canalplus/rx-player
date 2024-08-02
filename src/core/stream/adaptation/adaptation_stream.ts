@@ -3,8 +3,9 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import type { IRepresentation } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
-import { assertUnreachable } from "../../../utils/assert";
+import assert, { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
@@ -20,10 +21,7 @@ import type {
 } from "../representation";
 import RepresentationStream from "../representation";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
-import type {
-  IAdaptationStreamArguments,
-  IAdaptationStreamCallbacks,
-} from "./types";
+import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types";
 
 /**
  * Create new `AdaptationStream` whose task will be to download the media data
@@ -74,13 +72,21 @@ export default function AdaptationStream(
   /** All Representations linked to the given track id in all variant streams. */
   const allRepresentations = period.variantStreams.flatMap((variantStream) => {
     return variantStream.media[track.trackType].flatMap((media) => {
-      return media.linkedTrackId === track.id
-        ? media.representations.map((r) => {
+      return media.linkedTrack === track.id
+        ? media.representations.map((representationId) => {
+            const representation = track.representations[representationId];
+            assert(
+              !isNullOrUndefined(representation),
+              "Representation from variant not found.",
+            );
             return {
               // Take the highest ceil between variant bandwidth and
               // Representation bitrate
-              bandwidth: Math.max(variantStream.bandwidth ?? 0, r.bitrate ?? 0),
-              representation: r,
+              bandwidth: Math.max(
+                variantStream.bandwidth ?? 0,
+                representation.bitrate ?? 0,
+              ),
+              representation,
             };
           })
         : [];

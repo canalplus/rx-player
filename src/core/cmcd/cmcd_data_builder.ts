@@ -1,6 +1,6 @@
 import log from "../../log";
 import type { IManifest, IPeriod, IRepresentation, ISegment } from "../../manifest";
-import type { ITrackMetadata } from "../../manifest/types";
+import type { IRepresentationMetadata, ITrackMetadata } from "../../manifest/types";
 import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
@@ -9,6 +9,7 @@ import type {
 import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types";
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import { objectValues } from "../../utils/object_values";
 import type { IRange } from "../../utils/ranges";
 import TaskCanceller from "../../utils/task_canceller";
 
@@ -287,22 +288,21 @@ export default class CmcdDataBuilder {
         break;
     }
     props.st = content.manifest.isDynamic ? "l" : "v";
-    // XXX TODO
-    // props.tb = content.adaptation.representations.reduce(
-    //   (acc: number | undefined, representation: IRepresentation) => {
-    //     if (
-    //       representation.isSupported !== true ||
-    //       representation.decipherable === false
-    //     ) {
-    //       return acc;
-    //     }
-    //     if (acc === undefined) {
-    //       return Math.round(representation.bitrate / 1000);
-    //     }
-    //     return Math.max(acc, Math.round(representation.bitrate / 1000));
-    //   },
-    //   undefined,
-    // );
+    props.tb = objectValues(content.track.representations).reduce(
+      (acc: number | undefined, representation: IRepresentationMetadata) => {
+        if (
+          representation.isSupported !== true ||
+          representation.decipherable === false
+        ) {
+          return acc;
+        }
+        if (acc === undefined) {
+          return Math.round(representation.bitrate / 1000);
+        }
+        return Math.max(acc, Math.round(representation.bitrate / 1000));
+      },
+      undefined,
+    );
     return this._producePayload(props);
   }
 

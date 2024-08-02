@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
+import { SUPPORTED_TRACK_TYPE } from "../../../../manifest";
+import type { ITrackType } from "../../../../public_types";
 import arrayFind from "../../../../utils/array_find";
 import arrayIncludes from "../../../../utils/array_includes";
 import type { IRepresentationIntermediateRepresentation } from "../node_parser_types";
-
-/** Different "type" a parsed Adaptation can be. */
-type IAdaptationType = "audio" | "video" | "text";
 
 /** Different `role`s a text Adaptation can be. */
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
@@ -53,19 +51,14 @@ export default function inferAdaptationType(
   adaptationMimeType: string | null,
   adaptationCodecs: string | null,
   adaptationRoles: IScheme[] | null,
-): IAdaptationType | undefined {
+): ITrackType | undefined {
   function fromMimeType(
     mimeType: string,
     roles: IScheme[] | null,
-  ): IAdaptationType | undefined {
+  ): ITrackType | undefined {
     const topLevel = mimeType.split("/")[0];
-    if (
-      arrayIncludes<IAdaptationType>(
-        SUPPORTED_ADAPTATIONS_TYPE,
-        topLevel as IAdaptationType,
-      )
-    ) {
-      return topLevel as IAdaptationType;
+    if (arrayIncludes<ITrackType>(SUPPORTED_TRACK_TYPE, topLevel as ITrackType)) {
+      return topLevel as ITrackType;
     }
     if (mimeType === "application/ttml+xml") {
       return "text";
@@ -87,7 +80,7 @@ export default function inferAdaptationType(
       return undefined;
     }
   }
-  function fromCodecs(codecs: string): IAdaptationType | undefined {
+  function fromCodecs(codecs: string): ITrackType | undefined {
     switch (codecs.substring(0, 3)) {
       case "avc":
       case "hev":

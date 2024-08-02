@@ -24,29 +24,29 @@ import getFirstPositionFromRepresentations from "./get_first_time_from_represent
  */
 export default function getMinimumPosition(periods: IParsedPeriod[]): number | undefined {
   for (let i = 0; i <= periods.length - 1; i++) {
-    const periodVariantStreams = periods[i].variantStreams;
-    const firstAudioMediaFromPeriod = periodVariantStreams[0]?.audio?.[0];
-    const firstVideoMediaFromPeriod = periodVariantStreams[0]?.video?.[0];
+    const periodTracks = periods[i].tracksMetadata;
+    const firstAudioTrackFromPeriod = periodTracks.audio[0];
+    const firstVideoTrackFromPeriod = periodTracks.video[0];
 
     if (
-      firstAudioMediaFromPeriod !== undefined ||
-      firstVideoMediaFromPeriod !== undefined
+      firstAudioTrackFromPeriod !== undefined ||
+      firstVideoTrackFromPeriod !== undefined
     ) {
       // null == no segment
       let minimumAudioPosition: number | null = null;
       let minimumVideoPosition: number | null = null;
-      if (firstAudioMediaFromPeriod !== undefined) {
+      if (firstAudioTrackFromPeriod !== undefined) {
         const firstPosition = getFirstPositionFromRepresentations(
-          firstAudioMediaFromPeriod.representations,
+          firstAudioTrackFromPeriod.representations,
         );
         if (firstPosition === undefined) {
           return undefined;
         }
         minimumAudioPosition = firstPosition;
       }
-      if (firstVideoMediaFromPeriod !== undefined) {
+      if (firstVideoTrackFromPeriod !== undefined) {
         const firstPosition = getFirstPositionFromRepresentations(
-          firstVideoMediaFromPeriod.representations,
+          firstVideoTrackFromPeriod.representations,
         );
         if (firstPosition === undefined) {
           return undefined;
@@ -55,8 +55,8 @@ export default function getMinimumPosition(periods: IParsedPeriod[]): number | u
       }
 
       if (
-        (firstAudioMediaFromPeriod !== undefined && minimumAudioPosition === null) ||
-        (firstVideoMediaFromPeriod !== undefined && minimumVideoPosition === null)
+        (firstAudioTrackFromPeriod !== undefined && minimumAudioPosition === null) ||
+        (firstVideoTrackFromPeriod !== undefined && minimumVideoPosition === null)
       ) {
         log.info(
           "Parser utils: found Period with no segment. ",

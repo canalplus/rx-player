@@ -16,7 +16,6 @@
 
 import features from "../../features";
 import log from "../../log";
-import type { IRepresentationMetadata } from "../../manifest";
 import type {
   ICdnMetadata,
   IContentProtections,
@@ -25,6 +24,8 @@ import type {
 import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
+import type { IRepresentationMetadata } from "../types";
+import { getMimeTypeString } from "../utils";
 import type { IRepresentationIndex } from "./representation_index";
 
 const generateRepresentationUniqueId = idGenerator();
@@ -240,7 +241,7 @@ class Representation implements IRepresentationMetadata {
    * @returns {string}
    */
   public getMimeTypeString(): string {
-    return `${this.mimeType ?? ""};codecs="${this.codecs?.[0] ?? ""}"`;
+    return getMimeTypeString(this);
   }
 
   /**

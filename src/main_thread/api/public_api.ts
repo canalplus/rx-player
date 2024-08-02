@@ -52,6 +52,7 @@ import type {
   IRepresentationMetadata,
   IPeriodsUpdateResult,
   IManifest,
+  ITrackMetadata,
 } from "../../manifest";
 import {
   getLivePosition,
@@ -60,11 +61,6 @@ import {
   ManifestMetadataFormat,
   createRepresentationFilterFromFnString,
 } from "../../manifest";
-import type {
-  IAudioTrackMetadata,
-  ITextTrackMetadata,
-  IVideoTrackMetadata,
-} from "../../manifest/types";
 import type { IWorkerMessage } from "../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
 import type { IPlaybackObservation } from "../../playback_observer";
@@ -2388,11 +2384,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   // TODO remove the need for that public method
-  __priv_getCurrentTracks(): {
-    audio: IAudioTrackMetadata | null | undefined;
-    video: IVideoTrackMetadata | null | undefined;
-    text: ITextTrackMetadata | null | undefined;
-  } | null {
+  __priv_getCurrentTracks(): Record<
+    ITrackType,
+    ITrackMetadata | null | undefined
+  > | null {
     if (this._priv_contentInfos === null) {
       return null;
     }
@@ -2802,22 +2797,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onTrackChange(
     contentInfos: IPublicApiContentInfos,
-    trackChangeObj:
-      | {
-          type: "video";
-          track: IVideoTrackMetadata | null;
-          period: IPeriodMetadata;
-        }
-      | {
-          type: "audio";
-          track: IAudioTrackMetadata | null;
-          period: IPeriodMetadata;
-        }
-      | {
-          type: "text";
-          track: ITextTrackMetadata | null;
-          period: IPeriodMetadata;
-        },
+    trackChangeObj: {
+      type: ITrackType;
+      track: ITrackMetadata | null;
+      period: IPeriodMetadata;
+    },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -3327,11 +3311,7 @@ interface IPublicApiContentInfos {
    * `null` if no track is active
    */
   activeTracks: {
-    [periodId: string]: {
-      audio: IAudioTrackMetadata | null | undefined;
-      video: IVideoTrackMetadata | null | undefined;
-      text: ITextTrackMetadata | null | undefined;
-    } | null;
+    [periodId: string]: Record<ITrackType, ITrackMetadata | null | undefined> | null;
   } | null;
   /**
    * Store currently considered representations, per active period.

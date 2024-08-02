@@ -17,11 +17,12 @@
 import config from "../../../config";
 import { formatError, MediaError } from "../../../errors";
 import log from "../../../log";
-import type { IPeriod, ITrackMetadata } from "../../../manifest";
-import { toTaggedTrack } from "../../../manifest";
+import type { IPeriod, ITrack } from "../../../manifest";
+import { getMimeTypeString, toTaggedTrack } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { ITrackType } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
+import { objectValues } from "../../../utils/object_values";
 import queueMicrotask from "../../../utils/queue_microtask";
 import { getLeftSizeOfRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
@@ -254,14 +255,7 @@ export default function PeriodStream(
           `P: ${period.start}`,
         );
 
-        // Conditions to make TypeScript happy
-        if (track.trackType === "video") {
-          callbacks.trackChange({ type: "video", track, period });
-        } else if (track.trackType === "audio") {
-          callbacks.trackChange({ type: "audio", track, period });
-        } else {
-          callbacks.trackChange({ type: "text", track, period });
-        }
+        callbacks.trackChange({ type: track.trackType, track, period });
 
         if (streamCanceller.isUsed()) {
           return; // Previous call has provoken cancellation by side-effect
@@ -337,7 +331,7 @@ export default function PeriodStream(
    * @param {Object} cancelSignal
    */
   function createAdaptationStream(
-    track: ITrackMetadata,
+    track: ITrack,
     representationsChoice: IReadOnlySharedReference<IRepresentationsChoice>,
     segmentSink: SegmentSink,
     cancelSignal: CancellationSignal,
@@ -455,7 +449,7 @@ export default function PeriodStream(
 function createOrReuseSegmentSink(
   segmentSinksStore: SegmentSinksStore,
   bufferType: IBufferType,
-  track: ITrackMetadata,
+  track: ITrack,
 ): SegmentSink {
   const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
   if (segmentSinkStatus.type === "initialized") {
@@ -474,12 +468,9 @@ function createOrReuseSegmentSink(
  * @param {Object} track
  * @returns {string}
  */
-function getFirstDeclaredMimeType(track: ITrackMetadata): string {
-  if (track.trackType === "text") {
-    // XXX TODO just text mime-type for now
-    return "text";
-  }
-  if (track.representations.length === 0) {
+function getFirstDeclaredMimeType(track: ITrack): string {
+  const representations = objectValues(track.representations);
+  if (representations.length === 0) {
     const noRepErr = new MediaError(
       "NO_PLAYABLE_REPRESENTATION",
       "No Representation in the chosen " + track.trackType + " track can be played",
@@ -487,10 +478,7 @@ function getFirstDeclaredMimeType(track: ITrackMetadata): string {
     );
     throw noRepErr;
   }
-  return getMimeTypeString(
-    track.representations[0].mimeType,
-    track.representations[0].codec,
-  );
+  return getMimeTypeString(representations[0]);
 }
 
 /**
@@ -583,12 +571,4 @@ function createEmptyAdaptationStream(
       neededSegments: [],
     });
   }
-}
-
-// XXX TODO move as util?
-function getMimeTypeString(
-  mimeType: string | undefined,
-  codec: string | undefined,
-): string {
-  return `${mimeType ?? ""};codecs="${codec ?? ""}"`;
 }

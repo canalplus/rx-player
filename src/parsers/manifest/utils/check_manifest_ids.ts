@@ -15,6 +15,7 @@
  */
 
 import log from "../../../log";
+import type { ITrackType } from "../../../public_types";
 import arrayIncludes from "../../../utils/array_includes";
 import type { IParsedManifest } from "../types";
 
@@ -39,42 +40,41 @@ export default function checkManifestIDs(manifest: IParsedManifest): void {
     } else {
       periodIDS.push(periodID);
     }
-    // XXX TODO
-    // const { variantStreams } = period;
-    // const adaptationIDs: string[] = [];
-    // (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
-    //   const adaptationsForType = adaptations[type];
-    //   if (adaptationsForType === undefined) {
-    //     return;
-    //   }
-    //   adaptationsForType.forEach((adaptation) => {
-    //     const adaptationID = adaptation.id;
-    //     if (arrayIncludes(adaptationIDs, adaptationID)) {
-    //       log.warn("Two adaptations with the same ID found. Updating.", adaptationID);
-    //       const newID = adaptationID + "-dup";
-    //       adaptation.id = newID;
-    //       checkManifestIDs(manifest);
-    //       adaptationIDs.push(newID);
-    //     } else {
-    //       adaptationIDs.push(adaptationID);
-    //     }
-    //     const representationIDs: Array<number | string> = [];
-    //     adaptation.representations.forEach((representation) => {
-    //       const representationID = representation.id;
-    //       if (arrayIncludes(representationIDs, representationID)) {
-    //         log.warn(
-    //           "Two representations with the same ID found. Updating.",
-    //           representationID,
-    //         );
-    //         const newID = `${representationID}-dup`;
-    //         representation.id = newID;
-    //         checkManifestIDs(manifest);
-    //         representationIDs.push(newID);
-    //       } else {
-    //         representationIDs.push(representationID);
-    //       }
-    //     });
-    //   });
-    // });
+    const { tracksMetadata } = period;
+    const trackIDs: string[] = [];
+    (Object.keys(tracksMetadata) as ITrackType[]).forEach((type) => {
+      const tracksForType = tracksMetadata[type];
+      if (tracksForType === undefined) {
+        return;
+      }
+      tracksForType.forEach((track) => {
+        const trackID = track.id;
+        if (arrayIncludes(trackIDs, trackID)) {
+          log.warn("Two tracks with the same ID found. Updating.", trackID);
+          const newID = trackID + "-dup";
+          track.id = newID;
+          checkManifestIDs(manifest);
+          trackIDs.push(newID);
+        } else {
+          trackIDs.push(trackID);
+        }
+        const representationIDs: Array<number | string> = [];
+        track.representations.forEach((representation) => {
+          const representationID = representation.id;
+          if (arrayIncludes(representationIDs, representationID)) {
+            log.warn(
+              "Two representations with the same ID found. Updating.",
+              representationID,
+            );
+            const newID = `${representationID}-dup`;
+            representation.id = newID;
+            checkManifestIDs(manifest);
+            representationIDs.push(newID);
+          } else {
+            representationIDs.push(representationID);
+          }
+        });
+      });
+    });
   });
 }

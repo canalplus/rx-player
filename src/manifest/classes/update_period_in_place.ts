@@ -18,6 +18,7 @@ import log from "../../log";
 import type { IRepresentationMetadata, ITrackMetadata } from "../../manifest";
 import type { ITrackType } from "../../public_types";
 import arrayFindIndex from "../../utils/array_find_index";
+import { objectValues } from "../../utils/object_values";
 import type Period from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 
@@ -44,25 +45,21 @@ export default function updatePeriodInPlace(
   oldPeriod.duration = newPeriod.duration;
   oldPeriod.streamEvents = newPeriod.streamEvents;
 
-  const oldTracks = oldPeriod.getTracks();
-  const newTracks = newPeriod.getTracks();
+  const oldTracks = oldPeriod.getTrackList();
+  const newTracks = newPeriod.getTrackList();
 
   for (let j = 0; j < oldTracks.length; j++) {
     const oldTrack = oldTracks[j];
-    const newTrackIdx = arrayFindIndex(
-      newTracks,
-      (a) => a.id === oldTrack.id,
-    );
+    const newTrackIdx = arrayFindIndex(newTracks, (a) => a.id === oldTrack.id);
 
     if (newTrackIdx === -1) {
-      log.warn(
-        'Manifest: Track "' + oldTracks[j].id + '" not found when merging.',
-      );
+      log.warn('Manifest: Track "' + oldTracks[j].id + '" not found when merging.');
       const [removed] = oldTracks.splice(j, 1);
+      delete oldPeriod.tracksMetadata[removed.trackType][removed.id];
       j--;
       res.removedTracks.push({
         id: removed.id,
-        trackType: removed.type,
+        trackType: removed.trackType,
       });
     } else {
       const [newTrack] = newTracks.splice(newTrackIdx, 1);
@@ -70,15 +67,15 @@ export default function updatePeriodInPlace(
       const addedRepresentations: IRepresentationMetadata[] = [];
       const removedRepresentations: string[] = [];
       res.updatedTracks.push({
-        Track: oldTrack.id,
-        trackType: oldTrack.type,
+        track: oldTrack.id,
+        trackType: oldTrack.trackType,
         updatedRepresentations,
         addedRepresentations,
         removedRepresentations,
       });
 
-      const oldRepresentations = oldTrack.representations;
-      const newRepresentations = newTrack.representations.slice();
+      const oldRepresentations = objectValues(oldTrack.representations);
+      const newRepresentations = objectValues(newTrack.representations);
 
       for (let k = 0; k < oldRepresentations.length; k++) {
         const oldRepresentation = oldRepresentations[k];
@@ -93,6 +90,7 @@ export default function updatePeriodInPlace(
               "not found when merging.",
           );
           const [removed] = oldRepresentations.splice(k, 1);
+          delete oldTrack.representations[removed.id];
           k--;
           removedRepresentations.push(removed.id);
         } else {
@@ -112,7 +110,9 @@ export default function updatePeriodInPlace(
           `Manifest: ${newRepresentations.length} new Representations ` +
             "found when merging.",
         );
-        oldTrack.representations.push(...newRepresentations);
+        for (const newRep of newRepresentations) {
+          oldTrack.representations[newRep.id] = newRep;
+        }
         addedRepresentations.push(
           ...newRepresentations.map((r) => r.getMetadataSnapshot()),
         );
@@ -120,16 +120,10 @@ export default function updatePeriodInPlace(
     }
   }
   if (newTracks.length > 0) {
-    log.warn(
-      `Manifest: ${newTracks.length} new Tracks ` + "found when merging.",
-    );
+    log.warn(`Manifest: ${newTracks.length} new Tracks ` + "found when merging.");
     for (const trak of newTracks) {
-      const prevAdaps = oldPeriod.Tracks[trak.trackType];
-      if (prevAdaps === undefined) {
-        oldPeriod.tracksMetadata[trak.trackType] = [trak];
-      } else {
-        prevAdaps.push(trak);
-      }
+      const prevTracks = oldPeriod.tracksMetadata[trak.trackType];
+      prevTracks[trak.id] = trak;
       res.addedTracks.push(trak.getMetadataSnapshot());
     }
   }

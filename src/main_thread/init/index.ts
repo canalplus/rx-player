@@ -16,7 +16,7 @@
 
 export type {
   IContentInitializerEvents,
-  IAdaptationChangeEventPayload,
+  ITrackChangeEventPayload,
   IStallingSituation,
 } from "./types";
 export { ContentInitializer } from "./types";

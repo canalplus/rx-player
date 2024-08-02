@@ -15,7 +15,8 @@
  */
 
 import log from "../../../log";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
+import { SUPPORTED_TRACK_TYPE } from "../../../manifest";
+import type { ITrackType } from "../../../public_types";
 import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
 import { concat, itobe4 } from "../../../utils/byte_parsing";
@@ -28,10 +29,10 @@ import { hexToBytes } from "../../../utils/string_parsing";
 import { createBox } from "../../containers/isobmff";
 import type {
   IContentProtectionKID,
-  IParsedAdaptation,
-  IParsedAdaptations,
+  IParsedTrack,
   IParsedManifest,
   IParsedRepresentation,
+  IParsedVariantStreamMetadata,
 } from "../types";
 import checkManifestIDs from "../utils/check_manifest_ids";
 import { getAudioCodecs, getVideoCodecs } from "./get_codecs";
@@ -44,7 +45,7 @@ import parseBoolean from "./utils/parseBoolean";
 import reduceChildren from "./utils/reduceChildren";
 import { replaceRepresentationSmoothTokens } from "./utils/tokens";
 
-interface IAdaptationParserArguments {
+interface ITrackParserArguments {
   root: Element;
   baseUrl: string;
   timescale: number;
@@ -53,8 +54,6 @@ interface IAdaptationParserArguments {
   timeShiftBufferDepth?: number | undefined;
   manifestReceivedTime?: number | undefined;
 }
-
-type IAdaptationType = "audio" | "video" | "text";
 
 const DEFAULT_MIME_TYPES: Partial<Record<string, string>> = {
   audio: "audio/mp4",
@@ -266,14 +265,14 @@ function createSmoothStreamingParser(
   }
 
   /**
-   * Parse the adaptations (<StreamIndex>) tree containing
+   * Parse the tracks (<StreamIndex>) tree containing
    * representations (<QualityLevels>) and timestamp indexes (<c>).
    * Indexes can be quite huge, and this function needs to
    * to be optimized.
    * @param {Object} args
    * @returns {Object}
    */
-  function parseAdaptation(args: IAdaptationParserArguments): IParsedAdaptation | null {
+  function parseTrack(args: ITrackParserArguments): IParsedTrack | null {
     const {
       root,
       timescale,
@@ -293,10 +292,10 @@ function createSmoothStreamingParser(
     if (typeAttribute === null) {
       throw new Error("StreamIndex without type.");
     }
-    if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, typeAttribute)) {
-      log.warn("Smooth Parser: Unrecognized adaptation type:", typeAttribute);
+    if (!arrayIncludes(SUPPORTED_TRACK_TYPE, typeAttribute)) {
+      log.warn("Smooth Parser: Unrecognized track type:", typeAttribute);
     }
-    const adaptationType = typeAttribute as IAdaptationType;
+    const trackType = typeAttribute as ITrackType;
 
     const subType = root.getAttribute("Subtype");
     const language = root.getAttribute("Language");
@@ -314,14 +313,14 @@ function createSmoothStreamingParser(
       (res, _name, node) => {
         switch (_name) {
           case "QualityLevel":
-            const qualityLevel = parseQualityLevel(node, adaptationType);
+            const qualityLevel = parseQualityLevel(node, trackType);
             if (qualityLevel === null) {
               return res;
             }
 
             // filter out video qualityLevels with small bitrates
             if (
-              adaptationType !== "video" ||
+              trackType !== "video" ||
               qualityLevel.bitrate > minRepresentationBitrate
             ) {
               res.qualityLevels.push(qualityLevel);
@@ -347,11 +346,10 @@ function createSmoothStreamingParser(
     // codec and mimeType
     assert(
       qualityLevels.length !== 0,
-      "Adaptation should have at least one playable representation.",
+      "Track should have at least one playable representation.",
     );
 
-    const adaptationID =
-      adaptationType + (isNonEmptyString(language) ? "_" + language : "");
+    const trackID = trackType + (isNonEmptyString(language) ? "_" + language : "");
 
     const representations = qualityLevels.map((qualityLevel) => {
       const media = replaceRepresentationSmoothTokens(
@@ -361,12 +359,12 @@ function createSmoothStreamingParser(
       );
       const mimeType = isNonEmptyString(qualityLevel.mimeType)
         ? qualityLevel.mimeType
-        : DEFAULT_MIME_TYPES[adaptationType];
+        : DEFAULT_MIME_TYPES[trackType];
       const codecs = qualityLevel.codecs;
       const id =
-        adaptationID +
+        trackID +
         "_" +
-        (!isNullOrUndefined(adaptationType) ? adaptationType + "-" : "") +
+        (!isNullOrUndefined(trackType) ? trackType + "-" : "") +
         (!isNullOrUndefined(mimeType) ? mimeType + "-" : "") +
         (!isNullOrUndefined(codecs) ? codecs + "-" : "") +
         String(qualityLevel.bitrate);
@@ -439,18 +437,18 @@ function createSmoothStreamingParser(
       return null;
     }
 
-    const parsedAdaptation: IParsedAdaptation = {
-      id: adaptationID,
-      type: adaptationType,
+    const parsedTrack: IParsedTrack = {
+      id: trackID,
+      trackType,
       representations,
       language: language === null ? undefined : language,
     };
 
-    if (adaptationType === "text" && subType === "DESC") {
-      parsedAdaptation.closedCaption = true;
+    if (trackType === "text" && subType === "DESC") {
+      parsedTrack.isClosedCaption = true;
     }
 
-    return parsedAdaptation;
+    return parsedTrack;
   }
 
   function parseFromDocument(
@@ -483,9 +481,9 @@ function createSmoothStreamingParser(
       timescale = 10000000;
     }
 
-    const { protections, adaptationNodes } = reduceChildren<{
+    const { protections, trackNodes } = reduceChildren<{
       protections: IContentProtectionSmooth[];
-      adaptationNodes: Element[];
+      trackNodes: Element[];
     }>(
       root,
       (res, name, node) => {
@@ -495,18 +493,22 @@ function createSmoothStreamingParser(
             break;
           }
           case "StreamIndex":
-            res.adaptationNodes.push(node);
+            res.trackNodes.push(node);
             break;
         }
         return res;
       },
       {
-        adaptationNodes: [],
+        trackNodes: [],
         protections: [],
       },
     );
 
-    const initialAdaptations: IParsedAdaptations = {};
+    const initialTracks: Record<ITrackType, IParsedTrack[]> = {
+      audio: [],
+      video: [],
+      text: [],
+    };
 
     const isLive = parseBoolean(root.getAttribute("IsLive"));
 
@@ -522,31 +524,22 @@ function createSmoothStreamingParser(
       }
     }
 
-    const adaptations: IParsedAdaptations = adaptationNodes.reduce(
-      (acc: IParsedAdaptations, node: Element) => {
-        const adaptation = parseAdaptation({
-          root: node,
-          baseUrl,
-          timescale,
-          protections,
-          isLive,
-          timeShiftBufferDepth,
-          manifestReceivedTime,
-        });
-        if (adaptation === null) {
-          return acc;
-        }
-        const type = adaptation.type;
-        const adaps = acc[type];
-        if (adaps === undefined) {
-          acc[type] = [adaptation];
-        } else {
-          adaps.push(adaptation);
-        }
+    const tracks = trackNodes.reduce((acc, node: Element) => {
+      const track = parseTrack({
+        root: node,
+        baseUrl,
+        timescale,
+        protections,
+        isLive,
+        timeShiftBufferDepth,
+        manifestReceivedTime,
+      });
+      if (track === null) {
         return acc;
-      },
-      initialAdaptations,
-    );
+      }
+      acc[track.trackType].push(track);
+      return acc;
+    }, initialTracks);
 
     let suggestedPresentationDelay: number | undefined;
     let availabilityStartTime: number | undefined;
@@ -559,10 +552,8 @@ function createSmoothStreamingParser(
       time: number;
     };
 
-    const firstVideoAdaptation =
-      adaptations.video !== undefined ? adaptations.video[0] : undefined;
-    const firstAudioAdaptation =
-      adaptations.audio !== undefined ? adaptations.audio[0] : undefined;
+    const firstVideoTrack = tracks.video !== undefined ? tracks.video[0] : undefined;
+    const firstAudioTrack = tracks.audio !== undefined ? tracks.audio[0] : undefined;
 
     /** Minimum time that can be reached regardless of the StreamIndex chosen. */
     let safeMinimumTime: number | undefined;
@@ -573,12 +564,12 @@ function createSmoothStreamingParser(
     /** Maximum time that can be reached in absolute on the content. */
     let unsafeMaximumTime: number | undefined;
 
-    if (firstVideoAdaptation !== undefined || firstAudioAdaptation !== undefined) {
+    if (firstVideoTrack !== undefined || firstAudioTrack !== undefined) {
       const firstTimeReferences: number[] = [];
       const lastTimeReferences: number[] = [];
 
-      if (firstVideoAdaptation !== undefined) {
-        const firstVideoRepresentation = firstVideoAdaptation.representations[0];
+      if (firstVideoTrack !== undefined) {
+        const firstVideoRepresentation = firstVideoTrack.representations[0];
         if (firstVideoRepresentation !== undefined) {
           const firstVideoTimeReference =
             firstVideoRepresentation.index.getFirstAvailablePosition();
@@ -595,8 +586,8 @@ function createSmoothStreamingParser(
         }
       }
 
-      if (firstAudioAdaptation !== undefined) {
-        const firstAudioRepresentation = firstAudioAdaptation.representations[0];
+      if (firstAudioTrack !== undefined) {
+        const firstAudioRepresentation = firstAudioTrack.representations[0];
         if (firstAudioRepresentation !== undefined) {
           const firstAudioTimeReference =
             firstAudioRepresentation.index.getFirstAvailablePosition();
@@ -665,6 +656,25 @@ function createSmoothStreamingParser(
 
     const periodStart = isLive ? 0 : minimumTime;
     const periodEnd = isLive ? undefined : maximumTimeData.maximumSafePosition;
+
+    const getMediaForType = (type: ITrackType) => {
+      return tracks[type].map((t) => {
+        return {
+          id: t.id,
+          linkedTrack: t.id,
+          representations: t.representations.map((r) => r.id),
+        };
+      });
+    };
+    const variantStream: IParsedVariantStreamMetadata = {
+      id: "0",
+      bandwidth: undefined,
+      media: {
+        audio: getMediaForType("audio"),
+        video: getMediaForType("video"),
+        text: getMediaForType("text"),
+      },
+    };
     const manifest = {
       availabilityStartTime:
         availabilityStartTime === undefined ? 0 : availabilityStartTime,
@@ -679,7 +689,8 @@ function createSmoothStreamingParser(
       },
       periods: [
         {
-          adaptations,
+          tracksMetadata: tracks,
+          variantStreams: [variantStream],
           duration: periodEnd !== undefined ? periodEnd - periodStart : duration,
           end: periodEnd,
           id: "gen-smooth-period-0",

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { MediaError } from "../../errors";
+import { MediaError } from "../../errors";
 import log from "../../log";
 import type { IParsedManifest } from "../../parsers/manifest";
 import type { IRepresentationFilter, IPlayerError } from "../../public_types";
@@ -34,8 +34,9 @@ import {
   getMinimumSafePosition,
   getPeriodForTime,
   getPeriodAfter,
+  toTaggedTrack,
 } from "../utils";
-import type Period from "./period";
+import Period from "./period";
 import type { ICodecSupportList } from "./representation";
 import type Representation from "./representation";
 import { MANIFEST_UPDATE_TYPE } from "./types";
@@ -297,53 +298,38 @@ export default class Manifest
    * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
    * @param {Object} options
-   * @param {Array.<Object>} _warnings - After construction, will be optionally
+   * @param {Array.<Object>} warnings - After construction, will be optionally
    * filled by errors expressing minor issues seen while parsing the Manifest.
    */
   constructor(
     parsedManifest: IParsedManifest,
     options: IManifestParsingOptions,
-    _warnings: IPlayerError[],
+    warnings: IPlayerError[],
   ) {
     super();
-    // const { representationFilter, manifestUpdateUrl } = options;
-    const { manifestUpdateUrl } = options;
+    const { representationFilter, manifestUpdateUrl } = options;
     this.manifestFormat = ManifestMetadataFormat.Class;
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
 
-    // XXX TODO
-    this.periods = [];
-    // const unsupportedAdaptations: Adaptation[] = [];
-    // this.periods = parsedManifest.periods
-    //   .map((parsedPeriod) => {
-    //     const period = new Period(
-    //       parsedPeriod,
-    //       unsupportedAdaptations,
-    //       representationFilter,
-    //     );
-    //     return period;
-    //   })
-    //   .sort((a, b) => a.start - b.start);
+    const unsupportedTracks: ITrackMetadata[] = [];
+    this.periods = parsedManifest.periods
+      .map((parsedPeriod) => {
+        const period = new Period(parsedPeriod, unsupportedTracks, representationFilter);
+        return period;
+      })
+      .sort((a, b) => a.start - b.start);
 
-    // if (unsupportedAdaptations.length > 0) {
-    //   const error = new MediaError(
-    //     "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-    //     "An Adaptation contains only incompatible codecs.",
-    //     { tracks: unsupportedAdaptations.map(toTaggedTrack) },
-    //   );
-    //   warnings.push(error);
-    // }
-
-    // /**
-    //  * @deprecated It is here to ensure compatibility with the way the
-    //  * v3.x.x manages adaptations at the Manifest level
-    //  */
-    // /* eslint-disable import/no-deprecated */
-    // this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    // /* eslint-enable import/no-deprecated */
+    if (unsupportedTracks.length > 0) {
+      const error = new MediaError(
+        "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+        "A track contains only incompatible codecs.",
+        { tracks: unsupportedTracks.map(toTaggedTrack) },
+      );
+      warnings.push(error);
+    }
 
     this.timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
@@ -369,23 +355,22 @@ export default class Manifest
    *
    * @param {Array.<Object>} supportList
    * @returns {Error|null} - Refreshing codec support might reveal that some
-   * `Adaptation` don't have any of their `Representation`s supported.
+   * `tracks` don't have any of their `Representation`s supported.
    * In that case, an error object will be created and returned, so you can
    * e.g. later emit it as a warning through the RxPlayer API.
    */
   public refreshCodecSupport(supportList: ICodecSupportList): MediaError | null {
-    // XXX TODO
-    // const unsupportedAdaptations: Adaptation[] = [];
-    // for (const period of this.periods) {
-    //   period.refreshCodecSupport(supportList, unsupportedAdaptations);
-    // }
-    // if (unsupportedAdaptations.length > 0) {
-    //   return new MediaError(
-    //     "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-    //     "An Adaptation contains only incompatible codecs.",
-    //     { tracks: unsupportedAdaptations.map(toTaggedTrack) },
-    //   );
-    // }
+    const unsupportedTracks: ITrackMetadata[] = [];
+    for (const period of this.periods) {
+      period.refreshCodecSupport(supportList, unsupportedTracks);
+    }
+    if (unsupportedTracks.length > 0) {
+      return new MediaError(
+        "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+        "A track contains only incompatible codecs.",
+        { tracks: unsupportedTracks.map(toTaggedTrack) },
+      );
+    }
     return null;
   }
 
@@ -467,7 +452,7 @@ export default class Manifest
 
   /**
    * Returns the theoretical minimum playable position on the content
-   * regardless of the current Adaptation chosen, as estimated at parsing
+   * regardless of the current tracks chosen, as estimated at parsing
    * time.
    * @returns {number}
    */
@@ -486,7 +471,7 @@ export default class Manifest
 
   /**
    * Returns the theoretical maximum playable position on the content
-   * regardless of the current Adaptation chosen, as estimated at parsing
+   * regardless of the current tracks chosen, as estimated at parsing
    * time.
    */
   public getMaximumSafePosition(): number {
@@ -513,63 +498,6 @@ export default class Manifest
       this.trigger("decipherabilityUpdate", updates);
     }
   }
-
-  // /**
-  //  * @deprecated only returns adaptations for the first period
-  //  * @returns {Array.<Object>}
-  //  */
-  // public getAdaptations(): Adaptation[] {
-  //   warnOnce(
-  //     "manifest.getAdaptations() is deprecated." +
-  //       " Please use manifest.period[].getAdaptations() instead",
-  //   );
-  //   const firstPeriod = this.periods[0];
-  //   if (firstPeriod === undefined) {
-  //     return [];
-  //   }
-  //   const adaptationsByType = firstPeriod.adaptations;
-  //   const adaptationsList: Adaptation[] = [];
-  //   for (const adaptationType in adaptationsByType) {
-  //     if (adaptationsByType.hasOwnProperty(adaptationType)) {
-  //       const adaptations = adaptationsByType[
-  //         adaptationType as ITrackType
-  //       ] as Adaptation[];
-  //       adaptationsList.push(...adaptations);
-  //     }
-  //   }
-  //   return adaptationsList;
-  // }
-
-  // /**
-  //  * @deprecated only returns adaptations for the first period
-  //  * @returns {Array.<Object>}
-  //  */
-  // public getAdaptationsForType(adaptationType: ITrackType): Adaptation[] {
-  //   warnOnce(
-  //     "manifest.getAdaptationsForType(type) is deprecated." +
-  //       " Please use manifest.period[].getAdaptationsForType(type) instead",
-  //   );
-  //   const firstPeriod = this.periods[0];
-  //   if (firstPeriod === undefined) {
-  //     return [];
-  //   }
-  //   const adaptationsForType = firstPeriod.adaptations[adaptationType];
-  //   return adaptationsForType === undefined ? [] : adaptationsForType;
-  // }
-
-  // /**
-  //  * @deprecated only returns adaptations for the first period
-  //  * @returns {Array.<Object>}
-  //  */
-  // public getAdaptation(wantedId: number | string): Adaptation | undefined {
-  //   warnOnce(
-  //     "manifest.getAdaptation(id) is deprecated." +
-  //       " Please use manifest.period[].getAdaptation(id) instead",
-  //   );
-  //   /* eslint-disable import/no-deprecated */
-  //   return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-  //   /* eslint-enable import/no-deprecated */
-  // }
 
   /**
    * Format the current `Manifest`'s properties into a
@@ -645,11 +573,6 @@ export default class Manifest
       }
     }
 
-    // Re-set this.adaptations for retro-compatibility in v3.x.x
-    /* eslint-disable import/no-deprecated */
-    // this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
-
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those
     // happen.
@@ -682,12 +605,13 @@ function updateDeciperability(
     for (const variantStream of period.variantStreams) {
       for (const trackType of ["audio", "video", "text"] as const) {
         for (const media of variantStream.media[trackType]) {
-          for (const representation of media.representations) {
-            const track = period.tracksMetadata[trackType][media.linkedTrackId];
+          for (const representationId of media.representations) {
+            const track = period.tracksMetadata[trackType][media.linkedTrack];
             if (track === undefined) {
               log.warn("Manifest: Track linked to Representation not found");
               continue;
             }
+            const representation = track.representations[representationId];
             const content = { manifest, period, track, representation };
             const result = isDecipherable(content);
             if (result !== representation.decipherable) {

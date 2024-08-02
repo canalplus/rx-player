@@ -27,29 +27,29 @@ export default function getMaximumPosition(periods: IParsedPeriod[]): {
   unsafe: number | undefined;
 } {
   for (let i = periods.length - 1; i >= 0; i--) {
-    const periodVariantStreams = periods[i].variantStreams;
-    const firstAudioMediaFromPeriod = periodVariantStreams[0]?.audio?.[0];
-    const firstVideoMediaFromPeriod = periodVariantStreams[0]?.video?.[0];
+    const periodTracks = periods[i].tracksMetadata;
+    const firstAudioTrackFromPeriod = periodTracks.audio[0];
+    const firstVideoTrackFromPeriod = periodTracks.video[0];
 
     if (
-      firstAudioMediaFromPeriod !== undefined ||
-      firstVideoMediaFromPeriod !== undefined
+      firstAudioTrackFromPeriod !== undefined ||
+      firstVideoTrackFromPeriod !== undefined
     ) {
       // null == no segment
       let maximumAudioPosition: number | null = null;
       let maximumVideoPosition: number | null = null;
-      if (firstAudioMediaFromPeriod !== undefined) {
+      if (firstAudioTrackFromPeriod !== undefined) {
         const lastPosition = getLastPositionFromRepresentations(
-          firstAudioMediaFromPeriod.representations,
+          firstAudioTrackFromPeriod.representations,
         );
         if (lastPosition === undefined) {
           return { safe: undefined, unsafe: undefined };
         }
         maximumAudioPosition = lastPosition;
       }
-      if (firstVideoMediaFromPeriod !== undefined) {
+      if (firstVideoTrackFromPeriod !== undefined) {
         const lastPosition = getLastPositionFromRepresentations(
-          firstVideoMediaFromPeriod.representations,
+          firstVideoTrackFromPeriod.representations,
         );
         if (lastPosition === undefined) {
           return { safe: undefined, unsafe: undefined };
@@ -58,8 +58,8 @@ export default function getMaximumPosition(periods: IParsedPeriod[]): {
       }
 
       if (
-        (firstAudioMediaFromPeriod !== undefined && maximumAudioPosition === null) ||
-        (firstVideoMediaFromPeriod !== undefined && maximumVideoPosition === null)
+        (firstAudioTrackFromPeriod !== undefined && maximumAudioPosition === null) ||
+        (firstVideoTrackFromPeriod !== undefined && maximumVideoPosition === null)
       ) {
         log.info(
           "Parser utils: found Period with no segment. ",

@@ -24,11 +24,13 @@ import type {
   IRepresentation,
   IRepresentationIndex,
   IPeriod,
+  ITrack,
 } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import { objectValues } from "../../../utils/object_values";
 import SortedList from "../../../utils/sorted_list";
 import TaskCanceller from "../../../utils/task_canceller";
 
@@ -141,7 +143,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
   }
 
   /**
-   * Method to call any time the played Representations change.
+   * Method to call any time a played track change.
    *
    * That switch will be considered as active until the `onPeriodCleared` method
    * has been called for the same `bufferType` and `Period`, or until `dispose`
@@ -149,15 +151,16 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
    * @param {string} bufferType - The type of buffer concerned by the
    * Representations switch
    * @param {Object} period - The Period concerned by the Representations switch
-   * @param {Object|null} representations - The Representations selected. `null`
-   * if the absence of `Representation` has been explicitely selected for this
-   * Period and buffer type (e.g. no video).
+   * @param {Object|null} track - The track selected. `null` if the absence of
+   * track has been explicitely selected for this Period and buffer type (e.g.
+   * no video).
    */
-  public onRepresentationListChange(
+  public onTrackChange(
     bufferType: IBufferType,
     period: IPeriod,
-    representations: IRepresentation[] | null,
+    track: ITrack | null,
   ): void {
+    const representations = track === null ? null : objectValues(track.representations);
     if (this._manifest.isLastPeriodKnown) {
       const lastPeriod = this._manifest.periods[this._manifest.periods.length - 1];
       if (period.id === lastPeriod?.id) {

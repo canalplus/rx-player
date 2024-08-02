@@ -19,12 +19,13 @@ import type { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fet
 import createSegmentFetcher from "../../../core/fetchers/segment/segment_fetcher";
 import log from "../../../log";
 import type { IRxPlayer } from "../../../main_thread/types";
-import type { ISegment } from "../../../manifest";
+import { getTrackListForType, type ISegment } from "../../../manifest";
 import Manifest from "../../../manifest/classes";
 import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import arrayFind from "../../../utils/array_find";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
+import { objectValues } from "../../../utils/object_values";
 import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
 import loadAndPushSegment from "./load_and_push_segment";
 import prepareSourceBuffer from "./prepare_source_buffer";
@@ -337,7 +338,7 @@ function areSameRepresentation(
 ): boolean {
   return (
     contentInfo1.representation.id === contentInfo2.representation.id &&
-    contentInfo1.adaptation.id === contentInfo2.adaptation.id &&
+    contentInfo1.track.id === contentInfo2.track.id &&
     contentInfo1.period.id === contentInfo2.period.id &&
     contentInfo1.manifest.id === contentInfo2.manifest.id
   );
@@ -352,17 +353,19 @@ function areSameRepresentation(
  */
 function getTrickModeInfo(time: number, manifest: Manifest): IContentInfo | null {
   const period = manifest.getPeriodForTime(time);
-  if (
-    period === undefined ||
-    period.adaptations.video === undefined ||
-    period.adaptations.video.length === 0
-  ) {
+  if (period === undefined) {
     return null;
   }
-  for (const videoAdaptation of period.adaptations.video) {
-    const representation = videoAdaptation.trickModeTracks?.[0].representations?.[0];
+  const tracks = getTrackListForType(period, "video");
+  if (tracks.length === 0) {
+    return null;
+  }
+  for (const track of tracks) {
+    const representation = objectValues(
+      track.trickModeTracks?.[0].representations ?? {},
+    )[0];
     if (!isNullOrUndefined(representation)) {
-      return { manifest, period, adaptation: videoAdaptation, representation };
+      return { manifest, period, track, representation };
     }
   }
   return null;
