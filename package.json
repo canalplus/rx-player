@@ -192,6 +192,9 @@
     "type": "git",
     "url": "git://github.com/canalplus/rx-player.git"
   },
+  "dependencies": {
+    "idb": "4.0.3"
+  },
   "devDependencies": {
     "@canalplus/readme.doc": "0.5.0",
     "@types/react": "18.2.45",
