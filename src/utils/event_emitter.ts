@@ -23,7 +23,7 @@ import isNullOrUndefined from "./is_null_or_undefined";
 import type { CancellationSignal } from "./task_canceller";
 
 // After making way too many attempts, I'm just listing cases here
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-restricted-types */
 export function addEventListener(
   target: Window,
   eventType: keyof WindowEventMap,
@@ -91,7 +91,7 @@ export function addEventListener<T, TEventName extends keyof T>(
   /* eslint-enable @typescript-eslint/no-unsafe-call */
   /* eslint-enable @typescript-eslint/no-explicit-any */
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-enable @typescript-eslint/ban-types */
+  /* eslint-enable @typescript-eslint/no-restricted-types */
 }
 
 export interface IEventEmitter<T> {
