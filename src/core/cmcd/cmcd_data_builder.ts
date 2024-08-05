@@ -1,6 +1,10 @@
 import log from "../../log";
 import type { IManifest, IPeriod, IRepresentation, ISegment } from "../../manifest";
-import type { IRepresentationMetadata, ITrackMetadata } from "../../manifest/types";
+import type {
+  IRepresentationMetadata,
+  ITrackMetadata,
+  IVariantStreamMetadata,
+} from "../../manifest/types";
 import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
@@ -36,6 +40,8 @@ export interface ICmcdSegmentInfo {
   period: IPeriod;
   /** Adaptation metadata linked to the wanted segment. */
   track: ITrackMetadata;
+  /** Variant metadata linked to the wanted segment. */
+  variant: IVariantStreamMetadata;
   /** Representation metadata linked to the wanted segment. */
   representation: IRepresentation;
   /** Segment metadata linked to the wanted segment. */
@@ -215,7 +221,10 @@ export default class CmcdDataBuilder {
     const lastObservation = this._playbackObserver?.getReference().getValue();
 
     const props = this._getCommonCmcdData(this._lastThroughput[content.track.trackType]);
-    props.br = Math.round(content.representation.bitrate / 1000);
+    const bitrate = content.variant.bandwidth ?? content.representation.bitrate;
+    if (bitrate !== undefined) {
+      props.br = Math.round(bitrate / 1000);
+    }
     props.d = Math.round(content.segment.duration * 1000);
     // TODO nor (next object request) and nrr (next range request)
 
@@ -266,10 +275,9 @@ export default class CmcdDataBuilder {
         ? undefined
         : Math.floor(Math.round(precizeDeadlineMs / 100) * 100);
 
-    if (precizeDeadlineMs !== undefined) {
+    if (bitrate !== undefined && precizeDeadlineMs !== undefined) {
       // estimate the file size, in kilobits
-      const estimatedFileSizeKb =
-        (content.representation.bitrate * content.segment.duration) / 1000;
+      const estimatedFileSizeKb = (bitrate * content.segment.duration) / 1000;
       const wantedCeilBandwidthKbps = estimatedFileSizeKb / (precizeDeadlineMs / 1000);
       props.rtp = Math.floor(
         Math.round((wantedCeilBandwidthKbps * RTP_FACTOR) / 100) * 100,
@@ -296,10 +304,13 @@ export default class CmcdDataBuilder {
         ) {
           return acc;
         }
-        if (acc === undefined) {
-          return Math.round(representation.bitrate / 1000);
+        // TODO make it work for HLS
+        if (representation.bitrate !== undefined) {
+          if (acc === undefined) {
+            return Math.round(representation.bitrate / 1000);
+          }
+          return Math.max(acc, Math.round(representation.bitrate / 1000));
         }
-        return Math.max(acc, Math.round(representation.bitrate / 1000));
       },
       undefined,
     );

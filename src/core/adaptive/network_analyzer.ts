@@ -16,11 +16,13 @@
 
 import config from "../../config";
 import log from "../../log";
-import type { IRepresentation } from "../../manifest";
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import type { IRepresentationEstimatorPlaybackObservation } from "./adaptive_representation_selector";
+import type {
+  IRepresentationEstimatorPlaybackObservation,
+  IRepresentationListItem,
+} from "./adaptive_representation_selector";
 import type BandwidthEstimator from "./utils/bandwidth_estimator";
 import EWMA from "./utils/ewma";
 import type {
@@ -133,7 +135,7 @@ function estimateRemainingTime(
  * @param {Object} pendingRequests - Every requests pending, in a chronological
  * order in terms of segment time.
  * @param {Object} playbackInfo - Information on the current playback.
- * @param {Object|null} currentRepresentation - The Representation being
+ * @param {Object|null} currentRepresentationItem - The Representation being
  * presently being loaded.
  * @param {boolean} lowLatencyMode - If `true`, we're playing the content as a
  * low latency content - where requests might be pending when the segment is
@@ -144,7 +146,7 @@ function estimateRemainingTime(
 function estimateStarvationModeBitrate(
   pendingRequests: IRequestInfo[],
   playbackInfo: IPlaybackConditionsInfo,
-  currentRepresentation: IRepresentation | null,
+  currentRepresentationItem: IRepresentationListItem | null,
   lowLatencyMode: boolean,
   lastEstimatedBitrate: number | undefined,
 ): number | undefined {
@@ -200,13 +202,13 @@ function estimateStarvationModeBitrate(
   const chunkDuration = concernedRequest.content.segment.duration;
   const requestElapsedTime = (now - concernedRequest.requestTimestamp) / 1000;
   const reasonableElapsedTime = requestElapsedTime <= (chunkDuration * 1.5 + 2) / speed;
-  if (isNullOrUndefined(currentRepresentation) || reasonableElapsedTime) {
+  if (isNullOrUndefined(currentRepresentationItem) || reasonableElapsedTime) {
     return undefined;
   }
 
   // calculate a reduced bitrate from the current one
   const factor = chunkDuration / requestElapsedTime;
-  const reducedBitrate = currentRepresentation.bitrate * Math.min(0.7, factor);
+  const reducedBitrate = currentRepresentationItem.bandwidth * Math.min(0.7, factor);
   if (lastEstimatedBitrate === undefined || reducedBitrate < lastEstimatedBitrate) {
     return reducedBitrate;
   }
@@ -316,7 +318,7 @@ export default class NetworkAnalyzer {
    * @param {Object} playbackInfo - Gives current information about playback.
    * @param {Object} bandwidthEstimator - `BandwidthEstimator` allowing to
    * produce network bandwidth estimates.
-   * @param {Object|null} currentRepresentation - The Representation currently
+   * @param {Object|null} currentRepresentationItem - The Representation currently
    * chosen.
    * `null` if no Representation has been chosen yet.
    * @param {Array.<Object>} currentRequests - All segment requests by segment's
@@ -328,7 +330,7 @@ export default class NetworkAnalyzer {
   public getBandwidthEstimate(
     playbackInfo: IPlaybackConditionsInfo,
     bandwidthEstimator: BandwidthEstimator,
-    currentRepresentation: IRepresentation | null,
+    currentRepresentationItem: IRepresentationListItem | null,
     currentRequests: IRequestInfo[],
     lastEstimatedBitrate: number | undefined,
   ): { bandwidthEstimate?: number | undefined; bitrateChosen: number } {
@@ -365,7 +367,7 @@ export default class NetworkAnalyzer {
       bandwidthEstimate = estimateStarvationModeBitrate(
         currentRequests,
         playbackInfo,
-        currentRepresentation,
+        currentRepresentationItem,
         this._lowLatencyMode,
         lastEstimatedBitrate,
       );
@@ -373,9 +375,9 @@ export default class NetworkAnalyzer {
       if (bandwidthEstimate !== undefined) {
         log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
         bandwidthEstimator.reset();
-        newBitrateCeil = isNullOrUndefined(currentRepresentation)
+        newBitrateCeil = isNullOrUndefined(currentRepresentationItem)
           ? bandwidthEstimate
-          : Math.min(bandwidthEstimate, currentRepresentation.bitrate);
+          : Math.min(bandwidthEstimate, currentRepresentationItem.bandwidth);
       }
     }
 
@@ -410,7 +412,7 @@ export default class NetworkAnalyzer {
   /**
    * For a given wanted bitrate, tells if should switch urgently.
    * @param {number} bitrate - The new estimated bitrate.
-   * @param {Object|null} currentRepresentation - The Representation being
+   * @param {Object|null} currentRepresentationItem - The Representation being
    * presently being loaded.
    * @param {Array.<Object>} currentRequests - All segment requests by segment's
    * start chronological order
@@ -419,13 +421,13 @@ export default class NetworkAnalyzer {
    */
   public isUrgent(
     bitrate: number,
-    currentRepresentation: IRepresentation | null,
+    currentRepresentationItem: IRepresentationListItem | null,
     currentRequests: IRequestInfo[],
     playbackInfo: IPlaybackConditionsInfo,
   ): boolean {
-    if (currentRepresentation === null) {
+    if (currentRepresentationItem === null) {
       return true;
-    } else if (bitrate >= currentRepresentation.bitrate) {
+    } else if (bitrate >= currentRepresentationItem.bandwidth) {
       return false;
     }
     return shouldDirectlySwitchToLowBitrate(

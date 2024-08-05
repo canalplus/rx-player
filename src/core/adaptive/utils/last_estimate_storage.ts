@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
+import type { IRepresentationListItem } from "../adaptive_representation_selector";
 
 /** Stores the last estimate made by the `RepresentationEstimator`. */
 export default class LastEstimateStorage {
@@ -28,30 +28,30 @@ export default class LastEstimateStorage {
    * Estimated Representation in the last estimate.
    * `null` if no estimate has been performed yet.
    */
-  public representation: IRepresentation | null;
+  public representationItem: IRepresentationListItem | null;
 
   /** Algorithm type used to make the last Representation estimate. */
   public algorithmType: ABRAlgorithmType;
 
   constructor() {
     this.bandwidth = undefined;
-    this.representation = null;
+    this.representationItem = null;
     this.algorithmType = ABRAlgorithmType.None;
   }
 
   /**
    * Update this `LastEstimateStorage` with new values.
-   * @param {Object} representation - Estimated Representation.
+   * @param {Object} representationItem - Estimated Representation.
    * @param {number|undefined} bandwidth - Estimated bandwidth.
    * @param {number} algorithmType - The type of algorithm used to produce that
    * estimate.
    */
   public update(
-    representation: IRepresentation,
+    representationItem: IRepresentationListItem,
     bandwidth: number | undefined,
     algorithmType: ABRAlgorithmType,
   ): void {
-    this.representation = representation;
+    this.representationItem = representationItem;
     this.bandwidth = bandwidth;
     this.algorithmType = algorithmType;
   }

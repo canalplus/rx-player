@@ -112,7 +112,7 @@ export interface ICdnMetadata {
 /** Representation of a "quality" available in an Adaptation. */
 export interface IParsedRepresentation {
   /** Maximum bitrate the Representation is available in, in bits per seconds. */
-  bitrate: number;
+  bitrate: number | undefined;
   /**
    * Information on the CDN(s) on which requests should be done to request this
    * Representation's initialization and media segments.

@@ -23,6 +23,7 @@ import type {
   IPeriod,
   IRepresentation,
   ITrackMetadata,
+  IVariantStreamMetadata,
 } from "../../../manifest";
 import { getLoggableSegmentId } from "../../../manifest";
 import type { ICdnMetadata } from "../../../parsers/manifest";
@@ -369,7 +370,14 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
         eventListeners.onMetrics?.({
           size: requestInfo.size,
           requestDuration: requestInfo.requestDuration,
-          content,
+          content: {
+            segment,
+            track,
+            representationItem: {
+              bandwidth: content.variant.bandwidth ?? representation.bitrate ?? 0,
+              representation,
+            },
+          },
           segmentDuration: segmentDurationAcc,
         });
       }
@@ -430,6 +438,7 @@ export interface ISegmentLoaderContent {
   manifest: IManifest;
   period: IPeriod;
   track: ITrackMetadata;
+  variant: IVariantStreamMetadata;
   representation: IRepresentation;
   segment: ISegment;
 }

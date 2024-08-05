@@ -86,7 +86,7 @@ export default function createAdaptiveRepresentationSelector(
    *
    * @see IRepresentationEstimator
    * @param {Object} context
-   * @param {Object} currentRepresentation
+   * @param {Object} currentRepresentationItem
    * @param {Object} representationList
    * @param {Object} playbackObserver
    * @param {Object} stopAllEstimates
@@ -94,7 +94,7 @@ export default function createAdaptiveRepresentationSelector(
    */
   return function getEstimates(
     context: { manifest: IManifest; period: IPeriod; track: ITrackMetadata },
-    currentRepresentation: IReadOnlySharedReference<IRepresentation | null>,
+    currentRepresentationItem: IReadOnlySharedReference<IRepresentationListItem | null>,
     representationList: IReadOnlySharedReference<IRepresentationListItem[]>,
     playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
     stopAllEstimates: CancellationSignal,
@@ -110,7 +110,7 @@ export default function createAdaptiveRepresentationSelector(
       {
         bandwidthEstimator,
         context,
-        currentRepresentation,
+        currentRepresentationItem,
         filters,
         initialBitrate,
         playbackObserver,
@@ -161,7 +161,7 @@ function getEstimateReference(
   {
     bandwidthEstimator,
     context,
-    currentRepresentation,
+    currentRepresentationItem,
     filters,
     initialBitrate,
     lowLatencyMode,
@@ -313,7 +313,7 @@ function getEstimateReference(
       const { bufferGap, position, maximumPosition } = lastPlaybackObservation;
       const resolutionLimit = filters.limitResolution.getValue();
       const bitrateThrottle = filters.throttleBitrate.getValue();
-      const currentRepresentationVal = currentRepresentation.getValue();
+      const currentRepresentationVal = currentRepresentationItem.getValue();
 
       const filteredReps = getFilteredRepresentations(
         sortedRepresentations,
@@ -333,7 +333,7 @@ function getEstimateReference(
       const knownStableBitrate =
         stableRepresentation === null
           ? undefined
-          : stableRepresentation.bitrate /
+          : stableRepresentation.bandwidth /
             (lastPlaybackObservation.speed > 0 ? lastPlaybackObservation.speed : 1);
 
       const { ABR_ENTER_BUFFER_BASED_ALGO, ABR_EXIT_BUFFER_BASED_ALGO } =
@@ -366,7 +366,7 @@ function getEstimateReference(
        */
       const currentBufferBasedEstimate = bufferBasedChooser.getLastEstimate();
 
-      let currentBestBitrate = chosenRepFromBandwidth.bitrate;
+      let currentBestBitrate = chosenRepFromBandwidth.bandwidth;
 
       /**
        * Representation chosen when considering the current buffer size.
@@ -378,7 +378,7 @@ function getEstimateReference(
        * `null` if this buffer size mode is not enabled or if we don't have a
        * choice from it yet.
        */
-      let chosenRepFromBufferSize: IRepresentation | null = null;
+      let chosenRepFromBufferSize: IRepresentationListItem | null = null;
       if (
         allowBufferBasedEstimates &&
         currentBufferBasedEstimate !== undefined &&
@@ -388,7 +388,7 @@ function getEstimateReference(
           filteredReps,
           currentBufferBasedEstimate,
         );
-        currentBestBitrate = chosenRepFromBufferSize.bitrate;
+        currentBestBitrate = chosenRepFromBufferSize.bandwidth;
       }
 
       /**
@@ -406,7 +406,7 @@ function getEstimateReference(
        *
        * `null` if not enabled or if there's currently no guess.
        */
-      let chosenRepFromGuessMode: IRepresentation | null = null;
+      let chosenRepFromGuessMode: IRepresentationListItem | null = null;
       if (
         lowLatencyMode &&
         currentRepresentationVal !== null &&
@@ -424,12 +424,12 @@ function getEstimateReference(
 
       if (
         chosenRepFromGuessMode !== null &&
-        chosenRepFromGuessMode.bitrate > currentBestBitrate
+        chosenRepFromGuessMode.bandwidth > currentBestBitrate
       ) {
         log.debug(
           "ABR: Choosing representation with guess-based estimation.",
-          chosenRepFromGuessMode.bitrate,
-          chosenRepFromGuessMode.id,
+          chosenRepFromGuessMode.bandwidth,
+          chosenRepFromGuessMode.representation.id,
         );
         prevEstimate.update(
           chosenRepFromGuessMode,
@@ -438,17 +438,17 @@ function getEstimateReference(
         );
         return {
           bitrate: bandwidthEstimate,
-          representation: chosenRepFromGuessMode,
+          representation: chosenRepFromGuessMode.representation,
           urgent:
             currentRepresentationVal === null ||
-            chosenRepFromGuessMode.bitrate < currentRepresentationVal.bitrate,
+            chosenRepFromGuessMode.bandwidth < currentRepresentationVal.bandwidth,
           knownStableBitrate,
         };
       } else if (chosenRepFromBufferSize !== null) {
         log.debug(
           "ABR: Choosing representation with buffer-based estimation.",
-          chosenRepFromBufferSize.bitrate,
-          chosenRepFromBufferSize.id,
+          chosenRepFromBufferSize.bandwidth,
+          chosenRepFromBufferSize.representation.id,
         );
         prevEstimate.update(
           chosenRepFromBufferSize,
@@ -457,9 +457,9 @@ function getEstimateReference(
         );
         return {
           bitrate: bandwidthEstimate,
-          representation: chosenRepFromBufferSize,
+          representation: chosenRepFromBufferSize.representation,
           urgent: networkAnalyzer.isUrgent(
-            chosenRepFromBufferSize.bitrate,
+            chosenRepFromBufferSize.bandwidth,
             currentRepresentationVal,
             requests,
             lastPlaybackObservation,
@@ -469,8 +469,8 @@ function getEstimateReference(
       } else {
         log.debug(
           "ABR: Choosing representation with bandwidth estimation.",
-          chosenRepFromBandwidth.bitrate,
-          chosenRepFromBandwidth.id,
+          chosenRepFromBandwidth.bandwidth,
+          chosenRepFromBandwidth.representation.id,
         );
         prevEstimate.update(
           chosenRepFromBandwidth,
@@ -479,9 +479,9 @@ function getEstimateReference(
         );
         return {
           bitrate: bandwidthEstimate,
-          representation: chosenRepFromBandwidth,
+          representation: chosenRepFromBandwidth.representation,
           urgent: networkAnalyzer.isUrgent(
-            chosenRepFromBandwidth.bitrate,
+            chosenRepFromBandwidth.bandwidth,
             currentRepresentationVal,
             requests,
             lastPlaybackObservation,
@@ -526,13 +526,13 @@ function getEstimateReference(
 
     if (!content.segment.isInit) {
       // calculate "maintainability score"
-      const { segment, representation } = content;
+      const { segment, representationItem } = content;
       if (segmentDuration === undefined && !segment.complete) {
         // We cannot know the real duration of the segment
         return;
       }
       const segDur = segmentDuration ?? segment.duration;
-      scoreCalculator.addSample(representation, requestDuration / 1000, segDur);
+      scoreCalculator.addSample(representationItem, requestDuration / 1000, segDur);
     }
   }
 
@@ -669,7 +669,7 @@ export interface IMetricsCallbackPayload {
   segmentDuration: number | undefined;
   /** Context about the segment downloaded. */
   content: {
-    representation: IRepresentation;
+    representationItem: IRepresentationListItem;
     track: ITrackMetadata;
     segment: ISegment;
   };
@@ -752,7 +752,7 @@ export interface IRepresentationEstimatorArguments {
    * The Representation currently loaded.
    * `null` if no Representation is currently loaded.
    */
-  currentRepresentation: IReadOnlySharedReference<IRepresentation | null>;
+  currentRepresentationItem: IReadOnlySharedReference<IRepresentationListItem | null>;
   /** Throttle Representation pool according to filters. */
   filters: {
     limitResolution: IReadOnlySharedReference<IResolutionInfo | undefined>;
@@ -793,7 +793,7 @@ export type IRepresentationEstimator = (
   /** Information on the content for which a Representation will be chosen */
   context: { manifest: IManifest; period: IPeriod; track: ITrackMetadata },
   /** Reference emitting the Representation currently loaded. */
-  currentRepresentation: IReadOnlySharedReference<IRepresentation | null>,
+  currentRepresentationItem: IReadOnlySharedReference<IRepresentationListItem | null>,
   /** Reference emitting the list of available Representations to choose from. */
   representationList: IReadOnlySharedReference<IRepresentationListItem[]>,
   /** Regularly emits playback conditions */

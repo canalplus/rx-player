@@ -16,6 +16,7 @@
 
 import log from "../../../log";
 import type { IRepresentation } from "../../../manifest";
+import type { IRepresentationListItem } from "../adaptive_representation_selector";
 import EWMA from "./ewma";
 
 /**
@@ -69,13 +70,13 @@ export interface IRepresentationMaintainabilityScore {
  */
 export default class RepresentationScoreCalculator {
   private _currentRepresentationData: {
-    representation: IRepresentation;
+    representationItem: IRepresentationListItem;
     ewma: EWMA;
     loadedSegments: number;
     loadedDuration: number;
   } | null;
 
-  private _lastRepresentationWithGoodScore: IRepresentation | null;
+  private _lastRepresentationWithGoodScore: IRepresentationListItem | null;
 
   constructor() {
     this._currentRepresentationData = null;
@@ -84,21 +85,25 @@ export default class RepresentationScoreCalculator {
 
   /**
    * Add new sample data.
-   * @param {Object} representation
+   * @param {Object} representationItem
    * @param {number} requestDuration - duration taken for doing the request for
    * the whole segment.
    * @param {number} segmentDuration - media duration of the whole segment, in
    * seconds.
    */
   public addSample(
-    representation: IRepresentation,
+    representationItem: IRepresentationListItem,
     requestDuration: number,
     segmentDuration: number,
   ): void {
     const ratio = segmentDuration / requestDuration;
     const currentRep = this._currentRepresentationData;
     let currentEWMA: EWMA;
-    if (currentRep !== null && currentRep.representation.id === representation.id) {
+    if (
+      currentRep !== null &&
+      currentRep.representationItem.representation.id ===
+        representationItem.representation.id
+    ) {
       currentEWMA = currentRep.ewma;
       currentRep.ewma.addSample(requestDuration, ratio);
       currentRep.loadedDuration += segmentDuration;
@@ -107,7 +112,7 @@ export default class RepresentationScoreCalculator {
       currentEWMA = new EWMA(5);
       currentEWMA.addSample(requestDuration, ratio);
       this._currentRepresentationData = {
-        representation,
+        representationItem,
         ewma: currentEWMA,
         loadedDuration: segmentDuration,
         loadedSegments: 0,
@@ -116,10 +121,14 @@ export default class RepresentationScoreCalculator {
 
     if (
       currentEWMA.getEstimate() > 1 &&
-      this._lastRepresentationWithGoodScore !== representation
+      this._lastRepresentationWithGoodScore?.representation.id !==
+        representationItem.representation.id
     ) {
-      log.debug("ABR: New last stable representation", representation.bitrate);
-      this._lastRepresentationWithGoodScore = representation;
+      log.debug(
+        "ABR: New last stable representation",
+        representationItem.representation.id,
+      );
+      this._lastRepresentationWithGoodScore = representationItem;
     }
   }
 
@@ -134,7 +143,8 @@ export default class RepresentationScoreCalculator {
   ): IRepresentationMaintainabilityScore | undefined {
     if (
       this._currentRepresentationData === null ||
-      this._currentRepresentationData.representation.id !== representation.id
+      this._currentRepresentationData.representationItem.representation.id !==
+        representation.id
     ) {
       return undefined;
     }
@@ -156,7 +166,7 @@ export default class RepresentationScoreCalculator {
    * `null` if no Representation ever reach that score.
    * @returns {Object|null}
    */
-  public getLastStableRepresentation(): IRepresentation | null {
+  public getLastStableRepresentation(): IRepresentationListItem | null {
     return this._lastRepresentationWithGoodScore;
   }
 }

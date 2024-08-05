@@ -14,32 +14,31 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
 import type { IRepresentationListItem } from "../adaptive_representation_selector";
 
 /**
- * From the given array of Representations (sorted by bitrate order ascending),
+ * From the given array of representationItems (sorted by bitrate order ascending),
  * returns the one corresponding to the given optimal, minimum and maximum
  * bitrates.
- * @param {Array.<Object>} representations - The representations array,
- * sorted in bitrate ascending order.
+ * @param {Array.<Object>} representationItems - The array, sorted in bandwidth
+ * ascending order.
  * @param {Number} wantedBitrate - The optimal bitrate the Representation
  * should have under the current condition.
  * @returns {Object|undefined}
  */
 export default function selectOptimalRepresentation(
-  representations: IRepresentationListItem[],
+  representationItems: IRepresentationListItem[],
   wantedBitrate: number,
-): IRepresentation {
+): IRepresentationListItem {
   const firstIndexTooHigh = arrayFindIndex(
-    representations,
-    (representation) => representation.bandwidth > wantedBitrate,
+    representationItems,
+    (representationItem) => representationItem.bandwidth > wantedBitrate,
   );
   if (firstIndexTooHigh === -1) {
-    return representations[representations.length - 1].representation;
+    return representationItems[representationItems.length - 1];
   } else if (firstIndexTooHigh === 0) {
-    return representations[0].representation;
+    return representationItems[0];
   }
-  return representations[firstIndexTooHigh - 1].representation;
+  return representationItems[firstIndexTooHigh - 1];
 }

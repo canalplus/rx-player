@@ -300,7 +300,7 @@ export interface IRepresentationMetadata {
    */
   uniqueId: string;
   /** Bitrate this Representation is in, in bits per seconds. */
-  bitrate: number;
+  bitrate: number | undefined;
   /**
    * `true` if the Representation is in a supported codec, false otherwise.
    * `undefined` for when this is not yet known (we're still in the process of

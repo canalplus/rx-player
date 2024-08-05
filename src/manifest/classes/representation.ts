@@ -44,7 +44,7 @@ class Representation implements IRepresentationMetadata {
   /**
    * @see IRepresentationMetadata
    */
-  public bitrate: number;
+  public bitrate: number | undefined;
   /**
    * @see IRepresentationMetadata
    */

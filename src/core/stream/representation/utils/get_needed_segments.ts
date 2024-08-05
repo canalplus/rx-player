@@ -237,7 +237,8 @@ export default function getNeededSegments({
       }
     }
 
-    const estimatedSegmentSize = duration * content.representation.bitrate; // in bits
+    // XXX TODO estimate segment size for HLS
+    const estimatedSegmentSize = duration * (content.representation.bitrate ?? 0); // in bits
     if (availableBufferSize - estimatedSegmentSize < 0) {
       isBufferFull = true;
       if (time > neededRange.start + MIN_BUFFER_AHEAD) {
@@ -406,6 +407,10 @@ function canFastSwitch(
   fastSwitchThreshold: number | undefined,
 ): boolean {
   const oldContentBitrate = oldSegmentRepresentation.bitrate;
+  // TODO fast-switch for HLS
+  if (oldContentBitrate === undefined || newSegmentRepresentation.bitrate === undefined) {
+    return false;
+  }
   const { BITRATE_REBUFFERING_RATIO } = config.getCurrent();
   if (fastSwitchThreshold === undefined) {
     // only re-load comparatively-poor bitrates for the same track.
