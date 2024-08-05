@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import type { IMediaElement } from "../browser_compatibility_types";
 
 // Needed for calling require (which itself is needed to mock properly) because
 // it is not type-checked:

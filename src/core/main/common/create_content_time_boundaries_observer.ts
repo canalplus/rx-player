@@ -24,7 +24,7 @@ export interface IContentTimeBoundariesObserverCallbacks {
  * Various methods from that class need then to be called at various events
  * (see `ContentTimeBoundariesObserver`).
  * @param {Object} manifest
- * @param {Object} mediaSource
+ * @param {Object|null} mediaSource
  * @param {Object} streamObserver
  * @param {Object} segmentSinksStore
  * @param {Object} cancelSignal
@@ -32,14 +32,16 @@ export interface IContentTimeBoundariesObserverCallbacks {
  */
 export default function createContentTimeBoundariesObserver(
   manifest: IManifest,
-  mediaSource: IMediaSourceInterface,
+  mediaSource: IMediaSourceInterface | null,
   streamObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
   segmentSinksStore: ISegmentSinksStore,
   callbacks: IContentTimeBoundariesObserverCallbacks,
   cancelSignal: CancellationSignal,
 ): ContentTimeBoundariesObserver {
   cancelSignal.register(() => {
-    mediaSource.interruptDurationSetting();
+    if (mediaSource !== null) {
+      mediaSource.interruptDurationSetting();
+    }
   });
   const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
     manifest,
@@ -56,16 +58,24 @@ export default function createContentTimeBoundariesObserver(
     callbacks.onPeriodChanged(period),
   );
   contentTimeBoundariesObserver.addEventListener("endingPositionChange", (evt) => {
-    mediaSource.setDuration(evt.endingPosition, evt.isEnd);
+    if (mediaSource !== null) {
+      mediaSource.setDuration(evt.endingPosition, evt.isEnd);
+    }
   });
   contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
-    log.debug("Init: end-of-stream order received.");
-    mediaSource.maintainEndOfStream();
+    if (mediaSource !== null) {
+      log.debug("Init: end-of-stream order received.");
+      mediaSource.maintainEndOfStream();
+    }
   });
   contentTimeBoundariesObserver.addEventListener("resumeStream", () => {
-    mediaSource.stopEndOfStream();
+    if (mediaSource !== null) {
+      mediaSource.stopEndOfStream();
+    }
   });
   const obj = contentTimeBoundariesObserver.getCurrentEndingTime();
-  mediaSource.setDuration(obj.endingPosition, obj.isEnd);
+  if (mediaSource !== null) {
+    mediaSource.setDuration(obj.endingPosition, obj.isEnd);
+  }
   return contentTimeBoundariesObserver;
 }

@@ -138,6 +138,10 @@ export interface IPlayerModuleState {
   maximumPosition: null | undefined | number;
   minimumPosition: null | undefined | number;
   playbackRate: number;
+  preloads: Array<{
+    url: string | undefined;
+    id: string;
+  }>;
   /** Try to play contents in "multithread" mode when possible. */
   relyOnWorker: boolean;
   /** Currently playing a content in "multithread" mode. */
@@ -196,6 +200,7 @@ const PlayerModule = declareModule(
     maximumPosition: undefined,
     minimumPosition: undefined,
     playbackRate: 1,
+    preloads: [],
     relyOnWorker: false,
     useWorker: false,
     subtitle: undefined,
@@ -272,6 +277,35 @@ const PlayerModule = declareModule(
           attachMultithread(player);
         }
         state.update("relyOnWorker", enabled);
+      },
+
+      preload(arg: ILoadVideoOptions) {
+        const contentInfo = player.preloadVideo(
+          Object.assign(
+            {
+              mode: state.get("relyOnWorker") ? "auto" : "main",
+              textTrackElement,
+              transportOptions: { checkMediaSegmentIntegrity: true },
+            },
+            arg,
+          ) as ILoadVideoOptions,
+        );
+        const preloads = state.get("preloads");
+        preloads.push({
+          id: contentInfo.id,
+          url: arg.url,
+        });
+        state.update("preloads", preloads);
+      },
+
+      loadPreload(preloadId: string) {
+        player.startPreload(preloadId);
+        const preloads = state.get("preloads");
+        const index = preloads.findIndex((p) => p.id === preloadId);
+        if (index >= 0) {
+          preloads.splice(index, 1);
+        }
+        state.update("preloads", preloads);
       },
 
       load(arg: ILoadVideoOptions) {

@@ -137,7 +137,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    * @param {Object} infos
    * @returns {Promise}
    */
-  public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[]> {
+  public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[] | undefined> {
     assertDataIsBufferSource(infos.data.chunk);
     log.debug(
       "AVSB: receiving order to push data to the SourceBuffer",
@@ -205,12 +205,14 @@ export default class AudioVideoSegmentSink extends SegmentSink {
       );
     }
     const ranges = res[res.length - 1];
-    this._segmentInventory.synchronizeBuffered(ranges);
+    if (ranges !== undefined) {
+      this._segmentInventory.synchronizeBuffered(ranges);
+    }
     return ranges;
   }
 
   /** @see SegmentSink */
-  public async removeBuffer(start: number, end: number): Promise<IRange[]> {
+  public async removeBuffer(start: number, end: number): Promise<IRange[] | undefined> {
     log.debug(
       "AVSB: receiving order to remove data from the SourceBuffer",
       this.bufferType,
@@ -223,7 +225,9 @@ export default class AudioVideoSegmentSink extends SegmentSink {
       value: { start, end },
     });
     const ranges = await promise;
-    this._segmentInventory.synchronizeBuffered(ranges);
+    if (ranges !== undefined) {
+      this._segmentInventory.synchronizeBuffered(ranges);
+    }
     return ranges;
   }
 

@@ -33,7 +33,9 @@ import TaskCanceller from "../../utils/task_canceller";
  * @param {SourceBufferList} sourceBuffers
  * @returns {Array.<SourceBuffer>}
  */
-function getUpdatingSourceBuffers(sourceBuffers: ISourceBufferList): ISourceBuffer[] {
+function getUpdatingSourceBuffers(
+  sourceBuffers: ISourceBufferList | ISourceBuffer[],
+): ISourceBuffer[] {
   const updatingSourceBuffers: ISourceBuffer[] = [];
   for (let i = 0; i < sourceBuffers.length; i++) {
     const SourceBuffer = sourceBuffers[i];
@@ -92,6 +94,20 @@ export default function triggerEndOfStream(
       },
       innerCanceller.signal,
     );
+  }
+
+  if (Array.isArray(sourceBuffers)) {
+    sourceBuffers.forEach((sb) => {
+      const onUpdateEnd = () => {
+        innerCanceller.cancel();
+        triggerEndOfStream(mediaSource, cancelSignal);
+      };
+      sb.addEventListener("updateend", onUpdateEnd);
+      innerCanceller.signal.register(() => {
+        sb.removeEventListener("updateend", onUpdateEnd);
+      });
+    });
+    return;
   }
 
   onRemoveSourceBuffers(
