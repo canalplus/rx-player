@@ -84,7 +84,7 @@ export function getMaximumSafePosition(manifest: IManifestMetadata): number {
 }
 
 /**
- * Returns Adaptations that contain Representations in supported codecs.
+ * Returns Adaptations that contain supported Representation(s).
  * @param {string|undefined} type - If set filter on a specific Adaptation's
  * type. Will return for all types if `undefined`.
  * @returns {Array.<Adaptation>}
@@ -103,7 +103,10 @@ export function getSupportedAdaptations(
 ): IAdaptationMetadata[] | IAdaptation[] {
   if (type === undefined) {
     return getAdaptations(period).filter((ada) => {
-      return ada.isSupported === true;
+      return (
+        ada.supportStatus.hasSupportedCodec !== false &&
+        ada.supportStatus.isDecipherable !== false
+      );
     });
   }
   const adaptationsForType = period.adaptations[type];
@@ -111,7 +114,10 @@ export function getSupportedAdaptations(
     return [];
   }
   return adaptationsForType.filter((ada) => {
-    return ada.isSupported === true;
+    return (
+      ada.supportStatus.hasSupportedCodec !== false &&
+      ada.supportStatus.isDecipherable !== false
+    );
   });
 }
 
@@ -503,12 +509,27 @@ function updateRepresentationsDeciperability(
       [],
     );
     for (const adaptation of adaptations) {
+      let hasOnlyUndecipherableRepresentations = true;
       for (const representation of adaptation.representations) {
         const result = isDecipherable(representation);
+        if (result !== false) {
+          hasOnlyUndecipherableRepresentations = false;
+        }
         if (result !== representation.decipherable) {
+          if (result === true) {
+            adaptation.supportStatus.isDecipherable = true;
+          } else if (
+            result === undefined &&
+            adaptation.supportStatus.isDecipherable === false
+          ) {
+            adaptation.supportStatus.isDecipherable = undefined;
+          }
           updates.push({ manifest, period, adaptation, representation });
           representation.decipherable = result;
         }
+      }
+      if (hasOnlyUndecipherableRepresentations) {
+        adaptation.supportStatus.isDecipherable = false;
       }
     }
   }
@@ -602,7 +623,7 @@ export function replicateUpdatesOnManifestMetadata(
                     for (const prop of Object.keys(newRepresentation) as Array<
                       keyof IRepresentationMetadata
                     >) {
-                      if (prop !== "decipherable" && prop !== "isSupported") {
+                      if (prop !== "decipherable") {
                         // eslint-disable-next-line
                         (baseRepresentation as any)[prop] = newRepresentation[prop];
                       }

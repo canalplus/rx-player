@@ -238,17 +238,14 @@ export interface IStartPreparedContentMessageValue {
  */
 export interface ICodecSupportUpdateMessage {
   type: MainThreadMessageType.CodecSupportUpdate;
-  value: Array<{
-    /** The corresponding codec (e.g. "ec-3"). */
-    codec: string;
-    /** The mime-type associated (e.g. "audio/mp4"). */
-    mimeType: string;
-    /**
-     * If `true`, this `mimeType` and `codec` combination is supported.
-     * If `false`, it is not supported.
-     */
-    result: boolean;
-  }>;
+  value: ICodecSupportInfo[];
+}
+
+export interface ICodecSupportInfo {
+  mimeType: string;
+  codec: string;
+  supported?: boolean | undefined;
+  supportedIfEncrypted?: boolean | undefined;
 }
 
 /**

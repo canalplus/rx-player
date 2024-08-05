@@ -23,17 +23,10 @@
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
-import features from "./features";
 import logger from "./log";
 import Player from "./main_thread/api";
-import MainCodecSupportProber from "./mse/main_codec_support_prober";
 
 patchWebkitSourceBuffer();
-
-// TODO this should be auto-imported when the various features that needs it
-// are added.
-// For now, I'm scare of breaking things so I'm not removing it yet.
-features.codecSupportProber = MainCodecSupportProber;
 
 if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG", "standard");

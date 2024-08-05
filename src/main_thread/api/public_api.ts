@@ -1066,6 +1066,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("manifestUpdate", (updates) =>
       this._priv_onManifestUpdate(contentInfos, updates),
     );
+
+    initializer.addEventListener("codecSupportUpdate", () =>
+      this._priv_onCodecSupportUpdate(contentInfos),
+    );
     initializer.addEventListener("decipherabilityUpdate", (updates) =>
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
@@ -1451,8 +1455,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
-      const ast =
-        manifest.availabilityStartTime !== undefined ? manifest.availabilityStartTime : 0;
+      const ast = manifest.availabilityStartTime ?? 0;
       return currentTime + ast;
     }
     return 0;
@@ -2558,6 +2561,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
+  /**
+   * Triggered each times the support for a codec has changed in the manifest.
+   * When triggered, the track store may need to consider selecting a new track.
+   *
+   * @param {Object} contentInfos
+   */
+  private _priv_onCodecSupportUpdate(contentInfos: IPublicApiContentInfos) {
+    const tStore = contentInfos?.tracksStore;
+    if (isNullOrUndefined(tStore)) {
+      return;
+    }
+    tStore.onManifestCodecSupportUpdate();
+  }
+
   private _priv_onDecipherabilityUpdate(
     contentInfos: IPublicApiContentInfos,
     elts: IDecipherabilityStatusChangedElement[],
@@ -2565,7 +2582,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (contentInfos === null || contentInfos.manifest === null) {
       return;
     }
-
     if (!isNullOrUndefined(contentInfos?.tracksStore)) {
       contentInfos.tracksStore.onDecipherabilityUpdates();
     }

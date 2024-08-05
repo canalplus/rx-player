@@ -3,8 +3,6 @@ import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
-import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
-import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
   IContentInitializationData,
   IDiscontinuityUpdateWorkerMessagePayload,
@@ -110,10 +108,6 @@ export default function initializeWorkerMain() {
             hasVideo: msg.value.hasVideo,
           });
         }
-
-        features.codecSupportProber = msg.value.hasMseInWorker
-          ? MainCodecSupportProber
-          : WorkerCodecSupportProber;
 
         sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
         break;
@@ -291,13 +285,9 @@ export default function initializeWorkerMain() {
         if (preparedContent === null || preparedContent.manifest === null) {
           return;
         }
-        if (typeof features.codecSupportProber?.updateCache === "function") {
-          for (const { mimeType, codec, result } of msg.value) {
-            features.codecSupportProber.updateCache(mimeType, codec, result);
-          }
-        }
+        const newEvaluatedCodecs = msg.value;
         try {
-          const warning = preparedContent.manifest.refreshCodecSupport(msg.value);
+          const warning = preparedContent.manifest.updateCodecSupport(newEvaluatedCodecs);
           if (warning !== null) {
             sendMessage({
               type: WorkerMessageType.Warning,

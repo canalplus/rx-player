@@ -27,6 +27,7 @@ export function findDefaultVideoCodec(): string {
   const videoCodecs = [
     'video/mp4;codecs="avc1.4d401e"',
     'video/mp4;codecs="avc1.42e01e"',
+    'video/mp4;codecs="hvc1.1.6.L93.B0"',
     'video/webm;codecs="vp8"',
   ];
   /* eslint-disable @typescript-eslint/unbound-method */

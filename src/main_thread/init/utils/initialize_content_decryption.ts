@@ -8,7 +8,8 @@ import SharedReference from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import { ContentDecryptorState } from "../../decrypt";
-import type { IContentProtection, IProcessedProtectionData } from "../../decrypt";
+import type IContentDecryptor from "../../decrypt";
+import type { IProcessedProtectionData } from "../../decrypt";
 
 /**
  * Initialize content decryption capabilities on the given `HTMLMediaElement`.
@@ -23,20 +24,17 @@ import type { IContentProtection, IProcessedProtectionData } from "../../decrypt
  * decryption may be wanted.
  * @param {Array.<Object>} keySystems - Key system configuration(s) wanted
  * Empty array if no content decryption capability is wanted.
- * @param {Object} protectionRef - Reference through which content
  * protection initialization data will be sent through.
  * @param {Object} callbacks - Callbacks called at various decryption-related
  * events.
  * @param {Object} cancelSignal - When that signal emits, this function will
- * stop listening to various events as well as items sent through the
- * `protectionRef` parameter.
+ * stop listening to various events.
  * @returns {Object} - Reference emitting the current status regarding DRM
  * initialization.
  */
 export default function initializeContentDecryption(
   mediaElement: IMediaElement,
   keySystems: IKeySystemOption[],
-  protectionRef: IReadOnlySharedReference<null | IContentProtection>,
   callbacks: {
     onWarning: (err: IPlayerError) => void;
     onError: (err: Error) => void;
@@ -46,9 +44,21 @@ export default function initializeContentDecryption(
       blacklistedKeyIds: Uint8Array[];
       delistedKeyIds: Uint8Array[];
     }) => void;
+    onCodecSupportUpdate?: () => void;
   },
   cancelSignal: CancellationSignal,
-): IReadOnlySharedReference<IDrmInitializationStatus> {
+): {
+  statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
+  contentDecryptor:
+    | {
+        enabled: true;
+        value: IContentDecryptor;
+      }
+    | {
+        enabled: false;
+        value: EncryptedMediaError;
+      };
+} {
   if (keySystems.length === 0) {
     return createEmeDisabledReference("No `keySystems` option given.");
   } else if (features.decrypt === null) {
@@ -73,6 +83,14 @@ export default function initializeContentDecryption(
 
   log.debug("Init: Creating ContentDecryptor");
   const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+
+  const onStateChange = (state: ContentDecryptorState) => {
+    if (state > ContentDecryptorState.Initializing) {
+      callbacks.onCodecSupportUpdate?.();
+      contentDecryptor.removeEventListener("stateChange", onStateChange);
+    }
+  };
+  contentDecryptor.addEventListener("stateChange", onStateChange);
 
   contentDecryptor.addEventListener("stateChange", (state) => {
     if (state === ContentDecryptorState.WaitingForAttachment) {
@@ -121,41 +139,29 @@ export default function initializeContentDecryption(
     callbacks.onKeyIdsCompatibilityUpdate(x);
   });
 
-  protectionRef.onUpdate(
-    (data) => {
-      if (data === null) {
-        return;
-      }
-      contentDecryptor.onInitializationData(data);
-    },
-    { clearSignal: decryptorCanceller.signal },
-  );
-
   decryptorCanceller.signal.register(() => {
     contentDecryptor.dispose();
   });
 
-  return drmStatusRef;
+  return {
+    statusRef: drmStatusRef,
+    contentDecryptor: { enabled: true, value: contentDecryptor },
+  };
 
-  function createEmeDisabledReference(errMsg: string) {
-    protectionRef.onUpdate(
-      (data, stopListening) => {
-        if (data === null) {
-          // initial value
-          return;
-        }
-        stopListening();
-        const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
-        callbacks.onError(err);
-      },
-      { clearSignal: cancelSignal },
-    );
+  function createEmeDisabledReference(errMsg: string): {
+    statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
+    contentDecryptor: {
+      enabled: false;
+      value: EncryptedMediaError;
+    };
+  } {
+    const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
     const ref = new SharedReference({
       initializationState: { type: "initialized" as const, value: null },
       drmSystemId: undefined,
     });
     ref.finish(); // We know that no new value will be triggered
-    return ref;
+    return { statusRef: ref, contentDecryptor: { enabled: false, value: err } };
   }
 }
 

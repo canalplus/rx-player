@@ -15,7 +15,6 @@
  */
 
 import log from "../../log";
-import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
 import type { IParsedAdaptation } from "../../parsers/manifest";
 import type {
   ITrackType,
@@ -25,7 +24,12 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
-import type { ICodecSupportList } from "./representation";
+import type {
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+  IAdaptationSupportStatus,
+} from "../types";
+import type CodecSupportCache from "./codec_support_cache";
 import Representation from "./representation";
 
 /**
@@ -83,7 +87,7 @@ export default class Adaptation implements IAdaptationMetadata {
   /**
    * @see IRepresentationMetadata
    */
-  public isSupported: boolean | undefined;
+  public supportStatus: IAdaptationSupportStatus;
   /**
    * @see IRepresentationMetadata
    */
@@ -104,6 +108,7 @@ export default class Adaptation implements IAdaptationMetadata {
    */
   constructor(
     parsedAdaptation: IParsedAdaptation,
+    cachedCodecSupport: CodecSupportCache,
     options: {
       representationFilter?: IRepresentationFilter | undefined;
       isManuallyAdded?: boolean | undefined;
@@ -143,14 +148,24 @@ export default class Adaptation implements IAdaptationMetadata {
     }
 
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
-      this.trickModeTracks = trickModeTracks.map((track) => new Adaptation(track));
+      this.trickModeTracks = trickModeTracks.map(
+        (track) => new Adaptation(track, cachedCodecSupport),
+      );
     }
 
     const argsRepresentations = parsedAdaptation.representations;
     const representations: Representation[] = [];
-    let isSupported: boolean | undefined;
+    this.supportStatus = {
+      hasSupportedCodec: false,
+      hasCodecWithUndefinedSupport: false,
+      isDecipherable: false,
+    };
     for (let i = 0; i < argsRepresentations.length; i++) {
-      const representation = new Representation(argsRepresentations[i], this.type);
+      const representation = new Representation(
+        argsRepresentations[i],
+        this.type,
+        cachedCodecSupport,
+      );
       let shouldAdd = true;
       if (!isNullOrUndefined(representationFilter)) {
         const reprObject: IRepresentationFilterRepresentation = {
@@ -183,12 +198,20 @@ export default class Adaptation implements IAdaptationMetadata {
       }
       if (shouldAdd) {
         representations.push(representation);
-        if (isSupported === undefined) {
-          if (representation.isSupported === true) {
-            isSupported = true;
-          } else if (representation.isSupported === false) {
-            isSupported = false;
+        if (representation.isSupported === undefined) {
+          this.supportStatus.hasCodecWithUndefinedSupport = true;
+          if (this.supportStatus.hasSupportedCodec === false) {
+            this.supportStatus.hasSupportedCodec = undefined;
           }
+        } else if (representation.isSupported) {
+          this.supportStatus.hasSupportedCodec = true;
+        }
+        if (representation.decipherable === undefined) {
+          if (this.supportStatus.isDecipherable === false) {
+            this.supportStatus.isDecipherable = undefined;
+          }
+        } else if (representation.decipherable) {
+          this.supportStatus.isDecipherable = true;
         }
       } else {
         log.debug(
@@ -203,8 +226,6 @@ export default class Adaptation implements IAdaptationMetadata {
     representations.sort((a, b) => a.bitrate - b.bitrate);
     this.representations = representations;
 
-    this.isSupported = isSupported;
-
     // for manuallyAdded adaptations (not in the manifest)
     this.manuallyAdded = isManuallyAdded === true;
   }
@@ -213,30 +234,42 @@ export default class Adaptation implements IAdaptationMetadata {
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
+   *
    *
    * If the right mimetype+codec combination is found in the provided object,
    * this `Adaptation`'s `isSupported` property will be updated accordingly as
    * well as all of its inner `Representation`'s `isSupported` attributes.
    *
-   * @param {Array.<Object>} supportList
+   * @param {Array.<Object>} cachedCodecSupport
    */
-  refreshCodecSupport(supportList: ICodecSupportList): void {
+  refreshCodecSupport(cachedCodecSupport: CodecSupportCache): void {
+    let hasCodecWithUndefinedSupport = false;
+    let hasSupportedRepresentation = false;
     for (const representation of this.representations) {
+      representation.refreshCodecSupport(cachedCodecSupport);
       if (representation.isSupported === undefined) {
-        representation.refreshCodecSupport(supportList);
-        if (this.isSupported !== true && representation.isSupported === true) {
-          this.isSupported = true;
-        } else if (
-          this.isSupported === undefined &&
-          representation.isSupported === false
-        ) {
-          this.isSupported = false;
-        }
+        hasCodecWithUndefinedSupport = true;
+      } else if (representation.isSupported) {
+        hasSupportedRepresentation = true;
       }
     }
+
+    if (hasSupportedRepresentation) {
+      /* The adaptation is supported because at least one representation is supported */
+      this.supportStatus.hasSupportedCodec = true;
+    } else if (hasCodecWithUndefinedSupport) {
+      /* The adaptation support is unknown because there is no representation explicitly
+      supported but there is codec with unknown support */
+      this.supportStatus.hasSupportedCodec = undefined;
+    } else {
+      /* All codecs support are known and no codecs are supported, adaptation
+      is not supported */
+      this.supportStatus.hasSupportedCodec = false;
+    }
+
+    this.supportStatus.hasCodecWithUndefinedSupport = hasCodecWithUndefinedSupport;
   }
 
   /**
@@ -271,7 +304,7 @@ export default class Adaptation implements IAdaptationMetadata {
     return {
       id: this.id,
       type: this.type,
-      isSupported: this.isSupported,
+      supportStatus: this.supportStatus,
       language: this.language,
       isForcedSubtitles: this.isForcedSubtitles,
       isClosedCaption: this.isClosedCaption,

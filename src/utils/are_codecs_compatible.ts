@@ -26,26 +26,34 @@ import startsWith from "./starts_with";
  * @returns A boolean that tell whether or not those two codecs provided are even.
  */
 function areCodecsCompatible(a: string, b: string): boolean {
-  const [mimeTypeA, ...propsA] = a.split(";");
-  const [mimeTypeB, ...propsB] = b.split(";");
+  const { mimeType: mimeTypeA, codecs: codecsA } = parseCodec(a);
+  const { mimeType: mimeTypeB, codecs: codecsB } = parseCodec(b);
 
   if (mimeTypeA !== mimeTypeB) {
     return false;
   }
-
-  const codecsA = arrayFind(propsA, (prop) => startsWith(prop, "codecs="));
-  const codecsB = arrayFind(propsB, (prop) => startsWith(prop, "codecs="));
-  if (codecsA === undefined || codecsB === undefined) {
+  if (codecsA === "" || codecsB === "") {
     return false;
   }
-
-  const codecA = codecsA.substring(7);
-  const codecB = codecsB.substring(7);
-  if (codecA.split(".")[0] !== codecB.split(".")[0]) {
+  if (codecsA.split(".")[0] !== codecsB.split(".")[0]) {
     return false;
   }
-
   return true;
+}
+
+const LENGTH_OF_CODEC_PREFIX = "codecs=".length;
+
+export function parseCodec(unparsedCodec: string): { mimeType: string; codecs: string } {
+  const [mimeType, ...props] = unparsedCodec.split(";");
+  let codecs = arrayFind(props, (prop) => startsWith(prop, "codecs=")) ?? "";
+  // remove the 'codecs=' prefix
+  codecs = codecs.substring(LENGTH_OF_CODEC_PREFIX);
+  // remove the leading and trailing quote
+  if (codecs[0] === '"') {
+    codecs = codecs.substring(1, codecs.length - 2);
+  }
+
+  return { mimeType, codecs };
 }
 
 export default areCodecsCompatible;

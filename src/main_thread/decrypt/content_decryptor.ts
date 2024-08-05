@@ -32,6 +32,7 @@ import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
 import createOrLoadSession from "./create_or_load_session";
+import type { ICodecSupportList } from "./find_key_system";
 import type { IMediaKeysInfos } from "./get_media_keys";
 import initMediaKeys from "./init_media_keys";
 import type { IKeyUpdateValue } from "./session_events_listener";
@@ -50,6 +51,7 @@ import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataValuesContainer from "./utils/init_data_values_container";
+import isCompatibleCodecSupported from "./utils/is_compatible_codec_supported";
 import {
   areAllKeyIdsContainedIn,
   areSomeKeyIdsContainedIn,
@@ -125,6 +127,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _initDataQueue: IProtectionData[];
 
   /**
+   * Store the list of supported codecs with the current key system configuration.
+   */
+  private _supportedCodecWhenEncrypted: ICodecSupportList;
+
+  /**
    * `true` if the EME API are available on the current platform according to
    * the default EME implementation used.
    * `false` otherwise.
@@ -163,6 +170,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: true,
       data: null,
     };
+    this._supportedCodecWhenEncrypted = [];
     this.error = null;
 
     eme.onEncrypted(
@@ -180,7 +188,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     initMediaKeys(mediaElement, ksOptions, canceller.signal)
       .then((mediaKeysInfo) => {
         const { options, mediaKeySystemAccess } = mediaKeysInfo;
-
+        this._supportedCodecWhenEncrypted = mediaKeysInfo.codecSupport;
         /**
          * String identifying the key system, allowing the rest of the code to
          * only advertise the required initialization data for license requests.
@@ -329,6 +337,33 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     };
     this._canceller.cancel();
     this.trigger("stateChange", this._stateData.state);
+  }
+
+  /**
+   * Returns `true` if the given mimeType and codec couple should be supported
+   * by the current key system.
+   * Returns `false` if it isn't.
+   *
+   * Returns `undefined` if we cannot determine if it is supported.
+   *
+   * @param {string} mimeType
+   * @param {string} codec
+   * @returns {boolean}
+   */
+  public isCodecSupported(mimeType: string, codec: string): boolean | undefined {
+    if (this._stateData.state === ContentDecryptorState.Initializing) {
+      log.error(
+        "DRM: Asking for codec support while the ContentDecryptor is still initializing",
+      );
+      return undefined;
+    }
+    if (
+      this._stateData.state === ContentDecryptorState.Error ||
+      this._stateData.state === ContentDecryptorState.Disposed
+    ) {
+      log.error("DRM: Asking for codec support while the ContentDecryptor is disposed");
+    }
+    return isCompatibleCodecSupported(mimeType, codec, this._supportedCodecWhenEncrypted);
   }
 
   /**
