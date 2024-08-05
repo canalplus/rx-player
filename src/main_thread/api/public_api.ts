@@ -1277,11 +1277,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {HTMLMediaElement|null} - The HTMLMediaElement used (`null` when
    * disposed)
    */
-  /* eslint-disable @typescript-eslint/ban-types */
+  /* eslint-disable @typescript-eslint/no-restricted-types */
   getVideoElement(): HTMLMediaElement | null {
     return this.videoElement as HTMLMediaElement;
   }
-  /* eslint-enable @typescript-eslint/ban-types */
+  /* eslint-enable @typescript-eslint/no-restricted-types */
 
   /**
    * Returns the player's current state.

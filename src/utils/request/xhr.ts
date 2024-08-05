@@ -49,7 +49,7 @@ export default function request(
   options: IRequestOptions<"document">,
 ): Promise<IRequestResponse<Document, "document">>;
 export default function request(
-  options: IRequestOptions<"json">, // eslint-disable-next-line @typescript-eslint/ban-types
+  options: IRequestOptions<"json">, // eslint-disable-next-line @typescript-eslint/no-restricted-types
 ): Promise<IRequestResponse<object, "json">>;
 export default function request(
   options: IRequestOptions<"blob">,

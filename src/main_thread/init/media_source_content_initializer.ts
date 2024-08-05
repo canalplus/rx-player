@@ -929,7 +929,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition()
               ? lastObservation.position.getWanted()
-              : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+              : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
             const isPaused =
               lastObservation.paused.pending ??
               coreObserver.getIsPaused() ??
@@ -939,7 +939,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition()
               ? lastObservation.position.getWanted()
-              : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+              : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
             // simple seek close to the current position
             // to flush the buffers
             if (position + 0.001 < lastObservation.duration) {
@@ -990,7 +990,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const lastObservation = coreObserver.getReference().getValue();
       const currentPosition = lastObservation.position.isAwaitingFuturePosition()
         ? lastObservation.position.getWanted()
-        : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+        : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
       const isPaused =
         lastObservation.paused.pending ??
         coreObserver.getIsPaused() ??

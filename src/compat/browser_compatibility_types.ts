@@ -299,7 +299,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   videoTracks?: ICompatVideoTrackList;
 }
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types */
 // @ts-expect-error unused function, just used for compile-time typechecking
 function testMediaElement(x: HTMLMediaElement) {
   assertCompatibleIMediaElement(x);
@@ -328,7 +328,7 @@ function testSourceBufferList(x: SourceBufferList) {
 function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
   // Noop
 }
-/* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types */
+/* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types */
 
 /**
  * AudioTrackList implementation (that TS forgot).
