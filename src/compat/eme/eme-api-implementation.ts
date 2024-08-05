@@ -3,7 +3,7 @@ import assert from "../../utils/assert";
 import globalScope from "../../utils/global_scope";
 import isNode from "../../utils/is_node";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import object_assign from "../../utils/object_assign";
+import objectAssign from "../../utils/object_assign";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
@@ -295,7 +295,7 @@ function createOnEncryptedForWebkit(): IEmeApiImplementation["onEncrypted"] {
     compatibleEventListener(
       target,
       (event?: Event) => {
-        const patchedEvent = object_assign(
+        const patchedEvent = objectAssign(
           { forceSessionRecreation: true },
           event as MediaEncryptedEvent,
         );
