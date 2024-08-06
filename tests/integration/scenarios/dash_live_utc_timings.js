@@ -37,7 +37,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521448, 3);
+        .closeTo(1553521446, 1);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553521748, 3);
     });
@@ -59,7 +59,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
+        .closeTo(1553521746, 1);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553522048, 1);
     });
@@ -101,7 +101,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush(); // Once for the init segment
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521448, 3);
+        .closeTo(1553521446, 1);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -123,7 +123,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
+        .closeTo(1553521746, 1);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553522048, 1);
     });
@@ -160,10 +160,12 @@ describe("DASH live - UTCTimings", () => {
       const timeShiftBufferDepth = 5 * 60;
       const maximumPosition = (Date.now()) / 1000 -
         availabilityStartTime;
-      const minimumPosition = maximumPosition - timeShiftBufferDepth;
+      const minimumPosition = maximumPosition -
+        timeShiftBufferDepth -
+        2 /* segment duration */;
 
       expect(player.getMinimumPosition()).to.be
-        .closeTo(minimumPosition, 3);
+        .closeTo(minimumPosition, 6);
       expect(player.getMaximumPosition()).to.be
         .closeTo(maximumPosition, 3);
     });
@@ -187,7 +189,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
+        .closeTo(1553521746, 1);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553522048, 1);
     });
@@ -220,7 +222,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521448, 3);
+        .closeTo(1553521446, 1);
 
       const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
       expect(requestsDone)
@@ -246,7 +248,7 @@ describe("DASH live - UTCTimings", () => {
       await xhrMock.flush();
       await sleep(100);
       expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521748, 1);
+        .closeTo(1553521746, 1);
       expect(player.getMaximumPosition()).to.be
         .closeTo(1553522048, 1);
     });

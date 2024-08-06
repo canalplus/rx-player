@@ -24,6 +24,7 @@ import {
 } from "../../../../../../manifest";
 import { IPlayerError } from "../../../../../../public_types";
 import assert from "../../../../../../utils/assert";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
 import { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
 import {
@@ -760,9 +761,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (!this._isDynamic) {
       return;
     }
-    const firstPosition = this._manifestBoundsCalculator
-      .getEstimatedMinimumSegmentTime();
-    if (firstPosition == null) {
+    const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(
+      (this._index.timeline[0]?.duration ?? 0) / this._index.timescale
+    );
+    if (isNullOrUndefined(firstPosition)) {
       return; // we don't know yet
     }
     const scaledFirstPosition = toIndexTime(firstPosition, this._index);

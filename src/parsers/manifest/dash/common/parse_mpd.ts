@@ -248,8 +248,8 @@ function parseCompleteIntermediateRepresentation(
   const availabilityStartTime = parseAvailabilityStartTime(rootAttributes,
                                                            args.referenceDateTime);
   const timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
-  const { externalClockOffset: clockOffset,
-          unsafelyBaseOnPreviousManifest } = args;
+  const maxSegmentDuration = rootAttributes.maxSegmentDuration;
+  const { externalClockOffset: clockOffset, unsafelyBaseOnPreviousManifest } = args;
 
   const { externalClockOffset } = args;
   const manifestBoundsCalculator = new ManifestBoundsCalculator({
@@ -357,9 +357,25 @@ function parseCompleteIntermediateRepresentation(
     // can go even lower in terms of depth
     minimumTime = minimumSafePosition;
     timeshiftDepth = timeShiftBufferDepth ?? null;
-    if (timeshiftDepth !== null && minimumTime !== undefined &&
-        livePosition - minimumTime > timeshiftDepth)
-    {
+    if (timeshiftDepth !== null) {
+      // The DASH spec implies that a segment is still available after a given
+      // `timeShiftBufferDepth` for a time equal to its duration
+      // (What I interpret from "ISO/IEC 23009-1 fifth edition 2022-08
+      // A.3.4 Media Segment list restrictions).
+      //
+      // This `timeshiftDepth` property is global for the whole Manifest (and
+      // not per segment), thus we cannot do exactly that, but we can take the
+      // anounced `maxSegmentDuration` by default instead. This may be a little
+      // too optimistic, but would in reality not lead to a lot of issues as
+      // this `timeshiftDepth` property is not the one that should be relied on
+      // to know which segment can or cannot be requested anymore.
+      timeshiftDepth += maxSegmentDuration ?? 0;
+    }
+    if (
+      timeshiftDepth !== null &&
+      minimumTime !== undefined &&
+      livePosition - minimumTime > timeshiftDepth
+    ) {
       timeshiftDepth = livePosition - minimumTime;
     }
   }
