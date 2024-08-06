@@ -468,6 +468,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                                                                     speed,
                                                                     cancelSignal);
 
+    const contentTimeBoundariesObserver = this
+      ._createContentTimeBoundariesObserver(manifest,
+                                            mediaSource,
+                                            streamObserver,
+                                            segmentBuffersStore,
+                                            cancelSignal);
 
     if (mayMediaElementFailOnUndecipherableData) {
       // On some devices, just reload immediately when data become undecipherable
@@ -481,13 +487,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         cancelSignal
       );
     }
-
-    const contentTimeBoundariesObserver = this
-      ._createContentTimeBoundariesObserver(manifest,
-                                            mediaSource,
-                                            streamObserver,
-                                            segmentBuffersStore,
-                                            cancelSignal);
 
     /**
      * Emit a "loaded" events once the initial play has been performed and the
