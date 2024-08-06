@@ -30052,10 +30052,14 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
   /**
    * Estimate a minimum bound for the content from the last set segment time
    * and buffer depth.
-   * Consider that it is only an estimation, not the real value.
+   * Consider that it is only an estimate, not the real value.
+   * @param {number} segmentDuration - In DASH, the buffer depth actually also
+   * depend on a corresponding's segment duration (e.g. a segment become
+   * unavailable once the `timeShiftBufferDepth` + its duration has elapsed).
+   * This argument can thus be set the approximate duration of a segment.
    * @return {number|undefined}
    */;
-  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime() {
+  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime(segmentDuration) {
     var _a;
     if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
@@ -30064,7 +30068,7 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
     if (maximumBound === undefined) {
       return undefined;
     }
-    var minimumBound = maximumBound - this._timeShiftBufferDepth;
+    var minimumBound = maximumBound - (this._timeShiftBufferDepth + segmentDuration);
     return minimumBound;
   }
   /**
@@ -31203,6 +31207,7 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
 
 
 
+
 // eslint-disable-next-line max-len
 
 /**
@@ -31600,14 +31605,15 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
    * available due to timeshifting.
    */;
   _proto._refreshTimeline = function _refreshTimeline() {
+    var _a, _b;
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     if (!this._isDynamic) {
       return;
     }
-    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
-    if (firstPosition == null) {
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(((_b = (_a = this._index.timeline[0]) === null || _a === void 0 ? void 0 : _a.duration) !== null && _b !== void 0 ? _b : 0) / this._index.timescale);
+    if ((0,is_null_or_undefined/* default */.A)(firstPosition)) {
       return; // we don't know yet
     }
     var scaledFirstPosition = (0,index_helpers/* toIndexTime */.vb)(firstPosition, this._index);
@@ -32171,7 +32177,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     var _this$_index = this._index,
       duration = _this$_index.duration,
       timescale = _this$_index.timescale;
-    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(duration / timescale);
     if (firstPosition === undefined) {
       return undefined;
     }
@@ -33493,6 +33499,7 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
   var mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   var availabilityStartTime = parseAvailabilityStartTime(rootAttributes, args.referenceDateTime);
   var timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  var maxSegmentDuration = rootAttributes.maxSegmentDuration;
   var clockOffset = args.externalClockOffset,
     unsafelyBaseOnPreviousManifest = args.unsafelyBaseOnPreviousManifest;
   var externalClockOffset = args.externalClockOffset;
@@ -33586,6 +33593,20 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
     // can go even lower in terms of depth
     minimumTime = minimumSafePosition;
     timeshiftDepth = timeShiftBufferDepth !== null && timeShiftBufferDepth !== void 0 ? timeShiftBufferDepth : null;
+    if (timeshiftDepth !== null) {
+      // The DASH spec implies that a segment is still available after a given
+      // `timeShiftBufferDepth` for a time equal to its duration
+      // (What I interpret from "ISO/IEC 23009-1 fifth edition 2022-08
+      // A.3.4 Media Segment list restrictions).
+      //
+      // This `timeshiftDepth` property is global for the whole Manifest (and
+      // not per segment), thus we cannot do exactly that, but we can take the
+      // anounced `maxSegmentDuration` by default instead. This may be a little
+      // too optimistic, but would in reality not lead to a lot of issues as
+      // this `timeshiftDepth` property is not the one that should be relied on
+      // to know which segment can or cannot be requested anymore.
+      timeshiftDepth += maxSegmentDuration !== null && maxSegmentDuration !== void 0 ? maxSegmentDuration : 0;
+    }
     if (timeshiftDepth !== null && minimumTime !== undefined && livePosition - minimumTime > timeshiftDepth) {
       timeshiftDepth = livePosition - minimumTime;
     }
@@ -53656,7 +53677,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.3";
+    _this.version = /* PLAYER_VERSION */"3.33.4-dev.2024080600";
     _this.log = src_log/* default */.A;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -56144,7 +56165,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
  * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
  */
 Player._priv_currentlyUsedVideoElements = new WeakSet();
-Player.version = /* PLAYER_VERSION */"3.33.3";
+Player.version = /* PLAYER_VERSION */"3.33.4-dev.2024080600";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
