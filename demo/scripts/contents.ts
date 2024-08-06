@@ -23,6 +23,12 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
     live: false,
   },
   {
+    name: "Live with thumbnail track",
+    url: "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest_thumbs.mpd",
+    transport: "dash",
+    live: true,
+  },
+  {
     name: "Axinom CMAF multiple Audio and Text tracks Tears of steel",
     url: "https://media.axprod.net/TestVectors/Cmaf/clear_1080p_h264/manifest.mpd",
     transport: "dash",
@@ -63,6 +69,12 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
     url: "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
     transport: "dash",
     live: true,
+  },
+  {
+    name: "VOD with thumbnail track",
+    url: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd",
+    transport: "dash",
+    live: false,
   },
   {
     name: "Super SpeedWay",

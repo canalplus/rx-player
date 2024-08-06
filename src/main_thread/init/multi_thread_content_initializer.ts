@@ -40,7 +40,7 @@ import type {
   IKeySystemOption,
   IPlayerError,
 } from "../../public_types";
-import type { ITransportOptions } from "../../transports";
+import type { IThumbnailResponse, ITransportOptions } from "../../transports";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
@@ -115,14 +115,30 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  /**
-   * Stores the resolvers and the current messageId that is sent to the web worker to
-   * receive segment sink metrics.
-   * The purpose of collecting metrics is for monitoring and debugging.
-   */
-  private _segmentMetrics: {
-    lastMessageId: number;
-    resolvers: Map<number, (value: ISegmentSinkMetrics | undefined) => void>;
+  private _awaitingRequests: {
+    nextRequestId: number;
+    /**
+     * Stores the resolvers and the current messageId that is sent to the web worker to
+     * receive segment sink metrics.
+     * The purpose of collecting metrics is for monitoring and debugging.
+     */
+    pendingSinkMetrics: Map<
+      number /* request id */,
+      {
+        resolve: (value: ISegmentSinkMetrics | undefined) => void;
+      }
+    >;
+    /**
+     * Stores the resolvers and the current messageId that is sent to the web worker to
+     * receive image thumbnails.
+     */
+    pendingThumbnailFetching: Map<
+      number /* request id */,
+      {
+        resolve: (value: IThumbnailResponse) => void;
+        reject: (error: Error) => void;
+      }
+    >;
   };
 
   /**
@@ -137,9 +153,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
-    this._segmentMetrics = {
-      lastMessageId: 0,
-      resolvers: new Map(),
+    this._awaitingRequests = {
+      nextRequestId: 0,
+      pendingSinkMetrics: new Map(),
+      pendingThumbnailFetching: new Map(),
     };
     this._queuedWorkerMessages = null;
   }
@@ -1135,9 +1152,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const resolveFn = this._segmentMetrics.resolvers.get(msgData.value.messageId);
-          if (resolveFn !== undefined) {
-            resolveFn(msgData.value.segmentSinkMetrics);
+          const sinkObj = this._awaitingRequests.pendingSinkMetrics.get(
+            msgData.value.requestId,
+          );
+          if (sinkObj !== undefined) {
+            sinkObj.resolve(msgData.value.segmentSinkMetrics);
           } else {
             log.error("MTCI: Failed to send segment sink store update");
           }
@@ -1151,6 +1170,23 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
         case WorkerMessageType.LogMessage:
           // Already handled by prepare's handler
+          break;
+        case WorkerMessageType.ThumbnailDataResponse:
+          if (this._currentContentInfo?.contentId !== msgData.contentId) {
+            return;
+          }
+          const tObj = this._awaitingRequests.pendingThumbnailFetching.get(
+            msgData.value.requestId,
+          );
+          if (tObj !== undefined) {
+            if (msgData.value.status === "error") {
+              tObj.reject(formatWorkerError(msgData.value.error));
+            } else {
+              tObj.resolve(msgData.value.data);
+            }
+          } else {
+            log.error("MTCI: Failed to send segment sink store update");
+          }
           break;
         default:
           assertUnreachable(msgData);
@@ -1592,29 +1628,65 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
 
-    const _getSegmentSinkMetrics: () => Promise<
-      ISegmentSinkMetrics | undefined
-    > = async () => {
-      this._segmentMetrics.lastMessageId++;
-      const messageId = this._segmentMetrics.lastMessageId;
+    const _getSegmentSinkMetrics = async (): Promise<ISegmentSinkMetrics | undefined> => {
+      this._awaitingRequests.nextRequestId++;
+      const requestId = this._awaitingRequests.nextRequestId;
       sendMessage(this._settings.worker, {
         type: MainThreadMessageType.PullSegmentSinkStoreInfos,
-        value: { messageId },
+        value: { requestId },
       });
       return new Promise((resolve, reject) => {
         const rejectFn = (err: CancellationError) => {
           cancelSignal.deregister(rejectFn);
-          this._segmentMetrics.resolvers.delete(messageId);
+          this._awaitingRequests.pendingSinkMetrics.delete(requestId);
           return reject(err);
         };
-        this._segmentMetrics.resolvers.set(
-          messageId,
-          (value: ISegmentSinkMetrics | undefined) => {
+        this._awaitingRequests.pendingSinkMetrics.set(requestId, {
+          resolve: (value: ISegmentSinkMetrics | undefined) => {
             cancelSignal.deregister(rejectFn);
-            this._segmentMetrics.resolvers.delete(messageId);
+            this._awaitingRequests.pendingSinkMetrics.delete(requestId);
             resolve(value);
           },
-        );
+        });
+        cancelSignal.register(rejectFn);
+      });
+    };
+    const _getThumbnailsData = async (
+      periodId: string,
+      thumbnailTrackId: string,
+      time: number,
+    ): Promise<IThumbnailResponse> => {
+      if (this._currentContentInfo === null) {
+        return Promise.reject(new Error("Cannot fetch thumbnails: No content loaded."));
+      }
+      this._awaitingRequests.nextRequestId++;
+      const requestId = this._awaitingRequests.nextRequestId;
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.ThumbnailDataRequest,
+        contentId: this._currentContentInfo.contentId,
+        value: { requestId, periodId, thumbnailTrackId, time },
+      });
+
+      return new Promise((resolve, reject) => {
+        const rejectFn = (err: CancellationError) => {
+          cleanUp();
+          reject(err);
+        };
+        const cleanUp = () => {
+          cancelSignal.deregister(rejectFn);
+          this._awaitingRequests.pendingThumbnailFetching.delete(requestId);
+        };
+
+        this._awaitingRequests.pendingThumbnailFetching.set(requestId, {
+          resolve: (value: IThumbnailResponse) => {
+            cleanUp();
+            resolve(value);
+          },
+          reject: (value: unknown) => {
+            cleanUp();
+            reject(value);
+          },
+        });
         cancelSignal.register(rejectFn);
       });
     };
@@ -1631,6 +1703,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               stopListening();
               this.trigger("loaded", {
                 getSegmentSinkMetrics: _getSegmentSinkMetrics,
+                getThumbnailData: _getThumbnailsData,
               });
             }
           },

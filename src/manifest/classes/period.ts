@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import { MediaError } from "../../errors";
-import type { IManifestStreamEvent, IParsedPeriod } from "../../parsers/manifest";
+import type {
+  ICdnMetadata,
+  IManifestStreamEvent,
+  IParsedPeriod,
+} from "../../parsers/manifest";
 import type { ITrackType, IRepresentationFilter } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -22,6 +26,7 @@ import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
 import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
 import Adaptation from "./adaptation";
 import type CodecSupportCache from "./codec_support_cache";
+import type { IRepresentationIndex } from "./representation_index";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
@@ -55,6 +60,11 @@ export default class Period implements IPeriodMetadata {
 
   /** Array containing every stream event happening on the period */
   public streamEvents: IManifestStreamEvent[];
+
+  /**
+   * If set to an object, this Period has thumbnail tracks.
+   */
+  public thumbnailTracks: IThumbnailTrack[];
 
   /**
    * @constructor
@@ -126,6 +136,16 @@ export default class Period implements IPeriodMetadata {
       );
     }
 
+    this.thumbnailTracks = args.thumbnailTracks.map((thumbnailTrack) => ({
+      id: thumbnailTrack.id,
+      mimeType: thumbnailTrack.mimeType,
+      index: thumbnailTrack.index,
+      cdnMetadata: thumbnailTrack.cdnMetadata,
+      height: thumbnailTrack.height,
+      width: thumbnailTrack.width,
+      horizontalTiles: thumbnailTrack.horizontalTiles,
+      verticalTiles: thumbnailTrack.verticalTiles,
+    }));
     this.duration = args.duration;
     this.start = args.start;
 
@@ -278,6 +298,50 @@ export default class Period implements IPeriodMetadata {
       id: this.id,
       streamEvents: this.streamEvents,
       adaptations,
+      thumbnailTracks: this.thumbnailTracks.map((thumbnailTrack) => ({
+        id: thumbnailTrack.id,
+        mimeType: thumbnailTrack.mimeType,
+        height: thumbnailTrack.height,
+        width: thumbnailTrack.width,
+        horizontalTiles: thumbnailTrack.horizontalTiles,
+        verticalTiles: thumbnailTrack.verticalTiles,
+      })),
     };
   }
+}
+
+/**
+ * Metadata on an image thumbnail track associated to a Period.
+ */
+export interface IThumbnailTrack {
+  /** Identifier for that thumbnail track. */
+  id: string;
+  /** interface allowing to obtain information on the actual thumbnails. */
+  index: IRepresentationIndex;
+  /** Mime-type for loaded thumbnails, allowing to know their format. */
+  mimeType: string;
+  /** CDN(s) on which the thumbnails may be loaded. */
+  cdnMetadata: ICdnMetadata[] | null;
+  /**
+   * A loaded thumbnail's height in pixels. Note that there can be multiple actual
+   * thumbnails per loaded thumbnail resource (see `horizontalTiles` and
+   * `verticalTiles` properties.
+   */
+  height: number;
+  /**
+   * A loaded thumbnail's width in pixels. Note that there can be multiple actual
+   * thumbnails per loaded thumbnail resource (see `horizontalTiles` and
+   * `verticalTiles` properties.
+   */
+  width: number;
+  /**
+   * Thumbnail tracks are usually grouped together. This is the number of
+   * images contained horizontally in a whole loaded thumbnail resource.
+   */
+  horizontalTiles: number;
+  /**
+   * Thumbnail tracks are usually grouped together. This is the number of
+   * images contained vertically in a whole loaded thumbnail resource.
+   */
+  verticalTiles: number;
 }

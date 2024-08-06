@@ -93,6 +93,7 @@ function parsePeriod(
     start: period.start,
     end: period.end,
     duration: period.end - period.start,
+    thumbnailTracks: [],
     adaptations: period.adaptations.reduce<Partial<Record<string, IParsedAdaptation[]>>>(
       (acc, ada) => {
         const type = ada.type;

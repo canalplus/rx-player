@@ -231,6 +231,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
               stopListening();
               this.trigger("loaded", {
                 getSegmentSinkMetrics: null,
+                getThumbnailData: () =>
+                  Promise.reject(
+                    new Error("Thumbnail data not available with directfile contents"),
+                  ),
               });
             }
           },

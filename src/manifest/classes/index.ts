@@ -19,6 +19,7 @@ import type { ICodecSupportInfo } from "./codec_support_cache";
 import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
 import Manifest from "./manifest";
 import Period from "./period";
+import type { IThumbnailTrack } from "./period";
 import Representation from "./representation";
 import type {
   IMetaPlaylistPrivateInfos,
@@ -42,6 +43,7 @@ export type {
   IRepresentationIndex,
   IPrivateInfos,
   ISegment,
+  IThumbnailTrack,
 };
 export {
   areSameContent,

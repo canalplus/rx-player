@@ -40,6 +40,7 @@ import type {
   ITextTrack,
   IVideoRepresentation,
   IVideoTrack,
+  IThumbnailTrackInfo,
 } from "../../../../src/public_types";
 
 RxPlayer.addFeatures([
@@ -325,6 +326,22 @@ const PlayerModule = declareModule(
 
       unmute() {
         player.unMute();
+      },
+
+      getAvailableThumbnailTracks(time: number): IThumbnailTrackInfo[] {
+        return player.getAvailableThumbnailTracks({ time });
+      },
+
+      renderThumbnail(
+        container: HTMLElement,
+        time: number,
+        thumbnailTrackId: string,
+      ): Promise<void> {
+        return player.renderThumbnail({
+          container,
+          time,
+          thumbnailTrackId,
+        });
       },
 
       setDefaultVideoRepresentationSwitchingMode(

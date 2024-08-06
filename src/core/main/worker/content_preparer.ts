@@ -24,6 +24,9 @@ import createAdaptiveRepresentationSelector from "../../adaptive";
 import CmcdDataBuilder from "../../cmcd";
 import type { IManifestRefreshSettings } from "../../fetchers";
 import { ManifestFetcher, SegmentQueueCreator } from "../../fetchers";
+import CdnPrioritizer from "../../fetchers/cdn_prioritizer";
+import createThumbnailFetcher from "../../fetchers/thumbnails/thumbnail_fetcher";
+import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetcher";
 import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import DecipherabilityFreezeDetector from "../common/DecipherabilityFreezeDetector";
@@ -129,11 +132,16 @@ export default class ContentPreparer {
         },
       );
 
+      const cdnPrioritizer = new CdnPrioritizer(contentCanceller.signal);
       const segmentQueueCreator = new SegmentQueueCreator(
         dashPipelines,
+        cdnPrioritizer,
         cmcdDataBuilder,
         context.segmentRetryOptions,
-        contentCanceller.signal,
+      );
+      const fetchThumbnailData = createThumbnailFetcher(
+        dashPipelines.thumbnails,
+        cdnPrioritizer,
       );
 
       const trackChoiceSetter = new TrackChoiceSetter();
@@ -161,6 +169,7 @@ export default class ContentPreparer {
         representationEstimator,
         segmentSinksStore,
         segmentQueueCreator,
+        fetchThumbnailData,
         workerTextSender,
         trackChoiceSetter,
       };
@@ -363,6 +372,8 @@ export interface IPreparedContentData {
    * fetching.
    */
   segmentQueueCreator: SegmentQueueCreator;
+  /** Allows to load image thumbnails. */
+  fetchThumbnailData: IThumbnailFetcher;
   /**
    * Allows to store and update the wanted tracks and Representation inside that
    * track.

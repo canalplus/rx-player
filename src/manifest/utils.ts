@@ -19,6 +19,7 @@ import type {
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  IThumbnailTrackMetadata,
 } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
@@ -603,6 +604,41 @@ export function replicateUpdatesOnManifestMetadata(
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
             (basePeriod as any)[prop] = (newPeriod as any)[prop];
           }
+        }
+
+        for (const removedThumbnailTrack of updatedPeriod.result.removedThumbnailTracks) {
+          for (
+            let thumbIdx = 0;
+            thumbIdx < basePeriod.thumbnailTracks.length;
+            thumbIdx++
+          ) {
+            if (basePeriod.thumbnailTracks[thumbIdx].id === removedThumbnailTrack.id) {
+              basePeriod.thumbnailTracks.splice(thumbIdx, 1);
+              break;
+            }
+          }
+        }
+        for (const updatedThumbnailTrack of updatedPeriod.result.updatedThumbnailTracks) {
+          const newThumbnailTrack = updatedThumbnailTrack;
+          for (
+            let thumbIdx = 0;
+            thumbIdx < basePeriod.thumbnailTracks.length;
+            thumbIdx++
+          ) {
+            if (basePeriod.thumbnailTracks[thumbIdx].id === newThumbnailTrack.id) {
+              const baseThumbnailTrack = basePeriod.thumbnailTracks[thumbIdx];
+              for (const prop of Object.keys(newThumbnailTrack) as Array<
+                keyof IThumbnailTrackMetadata
+              >) {
+                // eslint-disable-next-line
+                (baseThumbnailTrack as any)[prop] = newThumbnailTrack[prop];
+              }
+              break;
+            }
+          }
+        }
+        for (const addedThumbnailTrack of updatedPeriod.result.addedThumbnailTracks) {
+          basePeriod.thumbnailTracks.push(addedThumbnailTrack);
         }
 
         for (const removedAdaptation of updatedPeriod.result.removedAdaptations) {

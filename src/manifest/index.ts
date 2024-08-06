@@ -9,6 +9,7 @@ import type {
   IRepresentationIndex,
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
+  IThumbnailTrack,
 } from "./classes";
 import type Manifest from "./classes";
 import { areSameContent, getLoggableSegmentId } from "./classes";
@@ -33,6 +34,7 @@ export type {
   ISegment,
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
+  IThumbnailTrack,
 };
 export { areSameContent, getLoggableSegmentId };
 export type {
