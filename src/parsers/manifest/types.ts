@@ -103,6 +103,52 @@ export interface ICdnMetadata {
   id?: string | undefined;
 }
 
+/** Information linked to an image thumbnail track. */
+export interface IParsedThumbnailTrack {
+  /** Identifier for that thumbnail track. */
+  id: string;
+  /**
+   * Information on the CDN(s) on which requests should be done to request
+   * thumbnails.
+   *
+   * `null` if there's no CDN involved here (e.g. resources are not
+   * requested through the network).
+   *
+   * An empty array means that no CDN are left to request the resource. As such,
+   * no resource can be loaded in that situation.
+   */
+  cdnMetadata: ICdnMetadata[] | null;
+  /** Interface allowing to get timed thumbnail metadata to then be able to fetch them. */
+  index: IRepresentationIndex;
+  /**
+   * Mimetype of the image thumbnails available here.
+   * Allows to know the image format (e.g. jpeg, png etc.)
+   */
+  mimeType: string;
+  /**
+   * A loaded thumbnail's height in pixels. Note that there can be multiple actual
+   * thumbnails per loaded thumbnail resource (see `horizontalTiles` and
+   * `verticalTiles` properties.
+   */
+  height: number;
+  /**
+   * A loaded thumbnail's width in pixels. Note that there can be multiple actual
+   * thumbnails per loaded thumbnail resource (see `horizontalTiles` and
+   * `verticalTiles` properties.
+   */
+  width: number;
+  /**
+   * Thumbnail tracks are usually grouped together. This is the number of
+   * images contained horizontally in a whole loaded thumbnail resource.
+   */
+  horizontalTiles: number;
+  /**
+   * Thumbnail tracks are usually grouped together. This is the number of
+   * images contained vertically in a whole loaded thumbnail resource.
+   */
+  verticalTiles: number;
+}
+
 /** Representation of a "quality" available in an Adaptation. */
 export interface IParsedRepresentation {
   /** Maximum bitrate the Representation is available in, in bits per seconds. */
@@ -269,6 +315,7 @@ export interface IParsedPeriod {
    * `undefined` if no parsed stream event in manifest.
    */
   streamEvents?: IManifestStreamEvent[] | undefined;
+  thumbnailTracks: IParsedThumbnailTrack[];
 }
 
 /** Information on the whole content */

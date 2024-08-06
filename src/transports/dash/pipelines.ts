@@ -23,6 +23,7 @@ import generateSegmentLoader from "./segment_loader";
 import generateAudioVideoSegmentParser from "./segment_parser";
 import generateTextTrackLoader from "./text_loader";
 import generateTextTrackParser from "./text_parser";
+import { loadThumbnail, parseThumbnail } from "./thumbnails";
 
 /**
  * Returns pipelines used for DASH streaming.
@@ -55,6 +56,10 @@ export default function (options: ITransportOptions): ITransportPipelines {
       parseSegment: audioVideoSegmentParser,
     },
     text: { loadSegment: textTrackLoader, parseSegment: textTrackParser },
+    thumbnails: {
+      loadThumbnail,
+      parseThumbnail,
+    },
   };
 }
 

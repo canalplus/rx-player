@@ -126,7 +126,10 @@ export default function parsePeriods(
       start: periodStart,
       unsafelyBaseOnPreviousPeriod,
     };
-    const adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
+    const { adaptations, thumbnailTracks } = parseAdaptationSets(
+      periodIR.children.adaptations,
+      adapCtxt,
+    );
 
     const namespaces = (context.xmlNamespaces ?? []).concat(
       periodIR.attributes.namespaces ?? [],
@@ -141,6 +144,7 @@ export default function parsePeriods(
       start: periodStart,
       end: periodEnd,
       duration: periodDuration,
+      thumbnailTracks,
       adaptations,
       streamEvents,
     };

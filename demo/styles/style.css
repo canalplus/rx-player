@@ -368,7 +368,7 @@ header .right {
 }
 
 .progress-bar-wrapper:hover {
-  transform: scaleY(2);
+  transform: scaleY(2.5);
 }
 
 .progress-bar-current {

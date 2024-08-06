@@ -16,10 +16,9 @@
 
 import config from "../../../config";
 import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
-import type { CancellationSignal } from "../../../utils/task_canceller";
 import type CmcdDataBuilder from "../../cmcd";
 import type { IBufferType } from "../../segment_sinks";
-import CdnPrioritizer from "../cdn_prioritizer";
+import type CdnPrioritizer from "../cdn_prioritizer";
 import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
 import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
 import createSegmentFetcher, { getSegmentFetcherRequestOptions } from "./segment_fetcher";
@@ -60,17 +59,16 @@ export default class SegmentQueueCreator {
 
   /**
    * @param {Object} transport
+   * @param {Object} cdnPrioritizer
+   * @param {Object|null} cmcdDataBuilder
    * @param {Object} options
-   * @param {Object} cancelSignal
    */
   constructor(
     transport: ITransportPipelines,
+    cdnPrioritizer: CdnPrioritizer,
     cmcdDataBuilder: CmcdDataBuilder | null,
     options: ISegmentQueueCreatorBackoffOptions,
-    cancelSignal: CancellationSignal,
   ) {
-    const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
-
     const { MIN_CANCELABLE_PRIORITY, MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;
     this._prioritizer = new TaskPrioritizer({

@@ -25,9 +25,15 @@ import type {
 } from "../../core/adaptive";
 import AdaptiveRepresentationSelector from "../../core/adaptive";
 import CmcdDataBuilder from "../../core/cmcd";
-import { ManifestFetcher, SegmentQueueCreator } from "../../core/fetchers";
+import {
+  CdnPrioritizer,
+  createThumbnailFetcher,
+  ManifestFetcher,
+  SegmentQueueCreator,
+} from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
 import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
+import getThumbnailData from "../../core/main/common/get_thumbnail_data";
 import SegmentSinksStore from "../../core/segment_sinks";
 import type {
   IStreamOrchestratorOptions,
@@ -49,7 +55,7 @@ import type {
   IKeySystemOption,
   IPlayerError,
 } from "../../public_types";
-import type { ITransportPipelines } from "../../transports";
+import type { IThumbnailResponse, ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
@@ -429,11 +435,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       bufferOptions,
     );
 
+    const cdnPrioritizer = new CdnPrioritizer(initCanceller.signal);
     const segmentQueueCreator = new SegmentQueueCreator(
       transport,
+      cdnPrioritizer,
       this._cmcdDataBuilder,
       segmentRequestOptions,
-      initCanceller.signal,
     );
 
     this._refreshManifestCodecSupport(manifest);
@@ -478,6 +485,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         autoPlay: shouldPlay,
         manifest,
         representationEstimator,
+        cdnPrioritizer,
         segmentQueueCreator,
         speed,
         bufferOptions: subBufferOptions,
@@ -538,9 +546,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaSource,
       playbackObserver,
       representationEstimator,
+      cdnPrioritizer,
       segmentQueueCreator,
       speed,
     } = args;
+    const { transport } = this._settings;
 
     const initialPeriod =
       manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
@@ -746,6 +756,23 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 getSegmentSinkMetrics: async () => {
                   return new Promise((resolve) =>
                     resolve(segmentSinksStore.getSegmentSinksMetrics()),
+                  );
+                },
+                getThumbnailData: async (
+                  periodId: string,
+                  thumbnailTrackId: string,
+                  time: number,
+                ): Promise<IThumbnailResponse> => {
+                  const fetchThumbnails = createThumbnailFetcher(
+                    transport.thumbnails,
+                    cdnPrioritizer,
+                  );
+                  return getThumbnailData(
+                    fetchThumbnails,
+                    manifest,
+                    periodId,
+                    thumbnailTrackId,
+                    time,
                   );
                 },
               });
@@ -1222,6 +1249,11 @@ interface IBufferingMediaSettings {
   playbackObserver: IMediaElementPlaybackObserver;
   /** Estimate the right Representation. */
   representationEstimator: IRepresentationEstimator;
+  /**
+   * Interface allowing to prioritize CDN between one another depending on past
+   * performances, content steering, etc.
+   */
+  cdnPrioritizer: CdnPrioritizer;
   /** Module to facilitate segment fetching. */
   segmentQueueCreator: SegmentQueueCreator;
   /** Last wanted playback rate. */
