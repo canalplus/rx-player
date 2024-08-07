@@ -31,6 +31,12 @@ export interface IMediaElementMediaKeysInfos {
   keySystemOptions: IKeySystemOption;
 
   /**
+   * The actual MediaKeySystemConfiguration asked to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
+
+  /**
    * Last MediaKeySystemAccess used to create a MediaKeys bound to that
    * HTMLMediaElement.
    */

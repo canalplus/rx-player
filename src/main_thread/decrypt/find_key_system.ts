@@ -26,11 +26,7 @@ import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key
 import config from "../../config";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import type {
-  IAudioCapabilitiesConfiguration,
-  IKeySystemOption,
-  IVideoCapabilitiesConfiguration,
-} from "../../public_types";
+import type { IKeySystemOption } from "../../public_types";
 import { parseCodec } from "../../utils/are_codecs_compatible";
 import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
@@ -47,8 +43,19 @@ export type ICodecSupportList = Array<{
 }>;
 
 export interface IMediaKeySystemAccessInfos {
+  /** `MediaKeySystemAccess` to use to create `MediaKeys` instances. */
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
+  /**
+   * Corresponding `keySystems` element that has led to the creation of the
+   * `MediaKeySystemAccess`.
+   */
   options: IKeySystemOption;
+  /** Information on supported or unsupported codec on that `MediaKeySystemAccess`. */
   codecSupport: ICodecSupportList;
 }
 
@@ -88,10 +95,12 @@ interface IKeySystemType {
  */
 function checkCachedMediaKeySystemAccess(
   keySystems: IKeySystemOption[],
+  askedConfiguration: MediaKeySystemConfiguration,
   currentKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption,
 ): null | {
   keySystemOptions: IKeySystemOption;
+  askedConfiguration: MediaKeySystemConfiguration;
   keySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
@@ -127,6 +136,7 @@ function checkCachedMediaKeySystemAccess(
     return {
       keySystemOptions: firstCompatibleOption,
       keySystemAccess: currentKeySystemAccess,
+      askedConfiguration,
     };
   }
   return null;
@@ -280,29 +290,23 @@ function buildKeySystemConfigurations(
 }
 /**
  * Extract from the current mediaKeys the supported Codecs.
- * @param {Object | undefined} audioCapabilitiesConfig - The audio capabilities provided to the KeySystem.
- * @param {Object | undefined} videoCapabilitiesConfig - The video capabilities provided to the KeySystem.
- * @param {Object | undefined} mksConfiguration - The result of getConfiguration() of the media keys.
+ * @param {Object} initialConfiguration - The MediaKeySystemConfiguration given
+ * to the `navigator.requestMediaKeySystemAccess` API.
+ * @param {Object | undefined} mksConfiguration - The result of
+ * getConfiguration() of the media keys.
  * @return {Array} The list of supported codec by the CDM.
  */
 export function extractCodecSupportListFromConfiguration(
-  audioCapabilitiesConfig: IAudioCapabilitiesConfiguration | undefined,
-  videoCapabilitiesConfig: IVideoCapabilitiesConfiguration | undefined,
+  initialConfiguration: MediaKeySystemConfiguration,
   mksConfiguration: MediaKeySystemConfiguration,
 ): ICodecSupportList {
-  const { EME_DEFAULT_AUDIO_CODECS, EME_DEFAULT_VIDEO_CODECS } = config.getCurrent();
-
   const testedAudioCodecs =
-    audioCapabilitiesConfig?.type === "contentType"
-      ? audioCapabilitiesConfig?.value
-      : EME_DEFAULT_AUDIO_CODECS;
-
+    initialConfiguration.audioCapabilities?.map((v) => v.contentType) ?? [];
   const testedVideoCodecs =
-    videoCapabilitiesConfig?.type === "contentType"
-      ? videoCapabilitiesConfig.value
-      : EME_DEFAULT_VIDEO_CODECS;
-
-  const testedCodecs = testedAudioCodecs.concat(testedVideoCodecs);
+    initialConfiguration.videoCapabilities?.map((v) => v.contentType) ?? [];
+  const testedCodecs: string[] = testedAudioCodecs
+    .concat(testedVideoCodecs)
+    .filter((c): c is string => c !== undefined);
   const supportedVideoCodecs = mksConfiguration.videoCapabilities?.map(
     (entry) => entry.contentType,
   );
@@ -368,6 +372,7 @@ export default function getMediaKeySystemAccess(
       // one as exactly the same compatibility options.
       const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(
         keySystemsConfigs,
+        currentState.askedConfiguration,
         currentState.mediaKeySystemAccess,
         currentState.keySystemOptions,
       );
@@ -377,10 +382,10 @@ export default function getMediaKeySystemAccess(
           type: "reuse-media-key-system-access" as const,
           value: {
             mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+            askedConfiguration: cachedKeySystemAccess.askedConfiguration,
             options: cachedKeySystemAccess.keySystemOptions,
             codecSupport: extractCodecSupportListFromConfiguration(
-              cachedKeySystemAccess.keySystemOptions.audioCapabilitiesConfig,
-              cachedKeySystemAccess.keySystemOptions.videoCapabilitiesConfig,
+              cachedKeySystemAccess.askedConfiguration,
               cachedKeySystemAccess.keySystemAccess.getConfiguration(),
             ),
           },
@@ -458,30 +463,35 @@ export default function getMediaKeySystemAccess(
         `${index + 1} of ${keySystemsType.length}`,
     );
 
-    try {
-      const keySystemAccess = await testKeySystem(keyType, keySystemConfigurations);
-      log.info("DRM: Found compatible keysystem", keyType, index + 1);
-      return {
-        type: "create-media-key-system-access" as const,
-        value: {
-          options: keySystemOptions,
-          mediaKeySystemAccess: keySystemAccess,
-          codecSupport: extractCodecSupportListFromConfiguration(
-            keySystemOptions.audioCapabilitiesConfig,
-            keySystemOptions.videoCapabilitiesConfig,
-            keySystemAccess.getConfiguration(),
-          ),
-        },
-      };
-    } catch (_) {
-      log.debug("DRM: Rejected access to keysystem", keyType, index + 1);
-      if (cancelSignal.cancellationError !== null) {
-        throw cancelSignal.cancellationError;
+    let keySystemAccess;
+    for (let configIdx = 0; configIdx < keySystemConfigurations.length; configIdx++) {
+      const keySystemConfiguration = keySystemConfigurations[configIdx];
+      try {
+        keySystemAccess = await testKeySystem(keyType, [keySystemConfiguration]);
+        log.info("DRM: Found compatible keysystem", keyType, index + 1);
+        return {
+          type: "create-media-key-system-access" as const,
+          value: {
+            options: keySystemOptions,
+            mediaKeySystemAccess: keySystemAccess,
+            askedConfiguration: keySystemConfiguration,
+            codecSupport: extractCodecSupportListFromConfiguration(
+              keySystemConfiguration,
+              keySystemAccess.getConfiguration(),
+            ),
+          },
+        };
+      } catch (_) {
+        log.debug("DRM: Rejected access to keysystem", keyType, index + 1, configIdx);
+        if (cancelSignal.cancellationError !== null) {
+          throw cancelSignal.cancellationError;
+        }
       }
-      return recursivelyTestKeySystems(index + 1);
     }
+    return recursivelyTestKeySystems(index + 1);
   }
 }
+
 /**
  * Test a key system configuration, resolves with the MediaKeySystemAccess
  * or reject if the key system is unsupported.

@@ -51,6 +51,11 @@ function createPersistentSessionsStorage(
 export interface IMediaKeysInfos {
   /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
   /** The MediaKeys instance. */
   mediaKeys: MediaKeys | ICustomMediaKeys;
   /** Stores allowing to create and retrieve MediaKeySessions. */
@@ -88,7 +93,7 @@ export default async function getMediaKeysInfos(
     throw cancelSignal.cancellationError;
   }
 
-  const { options, mediaKeySystemAccess, codecSupport } = evt.value;
+  const { options, mediaKeySystemAccess, askedConfiguration, codecSupport } = evt.value;
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   const persistentSessionsStore = createPersistentSessionsStorage(options);
 
@@ -110,6 +115,7 @@ export default async function getMediaKeysInfos(
       return {
         mediaKeys,
         mediaKeySystemAccess,
+        askedConfiguration,
         stores: { loadedSessionsStore, persistentSessionsStore },
         options,
         codecSupport,
@@ -123,6 +129,7 @@ export default async function getMediaKeysInfos(
   return {
     mediaKeys,
     mediaKeySystemAccess,
+    askedConfiguration,
     stores: { loadedSessionsStore, persistentSessionsStore },
     options,
     codecSupport,
