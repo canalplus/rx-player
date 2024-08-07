@@ -43,7 +43,7 @@ import {
 import { CancellationSignal } from "../../../../utils/task_canceller";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
-export const defaultKSConfig = [
+export const defaultKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [ { contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
                          { contentType: "audio/webm;codecs=opus" } ],
@@ -55,21 +55,13 @@ export const defaultKSConfig = [
                          { contentType: "video/mp4;codecs=\"avc1.42e01e\"" },
                          { contentType: "video/webm;codecs=\"vp8\"" } ],
   },
-  {
-    audioCapabilities: undefined,
-    distinctiveIdentifier: "optional" as const,
-    initDataTypes: ["cenc"] as const,
-    persistentState: "optional" as const,
-    sessionTypes: ["temporary"] as const,
-    videoCapabilities: undefined,
-  },
 ];
 
 /**
  * Default "com.microsoft.playready.recommendation" MediaKeySystemAccess
  * configuration used by the RxPlayer.
  */
-export const defaultPRRecommendationKSConfig = [
+export const defaultPRRecommendationKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [ { robustness: "3000",
                            contentType: "audio/mp4;codecs=\"mp4a.40.2\"" },
@@ -96,14 +88,6 @@ export const defaultPRRecommendationKSConfig = [
                          { robustness: "2000",
                            contentType: "video/webm;codecs=\"vp8\"" } ],
   },
-  {
-    audioCapabilities: undefined,
-    distinctiveIdentifier: "optional" as const,
-    initDataTypes: ["cenc"] as const,
-    persistentState: "optional" as const,
-    sessionTypes: ["temporary"] as const,
-    videoCapabilities: undefined,
-  },
 ];
 
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */
@@ -129,7 +113,6 @@ export const defaultWidevineConfig = (() => {
   });
   return [
     { ...defaultKSConfig[0],  audioCapabilities, videoCapabilities },
-    defaultKSConfig[1],
   ];
 })();
 

@@ -247,7 +247,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     }
 
     const { mediaElement, mediaKeysInfo } = this._stateData.data;
-    const { options, mediaKeys, mediaKeySystemAccess, stores } = mediaKeysInfo;
+    const { options, mediaKeys, mediaKeySystemAccess, stores, askedConfiguration } =
+      mediaKeysInfo;
     const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
 
     if (shouldDisableLock) {
@@ -264,11 +265,14 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     }
 
     this._stateData.isMediaKeysAttached = MediaKeyAttachmentStatus.Pending;
-    const stateToAttach = { emeImplementation: eme,
-                            loadedSessionsStore: stores.loadedSessionsStore,
-                            mediaKeySystemAccess,
-                            mediaKeys,
-                            keySystemOptions: options };
+    const stateToAttach = {
+      emeImplementation: eme,
+      loadedSessionsStore: stores.loadedSessionsStore,
+      mediaKeySystemAccess,
+      mediaKeys,
+      askedConfiguration,
+      keySystemOptions: options,
+    };
 
     log.debug("DRM: Attaching current MediaKeys");
     attachMediaKeys(mediaElement, stateToAttach, this._canceller.signal)
