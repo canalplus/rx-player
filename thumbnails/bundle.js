@@ -39070,8 +39070,8 @@ ${event}`
      */
     static _priv_registerVideoElement(videoElement) {
       if (_Player._priv_currentlyUsedVideoElements.has(videoElement)) {
-        const errorMessage2 = "The video element is already attached to another RxPlayer instance.\nMake sure to dispose the previous instance with player.dispose() before creating a new player instance attaching that video element.";
-        console.warn(errorMessage2);
+        const errMsg = "The video element is already attached to another RxPlayer instance.\nMake sure to dispose the previous instance with player.dispose() before creating a new player instance attaching that video element.";
+        console.warn(errMsg);
       }
       _Player._priv_currentlyUsedVideoElements.add(videoElement);
     }
@@ -39386,42 +39386,26 @@ ${event}`
         }
       };
     }
-    async getThumbnailData(time, options) {
+    async renderThumbnail(container, time) {
       if (this._priv_contentInfos === null || this._priv_contentInfos.fetchThumbnailDataCallback === null) {
         return Promise.reject("Cannot get thumbnail: no content loaded");
       }
       const { pendingThumbnailRequests, currentContentCanceller } = this._priv_contentInfos;
-      const container = options == null ? void 0 : options.container;
       const canceller = new TaskCanceller();
       canceller.linkToSignal(currentContentCanceller.signal);
-      if ((options == null ? void 0 : options.cancelPreviousThumbnailRequests) === true) {
-        pendingThumbnailRequests.withoutContainer.forEach((task) => {
-          task.cancel();
-        });
-        for (const task of pendingThumbnailRequests.withContainer.values()) {
-          task.cancel();
-        }
-        pendingThumbnailRequests.withContainer.clear();
-      }
-      let onFinished;
-      if (!isNullOrUndefined(container)) {
-        const olderTask = pendingThumbnailRequests.withContainer.get(container);
-        olderTask == null ? void 0 : olderTask.cancel();
-        pendingThumbnailRequests.withContainer.set(container, canceller);
-        onFinished = () => {
-          canceller.cancel();
-          pendingThumbnailRequests.withContainer.delete(container);
-        };
-      } else {
-        pendingThumbnailRequests.withoutContainer.push(canceller);
-        onFinished = () => {
-          canceller.cancel();
-          const index = pendingThumbnailRequests.withoutContainer.indexOf(canceller);
-          if (index >= 0) {
-            pendingThumbnailRequests.withoutContainer.splice(index, 1);
+      let imageUrl;
+      const olderTask = pendingThumbnailRequests.get(container);
+      olderTask == null ? void 0 : olderTask.cancel();
+      pendingThumbnailRequests.set(container, canceller);
+      const onFinished = () => {
+        canceller.cancel();
+        pendingThumbnailRequests.delete(container);
+        setTimeout(() => {
+          if (imageUrl !== void 0) {
+            URL.revokeObjectURL(imageUrl);
           }
-        };
-      }
+        }, 0);
+      };
       try {
         const res = await this._priv_contentInfos.fetchThumbnailDataCallback(time);
         const canvas = document.createElement("canvas");
@@ -39439,18 +39423,14 @@ ${event}`
         if (foundIdx === void 0) {
           throw new Error("Cannot display thumbnail: time not found in fetched data");
         }
-        console.time("aaaa");
-        console.time("url");
         const image = new Image();
         const blob = new Blob([res.data], { type: res.mimeType });
-        const url = URL.createObjectURL(blob);
-        image.src = url;
+        imageUrl = URL.createObjectURL(blob);
+        image.src = imageUrl;
         canvas.height = res.thumbnails[foundIdx].height;
         canvas.width = res.thumbnails[foundIdx].width;
-        console.timeEnd("url");
         return new Promise((resolve, reject) => {
           image.onload = () => {
-            console.time("canvas");
             context.drawImage(
               image,
               res.thumbnails[foundIdx].offsetX,
@@ -39464,24 +39444,38 @@ ${event}`
             );
             canvas.style.width = "100%";
             canvas.style.height = "100%";
-            URL.revokeObjectURL(url);
-            if ((options == null ? void 0 : options.container) !== void 0) {
-              options.container.innerHTML = "";
-              options.container.appendChild(canvas);
-            }
-            resolve({ thumbnailElement: canvas });
+            canvas.className = "__rx-thumbnail__";
+            clearPreviousThumbnails();
+            container.appendChild(canvas);
+            resolve();
             onFinished();
-            console.timeEnd("canvas");
-            console.timeEnd("aaaa");
           };
           image.onerror = () => {
+            clearPreviousThumbnails();
             reject(new Error("Could not load the corresponding image in the DOM"));
             onFinished();
           };
         });
       } catch (err) {
+        if (err !== null && err === canceller.signal.cancellationError) {
+          const error = new ThumbnailRenderingError(
+            "ABORTED",
+            "Thumbnail rendering has been aborted"
+          );
+          clearPreviousThumbnails();
+          throw error;
+        }
+        clearPreviousThumbnails();
         onFinished();
         throw err;
+      }
+      function clearPreviousThumbnails() {
+        for (let i = container.children.length - 1; i >= 0; i--) {
+          const child = container.children[i];
+          if (child.className === "__rx-thumbnail__") {
+            container.removeChild(child);
+          }
+        }
       }
     }
     /**
@@ -39718,10 +39712,7 @@ ${event}`
         useWorker,
         segmentSinkMetricsCallback: null,
         fetchThumbnailDataCallback: null,
-        pendingThumbnailRequests: {
-          withoutContainer: [],
-          withContainer: /* @__PURE__ */ new WeakMap()
-        }
+        pendingThumbnailRequests: /* @__PURE__ */ new Map()
       };
       initializer.addEventListener("error", (error) => {
         this._priv_onFatalError(error, contentInfos);
@@ -41694,6 +41685,18 @@ ${event}`
   Player.version = /* PLAYER_VERSION */
   "4.1.0";
   var public_api_default = Player;
+  var ThumbnailRenderingError = class _ThumbnailRenderingError extends Error {
+    /**
+     * @param {string} code
+     * @param {string} message
+     */
+    constructor(code, message) {
+      super(errorMessage(code, message));
+      Object.setPrototypeOf(this, _ThumbnailRenderingError.prototype);
+      this.name = "ThumbnailRenderingError";
+      this.code = code;
+    }
+  };
 
   // src/main_thread/api/index.ts
   var api_default = public_api_default;
@@ -70286,9 +70289,7 @@ ${event}`
           player.unMute();
         },
         getThumbnailData(time) {
-          return player.getThumbnailData(time, {
-            container: state.get("imageThumbnailContainerElement")
-          });
+          return player.renderThumbnail(state.get("imageThumbnailContainerElement"), time);
         },
         setDefaultVideoRepresentationSwitchingMode(mode) {
           state.update("defaultVideoRepresentationsSwitchingMode", mode);
@@ -70883,9 +70884,8 @@ ${event}`
             if (typeof err === "object" && err !== null && err.code === "ABORTED") {
               return;
             } else {
-              imageThumbnailElement.innerHTML = "";
               hideSpinner();
-              console.error("Error while loading thumbnails:", err);
+              console.warn("Error while loading thumbnails:", err);
             }
           });
         }
