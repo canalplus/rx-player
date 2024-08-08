@@ -60348,8 +60348,8 @@ ${event}`
   }
   function parseThumbnail(data2, context) {
     const { thumbnailTrack, thumbnail: wantedThumbnail } = context;
-    const height = Math.ceil(thumbnailTrack.height / thumbnailTrack.verticalTiles);
-    const width = Math.ceil(thumbnailTrack.width / thumbnailTrack.horizontalTiles);
+    const height = thumbnailTrack.height / thumbnailTrack.verticalTiles;
+    const width = thumbnailTrack.width / thumbnailTrack.horizontalTiles;
     const thumbnails = [];
     const tileDuration = (wantedThumbnail.end - wantedThumbnail.time) / (thumbnailTrack.horizontalTiles * thumbnailTrack.horizontalTiles);
     let start = wantedThumbnail.time;
@@ -60358,10 +60358,10 @@ ${event}`
         thumbnails.push({
           start,
           end: start + tileDuration,
-          offsetX: column * width,
-          offsetY: row * height,
-          height,
-          width
+          offsetX: Math.round(column * width),
+          offsetY: Math.round(row * height),
+          height: Math.floor(height),
+          width: Math.floor(width)
         });
         start += tileDuration;
       }
