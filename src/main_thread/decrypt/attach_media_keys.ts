@@ -55,6 +55,7 @@ export default async function attachMediaKeys(
   {
     emeImplementation,
     keySystemOptions,
+    askedConfiguration,
     loadedSessionsStore,
     mediaKeySystemAccess,
     mediaKeys,
@@ -81,6 +82,7 @@ export default async function attachMediaKeys(
     mediaKeySystemAccess,
     mediaKeys,
     loadedSessionsStore,
+    askedConfiguration,
   });
   if (mediaElement.mediaKeys === mediaKeys) {
     return;
@@ -109,6 +111,11 @@ export interface IMediaKeysState {
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
   /** The MediaKeys instance to attach to the media element. */
   mediaKeys: MediaKeys | ICustomMediaKeys;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
   /**
    * The chosen EME implementation abstraction linked to `mediaKeys`.
    * Different EME implementation might for example be used while debugging or

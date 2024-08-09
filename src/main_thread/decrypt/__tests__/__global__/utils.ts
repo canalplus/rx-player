@@ -21,7 +21,7 @@ import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
-export const defaultKSConfig = [
+export const defaultKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [
       { contentType: 'audio/mp4;codecs="mp4a.40.2"' },
@@ -38,21 +38,13 @@ export const defaultKSConfig = [
       { contentType: 'video/webm;codecs="vp8"' },
     ],
   },
-  {
-    audioCapabilities: undefined,
-    distinctiveIdentifier: "optional" as const,
-    initDataTypes: ["cenc"] as const,
-    persistentState: "optional" as const,
-    sessionTypes: ["temporary"] as const,
-    videoCapabilities: undefined,
-  },
 ];
 
 /**
  * Default "com.microsoft.playready.recommendation" MediaKeySystemAccess
  * configuration used by the RxPlayer.
  */
-export const defaultPRRecommendationKSConfig = [
+export const defaultPRRecommendationKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [
       { robustness: "3000", contentType: 'audio/mp4;codecs="mp4a.40.2"' },
@@ -75,18 +67,10 @@ export const defaultPRRecommendationKSConfig = [
       { robustness: "2000", contentType: 'video/webm;codecs="vp8"' },
     ],
   },
-  {
-    audioCapabilities: undefined,
-    distinctiveIdentifier: "optional" as const,
-    initDataTypes: ["cenc"] as const,
-    persistentState: "optional" as const,
-    sessionTypes: ["temporary"] as const,
-    videoCapabilities: undefined,
-  },
 ];
 
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */
-export const defaultWidevineConfig = (() => {
+export const defaultWidevineConfig: MediaKeySystemConfiguration[] = (() => {
   const ROBUSTNESSES = [
     "HW_SECURE_ALL",
     "HW_SECURE_DECODE",
@@ -108,10 +92,7 @@ export const defaultWidevineConfig = (() => {
       { contentType: "audio/webm;codecs=opus", robustness },
     ];
   });
-  return [
-    { ...defaultKSConfig[0], audioCapabilities, videoCapabilities },
-    defaultKSConfig[1],
-  ];
+  return [{ ...defaultKSConfig[0], audioCapabilities, videoCapabilities }];
 })();
 
 /**
