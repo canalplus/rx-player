@@ -55,11 +55,11 @@ function getServerCertificate(url: string): Promise<ArrayBuffer> {
         const serverCertificate = xhr.response as ArrayBuffer;
         resolve(serverCertificate);
       } else {
-        reject();
+        reject(new Error("Could not fetch serverCertificate: HTTP Status Error"));
       }
     };
-    xhr.onerror = (err) => {
-      reject(err);
+    xhr.onerror = () => {
+      reject(new Error("Could not fetch serverCertificate: Request Error"));
     };
     xhr.send();
   });

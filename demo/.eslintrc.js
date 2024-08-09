@@ -33,6 +33,16 @@ module.exports = {
   },
 
   rules: {
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        args: "all",
+        argsIgnorePattern: "^_",
+        caughtErrors: "none",
+        destructuredArrayIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      },
+    ],
     "comma-dangle": [1, "only-multiline"],
     "no-cond-assign": 0,
     "no-console": 1,
@@ -70,13 +80,6 @@ module.exports = {
     "no-case-declarations": 0,
     "no-var": 1,
     "prefer-const": 1,
-    "@typescript-eslint/quotes": [
-      "error",
-      "double",
-      {
-        avoidEscape: true,
-      },
-    ],
     "linebreak-style": [1, "unix"],
     semi: [1, "always"],
     "react/jsx-uses-vars": [2],
