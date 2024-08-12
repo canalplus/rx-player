@@ -15,7 +15,6 @@
  */
 
 import log from "../../log";
-import type { ICustomMediaEncryptedEvent } from "../../main_thread/decrypt/content_decryptor";
 import { getPsshSystemID } from "../../parsers/containers/isobmff";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import { be4toi } from "../../utils/byte_parsing";
@@ -51,7 +50,6 @@ export interface IEncryptedEventData {
      */
     data: Uint8Array;
   }>;
-  forceSessionRecreation?: boolean | undefined;
 }
 
 /**
@@ -147,9 +145,9 @@ function isPSSHAlreadyEncountered(
  * encountered in the given event.
  */
 export default function getInitData(
-  encryptedEvent: ICustomMediaEncryptedEvent,
+  encryptedEvent: MediaEncryptedEvent,
 ): IEncryptedEventData | null {
-  const { initData, initDataType, forceSessionRecreation } = encryptedEvent;
+  const { initData, initDataType } = encryptedEvent;
   if (isNullOrUndefined(initData)) {
     log.warn("Compat: No init data found on media encrypted event.");
     return null;
@@ -157,5 +155,5 @@ export default function getInitData(
 
   const initDataBytes = new Uint8Array(initData);
   const values = getInitializationDataValues(initDataBytes);
-  return { type: initDataType, values, forceSessionRecreation };
+  return { type: initDataType, values };
 }
