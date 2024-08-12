@@ -14,12 +14,20 @@ import {
   keepRangeIntersection,
 } from "../../../utils/ranges";
 import TaskCanceller from "../../../utils/task_canceller";
-import { DummyMediaKeys, requestMediaKeySystemAccess } from "./eme";
+import { DummyMediaKeys, createRequestMediaKeySystemAccess } from "./eme";
+import type { IRequestMediaKeySystemAccessConfig } from "./eme";
 import { DummyMediaSource } from "./mse";
 import TimeRangesWithMetadata, { EventScheduler } from "./utils";
 
 export interface IDummyMediaElementOptions {
   nodeName?: "AUDIO" | "VIDEO" | undefined | null;
+  drmOptions?:
+    | {
+        requestMediaKeySystemAccessConfig?:
+          | IRequestMediaKeySystemAccessConfig
+          | undefined;
+      }
+    | undefined;
 }
 
 export class DummyMediaElement
@@ -152,7 +160,9 @@ export class DummyMediaElement
 
     this.FORCED_MEDIA_SOURCE = DummyMediaSource;
     this.FORCED_EME_API = {
-      requestMediaKeySystemAccess,
+      requestMediaKeySystemAccess: createRequestMediaKeySystemAccess(
+        opts.drmOptions?.requestMediaKeySystemAccessConfig,
+      ),
       onEncrypted: createCompatibleEventListener(["encrypted"]),
       setMediaKeys,
       implementation: "standard",

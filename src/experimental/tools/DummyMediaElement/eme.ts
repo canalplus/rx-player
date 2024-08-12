@@ -22,46 +22,94 @@ import {
   utf8ToStr,
 } from "../../../utils/string_parsing";
 
-const keySystemBlacklist: string[] = [];
-const keySystemWhitelist: string[] = [];
+export interface IRequestMediaKeySystemAccessConfig {
+  /**
+   * For the given arguments of the `navigator.requestMediaKeySystemAccess`
+   * API, returns the resulting `MediaKeySystemConfiguration`, or `null` if
+   * that configuration should be anounced as not supported.
+   *
+   * If not set, the first configuration will be anounced as supported for a
+   * supported key system.
+   *
+   * @param {string} keySystem
+   * @param {Array.<Object>} configs
+   * @returns {Object} config
+   */
+  getMediaKeySystemConfiguration?:
+    | ((
+        keySystem: string,
+        configs: MediaKeySystemConfiguration[],
+      ) => MediaKeySystemConfiguration | null)
+    | undefined;
+
+  /**
+   * For the given key system, returns `true` if it should be anounced as
+   * supported or `false` if it should be anounced as unsupported.
+   *
+   * If not set, all keySystems are supported.
+   * @param {string} keySystem
+   * @returns {boolean}
+   */
+  isKeySystemSupported: ((keySystem: string) => boolean) | undefined;
+}
 
 /**
- * Re-implementation of the EME `navigator.requestMediaKeySystemAccess` API.
- * @param {string} keySystem
- * @param {Array.<Object>} supportedConfigurations
- * @returns {Promise.<Object>}
+ * Return a configured re-implementation of the EME
+ * `navigator.requestMediaKeySystemAccess` API.
+ * @param {Object|undefined} [config]
+ * @returns {Function}
  */
-export function requestMediaKeySystemAccess(
-  keySystem: string,
-  supportedConfigurations: MediaKeySystemConfiguration[],
-): Promise<DummyMediaKeySystemAccess> {
-  if (keySystem === "") {
-    return Promise.reject(
-      new TypeError("`requestMediaKeySystemAccess` error: empty string"),
+export function createRequestMediaKeySystemAccess(
+  config?: IRequestMediaKeySystemAccessConfig | undefined,
+) {
+  /**
+   * Re-implementation of the EME `navigator.requestMediaKeySystemAccess` API.
+   * @param {string} keySystem
+   * @param {Array.<Object>} supportedConfigurations
+   * @returns {Promise.<Object>}
+   */
+  return function requestMediaKeySystemAccess(
+    keySystem: string,
+    supportedConfigurations: MediaKeySystemConfiguration[],
+  ): Promise<DummyMediaKeySystemAccess> {
+    if (keySystem === "") {
+      return Promise.reject(
+        new TypeError("`requestMediaKeySystemAccess` error: empty string"),
+      );
+    }
+    if (supportedConfigurations.length === 0) {
+      return Promise.reject(
+        new TypeError("`requestMediaKeySystemAccess` error: no given configuration."),
+      );
+    }
+    if (
+      typeof config?.isKeySystemSupported === "function" &&
+      !config.isKeySystemSupported(keySystem)
+    ) {
+      const error = new Error(`"${keySystem}" is not a supported keySystem`);
+      error.name = "NotSupportedError";
+      return Promise.reject(error);
+    }
+    let supportedConfiguration: MediaKeySystemConfiguration | null =
+      supportedConfigurations[0] ?? null;
+
+    if (typeof config?.getMediaKeySystemConfiguration === "function") {
+      supportedConfiguration = config.getMediaKeySystemConfiguration(
+        keySystem,
+        supportedConfigurations,
+      );
+    }
+    if (supportedConfiguration === null) {
+      const error = new Error(
+        "`requestMediaKeySystemAccess` error: No configuration supported.",
+      );
+      error.name = "NotSupportedError";
+      return Promise.reject(error);
+    }
+    return Promise.resolve(
+      new DummyMediaKeySystemAccess(keySystem, supportedConfiguration),
     );
-  }
-  if (supportedConfigurations.length === 0) {
-    return Promise.reject(
-      new TypeError("`requestMediaKeySystemAccess` error: no given configuration."),
-    );
-  }
-  if (
-    (keySystemWhitelist.length > 0 && !arrayIncludes(keySystemWhitelist, keySystem)) ||
-    (keySystemBlacklist.length > 0 && arrayIncludes(keySystemBlacklist, keySystem))
-  ) {
-    const error = new Error(`"${keySystem}" is not a supported keySystem`);
-    error.name = "NotSupportedError";
-    return Promise.reject(error);
-  }
-  for (const config of supportedConfigurations) {
-    // TODO configurable configuration validation. Callback?
-    return Promise.resolve(new DummyMediaKeySystemAccess(keySystem, config));
-  }
-  const error = new Error(
-    "`requestMediaKeySystemAccess` error: No configuration supported.",
-  );
-  error.name = "NotSupportedError";
-  return Promise.reject(error);
+  };
 }
 
 /**

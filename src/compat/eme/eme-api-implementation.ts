@@ -44,7 +44,7 @@ export interface IEmeApiImplementation {
   requestMediaKeySystemAccess: (
     keyType: string,
     config: MediaKeySystemConfiguration[],
-  ) => Promise<IMediaKeySystemAccess | CustomMediaKeySystemAccess>;
+  ) => Promise<IMediaKeySystemAccess>;
 
   /**
    * API allowing to listen for `"encrypted"` events, presumably sent by the
