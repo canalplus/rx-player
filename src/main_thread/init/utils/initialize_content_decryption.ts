@@ -10,7 +10,6 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
 import { ContentDecryptorState } from "../../decrypt";
 import type IContentDecryptor from "../../decrypt";
 import type { IProcessedProtectionData } from "../../decrypt";
-import type { IContext } from "../../decrypt/content_decryptor";
 
 /**
  * Initialize content decryption capabilities on the given `HTMLMediaElement`.
@@ -47,7 +46,6 @@ export default function initializeContentDecryption(
     }) => void;
     onCodecSupportUpdate?: () => void;
   },
-  context: IContext,
   cancelSignal: CancellationSignal,
 ): {
   statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
@@ -84,7 +82,7 @@ export default function initializeContentDecryption(
   }
 
   log.debug("Init: Creating ContentDecryptor");
-  const contentDecryptor = new ContentDecryptor(mediaElement, keySystems, context);
+  const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
 
   const onStateChange = (state: ContentDecryptorState) => {
     if (state > ContentDecryptorState.Initializing) {
