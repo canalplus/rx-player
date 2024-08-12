@@ -15,12 +15,12 @@
  */
 
 import log from "../../log";
+import type { ICustomMediaEncryptedEvent } from "../../main_thread/decrypt/content_decryptor";
 import { getPsshSystemID } from "../../parsers/containers/isobmff";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import { be4toi } from "../../utils/byte_parsing";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { PSSH_TO_INTEGER } from "./constants";
-import type { ICustomMediaEncryptedEvent } from "./custom_media_keys/types";
 
 /** Data recuperated from parsing the payload of an `encrypted` event. */
 export interface IEncryptedEventData {
