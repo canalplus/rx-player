@@ -20,10 +20,7 @@ import getMozMediaKeysCallbacks, {
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
-import type {
-  ICustomMediaEncryptedEvent,
-  ICustomMediaKeys,
-} from "./custom_media_keys/types";
+import type { ICustomMediaKeys } from "./custom_media_keys/types";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
 import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
 
@@ -67,7 +64,7 @@ export interface IEmeApiImplementation {
    */
   onEncrypted: (
     target: IEventTargetLike,
-    listener: (evt: ICustomMediaEncryptedEvent) => void,
+    listener: (evt: unknown) => void,
     cancelSignal: CancellationSignal,
   ) => void;
 
@@ -289,7 +286,7 @@ function createOnEncryptedForWebkit(): IEmeApiImplementation["onEncrypted"] {
   );
   const onEncrypted = (
     target: IEventTargetLike,
-    listener: (event: ICustomMediaEncryptedEvent) => void,
+    listener: (event?: Event) => void,
     cancelSignal: CancellationSignal,
   ) => {
     compatibleEventListener(
