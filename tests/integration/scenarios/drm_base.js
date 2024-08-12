@@ -7,9 +7,7 @@ import waitForPlayerState, {
 } from "../../utils/waitForPlayerState";
 import { lockLowestBitrates } from "../../utils/bitrates";
 import sleep from "../../utils/sleep";
-
-const textDecoder = new TextDecoder();
-const textEncoder = new TextEncoder();
+import { generateGetLicenseForFakeLicense } from "../utils/drm_utils";
 
 describe("DRM: Basic use cases", function () {
   const { url, transport } = manifestInfos;
@@ -62,7 +60,7 @@ describe("DRM: Basic use cases", function () {
       keySystems: [
         {
           type: "com.microsoft.playready",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
           }),
@@ -96,7 +94,7 @@ describe("DRM: Basic use cases", function () {
       keySystems: [
         {
           type: "com.microsoft.playready",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
           }),
@@ -158,7 +156,7 @@ describe("DRM: Basic use cases", function () {
       keySystems: [
         {
           type: "com.microsoft.playready",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             failingKeyIds,
@@ -205,7 +203,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             highPolicyLevelKeyIds,
@@ -252,7 +250,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "continue",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             highPolicyLevelKeyIds,
@@ -301,7 +299,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "error",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             highPolicyLevelKeyIds,
@@ -348,7 +346,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             mediumPolicyLevelKeyIds,
@@ -406,7 +404,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "error",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             mediumPolicyLevelKeyIds,
@@ -463,7 +461,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             mediumPolicyLevelKeyIds,
@@ -537,7 +535,7 @@ describe("DRM: Basic use cases", function () {
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicense({
+          getLicense: generateGetLicenseForFakeLicense({
             expectedKeyIds,
             askedKeyIds,
             mediumPolicyLevelKeyIds,
@@ -593,63 +591,4 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
     expect(player.getError()).toBeNull();
   });
-
-  function generateGetLicense({
-    expectedKeyIds,
-    askedKeyIds,
-    highPolicyLevelKeyIds,
-    mediumPolicyLevelKeyIds,
-    failingKeyIds,
-  }) {
-    return function getLicense(challenge, messageType) {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          try {
-            expect(messageType).toEqual("license-request");
-            const challengeStr = textDecoder.decode(challenge);
-            const challengeObj = JSON.parse(challengeStr);
-            const keys = {};
-            challengeObj.keyIds.forEach((kid) => {
-              if (Array.isArray(expectedKeyIds)) {
-                expect(expectedKeyIds).toContain(kid);
-              }
-              if (Array.isArray(askedKeyIds)) {
-                askedKeyIds.push(kid);
-              }
-              if (Array.isArray(failingKeyIds) && failingKeyIds.includes(kid)) {
-                const error = new Error("Should fallback!");
-                error.noRetry = true;
-                error.fallbackOnLastTry = true;
-                reject(error);
-              }
-              let policyLevel = 0;
-              if (
-                Array.isArray(highPolicyLevelKeyIds) &&
-                highPolicyLevelKeyIds.includes(kid)
-              ) {
-                policyLevel = 200;
-              } else if (
-                Array.isArray(mediumPolicyLevelKeyIds) &&
-                mediumPolicyLevelKeyIds.includes(kid)
-              ) {
-                policyLevel = 50;
-              }
-              keys[kid] = {
-                policyLevel,
-              };
-            });
-            const license = {
-              type: "license",
-              persistent: false,
-              keys,
-            };
-            const licenseU8 = textEncoder.encode(JSON.stringify(license));
-            resolve(licenseU8.buffer);
-          } catch (e) {
-            reject(e);
-          }
-        }, 50);
-      });
-    };
-  }
 });
