@@ -275,6 +275,31 @@ function buildKeySystemConfigurations(
     sessionTypes,
   };
 
+  if (audioCapabilitiesConfig !== undefined) {
+    if (videoCapabilitiesConfig !== undefined) {
+      return [wantedMediaKeySystemConfiguration];
+    }
+    return [
+      wantedMediaKeySystemConfiguration,
+      {
+        ...wantedMediaKeySystemConfiguration,
+        // Re-try without `videoCapabilities` in case the EME implementation is
+        // buggy
+        videoCapabilities: undefined,
+      } as unknown as MediaKeySystemConfiguration,
+    ];
+  } else if (videoCapabilitiesConfig !== undefined) {
+    return [
+      wantedMediaKeySystemConfiguration,
+      {
+        ...wantedMediaKeySystemConfiguration,
+        // Re-try without `audioCapabilities` in case the EME implementation is
+        // buggy
+        audioCapabilities: undefined,
+      } as unknown as MediaKeySystemConfiguration,
+    ];
+  }
+
   return [
     wantedMediaKeySystemConfiguration,
 
