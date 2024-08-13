@@ -35,7 +35,11 @@ function areCodecsCompatible(a: string, b: string): boolean {
   if (codecsA === "" || codecsB === "") {
     return false;
   }
-  if (codecsA.split(".")[0] !== codecsB.split(".")[0]) {
+  let initialPartA = codecsA.split(".")[0];
+  initialPartA = initialPartA === "hev1" ? "hvc1" : initialPartA;
+  let initialPartB = codecsB.split(".")[0];
+  initialPartB = initialPartB === "hev1" ? "hvc1" : initialPartB;
+  if (initialPartA !== initialPartB) {
     return false;
   }
   return true;
