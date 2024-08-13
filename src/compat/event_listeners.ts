@@ -30,7 +30,6 @@ import type {
   IEventTarget,
   IMediaElement,
 } from "./browser_compatibility_types";
-import type { ICustomMediaEncryptedEvent } from "./eme/custom_media_keys/types";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -83,14 +82,8 @@ function eventPrefixed(eventNames: string[], prefixes?: string[]): string[] {
 }
 
 export interface IEventEmitterLike {
-  addEventListener: (
-    eventName: string,
-    handler: EventListenerOrEventListenerObject,
-  ) => void;
-  removeEventListener: (
-    eventName: string,
-    handler: EventListenerOrEventListenerObject,
-  ) => void;
+  addEventListener: (eventName: string, handler: () => void) => void;
+  removeEventListener: (eventName: string, handler: () => void) => void;
 }
 
 export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<unknown>;
@@ -106,31 +99,12 @@ export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<u
  * @returns {Function} - Returns function allowing to easily add a callback to
  * be triggered when that event is emitted on a given event target.
  */
-
-function createCompatibleEventListener(
-  eventNames: Array<"needkey" | "encrypted">,
-  prefixes?: string[],
-): (
-  element: IEventTargetLike,
-  listener: (event: ICustomMediaEncryptedEvent) => void,
-  cancelSignal: CancellationSignal,
-) => void;
-
 function createCompatibleEventListener(
   eventNames: string[],
   prefixes?: string[],
 ): (
   element: IEventTargetLike,
-  listener: (event?: Event) => void,
-  cancelSignal: CancellationSignal,
-) => void;
-
-function createCompatibleEventListener(
-  eventNames: string[] | Array<"needkey" | "encrypted">,
-  prefixes?: string[],
-): (
-  element: IEventTargetLike,
-  listener: (event?: Event | MediaEncryptedEvent) => void,
+  listener: (event?: unknown) => void,
   cancelSignal: CancellationSignal,
 ) => void {
   let mem: string | undefined;
@@ -138,12 +112,13 @@ function createCompatibleEventListener(
 
   return (
     element: IEventTargetLike,
-    listener: (event?: Event) => void,
+    listener: (event?: unknown) => void,
     cancelSignal: CancellationSignal,
   ) => {
     if (cancelSignal.isCancelled()) {
       return;
     }
+
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (typeof HTMLElement !== "undefined" && element instanceof HTMLElement) {
