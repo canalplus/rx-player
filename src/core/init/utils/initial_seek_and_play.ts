@@ -17,6 +17,7 @@
 import { shouldValidateMetadata } from "../../../compat";
 import { READY_STATES } from "../../../compat/browser_compatibility_types";
 import { isSafariMobile } from "../../../compat/browser_detection";
+import isSeekingApproximate from "../../../compat/is_seeking_approximate";
 /* eslint-disable-next-line max-len */
 import shouldPreventSeekingAt0Initially from "../../../compat/should_prevent_seeking_at_0_initially";
 import { MediaError } from "../../../errors";
@@ -165,7 +166,10 @@ export default function performInitialSeekAndPlay(
       }
       if (!isAwaitingSeek &&
           !observation.seeking &&
-          observation.rebuffering === null &&
+          (
+            (isSeekingApproximate && observation.readyState >= 3) ||
+            observation.rebuffering === null
+          ) &&
           observation.readyState >= 1)
       {
         stopListening();
