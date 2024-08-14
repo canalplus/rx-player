@@ -910,10 +910,16 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * `null` if audio tracks were disabled and `undefined` if the Period is not
    * known.
    */
-  public getChosenAudioTrack(periodObj: ITSPeriodObject): IAudioTrack | null {
+  public getChosenAudioTrack(
+    periodObj: ITSPeriodObject,
+    filterPlayableRepresentations: boolean,
+  ): IAudioTrack | null {
     return isNullOrUndefined(periodObj.audio.storedSettings)
       ? null
-      : toAudioTrack(periodObj.audio.storedSettings.adaptation, true);
+      : toAudioTrack(
+          periodObj.audio.storedSettings.adaptation,
+          filterPlayableRepresentations,
+        );
   }
 
   /**
@@ -942,12 +948,18 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @param {Object} periodObj - The concerned Period's object
    * @returns {Object|null} - The video track chosen for this Period
    */
-  public getChosenVideoTrack(periodObj: ITSPeriodObject): IVideoTrack | null {
+  public getChosenVideoTrack(
+    periodObj: ITSPeriodObject,
+    filterPlayableRepresentations: boolean,
+  ): IVideoTrack | null {
     if (isNullOrUndefined(periodObj.video.storedSettings)) {
       return null;
     }
 
-    return toVideoTrack(periodObj.video.storedSettings.adaptation, true);
+    return toVideoTrack(
+      periodObj.video.storedSettings.adaptation,
+      filterPlayableRepresentations,
+    );
   }
 
   /**
@@ -957,10 +969,15 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * Returns `undefined` if the given Period's id is not known.
    *
    * @param {Object} periodObj - The concerned Period's object
+   * @param {boolean} filterPlayableRepresentations - If `true`, only
+   * representations considered to be "playable" will be included in the
+   * returned response.
+   * If `false`, the response should contain all linked representations.
    * @returns {Array.<Object>}
    */
   public getAvailableAudioTracks(
     periodObj: ITSPeriodObject,
+    filterPlayableRepresentations: boolean,
   ): IAvailableAudioTrack[] | undefined {
     const storedSettings = periodObj.audio.storedSettings;
     const currentId = !isNullOrUndefined(storedSettings)
@@ -969,7 +986,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const adaptations = getSupportedAdaptations(periodObj.period, "audio");
     return adaptations.map((adaptation: IAdaptationMetadata) => {
       const active = currentId === null ? false : currentId === adaptation.id;
-      return objectAssign(toAudioTrack(adaptation, true), { active });
+      return objectAssign(toAudioTrack(adaptation, filterPlayableRepresentations), {
+        active,
+      });
     });
   }
 
@@ -1004,10 +1023,15 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * Returns `undefined` if the given Period's id is not known.
    *
    * @param {Object} periodObj - The concerned Period's object
+   * @param {boolean} filterPlayableRepresentations - If `true`, only
+   * representations considered to be "playable" will be included in the
+   * returned response.
+   * If `false`, the response should contain all linked representations.
    * @returns {Array.<Object>}
    */
   public getAvailableVideoTracks(
     periodObj: ITSPeriodObject,
+    filterPlayableRepresentations: boolean,
   ): IAvailableVideoTrack[] | undefined {
     const storedSettings = periodObj.video.storedSettings;
     const currentId = isNullOrUndefined(storedSettings)
@@ -1017,7 +1041,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const adaptations = getSupportedAdaptations(periodObj.period, "video");
     return adaptations.map((adaptation) => {
       const active = currentId === null ? false : currentId === adaptation.id;
-      const track = toVideoTrack(adaptation, true);
+      const track = toVideoTrack(adaptation, filterPlayableRepresentations);
       const trickModeTracks =
         track.trickModeTracks !== undefined
           ? track.trickModeTracks.map((trickModeAdaptation) => {
