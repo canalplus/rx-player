@@ -18,6 +18,7 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaSourceInterface } from "../../mse";
 import { SourceBufferType } from "../../mse";
+import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -251,7 +252,8 @@ export default class SegmentSinksStore {
     }
     this._initializedSegmentSinks[bufferType] = null;
     if (SegmentSinksStore.isNative(bufferType)) {
-      this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
+      assert(this._onNativeBufferAddedOrDisabled.length === 0);
     }
   }
 
@@ -295,7 +297,8 @@ export default class SegmentSinksStore {
         this._mediaSource,
       );
       this._initializedSegmentSinks[bufferType] = nativeSegmentSink;
-      this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
+      assert(this._onNativeBufferAddedOrDisabled.length === 0);
       return nativeSegmentSink;
     }
 
