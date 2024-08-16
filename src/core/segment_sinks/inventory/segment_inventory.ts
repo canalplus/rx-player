@@ -1349,11 +1349,14 @@ function prettyPrintInventory(inventory: IBufferedChunk[]): string {
       if (encounteredPeriod === undefined) {
         currentLetter = generateNewLetter(chunk.infos);
         encounteredReps[periodId] = { [representationId]: currentLetter };
-      } else if (encounteredPeriod[representationId] === undefined) {
-        currentLetter = generateNewLetter(chunk.infos);
-        encounteredPeriod[representationId] = currentLetter;
       } else {
-        currentLetter = encounteredPeriod[representationId];
+        const previousLetter = encounteredPeriod[representationId];
+        if (previousLetter === undefined) {
+          currentLetter = generateNewLetter(chunk.infos);
+          encounteredPeriod[representationId] = currentLetter;
+        } else {
+          currentLetter = previousLetter;
+        }
       }
 
       if (lastChunk === null) {
