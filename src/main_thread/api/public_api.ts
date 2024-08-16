@@ -3244,8 +3244,8 @@ interface IPublicAPIEvent {
   audioTrackChange: IAudioTrack | null;
   textTrackChange: ITextTrack | null;
   videoTrackChange: IVideoTrack | null;
-  audioRepresentationChange: IVideoRepresentation | null;
-  videoRepresentationChange: IAudioRepresentation | null;
+  audioRepresentationChange: IAudioRepresentation | null;
+  videoRepresentationChange: IVideoRepresentation | null;
   volumeChange: {
     volume: number;
     muted: boolean;

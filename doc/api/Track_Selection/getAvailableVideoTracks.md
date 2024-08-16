@@ -54,6 +54,17 @@ Each of the objects in the returned array have the following properties:
     Note that because elements of the `representations` array only contains playable
     Representation, this value here cannot be set to `false` when in this array.
 
+  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+    Representation.
+
+    If set to an Object, the Representation is known to be encrypted. If unset or set to
+    `undefined` the Representation is either unencrypted or we don't know if it is.
+
+    When set to an object, it may contain the following properties:
+
+    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+      Representation.
+
 - `signInterpreted` (`Boolean|undefined`): If set to `true`, the track is known to contain
   an interpretation in sign language. If set to `false`, the track is known to not contain
   that type of content. If not set or set to undefined we don't know whether that video

@@ -835,6 +835,18 @@ export interface IAudioRepresentation {
    * encrypted or not in some cases).
    */
   decipherable?: boolean | undefined;
+  /**
+   * Encryption information linked to this content.
+   * If set to an Object, the Representation is known to be encrypted.
+   * If unset or set to `undefined` the Representation is either unencrypted or
+   * we don't know if it is.
+   */
+  contentProtections?:
+    | {
+        /** Known key ids linked to that Representation. */
+        keyIds?: Uint8Array[] | undefined;
+      }
+    | undefined;
 }
 
 /** Audio track returned by the RxPlayer. */
@@ -905,6 +917,18 @@ export interface IVideoRepresentation {
    * encrypted or not in some cases).
    */
   decipherable?: boolean | undefined;
+  /**
+   * Encryption information linked to this content.
+   * If set to an Object, the Representation is known to be encrypted.
+   * If unset or set to `undefined` the Representation is either unencrypted or
+   * we don't know if it is.
+   */
+  contentProtections?:
+    | {
+        /** Known key ids linked to that Representation. */
+        keyIds?: Uint8Array[] | undefined;
+      }
+    | undefined;
 }
 
 /** Video track returned by the RxPlayer. */
