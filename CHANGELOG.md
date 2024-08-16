@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.33.4 (upcoming)
+
+### Bug fixes
+
+-   Compat: Fix autoPlay on Tizen when the content starts on a discontinuity [#1500]
+
+### Other improvements
+
+-   DASH: provide a more precize calculation for the timeshift buffer depth [#1492]
+
 ## v3.33.3
 
 ### Bug fixes
