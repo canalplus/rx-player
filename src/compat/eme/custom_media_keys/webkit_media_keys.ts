@@ -30,7 +30,7 @@ import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
 import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
-  _setVideo: (videoElement: IMediaElement) => void;
+  _setVideo: (videoElement: IMediaElement) => Promise<unknown>;
   createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
   setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
