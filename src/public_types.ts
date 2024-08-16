@@ -803,11 +803,37 @@ export interface IRepresentationContext {
  * RxPlayer.
  */
 export interface IAudioRepresentation {
+  /**
+   * Identifier for that Representation.
+   * Might e.g. be used with the `lockVideoRepresentation` API.
+   */
   id: string | number;
+  /** Optional maximum bitrate, in bits per seconds, for this Representation. */
   bitrate?: number | undefined;
+  /** Codec(s) relied on by the media segments of that Representation. */
   codec?: string | undefined;
+  /**
+   * If `true`, this Representation is linked to "spatial audio" technology, such as
+   * Dolby Atmos.
+   * If `false`, it is not linked to such technology.
+   *
+   * If `undefined`, we don't if it is linked to a spatial audio technology or not.
+   */
   isSpatialAudio?: boolean | undefined;
+  /**
+   * If `true`, the codec is known to be supported on the current device.
+   * If `false`, it is known to be unsupported.
+   *
+   * If `undefined`, we don't know yet if it is supported or not.
+   */
   isCodecSupported?: boolean | undefined;
+  /**
+   * If `true`, this Representation is known to be decipherable.
+   * If `false`, it is known to be encrypted and not decipherable.
+   *
+   * If `undefined`, we don't know yet if it is decipherable or not (or if it is
+   * encrypted or not in some cases).
+   */
   decipherable?: boolean | undefined;
 }
 
@@ -847,14 +873,37 @@ export interface ITextTrack {
  * RxPlayer.
  */
 export interface IVideoRepresentation {
+  /**
+   * Identifier for that Representation.
+   * Might e.g. be used with the `lockVideoRepresentation` API.
+   */
   id: string;
+  /** Optional maximum bitrate, in bits per seconds, for this Representation. */
   bitrate?: number | undefined;
+  /** Defines the width of the Representation in pixels. */
   width?: number | undefined;
+  /** Defines the height of the Representation in pixels. */
   height?: number | undefined;
+  /** Codec(s) relied on by the media segments of that Representation. */
   codec?: string | undefined;
+  /** The frame rate for this Representation, in frame per seconds. */
   frameRate?: number | undefined;
+  /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo?: IHDRInformation | undefined;
+  /**
+   * If `true`, the codec is known to be supported on the current device.
+   * If `false`, it is known to be unsupported.
+   *
+   * If `undefined`, we don't know yet if it is supported or not.
+   */
   isCodecSupported?: boolean | undefined;
+  /**
+   * If `true`, this Representation is known to be decipherable.
+   * If `false`, it is known to be encrypted and not decipherable.
+   *
+   * If `undefined`, we don't know yet if it is decipherable or not (or if it is
+   * encrypted or not in some cases).
+   */
   decipherable?: boolean | undefined;
 }
 
