@@ -219,7 +219,7 @@
     "semver": "7.6.3",
     "typescript": "5.5.4",
     "vitest": "2.0.5",
-    "webdriverio": "8.38.2"
+    "webdriverio": "9.0.1"
   },
   "scripts-list": {
     "Build a demo page (e.g. to test a code change)": {
