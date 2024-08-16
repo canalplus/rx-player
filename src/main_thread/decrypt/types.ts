@@ -41,6 +41,11 @@ export interface IContentDecryptorEvent {
    */
   warning: IPlayerError;
 
+  tooMuchSessions: {
+    queuedKeyIds: Uint8Array[];
+    activeKeyIds: Uint8Array[];
+  };
+
   /**
    * Event emitted when the `ContentDecryptor`'s state changed.
    * States are a central aspect of the `ContentDecryptor`, be sure to check the

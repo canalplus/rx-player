@@ -204,7 +204,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    this._initializeMediaSourceAndDecryption(mediaElement)
+    this._initializeMediaSourceAndDecryption(mediaElement, playbackObserver)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
@@ -242,7 +242,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this.trigger("error", err);
   }
 
-  private _initializeMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
+  private _initializeMediaSourceAndDecryption(
+    mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
+  ): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
     unlinkMediaSource: TaskCanceller;
@@ -258,6 +261,58 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         {
           onWarning: (err: IPlayerError) => this.trigger("warning", err),
           onError: (err: Error) => this._onFatalError(err),
+          onTooMuchSessions: (val: {
+            queuedKeyIds: Uint8Array[];
+            activeKeyIds: Uint8Array[];
+          }) => {
+            const manifest = this._manifest?.syncValue;
+            if (isNullOrUndefined(manifest)) {
+              log.error(
+                "Init: Received tooMuchSessions error before fetching the Manifest",
+              );
+              return;
+            }
+            assert(contentDecryptor.enabled === true);
+            const contentDecryptorClass = contentDecryptor.value;
+
+            const lastObservation = playbackObserver.getReference().getValue();
+            const earliestPlayedPosition = Math.min(
+              mediaElement.currentTime,
+              lastObservation.position.getWanted(),
+            );
+
+            const keyIdsToCheck = val.activeKeyIds.slice();
+            for (const period of manifest.periods) {
+              if (period.end !== undefined && period.end < earliestPlayedPosition) {
+                continue;
+              }
+              for (const adaptation of period.getAdaptations()) {
+                for (const representation of adaptation.representations) {
+                  const repKeyIds = representation.contentProtections?.keyIds;
+                  if (repKeyIds === undefined) {
+                    break;
+                  }
+                  for (let i = keyIdsToCheck.length - 1; i >= 0; i--) {
+                    const kidToCheck = keyIdsToCheck[i];
+                    for (const repKid of repKeyIds) {
+                      if (areArraysOfNumbersEqual(kidToCheck, repKid.keyId)) {
+                        keyIdsToCheck.splice(i, 1);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            if (keyIdsToCheck.length === 0) {
+              // XXX TODO lockedStream
+            } else {
+              const hasFreedSession = contentDecryptorClass.freeKeyIds(keyIdsToCheck);
+              if (!hasFreedSession) {
+                // XXX TODO I don't know here
+              }
+            }
+          },
           onBlackListProtectionData: (val) => {
             // Ugly IIFE workaround to allow async event listener
             (async () => {

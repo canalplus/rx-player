@@ -20,9 +20,13 @@ import type { CancellationSignal } from "../../utils/task_canceller";
 import createSession from "./create_session";
 import type { IProcessedProtectionData, IMediaKeySessionStores } from "./types";
 import { MediaKeySessionLoadingType } from "./types";
-import cleanOldLoadedSessions from "./utils/clean_old_loaded_sessions";
+import cleanOldLoadedSessions, {
+  NoSessionSpaceError,
+} from "./utils/clean_old_loaded_sessions";
 import isSessionUsable from "./utils/is_session_usable";
 import type KeySessionRecord from "./utils/key_session_record";
+
+export { NoSessionSpaceError };
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:
@@ -34,24 +38,34 @@ import type KeySessionRecord from "./utils/key_session_record";
  * `EME_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS` config property.
  *
  * You can refer to the events emitted to know about the current situation.
- * @param {Object} initializationData
- * @param {Object} stores
- * @param {string} wantedSessionType
- * @param {number} maxSessionCacheSize
+ * @param {Object} arg
+ * @param {Object} arg.initializationData
+ * @param {Object} arg.sessionStores
+ * @param {string} arg.sessionType
+ * @param {number} arg.maxSessionCacheSize
  * @param {Object} cancelSignal
  * @returns {Promise}
  */
 export default async function createOrLoadSession(
-  initializationData: IProcessedProtectionData,
-  stores: IMediaKeySessionStores,
-  wantedSessionType: MediaKeySessionType,
-  maxSessionCacheSize: number,
+  {
+    initializationData,
+    sessionStores,
+    sessionType,
+    activeRecords,
+    maxSessionCacheSize,
+  }: {
+    initializationData: IProcessedProtectionData;
+    sessionStores: IMediaKeySessionStores;
+    sessionType: MediaKeySessionType;
+    activeRecords: KeySessionRecord[];
+    maxSessionCacheSize: number;
+  },
   cancelSignal: CancellationSignal,
 ): Promise<ICreateOrLoadSessionResult> {
   /** Store previously-loaded compatible MediaKeySession, if one. */
   let previousLoadedSession: MediaKeySession | ICustomMediaKeySession | null = null;
 
-  const { loadedSessionsStore, persistentSessionsStore } = stores;
+  const { loadedSessionsStore, persistentSessionsStore } = sessionStores;
   const entry = loadedSessionsStore.reuse(initializationData);
   if (entry !== null) {
     previousLoadedSession = entry.mediaKeySession;
@@ -82,15 +96,15 @@ export default async function createOrLoadSession(
     }
   }
 
-  await cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize);
+  await cleanOldLoadedSessions(loadedSessionsStore, activeRecords, maxSessionCacheSize);
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError; // stop here if cancelled since
   }
 
   const evt = await createSession(
-    stores,
+    sessionStores,
     initializationData,
-    wantedSessionType,
+    sessionType,
     cancelSignal,
   );
   return {

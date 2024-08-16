@@ -39,6 +39,10 @@ export default function initializeContentDecryption(
     onWarning: (err: IPlayerError) => void;
     onError: (err: Error) => void;
     onBlackListProtectionData: (val: IProcessedProtectionData) => void;
+    onTooMuchSessions: (arg: {
+      queuedKeyIds: Uint8Array[];
+      activeKeyIds: Uint8Array[];
+    }) => void;
     onKeyIdsCompatibilityUpdate: (updates: {
       whitelistedKeyIds: Uint8Array[];
       blacklistedKeyIds: Uint8Array[];
@@ -137,6 +141,10 @@ export default function initializeContentDecryption(
 
   contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (x) => {
     callbacks.onKeyIdsCompatibilityUpdate(x);
+  });
+
+  contentDecryptor.addEventListener("tooMuchSessions", (e) => {
+    callbacks.onTooMuchSessions(e);
   });
 
   decryptorCanceller.signal.register(() => {
