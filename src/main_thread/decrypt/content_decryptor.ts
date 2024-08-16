@@ -1147,8 +1147,8 @@ function addKeyIdsFromPeriod(set: Set<Uint8Array>, period: IPeriodMetadata) {
         representation.contentProtections !== undefined &&
         representation.contentProtections.keyIds !== undefined
       ) {
-        for (const kidInf of representation.contentProtections.keyIds) {
-          set.add(kidInf.keyId);
+        for (const kid of representation.contentProtections.keyIds) {
+          set.add(kid);
         }
       }
     }

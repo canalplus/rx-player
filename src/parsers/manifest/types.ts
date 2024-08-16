@@ -39,12 +39,6 @@ export interface IParsedStreamEventData {
   };
 }
 
-/** Describes information about an encryption Key ID of a given media. */
-export interface IContentProtectionKID {
-  keyId: Uint8Array;
-  systemId?: string | undefined;
-}
-
 /**
  * Encryption initialization data.
  * This is the data used to initialize a license request.
@@ -85,7 +79,7 @@ export interface IContentProtections {
    * `undefined` if the key id(s) associated with that content may exist but are
    * not known.
    */
-  keyIds: IContentProtectionKID[] | undefined;
+  keyIds: Uint8Array[] | undefined;
   /** The different encryption initialization data associated with that content. */
   initData: IContentProtectionInitData[];
 }

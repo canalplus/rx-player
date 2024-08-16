@@ -27,7 +27,6 @@ import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
 import { createBox } from "../../containers/isobmff";
 import type {
-  IContentProtectionKID,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -371,15 +370,12 @@ function createSmoothStreamingParser(
         (!isNullOrUndefined(codecs) ? codecs + "-" : "") +
         String(qualityLevel.bitrate);
 
-      const keyIDs: IContentProtectionKID[] = [];
+      const keyIDs: Uint8Array[] = [];
       let firstProtection: IContentProtectionSmooth | undefined;
       if (protections.length > 0) {
         firstProtection = protections[0];
         protections.forEach((protection) => {
-          const keyId = protection.keyId;
-          protection.keySystems.forEach((keySystem) => {
-            keyIDs.push({ keyId, systemId: keySystem.systemId });
-          });
+          keyIDs.push(protection.keyId);
         });
       }
 
