@@ -22,8 +22,7 @@ function objectValues<T>(o: { [s: string]: T }): T[] {
   return Object.keys(o).map((k: string) => o[k]);
 }
 
-/* eslint-disable  @typescript-eslint/unbound-method, no-restricted-properties */
+// eslint-disable-next-line  @typescript-eslint/unbound-method, no-restricted-properties
 export default typeof Object.values === "function" ? Object.values : objectValues;
-/* eslint-enable  @typescript-eslint/unbound-method, no-restricted-properties */
 
 export { objectValues };

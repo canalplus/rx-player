@@ -53,7 +53,7 @@ function AudioTrackKnob({
       if (track !== undefined) {
         player.actions.setAudioTrack(track);
       } else {
-        /* eslint-disable-next-line no-console */
+        // eslint-disable-next-line no-console
         console.error("Error: audio track not found");
       }
     },

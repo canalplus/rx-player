@@ -287,8 +287,7 @@ export default class TaskPrioritizer<T> {
    * `this._prioritySteps.low`).
    */
   private _interruptCancellableTasks(): void {
-    for (let i = 0; i < this._pendingTasks.length; i++) {
-      const pendingObj = this._pendingTasks[i];
+    for (const pendingObj of this._pendingTasks) {
       if (pendingObj.priority >= this._prioritySteps.low) {
         this._interruptPendingTask(pendingObj);
 

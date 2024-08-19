@@ -1,17 +1,11 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import probeDecodingInfos from "../../probers/decodingInfo";
 import type { IMediaConfiguration } from "../../types";
 import { ProberStatus } from "../../types";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-const origDecodingInfo = (navigator as any).mediaCapabilities;
-const origMediaCapabilities = (navigator as any).mediaCapabilities;
+const origDecodingInfo = navigator.mediaCapabilities;
+const origMediaCapabilities = navigator.mediaCapabilities;
 
 /**
  * Stub decodingInfo API to resolve.
@@ -33,7 +27,9 @@ function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
     decodingInfo: decodingInfoStub,
   };
 
-  (navigator as any).mediaCapabilities = mockMediaCapabilities;
+  // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
+  // now, we're going through JSDom through so that's OK.
+  navigator.mediaCapabilities = mockMediaCapabilities;
   return decodingInfoStub;
 }
 
@@ -41,7 +37,9 @@ function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
  * Reset decodingInfo to native implementation.
  */
 function resetDecodingInfos(): void {
-  (navigator as any).mediaCapabilities = origDecodingInfo;
+  // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
+  // now, we're going through JSDom through so that's OK.
+  navigator.mediaCapabilities = origDecodingInfo;
 }
 
 describe("MediaCapabilitiesProber probers - decodingInfo", () => {
@@ -49,7 +47,9 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     vi.resetModules();
   });
   afterEach(() => {
-    (navigator as any).mediaCapabilities = origMediaCapabilities;
+    // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
+    // now, we're going through JSDom through so that's OK.
+    navigator.mediaCapabilities = origMediaCapabilities;
   });
 
   it("should throw if no video and audio config", () => {
@@ -163,25 +163,29 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   });
 
   it("should throw if API mediaCapabilities not available", () => {
-    delete (navigator as any).mediaCapabilities;
-    /* eslint-disable @typescript-eslint/no-floating-promises */
+    // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
+    // now, we're going through JSDom through so that's OK.
+    delete navigator.mediaCapabilities;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     expect(probeDecodingInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: MediaCapabilities API not available",
     );
-    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if API decodingInfo not available", () => {
-    if ((navigator as any).mediaCapabilities) {
-      delete (navigator as any).mediaCapabilities.decodingInfo;
+    if (!isNullOrUndefined(navigator.mediaCapabilities)) {
+      // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
+      // now, we're going through JSDom through so that's OK.
+      delete navigator.mediaCapabilities.decodingInfo;
     } else {
-      (navigator as any).mediaCapabilities = {};
+      // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
+      // now, we're going through JSDom through so that's OK.
+      navigator.mediaCapabilities = {};
     }
-    /* eslint-disable @typescript-eslint/no-floating-promises */
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     expect(probeDecodingInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: Decoding Info not available",
     );
-    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should resolve with `Supported` if decodingInfo supports (video only)", () => {

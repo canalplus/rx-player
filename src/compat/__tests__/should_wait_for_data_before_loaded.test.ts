@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IShouldWaitForDataBeforeLoaded from "../should_wait_for_data_before_loaded";
 
 describe("compat - shouldWaitForDataBeforeLoaded", () => {
   beforeEach(() => {
@@ -17,10 +12,10 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: false,
       };
     });
-    const shouldWaitForDataBeforeLoaded = (await vi.importActual(
-      "../should_wait_for_data_before_loaded",
-    )) as any;
-    expect(shouldWaitForDataBeforeLoaded.default(false)).toBe(true);
+    const shouldWaitForDataBeforeLoaded = (
+      await vi.importActual("../should_wait_for_data_before_loaded")
+    ).default as typeof IShouldWaitForDataBeforeLoaded;
+    expect(shouldWaitForDataBeforeLoaded(false)).toBe(true);
   });
 
   it("should return true if we are not on Safari browser but in directfile mode", async () => {
@@ -29,10 +24,10 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: false,
       };
     });
-    const shouldWaitForDataBeforeLoaded = (await vi.importActual(
-      "../should_wait_for_data_before_loaded",
-    )) as any;
-    expect(shouldWaitForDataBeforeLoaded.default(true)).toBe(true);
+    const shouldWaitForDataBeforeLoaded = (
+      await vi.importActual("../should_wait_for_data_before_loaded")
+    ).default as typeof IShouldWaitForDataBeforeLoaded;
+    expect(shouldWaitForDataBeforeLoaded(true)).toBe(true);
   });
 
   it("should return true if we are on the Safari browser but not in directfile mode", async () => {
@@ -41,10 +36,10 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: true,
       };
     });
-    const shouldWaitForDataBeforeLoaded = (await vi.importActual(
-      "../should_wait_for_data_before_loaded",
-    )) as any;
-    expect(shouldWaitForDataBeforeLoaded.default(false)).toBe(true);
+    const shouldWaitForDataBeforeLoaded = (
+      await vi.importActual("../should_wait_for_data_before_loaded")
+    ).default as typeof IShouldWaitForDataBeforeLoaded;
+    expect(shouldWaitForDataBeforeLoaded(false)).toBe(true);
   });
 
   // eslint-disable-next-line max-len
@@ -54,13 +49,9 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
         isSafariMobile: true,
       };
     });
-    const shouldWaitForDataBeforeLoaded = (await vi.importActual(
-      "../should_wait_for_data_before_loaded",
-    )) as any;
-    expect(shouldWaitForDataBeforeLoaded.default(true)).toBe(false);
-  });
-
-  beforeEach(() => {
-    vi.resetModules();
+    const shouldWaitForDataBeforeLoaded = (
+      await vi.importActual("../should_wait_for_data_before_loaded")
+    ).default as typeof IShouldWaitForDataBeforeLoaded;
+    expect(shouldWaitForDataBeforeLoaded(true)).toBe(false);
   });
 });

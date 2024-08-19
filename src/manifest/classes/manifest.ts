@@ -360,9 +360,7 @@ export default class Manifest
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
-    /* eslint-disable import/no-deprecated */
     this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
 
     this.timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
@@ -595,9 +593,7 @@ export default class Manifest
       "manifest.getAdaptation(id) is deprecated." +
         " Please use manifest.period[].getAdaptation(id) instead",
     );
-    /* eslint-disable import/no-deprecated */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-    /* eslint-enable import/no-deprecated */
   }
 
   /**
@@ -691,9 +687,7 @@ export default class Manifest
     this.updateCodecSupport();
 
     // Re-set this.adaptations for retro-compatibility in v3.x.x
-    /* eslint-disable import/no-deprecated */
     this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
 
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those

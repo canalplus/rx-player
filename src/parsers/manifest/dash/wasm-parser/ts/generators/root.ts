@@ -35,7 +35,7 @@ export function generateRootChildrenParser(
 ): (nodeId: number) => void {
   return function onRootChildren(nodeId: number) {
     switch (nodeId) {
-      case TagName.MPD:
+      case TagName.MPD: {
         rootObj.mpd = {
           children: {
             baseURLs: [],
@@ -58,6 +58,7 @@ export function generateRootChildrenParser(
         );
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
+      }
 
       default:
         // Allows to make sure we're not mistakenly closing a re-opened

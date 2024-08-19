@@ -425,7 +425,7 @@ function generateTextContent(
         if (isNonEmptyString(backgroundColor)) {
           style.backgroundColor = backgroundColor;
         } else {
-          delete style.backgroundColor;
+          style.backgroundColor = "";
         }
         const el = createTextElement(currentNode, style, shouldTrimWhiteSpaceFromParent);
         elements.push(el);

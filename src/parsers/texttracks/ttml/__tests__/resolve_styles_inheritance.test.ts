@@ -1,12 +1,8 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+import type IResolveStylesInheritance from "../resolve_styles_inheritance";
 
 const logWarnMock = vi.fn();
-let resolveStylesInheritance: any;
+let resolveStylesInheritance: typeof IResolveStylesInheritance;
 
 describe("resolve_styles_inheritance", () => {
   beforeEach(async () => {
@@ -16,7 +12,7 @@ describe("resolve_styles_inheritance", () => {
       },
     }));
     resolveStylesInheritance = (await vi.importActual("../resolve_styles_inheritance"))
-      .default;
+      .default as typeof IResolveStylesInheritance;
   });
   afterEach(() => {
     vi.resetModules();

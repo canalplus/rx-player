@@ -149,7 +149,7 @@ export function declareModule<TStateObject extends object, TModuleArg, TActions>
           try {
             listener(stateObject[stateName]);
           } catch (e) {
-            /* eslint-disable-next-line no-console */
+            // eslint-disable-next-line no-console
             console.error("EventEmitter: listener error", e instanceof Error ? e : null);
           }
         });

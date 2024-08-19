@@ -1,12 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import arrayFindIndex from "../../utils/array_find_index";
+import type { IMediaElement } from "../browser_compatibility_types";
+import type IClearElementSrc from "../clear_element_src";
 
 describe("Compat - clearElementSrc", () => {
   beforeEach(() => {
@@ -19,11 +14,12 @@ describe("Compat - clearElementSrc", () => {
       removeAttribute() {
         return null;
       },
-    };
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    } as unknown as IMediaElement;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
     expect(fakeElement.src).toBe("");
     expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
     expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
@@ -35,11 +31,12 @@ describe("Compat - clearElementSrc", () => {
       removeAttribute() {
         throw new Error("Oups, can't remove attribute.");
       },
-    };
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    } as unknown as IMediaElement;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
 
-    expect(() => clearElementSrc.default(fakeElement)).toThrowError(
+    expect(() => clearElementSrc(fakeElement)).toThrowError(
       "Oups, can't remove attribute.",
     );
     expect(fakeElement.src).toBe("");
@@ -55,20 +52,21 @@ describe("Compat - clearElementSrc", () => {
       textTracks: [{ mode: "showing" }, { mode: "showing" }],
       childNodes: [{ nodeName: "audio" }, { nodeName: "track" }, { nodeName: "track" }],
       hasChildNodes: () => true,
-      removeChild: (node: { nodeName: string }) => {
-        const { childNodes } = fakeElement;
+      removeChild: (node: Node) => {
+        const childNodes = fakeElement.childNodes as Node[];
         const idx = arrayFindIndex(childNodes, (n) => n.nodeName === node.nodeName);
         childNodes.splice(idx, 1);
       },
-    };
+    } as unknown as IMediaElement;
 
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
     const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.textTracks[0].mode).toBe("disabled");
@@ -93,19 +91,20 @@ describe("Compat - clearElementSrc", () => {
       removeChild: () => {
         throw new Error();
       },
-    };
+    } as unknown as IMediaElement;
 
-    const mockLogWarn = vi.fn((message) => message);
+    const mockLogWarn = vi.fn((message: unknown) => message);
     vi.doMock("../../log", () => ({
       default: { warn: mockLogWarn },
     }));
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
     const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.textTracks[0].mode).toBe("disabled");
@@ -135,15 +134,16 @@ describe("Compat - clearElementSrc", () => {
       childNodes: [{ nodeName: "audio" }],
       hasChildNodes: () => true,
       removeChild: () => null,
-    };
+    } as unknown as IMediaElement;
 
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
     const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([{ nodeName: "audio" }]);
@@ -163,15 +163,16 @@ describe("Compat - clearElementSrc", () => {
       childNodes: [],
       hasChildNodes: () => false,
       removeChild: () => null,
-    };
+    } as unknown as IMediaElement;
 
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
     const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([]);
@@ -191,15 +192,16 @@ describe("Compat - clearElementSrc", () => {
       childNodes: [],
       hasChildNodes: () => false,
       removeChild: () => null,
-    };
+    } as unknown as IMediaElement;
 
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
     const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([]);
@@ -219,15 +221,16 @@ describe("Compat - clearElementSrc", () => {
       childNodes: [],
       hasChildNodes: () => false,
       removeChild: () => null,
-    };
+    } as unknown as IMediaElement;
 
-    const clearElementSrc = (await vi.importActual("../clear_element_src")) as any;
+    const clearElementSrc = (await vi.importActual("../clear_element_src"))
+      .default as typeof IClearElementSrc;
 
     const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
     const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
     const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
 
-    clearElementSrc.default(fakeElement);
+    clearElementSrc(fakeElement);
 
     expect(fakeElement.src).toBe("");
     expect(fakeElement.childNodes).toEqual([]);

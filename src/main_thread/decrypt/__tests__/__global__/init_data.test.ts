@@ -1,20 +1,11 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+import type IContentDecryptor from "../../content_decryptor";
+import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
 import {
   formatFakeChallengeFromInitData,
   MediaKeySessionImpl,
   MediaKeysImpl,
-  // MediaKeySystemAccessImpl,
   mockCompat,
-  // testContentDecryptorError,
 } from "./utils";
 
 describe("decrypt - global tests - init data", () => {
@@ -42,22 +33,26 @@ describe("decrypt - global tests - init data", () => {
     const mockCreateSession = vi
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockReturnValue(mediaKeySession);
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       contentDecryptor.onInitializationData({
         type: "cenc",
         values: [{ systemId: "15", data: initData }],
@@ -94,22 +89,26 @@ describe("decrypt - global tests - init data", () => {
     const mockCreateSession = vi
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockReturnValue(mediaKeySession);
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       contentDecryptor.onInitializationData({
         type: "cenc",
         values: [{ systemId: "15", data: initData }],
@@ -162,9 +161,10 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -175,13 +175,16 @@ describe("decrypt - global tests - init data", () => {
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       contentDecryptor.onInitializationData({
         type: "cenc",
         values: [{ systemId: "15", data: initDatas[0] }],
@@ -266,22 +269,26 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       contentDecryptor.onInitializationData({
         type: "cenc",
         values: [{ systemId: "15", data: initData }],
@@ -337,22 +344,26 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockReturnValue(mediaKeySession);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       const initDataEvent = {
         type: "cenc",
         values: [{ systemId: "15", data: initData }],
@@ -393,22 +404,26 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockReturnValue(mediaKeySession);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       const initDataEvent = {
         type: "cenc",
         values: [{ systemId: "15", data: initData }],
@@ -460,9 +475,10 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -480,13 +496,16 @@ describe("decrypt - global tests - init data", () => {
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
@@ -562,9 +581,10 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initData = new Uint8Array([54, 55, 75]);
@@ -576,13 +596,16 @@ describe("decrypt - global tests - init data", () => {
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);
       setTimeout(() => {
@@ -640,9 +663,10 @@ describe("decrypt - global tests - init data", () => {
       .spyOn(MediaKeysImpl.prototype, "createSession")
       .mockImplementation(() => mediaKeySessions[createSessionCallIdx++]);
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       // == vars ==
       const initDatas = [
@@ -660,13 +684,16 @@ describe("decrypt - global tests - init data", () => {
 
       // == test ==
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
-        if (newState !== ContentDecryptorState.WaitingForAttachment) {
-          rej(new Error(`Unexpected state: ${newState}`));
-        }
-        contentDecryptor.removeEventListener("stateChange");
-        contentDecryptor.attach();
-      });
+      contentDecryptor.addEventListener(
+        "stateChange",
+        (newState: IContentDecryptorState) => {
+          if (newState !== ContentDecryptorState.WaitingForAttachment) {
+            rej(new Error(`Unexpected state: ${newState}`));
+          }
+          contentDecryptor.removeEventListener("stateChange");
+          contentDecryptor.attach();
+        },
+      );
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[0]);
       contentDecryptor.onInitializationData(initDataEvents[1]);
       eventTriggers.triggerEncrypted(videoElt, initDataEvents[1]);

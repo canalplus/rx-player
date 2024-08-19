@@ -313,7 +313,7 @@ function createSmoothStreamingParser(
       root,
       (res, _name, node) => {
         switch (_name) {
-          case "QualityLevel":
+          case "QualityLevel": {
             const qualityLevel = parseQualityLevel(node, adaptationType);
             if (qualityLevel === null) {
               return res;
@@ -327,6 +327,7 @@ function createSmoothStreamingParser(
               res.qualityLevels.push(qualityLevel);
             }
             break;
+          }
           case "c":
             res.cNodes.push(node);
             break;

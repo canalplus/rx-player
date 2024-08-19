@@ -57,8 +57,7 @@ export default function resolveStylesInheritance(styles: IStyleObject[]): void {
   const recursivelyBrowsedIndexes: number[] = [];
   function resolveStyleInheritance(styleElt: IStyleObject, index: number) {
     recursivelyBrowsedIndexes.push(index);
-    for (let j = 0; j < styleElt.extendsStyles.length; j++) {
-      const extendedStyleID = styleElt.extendsStyles[j];
+    for (const extendedStyleID of styleElt.extendsStyles) {
       const extendedStyleIndex = arrayFindIndex(styles, (x) => x.id === extendedStyleID);
       if (extendedStyleIndex < 0) {
         log.warn("TTML Parser: unknown style inheritance: " + extendedStyleID);

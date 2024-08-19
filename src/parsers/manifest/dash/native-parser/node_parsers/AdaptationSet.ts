@@ -64,7 +64,7 @@ function parseAdaptationSetChildren(
           }
           break;
 
-        case "BaseURL":
+        case "BaseURL": {
           const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
           if (baseURLObj !== undefined) {
             children.baseURLs.push(baseURLObj);
@@ -73,6 +73,7 @@ function parseAdaptationSetChildren(
             warnings = warnings.concat(baseURLWarnings);
           }
           break;
+        }
 
         case "ContentComponent":
           children.contentComponent = parseContentComponent(currentElement);
@@ -93,15 +94,16 @@ function parseAdaptationSetChildren(
           children.inbandEventStreams.push(parseScheme(currentElement));
           break;
 
-        case "Label":
+        case "Label": {
           const label = currentElement.textContent;
 
           if (label !== null && label !== undefined) {
             children.label = label;
           }
           break;
+        }
 
-        case "Representation":
+        case "Representation": {
           const [representation, representationWarnings] =
             createRepresentationIntermediateRepresentation(currentElement);
           children.representations.push(representation);
@@ -109,6 +111,7 @@ function parseAdaptationSetChildren(
             warnings = warnings.concat(representationWarnings);
           }
           break;
+        }
 
         case "Role":
           if (isNullOrUndefined(children.roles)) {
@@ -126,23 +129,25 @@ function parseAdaptationSetChildren(
           }
           break;
 
-        case "SegmentBase":
+        case "SegmentBase": {
           const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
           children.segmentBase = segmentBase;
           if (segmentBaseWarnings.length > 0) {
             warnings = warnings.concat(segmentBaseWarnings);
           }
           break;
+        }
 
-        case "SegmentList":
+        case "SegmentList": {
           const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
           children.segmentList = segmentList;
           if (segmentListWarnings.length > 0) {
             warnings = warnings.concat(segmentListWarnings);
           }
           break;
+        }
 
-        case "SegmentTemplate":
+        case "SegmentTemplate": {
           const [segmentTemplate, segmentTemplateWarnings] =
             parseSegmentTemplate(currentElement);
           children.segmentTemplate = segmentTemplate;
@@ -150,8 +155,9 @@ function parseAdaptationSetChildren(
             warnings = warnings.concat(segmentTemplateWarnings);
           }
           break;
+        }
 
-        case "ContentProtection":
+        case "ContentProtection": {
           const [contentProtection, contentProtectionWarnings] =
             parseContentProtection(currentElement);
           if (contentProtectionWarnings.length > 0) {
@@ -161,6 +167,7 @@ function parseAdaptationSetChildren(
             contentProtections.push(contentProtection);
           }
           break;
+        }
 
         // case "Rating":
         //   children.rating = currentElement;

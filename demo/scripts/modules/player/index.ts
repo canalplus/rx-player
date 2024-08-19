@@ -57,18 +57,19 @@ RxPlayer.addFeatures([
   MULTI_THREAD,
 ]);
 
-/* eslint-disable */
-(window as any).RxPlayer = RxPlayer;
-/* eslint-enable */
+(
+  window as typeof window & {
+    RxPlayer: typeof RxPlayer;
+  }
+).RxPlayer = RxPlayer;
 
 declare const __INCLUDE_WASM_PARSER__: boolean;
 
-/* eslint-disable no-undef */
+// eslint-disable-next-line no-undef
 if (__INCLUDE_WASM_PARSER__) {
-  /* eslint-enable no-undef */
   RxPlayer.addFeatures([DASH_WASM]);
   DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" }).catch((err) => {
-    /* eslint-disable-next-line no-console */
+    // eslint-disable-next-line no-console
     console.error("Error when initializing WASM DASH MPD parser:", err);
   });
 }
@@ -225,9 +226,16 @@ const PlayerModule = declareModule(
     let debugEltInstance: { dispose(): void } | undefined;
 
     // facilitate DEV mode
-    /* eslint-disable */
-    (window as any).player = (window as any).rxPlayer = player;
-    /* eslint-enable */
+    (
+      window as typeof window & {
+        player: RxPlayer;
+      }
+    ).player = player;
+    (
+      window as typeof window & {
+        rxPlayer: RxPlayer;
+      }
+    ).rxPlayer = player;
 
     linkPlayerEventsToState(player, state, abortSignal);
 
@@ -450,7 +458,7 @@ const PlayerModule = declareModule(
           dashWasmUrl: "./mpd-parser.wasm",
         })
         .catch((err) => {
-          /* eslint-disable-next-line no-console */
+          // eslint-disable-next-line no-console
           console.error("Error when attaching worker:", err);
         });
     }

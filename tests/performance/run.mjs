@@ -233,7 +233,7 @@ async function linkCurrentRxPlayer() {
  * @returns {Promise}
  */
 async function linkLastRxPlayer() {
-  await removeFile(path.join(currentDirectory, "node_modules"));
+  await removeDir(path.join(currentDirectory, "node_modules"));
   await spawnProc(
     "npm install",
     ["--prefix", currentDirectory, "rx-player"],
@@ -454,7 +454,7 @@ function createResultServer() {
         try {
           const parsedBody = JSON.parse(body);
           if (parsedBody.type === "log") {
-            /* eslint-disable-next-line no-console */
+            // eslint-disable-next-line no-console
             console.log("LOG:", parsedBody.data);
           } else if (parsedBody.type === "done") {
             if (currentBrowser !== undefined) {

@@ -1,4 +1,3 @@
-/* eslint-disable */
 /*
 MIT License
 Copyright (c) 2020 Egor Nepomnyaschih
@@ -179,7 +178,7 @@ export function bytesToBase64(bytes: number[] | Uint8Array): string {
  * Convert a base64 string into the corresponding Uint8Array containing its
  * corresponding binary data.
  * /!\ Can throw if an invalid base64 string was given.
- * @param {Array.<number>|Uint8Array} bytes
+ * @param {string} str
  * @returns {string}
  */
 export function base64ToBytes(str: string): Uint8Array {
@@ -187,12 +186,14 @@ export function base64ToBytes(str: string): Uint8Array {
   let paddedStr = str;
   if (paddingNeeded !== 0) {
     log.warn("base64ToBytes: base64 given miss padding");
+    // eslint-disable-next-line no-nested-ternary
     paddedStr += paddingNeeded === 3 ? "=" : paddingNeeded === 2 ? "==" : "==="; // invalid, but we will catch it
   }
   const index = paddedStr.indexOf("=");
   if (index !== -1 && index < paddedStr.length - 2) {
     throw new Error("Unable to parse base64 string.");
   }
+  // eslint-disable-next-line no-nested-ternary
   const missingOctets = paddedStr.endsWith("==") ? 2 : paddedStr.endsWith("=") ? 1 : 0;
   const n = paddedStr.length;
   const result = new Uint8Array((n / 4) * 3);

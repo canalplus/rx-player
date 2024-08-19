@@ -32,9 +32,15 @@ export interface IVTTHTMLCue {
  *   - element {HTMLElement}: the cue text, translated into an HTMLElement
  *
  * Returns undefined if the cue block could not be parsed.
- * @param {Array.<string>} cueBlock
- * @param {Number} timeOffset
- * @param {Array.<Object>} classes
+ * @param {Object} cueObj
+ * @param {Number} cueObj.start
+ * @param {Number} cueObj.end
+ * @param {Object} cueObj.settings;
+ * @param {string|undefined} cueObj.header
+ * @param {Array.<string>} cueObj.payload
+ * @param {Object} styling
+ * @param {Object} styling.classes
+ * @param {string|undefined} styling.global
  * @returns {Object|undefined}
  */
 export default function toHTML(

@@ -1,11 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type IProbeMediaContentType from "../../probers/mediaContentType";
 import { ProberStatus } from "../../types";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { IMediaConfiguration } from "../../types";
 
 describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
   beforeEach(() => {
@@ -17,13 +13,12 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       MediaSource_: null,
     }));
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
-    /* eslint-disable @typescript-eslint/no-floating-promises */
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     expect(probeMediaContentType({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " + "MediaSource API not available",
     );
-    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no compatible isTypeSupported API", async () => {
@@ -33,13 +28,12 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       },
     }));
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
-    /* eslint-disable @typescript-eslint/no-floating-promises */
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     expect(probeMediaContentType({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: " + "isTypeSupported not available",
     );
-    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no specified contentType in config", async () => {
@@ -49,12 +43,12 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(1);
     await probeMediaContentType(config).catch(({ message }: { message: string }) => {
@@ -72,15 +66,15 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       video: {
         contentType: "video/mp5",
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)
@@ -100,15 +94,15 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       audio: {
         contentType: "audio/wma",
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)
@@ -128,7 +122,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       audio: {
         contentType: "audio/wma",
@@ -138,8 +132,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)
@@ -159,15 +153,15 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       audio: {
         contentType: "audio/wma",
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)
@@ -187,15 +181,15 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       video: {
         contentType: "video/mp5",
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)
@@ -215,7 +209,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       video: {
         contentType: "video/mp5",
@@ -225,8 +219,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)
@@ -248,7 +242,7 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const config = {
+    const config: IMediaConfiguration = {
       type: "media-source",
       video: {
         contentType: "video/mp5",
@@ -258,8 +252,8 @@ describe("MediaCapabilitiesProber - probers probeMediaContentType", () => {
       },
     };
     const probeMediaContentType = (
-      (await vi.importActual("../../probers/mediaContentType")) as any
-    ).default;
+      await vi.importActual("../../probers/mediaContentType")
+    ).default as typeof IProbeMediaContentType;
 
     expect.assertions(2);
     await probeMediaContentType(config)

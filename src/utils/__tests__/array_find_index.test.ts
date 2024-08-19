@@ -1,23 +1,21 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import arrayFindIndex from "../array_find_index";
 
-/* eslint-disable no-invalid-this */
-/* eslint-disable no-restricted-properties */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-restricted-types */
-
-/* eslint-disable @typescript-eslint/unbound-method */
-const initialArrayFindIndex = (Array.prototype as { findIndex: unknown }).findIndex;
-/* eslint-enable @typescript-eslint/unbound-method */
+// eslint-disable-next-line @typescript-eslint/unbound-method
+// eslint-disable-next-line no-restricted-properties
+const initialArrayFindIndex = Array.prototype.findIndex;
 
 describe("utils - arrayFindIndex", () => {
   beforeEach(() => {
-    (Array.prototype as { findIndex: unknown }).findIndex = undefined;
+    // @ts-expect-error: Remove temporarily default `findIndex` implementation
+    // to rely on our own instead.
+    // eslint-disable-next-line no-restricted-properties
+    Array.prototype.findIndex = undefined;
   });
 
   afterEach(() => {
-    (Array.prototype as { findIndex: unknown }).findIndex = initialArrayFindIndex;
+    // eslint-disable-next-line no-restricted-properties
+    Array.prototype.findIndex = initialArrayFindIndex;
   });
 
   it("should return -1 for an empty array", () => {
@@ -73,6 +71,7 @@ describe("utils - arrayFindIndex", () => {
     arrayFindIndex(
       arr,
       function (this: unknown) {
+        // eslint-disable-next-line no-invalid-this
         expect(this).toBe(context);
         return false;
       },
@@ -82,7 +81,8 @@ describe("utils - arrayFindIndex", () => {
 
   if (typeof initialArrayFindIndex === "function") {
     it("should call the original array.findIndex function if it exists", () => {
-      (Array.prototype as { findIndex: unknown }).findIndex = initialArrayFindIndex;
+      // eslint-disable-next-line no-restricted-properties
+      Array.prototype.findIndex = initialArrayFindIndex;
       const obj1 = {};
       const obj2 = {};
       const context = {};
@@ -96,6 +96,7 @@ describe("utils - arrayFindIndex", () => {
         index: number,
         cArr: unknown[],
       ): boolean {
+        // eslint-disable-next-line no-invalid-this
         expect(this).toBe(context);
         expect(index).toBe(currentIndex++);
         expect(cArr).toBe(arr);

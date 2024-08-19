@@ -1,23 +1,20 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import arrayFind from "../array_find";
 
-/* eslint-disable no-invalid-this */
-/* eslint-disable no-restricted-properties */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-restricted-types */
-
-/* eslint-disable @typescript-eslint/unbound-method */
-const initialArrayFind = (Array.prototype as { find: unknown }).find;
-/* eslint-enable @typescript-eslint/unbound-method */
+// eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
+const initialArrayFind = Array.prototype.find;
 
 describe("utils - arrayFind", () => {
   beforeEach(() => {
-    (Array.prototype as { find: unknown }).find = undefined;
+    // @ts-expect-error: Remove temporarily default `find` implementation
+    // to rely on our own instead.
+    // eslint-disable-next-line no-restricted-properties
+    Array.prototype.find = undefined;
   });
 
   afterEach(() => {
-    (Array.prototype as { find: unknown }).find = initialArrayFind;
+    // eslint-disable-next-line no-restricted-properties
+    Array.prototype.find = initialArrayFind;
   });
 
   it("should return undefined for an empty array", () => {
@@ -73,6 +70,7 @@ describe("utils - arrayFind", () => {
     arrayFind(
       arr,
       function (this: unknown) {
+        // eslint-disable-next-line no-invalid-this
         expect(this).toBe(context);
         return false;
       },
@@ -82,7 +80,8 @@ describe("utils - arrayFind", () => {
 
   if (typeof initialArrayFind === "function") {
     it("should call the original array.find function if it exists", () => {
-      (Array.prototype as { find: unknown }).find = initialArrayFind;
+      // eslint-disable-next-line no-restricted-properties
+      Array.prototype.find = initialArrayFind;
       const obj1 = {};
       const obj2 = {};
       const context = {};
@@ -96,6 +95,7 @@ describe("utils - arrayFind", () => {
         index: number,
         cArr: unknown[],
       ): boolean {
+        // eslint-disable-next-line no-invalid-this
         expect(this).toBe(context);
         expect(index).toBe(currentIndex++);
         expect(cArr).toBe(arr);

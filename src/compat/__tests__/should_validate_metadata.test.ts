@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IShouldValidateMetadata from "../should_validate_metadata";
 
 describe("compat - shouldValidateMetadata", () => {
   beforeEach(() => {
@@ -17,10 +12,9 @@ describe("compat - shouldValidateMetadata", () => {
         isSamsungBrowser: false,
       };
     });
-    const shouldValidateMetadata = (await vi.importActual(
-      "../should_validate_metadata",
-    )) as any;
-    expect(shouldValidateMetadata.default()).toBe(false);
+    const shouldValidateMetadata = (await vi.importActual("../should_validate_metadata"))
+      .default as typeof IShouldValidateMetadata;
+    expect(shouldValidateMetadata()).toBe(false);
   });
 
   it("should return true if we are on the Samsung browser", async () => {
@@ -29,12 +23,8 @@ describe("compat - shouldValidateMetadata", () => {
         isSamsungBrowser: true,
       };
     });
-    const shouldValidateMetadata = (await vi.importActual(
-      "../should_validate_metadata",
-    )) as any;
-    expect(shouldValidateMetadata.default()).toBe(true);
-  });
-  beforeEach(() => {
-    vi.resetModules();
+    const shouldValidateMetadata = (await vi.importActual("../should_validate_metadata"))
+      .default as typeof IShouldValidateMetadata;
+    expect(shouldValidateMetadata()).toBe(true);
   });
 });

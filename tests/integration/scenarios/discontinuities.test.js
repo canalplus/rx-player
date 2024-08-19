@@ -89,7 +89,7 @@ describe("discontinuities handling", () => {
   describe("discontinuities between periods with different types", () => {
     const { url, transport } = differentTypesDiscontinuitiesInfos;
     it("should seek over discontinuities between periods", async function ({ skip }) {
-      /* eslint-disable no-undef */
+      // eslint-disable-next-line no-undef
       if (__BROWSER_NAME__ === "firefox") {
         // test is failing on firefox in the CI because it seems to not support audio only
         skip();

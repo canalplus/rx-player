@@ -1338,8 +1338,7 @@ function prettyPrintInventory(inventory: IBufferedChunk[]): string {
   }
 
   let str = "";
-  for (let i = 0; i < inventory.length; i++) {
-    const chunk = inventory[i];
+  for (const chunk of inventory) {
     if (chunk.bufferedStart !== undefined && chunk.bufferedEnd !== undefined) {
       const periodId = chunk.infos.period.id;
       const representationId = chunk.infos.representation.id;

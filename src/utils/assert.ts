@@ -73,12 +73,10 @@ export function assertInterface<T>(
   assert(!isNullOrUndefined(o), `${name} should be an object`);
   for (const k in iface) {
     if (iface.hasOwnProperty(k)) {
-      /* eslint-disable @typescript-eslint/restrict-template-expressions */
       assert(
         typeof o[k] === iface[k],
         `${name} should have property ${k} as a ${iface[k]}`,
       );
-      /* eslint-enable @typescript-eslint/restrict-template-expressions */
     }
   }
 }

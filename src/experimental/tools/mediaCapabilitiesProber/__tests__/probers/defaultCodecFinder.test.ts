@@ -1,10 +1,8 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
+  findDefaultVideoCodec as IFindDefaultVideoCodec,
+  findDefaultAudioCodec as IFindDefaultAudioCodec,
+} from "../../probers/defaultCodecsFinder";
 
 describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
   beforeEach(() => {
@@ -24,9 +22,9 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultVideoCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultVideoCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultVideoCodec as typeof IFindDefaultVideoCodec;
     expect(findDefaultVideoCodec()).toBe('video/mp4;codecs="avc1.4d401e"');
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
@@ -38,9 +36,9 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultVideoCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultVideoCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultVideoCodec as typeof IFindDefaultVideoCodec;
     expect(() => {
       findDefaultVideoCodec();
     }).toThrowError("No default video codec found.");
@@ -51,9 +49,9 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: null,
     }));
-    const { findDefaultVideoCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultVideoCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultVideoCodec as typeof IFindDefaultVideoCodec;
     expect(() => {
       findDefaultVideoCodec();
     }).toThrowError("Cannot check video codec support: No API available.");
@@ -63,9 +61,9 @@ describe("MediaCapabilitiesProber probers - findDefaultVideoCodec", () => {
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {},
     }));
-    const { findDefaultVideoCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultVideoCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultVideoCodec as typeof IFindDefaultVideoCodec;
     expect(() => {
       findDefaultVideoCodec();
     }).toThrowError("Cannot check video codec support: No API available.");
@@ -88,9 +86,9 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultAudioCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultAudioCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultAudioCodec as typeof IFindDefaultAudioCodec;
     expect(findDefaultAudioCodec()).toBe('audio/mp4;codecs="mp4a.40.2"');
     expect(mockIsTypeSupported).toHaveBeenCalledTimes(1);
   });
@@ -102,9 +100,9 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
         isTypeSupported: mockIsTypeSupported,
       },
     }));
-    const { findDefaultAudioCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultAudioCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultAudioCodec as typeof IFindDefaultAudioCodec;
     expect(() => {
       findDefaultAudioCodec();
     }).toThrowError("No default audio codec found.");
@@ -115,9 +113,9 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: null,
     }));
-    const { findDefaultAudioCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultAudioCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultAudioCodec as typeof IFindDefaultAudioCodec;
     expect(() => {
       findDefaultAudioCodec();
     }).toThrowError("Cannot check audio codec support: No API available.");
@@ -127,9 +125,9 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({
       MediaSource_: {},
     }));
-    const { findDefaultAudioCodec } = (await vi.importActual(
-      "../../probers/defaultCodecsFinder",
-    )) as any;
+    const findDefaultAudioCodec = (
+      await vi.importActual("../../probers/defaultCodecsFinder")
+    ).findDefaultAudioCodec as typeof IFindDefaultAudioCodec;
     expect(() => {
       findDefaultAudioCodec();
     }).toThrow("Cannot check audio codec support: No API available.");

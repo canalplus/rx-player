@@ -1,11 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IStyleElements } from "../parse_style_block";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IToHtml from "../to_html";
 
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
@@ -19,12 +14,13 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = ((await vi.importActual("../to_html")) as any).default;
+    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
       header: "b",
       payload: ["<body><b></b><p>Hello<p><body>"],
+      settings: {},
     };
 
     const classes: IStyleElements = {};
@@ -57,12 +53,13 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = ((await vi.importActual("../to_html")) as any).default;
+    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
       header: "b",
       payload: ["<body><b></b><p>Hello<p><body>"],
+      settings: {},
     };
 
     const classes: IStyleElements = {
@@ -97,12 +94,13 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = ((await vi.importActual("../to_html")) as any).default;
+    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
       header: "b",
       payload: ["<body><b></b><p>Hello<p><body>"],
+      settings: {},
     };
 
     const classes: IStyleElements = {};
@@ -136,12 +134,13 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = ((await vi.importActual("../to_html")) as any).default;
+    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
       header: "b",
       payload: ["<body><b></b><p>Hello<p><body>"],
+      settings: {},
     };
 
     const classes: IStyleElements = { b: "bar: baz;" };
@@ -176,11 +175,12 @@ describe("parsers - webvtt - toHTML", () => {
       },
     }));
 
-    const toHTML = ((await vi.importActual("../to_html")) as any).default;
+    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
       payload: [],
+      settings: {},
     };
 
     const classes: IStyleElements = {};

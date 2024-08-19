@@ -32,9 +32,8 @@ if (
   MozMediaKeys !== undefined &&
   MozMediaKeys.prototype !== undefined &&
   typeof MozMediaKeys.isTypeSupported === "function" &&
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MozMediaKeys.prototype.createSession === "function"
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 ) {
   MozMediaKeysConstructor = MozMediaKeys;
 }

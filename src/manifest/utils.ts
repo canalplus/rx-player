@@ -138,8 +138,7 @@ export function getPeriodForTime(
   time: number,
 ): IPeriod | IPeriodMetadata | undefined {
   let nextPeriod = null;
-  for (let i = manifest.periods.length - 1; i >= 0; i--) {
-    const period = manifest.periods[i];
+  for (const period of manifest.periods) {
     if (periodContainsTime(period, time, nextPeriod)) {
       return period;
     }

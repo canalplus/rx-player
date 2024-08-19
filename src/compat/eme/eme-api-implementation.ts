@@ -288,11 +288,9 @@ function defaultSetMediaKeys(
 ): Promise<unknown> {
   try {
     let ret: unknown;
-    /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       ret = elt.setMediaKeys(mediaKeys as MediaKeys);
     }
-    /* eslint-enable @typescript-eslint/unbound-method */
 
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary

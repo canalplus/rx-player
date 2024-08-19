@@ -1,11 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type IBufferBasedChooser from "../buffer_based_chooser";
 import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe("BufferBasedChooser", () => {
   beforeEach(() => {
@@ -17,8 +12,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([]);
     bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
@@ -79,8 +74,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     const bbc = new BufferBasedChooser([10, 20]);
     bbc.onAddedSegment({
@@ -101,8 +96,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -164,8 +159,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -227,8 +222,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -281,8 +276,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -314,8 +309,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -368,8 +363,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -422,8 +417,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -485,8 +480,8 @@ describe("BufferBasedChooser", () => {
     vi.doMock("../../../log", () => ({
       default: logger,
     }));
-    const BufferBasedChooser = ((await vi.importActual("../buffer_based_chooser")) as any)
-      .default;
+    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
+      .default as typeof IBufferBasedChooser;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({

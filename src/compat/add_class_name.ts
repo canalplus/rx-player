@@ -26,9 +26,8 @@ export default function addClassName(elt: HTMLElement, className: string): void 
   if (hasClassList === undefined) {
     hasClassList =
       elt.classList !== undefined &&
-      /* eslint-disable @typescript-eslint/unbound-method */
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       typeof elt.classList.add === "function";
-    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   if (hasClassList) {

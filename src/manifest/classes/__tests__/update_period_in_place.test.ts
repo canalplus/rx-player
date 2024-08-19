@@ -5,8 +5,6 @@ import type Period from "../period";
 import { MANIFEST_UPDATE_TYPE } from "../types";
 import updatePeriodInPlace from "../update_period_in_place";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 const oldVideoRepresentation1 = {
   id: "rep-video-1",
   getMetadataSnapshot() {

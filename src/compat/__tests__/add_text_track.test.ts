@@ -1,13 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-
-// Needed for calling require (which itself is needed to mock properly) because
-// it is not type-checked:
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IAddTextTrack from "../add_text_track";
 
 describe("compat - addTextTrack", () => {
   beforeEach(() => {
@@ -29,7 +22,8 @@ describe("compat - addTextTrack", () => {
     vi.doMock("../browser_detection", () => ({
       isIEOrEdge: true,
     }));
-    const { default: addTextTrack } = (await vi.importActual("../add_text_track")) as any;
+    const addTextTrack = (await vi.importActual("../add_text_track"))
+      .default as typeof IAddTextTrack;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -58,7 +52,8 @@ describe("compat - addTextTrack", () => {
       isIEOrEdge: true,
     }));
 
-    const { default: addTextTrack } = (await vi.importActual("../add_text_track")) as any;
+    const addTextTrack = (await vi.importActual("../add_text_track"))
+      .default as typeof IAddTextTrack;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -72,7 +67,8 @@ describe("compat - addTextTrack", () => {
     vi.doMock("../browser_detection", () => ({
       isIEOrEdge: false,
     }));
-    const { default: addTextTrack } = (await vi.importActual("../add_text_track")) as any;
+    const addTextTrack = (await vi.importActual("../add_text_track"))
+      .default as typeof IAddTextTrack;
 
     const fakeTextTrack = {
       id: "textTrack1",
@@ -87,7 +83,7 @@ describe("compat - addTextTrack", () => {
     const fakeTextTracks: TextTrack[] = [];
     const fakeChildNodes: ChildNode[] = [];
 
-    const mockAppendChild = vi.fn((_trackElement) => {
+    const mockAppendChild = vi.fn((_trackElement: HTMLTrackElement) => {
       fakeChildNodes.push(_trackElement);
       fakeTextTracks.push(_trackElement.track);
     });

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-
 /**
  * Run the demo server
  * =========================
@@ -43,15 +41,11 @@ launchStaticServer(join(projectRootDirectory, "demo/"), {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
     `Usage: node start_demo_web_server.mjs [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).`,
-    /* eslint-enable indent */
   );
-  /* eslint-enable no-console */
 }

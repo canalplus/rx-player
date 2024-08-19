@@ -58,7 +58,7 @@ export interface IConstructorOptions {
   videoResolutionLimit?: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden?: boolean;
 
-  /* eslint-disable-next-line @typescript-eslint/no-restricted-types */
+  // eslint-disable-next-line @typescript-eslint/no-restricted-types
   videoElement?: HTMLMediaElement;
   baseBandwidth?: number;
 }
@@ -393,8 +393,7 @@ export type ISegmentLoader = (
       totalSize?: number | undefined;
     }) => void;
   },
-) => // returns either the aborting callback or nothing
-(() => void) | void;
+) => (() => void) | void; // returns either the aborting callback or nothing
 
 /** Context given to a segment loader. */
 export interface ISegmentLoaderContext {
@@ -509,8 +508,7 @@ export type IManifestLoader = (
     reject: (err?: Error) => void;
     fallback: () => void;
   },
-) => // returns either the aborting callback or nothing
-(() => void) | void;
+) => (() => void) | void; // returns either the aborting callback or nothing
 
 export interface IManifestLoaderInfo {
   /** URL at which the wanted Manifest can be accessed. */
@@ -538,7 +536,9 @@ export interface IKeySystemOption {
     messageType: string,
   ) => Promise<BufferSource | null> | BufferSource | null;
   /** Supplementary optional configuration for the getLicense call. */
-  getLicenseConfig?: { retry?: number; timeout?: number };
+  getLicenseConfig?:
+    | { retry?: number | undefined; timeout?: number | undefined }
+    | undefined;
   /**
    * Optional `serverCertificate` we will try to set to speed-up the
    * license-fetching process.
@@ -1089,9 +1089,8 @@ export interface ITrackUpdateEventPayload {
 export interface IRepresentationListUpdateContext {
   period: IPeriod;
   trackType: ITrackType;
-  /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   reason: "decipherability-update" | string;
-  /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 export interface ILockedVideoRepresentationsSettings {

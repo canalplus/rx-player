@@ -1,10 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IGetProbedConfiguration from "../capabilities";
+import type { ICapabilitiesTypes } from "../capabilities";
 
 describe("MediaCapabilitiesProber - getProbedConfiguration", () => {
   it("should return result from filtered configuration", async () => {
@@ -15,10 +11,14 @@ describe("MediaCapabilitiesProber - getProbedConfiguration", () => {
       extend: mockExtend,
       filterConfigurationWithCapabilities: mockFilterConfigurationWithCapabilities,
     }));
-    const getProbedConfiguration = ((await vi.importActual("../capabilities")) as any)
-      .default;
-    expect(getProbedConfiguration({}, ["Athos", "Portos", "Aramis"])).toEqual(
-      expectedResult,
-    );
+    const getProbedConfiguration = (await vi.importActual("../capabilities"))
+      .default as typeof IGetProbedConfiguration;
+    expect(
+      getProbedConfiguration({}, [
+        "Athos",
+        "Portos",
+        "Aramis",
+      ] as unknown as ICapabilitiesTypes[]),
+    ).toEqual(expectedResult);
   });
 });

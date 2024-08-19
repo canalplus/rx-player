@@ -42,12 +42,12 @@ import parseCue from "./parse_cue";
 export default function parseTTMLToDiv(str: string, timeOffset: number): ITTMLHTMLCue[] {
   const parsedCues = parseTtml(str, timeOffset);
   const cues: ITTMLHTMLCue[] = [];
-  for (let i = 0; i < parsedCues.length; i++) {
-    const { paragraphStyle } = parsedCues[i];
+  for (const parsedCue of parsedCues) {
+    const { paragraphStyle } = parsedCue;
     if (shouldApplyDefaultTTMLStyle(paragraphStyle)) {
       applyDefaultTTMLStyle(paragraphStyle);
     }
-    const cue = parseCue(parsedCues[i]);
+    const cue = parseCue(parsedCue);
     if (cue !== null) {
       cues.push(cue);
     }

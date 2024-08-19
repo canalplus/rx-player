@@ -41,10 +41,11 @@ export function generateContentProtectionAttrParser(
       case AttributeName.ContentProtectionValue:
         cpAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
-      case AttributeName.ContentProtectionKeyId:
+      case AttributeName.ContentProtectionKeyId: {
         const kid = parseString(textDecoder, linearMemory.buffer, ptr, len);
         cpAttrs.keyId = hexToBytes(kid.replace(/-/g, ""));
         break;
+      }
       case AttributeName.ContentProtectionCencPSSH:
         try {
           const b64 = parseString(textDecoder, linearMemory.buffer, ptr, len);

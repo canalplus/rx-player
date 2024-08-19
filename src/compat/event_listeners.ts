@@ -151,20 +151,16 @@ function createCompatibleEventListener(
         (element as IEventEmitterLike).addEventListener(eventName, listener);
       } else {
         hasSetOnFn = true;
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (element as any)["on" + eventName] = listener;
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       }
       cancelSignal.register(() => {
         if (typeof element.removeEventListener === "function") {
           (element as IEventEmitterLike).removeEventListener(eventName, listener);
         }
         if (hasSetOnFn) {
-          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
           delete (element as any)["on" + eventName];
-          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         }
       });
     });

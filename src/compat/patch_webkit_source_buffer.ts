@@ -20,29 +20,45 @@ import isNode from "../utils/is_node";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import queueMicrotask from "../utils/queue_microtask";
 
-type IWebKitSourceBufferConstructor = new () => IWebKitSourceBuffer;
+interface IWebKitSourceBufferConstructor {
+  new (): IWebKitSourceBuffer;
+  prototype: IWebKitSourceBuffer;
+}
 
-interface IWebKitSourceBuffer {
-  append(data: ArrayBuffer): void;
+interface IWebKitSourceBuffer
+  extends EventEmitter<{
+    updatestart: Event;
+    update: Event;
+    updateend: Event;
+    error: Event | Error;
+  }> {
+  _emitUpdate?: (eventName: "error" | "update", val: unknown) => void;
+  appendBuffer?: (data: BufferSource) => void;
+  updating: boolean;
+  append(data: BufferSource): void;
   remove(from: number, to: number): void;
 }
 
 // TODO This is the last ugly side-effect here.
 // Either remove it or find the best way to implement that
 export default function patchWebkitSourceBuffer(): void {
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-disable @typescript-eslint/no-unsafe-call */
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   // old WebKit SourceBuffer implementation,
   // where a synchronous append is used instead of appendBuffer
   if (
     !isNode &&
-    !isNullOrUndefined((globalScope as any).WebKitSourceBuffer) &&
-    (globalScope as any).WebKitSourceBuffer.prototype.addEventListener === undefined
+    !isNullOrUndefined(
+      (
+        globalScope as typeof globalScope & {
+          WebKitSourceBuffer?: IWebKitSourceBufferConstructor;
+        }
+      ).WebKitSourceBuffer,
+    ) &&
+    (
+      globalScope as typeof globalScope & {
+        WebKitSourceBuffer: IWebKitSourceBufferConstructor;
+      }
+    ).WebKitSourceBuffer.prototype.addEventListener === undefined
   ) {
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     const sourceBufferWebkitRef: IWebKitSourceBufferConstructor = (
       globalScope as unknown as {
         WebKitSourceBuffer: IWebKitSourceBufferConstructor;
@@ -52,42 +68,45 @@ export default function patchWebkitSourceBuffer(): void {
 
     for (const fnName in EventEmitter.prototype) {
       if (EventEmitter.prototype.hasOwnProperty(fnName)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sourceBufferWebkitProto[fnName] = (EventEmitter.prototype as any)[fnName];
+        (sourceBufferWebkitProto as unknown as Record<string, unknown>)[fnName] = (
+          EventEmitter.prototype as unknown as Record<string, unknown>
+        )[fnName];
       }
     }
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
-    sourceBufferWebkitProto._listeners = [];
+    (
+      sourceBufferWebkitProto as unknown as {
+        _listeners: Array<() => void>;
+      }
+    )._listeners = [];
 
-    sourceBufferWebkitProto._emitUpdate = function (eventName: string, val: unknown) {
+    sourceBufferWebkitProto._emitUpdate = function (
+      eventName: "error" | "update",
+      val: unknown,
+    ) {
       queueMicrotask(() => {
-        /* eslint-disable no-invalid-this */
-        this.trigger(eventName, val);
+        // @ts-expect-error: trigger is normally protected
+        this.trigger(eventName, val as Event);
         this.updating = false;
-        this.trigger("updateend");
-        /* eslint-enable no-invalid-this */
+        // @ts-expect-error: trigger is normally protected
+        this.trigger("updateend", new Event("updateend"));
       });
     };
 
-    sourceBufferWebkitProto.appendBuffer = function (data: unknown) {
-      /* eslint-disable no-invalid-this */
-      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+    sourceBufferWebkitProto.appendBuffer = function (data: BufferSource) {
       if (this.updating) {
         throw new Error("updating");
       }
-      this.trigger("updatestart");
+      // @ts-expect-error: trigger is normally protected
+      this.trigger("updatestart", new Event("updatestart"));
       this.updating = true;
       try {
         this.append(data);
       } catch (error) {
-        this._emitUpdate("error", error);
+        this._emitUpdate?.("error", error);
         return;
       }
-      this._emitUpdate("update");
-      /* eslint-enable no-invalid-this */
+      this._emitUpdate?.("update", new Event("update"));
     };
   }
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-enable @typescript-eslint/no-unsafe-call */
 }

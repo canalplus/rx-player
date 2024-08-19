@@ -33,16 +33,13 @@ export type {
   IAdaptiveRepresentationSelectorArguments,
   IABRThrottlers,
   IResolutionInfo,
-
   // Fetchers Metadata
   IManifestFetcherSettings,
   ISegmentFetcherCreatorBackoffOptions,
-
   // Media Sinks Metadata
   IBufferType,
   IBufferedChunk,
   ITextDisplayerInterface,
-
   // Stream Metadata
   IAdaptationChoice,
   IInbandEvent,

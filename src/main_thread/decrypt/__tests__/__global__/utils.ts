@@ -1,24 +1,14 @@
 import type { MockInstance } from "vitest";
 import { vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable no-restricted-properties */
-
 import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
 import type { IEmeApiImplementation, IEncryptedEventData } from "../../../../compat/eme";
+import type { IKeySystemOption } from "../../../../public_types";
 import { base64ToBytes, bytesToBase64 } from "../../../../utils/base64";
 import EventEmitter from "../../../../utils/event_emitter";
 import flatMap from "../../../../utils/flat_map";
 import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type IContentDecryptor from "../../content_decryptor";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultKSConfig: MediaKeySystemConfiguration[] = [
@@ -182,6 +172,7 @@ export class MediaKeySessionImpl extends EventEmitter<Record<string, unknown>> {
   public generateRequest(initDataType: string, initData: BufferSource): Promise<void> {
     const msg = formatFakeChallengeFromInitData(initData, initDataType);
     setTimeout(() => {
+      // eslint-disable-next-line no-restricted-properties
       const event: MediaKeyMessageEvent = Object.assign(new CustomEvent("message"), {
         message: msg.buffer,
         messageType: "license-request" as const,
@@ -385,7 +376,11 @@ export function mockCompat(
   const mockGenerateKeyRequest = vi
     .fn()
     .mockImplementation(
-      (mks: MediaKeySessionImpl, initializationDataType, initializationData) => {
+      (
+        mks: MediaKeySessionImpl,
+        initializationDataType: string,
+        initializationData: BufferSource,
+      ) => {
         return mks.generateRequest(initializationDataType, initializationData);
       },
     );
@@ -460,13 +455,14 @@ export function mockCompat(
  * @returns {Promise}
  */
 export function testContentDecryptorError(
-  ContentDecryptor: any,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ContentDecryptor: typeof IContentDecryptor,
   mediaElement: IMediaElement,
-  keySystemsConfigs: unknown[],
-): Promise<unknown> {
+  keySystemsConfigs: IKeySystemOption[],
+): Promise<Error> {
   return new Promise((res, rej) => {
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystemsConfigs);
-    contentDecryptor.addEventListener("error", (error: any) => {
+    contentDecryptor.addEventListener("error", (error) => {
       res(error);
     });
     setTimeout(() => {

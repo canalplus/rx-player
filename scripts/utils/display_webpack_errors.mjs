@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 /**
  * Format errors returned by webpack and display it through a `console.log`
  * call.
@@ -7,7 +5,6 @@
  * @param {Array.<Object>} warnings
  */
 export default function displayWebpackErrors(errors, warnings) {
-  /* eslint-disable no-console */
   for (let i = 0; i < warnings.length; i++) {
     const warning = warnings[i];
     if (warning.loaderSource != null) {
@@ -29,5 +26,4 @@ export default function displayWebpackErrors(errors, warnings) {
   if (errors.length || warnings.length) {
     console.log();
   }
-  /* eslint-enable no-console */
 }

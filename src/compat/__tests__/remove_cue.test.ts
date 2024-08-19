@@ -1,12 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import arrayFindIndex from "../../utils/array_find_index";
+import type IRemoveCue from "../remove_cue";
 
 describe("compat - removeCue", () => {
   beforeEach(() => {
@@ -14,7 +8,7 @@ describe("compat - removeCue", () => {
   });
 
   it("should remove cue from track if not on firefox", async () => {
-    const fakeTrackCues = [{ id: "1" }];
+    const fakeTrackCues = [{ id: "1" }] as unknown as TextTrackCue[];
 
     const mockRemoveCue = vi.fn((cue: { id: string }) => {
       const idx = arrayFindIndex(fakeTrackCues, (c) => {
@@ -37,16 +31,17 @@ describe("compat - removeCue", () => {
       cues: fakeTrackCues,
       activeCues: [],
       removeCue: mockRemoveCue,
-    };
+    } as unknown as TextTrack;
 
     vi.doMock("../browser_detection", () => ({
       isFirefox: false,
     }));
 
-    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
-    removeCue(fakeTrack, { id: "1" });
+    const removeCue = (await vi.importActual("../remove_cue"))
+      .default as typeof IRemoveCue;
+    removeCue(fakeTrack, { id: "1" } as unknown as TextTrackCue);
 
-    expect(fakeTrack.cues.length).toBe(0);
+    expect(fakeTrack.cues?.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockGetMode).not.toHaveBeenCalled();
     expect(mockSetMode).not.toHaveBeenCalled();
@@ -55,7 +50,7 @@ describe("compat - removeCue", () => {
   });
 
   it("should remove cue from track if on firefox and is active cue", async () => {
-    const fakeCue = { id: "1" };
+    const fakeCue = { id: "1" } as unknown as TextTrackCue;
     const fakeTrackCues = [fakeCue];
     let fakeMode = "showing";
 
@@ -84,16 +79,17 @@ describe("compat - removeCue", () => {
       cues: fakeTrackCues,
       activeCues: fakeTrackCues,
       removeCue: mockRemoveCue,
-    };
+    } as unknown as TextTrack;
 
     vi.doMock("../browser_detection", () => ({
       isFirefox: true,
     }));
 
-    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
+    const removeCue = (await vi.importActual("../remove_cue"))
+      .default as typeof IRemoveCue;
     removeCue(fakeTrack, fakeCue);
 
-    expect(fakeTrack.cues.length).toBe(0);
+    expect(fakeTrack.cues?.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockGetMode).toHaveBeenCalledTimes(1);
     expect(mockSetMode).toHaveBeenCalledTimes(2);
@@ -102,7 +98,7 @@ describe("compat - removeCue", () => {
   });
 
   it("should remove cue from track if on firefox and is not active cue", async () => {
-    const fakeCue = { id: "1" };
+    const fakeCue = { id: "1" } as unknown as TextTrackCue;
     const fakeTrackCue = [fakeCue];
     let fakeMode = "showing";
 
@@ -131,16 +127,17 @@ describe("compat - removeCue", () => {
       cues: fakeTrackCue,
       activeCues: [],
       removeCue: mockRemoveCue,
-    };
+    } as unknown as TextTrack;
 
     vi.doMock("../browser_detection", () => ({
       isFirefox: true,
     }));
 
-    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
+    const removeCue = (await vi.importActual("../remove_cue"))
+      .default as typeof IRemoveCue;
     removeCue(fakeTrack, fakeCue);
 
-    expect(fakeTrack.cues.length).toBe(0);
+    expect(fakeTrack.cues?.length).toBe(0);
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockGetMode).not.toHaveBeenCalled();
     expect(mockSetMode).not.toHaveBeenCalled();
@@ -149,12 +146,12 @@ describe("compat - removeCue", () => {
   });
 
   it("should log if removeCue throws if on firefox and is active cue", async () => {
-    const fakeCue = { id: "1" };
+    const fakeCue: TextTrackCue = { id: "1" } as unknown as TextTrackCue;
     const fakeTrackCues = [fakeCue];
     const mockRemoveCue = vi.fn(() => {
       throw new Error();
     });
-    const mockLog = vi.fn((message) => message);
+    const mockLog = vi.fn((message: unknown) => message);
 
     vi.doMock("../browser_detection", () => ({
       isFirefox: true,
@@ -165,17 +162,18 @@ describe("compat - removeCue", () => {
       },
     }));
 
-    const fakeTrack = {
+    const fakeTrack: TextTrack = {
       mode: "showing",
       cues: fakeTrackCues,
       activeCues: fakeTrackCues,
       removeCue: mockRemoveCue,
-    };
+    } as unknown as TextTrack;
 
-    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
+    const removeCue = (await vi.importActual("../remove_cue"))
+      .default as typeof IRemoveCue;
     removeCue(fakeTrack, fakeCue);
 
-    expect(fakeTrack.cues.length).toBe(1);
+    expect(fakeTrack.cues?.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith("Compat: Could not remove cue from text track.");
@@ -184,7 +182,7 @@ describe("compat - removeCue", () => {
   });
 
   it("should log if removeCue throws if not on firefox", async () => {
-    const mockLog = vi.fn((message) => message);
+    const mockLog = vi.fn((message: unknown) => message);
     const mockRemoveCue = vi.fn(() => {
       throw new Error();
     });
@@ -202,12 +200,13 @@ describe("compat - removeCue", () => {
       mode: "showing",
       cues: [{ id: "1" }],
       removeCue: mockRemoveCue,
-    };
+    } as unknown as TextTrack;
 
-    const removeCue = ((await vi.importActual("../remove_cue")) as any).default;
-    removeCue(fakeTrack, { id: "1" });
+    const removeCue = (await vi.importActual("../remove_cue"))
+      .default as typeof IRemoveCue;
+    removeCue(fakeTrack, { id: "1" } as unknown as TextTrackCue);
 
-    expect(fakeTrack.cues.length).toBe(1);
+    expect(fakeTrack.cues?.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith("Compat: Could not remove cue from text track.");

@@ -1,10 +1,9 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IPeriod from "../period";
+import type {
+  replacePeriods as IReplacePeriods,
+  updatePeriods as IUpatePeriods,
+} from "../update_periods";
 
 const MANIFEST_UPDATE_TYPE = {
   Full: 0,
@@ -22,16 +21,17 @@ function generateFakePeriod({
   start,
   end,
 }: {
-  id?: string | undefined;
-  start?: number;
+  id: string;
+  start?: number | undefined;
   end?: number | undefined;
-}) {
+}): IPeriod {
   return {
     id: id ?? String(start),
     start: start ?? 0,
     end,
     duration: end === undefined ? undefined : end - (start ?? 0),
     streamEvents: [],
+    adaptations: {},
     refreshCodecSupport() {
       // noop
     },
@@ -41,8 +41,8 @@ function generateFakePeriod({
     getAdaptationsForType() {
       return [];
     },
-    getAdaptation() {
-      return;
+    getAdaptation(): undefined {
+      return undefined;
     },
     getSupportedAdaptations() {
       return [];
@@ -84,8 +84,8 @@ describe("Manifest - replacePeriods", () => {
     ];
     const initialPeriods = oldPeriods.slice();
     const newPeriods = [generateFakePeriod({ id: "p2" })];
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -131,8 +131,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p2" }),
       generateFakePeriod({ id: "p3" }),
     ];
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
@@ -175,8 +175,8 @@ describe("Manifest - replacePeriods", () => {
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1" })];
     const newPeriods = [generateFakePeriod({ id: "p2" })];
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[0].getMetadataSnapshot()],
@@ -212,8 +212,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p3" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -272,8 +272,8 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p2" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[0].getMetadataSnapshot()],
@@ -309,12 +309,12 @@ describe("Manifest - replacePeriods", () => {
       default: fakeUpdatePeriodInPlace,
     }));
     const oldPeriods = [
-      generateFakePeriod({ id: "p1" }),
-      generateFakePeriod({ id: "p2" }),
+      generateFakePeriod({ id: "p1", start: 0 }),
+      generateFakePeriod({ id: "p2", start: 0 }),
     ];
-    const newPeriods = [] as any[];
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const newPeriods = [] as IPeriod[];
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -339,13 +339,13 @@ describe("Manifest - replacePeriods", () => {
     vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [] as any[];
+    const oldPeriods = [] as IPeriod[];
     const newPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const replacePeriods = ((await vi.importActual("../update_periods")) as any)
-      .replacePeriods;
+    const replacePeriods = (await vi.importActual("../update_periods"))
+      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -385,8 +385,8 @@ describe("Manifest - updatePeriods", () => {
     const newPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
     const initialPeriods = oldPeriods.slice();
 
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -426,8 +426,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
@@ -464,8 +464,8 @@ describe("Manifest - updatePeriods", () => {
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "p3", start: 70, end: 80 })];
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
 
     let error: unknown = null;
     try {
@@ -515,8 +515,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -576,8 +576,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p2", start: 70 }),
     ];
 
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
 
     let error: unknown = null;
     try {
@@ -617,9 +617,9 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const newPeriods = [] as any[];
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const newPeriods = [] as IPeriod[];
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -643,13 +643,13 @@ describe("Manifest - updatePeriods", () => {
     vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
-    const oldPeriods = [] as any[];
+    const oldPeriods = [] as IPeriod[];
     const newPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -676,8 +676,8 @@ describe("Manifest - updatePeriods", () => {
     vi.doMock("../update_period_in_place", () => ({
       default: fakeUpdatePeriodInPlace,
     }));
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
@@ -721,8 +721,8 @@ describe("Manifest - updatePeriods", () => {
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "p2", start: 60, end: 80 })];
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
 
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
@@ -749,8 +749,8 @@ describe("Manifest - updatePeriods", () => {
     }));
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "px", start: 50, end: 70 })];
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
 
     let error: unknown = null;
     try {
@@ -797,8 +797,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[2].getMetadataSnapshot()],
@@ -857,8 +857,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -917,8 +917,8 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
       generateFakePeriod({ id: "p3", start: 80, end: 90 }),
     ];
-    const updatePeriods = ((await vi.importActual("../update_periods")) as any)
-      .updatePeriods;
+    const updatePeriods = (await vi.importActual("../update_periods"))
+      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],

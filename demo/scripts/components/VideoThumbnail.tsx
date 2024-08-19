@@ -89,7 +89,7 @@ export default function VideoThumbnail({
           } else {
             hideSpinner();
 
-            /* eslint-disable-next-line no-console */
+            // eslint-disable-next-line no-console
             console.error("Error while loading thumbnails:", err);
           }
         });

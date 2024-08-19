@@ -86,7 +86,7 @@ export default class MainMediaSourceInterface
     const mediaSource = new MediaSource_();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
     this.handle = isNullOrUndefined(handle)
-      ? /* eslint-disable-next-line @typescript-eslint/no-restricted-types */
+      ? // eslint-disable-next-line @typescript-eslint/no-restricted-types
         { type: "media-source", value: mediaSource as unknown as MediaSource }
       : { type: "handle", value: handle };
     this._mediaSource = mediaSource;

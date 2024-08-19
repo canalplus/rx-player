@@ -1,19 +1,23 @@
 import type { MockInstance } from "vitest";
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import config from "../../../config";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
+  IAudioTrackSwitchingMode,
+  IKeySystemOption,
+  ILoadVideoOptions,
+  IStartAtOption,
+} from "../../../public_types";
+import type {
+  parseConstructorOptions as IParseConstructorOptions,
+  parseLoadVideoOptions as IParseLoadVideoOptions,
+  checkReloadOptions as ICheckReloadOptions,
+} from "../option_utils";
 
 let warnOnceMock: MockInstance;
 let logWarnMock: MockInstance;
 
 describe("API - parseConstructorOptions", () => {
-  let parseConstructorOptions: any;
+  let parseConstructorOptions: typeof IParseConstructorOptions;
   beforeEach(async () => {
     warnOnceMock = vi.fn();
     logWarnMock = vi.fn();
@@ -28,8 +32,8 @@ describe("API - parseConstructorOptions", () => {
     vi.doMock("../../../utils/warn_once", () => {
       return { default: warnOnceMock };
     });
-    const imports = (await vi.importActual("../option_utils")) as any;
-    parseConstructorOptions = imports.parseConstructorOptions;
+    parseConstructorOptions = (await vi.importActual("../option_utils"))
+      .parseConstructorOptions as typeof IParseConstructorOptions;
   });
 
   afterEach(() => {
@@ -173,45 +177,85 @@ describe("API - parseConstructorOptions", () => {
   });
 
   it("should throw if the maxBufferAhead given is not a number", () => {
-    expect(() => parseConstructorOptions({ maxBufferAhead: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxBufferAhead: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxBufferAhead: {} as any })).toThrow();
+    expect(() =>
+      parseConstructorOptions({ maxBufferAhead: "a" as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ maxBufferAhead: /a/ as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ maxBufferAhead: {} as unknown as number }),
+    ).toThrow();
   });
 
   it("should throw if the maxBufferBehind given is not a number", () => {
-    expect(() => parseConstructorOptions({ maxBufferBehind: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxBufferBehind: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ maxBufferBehind: {} as any })).toThrow();
+    expect(() =>
+      parseConstructorOptions({ maxBufferBehind: "a" as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ maxBufferBehind: /a/ as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ maxBufferBehind: {} as unknown as number }),
+    ).toThrow();
   });
 
   it("should throw if the wantedBufferAhead given is not a number", () => {
-    expect(() => parseConstructorOptions({ wantedBufferAhead: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ wantedBufferAhead: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ wantedBufferAhead: {} as any })).toThrow();
+    expect(() =>
+      parseConstructorOptions({ wantedBufferAhead: "a" as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ wantedBufferAhead: /a/ as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ wantedBufferAhead: {} as unknown as number }),
+    ).toThrow();
   });
 
   it("should throw if the videoElement given is not an HTMLMediaElement", () => {
-    expect(() => parseConstructorOptions({ videoElement: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ videoElement: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ videoElement: {} as any })).toThrow();
-    expect(() => parseConstructorOptions({ videoElement: [] as any })).toThrow();
-    expect(() => parseConstructorOptions({ videoElement: 0 as any })).toThrow();
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-restricted-types
+      parseConstructorOptions({ videoElement: "a" as unknown as HTMLMediaElement }),
+    ).toThrow();
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-restricted-types
+      parseConstructorOptions({ videoElement: /a/ as unknown as HTMLMediaElement }),
+    ).toThrow();
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-restricted-types
+      parseConstructorOptions({ videoElement: {} as unknown as HTMLMediaElement }),
+    ).toThrow();
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-restricted-types
+      parseConstructorOptions({ videoElement: [] as unknown as HTMLMediaElement }),
+    ).toThrow();
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-restricted-types
+      parseConstructorOptions({ videoElement: 0 as unknown as HTMLMediaElement }),
+    ).toThrow();
     expect(() =>
       parseConstructorOptions({
-        videoElement: document.createElement("div") as any,
+        // eslint-disable-next-line @typescript-eslint/no-restricted-types
+        videoElement: document.createElement("div") as unknown as HTMLMediaElement,
       }),
     ).toThrow();
   });
 
   it("should throw if the baseBandwidth given is not a number", () => {
-    expect(() => parseConstructorOptions({ baseBandwidth: "a" as any })).toThrow();
-    expect(() => parseConstructorOptions({ baseBandwidth: /a/ as any })).toThrow();
-    expect(() => parseConstructorOptions({ baseBandwidth: {} as any })).toThrow();
+    expect(() =>
+      parseConstructorOptions({ baseBandwidth: "a" as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ baseBandwidth: /a/ as unknown as number }),
+    ).toThrow();
+    expect(() =>
+      parseConstructorOptions({ baseBandwidth: {} as unknown as number }),
+    ).toThrow();
   });
 });
 
 describe("API - parseLoadVideoOptions", () => {
-  let parseLoadVideoOptions: any;
+  let parseLoadVideoOptions: typeof IParseLoadVideoOptions;
   beforeEach(async () => {
     warnOnceMock = vi.fn();
     logWarnMock = vi.fn();
@@ -226,8 +270,8 @@ describe("API - parseLoadVideoOptions", () => {
     vi.doMock("../../../utils/warn_once", () => {
       return { default: warnOnceMock };
     });
-    const imports = (await vi.importActual("../option_utils")) as any;
-    parseLoadVideoOptions = imports.parseLoadVideoOptions;
+    parseLoadVideoOptions = (await vi.importActual("../option_utils"))
+      .parseLoadVideoOptions as typeof IParseLoadVideoOptions;
   });
 
   afterEach(() => {
@@ -260,10 +304,10 @@ describe("API - parseLoadVideoOptions", () => {
   };
 
   it("should throw if no option is given", () => {
-    let err;
-    let opt;
+    let err: unknown;
+    let opt: unknown;
     try {
-      opt = parseLoadVideoOptions();
+      opt = (parseLoadVideoOptions as unknown as () => void)();
     } catch (e) {
       err = e;
     }
@@ -278,12 +322,12 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw if no url nor custom Manifest loader is given", () => {
-    let err1;
-    let opt1;
-    let err2;
-    let opt2;
+    let err1: unknown;
+    let opt1: unknown;
+    let err2: unknown;
+    let opt2: unknown;
     try {
-      opt1 = parseLoadVideoOptions({});
+      opt1 = parseLoadVideoOptions({} as unknown as ILoadVideoOptions);
     } catch (e) {
       err1 = e;
     }
@@ -321,10 +365,10 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should throw if no transport is given", () => {
-    let err;
-    let opt;
+    let err: unknown;
+    let opt: unknown;
     try {
-      opt = parseLoadVideoOptions({ url: "foo" });
+      opt = parseLoadVideoOptions({ url: "foo" } as unknown as ILoadVideoOptions);
     } catch (e) {
       err = e;
     }
@@ -450,7 +494,7 @@ describe("API - parseLoadVideoOptions", () => {
     };
     expect(
       parseLoadVideoOptions({
-        keySystems: keySystem1 as any,
+        keySystems: keySystem1 as unknown as IKeySystemOption[],
         url: "foo",
         transport: "bar",
       }),
@@ -476,13 +520,13 @@ describe("API - parseLoadVideoOptions", () => {
 
   it("should throw when setting an invalid keySystems option", () => {
     {
-      let err;
-      let opt;
+      let err: unknown;
+      let opt: unknown;
       try {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          keySystems: {} as any,
+          keySystems: {} as unknown as IKeySystemOption[],
         });
       } catch (e) {
         err = e;
@@ -499,13 +543,13 @@ describe("API - parseLoadVideoOptions", () => {
       );
     }
     {
-      let err;
-      let opt;
+      let err: unknown;
+      let opt: unknown;
       try {
         opt = parseLoadVideoOptions({
           url: "foo",
           transport: "bar",
-          keySystems: { type: "test" } as any,
+          keySystems: { type: "test" } as unknown as IKeySystemOption[],
         });
       } catch (e) {
         err = e;
@@ -522,8 +566,8 @@ describe("API - parseLoadVideoOptions", () => {
       );
     }
     {
-      let err;
-      let opt;
+      let err: unknown;
+      let opt: unknown;
       try {
         opt = parseLoadVideoOptions({
           url: "foo",
@@ -532,7 +576,7 @@ describe("API - parseLoadVideoOptions", () => {
             getLicense: () => {
               return new Uint8Array([]);
             },
-          } as any,
+          } as unknown as IKeySystemOption[],
         });
       } catch (e) {
         err = e;
@@ -638,7 +682,7 @@ describe("API - parseLoadVideoOptions", () => {
     logWarnMock.mockReturnValue(undefined);
     expect(
       parseLoadVideoOptions({
-        defaultAudioTrackSwitchingMode: "foo-bar" as any,
+        defaultAudioTrackSwitchingMode: "foo-bar" as unknown as IAudioTrackSwitchingMode,
         url: "foo",
         transport: "bar",
       }),
@@ -705,7 +749,7 @@ describe("API - parseLoadVideoOptions", () => {
     logWarnMock.mockReturnValue(undefined);
     expect(
       parseLoadVideoOptions({
-        onCodecSwitch: "foo-bar" as any,
+        onCodecSwitch: "foo-bar" as unknown as "continue",
         url: "foo",
         transport: "bar",
       }),
@@ -830,7 +874,7 @@ If badly set, continue will be used as default`,
       parseLoadVideoOptions({
         url: "foo",
         transport: "bar",
-        startAt: { a: 12 } as any,
+        startAt: { a: 12 } as unknown as IStartAtOption,
       }),
     ).toEqual({
       ...defaultLoadVideoOptions,
@@ -926,11 +970,11 @@ If badly set, continue will be used as default`,
   });
 
   it("should throw when setting an invalid textTrackMode option", () => {
-    let err;
-    let opt;
+    let err: unknown;
+    let opt: unknown;
     try {
       opt = parseLoadVideoOptions({
-        textTrackMode: "toto" as any,
+        textTrackMode: "toto" as unknown as "html",
         url: "foo",
         transport: "bar",
       });
@@ -948,8 +992,8 @@ If badly set, continue will be used as default`,
   });
 
   it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
-    let err;
-    let opt;
+    let err: unknown;
+    let opt: unknown;
     try {
       opt = parseLoadVideoOptions({
         textTrackMode: "html",
@@ -972,15 +1016,15 @@ If badly set, continue will be used as default`,
   });
 
   it("should throw when setting an html textTrackMode option with no textTrackElement", () => {
-    let err;
-    let opt;
+    let err: unknown;
+    let opt: unknown;
     const textTrackElement = {};
     try {
       opt = parseLoadVideoOptions({
         textTrackMode: "html",
         url: "foo",
         transport: "bar",
-        textTrackElement: textTrackElement as any,
+        textTrackElement: textTrackElement as unknown as HTMLElement,
       });
     } catch (e) {
       err = e;
@@ -1029,10 +1073,10 @@ If badly set, continue will be used as default`,
 });
 
 describe("API - checkReloadOptions", () => {
-  let checkReloadOptions: any;
+  let checkReloadOptions: typeof ICheckReloadOptions;
   beforeEach(async () => {
-    const imports = (await vi.importActual("../option_utils")) as any;
-    checkReloadOptions = imports.checkReloadOptions;
+    checkReloadOptions = (await vi.importActual("../option_utils"))
+      .checkReloadOptions as typeof ICheckReloadOptions;
   });
   it("Should valid undefined options", () => {
     const options = undefined;
@@ -1060,7 +1104,7 @@ describe("API - checkReloadOptions", () => {
   });
   it("Should throw when invalid options", () => {
     const options = null;
-    expect(() => checkReloadOptions(options as any)).toThrow(
+    expect(() => checkReloadOptions(options as unknown as object)).toThrow(
       "API: reload - Invalid options format.",
     );
   });
@@ -1068,7 +1112,7 @@ describe("API - checkReloadOptions", () => {
     const options = {
       reloadAt: 3,
     };
-    expect(() => checkReloadOptions(options as any)).toThrow(
+    expect(() => checkReloadOptions(options as unknown as object)).toThrow(
       "API: reload - Invalid 'reloadAt' option format.",
     );
   });
@@ -1078,7 +1122,7 @@ describe("API - checkReloadOptions", () => {
         position: "3",
       },
     };
-    expect(() => checkReloadOptions(options as any)).toThrow(
+    expect(() => checkReloadOptions(options as unknown as object)).toThrow(
       "API: reload - Invalid 'reloadAt.position' option format.",
     );
   });
@@ -1088,7 +1132,7 @@ describe("API - checkReloadOptions", () => {
         relative: "3",
       },
     };
-    expect(() => checkReloadOptions(options as any)).toThrow(
+    expect(() => checkReloadOptions(options as unknown as object)).toThrow(
       "API: reload - Invalid 'reloadAt.relative' option format.",
     );
   });

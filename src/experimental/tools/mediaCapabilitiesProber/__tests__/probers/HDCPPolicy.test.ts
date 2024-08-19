@@ -1,12 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
+import type IProbeHDCPPolicy from "../../probers/HDCPPolicy";
 import { ProberStatus } from "../../types";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-restricted-properties */
 
 describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
   afterEach(() => {
@@ -17,13 +11,12 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     vi.doMock("../../../../../compat/eme", () => ({
       default: vi.fn(),
     }));
-    const probeHDCPPolicy = ((await vi.importActual("../../probers/HDCPPolicy")) as any)
-      .default;
-    /* eslint-disable @typescript-eslint/no-floating-promises */
+    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
+      .default as typeof IProbeHDCPPolicy;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: API not available",
     );
-    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should throw if no hdcp attribute in config", async () => {
@@ -37,14 +30,13 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
       },
     }));
-    const probeHDCPPolicy = ((await vi.importActual("../../probers/HDCPPolicy")) as any)
-      .default;
-    /* eslint-disable @typescript-eslint/no-floating-promises */
+    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
+      .default as typeof IProbeHDCPPolicy;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     expect(probeHDCPPolicy({})).rejects.toEqual(
       "MediaCapabilitiesProber >>> API_CALL: " +
         "Missing policy argument for calling getStatusForPolicy.",
     );
-    /* eslint-enable @typescript-eslint/no-floating-promises */
   });
 
   it("should resolve with `Unknown` if no getStatusForPolicy API", async () => {
@@ -62,8 +54,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       },
     }));
 
-    const probeHDCPPolicy = ((await vi.importActual("../../probers/HDCPPolicy")) as any)
-      .default;
+    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
+      .default as typeof IProbeHDCPPolicy;
 
     await probeHDCPPolicy({ hdcp: "1.1" }).then(([res]: [unknown]) => {
       expect(res).toEqual(ProberStatus.Unknown);
@@ -89,8 +81,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       },
     }));
 
-    const probeHDCPPolicy = ((await vi.importActual("../../probers/HDCPPolicy")) as any)
-      .default;
+    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
+      .default as typeof IProbeHDCPPolicy;
 
     await probeHDCPPolicy({ hdcp: "1.1" }).then(([res]: [unknown]) => {
       expect(res).toEqual(ProberStatus.Supported);
@@ -116,8 +108,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       },
     }));
 
-    const probeHDCPPolicy = ((await vi.importActual("../../probers/HDCPPolicy")) as any)
-      .default;
+    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
+      .default as typeof IProbeHDCPPolicy;
     await probeHDCPPolicy({ hdcp: "1.1" }).then(([res]: [unknown]) => {
       expect(res).toEqual(ProberStatus.NotSupported);
       expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
