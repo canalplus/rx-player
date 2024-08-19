@@ -101,7 +101,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     if (actualFormat === "full" && actualFormat !== this._currentFormat) {
       // Add the current Date so we can see at which time logs are displayed
       const now = getMonotonicTimeStamp();
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/nursery/noConsole:
       console.log(String(now.toFixed(2)), "[Init]", `Local-Date: ${Date.now()}`);
     }
     this._currentFormat = actualFormat;

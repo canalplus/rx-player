@@ -21,5 +21,5 @@
  * is needed.
  * Also, it allows to avoid telling eslint to ignore empty blocks everywhere.
  */
-// eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+// biome-ignore lint/suspicious/noEmptyBlockStatements: that's like the whole point
 export default function (): void {}

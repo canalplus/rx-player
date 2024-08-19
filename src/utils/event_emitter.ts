@@ -147,7 +147,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
         }
         // Cannot use our logger here sadly because our logger is an `EventEmitter`
         // itself.
-        // eslint-disable-next-line no-console
+        // biome-ignore lint/nursery/noConsole:
         console.error("RxPlayer: EventEmitter error", e instanceof Error ? e : null);
       }
     });

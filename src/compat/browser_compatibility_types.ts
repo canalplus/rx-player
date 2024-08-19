@@ -300,7 +300,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
 }
 
 // @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
+// biome-ignore: lint/correctness/noUnusedVariables:
 function testMediaElement(x: HTMLMediaElement) {
   assertCompatibleIMediaElement(x);
 }

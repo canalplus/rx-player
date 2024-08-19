@@ -1,0 +1,90 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "formatter": { "indentStyle": "space", "lineWidth": 90 },
+  "organizeImports": { "enabled": true },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noForEach": "off",
+        "noStaticOnlyClass": "error",
+        "noUselessTypeConstraint": "error",
+        "noVoid": "error",
+        "useArrowFunction": "off",
+        "useLiteralKeys": "error",
+        "useOptionalChain": "off"
+      },
+      "correctness": {
+        "noInvalidConstructorSuper": "error",
+        "noInvalidUseBeforeDeclaration": "error",
+        "noUnsafeFinally": "error",
+        "noUnusedLabels": "error",
+        "noUnusedVariables": "error",
+        "noVoidTypeReturn": "off",
+        "useArrayLiterals": "off",
+        "useIsNan": "error"
+      },
+      "nursery": {
+        "noConsole": "warn",
+        "noDuplicateElseIf": "error",
+        "noDuplicateJsonKeys": "error",
+        "noEmptyBlock": "warn",
+        "noEvolvingTypes": "off"
+      },
+      "security": { "noGlobalEval": "error" },
+      "style": {
+        "noCommaOperator": "error",
+        "noDefaultExport": "off",
+        "noInferrableTypes": "off",
+        "noNamespace": "error",
+        "noNonNullAssertion": "error",
+        "noParameterAssign": "error",
+        "noUselessElse": "off",
+        "noVar": "error",
+        "useAsConstAssertion": "error",
+        "useBlockStatements": "error",
+        "useConsistentArrayType": "off",
+        "useConst": "error",
+        "useEnumInitializers": "off",
+        "useExponentiationOperator": "off",
+        "useForOf": "off",
+        "useNumberNamespace": "off",
+        "useShorthandFunctionType": "error",
+        "useSingleVarDeclarator": "error",
+        "useTemplate": "off"
+      },
+      "suspicious": {
+        "noConfusingVoidType": "off",
+        "noConstEnum": "off",
+        "noDebugger": "error",
+        "noDoubleEquals": "error",
+        "noDuplicateCase": "error",
+        "noEmptyBlockStatements": "error",
+        "noExplicitAny": "error",
+        "noExtraNonNullAssertion": "error",
+        "noFallthroughSwitchClause": "error",
+        "noGlobalAssign": "off",
+        "noGlobalIsFinite": "off",
+        "noGlobalIsNan": "off",
+        "noImplicitAnyLet": "off",
+        "noMisleadingInstantiator": "error",
+        "noUnsafeDeclarationMerging": "error",
+        "useAwait": "off",
+        "useNamespaceKeyword": "error",
+        "useValidTypeof": "error"
+      }
+    },
+    "ignore": [
+      "**/node_modules",
+      "**/*.log",
+      "**/*.keys",
+      "demo/bundle.js",
+      "demo/lib.js",
+      "tools/tests/coverage/",
+      "dist/*",
+      "**/test-output.xml",
+      "./src/__GENERATED_CODE"
+    ]
+  }
+}

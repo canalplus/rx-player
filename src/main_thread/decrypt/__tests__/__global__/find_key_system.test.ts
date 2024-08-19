@@ -2,6 +2,7 @@ import type { MockInstance } from "vitest";
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import * as compat from "../../../../compat/can_rely_on_request_media_key_system_access";
 import eme from "../../../../compat/eme";
+import noop from "../../../../utils/noop";
 import { testKeySystem } from "../../find_key_system";
 
 describe("find_key_systems - ", () => {
@@ -21,8 +22,7 @@ describe("find_key_systems - ", () => {
     requestMediaKeySystemAccessMock.mockImplementation(() => ({
       createMediaKeys: () => ({
         createSession: () => ({
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          generateRequest: () => {},
+          generateRequest: () => noop,
         }),
       }),
     }));

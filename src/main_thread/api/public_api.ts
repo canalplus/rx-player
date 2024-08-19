@@ -359,7 +359,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         "The video element is already attached to another RxPlayer instance." +
         "\nMake sure to dispose the previous instance with player.dispose() before creating" +
         " a new player instance attaching that video element.";
-      // eslint-disable-next-line no-console
+      // biome-ignore lint/nursery/noConsole:
       console.warn(errorMessage);
       /*
        * TODO: for next major version 5.0: this need to throw an error instead of just logging
