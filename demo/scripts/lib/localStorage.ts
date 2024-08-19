@@ -4,7 +4,7 @@ const { localStorage } = window;
 export const hasLocalStorage = !!localStorage;
 
 if (!hasLocalStorage) {
-  /* eslint-disable-next-line no-console */
+  // eslint-disable-next-line no-console
   console.warn(
     "`localStorage` is not available." +
       " You will not be able to store content information.",
@@ -33,7 +33,7 @@ export function getLocalStorageContents(): IStoredContentInfo[] {
       const parsed = JSON.parse(localContentItems) as IStoredContentInfo[];
       localStorageContents.push(...parsed);
     } catch (err) {
-      /* eslint-disable-next-line */
+      // eslint-disable-next-line
       console.warn("Demo: Can't parse local storage content.");
     }
   }

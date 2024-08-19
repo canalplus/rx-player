@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import noop from "../../../../utils/noop";
 import type {
   CancellationError,
   CancellationSignal,
@@ -7,13 +8,6 @@ import TaskCanceller from "../../../../utils/task_canceller";
 import type { ITaskFn } from "../task_prioritizer";
 import TaskPrioritizer from "../task_prioritizer";
 
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-// function assert(condition: boolean, msg?: string): asserts condition {
-//   if (!condition) {
-//     throw new Error(msg ?? "The asserted condition turned out to be false.");
-//   }
-// }
 function generateTaskFunction<T>(res: T): ITaskFn<T> {
   return (cancelSignal: CancellationSignal) => {
     return new Promise((resolve, reject) => {
@@ -112,7 +106,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task1).toHaveBeenCalledTimes(1);
         expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).toHaveBeenCalledTimes(1);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -137,7 +131,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task1).toHaveBeenCalledTimes(1);
         expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).toHaveBeenCalledTimes(1);
-      });
+      }, noop);
 
     const prom = prioritizer
       .create(
@@ -207,7 +201,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task1).toHaveBeenCalledTimes(1);
         expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).toHaveBeenCalledTimes(1);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -232,7 +226,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(task1).toHaveBeenCalledTimes(1);
         expect(task2).toHaveBeenCalledTimes(1);
         expect(task3).toHaveBeenCalledTimes(1);
-      });
+      }, noop);
 
     const prom = prioritizer
       .create(
@@ -302,7 +296,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(0);
         expect(was1Ended).toEqual(true);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -327,7 +321,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(was1Ended).toEqual(true);
         expect(was2Interrupted).toEqual(0);
         expect(was2Ended).toEqual(true);
-      });
+      }, noop);
 
     const prom = prioritizer
       .create(
@@ -431,7 +425,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(2);
         expect(was2Interrupted).toEqual(0);
         expect(was2Ended).toEqual(true);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -458,7 +452,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(3);
         expect(was3Interrupted).toEqual(0);
         expect(was3Ended).toEqual(true);
-      });
+      }, noop);
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(0);
@@ -535,7 +529,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(2);
         expect(was2Interrupted).toEqual(0);
         expect(was2Ended).toEqual(true);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -562,7 +556,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(3);
         expect(was3Interrupted).toEqual(0);
         expect(was3Ended).toEqual(true);
-      });
+      }, noop);
 
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(0);
@@ -643,7 +637,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(2);
         expect(was2Interrupted).toEqual(0);
         expect(was2Ended).toEqual(true);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -670,7 +664,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(3);
         expect(was3Interrupted).toEqual(0);
         expect(was3Ended).toEqual(true);
-      });
+      }, noop);
     expect(task1).toHaveBeenCalledTimes(2);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(0);
@@ -747,7 +741,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(2);
         expect(was2Interrupted).toEqual(1);
         expect(was2Ended).toEqual(true);
-      });
+      }, noop);
 
     prioritizer
       .create(
@@ -774,7 +768,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(3);
         expect(was3Interrupted).toEqual(0);
         expect(was3Ended).toEqual(true);
-      });
+      }, noop);
     expect(task1).toHaveBeenCalledTimes(2);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(task3).toHaveBeenCalledTimes(0);
@@ -852,7 +846,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(2);
         expect(was2Interrupted).toEqual(0);
         expect(was2Ended).toEqual(true);
-      });
+      }, noop);
     expect(task1).toHaveBeenCalledTimes(1);
     expect(task2).toHaveBeenCalledTimes(1);
     expect(was1Interrupted).toEqual(0);
@@ -901,7 +895,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
         expect(val).toEqual(1);
         expect(was1Interrupted).toEqual(0);
         expect(was1Ended).toEqual(true);
-      });
+      }, noop);
 
     const prom = prioritizer
       .create(

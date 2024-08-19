@@ -53,15 +53,16 @@ describe("TextTrackCuesStore - insert()", () => {
     ];
 
     // small hack to access class private property with bracket notation without having ts errors
-    /* eslint-disable @typescript-eslint/dot-notation */
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("bye"), start: 1, end: 2 }],
       1,
       2,
     );
 
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 
   it("inserting strictly before existing cue", () => {
@@ -90,13 +91,15 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("hello"), start: 0, end: 1 }],
       0,
       1,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 
   it("inserting between two cues", () => {
@@ -135,13 +138,15 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("bye"), start: 1, end: 2 }],
       1,
       2,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 
   it("replacing current cues", () => {
@@ -165,13 +170,15 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("hi"), start: 0, end: 1 }],
       0,
       1,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 
   it("inserting cues that partially replace existing cues", () => {
@@ -200,13 +207,15 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("hi"), start: 0, end: 1 }],
       0,
       1,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
   it("inserting cues that replace existing cues and go beyond", () => {
     //   ours:            |AAAAAAA|
@@ -229,13 +238,15 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("how are you?"), start: 0, end: 2 }],
       0,
       2,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 
   it("inserting after previous one with parsing approximation", () => {
@@ -264,13 +275,15 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("how are you?"), start: 1, end: 2 }],
       1,
       2,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 
   it("inserting cues that replace existing cues and go beyond with parsing approximation", () => {
@@ -299,12 +312,14 @@ describe("TextTrackCuesStore - insert()", () => {
       },
     ];
 
-    textTrackCuesStore["_cuesBuffer"] = currentCues;
+    // @ts-expect-error: property is normally private
+    textTrackCuesStore._cuesBuffer = currentCues;
     textTrackCuesStore.insert(
       [{ element: createCueElement("hi"), start: 10, end: 12 }],
       10,
       12,
     );
-    expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
+    // @ts-expect-error: property is normally private
+    expect(textTrackCuesStore._cuesBuffer).toEqual(expectedCues);
   });
 });

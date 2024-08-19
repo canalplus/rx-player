@@ -1,12 +1,9 @@
 import { describe, it, expect } from "vitest";
 import assert, { assertInterface, assertUnreachable, AssertionError } from "../assert";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 describe("utils - assert", () => {
   it("should throw an error if the assertion is false", () => {
-    let error;
+    let error: unknown;
     try {
       assert(false);
     } catch (e) {
@@ -24,7 +21,7 @@ describe("utils - assert", () => {
 
   it("should be able to take a message argument", () => {
     const myMessage = "foo bar\n\r";
-    let error;
+    let error: unknown;
     try {
       assert(false, myMessage);
     } catch (e) {
@@ -47,7 +44,7 @@ describe("utils - assert", () => {
 
 describe("utils - assertInterface", () => {
   it("should throw if undefined or null is given", () => {
-    let error;
+    let error: unknown;
     const nameOfMyObj = "toto titi";
 
     const objIface = {
@@ -88,16 +85,16 @@ describe("utils - assertInterface", () => {
   });
 
   it("should throw if the concerned interface is not respected", () => {
-    let error;
+    let error: unknown;
     const nameOfMyObj = "toto titi";
     const myObj = {
       a: 45,
       b: {
         c: "toto",
       },
-      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
-      d: () => {},
-      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
+      d: () => {
+        /* noop */
+      },
       e: true,
     };
 
@@ -114,9 +111,7 @@ describe("utils - assertInterface", () => {
     } catch (e) {
       error = e;
     }
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
     expect(error).toBeDefined();
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
 
     expect(error).toBeInstanceOf(Error);
 
@@ -129,15 +124,15 @@ describe("utils - assertInterface", () => {
   });
 
   it("should name the interface 'object' if no name is specified", () => {
-    let error;
+    let error: unknown;
     const myObj = {
       a: 45,
       b: {
         c: "toto",
       },
-      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
-      d: () => {},
-      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
+      d: () => {
+        /* noop */
+      },
       e: true,
     };
 
@@ -171,9 +166,9 @@ describe("utils - assertInterface", () => {
       b: {
         c: "toto",
       },
-      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
-      d: () => {},
-      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
+      d: () => {
+        /* noop */
+      },
       e: true,
     };
 
@@ -194,14 +189,13 @@ describe("utils - assertInterface", () => {
       b: {
         c: "toto",
       },
-      /* eslint-disable no-empty,@typescript-eslint/no-empty-function */
-      d: () => {},
-      /* eslint-enable no-empty,@typescript-eslint/no-empty-function */
+      d: () => {
+        /* noop */
+      },
       e: true,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Object.prototype as any).f = "number";
+    (Object.prototype as { f?: string }).f = "number";
 
     const objIface = {
       a: "number",
@@ -225,7 +219,7 @@ describe("utils - AssertionError", () => {
 
 describe("utils - assertUnreachable", () => {
   it("should throw an error if the function is called", () => {
-    let error;
+    let error: unknown;
     try {
       assertUnreachable(4 as never);
     } catch (e: unknown) {

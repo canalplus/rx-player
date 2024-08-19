@@ -1,13 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import globalScope from "../../utils/global_scope";
 
-// Needed for calling require (which itself is needed to mock properly) because
-// it is not type-checked:
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-
 describe("compat - browser compatibility types", () => {
   interface IFakeWindow {
     MediaSource?: unknown;

@@ -8,14 +8,14 @@ describe("Features list - DASH WASM Parser", () => {
   it("should add DASH WASM parser in the current features", () => {
     const mockInitialize = vi
       .spyOn(DashWasmParser.prototype, "initialize")
-      .mockImplementation(vi.fn());
+      .mockImplementation(vi.fn(() => Promise.resolve()));
 
     const DASH_WASM = dashWasmFeature;
     expect(mockInitialize).not.toHaveBeenCalled();
 
-    /* eslint-disable @typescript-eslint/no-floating-promises */
-    DASH_WASM.initialize({ wasmUrl: "blank" });
-    /* eslint-enable @typescript-eslint/no-floating-promises */
+    DASH_WASM.initialize({ wasmUrl: "blank" }).catch(() => {
+      /* noop */
+    });
 
     expect(mockInitialize).toHaveBeenCalledTimes(1);
 

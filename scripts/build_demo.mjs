@@ -151,9 +151,7 @@ export default function buildDemo(options) {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
     `Usage: node build_demo.mjs [options]
 Options:
   -h, --help             Display this help
@@ -161,8 +159,5 @@ Options:
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
   -w, --watch            Re-build each time either the demo or library files change
   --include-wasm         The demo will be able to request the WebAssembly MPD parser (if available).`,
-
-    /* eslint-enable indent */
   );
-  /* eslint-enable no-console */
 }

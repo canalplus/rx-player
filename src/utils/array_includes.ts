@@ -56,10 +56,8 @@ export default function arrayIncludes<T>(
   searchElement: T,
   fromIndex?: number,
 ): boolean {
-  /* eslint-disable @typescript-eslint/unbound-method */
-  // eslint-disable-next-line no-restricted-properties
+  // eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
   if (typeof Array.prototype.includes === "function") {
-    /* eslint-enable @typescript-eslint/unbound-method */
     // eslint-disable-next-line no-restricted-properties
     return arr.includes(searchElement, fromIndex);
   }

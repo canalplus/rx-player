@@ -79,7 +79,7 @@ function ControlBar({
   const onLiveDotClick = React.useCallback(() => {
     const livePos = livePosition ?? maximumPosition;
     if (livePos == null) {
-      /* eslint-disable-next-line no-console */
+      // eslint-disable-next-line no-console
       console.error("Cannot go back to live: live position not found");
       return;
     }

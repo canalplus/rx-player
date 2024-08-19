@@ -47,9 +47,7 @@ export default function isCodecSupported(mimeType: string): boolean {
     return false;
   }
 
-  /* eslint-disable @typescript-eslint/unbound-method */
   if (typeof MediaSource_.isTypeSupported === "function") {
-    /* eslint-enable @typescript-eslint/unbound-method */
     const cachedSupport = supportMap.get(mimeType);
     if (cachedSupport !== undefined) {
       return cachedSupport;

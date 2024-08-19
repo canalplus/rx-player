@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IGetClockOffset from "../get_clock_offset";
 
 describe("DASH Parser - getClockOffset", () => {
   beforeEach(() => {
@@ -17,8 +12,8 @@ describe("DASH Parser - getClockOffset", () => {
       default: { warn: mockWarn },
     }));
 
-    const getClockOffset = ((await vi.importActual("../get_clock_offset")) as any)
-      .default;
+    const getClockOffset = (await vi.importActual("../get_clock_offset"))
+      .default as typeof IGetClockOffset;
     const mockDate = vi
       .spyOn(performance, "now")
       .mockReturnValue(Date.parse("2019-03-24T13:00:00Z"));
@@ -33,8 +28,8 @@ describe("DASH Parser - getClockOffset", () => {
     vi.doMock("../../../../../log", () => ({
       default: { warn: mockWarn },
     }));
-    const getClockOffset = ((await vi.importActual("../get_clock_offset")) as any)
-      .default;
+    const getClockOffset = (await vi.importActual("../get_clock_offset"))
+      .default as typeof IGetClockOffset;
 
     expect(getClockOffset("2018/412/13")).toEqual(undefined);
     expect(mockWarn).toHaveBeenCalledTimes(1);

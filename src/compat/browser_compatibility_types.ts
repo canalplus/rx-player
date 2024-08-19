@@ -299,8 +299,8 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   videoTracks?: ICompatVideoTrackList;
 }
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types */
 // @ts-expect-error unused function, just used for compile-time typechecking
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
 function testMediaElement(x: HTMLMediaElement) {
   assertCompatibleIMediaElement(x);
 }
@@ -308,6 +308,7 @@ function assertCompatibleIMediaElement(_x: IMediaElement) {
   // Noop
 }
 // @ts-expect-error unused function, just used for compile-time typechecking
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
 function testMediaSource(x: MediaSource) {
   assertCompatibleIMediaSource(x);
 }
@@ -315,6 +316,7 @@ function assertCompatibleIMediaSource(_x: IMediaSource) {
   // Noop
 }
 // @ts-expect-error unused function, just used for compile-time typechecking
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
 function testSourceBuffer(x: SourceBuffer) {
   assertCompatibleISourceBuffer(x);
 }
@@ -322,13 +324,13 @@ function assertCompatibleISourceBuffer(_x: ISourceBuffer) {
   // Noop
 }
 // @ts-expect-error unused function, just used for compile-time typechecking
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
 function testSourceBufferList(x: SourceBufferList) {
   assertCompatibleISourceBufferList(x);
 }
 function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
   // Noop
 }
-/* eslint-enable @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types */
 
 /**
  * AudioTrackList implementation (that TS forgot).

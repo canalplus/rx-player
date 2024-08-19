@@ -1,11 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import globalScope from "../../utils/global_scope";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IIsVTTCue from "../is_vtt_cue";
 
 describe("Compat - isVTTCue", () => {
   interface IFakeWindow {
@@ -27,8 +22,8 @@ describe("Compat - isVTTCue", () => {
     const originalVTTCue = globalScope.VTTCue;
     gs.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
-    const isVTTCue = (await vi.importActual("../is_vtt_cue")) as any;
-    expect(isVTTCue.default(cue)).toEqual(true);
+    const isVTTCue = (await vi.importActual("../is_vtt_cue")).default as typeof IIsVTTCue;
+    expect(isVTTCue(cue)).toEqual(true);
     globalScope.VTTCue = originalVTTCue;
   });
 
@@ -39,9 +34,9 @@ describe("Compat - isVTTCue", () => {
       startTime: 0,
       endTime: 10,
       text: "toto",
-    };
-    const isVTTCue = (await vi.importActual("../is_vtt_cue")) as any;
-    expect(isVTTCue.default(cue)).toEqual(false);
+    } as unknown as VTTCue;
+    const isVTTCue = (await vi.importActual("../is_vtt_cue")).default as typeof IIsVTTCue;
+    expect(isVTTCue(cue)).toEqual(false);
     globalScope.VTTCue = originalVTTCue;
   });
 
@@ -50,8 +45,8 @@ describe("Compat - isVTTCue", () => {
     gs.VTTCue = MockVTTCue;
     const cue = new VTTCue(0, 10, "");
     delete gs.VTTCue;
-    const isVTTCue = (await vi.importActual("../is_vtt_cue")) as any;
-    expect(isVTTCue.default(cue)).toEqual(false);
+    const isVTTCue = (await vi.importActual("../is_vtt_cue")).default as typeof IIsVTTCue;
+    expect(isVTTCue(cue)).toEqual(false);
     globalScope.VTTCue = originalVTTCue;
   });
 });

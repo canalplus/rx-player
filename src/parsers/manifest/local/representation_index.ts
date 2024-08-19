@@ -54,8 +54,7 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
     const startTime = up;
     const endTime = up + duration;
     const wantedSegments: ILocalIndexSegment[] = [];
-    for (let i = 0; i < this._index.segments.length; i++) {
-      const segment = this._index.segments[i];
+    for (const segment of this._index.segments) {
       const segmentStart = segment.time;
       if (endTime <= segmentStart) {
         break;

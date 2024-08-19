@@ -80,7 +80,7 @@ export function generateEventStreamAttrParser(
       case AttributeName.TimeScale:
         esAttrs.timescale = dataView.getFloat64(ptr, true);
         break;
-      case AttributeName.Namespace:
+      case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };
         let offset = ptr;
         const keySize = dataView.getUint32(offset);
@@ -99,6 +99,7 @@ export function generateEventStreamAttrParser(
           esAttrs.namespaces.push(xmlNs);
         }
         break;
+      }
     }
   };
 }
@@ -127,11 +128,12 @@ function generateEventAttrParser(
       case AttributeName.Id:
         eventAttr.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
-      case AttributeName.EventStreamEltRange:
+      case AttributeName.EventStreamEltRange: {
         const rangeStart = dataView.getFloat64(ptr, true);
         const rangeEnd = dataView.getFloat64(ptr + 8, true);
         eventAttr.eventStreamData = fullMpd.slice(rangeStart, rangeEnd);
         break;
+      }
     }
   };
 }

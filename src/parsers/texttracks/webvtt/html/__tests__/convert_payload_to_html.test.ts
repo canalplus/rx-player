@@ -1,11 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import globalScope from "../../../../../utils/global_scope";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IConvertPayloadToHTML from "../convert_payload_to_html";
 
 describe("parsers - webvtt - convertPayloadToHTML", () => {
   beforeEach(() => {
@@ -26,9 +21,6 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
 
     const origDOMParser = gs.DOMParser;
     gs.DOMParser = class MockDOMParser {
-      constructor() {
-        // Useless constructor in mock
-      }
       public parseFromString() {
         return spyParseFromString();
       }
@@ -39,9 +31,8 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       default: spy,
     }));
 
-    const convertPayloadToHTML = (
-      (await vi.importActual("../convert_payload_to_html")) as any
-    ).default;
+    const convertPayloadToHTML = (await vi.importActual("../convert_payload_to_html"))
+      .default as typeof IConvertPayloadToHTML;
     expect(convertPayloadToHTML("", {})).toEqual([]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
     expect(spy).not.toHaveBeenCalled();
@@ -75,17 +66,13 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
 
     const origDOMParser = gs.DOMParser;
     gs.DOMParser = class MockDOMParser {
-      constructor() {
-        // Useless constructor in mock
-      }
       public parseFromString() {
         return spyParseFromString();
       }
     };
 
-    const convertPayloadToHTML = (
-      (await vi.importActual("../convert_payload_to_html")) as any
-    ).default;
+    const convertPayloadToHTML = (await vi.importActual("../convert_payload_to_html"))
+      .default as typeof IConvertPayloadToHTML;
     expect(convertPayloadToHTML(innerText, {})).toEqual([bNode, span]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
     expect(spyCreateStyledElement).toHaveBeenCalledTimes(2);

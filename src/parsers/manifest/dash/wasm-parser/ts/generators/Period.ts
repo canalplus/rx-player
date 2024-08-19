@@ -183,7 +183,7 @@ export function generatePeriodAttrParser(
         periodAttrs.availabilityTimeComplete =
           new DataView(linearMemory.buffer).getUint8(0) === 0;
         break;
-      case AttributeName.Namespace:
+      case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };
         const dataView = new DataView(linearMemory.buffer);
         let offset = ptr;
@@ -203,6 +203,7 @@ export function generatePeriodAttrParser(
           periodAttrs.namespaces.push(xmlNs);
         }
         break;
+      }
     }
   };
 }

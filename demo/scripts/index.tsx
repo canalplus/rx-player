@@ -11,7 +11,7 @@ import Main from "./controllers/Main";
 window.onload = function (): void {
   const rootElt = document.getElementById("player-container");
   if (rootElt === null) {
-    /* eslint-disable-next-line no-console */
+    // eslint-disable-next-line no-console
     console.error("Error: missing `player-container` element");
     return;
   }

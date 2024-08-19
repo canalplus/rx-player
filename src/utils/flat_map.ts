@@ -29,11 +29,10 @@ type ArrayWithFlatMap<T> = T[] & {
  * @param {Function} fn
  */
 export default function flatMap<T, U>(originalArray: T[], fn: (arg: T) => U[] | U): U[] {
-  /* eslint-disable @typescript-eslint/unbound-method */
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   if (typeof (Array.prototype as ArrayWithFlatMap<T>).flatMap === "function") {
     return (originalArray as ArrayWithFlatMap<T>).flatMap(fn);
   }
-  /* eslint-enable @typescript-eslint/unbound-method */
 
   return originalArray.reduce((acc: U[], arg: T): U[] => {
     const r = fn(arg);

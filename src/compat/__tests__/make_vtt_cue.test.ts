@@ -1,11 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import globalScope from "../../utils/global_scope";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IMakeCue from "../make_vtt_cue";
 
 describe("Compat - makeVTTCue", () => {
   class MockVTTCue {
@@ -39,11 +34,11 @@ describe("Compat - makeVTTCue", () => {
     vi.doMock("../../log", () => ({
       default: mockLog,
     }));
-    const makeCue = (await vi.importActual("../make_vtt_cue")) as any;
+    const makeCue = (await vi.importActual("../make_vtt_cue")).default as typeof IMakeCue;
     let result: unknown;
     let error: unknown;
     try {
-      result = makeCue.default(5, 10, "toto");
+      result = makeCue(5, 10, "toto");
     } catch (e: unknown) {
       error = e;
     }
@@ -59,8 +54,8 @@ describe("Compat - makeVTTCue", () => {
     vi.doMock("../../log", () => ({
       default: mockLog,
     }));
-    const makeCue = (await vi.importActual("../make_vtt_cue")) as any;
-    const result = makeCue.default(12, 10, "toto");
+    const makeCue = (await vi.importActual("../make_vtt_cue")).default as typeof IMakeCue;
+    const result = makeCue(12, 10, "toto");
     expect(result).toBeNull();
     expect(mockLog.warn).toHaveBeenCalledTimes(1);
     expect(mockLog.warn).toHaveBeenCalledWith("Compat: Invalid cue times: 12 - 10");
@@ -72,8 +67,8 @@ describe("Compat - makeVTTCue", () => {
     vi.doMock("../../log", () => ({
       default: mockLog,
     }));
-    const makeCue = (await vi.importActual("../make_vtt_cue")) as any;
-    const result = makeCue.default(10, 12, "toto");
+    const makeCue = (await vi.importActual("../make_vtt_cue")).default as typeof IMakeCue;
+    const result = makeCue(10, 12, "toto");
     expect(result).toEqual(new MockVTTCue(10, 12, "toto"));
     expect(mockLog.warn).not.toHaveBeenCalled();
   });

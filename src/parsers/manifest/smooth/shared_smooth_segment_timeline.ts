@@ -200,11 +200,11 @@ export default class SharedSmoothSegmentTimeline {
     }
 
     this.refresh();
-    for (let i = 0; i < nextSegments.length; i++) {
+    for (const nextSeg of nextSegments) {
       addSegmentInfos(
         this.timeline,
         this.timescale,
-        nextSegments[i],
+        nextSeg,
         currentSegment.privateInfos.smoothMediaSegment,
       );
     }

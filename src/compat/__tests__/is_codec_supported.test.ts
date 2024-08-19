@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IIsCodecSupported from "../is_codec_supported";
 
 describe("Compat - isCodecSupported", () => {
   beforeEach(() => {
@@ -17,9 +12,10 @@ describe("Compat - isCodecSupported", () => {
         MediaSource_: undefined,
       };
     });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported")) as any;
-    expect(isCodecSupported.default("foo")).toEqual(false);
-    expect(isCodecSupported.default("")).toEqual(false);
+    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
+      .default as typeof IIsCodecSupported;
+    expect(isCodecSupported("foo")).toEqual(false);
+    expect(isCodecSupported("")).toEqual(false);
   });
 
   it("should return true in any case if the MediaSource does not have the right function", async () => {
@@ -28,9 +24,10 @@ describe("Compat - isCodecSupported", () => {
         MediaSource_: { isTypeSupported: undefined },
       };
     });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported")) as any;
-    expect(isCodecSupported.default("foo")).toEqual(true);
-    expect(isCodecSupported.default("")).toEqual(true);
+    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
+      .default as typeof IIsCodecSupported;
+    expect(isCodecSupported("foo")).toEqual(true);
+    expect(isCodecSupported("")).toEqual(true);
   });
 
   it("should return true if MediaSource.isTypeSupported returns true", async () => {
@@ -43,9 +40,10 @@ describe("Compat - isCodecSupported", () => {
         },
       };
     });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported")) as any;
-    expect(isCodecSupported.default("foo")).toEqual(true);
-    expect(isCodecSupported.default("")).toEqual(true);
+    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
+      .default as typeof IIsCodecSupported;
+    expect(isCodecSupported("foo")).toEqual(true);
+    expect(isCodecSupported("")).toEqual(true);
   });
 
   it("should return false if MediaSource.isTypeSupported returns false", async () => {
@@ -58,8 +56,9 @@ describe("Compat - isCodecSupported", () => {
         },
       };
     });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported")) as any;
-    expect(isCodecSupported.default("foo")).toEqual(false);
-    expect(isCodecSupported.default("")).toEqual(false);
+    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
+      .default as typeof IIsCodecSupported;
+    expect(isCodecSupported("foo")).toEqual(false);
+    expect(isCodecSupported("")).toEqual(false);
   });
 });

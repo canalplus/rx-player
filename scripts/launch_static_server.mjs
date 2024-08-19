@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-
 /**
  * Launch static server
  * ====================
@@ -117,7 +115,6 @@ export default function launchStaticServer(path, config) {
     function onHttpConnection(err) {
       if (err) {
         if (config.verbose) {
-          /* eslint-disable-next-line no-console */
           console.error(
             `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
               "Could not start static HTTP server:",
@@ -134,7 +131,6 @@ export default function launchStaticServer(path, config) {
         return;
       }
       httpServerStatus = "success";
-      /* eslint-disable-next-line no-console */
       console.log(
         `[${getHumanReadableHours()}] ` +
           `Listening HTTP at http://localhost:${config.httpPort}`,
@@ -147,7 +143,6 @@ export default function launchStaticServer(path, config) {
     function onHttpsConnection(err) {
       if (err) {
         if (config.verbose) {
-          /* eslint-disable-next-line no-console */
           console.error(
             `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
               "Could not start static HTTPS server:",
@@ -164,7 +159,6 @@ export default function launchStaticServer(path, config) {
         return;
       }
       httpsServerStatus = "success";
-      /* eslint-disable-next-line no-console */
       console.log(
         `[${getHumanReadableHours()}] ` +
           `Listening HTTPS at https://localhost:${config.httpsPort}`,

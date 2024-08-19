@@ -34,11 +34,7 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
         "MediaCapabilitiesProber >>> API_CALL: " + "MediaCapabilities API not available",
       );
     }
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    if (!("decodingInfo" in (navigator as any).mediaCapabilities)) {
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    if (!("decodingInfo" in navigator.mediaCapabilities)) {
       throw new Error(
         "MediaCapabilitiesProber >>> API_CALL: " + "Decoding Info not available",
       );
@@ -54,7 +50,6 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
 export default function probeDecodingInfos(
   config: IMediaConfiguration,
 ): Promise<[ProberStatus]> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return isMediaCapabilitiesAPIAvailable().then(() => {
     const hasVideoConfig =
       config.type !== undefined &&
@@ -86,21 +81,13 @@ export default function probeDecodingInfos(
       );
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    return (navigator as any).mediaCapabilities
-      .decodingInfo(config)
-      .then((result: IDecodingInfos) => {
+    return navigator.mediaCapabilities
+      .decodingInfo(config as unknown as MediaDecodingConfiguration)
+      .then((result: IDecodingInfos): [ProberStatus] => {
         return [result.supported ? ProberStatus.Supported : ProberStatus.NotSupported];
       })
       .catch(() => {
         return [ProberStatus.NotSupported];
       });
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
   });
 }

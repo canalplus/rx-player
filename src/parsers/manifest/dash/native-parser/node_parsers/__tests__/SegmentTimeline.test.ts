@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type SegmentTimelineParser from "../SegmentTimeline";
 
 describe("DASH Node parsers - SegmentTimeline", () => {
   beforeEach(() => {
@@ -12,8 +7,8 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   });
 
   it("should return a function to parse lazily the timeline", async () => {
-    const parseSegmentTimeline = ((await vi.importActual("../SegmentTimeline")) as any)
-      .default;
+    const parseSegmentTimeline = (await vi.importActual("../SegmentTimeline"))
+      .default as typeof SegmentTimelineParser;
 
     const element = new DOMParser().parseFromString("<Root><S /></Root>", "text/xml")
       .childNodes[0] as Element;
@@ -26,8 +21,8 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   });
 
   it("should return an empty HTMLCollection if no S element is present", async () => {
-    const parseSegmentTimeline = ((await vi.importActual("../SegmentTimeline")) as any)
-      .default;
+    const parseSegmentTimeline = (await vi.importActual("../SegmentTimeline"))
+      .default as typeof SegmentTimelineParser;
 
     const element = new DOMParser().parseFromString("<Root />", "text/xml")
       .childNodes[0] as Element;
@@ -43,8 +38,8 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   });
 
   it("should return an empty HTMLCollection for an Invalid XML", async () => {
-    const parseSegmentTimeline = ((await vi.importActual("../SegmentTimeline")) as any)
-      .default;
+    const parseSegmentTimeline = (await vi.importActual("../SegmentTimeline"))
+      .default as typeof SegmentTimelineParser;
 
     const element = new DOMParser().parseFromString(
       "<Root><S></S><S<S></Root>",
@@ -62,8 +57,8 @@ describe("DASH Node parsers - SegmentTimeline", () => {
   });
 
   it("should parse S elements only when called for the first time", async () => {
-    const parseSegmentTimeline = ((await vi.importActual("../SegmentTimeline")) as any)
-      .default;
+    const parseSegmentTimeline = (await vi.importActual("../SegmentTimeline"))
+      .default as typeof SegmentTimelineParser;
 
     const sElement1 = new DOMParser().parseFromString("<S>1</S>", "text/xml")
       .childNodes[0] as Element;

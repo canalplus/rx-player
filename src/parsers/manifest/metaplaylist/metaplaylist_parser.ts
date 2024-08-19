@@ -91,7 +91,7 @@ export default function parseMetaPlaylist(
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       parsedData = JSON.parse(data);
-    } catch (error) {
+    } catch (_error) {
       throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
     }
   } else {
@@ -118,8 +118,7 @@ export default function parseMetaPlaylist(
     throw new Error("MPL Parser: No content found.");
   }
   const ressources: Array<{ url: string; transportType: string }> = [];
-  for (let i = 0; i < contents.length; i++) {
-    const content = contents[i];
+  for (const content of contents) {
     if (
       isNullOrUndefined(content.url) ||
       isNullOrUndefined(content.startTime) ||

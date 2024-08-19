@@ -1,18 +1,12 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-restricted-properties */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-
+import type { IKeySystemOption } from "../../../../public_types";
+import type IContentDecryptor from "../../content_decryptor";
+import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
 import { MediaKeysImpl, MediaKeySystemAccessImpl, mockCompat } from "./utils";
 
 describe("decrypt - global tests - server certificate", () => {
   const mockGetLicense = vi.fn(() => {
-    return new Promise(() => {
+    return new Promise<BufferSource>(() => {
       /* noop */
     });
   });
@@ -20,10 +14,10 @@ describe("decrypt - global tests - server certificate", () => {
   /** Default video element used in our tests. */
   const videoElt = document.createElement("video");
 
-  const serverCertificate = [1, 2, 3];
+  const serverCertificate = new Uint8Array([1, 2, 3]);
 
   /** Default keySystems configuration used in our tests. */
-  const ksConfigCert = [
+  const ksConfigCert: IKeySystemOption[] = [
     {
       type: "com.widevine.alpha",
       getLicense: mockGetLicense,
@@ -52,13 +46,14 @@ describe("decrypt - global tests - server certificate", () => {
         return Promise.resolve(true);
       });
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
     return new Promise<void>((res) => {
-      contentDecryptor.addEventListener("stateChange", (state: any) => {
+      contentDecryptor.addEventListener("stateChange", (state) => {
         if (state === ContentDecryptorState.WaitingForAttachment) {
           contentDecryptor.removeEventListener("stateChange");
           setTimeout(() => {
@@ -95,12 +90,13 @@ describe("decrypt - global tests - server certificate", () => {
         return Promise.resolve(true);
       });
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state: any) => {
+    contentDecryptor.addEventListener("stateChange", (state) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         setTimeout(() => {
@@ -136,12 +132,13 @@ describe("decrypt - global tests - server certificate", () => {
         throw new Error("some error");
       });
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state: any) => {
+    contentDecryptor.addEventListener("stateChange", (state) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
@@ -149,7 +146,7 @@ describe("decrypt - global tests - server certificate", () => {
     });
 
     let warningsReceived = 0;
-    contentDecryptor.addEventListener("warning", (w: any) => {
+    contentDecryptor.addEventListener("warning", (w) => {
       expect(w.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
       expect(w.type).toEqual("ENCRYPTED_MEDIA_ERROR");
       warningsReceived++;
@@ -175,12 +172,13 @@ describe("decrypt - global tests - server certificate", () => {
         return Promise.reject(new Error("some error"));
       });
 
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state: any) => {
+    contentDecryptor.addEventListener("stateChange", (state) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         contentDecryptor.attach();
@@ -188,7 +186,7 @@ describe("decrypt - global tests - server certificate", () => {
     });
 
     let warningsReceived = 0;
-    contentDecryptor.addEventListener("warning", (w: any) => {
+    contentDecryptor.addEventListener("warning", (w) => {
       expect(w.code).toEqual("LICENSE_SERVER_CERTIFICATE_ERROR");
       expect(w.type).toEqual("ENCRYPTED_MEDIA_ERROR");
       warningsReceived++;
@@ -225,12 +223,13 @@ describe("decrypt - global tests - server certificate", () => {
       MediaKeysImpl.prototype,
       "setServerCertificate",
     );
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfigCert);
 
-    contentDecryptor.addEventListener("stateChange", (state: any) => {
+    contentDecryptor.addEventListener("stateChange", (state) => {
       if (state === ContentDecryptorState.WaitingForAttachment) {
         contentDecryptor.removeEventListener("stateChange");
         setTimeout(() => {

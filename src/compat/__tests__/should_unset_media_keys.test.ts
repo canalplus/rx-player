@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IShouldUnsetMediaKeys from "../should_unset_media_keys";
 
 describe("compat - shouldUnsetMediaKeys", () => {
   beforeEach(() => {
@@ -17,10 +12,9 @@ describe("compat - shouldUnsetMediaKeys", () => {
         isIE11: false,
       };
     });
-    const shouldUnsetMediaKeys = (await vi.importActual(
-      "../should_unset_media_keys",
-    )) as any;
-    expect(shouldUnsetMediaKeys.default()).toBe(false);
+    const shouldUnsetMediaKeys = (await vi.importActual("../should_unset_media_keys"))
+      .default as typeof IShouldUnsetMediaKeys;
+    expect(shouldUnsetMediaKeys()).toBe(false);
   });
 
   it("should return true if we are on IE11", async () => {
@@ -29,9 +23,8 @@ describe("compat - shouldUnsetMediaKeys", () => {
         isIE11: true,
       };
     });
-    const shouldUnsetMediaKeys = (await vi.importActual(
-      "../should_unset_media_keys",
-    )) as any;
-    expect(shouldUnsetMediaKeys.default()).toBe(true);
+    const shouldUnsetMediaKeys = (await vi.importActual("../should_unset_media_keys"))
+      .default as typeof IShouldUnsetMediaKeys;
+    expect(shouldUnsetMediaKeys()).toBe(true);
   });
 });

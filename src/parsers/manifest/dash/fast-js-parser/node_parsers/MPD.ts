@@ -59,19 +59,20 @@ function parseMPDChildren(
       continue;
     }
     switch (currentNode.tagName) {
-      case "BaseURL":
+      case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
         if (baseURLObj !== undefined) {
           baseURLs.push(baseURLObj);
         }
         warnings = warnings.concat(baseURLWarnings);
         break;
+      }
 
       case "Location":
         locations.push(textContent(currentNode.children));
         break;
 
-      case "Period":
+      case "Period": {
         const [period, periodWarnings] = createPeriodIntermediateRepresentation(
           currentNode,
           fullMpd,
@@ -79,13 +80,15 @@ function parseMPDChildren(
         periods.push(period);
         warnings = warnings.concat(periodWarnings);
         break;
+      }
 
-      case "UTCTiming":
+      case "UTCTiming": {
         const utcTiming = parseScheme(currentNode);
         utcTimings.push(utcTiming);
         break;
+      }
 
-      case "ContentProtection":
+      case "ContentProtection": {
         const [contentProtection, contentProtectionWarnings] =
           parseContentProtection(currentNode);
         if (contentProtectionWarnings.length > 0) {
@@ -95,6 +98,7 @@ function parseMPDChildren(
           contentProtections.push(contentProtection);
         }
         break;
+      }
     }
   }
   return [{ baseURLs, locations, periods, utcTimings, contentProtections }, warnings];

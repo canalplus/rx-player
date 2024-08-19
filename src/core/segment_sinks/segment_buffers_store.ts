@@ -21,6 +21,7 @@ import { SourceBufferType } from "../../mse";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import noop from "../../utils/noop";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IBufferType, SegmentSink } from "./implementations";
 import { AudioVideoSegmentSink } from "./implementations";
@@ -212,8 +213,8 @@ export default class SegmentSinksStore {
       return Promise.resolve();
     }
     return createCancellablePromise(cancelWaitSignal, (res) => {
-      /* eslint-disable-next-line prefer-const */
-      let onAddedOrDisabled: () => void;
+      // eslint-disable-next-line prefer-const
+      let onAddedOrDisabled: () => void = noop;
 
       const removeCallback = () => {
         const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);

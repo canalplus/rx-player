@@ -1,12 +1,8 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { ITNode } from "../../../../../../utils/xml-parser";
 import { parseXml } from "../../../../../../utils/xml-parser";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IParseSegmentURL from "../SegmentURL";
+import type { MPDError as IMPDError } from "../utils";
 
 describe("DASH Node Parsers - SegmentURL", () => {
   beforeEach(() => {
@@ -18,7 +14,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
     const element1 = parseXml("<Foo />")[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{}, []]);
 
@@ -34,7 +31,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
     const element1 = parseXml('<Foo mediaRange="10-100" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ mediaRange: [10, 100] }, []]);
 
@@ -50,8 +48,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
-    const MPDError = ((await vi.importActual("../utils")) as any).MPDError;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
+    const MPDError = (await vi.importActual("../utils")).MPDError as typeof IMPDError;
     const element1 = parseXml('<Foo mediaRange="a" />')[0] as ITNode;
     const error1 = new MPDError('`mediaRange` property has an unrecognized format "a"');
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
@@ -76,7 +75,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
     const element1 = parseXml('<Foo indexRange="0-100" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ indexRange: [0, 100] }, []]);
 
@@ -92,8 +92,9 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
-    const MPDError = ((await vi.importActual("../utils")) as any).MPDError;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
+    const MPDError = (await vi.importActual("../utils")).MPDError as typeof IMPDError;
     const element1 = parseXml('<Foo indexRange="a" />')[0] as ITNode;
     const error1 = new MPDError('`indexRange` property has an unrecognized format "a"');
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
@@ -116,7 +117,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
     const element1 = parseXml('<Foo media="a" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ media: "a" }, []]);
 
@@ -132,7 +134,8 @@ describe("DASH Node Parsers - SegmentURL", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseSegmentURL = ((await vi.importActual("../SegmentURL")) as any).default;
+    const parseSegmentURL = (await vi.importActual("../SegmentURL"))
+      .default as typeof IParseSegmentURL;
     const element1 = parseXml('<Foo index="a" />')[0] as ITNode;
     expect(parseSegmentURL(element1)).toEqual([{ index: "a" }, []]);
 

@@ -49,8 +49,8 @@ export default function parseSRTStringToHTML(
   const cueBlocks: string[][] = getCueBlocks(lines);
 
   const cues: ISRTHTMLCue[] = [];
-  for (let i = 0; i < cueBlocks.length; i++) {
-    const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
+  for (const cueBlock of cueBlocks) {
+    const cueObject = parseCueBlock(cueBlock, timeOffset);
     if (cueObject !== null) {
       const htmlCue = toHTML(cueObject);
       if (htmlCue !== null) {

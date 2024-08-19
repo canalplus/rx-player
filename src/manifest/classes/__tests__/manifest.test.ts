@@ -1,29 +1,40 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type {
+  IParsedAdaptation,
+  IParsedPeriod,
+  IParsedRepresentation,
+} from "../../../parsers/manifest";
 import type { IPlayerError } from "../../../public_types";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+import type IAdaptation from "../adaptation";
 import CodecSupportCache from "../codec_support_cache";
+import type IManifest from "../manifest";
+import type IPeriod from "../period";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-
-function generateParsedPeriod(id: string, start: number, end: number | undefined) {
+function generateParsedPeriod(
+  id: string,
+  start: number,
+  end: number | undefined,
+): IParsedPeriod {
   const adaptations = { audio: [generateParsedAudioAdaptation(id)] };
-  return { id, start, end, adaptations };
+  return {
+    id,
+    start,
+    end,
+    adaptations,
+    duration: end === undefined ? undefined : end - start,
+    streamEvents: [],
+  };
 }
-function generateParsedAudioAdaptation(id: string) {
+function generateParsedAudioAdaptation(id: string): IParsedAdaptation {
   return {
     id,
     type: "audio",
     representations: [generateParsedRepresentation(id)],
   };
 }
-function generateParsedRepresentation(id: string) {
-  return { id, bitrate: 100 };
+function generateParsedRepresentation(id: string): IParsedRepresentation {
+  return { id, bitrate: 100 } as IParsedRepresentation;
 }
 
 describe("Manifest - Manifest", () => {
@@ -51,6 +62,8 @@ describe("Manifest - Manifest", () => {
   it("should create a normalized Manifest structure", async () => {
     const simpleFakeManifest = {
       id: "man",
+      transportType: "dash",
+      isLastPeriodKnown: true,
       isDynamic: false,
       isLive: false,
       duration: 5,
@@ -58,6 +71,7 @@ describe("Manifest - Manifest", () => {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -66,7 +80,7 @@ describe("Manifest - Manifest", () => {
       periods: [],
     };
 
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const warnings: IPlayerError[] = [];
     const manifest = new Manifest(simpleFakeManifest, {}, warnings);
 
@@ -94,6 +108,8 @@ describe("Manifest - Manifest", () => {
     const period2 = generateParsedPeriod("1", 12, undefined);
     const simpleFakeManifest = {
       id: "man",
+      transportType: "dash",
+      isLastPeriodKnown: true,
       isDynamic: false,
       isLive: false,
       duration: 5,
@@ -101,6 +117,7 @@ describe("Manifest - Manifest", () => {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -109,14 +126,14 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn((period) => {
+    const fakePeriod = vi.fn((period: IPeriod) => {
       return { id: `foo${period.id}`, adaptations: period.adaptations };
     });
     vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
 
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(
@@ -150,12 +167,15 @@ describe("Manifest - Manifest", () => {
     const simpleFakeManifest = {
       id: "man",
       isDynamic: false,
+      transportType: "dash",
+      isLastPeriodKnown: true,
       isLive: false,
       duration: 5,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -168,17 +188,16 @@ describe("Manifest - Manifest", () => {
       return false;
     };
 
-    const fakePeriod = vi.fn((period) => {
-      return { id: `foo${period.id}` };
+    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+      return { id: `foo${period.id}` } as IPeriod;
     });
     vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
-    /* eslint-disable @typescript-eslint/no-unused-expressions */
-    new Manifest(simpleFakeManifest, { representationFilter }, []);
-    /* eslint-enable @typescript-eslint/no-unused-expressions */
+    const manifest = new Manifest(simpleFakeManifest, { representationFilter }, []);
+    expect(manifest).not.toBe(null);
 
     expect(fakePeriod).toHaveBeenCalledTimes(2);
     expect(fakePeriod).toHaveBeenCalledWith(
@@ -207,12 +226,15 @@ describe("Manifest - Manifest", () => {
     const simpleFakeManifest = {
       id: "man",
       isDynamic: false,
+      transportType: "dash",
+      isLastPeriodKnown: true,
       isLive: false,
       duration: 5,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -221,13 +243,13 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn((period) => {
-      return { ...period, id: `foo${period.id}` };
+    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+      return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
     vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
@@ -263,11 +285,14 @@ describe("Manifest - Manifest", () => {
       id: "man",
       isDynamic: false,
       isLive: false,
+      transportType: "dash",
+      isLastPeriodKnown: true,
       duration: 5,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -276,21 +301,23 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
-      unsupportedAdaptations.push({
-        type: "audio",
-        language: "",
-        normalized: "",
-        audioDescription: false,
-        id: period.adaptations.audio[0].id,
-        representations: period.adaptations.audio[0].representations,
-      });
-      return { ...period, id: `foo${period.id}` };
-    });
+    const fakePeriod = vi.fn(
+      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+        unsupportedAdaptations.push({
+          type: "audio",
+          language: "",
+          normalized: "",
+          audioDescription: false,
+          id: period.adaptations.audio?.[0].id ?? "a",
+          representations: period.adaptations.audio?.[0].representations ?? [],
+        } as unknown as IAdaptation);
+        return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
+      },
+    );
     vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
     const warnings: IPlayerError[] = [];
     new Manifest(simpleFakeManifest, {}, warnings);
@@ -303,8 +330,8 @@ describe("Manifest - Manifest", () => {
           language: "",
           normalized: "",
           audioDescription: false,
-          id: period1.adaptations.audio[0].id,
-          representations: period1.adaptations.audio[0].representations,
+          id: period1.adaptations.audio?.[0].id,
+          representations: period1.adaptations.audio?.[0].representations,
         },
         type: "audio",
       },
@@ -313,8 +340,8 @@ describe("Manifest - Manifest", () => {
           language: "",
           normalized: "",
           audioDescription: false,
-          id: period2.adaptations.audio[0].id,
-          representations: period2.adaptations.audio[0].representations,
+          id: period2.adaptations.audio?.[0].id,
+          representations: period2.adaptations.audio?.[0].representations,
         },
         type: "audio",
       },
@@ -334,6 +361,8 @@ describe("Manifest - Manifest", () => {
       availabilityStartTime: 5,
       duration: 12,
       id: "man",
+      transportType: "dash",
+      isLastPeriodKnown: true,
       isDynamic: false,
       isLive: false,
       lifetime: 13,
@@ -341,24 +370,31 @@ describe("Manifest - Manifest", () => {
       timeBounds: {
         minimumSafePosition: 5,
         timeshiftDepth: null,
-        maximumTimeData: { isLinear: false, maximumSafePosition: 10, time },
+        maximumTimeData: {
+          livePosition: 10,
+          isLinear: false,
+          maximumSafePosition: 10,
+          time,
+        },
       },
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
     };
 
-    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
-      unsupportedAdaptations.push({
-        id: period.adaptations.audio[0].id,
-        type: "audio",
-        representations: [],
-      });
-      return { ...period, id: `foo${period.id}` };
-    });
+    const fakePeriod = vi.fn(
+      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+        unsupportedAdaptations.push({
+          id: period.adaptations.audio?.[0].id,
+          type: "audio",
+          representations: [],
+        } as unknown as IAdaptation);
+        return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
+      },
+    );
     vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const warnings: IPlayerError[] = [];
     const manifest = new Manifest(oldManifestArgs, {}, warnings);
 
@@ -376,8 +412,8 @@ describe("Manifest - Manifest", () => {
     expect(manifest.getMaximumSafePosition()).toEqual(10);
     expect(manifest.getMinimumSafePosition()).toEqual(5);
     expect(manifest.periods).toEqual([
-      { id: "foo0", adaptations: oldPeriod1.adaptations, start: 4 },
-      { id: "foo1", adaptations: oldPeriod2.adaptations, start: 12 },
+      { id: "foo0", adaptations: oldPeriod1.adaptations, start: 4, streamEvents: [] },
+      { id: "foo1", adaptations: oldPeriod2.adaptations, start: 12, streamEvents: [] },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
     expect(manifest.uris).toEqual(["url1", "url2"]);
@@ -388,18 +424,20 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should return all URLs given with `getContentUrls`", async () => {
-    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
-      unsupportedAdaptations.push({
-        id: period.adaptations.audio[0].id,
-        type: "audio",
-        representations: [],
-      });
-      return { ...period, id: `foo${period.id}` };
-    });
+    const fakePeriod = vi.fn(
+      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+        unsupportedAdaptations.push({
+          id: period.adaptations.audio?.[0].id,
+          type: "audio",
+          representations: [],
+        } as unknown as IAdaptation);
+        return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
+      },
+    );
     vi.doMock("../period", () => ({
       default: fakePeriod,
     }));
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
     const oldPeriod1 = generateParsedPeriod("0", 4, undefined);
     const oldPeriod2 = generateParsedPeriod("1", 12, undefined);
@@ -409,11 +447,14 @@ describe("Manifest - Manifest", () => {
       id: "man",
       isDynamic: false,
       isLive: false,
+      transportType: "dash",
+      isLastPeriodKnown: true,
       lifetime: 13,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -433,6 +474,8 @@ describe("Manifest - Manifest", () => {
       id: "man",
       isDynamic: false,
       isLive: false,
+      transportType: "dash",
+      isLastPeriodKnown: true,
       lifetime: 13,
       periods: [
         { id: "0", start: 4, adaptations: oldPeriod1.adaptations },
@@ -443,6 +486,7 @@ describe("Manifest - Manifest", () => {
         minimumSafePosition: 0,
         timeshiftDepth: null,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: false,
           maximumSafePosition: 10,
           time: 10,
@@ -455,14 +499,16 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should replace with a new Manifest when calling `replace`", async () => {
-    const fakePeriod = vi.fn((period, unsupportedAdaptations) => {
-      unsupportedAdaptations.push({
-        id: period.adaptations.audio[0].id,
-        type: "audio",
-        representations: [],
-      });
-      return { ...period, id: `foo${period.id}` };
-    });
+    const fakePeriod = vi.fn(
+      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+        unsupportedAdaptations.push({
+          id: period.adaptations.audio?.[0].id,
+          type: "audio",
+          representations: [],
+        } as unknown as IAdaptation);
+        return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
+      },
+    );
     const fakeReplacePeriodsRes = {
       updatedPeriods: [],
       addedPeriods: [],
@@ -482,6 +528,8 @@ describe("Manifest - Manifest", () => {
       availabilityStartTime: 5,
       duration: 12,
       id: "man",
+      transportType: "dash",
+      isLastPeriodKnown: true,
       isDynamic: false,
       isLive: false,
       lifetime: 13,
@@ -490,6 +538,7 @@ describe("Manifest - Manifest", () => {
         minimumSafePosition: 7,
         timeshiftDepth: 10,
         maximumTimeData: {
+          livePosition: 10,
           isLinear: true,
           maximumSafePosition: 30,
           time: 30000,
@@ -499,10 +548,17 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const Manifest = ((await vi.importActual("../manifest")) as any).default;
+    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(oldManifestArgs, {}, []);
 
-    const mockTrigger = vi.spyOn(manifest, "trigger").mockImplementation(vi.fn());
+    const mockTrigger = vi
+      .spyOn(
+        manifest as IManifest & {
+          trigger: (eventName: string, payload: unknown) => void;
+        },
+        "trigger",
+      )
+      .mockImplementation(vi.fn());
 
     const newAdaptations = {};
     const newPeriod1 = {
@@ -535,7 +591,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [newPeriod1, newPeriod2],
       uris: ["url3", "url4"],
-    };
+    } as unknown as IManifest;
 
     manifest.replace(newManifest);
     expect(fakeReplacePeriods).toHaveBeenCalledTimes(1);

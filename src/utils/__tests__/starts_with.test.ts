@@ -1,21 +1,19 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import startsWith from "../starts_with";
 
-/* eslint-disable no-restricted-properties */
-
-/* eslint-disable @typescript-eslint/unbound-method */
+// eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
 const initialStartsWith = String.prototype.startsWith;
-/* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - starts-with", () => {
   beforeEach(() => {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    (String.prototype as any).startsWith = undefined;
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    // @ts-expect-error: We're setting `startsWith` to `undefined` to
+    // specifically test our own implementation
+    // eslint-disable-next-line no-restricted-properties
+    String.prototype.startsWith = undefined;
   });
 
   afterEach(() => {
+    // eslint-disable-next-line no-restricted-properties
     String.prototype.startsWith = initialStartsWith;
   });
 
@@ -34,6 +32,7 @@ describe("utils - starts-with", () => {
 
   if (typeof initialStartsWith === "function") {
     it("should call the original startsWith function if available", () => {
+      // eslint-disable-next-line no-restricted-properties
       String.prototype.startsWith = initialStartsWith;
       const mockStartsWith = vi.spyOn(String.prototype, "startsWith");
       const str = "Street Halo";

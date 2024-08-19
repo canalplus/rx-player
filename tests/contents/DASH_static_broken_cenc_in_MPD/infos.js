@@ -1,10 +1,10 @@
 const BASE_URL =
   "http://" +
-  /* eslint-disable no-undef */
+  // eslint-disable-next-line no-undef
   __TEST_CONTENT_SERVER__.URL +
   ":" +
+  // eslint-disable-next-line no-undef
   __TEST_CONTENT_SERVER__.PORT +
-  /* eslint-enable no-undef */
   "/DASH_static_broken_cenc_in_MPD/media/";
 
 export default {

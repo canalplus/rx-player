@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import assert from "../../../utils/assert";
 import MediaElementTracksStore from "../media_element_tracks_store";
 
 const fakeMediaElement = {
@@ -16,7 +17,7 @@ const fakeMediaElement = {
     { language: "pt-BR", mode: "hidden" },
   ],
   videoTracks: [{ language: "", selected: true }],
-} as unknown as HTMLVideoElement;
+} as unknown as IMediaElement;
 
 describe("API - MediaElementTracksStore", () => {
   it("should returns correct results for getter", () => {
@@ -57,10 +58,8 @@ describe("API - MediaElementTracksStore", () => {
 
     trackManager.setAudioTrackById("gen_audio_en_1");
     // unset enabled attribute of other track, as browser is supported to do this
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (fakeMediaElement as any).audioTracks[1].enabled = false;
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    assert(fakeMediaElement.audioTracks !== undefined);
+    fakeMediaElement.audioTracks[1].enabled = false;
     expect(trackManager.getChosenAudioTrack()).toEqual({
       id: "gen_audio_en_1",
       language: "en",
@@ -71,6 +70,7 @@ describe("API - MediaElementTracksStore", () => {
 
     trackManager.setTextTrackById("gen_text_en_1");
     // changed mode attribute of other track, as browser is supported to do this
+    assert(fakeMediaElement.textTracks !== undefined);
     fakeMediaElement.textTracks[1].mode = "hidden";
     expect(trackManager.getChosenTextTrack()).toEqual({
       id: "gen_text_en_1",
@@ -98,7 +98,12 @@ describe("API - MediaElementTracksStore", () => {
         language: "es",
         mode: "hidden",
       } as TextTrack);
-      fakeMediaElement.textTracks.onaddtrack?.({} as TrackEvent);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      (
+        fakeMediaElement.textTracks as {
+          onaddtrack: ((arg: TrackEvent) => void) | undefined;
+        }
+      ).onaddtrack?.({} as TrackEvent);
     });
   });
 
@@ -113,16 +118,14 @@ describe("API - MediaElementTracksStore", () => {
       });
 
       // Fake browser behavior
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const _elt = fakeMediaElement as any;
-      _elt.videoTracks.unshift({ language: "en", selected: false });
-      _elt.videoTracks.onaddtrack?.({} as TrackEvent);
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+      const _elt = fakeMediaElement;
+      (
+        _elt.videoTracks as unknown as Array<{
+          language: string;
+          selected: boolean;
+        }>
+      ).unshift({ language: "en", selected: false });
+      _elt.videoTracks?.onaddtrack?.({} as TrackEvent);
     });
   });
 
@@ -140,16 +143,14 @@ describe("API - MediaElementTracksStore", () => {
       });
 
       // Fake browser behavior
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const _elt = fakeMediaElement as any;
-      _elt.audioTracks.unshift({ language: "en", selected: false });
-      _elt.audioTracks.onaddtrack?.({} as TrackEvent);
-      /* eslint-enable @typescript-eslint/no-unsafe-call */
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+      const _elt = fakeMediaElement;
+      (
+        _elt.audioTracks as unknown as Array<{
+          language: string;
+          selected: boolean;
+        }>
+      ).unshift({ language: "en", selected: false });
+      _elt.audioTracks?.onaddtrack?.({} as TrackEvent);
     });
   });
 
@@ -166,7 +167,11 @@ describe("API - MediaElementTracksStore", () => {
 
       // Fake browser behavior
       fakeMediaElement.textTracks[0].mode = "hidden";
-      fakeMediaElement.textTracks?.onchange?.(undefined as unknown as Event);
+      (
+        fakeMediaElement.textTracks as {
+          onchange: ((arg: Event) => void) | undefined;
+        }
+      ).onchange?.(undefined as unknown as Event);
     });
   });
 });

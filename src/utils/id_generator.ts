@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 /**
  * Creates an ID generator which generates a number containing an incremented
  * number each time you call it.

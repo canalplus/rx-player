@@ -47,7 +47,7 @@ export function parseSElementNode(root: ITNode): IParsedS {
       continue;
     }
     switch (attributeName) {
-      case "t":
+      case "t": {
         const start = parseInt(attributeVal, 10);
         if (isNaN(start)) {
           log.warn(`DASH: invalid t ("${attributeVal}")`);
@@ -55,7 +55,8 @@ export function parseSElementNode(root: ITNode): IParsedS {
           parsedS.start = start;
         }
         break;
-      case "d":
+      }
+      case "d": {
         const duration = parseInt(attributeVal, 10);
         if (isNaN(duration)) {
           log.warn(`DASH: invalid d ("${attributeVal}")`);
@@ -63,7 +64,8 @@ export function parseSElementNode(root: ITNode): IParsedS {
           parsedS.duration = duration;
         }
         break;
-      case "r":
+      }
+      case "r": {
         const repeatCount = parseInt(attributeVal, 10);
         if (isNaN(repeatCount)) {
           log.warn(`DASH: invalid r ("${attributeVal}")`);
@@ -71,6 +73,7 @@ export function parseSElementNode(root: ITNode): IParsedS {
           parsedS.repeatCount = repeatCount;
         }
         break;
+      }
     }
   }
   return parsedS;
@@ -88,7 +91,7 @@ export function parseSHTMLElement(root: Element): IParsedS {
   for (let j = 0; j < root.attributes.length; j++) {
     const attribute = root.attributes[j];
     switch (attribute.name) {
-      case "t":
+      case "t": {
         const start = parseInt(attribute.value, 10);
         if (isNaN(start)) {
           log.warn(`DASH: invalid t ("${attribute.value}")`);
@@ -96,7 +99,8 @@ export function parseSHTMLElement(root: Element): IParsedS {
           parsedS.start = start;
         }
         break;
-      case "d":
+      }
+      case "d": {
         const duration = parseInt(attribute.value, 10);
         if (isNaN(duration)) {
           log.warn(`DASH: invalid d ("${attribute.value}")`);
@@ -104,7 +108,8 @@ export function parseSHTMLElement(root: Element): IParsedS {
           parsedS.duration = duration;
         }
         break;
-      case "r":
+      }
+      case "r": {
         const repeatCount = parseInt(attribute.value, 10);
         if (isNaN(repeatCount)) {
           log.warn(`DASH: invalid r ("${attribute.value}")`);
@@ -112,6 +117,7 @@ export function parseSHTMLElement(root: Element): IParsedS {
           parsedS.repeatCount = repeatCount;
         }
         break;
+      }
     }
   }
   return parsedS;

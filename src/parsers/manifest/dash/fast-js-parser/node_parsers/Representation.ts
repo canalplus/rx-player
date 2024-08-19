@@ -56,39 +56,43 @@ function parseRepresentationChildren(
     }
 
     switch (currentElement.tagName) {
-      case "BaseURL":
+      case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
         if (baseURLObj !== undefined) {
           children.baseURLs.push(baseURLObj);
         }
         warnings = warnings.concat(baseURLWarnings);
         break;
+      }
       case "InbandEventStream":
         if (children.inbandEventStreams === undefined) {
           children.inbandEventStreams = [];
         }
         children.inbandEventStreams.push(parseScheme(currentElement));
         break;
-      case "SegmentBase":
+      case "SegmentBase": {
         const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
         children.segmentBase = segmentBase;
         if (segmentBaseWarnings.length > 0) {
           warnings = warnings.concat(segmentBaseWarnings);
         }
         break;
-      case "SegmentList":
+      }
+      case "SegmentList": {
         const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
         warnings = warnings.concat(segmentListWarnings);
         children.segmentList = segmentList;
         break;
-      case "SegmentTemplate":
+      }
+      case "SegmentTemplate": {
         const [segmentTemplate, segmentTemplateWarnings] =
           parseSegmentTemplate(currentElement);
         warnings = warnings.concat(segmentTemplateWarnings);
         children.segmentTemplate = segmentTemplate;
         break;
+      }
 
-      case "ContentProtection":
+      case "ContentProtection": {
         const [contentProtection, contentProtectionWarnings] =
           parseContentProtection(currentElement);
         if (contentProtectionWarnings.length > 0) {
@@ -98,6 +102,7 @@ function parseRepresentationChildren(
           contentProtections.push(contentProtection);
         }
         break;
+      }
       case "SupplementalProperty":
         if (isNullOrUndefined(children.supplementalProperties)) {
           children.supplementalProperties = [parseScheme(currentElement)];

@@ -161,7 +161,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       switchingMode: "lazy",
     });
 
-    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.refresh = updateReferenceIfNeeded;
     this._canceller.signal.register(removeListeners);

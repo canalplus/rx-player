@@ -1,10 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type IEnableAudioTrack from "../enable_audio_track";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 describe("compat - enableAudioTrack", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -39,16 +35,17 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
-    expect(enableAudioTrack.default(fakeAudioTracks, 2)).toEqual(true);
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
+      .default as typeof IEnableAudioTrack;
+    expect(enableAudioTrack(fakeAudioTracks, 2)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(true);
-    expect(enableAudioTrack.default(fakeAudioTracks, 1)).toEqual(true);
+    expect(enableAudioTrack(fakeAudioTracks, 1)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);
     expect(fakeAudioTracks[2].enabled).toBe(false);
-    expect(enableAudioTrack.default(fakeAudioTracks, 0)).toEqual(true);
+    expect(enableAudioTrack(fakeAudioTracks, 0)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(true);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(false);
@@ -83,16 +80,17 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
-    expect(enableAudioTrack.default(fakeAudioTracks, 2)).toEqual(true);
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
+      .default as typeof IEnableAudioTrack;
+    expect(enableAudioTrack(fakeAudioTracks, 2)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(true);
-    expect(enableAudioTrack.default(fakeAudioTracks, 1)).toEqual(true);
+    expect(enableAudioTrack(fakeAudioTracks, 1)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);
     expect(fakeAudioTracks[2].enabled).toBe(false);
-    expect(enableAudioTrack.default(fakeAudioTracks, 0)).toEqual(true);
+    expect(enableAudioTrack(fakeAudioTracks, 0)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(true);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(false);
@@ -127,16 +125,17 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
-    expect(enableAudioTrack.default(fakeAudioTracks, -1)).toEqual(false);
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
+      .default as typeof IEnableAudioTrack;
+    expect(enableAudioTrack(fakeAudioTracks, -1)).toEqual(false);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(false);
-    expect(enableAudioTrack.default(fakeAudioTracks, 0)).toEqual(true);
+    expect(enableAudioTrack(fakeAudioTracks, 0)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(true);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(false);
-    expect(enableAudioTrack.default(fakeAudioTracks, 4)).toEqual(false);
+    expect(enableAudioTrack(fakeAudioTracks, 4)).toEqual(false);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
     expect(fakeAudioTracks[2].enabled).toBe(false);
@@ -222,8 +221,9 @@ describe("compat - enableAudioTrack", () => {
         track3IsEnabled = enabled;
       },
     });
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
-    expect(enableAudioTrack.default(fakeAudioTracks, 1)).toBe(true);
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
+      .default as typeof IEnableAudioTrack;
+    expect(enableAudioTrack(fakeAudioTracks, 1)).toBe(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);
     expect(fakeAudioTracks[2].enabled).toBe(false);
@@ -318,8 +318,9 @@ describe("compat - enableAudioTrack", () => {
         track3IsEnabled = enabled;
       },
     });
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track")) as any;
-    expect(enableAudioTrack.default(fakeAudioTracks, 1)).toBe(true);
+    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
+      .default as typeof IEnableAudioTrack;
+    expect(enableAudioTrack(fakeAudioTracks, 1)).toBe(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);
     expect(fakeAudioTracks[2].enabled).toBe(false);

@@ -58,9 +58,8 @@ if (
   MSMediaKeys !== undefined &&
   MSMediaKeys.prototype !== undefined &&
   typeof MSMediaKeys.isTypeSupported === "function" &&
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MSMediaKeys.prototype.createSession === "function"
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 ) {
   MSMediaKeysConstructor = MSMediaKeys;
 }
