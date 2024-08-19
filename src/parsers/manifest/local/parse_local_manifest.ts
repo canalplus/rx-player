@@ -169,7 +169,7 @@ function parseRepresentation(
 function formatContentProtections(
   localContentProtections: ILocalContentProtections,
 ): IContentProtections {
-  const keyIds = localContentProtections.keyIds;
+  const keyIds = localContentProtections.keyIds.map((k) => k.keyId);
   const initData: IContentProtectionInitData[] = Object.keys(
     localContentProtections.initData,
   ).map((currType) => {

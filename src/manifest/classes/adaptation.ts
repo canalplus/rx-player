@@ -180,9 +180,7 @@ export default class Adaptation implements IAdaptationMetadata {
         if (representation.contentProtections !== undefined) {
           reprObject.contentProtections = {};
           if (representation.contentProtections.keyIds !== undefined) {
-            const keyIds = representation.contentProtections.keyIds.map(
-              ({ keyId }) => keyId,
-            );
+            const keyIds = representation.contentProtections.keyIds;
             reprObject.contentProtections.keyIds = keyIds;
           }
         }

@@ -1267,17 +1267,17 @@ function updateKeyIdsDecipherabilityOnManifest(
     if (contentKIDs !== undefined) {
       for (const elt of contentKIDs) {
         for (const blacklistedKeyId of blacklistedKeyIds) {
-          if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(blacklistedKeyId, elt)) {
             return false;
           }
         }
         for (const whitelistedKeyId of whitelistedKeyIds) {
-          if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(whitelistedKeyId, elt)) {
             return true;
           }
         }
         for (const delistedKeyId of delistedKeyIds) {
-          if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(delistedKeyId, elt)) {
             return undefined;
           }
         }

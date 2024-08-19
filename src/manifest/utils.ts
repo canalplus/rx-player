@@ -407,9 +407,10 @@ export interface IDecipherabilityStatusChangedElement {
  *     decipherability updated to `undefined`.
  *
  * @param {Object} manifest
- * @param {Array.<Uint8Array>} whitelistedKeyIds
- * @param {Array.<Uint8Array>} blacklistedKeyIds
- * @param {Array.<Uint8Array>} delistedKeyIds
+ * @param {Object} updates
+ * @param {Array.<Uint8Array>} updates.whitelistedKeyIds
+ * @param {Array.<Uint8Array>} updates.blacklistedKeyIds
+ * @param {Array.<Uint8Array>} updates.delistedKeyIds
  */
 export function updateDecipherabilityFromKeyIds(
   manifest: IManifestMetadata,
@@ -428,17 +429,17 @@ export function updateDecipherabilityFromKeyIds(
     if (contentKIDs !== undefined) {
       for (const elt of contentKIDs) {
         for (const blacklistedKeyId of blacklistedKeyIds) {
-          if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(blacklistedKeyId, elt)) {
             return false;
           }
         }
         for (const whitelistedKeyId of whitelistedKeyIds) {
-          if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(whitelistedKeyId, elt)) {
             return true;
           }
         }
         for (const delistedKeyId of delistedKeyIds) {
-          if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(delistedKeyId, elt)) {
             return undefined;
           }
         }
