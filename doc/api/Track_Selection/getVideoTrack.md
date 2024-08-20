@@ -2,6 +2,8 @@
 
 ## Description
 
+### Returned object
+
 Get information about the video track currently set.
 
 - `null` if no video track is enabled right now.
@@ -47,8 +49,9 @@ object with the following properties:
   - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
     Representation is supported by the current platform.
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that unless you set the `filterPlayableRepresentations` option to `false`, no
+    Representation with a `isCodecSupported` value of `false` will be present in this
+    array (they'll all be filtered out).
 
     `undefined` (or not set) if support of that Representation is unknown or if does not
     make sense here.
@@ -56,8 +59,9 @@ object with the following properties:
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
     (in the eventuality it had DRM-related protection).
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that unless you set the `filterPlayableRepresentations` option to `false`, no
+    Representation with a `isCodecSupported` value of `false` will be present in this
+    array (they'll all be filtered out).
 
 - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is known to
   contain an interpretation in sign language. If set to `false`, the track is known to not
@@ -80,6 +84,8 @@ object with the following properties:
   It this property is either `undefined` or not set, then this track has no linked
   trickmode video track.
 
+### Asking for a specific Period
+
 You can also get the information on the chosen video track for another Period by calling
 `getVideoTrack` with the corresponding Period's id in argument. Such id can be obtained
 through the `getAvailablePeriods` method, the `newAvailablePeriods` event or the
@@ -89,6 +95,34 @@ through the `getAvailablePeriods` method, the `newAvailablePeriods` event or the
 // example: getting track information for the first Period
 const periods = rxPlayer.getAvailablePeriods();
 console.log(rxPlayer.getVideoTrack(periods[0].id);
+```
+
+### Including Representations that cannot be played
+
+You can also ask `getVideoTrack` to include in its response `Representation` objects which
+will not be played because they have their `isCodecSupported` or `decipherable` property
+set to `false` (those are filtered out by default, as indicated above).
+
+To do this, you can provide an object to `getVideoTrack` with a
+`filterPlayableRepresentations` property set to `false` like this:
+
+```js
+const videoTrack = player.getVideoTrack();
+```
+
+You may for example also want to know which Representation are not playable to provide
+debug information, or to detect deterministically the capabilities of the current device.
+
+Note that this will return the metadata of the currently-chosen video track only for the
+current Period. To obtain metadata on all representations for the currently-chosen video
+track for another Period, you can also set a `periodId` property:
+
+```js
+const periods = rxPlayer.getAvailablePeriods();
+console.log(rxPlayer.getVideoTrack({
+    periodId: periods[0].id,
+    filterPlayableRepresentations: false,
+});
 ```
 
 <div class="warning">
@@ -103,14 +137,37 @@ video tracks API in the browser, this method returns "undefined".
 // Get information about the currently-playing video track
 const videoTrack = player.getVideoTrack();
 
+// Also include metadata on the non-playable Representations
+const videoTrack = player.getVideoTrack({
+  filterPlayableRepresentations: false,
+});
+
 // Get information about the video track for a specific Period
 const videoTrack = player.getVideoTrack(periodId);
+
+// Get information about the video track for a specific Period and also include metadata
+// on the non-playable Representations
+const videoTrack = player.getVideoTrack({
+  periodId,
+  filterPlayableRepresentations: false,
+});
 ```
 
 - **arguments**:
 
-  1.  _periodId_ `string|undefined`: The `id` of the Period for which you want to get
-      information about its current video track. If not defined, the information
-      associated to the currently-playing Period will be returned.
+  1.  _arg_ `Object|string|undefined`: If set to a `string`, this is the `id` of the
+      Period for which you want to get information about its current video track.
+
+      If not defined, the information associated to the currently-playing Period will be
+      returned.
+
+      If set to an Object, the following properties can be set (all optional):
+
+          - `periodId` (`string|undefined`): The `id` of the wanted Period, or
+            `undefined` (or not set) for the currently-playing Period
+
+          - `filterPlayableRepresentations` (`boolean|undefined`): If set to `false`,
+            Representation that are considered "non-playable" (which have an unsupported
+            mime-type/codec or which are undecipherable) will be included.
 
 - **return value** `Object|null|undefined`

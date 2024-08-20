@@ -1889,10 +1889,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns every available audio tracks for a given Period - or the current
    * one if no `periodId` is given.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Array.<Object>}
    */
-  getAvailableAudioTracks(periodId?: string | undefined): IAvailableAudioTrack[] {
+  getAvailableAudioTracks(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IAvailableAudioTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1900,10 +1908,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (isDirectFile) {
       return mediaElementTracksStore?.getAvailableAudioTracks() ?? [];
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableAudioTracks(periodRef) ?? [],
+      (tcm, periodRef) =>
+        tcm.getAvailableAudioTracks(periodRef, filterPlayableRepresentations) ?? [],
     );
   }
 
@@ -1930,10 +1948,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns every available video tracks for the current Period.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Array.<Object>}
    */
-  getAvailableVideoTracks(periodId?: string | undefined): IAvailableVideoTrack[] {
+  getAvailableVideoTracks(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IAvailableVideoTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1941,19 +1967,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (isDirectFile) {
       return mediaElementTracksStore?.getAvailableVideoTracks() ?? [];
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableVideoTracks(periodRef) ?? [],
+      (tcm, periodRef) =>
+        tcm.getAvailableVideoTracks(periodRef, filterPlayableRepresentations) ?? [],
     );
   }
 
   /**
    * Returns currently chosen audio language for the current Period.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Object|null|undefined}
    */
-  getAudioTrack(periodId?: string | undefined): IAudioTrack | null | undefined {
+  getAudioTrack(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IAudioTrack | null | undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -1964,8 +2008,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       return mediaElementTracksStore.getChosenAudioTrack();
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenAudioTrack(periodRef),
+      tcm.getChosenAudioTrack(periodRef, filterPlayableRepresentations),
     );
   }
 
@@ -1992,10 +2045,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns currently chosen video track for the current Period.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Object|null|undefined}
    */
-  getVideoTrack(periodId?: string | undefined): IVideoTrack | null | undefined {
+  getVideoTrack(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IVideoTrack | null | undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -2006,8 +2067,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       return mediaElementTracksStore.getChosenVideoTrack();
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenVideoTrack(periodRef),
+      tcm.getChosenVideoTrack(periodRef, filterPlayableRepresentations),
     );
   }
 
@@ -2612,10 +2682,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           }
           switch (elt.adaptation.type) {
             case "audio":
-              isCurrent = tStore.getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent =
+                tStore.getChosenAudioTrack(periodRef, false)?.id === elt.adaptation.id;
               break;
             case "video":
-              isCurrent = tStore.getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent =
+                tStore.getChosenVideoTrack(periodRef, false)?.id === elt.adaptation.id;
               break;
             case "text":
               isCurrent = tStore.getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
@@ -2690,11 +2762,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isNullOrUndefined(tracksStore)) {
       const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
       if (periodRef) {
-        const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+        const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
         this._priv_triggerEventIfNotStopped("audioTrackChange", audioTrack, cancelSignal);
         const textTrack = tracksStore.getChosenTextTrack(periodRef);
         this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
-        const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+        const videoTrack = tracksStore.getChosenVideoTrack(periodRef, true);
         this._priv_triggerEventIfNotStopped("videoTrackChange", videoTrack, cancelSignal);
       }
     } else {
@@ -2854,7 +2926,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       switch (type) {
         case "audio":
-          const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+          const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
           this._priv_triggerEventIfNotStopped(
             "audioTrackChange",
             audioTrack,
@@ -2866,7 +2938,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
           break;
         case "video":
-          const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+          const videoTrack = tracksStore.getChosenVideoTrack(periodRef, true);
           this._priv_triggerEventIfNotStopped(
             "videoTrackChange",
             videoTrack,
@@ -3178,7 +3250,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     switch (trackType) {
       case "video":
-        const videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
+        const videoTracks = tracksStore.getAvailableVideoTracks(periodRef, true);
         this._priv_triggerEventIfNotStopped(
           "availableVideoTracksChange",
           videoTracks ?? [],
@@ -3186,7 +3258,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         );
         break;
       case "audio":
-        const audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
+        const audioTracks = tracksStore.getAvailableAudioTracks(periodRef, true);
         this._priv_triggerEventIfNotStopped(
           "availableAudioTracksChange",
           audioTracks ?? [],
