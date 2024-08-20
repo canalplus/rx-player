@@ -401,6 +401,11 @@ export default function initializeWorkerMain() {
         break;
       }
 
+      case MainThreadMessageType.ConfigUpdate: {
+        config.update(msg.value);
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }

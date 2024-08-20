@@ -1195,3 +1195,24 @@ const DEFAULT_CONFIG = {
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;
 export default DEFAULT_CONFIG;
+
+// NOTE Because the config may have to be serialized and shared between several
+// environments, we check here that some strict type is respected:
+//   - only a subset of types are authorized for now, just make it easier to
+//     reason about.
+//   - Needs to make sense in JSON: no `function`, no `Date`, no `undefined`...
+interface IGenericConfigData {
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | number[]
+    | string[]
+    | Partial<Record<string, string[]>>
+    | IGenericConfigData;
+}
+
+function checkIsSerializable(_conf: IGenericConfigData): void {
+  // noop
+}
+checkIsSerializable(DEFAULT_CONFIG);
