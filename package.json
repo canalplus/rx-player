@@ -17,6 +17,11 @@
       "require": "./dist/commonjs/experimental/index.js",
       "default": "./dist/es2017/experimental/index.js"
     },
+    "./experimental/config": {
+      "import": "./dist/es2017/config.js",
+      "require": "./dist/commonjs/config.js",
+      "default": "./dist/es2017/config.js"
+    },
     "./experimental/features": {
       "import": "./dist/es2017/experimental/features/index.js",
       "require": "./dist/commonjs/experimental/features/index.js",
