@@ -106,7 +106,7 @@ between those two:
 [corresponding documentation page](../api/Miscellaneous/DASH_WASM_Parser.md).
 
 **[6]**: Both the `NATIVE_TEXT_BUFFER` and `HTML_TEXT_BUFFER` features are deprecated.
-They are already implicitly imported when parsing any of the corresponding text parsers.
+They are already implicitly imported when adding any of the corresponding text parsers.
 
 **[7]**: The `MULTI_THREAD` feature has its own setup, detailed in the
 [corresponding documentation page](../api/Miscellaneous/MultiThreading.md).
