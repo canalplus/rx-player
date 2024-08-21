@@ -295,10 +295,9 @@ function createOnEncryptedForWebkit(): IEmeApiImplementation["onEncrypted"] {
     compatibleEventListener(
       target,
       (event?: Event) => {
-        const patchedEvent = objectAssign(
-          { forceSessionRecreation: true },
-          event as MediaEncryptedEvent,
-        );
+        const patchedEvent = objectAssign(event as MediaEncryptedEvent, {
+          forceSessionRecreation: true,
+        });
         listener(patchedEvent);
       },
       cancelSignal,
