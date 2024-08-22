@@ -358,6 +358,7 @@ function toVideoRepresentation(
     hdrInfo,
     isSupported,
     decipherable,
+    contentProtections,
   } = representation;
   return {
     id,
@@ -369,6 +370,12 @@ function toVideoRepresentation(
     hdrInfo,
     isCodecSupported: isSupported,
     decipherable,
+    contentProtections:
+      contentProtections !== undefined
+        ? {
+            keyIds: contentProtections.keyIds,
+          }
+        : undefined,
   };
 }
 

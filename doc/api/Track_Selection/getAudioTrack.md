@@ -71,6 +71,17 @@ object with the following properties:
     Representation with a `isCodecSupported` value of `false` will be present in this
     array (they'll all be filtered out).
 
+  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+    Representation.
+
+    If set to an Object, the Representation is known to be encrypted. If unset or set to
+    `undefined` the Representation is either unencrypted or we don't know if it is.
+
+    When set to an object, it may contain the following properties:
+
+    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+      Representation.
+
 `undefined` if no audio content has been loaded yet or if its information is unknown.
 
 ### Asking for a specific Period
