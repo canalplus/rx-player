@@ -1,3 +1,4 @@
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -16,5 +17,9 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function mayMediaElementFailOnUndecipherableData(): boolean {
-  return EnvDetector.device === EnvDetector.DEVICES.PlayStation5;
+  const { FORCE_MEDIA_ELEMENT_FAIL_ON_UNDECIPHERABLE_DATA } = config.getCurrent();
+  return (
+    FORCE_MEDIA_ELEMENT_FAIL_ON_UNDECIPHERABLE_DATA ||
+    EnvDetector.device === EnvDetector.DEVICES.PlayStation5
+  );
 }

@@ -1,3 +1,4 @@
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -16,7 +17,9 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function shouldAwaitSetMediaKeys(): boolean {
+  const { FORCE_SHOULD_AWAIT_SET_MEDIA_KEYS } = config.getCurrent();
   return (
+    FORCE_SHOULD_AWAIT_SET_MEDIA_KEYS ||
     EnvDetector.device === EnvDetector.DEVICES.WebOs2021 ||
     EnvDetector.device === EnvDetector.DEVICES.WebOs2022 ||
     EnvDetector.device === EnvDetector.DEVICES.WebOsOther

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -25,6 +26,10 @@ import EnvDetector from "./env_detector";
  * @returns {Boolean}
  */
 export default function shouldWaitForDataBeforeLoaded(isDirectfile: boolean): boolean {
+  const { FORCE_DONT_WAIT_FOR_DATA_BEFORE_LOADED } = config.getCurrent();
+  if (FORCE_DONT_WAIT_FOR_DATA_BEFORE_LOADED) {
+    return false;
+  }
   if (
     isDirectfile &&
     (EnvDetector.browser === EnvDetector.BROWSERS.SafariMobile ||

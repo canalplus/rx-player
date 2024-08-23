@@ -1,3 +1,4 @@
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -13,5 +14,9 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function shouldWaitForHaveEnoughData(): boolean {
-  return EnvDetector.device === EnvDetector.DEVICES.PlayStation5;
+  const { FORCE_WAIT_FOR_HAVE_ENOUGH_DATA } = config.getCurrent();
+  return (
+    FORCE_WAIT_FOR_HAVE_ENOUGH_DATA ||
+    EnvDetector.device === EnvDetector.DEVICES.PlayStation5
+  );
 }

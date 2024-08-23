@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -23,5 +24,6 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function shouldValidateMetadata(): boolean {
-  return EnvDetector.isSamsungBrowser;
+  const { FORCE_SHOULD_VALIDATE_METADATA } = config.getCurrent();
+  return FORCE_SHOULD_VALIDATE_METADATA || EnvDetector.isSamsungBrowser;
 }

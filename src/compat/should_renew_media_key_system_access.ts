@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -22,6 +23,10 @@ import EnvDetector from "./env_detector";
  * @returns {Boolean}
  */
 export default function shouldRenewMediaKeySystemAccess(keySystem: string): boolean {
+  const { FORCE_SHOULD_RENEW_MEDIA_KEY_SYSTEM_ACCESS } = config.getCurrent();
+  if (FORCE_SHOULD_RENEW_MEDIA_KEY_SYSTEM_ACCESS) {
+    return true;
+  }
   return (
     keySystem.indexOf("playready") !== -1 &&
     (EnvDetector.browser === EnvDetector.BROWSERS.Ie11 ||

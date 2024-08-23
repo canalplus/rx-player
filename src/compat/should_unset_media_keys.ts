@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -23,5 +24,8 @@ import EnvDetector from "./env_detector";
  * @returns {Boolean}
  */
 export default function shouldUnsetMediaKeys(): boolean {
-  return EnvDetector.browser === EnvDetector.BROWSERS.Ie11;
+  const { FORCE_SHOULD_UNSET_MEDIA_KEYS } = config.getCurrent();
+  return (
+    FORCE_SHOULD_UNSET_MEDIA_KEYS || EnvDetector.browser === EnvDetector.BROWSERS.Ie11
+  );
 }
