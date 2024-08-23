@@ -8,10 +8,14 @@ describe("Compat - canReuseMediaKeys", () => {
     jest.resetModules();
   });
 
-  it("should return true on any browser but WebOS", () => {
+  it("should return true on most browsers", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isWebOs: false };
+      return {
+        __esModule: true as const,
+        isWebOs: false,
+        isPhilipsNetTv: false,
+        isPanasonic: false,
+      };
     });
     const canReuseMediaKeys =
       jest.requireActual("../can_reuse_media_keys.ts");
@@ -20,12 +24,43 @@ describe("Compat - canReuseMediaKeys", () => {
 
   it("should return false on WebOs", () => {
     jest.mock("../browser_detection", () => {
-      return { __esModule: true as const,
-               isWebOs: true,
-               isWebOs2022: false };
+      return {
+        __esModule: true as const,
+        isWebOs: true,
+        isWebOs2022: false,
+        isPanasonic: false,
+        isPhilipsNetTv: false,
+      };
     });
-    const canReuseMediaKeys =
-      jest.requireActual("../can_reuse_media_keys.ts");
+    const canReuseMediaKeys = jest.requireActual("../can_reuse_media_keys.ts");
+    expect(canReuseMediaKeys.default()).toBe(false);
+  });
+
+  it("should return false on Panasonic", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true as const,
+        isWebOs: false,
+        isWebOs2022: false,
+        isPanasonic: true,
+        isPhilipsNetTv: false,
+      };
+    });
+    const canReuseMediaKeys = jest.requireActual("../can_reuse_media_keys.ts");
+    expect(canReuseMediaKeys.default()).toBe(false);
+  });
+
+  it("should return false on Philips' NETTV", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true as const,
+        isWebOs: false,
+        isWebOs2022: false,
+        isPanasonic: false,
+        isPhilipsNetTv: true,
+      };
+    });
+    const canReuseMediaKeys = jest.requireActual("../can_reuse_media_keys.ts");
     expect(canReuseMediaKeys.default()).toBe(false);
   });
 });
