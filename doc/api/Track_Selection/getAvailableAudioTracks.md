@@ -71,16 +71,16 @@ Each of the objects in the returned array have the following properties:
 
 ### Asking for a specific Period
 
-  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+- `contentProtections` (`Object|undefined`): Encryption information linked to this
+  Representation.
+
+  If set to an Object, the Representation is known to be encrypted. If unset or set to
+  `undefined` the Representation is either unencrypted or we don't know if it is.
+
+  When set to an object, it may contain the following properties:
+
+  - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
     Representation.
-
-    If set to an Object, the Representation is known to be encrypted. If unset or set to
-    `undefined` the Representation is either unencrypted or we don't know if it is.
-
-    When set to an object, it may contain the following properties:
-
-    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
-      Representation.
 
 You can also get the list of available audio tracks for a specific Period by calling
 `getAvailableAudioTracks` with the corresponding Period's id in argument. Such id can be
