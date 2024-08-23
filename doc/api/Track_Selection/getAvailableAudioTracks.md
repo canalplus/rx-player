@@ -69,8 +69,6 @@ Each of the objects in the returned array have the following properties:
     Representation with a `isCodecSupported` value of `false` will be present in this
     array (they'll all be filtered out).
 
-### Asking for a specific Period
-
   - `contentProtections` (`Object|undefined`): Encryption information linked to this
     Representation.
 
@@ -81,6 +79,8 @@ Each of the objects in the returned array have the following properties:
 
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
+
+### Asking for a specific Period
 
 You can also get the list of available audio tracks for a specific Period by calling
 `getAvailableAudioTracks` with the corresponding Period's id in argument. Such id can be
