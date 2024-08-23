@@ -1191,6 +1191,87 @@ const DEFAULT_CONFIG = {
    * one.
    */
   DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as const,
+
+  // Compatibility toggles:
+
+  /**
+   * If set to `true`, we'll always try to check thoroughly that a
+   * `MediaKeySystemAccess` can be relied on.
+   */
+  FORCE_CANNOT_RELY_ON_REQUEST_MEDIA_KEY_SYSTEM_ACCESS: false,
+
+  /**
+   * If set to `true`, we'll always re-create a `MediaKeys` instance for each
+   * encrypted content where we need one.
+   */
+  FORCE_CANNOT_REUSE_MEDIA_KEYS: false,
+
+  /**
+   * If set to `true`, we'll never seek directly after receiving the
+   * `loadedmetadata` event from an `HTMLMediaElement`, instead waiting a small
+   * amount of time before.
+   */
+  FORCE_CANNOT_SEEK_DIRECTLY_AFTER_LOADED_METADATA: false,
+
+  /**
+   * If set to `true`, force work-around for devices which have issues with
+   * `MediaSource` objects with a high `duration` property.
+   */
+  FORCE_HAS_ISSUES_WITH_HIGH_MEDIA_SOURCE_DURATION: false,
+
+  /**
+   * If set to `true`, the device might seek before what we actually tell it to,
+   * breaking other RxPlayer behaviors in the process.
+   * Setting it to `true` allows to enable work-arounds.
+   */
+  FORCE_IS_SEEKING_APPROXIMATE: false,
+
+  /**
+   * If set to `true`, the device might fail directly after uncountering
+   * decipherable data.
+   */
+  FORCE_MEDIA_ELEMENT_FAIL_ON_UNDECIPHERABLE_DATA: false,
+
+  /**
+   * If set to `true` we'll await a `MediaKeys` attachment on a given
+   * `HTMLMediaElement` before trying to set a new one.
+   */
+  FORCE_SHOULD_AWAIT_SET_MEDIA_KEYS: false,
+
+  /** If set to `true` we'll rely on Safari's Webkit flavor of the EME API. */
+  FORCE_SHOULD_FAVOUR_CUSTOM_SAFARI_EME: false,
+
+  /**
+   * If `true`, we'll reload if unencrypted data is encountered close to
+   * the current position.
+   */
+  FORCE_SHOULD_RELOAD_MEDIA_SOURCE_ON_DECIPHERABILITY_UPDATE: false,
+
+  /** If `true`, we'll for each content re-create a `MediaKeySystemAccess`. */
+  FORCE_SHOULD_RENEW_MEDIA_KEY_SYSTEM_ACCESS: false,
+
+  /** If `true`, we'll unset the `MediaKeys` at each stop. */
+  FORCE_SHOULD_UNSET_MEDIA_KEYS: false,
+
+  /**
+   * If `true`, we cannot trust that a `loadedmetadata` event from the
+   * `HTMLMediaElement` is sent after the browser has parsed key metadata such
+   * as the content's duration.
+   */
+  FORCE_SHOULD_VALIDATE_METADATA: false,
+
+  /**
+   * If `true`, we have to announce the content as loaded even if no data is
+   * actually loaded, because that target do not preload, meaning a `play` call
+   * is required.
+   */
+  FORCE_DONT_WAIT_FOR_DATA_BEFORE_LOADED: false,
+
+  /**
+   * If `true`, we have to wait for the `HAVE_ENOUGH_DATA` `readyState` before
+   * announcing the content as loaded.
+   */
+  FORCE_WAIT_FOR_HAVE_ENOUGH_DATA: false,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;

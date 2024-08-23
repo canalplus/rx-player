@@ -119,7 +119,7 @@ export default function performInitialSeekAndPlay(
               const initiallySeekedTime =
                 typeof startTime === "number" ? startTime : startTime();
               if (initiallySeekedTime !== 0) {
-                if (canSeekDirectlyAfterLoadedMetadata) {
+                if (canSeekDirectlyAfterLoadedMetadata()) {
                   performInitialSeek(initiallySeekedTime);
                 } else {
                   setTimeout(() => {

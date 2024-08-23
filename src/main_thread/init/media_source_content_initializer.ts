@@ -670,7 +670,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentSinksStore,
     );
 
-    if (mayMediaElementFailOnUndecipherableData) {
+    if (mayMediaElementFailOnUndecipherableData()) {
       // On some devices, just reload immediately when data become undecipherable
       manifest.addEventListener(
         "decipherabilityUpdate",

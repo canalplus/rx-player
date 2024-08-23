@@ -1,3 +1,4 @@
+import config from "../config";
 import { isPlayStation5 } from "./browser_detection";
 
 /**
@@ -21,7 +22,8 @@ import { isPlayStation5 } from "./browser_detection";
  * @returns {boolean}
  */
 export default function hasIssuesWithHighMediaSourceDuration(): boolean {
+  const { FORCE_HAS_ISSUES_WITH_HIGH_MEDIA_SOURCE_DURATION } = config.getCurrent();
   // For now only seen on the Webkit present in the PlayStation 5, for which the
   // alternative is known to work.
-  return isPlayStation5;
+  return FORCE_HAS_ISSUES_WITH_HIGH_MEDIA_SOURCE_DURATION || isPlayStation5;
 }

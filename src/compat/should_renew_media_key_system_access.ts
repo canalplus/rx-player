@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isIE11 } from "./browser_detection";
 
 /**
@@ -22,5 +23,6 @@ import { isIE11 } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldRenewMediaKeySystemAccess(): boolean {
-  return isIE11;
+  const { FORCE_SHOULD_RENEW_MEDIA_KEY_SYSTEM_ACCESS } = config.getCurrent();
+  return FORCE_SHOULD_RENEW_MEDIA_KEY_SYSTEM_ACCESS || isIE11;
 }

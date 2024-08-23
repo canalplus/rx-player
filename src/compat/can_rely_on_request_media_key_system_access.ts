@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isEdgeChromium } from "./browser_detection";
 
 /**
@@ -35,6 +36,10 @@ import { isEdgeChromium } from "./browser_detection";
  * @returns {boolean}
  */
 export function canRelyOnRequestMediaKeySystemAccess(keySystem: string): boolean {
+  const { FORCE_CANNOT_RELY_ON_REQUEST_MEDIA_KEY_SYSTEM_ACCESS } = config.getCurrent();
+  if (FORCE_CANNOT_RELY_ON_REQUEST_MEDIA_KEY_SYSTEM_ACCESS) {
+    return false;
+  }
   if (isEdgeChromium && keySystem.indexOf("playready") !== -1) {
     return false;
   }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isTizen } from "./browser_detection";
 
 /**
@@ -26,7 +27,9 @@ import { isTizen } from "./browser_detection";
  *
  * This boolean is only `true` on the devices where this behavior has been
  * observed.
+ * @returns {boolean}
  */
-const isSeekingApproximate: boolean = isTizen;
-
-export default isSeekingApproximate;
+export default function isSeekingApproximate(): boolean {
+  const { FORCE_IS_SEEKING_APPROXIMATE } = config.getCurrent();
+  return FORCE_IS_SEEKING_APPROXIMATE || isTizen;
+}

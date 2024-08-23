@@ -1209,7 +1209,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         updates,
       );
       if (
-        mayMediaElementFailOnUndecipherableData &&
+        mayMediaElementFailOnUndecipherableData() &&
         manUpdates.some((e) => e.representation.decipherable !== true)
       ) {
         reloadMediaSource();
@@ -1237,7 +1237,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         protData,
       );
       if (
-        mayMediaElementFailOnUndecipherableData &&
+        mayMediaElementFailOnUndecipherableData() &&
         manUpdates.some((e) => e.representation.decipherable !== true)
       ) {
         reloadMediaSource();

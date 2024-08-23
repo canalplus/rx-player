@@ -1,3 +1,4 @@
+import config from "../config";
 import { isPlayStation5 } from "./browser_detection";
 
 /**
@@ -13,5 +14,6 @@ import { isPlayStation5 } from "./browser_detection";
  * @returns {boolean}
  */
 export default function shouldWaitForHaveEnoughData(): boolean {
-  return isPlayStation5;
+  const { FORCE_WAIT_FOR_HAVE_ENOUGH_DATA } = config.getCurrent();
+  return FORCE_WAIT_FOR_HAVE_ENOUGH_DATA || isPlayStation5;
 }

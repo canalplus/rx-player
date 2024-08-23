@@ -1,3 +1,4 @@
+import config from "../config";
 import { isWebOs } from "./browser_detection";
 
 /**
@@ -16,5 +17,6 @@ import { isWebOs } from "./browser_detection";
  * @returns {boolean}
  */
 export default function shouldAwaitSetMediaKeys(): boolean {
-  return isWebOs;
+  const { FORCE_SHOULD_AWAIT_SET_MEDIA_KEYS } = config.getCurrent();
+  return FORCE_SHOULD_AWAIT_SET_MEDIA_KEYS || isWebOs;
 }

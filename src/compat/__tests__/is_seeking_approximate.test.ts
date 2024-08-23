@@ -15,19 +15,19 @@ describe("isSeekingApproximate", () => {
     vi.doMock("../browser_detection", () => {
       return { isTizen: true };
     });
-    const shouldAppendBufferAfterPadding = (await vi.importActual(
+    const isSeekingApproximate = (await vi.importActual(
       "../is_seeking_approximate",
     )) as any;
-    expect(shouldAppendBufferAfterPadding.default).toBe(true);
+    expect(isSeekingApproximate.default()).toBe(true);
   });
 
   it("should be false if not on tizen", async () => {
     vi.doMock("../browser_detection", () => {
       return { isTizen: false };
     });
-    const shouldAppendBufferAfterPadding = (await vi.importActual(
+    const isSeekingApproximate = (await vi.importActual(
       "../is_seeking_approximate",
     )) as any;
-    expect(shouldAppendBufferAfterPadding.default).toBe(false);
+    expect(isSeekingApproximate.default()).toBe(false);
   });
 });
