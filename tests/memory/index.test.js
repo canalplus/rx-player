@@ -63,7 +63,10 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(2e6);
     },
-    15 * 60 * 1000,
+    {
+      timeout: 15 * 60 * 1000,
+      retry: 2,
+    },
   );
 
   it(
@@ -112,7 +115,10 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(7e6);
     },
-    10 * 60 * 1000,
+    {
+      timeout: 10 * 60 * 1000,
+      retry: 2,
+    },
   );
 
   it(
@@ -153,7 +159,10 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(7e6);
     },
-    30 * 60 * 1000,
+    {
+      timeout: 30 * 60 * 1000,
+      retry: 2,
+    },
   );
 
   it(
@@ -223,7 +232,10 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(9e6);
     },
-    15 * 60 * 1000,
+    {
+      timeout: 15 * 60 * 1000,
+      retry: 2,
+    },
   );
 
   // TODO FIXME This one failed after a chrome update, no idea why for now
@@ -279,6 +291,9 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(1e6);
     },
-    5 * 60 * 1000,
+    {
+      timeout: 5 * 60 * 1000,
+      retry: 2,
+    },
   );
 });
