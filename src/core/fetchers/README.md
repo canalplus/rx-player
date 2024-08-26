@@ -36,7 +36,7 @@ performances when doing that.
 
 The SegmentQueueCreator allows to easily perform segment downloads for the rest of the
 code. This is the part of the code that interacts with the transport protocols - defined
-in `stc/transports` - to load and parse media segments.
+in `src/transports` - to load and parse media segments.
 
 To do so, the SegmentQueueCreator creates `SegmentQueue` classes of different types
 (example: a video or audio `SegmentQueue`) when you ask for it. Through those
