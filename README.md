@@ -175,6 +175,45 @@ demonstrating a simple usage of the player.
 Demo pages for our previous versions are also available
 [here](https://developers.canal-plus.com/rx-player/demo_page_by_version.html).
 
+## Test an RxPlayer branch from your application
+
+We're experimenting with the possibility to allow users to rely on pending RxPlayer
+developments directly in their applications.
+
+On most recent development branches and commits, you can directly
+[rely on the GitHub URL in your package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#github-urls)
+and after installing it as a dependency, build the RxPlayer locally calling our new
+node.js build script we export from `"rx-player/scripts/build"`.
+
+That script will install locally our own dependencies and then produce the RxPlayer builds
+(which are not pushed to GitHub). Because of Node.js limitations, we sadly have to go
+through a temporary file (with an `mjs` extension) here. To save your time, here's the
+full commands you can run after installing an RxPlayer branch (or commit hash) in your
+project:
+
+```sh
+# Write temporary building file
+echo 'import { build } from "rx-player/scripts/build"; build();' > rx_build.tmp.mjs
+node rx_build.tmp.mjs # Run it to build the RxPlayer
+rm rx_build.tmp.mjs # Remove the temporary file
+```
+
+Alternatively you can also just add the following `postinstall` script to your
+[package.json scripts](https://docs.npmjs.com/cli/v10/using-npm/scripts):
+
+```json
+"postinstall": "echo 'import { build } from \"rx-player/scripts/build\"; build();' > tmp_rxb.mjs && node tmp_rxb.mjs && rm tmp_rxb.mjs",
+```
+
+Note however that depending on an RxPlayer branch or commit should not be done in
+production and may be removed or updated in the future. It should only be used to check
+and prepare work linked to future RxPlayer fixes and features.
+
+The dependencies loaded may weigh in the several hundred of megabytes once uncompressed.
+If that's a problem for you, you can set the `cleanAfterBuild` option when calling the
+`build` function (`build({ cleanAfterBuild: true })`), this will remove the now-unrequired
+build-time dependencies once the build is produced.
+
 ## Contribute
 
 Details on how to contribute is written in the [CONTRIBUTING.md file](./CONTRIBUTING.md)

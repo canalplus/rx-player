@@ -12,6 +12,10 @@
       "require": "./dist/commonjs/index.js",
       "default": "./dist/es2017/index.js"
     },
+    "./scripts/build": {
+      "import": "./scripts/clean_build.mjs",
+      "default": "./scripts/clean_build.mjs"
+    },
     "./experimental": {
       "import": "./dist/es2017/experimental/index.js",
       "require": "./dist/commonjs/experimental/index.js",
