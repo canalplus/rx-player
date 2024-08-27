@@ -21,7 +21,9 @@ jobs:
 
       # needed for integration & memory tests codecs support
       - run: echo "$(<.npmrc )"                 
-      - run: echo "$(<~/.npmrc )"                 
+      - run: echo "$(<~/.npmrc )"         
+      - run: cat $NPM_CONFIG_USERCONFIG
+        
 
       - name: Install dependencies
         run: npm ci
