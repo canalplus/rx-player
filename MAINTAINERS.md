@@ -28,3 +28,6 @@ Here is the list of previous maintainers, which are not working on the project a
 - Guillaume Renault <guillaume.renault@canal-plus.com>
 - Paul Rosset <paul.rosset@canal-plus.com>
 - Pierre Guilleminot <pierre.guilleminot@canal-plus.com>
+
+
+## THIS IS VERSION BUILD FROM THE CI on branch ci-publish-packages
