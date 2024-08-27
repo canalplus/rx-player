@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - run: npm pack 
+      - run: echo"npm-pack=$(npm pack)" >> $GITHUB_OUTPUT
         id: npm-pack
 
       - uses: actions/upload-artifact@v4
