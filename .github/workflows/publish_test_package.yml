@@ -18,6 +18,8 @@ jobs:
           node-version: 20
           scope: '@${{ github.repository_owner }}'
           registry-url: 'https://npm.pkg.github.com'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # needed for integration & memory tests codecs support
       - run: echo "$(<.npmrc )"                 
