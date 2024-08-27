@@ -15,17 +15,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 14
           registry-url: 'https://npm.pkg.github.com'
 
       # needed for integration & memory tests codecs support
-      - name: Configure .npmrc
-        run: |
-          echo ""@Florent-Bouisset:registry=https://npm.pkg.github.com"" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+      - run: echo "$(<.npmrc )"                 
+      - run: echo "$(<~/.npmrc )"                 
+
       - name: Install dependencies
         run: npm ci
-      - run: echo "$(<.npmrc )"                 
       - name: Publish package
         run: npm publish
         env:
