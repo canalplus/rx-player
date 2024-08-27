@@ -30,8 +30,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.npm-pack.outputs }}
-          path: ${{ steps.npm-pack.outputs }}
+          name: ${{ steps.npm-pack.outputs.npm-pack }}
+          path: ${{ steps.npm-pack.outputs.npm-pack }}
 
 
 
