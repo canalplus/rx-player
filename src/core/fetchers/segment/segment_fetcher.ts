@@ -427,11 +427,35 @@ export interface ISegmentFetcherCallbacks<TSegmentDataType> {
 
 /** Content used by the segment loader as a context to load a new segment. */
 export interface ISegmentLoaderContent {
+  /** Manifest metadata linked to the wanted segment. */
   manifest: IManifest;
+  /** Period metadata linked to the wanted segment. */
   period: IPeriod;
+  /** Adaptation metadata linked to the wanted segment. */
   adaptation: IAdaptation;
+  /** Representation metadata linked to the wanted segment. */
   representation: IRepresentation;
+  /** Segment metadata linked to the wanted segment. */
   segment: ISegment;
+  /**
+   * Optional next segment that may be requested after this one.
+   * Should only be set (to something else than `undefined`) if that following
+   * segment is part of the same `Representation`.
+   *
+   * This is only used as an hint, finally requesting another segment after this
+   * one due to unexpected changes (e.g. bandwidth update, track change etc.) is
+   * OK.
+   *
+   * This information is then used mostly for matters related yet not required
+   * by requests, such as CMCD reporting. In scenarios when it's not
+   * straightforward to guess which segment will be requested after this one,
+   * this property can be ignored (set to `undefined`).
+   *
+   * If `null` no segment will be requested next for now.
+   *
+   * If `undefined` we do not know which next segment will be requested.
+   */
+  nextSegment: ISegment | null | undefined;
 }
 
 /**

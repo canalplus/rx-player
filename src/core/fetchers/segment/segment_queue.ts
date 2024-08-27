@@ -255,11 +255,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     }
 
     const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
-    const { segmentQueue } = downloadQueue.getValue();
-    const currentNeededSegment = segmentQueue[0];
-    const recursivelyRequestSegments = (
-      startingSegment: IQueuedSegment | undefined,
-    ): void => {
+
+    const recursivelyRequestSegments = (): void => {
+      const { segmentQueue } = downloadQueue.getValue();
+      const startingSegment = segmentQueue[0];
       if (currentCanceller !== null && currentCanceller.isUsed()) {
         contentInfo.mediaSegmentRequest = null;
         return;
@@ -276,7 +275,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           : canceller.linkToSignal(currentCanceller.signal);
 
       const { segment, priority } = startingSegment;
-      const context = objectAssign({ segment }, content);
+      const context = objectAssign(
+        { segment, nextSegment: segmentQueue[1]?.segment },
+        content,
+      );
 
       /**
        * If `true` , the current task has either errored, finished, or was
@@ -318,7 +320,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           lastQueue.shift();
         }
         isComplete = true;
-        recursivelyRequestSegments(lastQueue[0]);
+        recursivelyRequestSegments();
       };
 
       /** Scheduled actual segment request. */
@@ -422,7 +424,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
 
       contentInfo.mediaSegmentRequest = { segment, priority, request, canceller };
     };
-    recursivelyRequestSegments(currentNeededSegment);
+    recursivelyRequestSegments();
   }
 
   /**
@@ -449,7 +451,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
         ? noop
         : canceller.linkToSignal(contentInfo.currentCanceller.signal);
     const { segment, priority } = queuedInitSegment;
-    const context = objectAssign({ segment }, content);
+    const context = objectAssign({ segment, nextSegment: undefined }, content);
 
     /**
      * If `true` , the current task has either errored, finished, or was

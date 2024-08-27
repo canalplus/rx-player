@@ -19,9 +19,9 @@ import startsWith from "./starts_with";
 // Scheme part of an url (e.g. "http://").
 const schemeRe = /^(?:[a-z]+:)?\/\//i;
 
-/** 
+/**
  * Match the different components of an URL.
- * 
+ *
  *     foo://example.com:8042/over/there?name=ferret#nose
        \_/   \______________/\_________/ \_________/ \__/
         |           |            |            |        |
@@ -66,6 +66,50 @@ function getFilenameIndexInUrl(url: string): number {
   }
 
   return indexOfLastSlash + 1;
+}
+
+function getRelativeUrl(url1: string, url2: string): string | null {
+  const parts1 = parseURL(url1);
+  const parts2 = parseURL(url2);
+  if (parts1.scheme !== parts2.scheme || parts1.authority !== parts2.authority) {
+    return null;
+  }
+
+  if (
+    (parts1.path[0] === "/" || parts2.path[0] === "/") &&
+    parts1.path[0] !== parts2.path[0]
+  ) {
+    return null;
+  }
+
+  const normalizedPath1 = removeDotSegment(parts1.path);
+  const normalizedPath2 = removeDotSegment(parts2.path);
+
+  const splittedPath1 = normalizedPath1.split("/");
+  if (splittedPath1[0] === "") {
+    splittedPath1.shift();
+  }
+
+  const splittedPath2 = normalizedPath2.split("/");
+  if (splittedPath2[0] === "") {
+    splittedPath2.shift();
+  }
+
+  while (
+    splittedPath1.length > 0 &&
+    splittedPath2.length > 0 &&
+    splittedPath1[0] === splittedPath2[0]
+  ) {
+    splittedPath1.shift();
+    splittedPath2.shift();
+  }
+
+  while (splittedPath1.length > 0) {
+    splittedPath1.shift();
+    splittedPath2.unshift("..");
+  }
+
+  return splittedPath2.length === 0 ? "." : splittedPath2.join("/");
 }
 
 /**
@@ -276,5 +320,5 @@ export function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl };
+export { getFilenameIndexInUrl, getRelativeUrl };
 export default resolveURL;

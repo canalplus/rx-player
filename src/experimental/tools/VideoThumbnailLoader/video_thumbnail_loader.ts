@@ -207,7 +207,10 @@ export default class VideoThumbnailLoader {
           lastRepInfo.initSegmentUniqueId = null;
           return sourceBufferInterface;
         }
-        const segmentInfo = objectAssign({ segment: initSegment }, content);
+        const segmentInfo = objectAssign(
+          { segment: initSegment, nextSegment: undefined },
+          content,
+        );
         await loadAndPushSegment(
           segmentInfo,
           sourceBufferInterface,
@@ -272,7 +275,10 @@ export default class VideoThumbnailLoader {
             const unlinkSignal = requestCanceller.linkToSignal(
               lastRepInfo.cleaner.signal,
             );
-            const segmentInfo = objectAssign({ segment }, content);
+            const segmentInfo = objectAssign(
+              { segment, nextSegment: undefined },
+              content,
+            );
             const prom = loadAndPushSegment(
               segmentInfo,
               sourceBufferInterface,

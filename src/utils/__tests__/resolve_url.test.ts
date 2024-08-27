@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import resolveURL, { getFilenameIndexInUrl } from "../resolve_url";
+import resolveURL, { getFilenameIndexInUrl, getRelativeUrl } from "../resolve_url";
 
 describe(`utils - resolveURL ${resolveURL.name}`, () => {
   it("should return an empty string if no argument is given", () => {
@@ -153,5 +153,88 @@ describe("utils - getFilenameIndexInUrl", () => {
     expect(getFilenameIndexInUrl("https://ww/ddd?test/toto/efewf/ffe/")).toEqual(11);
     expect(getFilenameIndexInUrl("https://ww/rr/d?test/toto/efewf/ffe/")).toEqual(14);
     expect(getFilenameIndexInUrl("https://ww/rr/d/?test/toto/efewf/ffe/")).toEqual(16);
+  });
+});
+
+describe("utils - getRelativeUrl", () => {
+  it("should succeed on two absolute URLs on the same domain", () => {
+    expect(
+      getRelativeUrl("https://foo.com/foo/bar/cil", "https://foo.com/foo/bar/cil/diub"),
+    ).toEqual("diub");
+    expect(
+      getRelativeUrl(
+        "https://foo.com/foo/bar/cil",
+        "https://foo.com/foo/bar/cil/diub/emp",
+      ),
+    ).toEqual("diub/emp");
+    expect(
+      getRelativeUrl(
+        "https://foo.com/foo/bar/cil/diub/emp",
+        "https://foo.com/foo/bar/cil/f/g/h/i",
+      ),
+    ).toEqual("../../f/g/h/i");
+
+    expect(
+      getRelativeUrl(
+        "https://foo.com/foo/bar/cil/emp",
+        "https://foo.com/foo/bar/cil/emp",
+      ),
+    ).toEqual(".");
+  });
+
+  it("should fail if scheme is different", () => {
+    expect(
+      getRelativeUrl("http://foo.com/foo/bar/cil/emp", "https://foo.com/foo/bar/cil/emp"),
+    ).toEqual(null);
+
+    expect(
+      getRelativeUrl("https://foo.com/foo/bar/cil/emp", "http://foo.com/foo/bar/cil/emp"),
+    ).toEqual(null);
+  });
+
+  it("should fail if domain is different", () => {
+    expect(
+      getRelativeUrl(
+        "https://bar.com/foo/bar/cil/emp",
+        "https://foo.com/foo/bar/cil/emp",
+      ),
+    ).toEqual(null);
+  });
+
+  it("should fail if one anounce a domain but not the other", () => {
+    expect(getRelativeUrl("https://foo.com/foo/bar/cil/diub/emp", "/a")).toEqual(null);
+
+    expect(getRelativeUrl("../url", "https://foo.com")).toEqual(null);
+  });
+
+  it('should output "." if the URL points to the same file', () => {
+    expect(getRelativeUrl("../url", "../url")).toEqual(".");
+    expect(
+      getRelativeUrl(
+        "https://foo.com/foo/bar/cil/diub/emp",
+        "https://foo.com/foo/bar/cil/diub/emp",
+      ),
+    ).toEqual(".");
+    expect(
+      getRelativeUrl(
+        "https://foo.com/foo/bar/cil/diub/emp",
+        "https://foo.com/foo/bar/../bar/cil/diub/emp",
+      ),
+    ).toEqual(".");
+  });
+
+  it("should succeed on two relative URLs", () => {
+    expect(getRelativeUrl("../url/a", "../url/a/b")).toEqual("b");
+    expect(getRelativeUrl("../url/a", "../url/b/c")).toEqual("../b/c");
+  });
+
+  it("should fail if one seems to be relative to the domain's root, yet we don't know it", () => {
+    expect(getRelativeUrl("/url/a", "../url/b/c")).toEqual(null);
+    expect(getRelativeUrl("./url/a", "/url/b/c")).toEqual(null);
+    expect(getRelativeUrl("http://foo.com/url/a", "/url/b/c")).toEqual(null);
+  });
+
+  it("should succeed if both seem to be relative to the domain's root, even if we don't know it", () => {
+    expect(getRelativeUrl("/url/a", "/url/b/c")).toEqual("../b/c");
   });
 });

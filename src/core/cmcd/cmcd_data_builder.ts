@@ -15,6 +15,7 @@ import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types"
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IRange } from "../../utils/ranges";
+import { getRelativeUrl } from "../../utils/resolve_url";
 import TaskCanceller from "../../utils/task_canceller";
 
 /**
@@ -44,6 +45,18 @@ export interface ICmcdSegmentInfo {
   representation: IRepresentation;
   /** Segment metadata linked to the wanted segment. */
   segment: ISegment;
+  /**
+   * Optional next segment that may be requested after this one.
+   * Should only be set (to something else than `undefined`) if that following
+   * segment is part of the same `Representation`.
+   *
+   * This information is used to produce the "next object request" and "next
+   * range request" part of the CMCD payload, used for segment prefetching.
+   *
+   * If `null` no segment will be requested next for now.
+   * If `undefined` we do not know which next segment will be requested.
+   */
+  nextSegment: ISegment | null | undefined;
 }
 
 /**
@@ -221,7 +234,6 @@ export default class CmcdDataBuilder {
     const props = this._getCommonCmcdData(this._lastThroughput[content.adaptation.type]);
     props.br = Math.round(content.representation.bitrate / 1000);
     props.d = Math.round(content.segment.duration * 1000);
-    // TODO nor (next object request) and nrr (next range request)
 
     switch (content.adaptation.type) {
       case "video":
@@ -236,6 +248,33 @@ export default class CmcdDataBuilder {
     }
     if (content.segment.isInit) {
       props.ot = "i";
+    }
+
+    if (
+      !isNullOrUndefined(content.nextSegment) &&
+      content.segment.url !== null &&
+      content.nextSegment.url !== null
+    ) {
+      // We add a special case for some initialization segment which need
+      // multiple byte-ranges to fully request, as the `CmcdDataBuilder`
+      // is not supposed to keep track of how the requesting part of the
+      // RxPlayer actually perform its multi-byte-range requests
+      if (!content.nextSegment.isInit || content.nextSegment.indexRange === undefined) {
+        const currSegmentUrl = content.segment.url;
+        const nextSegmentUrl = content.nextSegment.url;
+        const relativeUrl = getRelativeUrl(currSegmentUrl, nextSegmentUrl);
+        if (relativeUrl !== null) {
+          if (relativeUrl !== ".") {
+            props.nor = encodeURIComponent(relativeUrl);
+          }
+          if (content.nextSegment.range !== undefined) {
+            props.nrr = String(content.nextSegment.range[0]) + "-";
+            if (isFinite(content.nextSegment.range[1])) {
+              props.nrr += String(content.nextSegment.range[1]);
+            }
+          }
+        }
+      }
     }
 
     let precizeBufferLengthMs;
@@ -355,7 +394,7 @@ export default class CmcdDataBuilder {
     };
 
     const addStringProperty = (
-      prop: "cid" | "sid",
+      prop: "cid" | "sid" | "nor" | "nrr",
       headerName: keyof typeof headers,
     ): void => {
       const val = props[prop];
@@ -384,6 +423,8 @@ export default class CmcdDataBuilder {
     addNumberProperty("d", "object");
     addNumberProperty("dl", "request");
     addNumberProperty("mtp", "request");
+    addStringProperty("nor", "request");
+    addStringProperty("nrr", "request");
     addTokenProperty("ot", "object");
     addNumberProperty("pr", "session");
     addNumberProperty("rtp", "status");
@@ -518,6 +559,31 @@ interface ICmcdProperties {
    * In kbps.
    */
   mtp?: number | undefined;
+  /**
+   * Next Object Request (nor)
+   * Relative path of the next object to be requested.
+   * This can be used to trigger pre-fetching by the CDN.
+   * This MUST be a path relative to the current request.
+   * This string MUST be URLEncoded.
+   * The client SHOULD NOT depend upon any pre-fetch action being taken - it is
+   * merely a request for such a pre-fetch to take place.
+   */
+  nor?: string | undefined;
+  /**
+   * Next Range Request (nrr)
+   * If the next request will be a partial object request, then this string
+   * denotes the byte range to be requested. If the ‘nor’ field is not set, then
+   * the object is assumed to match the object currently being requested.
+   * The client SHOULD NOT depend upon any pre-fetch action being taken – it is
+   * merely a request for such a pre-fetch to take place. Formatting is similar
+   * to the HTTP Range header, except that the unit MUST be ‘byte’, the ‘Range:’
+   * prefix is NOT required and specifying multiple ranges is NOT allowed.
+   * Valid combinations are:
+   * "<range-start>-"
+   * "<range-start>-<range-end>"
+   * "-<suffix-length>"
+   */
+  nrr?: string | undefined;
   /**
    * Object type (ot)
    * The media type of the current object being requested:
