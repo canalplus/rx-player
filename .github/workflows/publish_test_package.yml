@@ -25,12 +25,11 @@ jobs:
       - run: echo "$(<.npmrc )"                 
       - run: echo "$(<~/.npmrc )"         
       - run: cat $NPM_CONFIG_USERCONFIG
-        
+      - run: echo ${{secrets.GITHUB_TOKEN}}
 
       - name: Install dependencies
         run: npm ci
       - name: Publish package
         run: npm publish
-        env:
-            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo totos 
       
