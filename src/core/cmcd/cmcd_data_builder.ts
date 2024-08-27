@@ -377,8 +377,8 @@ export default class CmcdDataBuilder {
       }
     };
 
-    addNumberProperty("br", "object");
     addNumberProperty("bl", "request");
+    addNumberProperty("br", "object");
     addBooleanProperty("bs", "status");
     addStringProperty("cid", "session");
     addNumberProperty("d", "object");
