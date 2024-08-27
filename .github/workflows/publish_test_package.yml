@@ -29,5 +29,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Publish package
-        run: npm publish
+        run: npm publish --access public
+
       
