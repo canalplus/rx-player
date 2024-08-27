@@ -140,8 +140,6 @@
   "license": "Apache-2.0",
   "sideEffects": false,
   "scripts": {
-    "prepare": "echo prepare > prepare.txt",
-    "postinstall": "echo postinstall > postinstall.txt", 
     "build": "./scripts/generate_build.mjs",
     "build:all": "npm run clean:build && npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
     "build:dev": "./scripts/generate_build.mjs --dev-mode",

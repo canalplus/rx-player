@@ -1,0 +1,29 @@
+name: Publish test package
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  publish-test-package:
+    # if: ${{ github.event.label.name == 'Performance checks' }}
+    runs-on: [ubuntu-latest]
+    permissions:
+        packages: write
+        contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://npm.pkg.github.com/'
+
+      # needed for integration & memory tests codecs support
+      
+      - name: Install dependencies
+        run: npm ci
+      - name: Publish package
+        run: npm publish
+        env:
+            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
