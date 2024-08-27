@@ -22,7 +22,7 @@ import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
+import { getFilenameIndexInUrl } from "../../../utils/url-utils";
 import type {
   IParsedAdaptation,
   IParsedAdaptations,

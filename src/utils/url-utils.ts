@@ -68,48 +68,62 @@ function getFilenameIndexInUrl(url: string): number {
   return indexOfLastSlash + 1;
 }
 
-function getRelativeUrl(url1: string, url2: string): string | null {
-  const parts1 = parseURL(url1);
-  const parts2 = parseURL(url2);
-  if (parts1.scheme !== parts2.scheme || parts1.authority !== parts2.authority) {
+/**
+ * Take two URLs and try to construct a relative URL for the second (`newUrl`)
+ * relative to the first (`baseUrl`).
+ *
+ * Returns `null` if they appear to be on different domains, depend on
+ * different schemes or if we don't have enough information to compute the
+ * relative URL.
+ * @param {string} baseUrl
+ * @param {string} newUrl
+ * @returns {string}
+ */
+function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
+  const baseParts = parseURL(baseUrl);
+  const newParts = parseURL(newUrl);
+  if (
+    baseParts.scheme !== newParts.scheme ||
+    baseParts.authority !== newParts.authority
+  ) {
     return null;
   }
 
   if (
-    (parts1.path[0] === "/" || parts2.path[0] === "/") &&
-    parts1.path[0] !== parts2.path[0]
+    (baseParts.path[0] === "/" || newParts.path[0] === "/") &&
+    baseParts.path[0] !== newParts.path[0]
   ) {
     return null;
   }
 
-  const normalizedPath1 = removeDotSegment(parts1.path);
-  const normalizedPath2 = removeDotSegment(parts2.path);
+  const baseNormalizedPath = removeDotSegment(baseParts.path);
+  const newNormalizedPath = removeDotSegment(newParts.path);
 
-  const splittedPath1 = normalizedPath1.split("/");
-  if (splittedPath1[0] === "") {
-    splittedPath1.shift();
+  const basePathSplitted = baseNormalizedPath.split("/");
+  if (basePathSplitted[0] === "") {
+    basePathSplitted.shift();
   }
 
-  const splittedPath2 = normalizedPath2.split("/");
-  if (splittedPath2[0] === "") {
-    splittedPath2.shift();
+  const newPathSplitted = newNormalizedPath.split("/");
+  if (newPathSplitted[0] === "") {
+    newPathSplitted.shift();
   }
 
   while (
-    splittedPath1.length > 0 &&
-    splittedPath2.length > 0 &&
-    splittedPath1[0] === splittedPath2[0]
+    basePathSplitted.length > 0 &&
+    newPathSplitted.length > 0 &&
+    basePathSplitted[0] === newPathSplitted[0]
   ) {
-    splittedPath1.shift();
-    splittedPath2.shift();
+    basePathSplitted.shift();
+    newPathSplitted.shift();
   }
 
-  while (splittedPath1.length > 0) {
-    splittedPath1.shift();
-    splittedPath2.unshift("..");
+  while (basePathSplitted.length > 0) {
+    basePathSplitted.shift();
+    newPathSplitted.unshift("..");
   }
 
-  return splittedPath2.length === 0 ? "." : splittedPath2.join("/");
+  return newPathSplitted.length === 0 ? "." : newPathSplitted.join("/");
 }
 
 /**
@@ -303,7 +317,7 @@ function mergePaths(baseParts: IParsedURL, relativePath: string): string {
  * @param {...(string|undefined)} args - The URL segments to resolve.
  * @returns {string} The resolved URL as a string.
  */
-export function resolveURL(...args: Array<string | undefined>): string {
+function resolveURL(...args: Array<string | undefined>): string {
   const filteredArgs = args.filter((val) => val !== "");
   const len = filteredArgs.length;
   if (len === 0) {
@@ -320,5 +334,4 @@ export function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl, getRelativeUrl };
-export default resolveURL;
+export { getFilenameIndexInUrl, getRelativeUrl, resolveURL };

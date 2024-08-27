@@ -15,8 +15,8 @@ import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types"
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IRange } from "../../utils/ranges";
-import { getRelativeUrl } from "../../utils/resolve_url";
 import TaskCanceller from "../../utils/task_canceller";
+import { getRelativeUrl } from "../../utils/url-utils";
 
 /**
  * `rtp`, for "REQUESTED_MAXIMUM_THROUGHPUT", indicates the maximum throughput
