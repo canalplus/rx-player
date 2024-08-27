@@ -5,7 +5,7 @@ on:
 
 jobs:
   publish-test-package:
-    # if: ${{ github.event.label.name == 'Performance checks' }}
+    # if: ${{ github.event.label.name == 'Publish test package' }}
     runs-on: [ubuntu-latest]
     permissions:
         packages: write
@@ -19,7 +19,9 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       # needed for integration & memory tests codecs support
-      
+      - name: Configure .npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
       - name: Install dependencies
         run: npm ci
       - run: echo "$(<.npmrc )"                 
