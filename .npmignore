@@ -17,6 +17,7 @@
 /scripts
 # rust build artifacts
 /src/parsers/manifest/dash/wasm-parser/target
+/src
 
 /FILES.md
 /CONTRIBUTING.md

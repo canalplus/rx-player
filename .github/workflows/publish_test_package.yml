@@ -21,7 +21,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # needed for integration & memory tests codecs support
       - run: echo "$(<.npmrc )"                 
       - run: echo "$(<~/.npmrc )"         
       - run: cat $NPM_CONFIG_USERCONFIG
@@ -31,5 +30,4 @@ jobs:
         run: npm ci
       - name: Publish package
         run: npm publish
-      - run: echo totos 
       
