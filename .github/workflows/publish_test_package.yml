@@ -39,7 +39,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ steps.npm-pack.outputs.npm-pack }}
           asset_name: testrx
-          tag: 4.2.1
+          tag: 4.2.2
           overwrite: true
           body: "This is my release text"
 
