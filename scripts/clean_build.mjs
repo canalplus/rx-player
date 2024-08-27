@@ -110,14 +110,17 @@ function getRightNpmExecutablePath() {
   let npmExecutable = "npm";
   const npmVersion = String(execSync(npmExecutable + " -v"));
   const majorVersion = parseInt(npmVersion.split(".")[0], 10);
-  if (!isNaN(majorVersion) && majorVersion < 6) {
+  if (isNaN(majorVersion)) {
+    throw new Error("Unrecognized npm version: " + npmVersion);
+  }
+  if (majorVersion < 6) {
     // Older versions of `npm` seem to break (seen on npm 5, but we'll also
     // consider 6 here as a security
     const whichNpm = String(execSync("command -v npm")).trim();
     let npmLocations = String(execSync("whereis npm"))
       .split(" ")
-      // Maybe not needed, but better safe than sorry
-      .filter((s) => s.trim().length > 0);
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
 
     if (npmLocations[0] === "npm:") {
       npmLocations = npmLocations.slice(1);
@@ -132,10 +135,17 @@ function getRightNpmExecutablePath() {
       } else {
         npmExecutable = npmLocations[0].trim();
       }
-      console.warn(
-        `The "npm" command seems to call a local package ("${whichNpm}").` +
-          ` Relying on "${npmExecutable}" instead`,
-      );
+
+      const newNpmVersion = String(execSync(npmExecutable + " -v"));
+      const newMajorVersion = parseInt(newNpmVersion.split(".")[0], 10);
+      if (isNan(newMajorVersion) || newMajorVersion <= majorVersion) {
+        npmExecutable = "npm";
+      } else {
+        console.warn(
+          `The "npm" command seems to call a local package ("${whichNpm}").` +
+            ` Relying on "${npmExecutable}" instead`,
+        );
+      }
     }
   }
   return npmExecutable;
