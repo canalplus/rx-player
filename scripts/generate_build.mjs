@@ -55,7 +55,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
  * @param {Object|undefined} options
  * @returns {Promise}
  */
-async function generateBuild(options = {}) {
+export default async function generateBuild(options = {}) {
   try {
     const devMode = options.devMode === true;
     console.log(" 🧹 Removing previous build artefacts...");
@@ -70,7 +70,7 @@ async function generateBuild(options = {}) {
     if (!fs.existsSync(dashWasmDir)) {
       console.log(" 🏭 Generating WebAssembly file...");
       await spawnProm(
-        "npm run " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
+        "npm run --silent " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
         [],
         (code) => new Error(`WebAssembly compilation process exited with code ${code}`),
       );
