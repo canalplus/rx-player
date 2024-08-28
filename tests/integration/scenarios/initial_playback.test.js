@@ -280,7 +280,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
 
       expect(manifestLoaderCalledTimes).to.equal(1);
-      await sleep(100);
+      await sleep(500);
       expect(manifestLoaderCalledTimes).to.equal(1);
 
       expect(segmentLoaderLoaderCalledTimes).to.equal(4);
