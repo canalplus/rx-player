@@ -973,7 +973,7 @@ refer to the [`streamEvent`](#streamevent) event for a definition of what a "str
 is).
 
 This means that the current position the player plays at, immediately changed from a time
-before the start time of a "stream event" to after its end time (or just after its end
+before the start time of a "stream event" to after its end time (or just after its start
 time for "stream event" without an end time).
 
 This is most likely due to the user seeking in the content. A "regular" content playback
