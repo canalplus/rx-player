@@ -356,7 +356,7 @@ describe("manifest error management", function () {
 
     expect(player.getError()).to.equal(null);
 
-    vi.advanceTimersByTime(100000);
+    vi.advanceTimersByTime(10000);
     vi.useRealTimers();
 
     await sleepWithoutFakeTimer(0);
