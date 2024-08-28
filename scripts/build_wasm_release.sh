@@ -3,13 +3,21 @@
 # TODO documentation
 
 print_toolchain_installation_notice() {
-  echo " +----------------------------------------------------------------------------------+"
-  echo " |  A rust toolchain will be installed locally in a temporary directory (./tmp).    |"
-  echo " |                                                                                  |"
-  echo " |  If you intend to develop on the RxPlayer regularly, it is recommended that you  |"
-  echo " |  install globally rustup (with the \"wasm32-unknown-unknown\" target) as well as   |"
-  echo " |  binaryen. Once done, please remove this \"tmp\" directory.                        |"
-  echo " +----------------------------------------------------------------------------------+"
+  echo ""
+  echo ""
+  echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer building Info  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo ""
+  echo "   A Rust toolchain is needed to build some components of the RxPlayer."
+  echo "   We will thus now install one locally in the following temporary directory:"
+  echo "   $(pwd)/tmp "
+  echo ""
+  echo "   If you intend to develop or build the RxPlayer regularly, you can install rustup or"
+  echo "   cargo globally (with the \"wasm32-unknown-unknown\" target) as well as binaryen."
+  echo "   Once done, this \"tmp\" directory can be removed."
+  echo ""
+  echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo ""
+  echo ""
 }
 
 has_local_cargo=false
@@ -47,18 +55,18 @@ fi
 
 # Move to MPD parser directory
 cd ./src/parsers/manifest/dash/wasm-parser
-echo "Building mpd-parser WebAssembly file with Cargo..."
+echo " 🦀 Building mpd-parser WebAssembly file with Cargo..."
 if $has_local_cargo; then
-  echo "⚠️  NOTE  ⚠️ : Relying on local cargo in ./tmp/cargo/bin/cargo"
+  echo "NOTE: Relying on local cargo in ./tmp/cargo/bin/cargo"
   . ../../../../../tmp/cargo/env
-  ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release
+  ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release -q
 else
-  cargo build --target wasm32-unknown-unknown --release
+  cargo build --target wasm32-unknown-unknown --release -q
 fi
 
-echo "Optimizing mpd-parser WebAssembly build..."
+echo " 🪚 Optimizing mpd-parser WebAssembly build..."
 if $has_local_wasmopt; then
-  echo "⚠️  NOTE  ⚠️ : Relying on local wasm-opt in ./tmp/binaryen/bin/wasm-opt"
+  echo "NOTE: Relying on local wasm-opt in ./tmp/binaryen/bin/wasm-opt"
   ../../../../../tmp/binaryen/bin/wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm
 else
   wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm

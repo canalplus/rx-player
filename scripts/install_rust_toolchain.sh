@@ -4,7 +4,7 @@
 
 # Log a line to stdout, prefixing it with the name of this script
 log() {
-  printf 'install_rust_toolchain: %s\n' "$1"
+  printf 'rx-player > install_rust_toolchain: %s\n' "$1"
 }
 
 # Log a line to sterr, prefixing it with the name of this script
@@ -32,7 +32,8 @@ ensure() {
   fi
 }
 
-log "This script will only install dependencies locally in a ./tmp directory"
+log "This script will install Rust dependencies locally in the following directory: $(pwd)/tmp"
+log "A lot of logs may be produced by this installation, they can mostly be ignored."
 
 requires_cmd curl
 requires_cmd tar
@@ -143,5 +144,5 @@ if ! [ -f tmp/binaryen/bin/wasm-opt ]; then
   err "Error after installing binaryen: wasm-opt not available in ./tmp/binaryen/bin/wasm-opt"
 fi
 
-echo ""
-echo "All dependencies have been installed with success!"
+log "All Rust dependencies have been installed"
+log "Exiting the current script with success!"
