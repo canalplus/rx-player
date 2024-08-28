@@ -98,6 +98,7 @@ export default async function getMediaKeysInfos(
   const persistentSessionsStore = createPersistentSessionsStorage(options);
 
   if (
+    evt.value.options.renewMediaKeys !== true &&
     canReuseMediaKeys() &&
     currentState !== null &&
     evt.type === "reuse-media-key-system-access"
