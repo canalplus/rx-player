@@ -501,7 +501,7 @@ export class DummySourceBuffer
         this._lastKeyId = keyId;
 
         const completeChunks: Uint8Array[] =
-          otherChunks === null ? [] : extractCompleteChunks(otherChunks)[0] ?? [];
+          otherChunks === null ? [] : (extractCompleteChunks(otherChunks)[0] ?? []);
         const chunks: Uint8Array[] =
           initSegment === null ? completeChunks : [initSegment, ...completeChunks];
 
