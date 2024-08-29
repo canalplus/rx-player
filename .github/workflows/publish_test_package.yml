@@ -37,6 +37,8 @@ jobs:
         run: echo "npm-pack=$(npm pack)" >> $GITHUB_OUTPUT
         id: npm-pack
 
+      - run : "echo ${{ github.sha }}"
+      
       - name: Upload Zip to release
         uses: svenstaro/upload-release-action@v2
         id: upload-action
@@ -45,6 +47,7 @@ jobs:
           file: ${{ steps.npm-pack.outputs.npm-pack }}
           asset_name: rx-player.tgz
           tag: "preview.${{ github.sha }}"
+          release_name: "preview.${{ github.sha }}"
           overwrite: true
           body: "This is my release text"
 
