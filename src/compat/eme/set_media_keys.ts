@@ -36,10 +36,6 @@ export function setMediaKeys(
       throw err;
     });
 
-  if (shouldAwaitSetMediaKeys()) {
-    return prom;
-  }
-
   return Promise.race([
     prom,
 
