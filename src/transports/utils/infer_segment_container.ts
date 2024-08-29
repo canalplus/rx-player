@@ -24,15 +24,15 @@ import type { ITrackType } from "../../public_types";
  *   - "webm" if we can say with confidence the segment will be in a webm format
  *   - `undefined` if we cannot say with confidence in which container the
  *     segment will be in.
- * @param {string} adaptationType
+ * @param {string} trackType
  * @param {string} mimeType
  * @returns {string | undefined}
  */
 export default function inferSegmentContainer(
-  adaptationType: ITrackType,
+  trackType: ITrackType,
   mimeType: string | undefined,
 ): "webm" | "mp4" | undefined {
-  if (adaptationType === "audio" || adaptationType === "video") {
+  if (trackType === "audio" || trackType === "video") {
     if (mimeType === "video/mp4" || mimeType === "audio/mp4") {
       return "mp4";
     }
@@ -40,7 +40,7 @@ export default function inferSegmentContainer(
       return "webm";
     }
     return undefined;
-  } else if (adaptationType === "text") {
+  } else if (trackType === "text") {
     return mimeType === "application/mp4" ? "mp4" : undefined;
   }
   return undefined;

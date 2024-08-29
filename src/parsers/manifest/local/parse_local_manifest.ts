@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
+import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import type {
   IContentProtections,
   IContentProtectionInitData,
-  IParsedAdaptation,
+  IParsedTrack,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
+  IParsedVariantStreamMetadata,
 } from "../types";
 import LocalRepresentationIndex from "./representation_index";
 import type {
@@ -86,26 +88,44 @@ function parsePeriod(
   period: ILocalPeriod,
   ctxt: { periodIdGenerator: () => string /* Generate next Period's id */ },
 ): IParsedPeriod {
-  const adaptationIdGenerator = idGenerator();
+  const trackIdGenerator = idGenerator();
+
+  const tracksMetadata = period.adaptations.reduce<
+    Record<"audio" | "video" | "text", IParsedTrack[]>
+  >(
+    (acc, ada) => {
+      const parsed = parseAdaptation(ada, { trackIdGenerator });
+      acc[ada.type].push(parsed);
+      return acc;
+    },
+    { audio: [], video: [], text: [] },
+  );
+  const getMediaForType = (type: ITrackType) => {
+    return tracksMetadata[type].map((t) => {
+      return {
+        id: t.id,
+        linkedTrack: t.id,
+        representations: t.representations.map((r) => r.id),
+      };
+    });
+  };
+  const variantStream: IParsedVariantStreamMetadata = {
+    id: "0",
+    bandwidth: undefined,
+    media: {
+      audio: getMediaForType("audio"),
+      video: getMediaForType("video"),
+      text: getMediaForType("text"),
+    },
+  };
   return {
     id: "period-" + ctxt.periodIdGenerator(),
 
     start: period.start,
     end: period.end,
     duration: period.end - period.start,
-    adaptations: period.adaptations.reduce<Partial<Record<string, IParsedAdaptation[]>>>(
-      (acc, ada) => {
-        const type = ada.type;
-        let adaps = acc[type];
-        if (adaps === undefined) {
-          adaps = [];
-          acc[type] = adaps;
-        }
-        adaps.push(parseAdaptation(ada, { adaptationIdGenerator }));
-        return acc;
-      },
-      {},
-    ),
+    variantStreams: [variantStream],
+    tracksMetadata,
   };
 }
 
@@ -117,15 +137,15 @@ function parsePeriod(
 function parseAdaptation(
   adaptation: ILocalAdaptation,
   ctxt: {
-    adaptationIdGenerator: () => string /* Generate next Adaptation's id */;
+    trackIdGenerator: () => string /* Generate next track's id */;
   },
-): IParsedAdaptation {
+): IParsedTrack {
   const representationIdGenerator = idGenerator();
   return {
-    id: "adaptation-" + ctxt.adaptationIdGenerator(),
-    type: adaptation.type,
-    audioDescription: adaptation.audioDescription,
-    closedCaption: adaptation.closedCaption,
+    id: "track-" + ctxt.trackIdGenerator(),
+    trackType: adaptation.type,
+    isAudioDescription: adaptation.audioDescription,
+    isClosedCaption: adaptation.closedCaption,
     language: adaptation.language,
     representations: adaptation.representations.map((representation) =>
       parseRepresentation(representation, { representationIdGenerator }),

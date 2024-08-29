@@ -17,7 +17,7 @@
 import log from "../../../log";
 import type {
   IManifest,
-  IAdaptation,
+  ITrackMetadata,
   ISegment,
   IPeriod,
   IRepresentation,
@@ -151,7 +151,7 @@ export interface IRequestInfo {
 export interface IRequestInfoContent {
   manifest: IManifest;
   period: IPeriod;
-  adaptation: IAdaptation;
+  track: ITrackMetadata;
   representation: IRepresentation;
   segment: ISegment;
 }

@@ -15,11 +15,12 @@
  */
 
 import log from "../../../log";
+import type { ITrackType } from "../../../public_types";
 import arrayIncludes from "../../../utils/array_includes";
-import type { IParsedAdaptationType, IParsedManifest } from "../types";
+import type { IParsedManifest } from "../types";
 
 /**
- * Ensure that no two periods, adaptations from the same period and
+ * Ensure that no two periods, variants and tracks from the same period and
  * representations from the same adaptation, have the same ID.
  *
  * Log and mutate their ID if not until this is verified.
@@ -39,26 +40,26 @@ export default function checkManifestIDs(manifest: IParsedManifest): void {
     } else {
       periodIDS.push(periodID);
     }
-    const { adaptations } = period;
-    const adaptationIDs: string[] = [];
-    (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
-      const adaptationsForType = adaptations[type];
-      if (adaptationsForType === undefined) {
+    const { tracksMetadata } = period;
+    const trackIDs: string[] = [];
+    (Object.keys(tracksMetadata) as ITrackType[]).forEach((type) => {
+      const tracksForType = tracksMetadata[type];
+      if (tracksForType === undefined) {
         return;
       }
-      adaptationsForType.forEach((adaptation) => {
-        const adaptationID = adaptation.id;
-        if (arrayIncludes(adaptationIDs, adaptationID)) {
-          log.warn("Two adaptations with the same ID found. Updating.", adaptationID);
-          const newID = adaptationID + "-dup";
-          adaptation.id = newID;
+      tracksForType.forEach((track) => {
+        const trackID = track.id;
+        if (arrayIncludes(trackIDs, trackID)) {
+          log.warn("Two tracks with the same ID found. Updating.", trackID);
+          const newID = trackID + "-dup";
+          track.id = newID;
           checkManifestIDs(manifest);
-          adaptationIDs.push(newID);
+          trackIDs.push(newID);
         } else {
-          adaptationIDs.push(adaptationID);
+          trackIDs.push(trackID);
         }
         const representationIDs: Array<number | string> = [];
-        adaptation.representations.forEach((representation) => {
+        track.representations.forEach((representation) => {
           const representationID = representation.id;
           if (arrayIncludes(representationIDs, representationID)) {
             log.warn(

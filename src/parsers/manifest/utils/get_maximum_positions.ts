@@ -16,7 +16,7 @@
 
 import log from "../../../log";
 import type { IParsedPeriod } from "../types";
-import getLastPositionFromAdaptation from "./get_last_time_from_adaptation";
+import getLastPositionFromRepresentations from "./get_last_time_from_representations";
 
 /**
  * @param {Array.<Object>} periods
@@ -27,31 +27,29 @@ export default function getMaximumPosition(periods: IParsedPeriod[]): {
   unsafe: number | undefined;
 } {
   for (let i = periods.length - 1; i >= 0; i--) {
-    const periodAdaptations = periods[i].adaptations;
-    const firstAudioAdaptationFromPeriod =
-      periodAdaptations.audio === undefined ? undefined : periodAdaptations.audio[0];
-    const firstVideoAdaptationFromPeriod =
-      periodAdaptations.video === undefined ? undefined : periodAdaptations.video[0];
+    const periodTracks = periods[i].tracksMetadata;
+    const firstAudioTrackFromPeriod = periodTracks.audio[0];
+    const firstVideoTrackFromPeriod = periodTracks.video[0];
 
     if (
-      firstAudioAdaptationFromPeriod !== undefined ||
-      firstVideoAdaptationFromPeriod !== undefined
+      firstAudioTrackFromPeriod !== undefined ||
+      firstVideoTrackFromPeriod !== undefined
     ) {
       // null == no segment
       let maximumAudioPosition: number | null = null;
       let maximumVideoPosition: number | null = null;
-      if (firstAudioAdaptationFromPeriod !== undefined) {
-        const lastPosition = getLastPositionFromAdaptation(
-          firstAudioAdaptationFromPeriod,
+      if (firstAudioTrackFromPeriod !== undefined) {
+        const lastPosition = getLastPositionFromRepresentations(
+          firstAudioTrackFromPeriod.representations,
         );
         if (lastPosition === undefined) {
           return { safe: undefined, unsafe: undefined };
         }
         maximumAudioPosition = lastPosition;
       }
-      if (firstVideoAdaptationFromPeriod !== undefined) {
-        const lastPosition = getLastPositionFromAdaptation(
-          firstVideoAdaptationFromPeriod,
+      if (firstVideoTrackFromPeriod !== undefined) {
+        const lastPosition = getLastPositionFromRepresentations(
+          firstVideoTrackFromPeriod.representations,
         );
         if (lastPosition === undefined) {
           return { safe: undefined, unsafe: undefined };
@@ -60,8 +58,8 @@ export default function getMaximumPosition(periods: IParsedPeriod[]): {
       }
 
       if (
-        (firstAudioAdaptationFromPeriod !== undefined && maximumAudioPosition === null) ||
-        (firstVideoAdaptationFromPeriod !== undefined && maximumVideoPosition === null)
+        (firstAudioTrackFromPeriod !== undefined && maximumAudioPosition === null) ||
+        (firstVideoTrackFromPeriod !== undefined && maximumVideoPosition === null)
       ) {
         log.info(
           "Parser utils: found Period with no segment. ",

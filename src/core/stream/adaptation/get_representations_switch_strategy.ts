@@ -15,7 +15,7 @@
  */
 
 import config from "../../../config";
-import type { IAdaptation, IPeriod } from "../../../manifest";
+import type { IPeriod, ITrackMetadata } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import arrayIncludes from "../../../utils/array_includes";
 import type { IRange } from "../../../utils/ranges";
@@ -33,7 +33,7 @@ import type {
 
 export default function getRepresentationsSwitchingStrategy(
   period: IPeriod,
-  adaptation: IAdaptation,
+  track: ITrackMetadata,
   settings: IRepresentationsChoice,
   segmentSink: SegmentSink,
   playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
@@ -47,7 +47,7 @@ export default function getRepresentationsSwitchingStrategy(
   for (const elt of inventory) {
     if (
       elt.infos.period.id === period.id &&
-      (elt.infos.adaptation.id !== adaptation.id ||
+      (elt.infos.track.id !== track.id ||
         !arrayIncludes(settings.representationIds, elt.infos.representation.id))
     ) {
       insertInto(unwantedRange, {
@@ -63,7 +63,7 @@ export default function getRepresentationsSwitchingStrategy(
       const info = operation.value.inventoryInfos;
       if (
         info.period.id === period.id &&
-        (info.adaptation.id !== adaptation.id ||
+        (info.track.id !== track.id ||
           !arrayIncludes(settings.representationIds, info.representation.id))
       ) {
         const start = info.segment.time;
@@ -73,7 +73,7 @@ export default function getRepresentationsSwitchingStrategy(
     }
   }
 
-  // Continue if we have no other Adaptation buffered in the current Period
+  // Continue if we have no other track buffered in the current Period
   if (unwantedRange.length === 0) {
     return { type: "continue", value: undefined };
   }
@@ -85,7 +85,7 @@ export default function getRepresentationsSwitchingStrategy(
     }
   }
 
-  // From here, clean-up data from the previous Adaptation, if one
+  // From here, clean-up data from the previous track, if one
   const shouldFlush = settings.switchingMode === "direct";
 
   const rangesToExclude = [];
@@ -109,7 +109,7 @@ export default function getRepresentationsSwitchingStrategy(
   if (!shouldFlush) {
     // exclude data around current position to avoid decoding issues
     const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
-    const bufferType = adaptation.type;
+    const bufferType = track.trackType;
 
     /** Ranges that won't be cleaned from the current buffer. */
     const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;

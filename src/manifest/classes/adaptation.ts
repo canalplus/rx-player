@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import type { IParsedAdaptation } from "../../parsers/manifest";
+import type { IParsedTrack } from "../../parsers/manifest";
 import type {
   ITrackType,
   IRepresentationFilter,
@@ -24,137 +24,146 @@ import type {
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
+import { objectValues } from "../../utils/object_values";
 import type {
-  IAdaptationMetadata,
+  ITrackMetadata,
   IRepresentationMetadata,
-  IAdaptationSupportStatus,
+  ITrackSupportStatus,
 } from "../types";
 import type CodecSupportCache from "./codec_support_cache";
 import Representation from "./representation";
 
 /**
- * Normalized Adaptation structure.
- * An `Adaptation` describes a single `Track`. For example a specific audio
- * track (in a given language) or a specific video track.
+ * Normalized track structure.
+ * A `Track` describes an available media of a particular type in a content.
+ * For example a specific audio track (in a given language) or a specific
+ * video track.
  * It istelf can be represented in different qualities, which we call here
  * `Representation`.
- * @class Adaptation
+ * @class Track
  */
-export default class Adaptation implements IAdaptationMetadata {
-  /** ID uniquely identifying the Adaptation in the Period. */
+export default class Track implements ITrackMetadata {
+  /** ID uniquely identifying the track in the Period. */
   public readonly id: string;
   /**
-   * `true` if this Adaptation was not present in the original Manifest, but was
+   * `true` if this track was not present in the original Manifest, but was
    * manually added after through the corresponding APIs.
    */
   public manuallyAdded?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
-  public readonly representations: Representation[];
+  public readonly representations: Record<string, Representation>;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
-  public readonly type: ITrackType;
+  public readonly trackType: ITrackType;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
+   */
+  public inVariantStreams: string[];
+  /**
+   * @see ITrackMetadata
    */
   public isAudioDescription?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public isClosedCaption?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public isForcedSubtitles?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public isSignInterpreted?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public isDub?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public language?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public normalizedLanguage?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
-  public supportStatus: IAdaptationSupportStatus;
+  public supportStatus: ITrackSupportStatus;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public isTrickModeTrack?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
   public label?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackMetadata
    */
-  public readonly trickModeTracks?: Adaptation[];
+  public readonly trickModeTracks?: Track[];
 
   /**
    * @constructor
-   * @param {Object} parsedAdaptation
+   * @param {Object} parsedTrack
+   * @param {Object} cachedCodecSupport
    * @param {Object|undefined} [options]
    */
   constructor(
-    parsedAdaptation: IParsedAdaptation,
+    parsedTrack: IParsedTrack,
     cachedCodecSupport: CodecSupportCache,
     options: {
       representationFilter?: IRepresentationFilter | undefined;
       isManuallyAdded?: boolean | undefined;
     } = {},
   ) {
-    const { trickModeTracks } = parsedAdaptation;
+    const { trickModeTracks } = parsedTrack;
     const { representationFilter, isManuallyAdded } = options;
-    this.id = parsedAdaptation.id;
-    this.type = parsedAdaptation.type;
+    this.id = parsedTrack.id;
+    this.trackType = parsedTrack.trackType;
 
-    if (parsedAdaptation.isTrickModeTrack !== undefined) {
-      this.isTrickModeTrack = parsedAdaptation.isTrickModeTrack;
-    }
-
-    if (parsedAdaptation.language !== undefined) {
-      this.language = parsedAdaptation.language;
-      this.normalizedLanguage = normalizeLanguage(parsedAdaptation.language);
+    // XXX TODO
+    this.inVariantStreams = [];
+    if (parsedTrack.isTrickModeTrack !== undefined) {
+      this.isTrickModeTrack = parsedTrack.isTrickModeTrack;
     }
 
-    if (parsedAdaptation.closedCaption !== undefined) {
-      this.isClosedCaption = parsedAdaptation.closedCaption;
+    if (parsedTrack.language !== undefined) {
+      this.language = parsedTrack.language;
+      this.normalizedLanguage = normalizeLanguage(parsedTrack.language);
     }
-    if (parsedAdaptation.audioDescription !== undefined) {
-      this.isAudioDescription = parsedAdaptation.audioDescription;
+
+    if (parsedTrack.isClosedCaption !== undefined) {
+      this.isClosedCaption = parsedTrack.isClosedCaption;
     }
-    if (parsedAdaptation.isDub !== undefined) {
-      this.isDub = parsedAdaptation.isDub;
+    if (parsedTrack.isAudioDescription !== undefined) {
+      this.isAudioDescription = parsedTrack.isAudioDescription;
     }
-    if (parsedAdaptation.forcedSubtitles !== undefined) {
-      this.isForcedSubtitles = parsedAdaptation.forcedSubtitles;
+    if (parsedTrack.isDub !== undefined) {
+      this.isDub = parsedTrack.isDub;
     }
-    if (parsedAdaptation.isSignInterpreted !== undefined) {
-      this.isSignInterpreted = parsedAdaptation.isSignInterpreted;
+    if (parsedTrack.isForcedSubtitles !== undefined) {
+      this.isForcedSubtitles = parsedTrack.isForcedSubtitles;
     }
-    if (parsedAdaptation.label !== undefined) {
-      this.label = parsedAdaptation.label;
+    if (parsedTrack.isSignInterpreted !== undefined) {
+      this.isSignInterpreted = parsedTrack.isSignInterpreted;
+    }
+    if (parsedTrack.label !== undefined) {
+      this.label = parsedTrack.label;
     }
 
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
       this.trickModeTracks = trickModeTracks.map(
-        (track) => new Adaptation(track, cachedCodecSupport),
+        (track) => new Track(track, cachedCodecSupport),
       );
     }
 
-    const argsRepresentations = parsedAdaptation.representations;
-    const representations: Representation[] = [];
+    const argsRepresentations = parsedTrack.representations;
+    const representations: Record<string, Representation> = {};
     this.supportStatus = {
       hasSupportedCodec: false,
       hasCodecWithUndefinedSupport: false,
@@ -163,7 +172,7 @@ export default class Adaptation implements IAdaptationMetadata {
     for (let i = 0; i < argsRepresentations.length; i++) {
       const representation = new Representation(
         argsRepresentations[i],
-        this.type,
+        this.trackType,
         cachedCodecSupport,
       );
       let shouldAdd = true;
@@ -185,7 +194,7 @@ export default class Adaptation implements IAdaptationMetadata {
           }
         }
         shouldAdd = representationFilter(reprObject, {
-          trackType: this.type,
+          trackType: this.trackType,
           language: this.language,
           normalizedLanguage: this.normalizedLanguage,
           isClosedCaption: this.isClosedCaption,
@@ -195,7 +204,7 @@ export default class Adaptation implements IAdaptationMetadata {
         });
       }
       if (shouldAdd) {
-        representations.push(representation);
+        representations[representation.id] = representation;
         if (representation.isSupported === undefined) {
           this.supportStatus.hasCodecWithUndefinedSupport = true;
           if (this.supportStatus.hasSupportedCodec === false) {
@@ -214,14 +223,13 @@ export default class Adaptation implements IAdaptationMetadata {
       } else {
         log.debug(
           "Filtering Representation due to representationFilter",
-          this.type,
-          `Adaptation: ${this.id}`,
+          this.trackType,
+          `track: ${this.id}`,
           `Representation: ${representation.id}`,
           `(${representation.bitrate})`,
         );
       }
     }
-    representations.sort((a, b) => a.bitrate - b.bitrate);
     this.representations = representations;
 
     // for manuallyAdded adaptations (not in the manifest)
@@ -237,7 +245,7 @@ export default class Adaptation implements IAdaptationMetadata {
    *
    *
    * If the right mimetype+codec combination is found in the provided object,
-   * this `Adaptation`'s `isSupported` property will be updated accordingly as
+   * this `Track`'s `isSupported` property will be updated accordingly as
    * well as all of its inner `Representation`'s `isSupported` attributes.
    *
    * @param {Array.<Object>} cachedCodecSupport
@@ -245,7 +253,7 @@ export default class Adaptation implements IAdaptationMetadata {
   refreshCodecSupport(cachedCodecSupport: CodecSupportCache): void {
     let hasCodecWithUndefinedSupport = false;
     let hasSupportedRepresentation = false;
-    for (const representation of this.representations) {
+    for (const representation of objectValues(this.representations)) {
       representation.refreshCodecSupport(cachedCodecSupport);
       if (representation.isSupported === undefined) {
         hasCodecWithUndefinedSupport = true;
@@ -276,33 +284,33 @@ export default class Adaptation implements IAdaptationMetadata {
    * @returns {Object|undefined}
    */
   getRepresentation(wantedId: number | string): Representation | undefined {
-    return arrayFind(this.representations, ({ id }) => wantedId === id);
+    return arrayFind(objectValues(this.representations), ({ id }) => wantedId === id);
   }
 
   /**
-   * Format the current `Adaptation`'s properties into a
-   * `IAdaptationMetadata` format which can better be communicated through
+   * Format the current `Track`'s properties into a
+   * `ITrackMetadata` format which can better be communicated through
    * another thread.
    *
    * Please bear in mind however that the returned object will not be updated
-   * when the current `Adaptation` instance is updated, it is only a
+   * when the current `Track` instance is updated, it is only a
    * snapshot at the current time.
    *
-   * If you want to keep that data up-to-date with the current `Adaptation`
+   * If you want to keep that data up-to-date with the current `Track`
    * instance, you will have to do it yourself.
    *
    * @returns {Object}
    */
-  getMetadataSnapshot(): IAdaptationMetadata {
-    const representations: IRepresentationMetadata[] = [];
-    const baseRepresentations = this.representations;
-    for (const representation of baseRepresentations) {
-      representations.push(representation.getMetadataSnapshot());
+  getMetadataSnapshot(): ITrackMetadata {
+    const representations: Record<string, IRepresentationMetadata> = {};
+    for (const representation of objectValues(this.representations)) {
+      representations[representation.id] = representation.getMetadataSnapshot();
     }
     return {
       id: this.id,
-      type: this.type,
+      trackType: this.trackType,
       supportStatus: this.supportStatus,
+      inVariantStreams: this.inVariantStreams,
       language: this.language,
       isForcedSubtitles: this.isForcedSubtitles,
       isClosedCaption: this.isClosedCaption,

@@ -15,9 +15,11 @@
  */
 
 import config from "../../../../config";
-import type { IAdaptation, IPeriod } from "../../../../manifest";
+import { getMimeTypeString } from "../../../../manifest";
+import type { IPeriod, ITrackMetadata } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
+import { objectValues } from "../../../../utils/object_values";
 import type { IRange } from "../../../../utils/ranges";
 import { excludeFromRanges, insertInto } from "../../../../utils/ranges";
 import type { SegmentSink } from "../../../segment_sinks";
@@ -55,14 +57,14 @@ export interface IAdaptationSwitchOptions {
  * situation.
  * @param {Object} segmentSink
  * @param {Object} period
- * @param {Object} adaptation
+ * @param {Object} track
  * @param {Object} playbackObserver
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
   segmentSink: SegmentSink,
   period: IPeriod,
-  adaptation: IAdaptation,
+  track: ITrackMetadata,
   switchingMode: ITrackSwitchingMode,
   playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
   options: IAdaptationSwitchOptions,
@@ -70,7 +72,7 @@ export default function getAdaptationSwitchStrategy(
   if (
     segmentSink.codec !== undefined &&
     options.onCodecSwitch === "reload" &&
-    !hasCompatibleCodec(adaptation, segmentSink.codec)
+    !hasCompatibleCodec(track, segmentSink.codec)
   ) {
     return { type: "needs-reload", value: undefined };
   }
@@ -79,7 +81,7 @@ export default function getAdaptationSwitchStrategy(
 
   const unwantedRange: IRange[] = [];
   for (const elt of inventory) {
-    if (elt.infos.period.id === period.id && elt.infos.adaptation.id !== adaptation.id) {
+    if (elt.infos.period.id === period.id && elt.infos.track.id !== track.id) {
       insertInto(unwantedRange, {
         start: elt.bufferedStart ?? elt.start,
         end: elt.bufferedEnd ?? elt.end,
@@ -91,7 +93,7 @@ export default function getAdaptationSwitchStrategy(
   for (const operation of pendingOperations) {
     if (operation.type === SegmentSinkOperation.Push) {
       const info = operation.value.inventoryInfos;
-      if (info.period.id === period.id && info.adaptation.id !== adaptation.id) {
+      if (info.period.id === period.id && info.track.id !== track.id) {
         const start = info.segment.time;
         const end = start + info.segment.duration;
         insertInto(unwantedRange, { start, end });
@@ -99,7 +101,7 @@ export default function getAdaptationSwitchStrategy(
     }
   }
 
-  // Continue if we have no other Adaptation buffered in the current Period
+  // Continue if we have no other track buffered in the current Period
   if (unwantedRange.length === 0) {
     return { type: "continue", value: undefined };
   }
@@ -111,7 +113,7 @@ export default function getAdaptationSwitchStrategy(
     }
   }
 
-  // From here, clean-up data from the previous Adaptation, if one
+  // From here, clean-up data from the previous track, if one
 
   const shouldCleanAll = switchingMode === "direct";
 
@@ -135,7 +137,7 @@ export default function getAdaptationSwitchStrategy(
 
   if (!shouldCleanAll) {
     // Exclude data around current position to avoid decoding issues
-    const bufferType = adaptation.type;
+    const bufferType = track.trackType;
     const { ADAP_REP_SWITCH_BUFFER_PADDINGS } = config.getCurrent();
     /** Ranges that won't be cleaned from the current buffer. */
     const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;
@@ -174,23 +176,20 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  return shouldCleanAll && adaptation.type !== "text"
+  return shouldCleanAll && track.trackType !== "text"
     ? { type: "flush-buffer", value: toRemove }
     : { type: "clean-buffer", value: toRemove };
 }
 
 /**
  * Returns `true` if at least one codec of the Representations in the given
- * Adaptation has a codec compatible with the given SegmentSink's codec.
- * @param {Object} adaptation
+ * track has a codec compatible with the given SegmentSink's codec.
+ * @param {Object} track
  * @param {string} segmentSinkCodec
  * @returns {boolean}
  */
-function hasCompatibleCodec(adaptation: IAdaptation, segmentSinkCodec: string): boolean {
-  return adaptation.representations.some(
-    (rep) =>
-      rep.isSupported === true &&
-      rep.decipherable !== false &&
-      areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec),
+function hasCompatibleCodec(track: ITrackMetadata, segmentSinkCodec: string): boolean {
+  return objectValues(track.representations).some((rep) =>
+    areCodecsCompatible(getMimeTypeString(rep), segmentSinkCodec),
   );
 }

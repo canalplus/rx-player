@@ -16,9 +16,9 @@
 
 import type {
   IManifest,
-  IAdaptation,
   IPeriod,
   IRepresentation,
+  ITrackMetadata,
 } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
@@ -86,7 +86,7 @@ export interface IBufferStatus {
  */
 export default function getBufferStatus(
   content: {
-    adaptation: IAdaptation;
+    track: ITrackMetadata;
     manifest: IManifest;
     period: IPeriod;
     representation: IRepresentation;
@@ -221,7 +221,7 @@ export default function getBufferStatus(
  */
 function getRangeOfNeededSegments(
   content: {
-    adaptation: IAdaptation;
+    track: ITrackMetadata;
     manifest: IManifest;
     period: IPeriod;
     representation: IRepresentation;
@@ -242,7 +242,7 @@ function getRangeOfNeededSegments(
   // segment which isn't the last one.
   if (
     !isNullOrUndefined(lastIndexPosition) &&
-    SegmentSinksStore.isNative(content.adaptation.type) &&
+    SegmentSinksStore.isNative(content.track.trackType) &&
     initialWantedTime >= lastIndexPosition &&
     representationIndex.isInitialized() &&
     !representationIndex.isStillAwaitingFutureSegments() &&

@@ -17,10 +17,10 @@
 import config from "../../../../config";
 import type {
   IManifest,
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
+  ITrack,
 } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import type { ISegmentParserParsedMediaChunk } from "../../../../transports";
@@ -52,7 +52,7 @@ export default async function pushMediaSegment<T>(
   }: {
     playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
     content: {
-      adaptation: IAdaptation;
+      track: ITrack;
       manifest: IManifest;
       period: IPeriod;
       representation: IRepresentation;

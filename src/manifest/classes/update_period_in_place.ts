@@ -15,9 +15,10 @@
  */
 
 import log from "../../log";
-import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
+import type { IRepresentationMetadata, ITrackMetadata } from "../../manifest";
 import type { ITrackType } from "../../public_types";
 import arrayFindIndex from "../../utils/array_find_index";
+import { objectValues } from "../../utils/object_values";
 import type Period from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 
@@ -35,50 +36,46 @@ export default function updatePeriodInPlace(
   updateType: MANIFEST_UPDATE_TYPE,
 ): IUpdatedPeriodResult {
   const res: IUpdatedPeriodResult = {
-    updatedAdaptations: [],
-    removedAdaptations: [],
-    addedAdaptations: [],
+    updatedTracks: [],
+    removedTracks: [],
+    addedTracks: [],
   };
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
   oldPeriod.duration = newPeriod.duration;
   oldPeriod.streamEvents = newPeriod.streamEvents;
 
-  const oldAdaptations = oldPeriod.getAdaptations();
-  const newAdaptations = newPeriod.getAdaptations();
+  const oldTracks = oldPeriod.getTrackList();
+  const newTracks = newPeriod.getTrackList();
 
-  for (let j = 0; j < oldAdaptations.length; j++) {
-    const oldAdaptation = oldAdaptations[j];
-    const newAdaptationIdx = arrayFindIndex(
-      newAdaptations,
-      (a) => a.id === oldAdaptation.id,
-    );
+  for (let j = 0; j < oldTracks.length; j++) {
+    const oldTrack = oldTracks[j];
+    const newTrackIdx = arrayFindIndex(newTracks, (a) => a.id === oldTrack.id);
 
-    if (newAdaptationIdx === -1) {
-      log.warn(
-        'Manifest: Adaptation "' + oldAdaptations[j].id + '" not found when merging.',
-      );
-      const [removed] = oldAdaptations.splice(j, 1);
+    if (newTrackIdx === -1) {
+      log.warn('Manifest: Track "' + oldTracks[j].id + '" not found when merging.');
+      const [removed] = oldTracks.splice(j, 1);
+      delete oldPeriod.tracksMetadata[removed.trackType][removed.id];
       j--;
-      res.removedAdaptations.push({
+      res.removedTracks.push({
         id: removed.id,
-        trackType: removed.type,
+        trackType: removed.trackType,
       });
     } else {
-      const [newAdaptation] = newAdaptations.splice(newAdaptationIdx, 1);
+      const [newTrack] = newTracks.splice(newTrackIdx, 1);
       const updatedRepresentations: IRepresentationMetadata[] = [];
       const addedRepresentations: IRepresentationMetadata[] = [];
       const removedRepresentations: string[] = [];
-      res.updatedAdaptations.push({
-        adaptation: oldAdaptation.id,
-        trackType: oldAdaptation.type,
+      res.updatedTracks.push({
+        track: oldTrack.id,
+        trackType: oldTrack.trackType,
         updatedRepresentations,
         addedRepresentations,
         removedRepresentations,
       });
 
-      const oldRepresentations = oldAdaptation.representations;
-      const newRepresentations = newAdaptation.representations.slice();
+      const oldRepresentations = objectValues(oldTrack.representations);
+      const newRepresentations = objectValues(newTrack.representations);
 
       for (let k = 0; k < oldRepresentations.length; k++) {
         const oldRepresentation = oldRepresentations[k];
@@ -93,6 +90,7 @@ export default function updatePeriodInPlace(
               "not found when merging.",
           );
           const [removed] = oldRepresentations.splice(k, 1);
+          delete oldTrack.representations[removed.id];
           k--;
           removedRepresentations.push(removed.id);
         } else {
@@ -112,25 +110,21 @@ export default function updatePeriodInPlace(
           `Manifest: ${newRepresentations.length} new Representations ` +
             "found when merging.",
         );
-        oldAdaptation.representations.push(...newRepresentations);
+        for (const newRep of newRepresentations) {
+          oldTrack.representations[newRep.id] = newRep;
+        }
         addedRepresentations.push(
           ...newRepresentations.map((r) => r.getMetadataSnapshot()),
         );
       }
     }
   }
-  if (newAdaptations.length > 0) {
-    log.warn(
-      `Manifest: ${newAdaptations.length} new Adaptations ` + "found when merging.",
-    );
-    for (const adap of newAdaptations) {
-      const prevAdaps = oldPeriod.adaptations[adap.type];
-      if (prevAdaps === undefined) {
-        oldPeriod.adaptations[adap.type] = [adap];
-      } else {
-        prevAdaps.push(adap);
-      }
-      res.addedAdaptations.push(adap.getMetadataSnapshot());
+  if (newTracks.length > 0) {
+    log.warn(`Manifest: ${newTracks.length} new Tracks ` + "found when merging.");
+    for (const trak of newTracks) {
+      const prevTracks = oldPeriod.tracksMetadata[trak.trackType];
+      prevTracks[trak.id] = trak;
+      res.addedTracks.push(trak.getMetadataSnapshot());
     }
   }
   return res;
@@ -141,23 +135,23 @@ export default function updatePeriodInPlace(
  * Period.
  */
 export interface IUpdatedPeriodResult {
-  /** Information on Adaptations that have been updated. */
-  updatedAdaptations: Array<{
+  /** Information on tracks that have been updated. */
+  updatedTracks: Array<{
     trackType: ITrackType;
-    /** The concerned Adaptation. */
-    adaptation: string;
+    /** The concerned tracks. */
+    track: string;
     /** Representations that have been updated. */
     updatedRepresentations: IRepresentationMetadata[];
-    /** Representations that have been removed from the Adaptation. */
+    /** Representations that have been removed from the track. */
     removedRepresentations: string[];
-    /** Representations that have been added to the Adaptation. */
+    /** Representations that have been added to the track. */
     addedRepresentations: IRepresentationMetadata[];
   }>;
-  /** Adaptation that have been removed from the Period. */
-  removedAdaptations: Array<{
+  /** Tracks that have been removed from the Period. */
+  removedTracks: Array<{
     id: string;
     trackType: ITrackType;
   }>;
-  /** Adaptation that have been added to the Period. */
-  addedAdaptations: IAdaptationMetadata[];
+  /** Tracks that have been added to the Period. */
+  addedTracks: ITrackMetadata[];
 }

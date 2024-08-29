@@ -15,10 +15,10 @@
  */
 
 import type {
-  IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  ITrackMetadata,
 } from "../../manifest";
 import type { IPlayerError } from "../../public_types";
 import type InitDataValuesContainer from "./utils/init_data_values_container";
@@ -200,8 +200,8 @@ export interface IContent {
   manifest: IManifestMetadata;
   /** Period object associated to the protection data. */
   period: IPeriodMetadata;
-  /** Adaptation object associated to the protection data. */
-  adaptation: IAdaptationMetadata;
+  /** Track associated to the protection data. */
+  track: ITrackMetadata;
   /** Representation object associated to the protection data. */
   representation: IRepresentationMetadata;
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { IRepresentationIndex } from "../../../../manifest";
-import getFirstPositionFromAdaptation from "../get_first_time_from_adaptation";
+import getFirstPositionFromRepresentations from "../get_first_time_from_representations";
 
 function generateRepresentationIndex(
   firstPosition: number | undefined | null,
@@ -57,15 +57,9 @@ function generateRepresentationIndex(
   };
 }
 
-describe("parsers utils - getFirstPositionFromAdaptation", function () {
+describe("parsers utils - getFirstPositionFromRepresentations", function () {
   it("should return null if no representation", () => {
-    expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [],
-      }),
-    ).toEqual(null);
+    expect(getFirstPositionFromRepresentations([])).toEqual(null);
   });
 
   it("should return the first position if a single representation is present", () => {
@@ -87,27 +81,9 @@ describe("parsers utils - getFirstPositionFromAdaptation", function () {
       cdnMetadata: [],
       index: generateRepresentationIndex(null),
     };
-    expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation1],
-      }),
-    ).toEqual(37);
-    expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation2],
-      }),
-    ).toEqual(undefined);
-    expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation3],
-      }),
-    ).toEqual(null);
+    expect(getFirstPositionFromRepresentations([representation1])).toEqual(37);
+    expect(getFirstPositionFromRepresentations([representation2])).toEqual(undefined);
+    expect(getFirstPositionFromRepresentations([representation3])).toEqual(null);
   });
 
   it("should return the maximum first position if many representations is present", () => {
@@ -130,11 +106,11 @@ describe("parsers utils - getFirstPositionFromAdaptation", function () {
       index: generateRepresentationIndex(57),
     };
     expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation1, representation2, representation3],
-      }),
+      getFirstPositionFromRepresentations([
+        representation1,
+        representation2,
+        representation3,
+      ]),
     ).toEqual(137);
   });
 
@@ -158,11 +134,11 @@ describe("parsers utils - getFirstPositionFromAdaptation", function () {
       index: generateRepresentationIndex(undefined),
     };
     expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation1, representation2, representation3],
-      }),
+      getFirstPositionFromRepresentations([
+        representation1,
+        representation2,
+        representation3,
+      ]),
     ).toEqual(undefined);
   });
 
@@ -186,11 +162,11 @@ describe("parsers utils - getFirstPositionFromAdaptation", function () {
       index: generateRepresentationIndex(null),
     };
     expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation1, representation2, representation3],
-      }),
+      getFirstPositionFromRepresentations([
+        representation1,
+        representation2,
+        representation3,
+      ]),
     ).toEqual(137);
   });
 
@@ -214,11 +190,11 @@ describe("parsers utils - getFirstPositionFromAdaptation", function () {
       index: generateRepresentationIndex(null),
     };
     expect(
-      getFirstPositionFromAdaptation({
-        id: "0",
-        type: "audio",
-        representations: [representation1, representation2, representation3],
-      }),
+      getFirstPositionFromRepresentations([
+        representation1,
+        representation2,
+        representation3,
+      ]),
     ).toEqual(null);
   });
 });

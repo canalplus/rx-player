@@ -18,6 +18,7 @@ import log from "../../log";
 import type { IRepresentation } from "../../manifest";
 import arrayFindIndex from "../../utils/array_find_index";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
+import type { IRepresentationListItem } from "./adaptive_representation_selector";
 import { estimateRequestBandwidth } from "./network_analyzer";
 import type LastEstimateStorage from "./utils/last_estimate_storage";
 import { ABRAlgorithmType } from "./utils/last_estimate_storage";
@@ -66,7 +67,7 @@ export default class GuessBasedChooser {
    * Perform a "guess", which basically indicates which Representation should be
    * chosen according to the `GuessBasedChooser`.
    *
-   * @param {Array.<Object>} representations - Array of all Representation the
+   * @param {Array.<Object>} representationList - Array of all Representation the
    * GuessBasedChooser can choose from, sorted by bitrate ascending.
    * /!\ It is very important that Representation in that Array are sorted by
    * bitrate ascending for this method to work as intented.
@@ -81,7 +82,7 @@ export default class GuessBasedChooser {
    * algorithm).
    */
   public getGuess(
-    representations: IRepresentation[],
+    representationList: IRepresentationListItem[],
     observation: {
       /**
        * For the concerned media buffer, difference in seconds between the next
@@ -123,11 +124,11 @@ export default class GuessBasedChooser {
       }
       if (this._canGuessHigher(bufferGap, speed, scoreData)) {
         const nextRepresentation = getNextRepresentation(
-          representations,
+          representationList,
           currentRepresentation,
         );
         if (nextRepresentation !== null) {
-          return nextRepresentation;
+          return nextRepresentation.representation;
         }
       }
       return null;
@@ -156,18 +157,21 @@ export default class GuessBasedChooser {
       this._consecutiveWrongGuesses++;
       this._blockGuessesUntil =
         getMonotonicTimeStamp() + Math.min(this._consecutiveWrongGuesses * 15000, 120000);
-      return getPreviousRepresentation(representations, currentRepresentation);
+      return (
+        getPreviousRepresentation(representationList, currentRepresentation)
+          ?.representation ?? null
+      );
     } else if (scoreData === undefined) {
       return currentRepresentation;
     }
 
     if (this._canGuessHigher(bufferGap, speed, scoreData)) {
       const nextRepresentation = getNextRepresentation(
-        representations,
+        representationList,
         currentRepresentation,
       );
       if (nextRepresentation !== null) {
-        return nextRepresentation;
+        return nextRepresentation.representation;
       }
     }
     return currentRepresentation;
@@ -266,20 +270,20 @@ export default class GuessBasedChooser {
  *
  * /!\ The representations have to be already sorted by bitrate, in ascending
  * order.
- * @param {Array.<Object>} representations - Available representations to choose
+ * @param {Array.<Object>} representationList - Available representations to choose
  * from, sorted by bitrate in ascending order.
  * @param {Object} currentRepresentation - The Representation currently
  * considered.
  * @returns {Object|null}
  */
 function getNextRepresentation(
-  representations: IRepresentation[],
+  representationList: IRepresentationListItem[],
   currentRepresentation: IRepresentation,
-): IRepresentation | null {
-  const len = representations.length;
+): IRepresentationListItem | null {
+  const len = representationList.length;
   let index = arrayFindIndex(
-    representations,
-    ({ id }) => id === currentRepresentation.id,
+    representationList,
+    ({ representation }) => representation.id === currentRepresentation.id,
   );
   if (index < 0) {
     log.error("ABR: Current Representation not found.");
@@ -287,8 +291,9 @@ function getNextRepresentation(
   }
 
   while (++index < len) {
-    if (representations[index].bitrate > currentRepresentation.bitrate) {
-      return representations[index];
+    // XXX TODO bitrate
+    if (representationList[index].bandwidth > currentRepresentation.bitrate) {
+      return representationList[index];
     }
   }
   return null;
@@ -303,12 +308,12 @@ function getNextRepresentation(
  * @returns {Object|null}
  */
 function getPreviousRepresentation(
-  representations: IRepresentation[],
+  representations: IRepresentationListItem[],
   currentRepresentation: IRepresentation,
-): IRepresentation | null {
+): IRepresentationListItem | null {
   let index = arrayFindIndex(
     representations,
-    ({ id }) => id === currentRepresentation.id,
+    ({ representation }) => representation.id === currentRepresentation.id,
   );
   if (index < 0) {
     log.error("ABR: Current Representation not found.");
@@ -316,7 +321,8 @@ function getPreviousRepresentation(
   }
 
   while (--index >= 0) {
-    if (representations[index].bitrate < currentRepresentation.bitrate) {
+    // XXX TODO bitrate
+    if (representations[index].bandwidth < currentRepresentation.bitrate) {
       return representations[index];
     }
   }

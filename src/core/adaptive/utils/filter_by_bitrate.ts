@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
+import type { IRepresentationListItem } from "../adaptive_representation_selector";
 
 /**
  * Get only representations lower or equal to a given bitrate.
@@ -26,18 +26,18 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * @returns {Array.<Object>}
  */
 export default function filterByBitrate(
-  representations: IRepresentation[],
+  representations: IRepresentationListItem[],
   bitrate: number,
-): IRepresentation[] {
+): IRepresentationListItem[] {
   if (representations.length === 0) {
     return [];
   }
-  representations.sort((ra, rb) => ra.bitrate - rb.bitrate);
-  const minimumBitrate = representations[0].bitrate;
+  representations.sort((ra, rb) => ra.bandwidth - rb.bandwidth);
+  const minimumBitrate = representations[0].bandwidth;
   const bitrateCeil = Math.max(bitrate, minimumBitrate);
   const firstSuperiorBitrateIndex = arrayFindIndex(
     representations,
-    (representation) => representation.bitrate > bitrateCeil,
+    (representation) => representation.bandwidth > bitrateCeil,
   );
   if (firstSuperiorBitrateIndex === -1) {
     return representations; // All representations have lower bitrates.

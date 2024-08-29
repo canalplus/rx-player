@@ -4,7 +4,7 @@ import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
-  IAdaptationChoice,
+  ITrackChoice,
   IResolutionInfo,
 } from "../../core/types";
 import {
@@ -18,6 +18,7 @@ import features from "../../features";
 import log from "../../log";
 import type { IManifestMetadata } from "../../manifest";
 import {
+  getTrackListForType,
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
@@ -46,6 +47,7 @@ import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
+import { objectValues } from "../../utils/object_values";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
@@ -642,7 +644,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.AdaptationChanged: {
+        case WorkerMessageType.TrackChanged: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -656,25 +658,58 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (period === undefined) {
             return;
           }
-          if (msgData.value.adaptationId === null) {
-            this.trigger("adaptationChange", {
+          if (msgData.value.trackId === null) {
+            this.trigger("trackChange", {
               period,
-              adaptation: null,
+              track: null,
               type: msgData.value.type,
             });
             return;
           }
-          const adaptations = period.adaptations[msgData.value.type] ?? [];
-          const adaptation = arrayFind(
-            adaptations,
-            (a) => a.id === msgData.value.adaptationId,
-          );
-          if (adaptation !== undefined) {
-            this.trigger("adaptationChange", {
-              period,
-              adaptation,
-              type: msgData.value.type,
-            });
+
+          // TODO TypeScript is too dumb here, see if that cannot be simplified
+          switch (msgData.value.type) {
+            case "audio":
+              {
+                const tracks = getTrackListForType(period, msgData.value.type);
+                const track = arrayFind(tracks, (a) => a.id === msgData.value.trackId);
+                if (track !== undefined) {
+                  this.trigger("trackChange", {
+                    period,
+                    track,
+                    type: msgData.value.type,
+                  });
+                }
+              }
+              break;
+            case "video":
+              {
+                const tracks = getTrackListForType(period, msgData.value.type);
+                const track = arrayFind(tracks, (a) => a.id === msgData.value.trackId);
+                if (track !== undefined) {
+                  this.trigger("trackChange", {
+                    period,
+                    track,
+                    type: msgData.value.type,
+                  });
+                }
+              }
+              break;
+            case "text":
+              {
+                const tracks = getTrackListForType(period, msgData.value.type);
+                const track = arrayFind(tracks, (a) => a.id === msgData.value.trackId);
+                if (track !== undefined) {
+                  this.trigger("trackChange", {
+                    period,
+                    track,
+                    type: msgData.value.type,
+                  });
+                }
+              }
+              break;
+            default:
+              assertUnreachable(msgData.value.type);
           }
           break;
         }
@@ -701,16 +736,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             });
             return;
           }
-          const adaptations = period.adaptations[msgData.value.type] ?? [];
-          const adaptation = arrayFind(
-            adaptations,
-            (a) => a.id === msgData.value.adaptationId,
-          );
-          if (adaptation === undefined) {
+          const tracks = getTrackListForType(period, msgData.value.type);
+          const track = arrayFind(tracks, (a) => a.id === msgData.value.trackId);
+          if (track === undefined) {
             return;
           }
           const representation = arrayFind(
-            adaptation.representations,
+            objectValues(track.representations),
             (r) => r.id === msgData.value.representationId,
           );
           if (representation !== undefined) {
@@ -821,9 +853,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (period === undefined) {
             return;
           }
-          const ref = new SharedReference<IAdaptationChoice | null | undefined>(
-            undefined,
-          );
+          const ref = new SharedReference<ITrackChoice | null | undefined>(undefined);
           ref.onUpdate((adapChoice) => {
             if (this._currentContentInfo === null) {
               ref.finish();
@@ -840,7 +870,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                   contentId: this._currentContentInfo.contentId,
                   value: {
                     periodId: msgData.value.periodId,
-                    adaptationId: adapChoice.adaptationId,
+                    trackId: adapChoice.trackId,
                     bufferType: msgData.value.bufferType,
                     choice: repChoice,
                   },
@@ -856,7 +886,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 choice: isNullOrUndefined(adapChoice)
                   ? adapChoice
                   : {
-                      adaptationId: adapChoice.adaptationId,
+                      trackId: adapChoice.trackId,
                       switchingMode: adapChoice.switchingMode,
                       initialRepresentations: adapChoice.representations.getValue(),
                       relativeResumingPosition: adapChoice.relativeResumingPosition,
@@ -867,7 +897,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           this.trigger("periodStreamReady", {
             period,
             type: msgData.value.bufferType,
-            adaptationRef: ref,
+            trackRef: ref,
           });
           break;
         }

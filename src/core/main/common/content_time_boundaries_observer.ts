@@ -21,14 +21,16 @@ import type {
 import { MediaError } from "../../../errors";
 import type {
   IManifest,
-  IAdaptation,
+  IRepresentation,
   IRepresentationIndex,
   IPeriod,
+  ITrack,
 } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import { objectValues } from "../../../utils/object_values";
 import SortedList from "../../../utils/sorted_list";
 import TaskCanceller from "../../../utils/task_canceller";
 
@@ -141,31 +143,36 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
   }
 
   /**
-   * Method to call any time an Adaptation has been selected.
+   * Method to call any time a played track change.
    *
-   * That Adaptation switch will be considered as active until the
-   * `onPeriodCleared` method has been called for the same `bufferType` and
-   * `Period`, or until `dispose` is called.
-   * @param {string} bufferType - The type of buffer concerned by the Adaptation
-   * switch
-   * @param {Object} period - The Period concerned by the Adaptation switch
-   * @param {Object|null} adaptation - The Adaptation selected. `null` if the
-   * absence of `Adaptation` has been explicitely selected for this Period and
-   * buffer type (e.g. no video).
+   * That switch will be considered as active until the `onPeriodCleared` method
+   * has been called for the same `bufferType` and `Period`, or until `dispose`
+   * is called.
+   * @param {string} bufferType - The type of buffer concerned by the
+   * Representations switch
+   * @param {Object} period - The Period concerned by the Representations switch
+   * @param {Object|null} track - The track selected. `null` if the absence of
+   * track has been explicitely selected for this Period and buffer type (e.g.
+   * no video).
    */
-  public onAdaptationChange(
+  public onTrackChange(
     bufferType: IBufferType,
     period: IPeriod,
-    adaptation: IAdaptation | null,
+    track: ITrack | null,
   ): void {
+    const representations = track === null ? null : objectValues(track.representations);
     if (this._manifest.isLastPeriodKnown) {
       const lastPeriod = this._manifest.periods[this._manifest.periods.length - 1];
       if (period.id === lastPeriod?.id) {
         if (bufferType === "audio" || bufferType === "video") {
           if (bufferType === "audio") {
-            this._maximumPositionCalculator.updateLastAudioAdaptation(adaptation);
+            this._maximumPositionCalculator.updateLastAudioRepresentations(
+              representations,
+            );
           } else {
-            this._maximumPositionCalculator.updateLastVideoAdaptation(adaptation);
+            this._maximumPositionCalculator.updateLastVideoRepresentations(
+              representations,
+            );
           }
           const endingPosition = this._maximumPositionCalculator.getEndingPosition();
           const newEndingPosition =
@@ -183,7 +190,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
     if (this._canceller.isUsed()) {
       return;
     }
-    if (adaptation === null) {
+    if (representations === null) {
       this._addActivelyLoadedPeriod(period, bufferType);
     }
   }
@@ -206,9 +213,10 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
    * Method to call any time a Period and type combination is not considered
    * anymore.
    *
-   * Calling this method allows to signal that a previous Adaptation and/or
-   * Representation change respectively indicated by an `onAdaptationChange` and
-   * an `onRepresentationChange` call, are not active anymore.
+   * Calling this method allows to signal that a previous Representation list
+   * and/or Representation change respectively indicated by an
+   * `onRepresentationListChange` and an `onRepresentationChange` call, are not
+   * active anymore.
    * @param {string} bufferType - The type of buffer concerned
    * @param {Object} period - The Period concerned
    */
@@ -413,48 +421,49 @@ export interface IContentTimeBoundariesObserverEvent {
 }
 
 /**
- * Calculate the last position from the last chosen audio and video Adaptations
- * for the last Period (or a default one, if no Adaptations has been chosen).
+ * Calculate the last position from the last chosen audio and video
+ * Representations for the last Period (or a default one, if no Representation
+ * has been chosen).
  * @class MaximumPositionCalculator
  */
 class MaximumPositionCalculator {
   private _manifest: IManifest;
 
   // TODO replicate for the minimum position ?
-  private _lastAudioAdaptation: IAdaptation | undefined | null;
-  private _lastVideoAdaptation: IAdaptation | undefined | null;
+  private _lastAudioRepresentations: IRepresentation[] | undefined | null;
+  private _lastVideoRepresentations: IRepresentation[] | undefined | null;
 
   /**
    * @param {Object} manifest
    */
   constructor(manifest: IManifest) {
     this._manifest = manifest;
-    this._lastAudioAdaptation = undefined;
-    this._lastVideoAdaptation = undefined;
+    this._lastAudioRepresentations = undefined;
+    this._lastVideoRepresentations = undefined;
   }
 
   /**
-   * Update the last known audio Adaptation for the last Period.
-   * If no Adaptation has been set, it should be set to `null`.
+   * Update the last known audio Representations for the last Period.
+   * If no Representations has been set, it should be set to `null`.
    *
    * Allows to calculate the maximum position more precizely in
    * `getMaximumAvailablePosition` and `getEndingPosition`.
-   * @param {Object|null} adaptation
+   * @param {Object|null} representations
    */
-  public updateLastAudioAdaptation(adaptation: IAdaptation | null): void {
-    this._lastAudioAdaptation = adaptation;
+  public updateLastAudioRepresentations(representations: IRepresentation[] | null): void {
+    this._lastAudioRepresentations = representations;
   }
 
   /**
-   * Update the last known video Adaptation for the last Period.
-   * If no Adaptation has been set, it should be set to `null`.
+   * Update the last known video Representations for the last Period.
+   * If no Representations has been set, it should be set to `null`.
    *
    * Allows to calculate the maximum position more precizely in
    * `getMaximumAvailablePosition` and `getEndingPosition`.
-   * @param {Object|null} adaptation
+   * @param {Object|null} representations
    */
-  public updateLastVideoAdaptation(adaptation: IAdaptation | null): void {
-    this._lastVideoAdaptation = adaptation;
+  public updateLastVideoRepresentations(representations: IRepresentation[] | null): void {
+    this._lastVideoRepresentations = representations;
   }
 
   /**
@@ -467,36 +476,36 @@ class MaximumPositionCalculator {
       return this._manifest.getMaximumSafePosition();
     }
     if (
-      this._lastVideoAdaptation === undefined ||
-      this._lastAudioAdaptation === undefined
+      this._lastVideoRepresentations === undefined ||
+      this._lastAudioRepresentations === undefined
     ) {
       return this._manifest.getMaximumSafePosition();
-    } else if (this._lastAudioAdaptation === null) {
-      if (this._lastVideoAdaptation === null) {
+    } else if (this._lastAudioRepresentations === null) {
+      if (this._lastVideoRepresentations === null) {
         return this._manifest.getMaximumSafePosition();
       } else {
-        const lastVideoPosition = getLastAvailablePositionFromAdaptation(
-          this._lastVideoAdaptation,
+        const lastVideoPosition = getLastAvailablePositionFromRepresentations(
+          this._lastVideoRepresentations,
         );
         if (typeof lastVideoPosition !== "number") {
           return this._manifest.getMaximumSafePosition();
         }
         return lastVideoPosition;
       }
-    } else if (this._lastVideoAdaptation === null) {
-      const lastAudioPosition = getLastAvailablePositionFromAdaptation(
-        this._lastAudioAdaptation,
+    } else if (this._lastVideoRepresentations === null) {
+      const lastAudioPosition = getLastAvailablePositionFromRepresentations(
+        this._lastAudioRepresentations,
       );
       if (typeof lastAudioPosition !== "number") {
         return this._manifest.getMaximumSafePosition();
       }
       return lastAudioPosition;
     } else {
-      const lastAudioPosition = getLastAvailablePositionFromAdaptation(
-        this._lastAudioAdaptation,
+      const lastAudioPosition = getLastAvailablePositionFromRepresentations(
+        this._lastAudioRepresentations,
       );
-      const lastVideoPosition = getLastAvailablePositionFromAdaptation(
-        this._lastVideoAdaptation,
+      const lastVideoPosition = getLastAvailablePositionFromRepresentations(
+        this._lastVideoRepresentations,
       );
       if (
         typeof lastAudioPosition !== "number" ||
@@ -520,24 +529,29 @@ class MaximumPositionCalculator {
       return this.getMaximumAvailablePosition();
     }
     if (
-      this._lastVideoAdaptation === undefined ||
-      this._lastAudioAdaptation === undefined
+      this._lastVideoRepresentations === undefined ||
+      this._lastAudioRepresentations === undefined
     ) {
       return undefined;
-    } else if (this._lastAudioAdaptation === null) {
-      if (this._lastVideoAdaptation === null) {
+    } else if (this._lastAudioRepresentations === null) {
+      if (this._lastVideoRepresentations === null) {
         return undefined;
       } else {
-        return getEndingPositionFromAdaptation(this._lastVideoAdaptation) ?? undefined;
+        return (
+          getEndingPositionFromRepresentations(this._lastVideoRepresentations) ??
+          undefined
+        );
       }
-    } else if (this._lastVideoAdaptation === null) {
-      return getEndingPositionFromAdaptation(this._lastAudioAdaptation) ?? undefined;
-    } else {
-      const lastAudioPosition = getEndingPositionFromAdaptation(
-        this._lastAudioAdaptation,
+    } else if (this._lastVideoRepresentations === null) {
+      return (
+        getEndingPositionFromRepresentations(this._lastAudioRepresentations) ?? undefined
       );
-      const lastVideoPosition = getEndingPositionFromAdaptation(
-        this._lastVideoAdaptation,
+    } else {
+      const lastAudioPosition = getEndingPositionFromRepresentations(
+        this._lastAudioRepresentations,
+      );
+      const lastVideoPosition = getEndingPositionFromRepresentations(
+        this._lastVideoRepresentations,
       );
       if (
         typeof lastAudioPosition !== "number" ||
@@ -552,26 +566,25 @@ class MaximumPositionCalculator {
 }
 
 /**
- * Returns last currently available position from the Adaptation given.
+ * Returns last currently available position from the Representations given.
  * `undefined` if a time could not be found.
- * `null` if the Adaptation has no segments (it could be that it didn't started or
- * that it already finished for example).
+ * `null` if the Representations have no segments (it could be that they didn't
+ * started yet or that they already finished for example).
  *
  * We consider the earliest last available position from every Representation
- * in the given Adaptation.
- * @param {Object} adaptation
+ * in the given Representations.
+ * @param {Object} representations
  * @returns {Number|undefined|null}
  */
-function getLastAvailablePositionFromAdaptation(
-  adaptation: IAdaptation,
+function getLastAvailablePositionFromRepresentations(
+  representations: IRepresentation[],
 ): number | undefined | null {
-  const { representations } = adaptation;
   let min: null | number = null;
 
   /**
    * Some Manifest parsers use the exact same `IRepresentationIndex` reference
-   * for each Representation of a given Adaptation, because in the actual source
-   * Manifest file, indexing data is often defined at Adaptation-level.
+   * for each Representation of a given Representations, because in the actual source
+   * DASH MPD file, indexing data is often defined at the AdaptationSet-level.
    * This variable allows to optimize the logic here when this is the case.
    */
   let lastIndex: IRepresentationIndex | undefined;
@@ -592,27 +605,26 @@ function getLastAvailablePositionFromAdaptation(
 }
 
 /**
- * Returns ending time from the Adaptation given, once all its segments are
+ * Returns ending time from the Representations given, once all its segments are
  * available.
  * `undefined` if a time could not be found.
- * `null` if the Adaptation has no segments (it could be that it already
+ * `null` if the Representations have no segments (it could be that they already
  * finished for example).
  *
  * We consider the earliest ending time from every Representation in the given
- * Adaptation.
- * @param {Object} adaptation
+ * Representations.
+ * @param {Object} representations
  * @returns {Number|undefined|null}
  */
-function getEndingPositionFromAdaptation(
-  adaptation: IAdaptation,
+function getEndingPositionFromRepresentations(
+  representations: IRepresentation[],
 ): number | undefined | null {
-  const { representations } = adaptation;
   let min: null | number = null;
 
   /**
    * Some Manifest parsers use the exact same `IRepresentationIndex` reference
-   * for each Representation of a given Adaptation, because in the actual source
-   * Manifest file, indexing data is often defined at Adaptation-level.
+   * for each Representation of a given Representations, because in the actual source
+   * DASH MPD file, indexing data is often defined at the AdaptationSet-level.
    * This variable allows to optimize the logic here when this is the case.
    */
   let lastIndex: IRepresentationIndex | undefined;

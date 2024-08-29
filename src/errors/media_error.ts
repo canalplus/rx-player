@@ -35,7 +35,7 @@ export default class MediaError extends Error {
   public readonly name: "MediaError";
   public readonly type: "MEDIA_ERROR";
   public readonly code: IMediaErrorCode;
-  public readonly tracksInfo: ITaggedTrack[] | undefined;
+  public readonly tracksMetadata: ITaggedTrack[] | undefined;
   public fatal: boolean;
   private _originalMessage: string;
 
@@ -80,7 +80,7 @@ export default class MediaError extends Error {
     this.code = code;
     this.fatal = false;
     if (context?.tracks !== undefined && context?.tracks.length > 0) {
-      this.tracksInfo = context.tracks;
+      this.tracksMetadata = context.tracks;
     }
   }
 
@@ -95,7 +95,7 @@ export default class MediaError extends Error {
       name: this.name,
       code: this.code,
       reason: this._originalMessage,
-      tracks: this.tracksInfo,
+      tracks: this.tracksMetadata,
     };
   }
 }

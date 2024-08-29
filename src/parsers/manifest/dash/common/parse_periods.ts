@@ -16,18 +16,17 @@
 
 import log from "../../../../log";
 import type { IManifest } from "../../../../manifest";
-import flatMap from "../../../../utils/flat_map";
+import type { ITrackType } from "../../../../public_types";
 import idGenerator from "../../../../utils/id_generator";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import isWorker from "../../../../utils/is_worker";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import objectValues from "../../../../utils/object_values";
 import { utf8ToStr } from "../../../../utils/string_parsing";
 import type {
   IManifestStreamEvent,
-  IParsedAdaptation,
-  IParsedAdaptations,
+  IParsedTrack,
   IParsedPeriod,
+  IParsedVariantStreamMetadata,
 } from "../../types";
 import type {
   IEventStreamIntermediateRepresentation,
@@ -126,7 +125,7 @@ export default function parsePeriods(
       start: periodStart,
       unsafelyBaseOnPreviousPeriod,
     };
-    const adaptations = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
+    const tracksMetadata = parseAdaptationSets(periodIR.children.adaptations, adapCtxt);
 
     const namespaces = (context.xmlNamespaces ?? []).concat(
       periodIR.attributes.namespaces ?? [],
@@ -136,18 +135,37 @@ export default function parsePeriods(
       periodStart,
       namespaces,
     );
+    const getMediaForType = (type: ITrackType) => {
+      return tracksMetadata[type].map((t) => {
+        return {
+          id: t.id,
+          linkedTrack: t.id,
+          representations: t.representations.map((r) => r.id),
+        };
+      });
+    };
+    const variantStream: IParsedVariantStreamMetadata = {
+      id: "0",
+      bandwidth: undefined,
+      media: {
+        audio: getMediaForType("audio"),
+        video: getMediaForType("video"),
+        text: getMediaForType("text"),
+      },
+    };
     const parsedPeriod: IParsedPeriod = {
       id: periodID,
       start: periodStart,
       end: periodEnd,
       duration: periodDuration,
-      adaptations,
+      variantStreams: [variantStream],
+      tracksMetadata,
       streamEvents,
     };
     parsedPeriods.unshift(parsedPeriod);
 
     if (!manifestBoundsCalculator.lastPositionIsKnown()) {
-      const lastPosition = getMaximumLastPosition(adaptations);
+      const lastPosition = getMaximumLastPosition(tracksMetadata);
       if (!isDynamic) {
         if (typeof lastPosition === "number") {
           manifestBoundsCalculator.setLastPosition(lastPosition);
@@ -246,22 +264,20 @@ function guessLastPositionFromClock(
  *   - If segments are available but we cannot define the last position
  *     return undefined.
  *   - If no segment are available in that period, return null
- * @param {Object} adaptationsPerType
+ * @param {Object} tracksMetadata
  * @returns {number|null|undefined}
  */
 function getMaximumLastPosition(
-  adaptationsPerType: IParsedAdaptations,
+  tracksMetadata: Record<ITrackType, IParsedTrack[]>,
 ): number | null | undefined {
   let maxEncounteredPosition: number | null = null;
   let allIndexAreEmpty = true;
-  const adaptationsVal = objectValues(adaptationsPerType).filter(
-    (ada): ada is IParsedAdaptation[] => !isNullOrUndefined(ada),
-  );
-  const allAdaptations = flatMap(
-    adaptationsVal,
-    (adaptationsForType) => adaptationsForType,
-  );
-  for (const adaptation of allAdaptations) {
+  const allTracks = [
+    ...tracksMetadata.audio,
+    ...tracksMetadata.video,
+    ...tracksMetadata.text,
+  ];
+  for (const adaptation of allTracks) {
     const representations = adaptation.representations;
     for (const representation of representations) {
       const position = representation.index.getLastAvailablePosition();

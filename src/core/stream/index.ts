@@ -28,7 +28,7 @@ export type {
   IStreamStatusPayload,
 } from "./representation";
 export type {
-  IAdaptationChoice,
+  ITrackChoice,
   INeedsBufferFlushPayload,
   ITrackSwitchingMode,
   IWaitingMediaSourceReloadPayload,

@@ -19,10 +19,10 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import type {
   IManifest,
-  IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
+  ITrack,
 } from "../../../manifest";
 import { getLoggableSegmentId } from "../../../manifest";
 import type { ICdnMetadata } from "../../../parsers/manifest";
@@ -119,7 +119,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
     fetcherCallbacks: ISegmentFetcherCallbacks<TSegmentDataType>,
     cancellationSignal: CancellationSignal,
   ): Promise<void> {
-    const { segment, adaptation, representation, manifest, period } = content;
+    const { segment, representation, track, manifest, period } = content;
 
     // used by logs
     const segmentIdString = getLoggableSegmentId(content);
@@ -159,8 +159,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
     /** Segment context given to the transport pipelines. */
     const context: ISegmentContext = {
       segment,
-      type: adaptation.type,
-      language: adaptation.language,
+      type: track.trackType,
+      language: track.language,
       isLive: manifest.isLive,
       periodStart: period.start,
       periodEnd: period.end,
@@ -429,7 +429,7 @@ export interface ISegmentFetcherCallbacks<TSegmentDataType> {
 export interface ISegmentLoaderContent {
   manifest: IManifest;
   period: IPeriod;
-  adaptation: IAdaptation;
+  track: ITrack;
   representation: IRepresentation;
   segment: ISegment;
 }

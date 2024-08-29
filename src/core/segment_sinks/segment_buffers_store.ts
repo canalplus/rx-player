@@ -418,7 +418,7 @@ function shouldHaveNativeBuffer(
 
 function getChunkContextSnapshot(context: IChunkContext): IChunkContextSnapshot {
   return {
-    adaptation: context.adaptation.getMetadataSnapshot(),
+    track: context.track,
     period: context.period.getMetadataSnapshot(),
     representation: context.representation.getMetadataSnapshot(),
   };

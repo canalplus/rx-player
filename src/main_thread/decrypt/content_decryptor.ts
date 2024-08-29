@@ -20,7 +20,8 @@ import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
 import log from "../../log";
-import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
+import { getTrackList } from "../../manifest";
+import type { IPeriodMetadata } from "../../manifest";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../../utils/array_find";
@@ -414,7 +415,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     if (log.hasLevel("DEBUG")) {
       log.debug(
         "DRM: processing init data",
-        initializationData.content?.adaptation.type,
+        initializationData.content?.track.trackType,
         initializationData.content?.representation.bitrate,
         (initializationData.keyIds ?? []).map((k) => bytesToHex(k)).join(", "),
       );
@@ -1192,14 +1193,8 @@ function mergeKeyIdSetIntoArray(set: Set<Uint8Array>, arr: Uint8Array[]) {
  * @param {Object} period
  */
 function addKeyIdsFromPeriod(set: Set<Uint8Array>, period: IPeriodMetadata) {
-  const adaptationsByType = period.adaptations;
-  const adaptations = objectValues(adaptationsByType).reduce<IAdaptationMetadata[]>(
-    // Note: the second case cannot happen. TS is just being dumb here
-    (acc, adaps) => (!isNullOrUndefined(adaps) ? acc.concat(adaps) : acc),
-    [],
-  );
-  for (const adaptation of adaptations) {
-    for (const representation of adaptation.representations) {
+  for (const track of getTrackList(period)) {
+    for (const representation of objectValues(track.representations)) {
       if (
         representation.contentProtections !== undefined &&
         representation.contentProtections.keyIds !== undefined
