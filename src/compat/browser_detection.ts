@@ -60,6 +60,9 @@ let isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
+/** `true` we're relying on Philips's NetTv browser. */
+let isPhilipsNetTv = false;
+
 /** `true` for the PlayStation 5 game console. */
 let isPlayStation5 = false;
 
@@ -143,6 +146,11 @@ let isXbox = false;
     ) {
       isWebOs2021 = true;
     }
+  } else if (
+    navigator.userAgent.indexOf("NETTV") !== -1 &&
+    navigator.userAgent.indexOf("Philips") !== -1
+  ) {
+    isPhilipsNetTv = true;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
@@ -160,6 +168,7 @@ export {
   isIEOrEdge,
   isFirefox,
   isPanasonic,
+  isPhilipsNetTv,
   isPlayStation5,
   isXbox,
   isSafariDesktop,
