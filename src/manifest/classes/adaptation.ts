@@ -49,55 +49,55 @@ export default class Adaptation implements IAdaptationMetadata {
    */
   public manuallyAdded?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.representations
    */
   public readonly representations: Representation[];
   /**
-   * @see IRepresentationMetadata
+   * @see ITrackType
    */
   public readonly type: ITrackType;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.isAudioDescription
    */
   public isAudioDescription?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.isClosedCaption
    */
   public isClosedCaption?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.isForcedSubtitles
    */
   public isForcedSubtitles?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.isSignInterpreted
    */
   public isSignInterpreted?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.isDub
    */
   public isDub?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.language
    */
   public language?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.normalizedLanguage
    */
   public normalizedLanguage?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationSupportStatus
    */
   public supportStatus: IAdaptationSupportStatus;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.isTrickModeTrack
    */
   public isTrickModeTrack?: boolean;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.label
    */
   public label?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see IAdaptationMetadata.trickModeTracks
    */
   public readonly trickModeTracks?: Adaptation[];
 
