@@ -37,15 +37,15 @@ class Representation implements IRepresentationMetadata {
   /** ID uniquely identifying the Representation in its parent Adaptation. */
   public readonly id: string;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.uniqueId
    */
   public readonly uniqueId: string;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.bitrate
    */
   public bitrate: number;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.frameRate
    */
   public frameRate?: number;
   /**
@@ -65,39 +65,47 @@ class Representation implements IRepresentationMetadata {
    */
   public cdnMetadata: ICdnMetadata[] | null;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.isSpatialAudio
    */
   public isSpatialAudio?: boolean | undefined;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.codecs
    */
   public codecs: string[];
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.mimeType
    */
   public mimeType?: string;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.width
    */
   public width?: number;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.height
    */
   public height?: number;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.contentProtections
    */
   public contentProtections?: IContentProtections;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.hdrInfo
    */
   public hdrInfo?: IHDRInformation;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.decipherable
+   *
+   * Note that this property should __NEVER__ be updated directly on an
+   * instanciated `Representation`, you are supposed to rely on
+   * `Manifest` methods for this.
    */
   public decipherable?: boolean | undefined;
   /**
-   * @see IRepresentationMetadata
+   * @see IRepresentationMetadata.isSupported
+   *
+   * Note that this property should __NEVER__ be updated directly on an
+   * instanciated `Representation`, you are supposed to rely on
+   * `Manifest` methods for this.
    */
   public isSupported: boolean | undefined;
   /**
