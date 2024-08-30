@@ -60,6 +60,7 @@ var READY_STATES = {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   A7: function() { return /* binding */ isPlayStation5; },
 /* harmony export */   Fr: function() { return /* binding */ isSafariDesktop; },
+/* harmony export */   NV: function() { return /* binding */ isPhilipsNetTv; },
 /* harmony export */   P5: function() { return /* binding */ isPanasonic; },
 /* harmony export */   Pb: function() { return /* binding */ isSamsungBrowser; },
 /* harmony export */   ZN: function() { return /* binding */ isTizen; },
@@ -113,6 +114,8 @@ var isWebOs2021 = false;
 var isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 var isPanasonic = false;
+/** `true` we're relying on Philips's NetTv browser. */
+var isPhilipsNetTv = false;
 /** `true` for the PlayStation 5 game console. */
 var isPlayStation5 = false;
 /** `true` for the Xbox game consoles. */
@@ -168,6 +171,8 @@ var isXbox = false;
     } else if (/[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) || /[Cc]hr[o0]me\/79/.test(navigator.userAgent)) {
       isWebOs2021 = true;
     }
+  } else if (navigator.userAgent.indexOf("NETTV") !== -1 && navigator.userAgent.indexOf("Philips") !== -1) {
+    isPhilipsNetTv = true;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
@@ -723,6 +728,43 @@ function addEventListener(elt, evt, listener, stopListening) {
  */
 var isNode = typeof window === "undefined";
 /* harmony default export */ __webpack_exports__.A = (isNode);
+
+/***/ }),
+
+/***/ 7913:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _browser_detection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(443);
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * On some devices (right now only seen on Tizen), seeking through the
+ * `currentTime` property can lead to the browser re-seeking once the
+ * segments have been loaded to improve seeking performances (for
+ * example, by seeking right to an intra video frame).
+ *
+ * This can lead to conflicts with the RxPlayer code.
+ *
+ * This boolean is only `true` on the devices where this behavior has been
+ * observed.
+ */
+var isSeekingApproximate = _browser_detection__WEBPACK_IMPORTED_MODULE_0__/* .isTizen */ .ZN;
+/* harmony default export */ __webpack_exports__.A = (isSeekingApproximate);
 
 /***/ }),
 
@@ -4898,11 +4940,13 @@ function _createOrLoadSession() {
  *   - (2022-11-21): WebOS (LG TVs), for some encrypted contents, just
  *     rebuffered indefinitely when loading a content already-loaded on the
  *     HTMLMediaElement.
+ *   - (2024-08-23): Seen on Philips 2024 and 2023 in:
+ *     https://github.com/canalplus/rx-player/issues/1464
  *
  * @returns {boolean}
  */
 function canReuseMediaKeys() {
-  return !browser_detection/* isWebOs */.hF && !browser_detection/* isPanasonic */.P5;
+  return !browser_detection/* isWebOs */.hF && !browser_detection/* isPhilipsNetTv */.NV && !browser_detection/* isPanasonic */.P5;
 }
 ;// CONCATENATED MODULE: ./src/compat/should_renew_media_key_system_access.ts
 /**
@@ -9609,7 +9653,7 @@ var currentMediaState = new WeakMap();
 /* harmony import */ var _utils_get_loaded_reference__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(5097);
 /* harmony import */ var _utils_initial_seek_and_play__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(107);
 /* harmony import */ var _utils_initialize_content_decryption__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6899);
-/* harmony import */ var _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3108);
+/* harmony import */ var _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3137);
 /* harmony import */ var _utils_throw_on_media_error__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8345);
 
 /**
@@ -9711,7 +9755,7 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
      * Class trying to avoid various stalling situations, emitting "stalled"
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
-    var rebufferingController = new _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A(playbackObserver, null, speed);
+    var rebufferingController = new _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A(playbackObserver, null, null, speed);
     rebufferingController.addEventListener("stalled", function (evt) {
       return _this2.trigger("stalled", evt);
     });
@@ -20132,8 +20176,8 @@ function getMaximumLiveSeekablePosition(contentLastPosition) {
   // authorize exceptionally going over it.
   return Math.max(Math.pow(2, 32), contentLastPosition + YEAR_IN_SECONDS);
 }
-// EXTERNAL MODULE: ./src/core/init/utils/rebuffering_controller.ts + 1 modules
-var rebuffering_controller = __webpack_require__(3108);
+// EXTERNAL MODULE: ./src/core/init/utils/rebuffering_controller.ts
+var rebuffering_controller = __webpack_require__(3137);
 ;// CONCATENATED MODULE: ./src/core/init/utils/stream_events_emitter/are_same_stream_events.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -20845,7 +20889,18 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
       speed: speed,
       startTime: initialTime
     }, cancelSignal);
-    var rebufferingController = this._createRebufferingController(playbackObserver, manifest, speed, cancelSignal);
+    var rebufferingController = this._createRebufferingController(playbackObserver, manifest, segmentBuffersStore, speed, cancelSignal);
+    rebufferingController.addEventListener("needsReload", function () {
+      // NOTE couldn't both be always calculated at event destination?
+      // Maybe there are exceptions?
+      var position = initialSeekPerformed.getValue() ? playbackObserver.getCurrentTime() : initialTime;
+      var autoplay = initialPlayPerformed.getValue() ? !playbackObserver.getIsPaused() : autoPlay;
+      onReloadOrder({
+        position: position,
+        autoPlay: autoplay
+      });
+    }, cancelSignal);
+    var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     if (may_media_element_fail_on_undecipherable_data) {
       // On some devices, just reload immediately when data become undecipherable
       manifest.addEventListener("decipherabilityUpdate", function (elts) {
@@ -20856,7 +20911,6 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
         }
       }, cancelSignal);
     }
-    var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     /**
      * Emit a "loaded" events once the initial play has been performed and the
      * media can begin playback.
@@ -21148,9 +21202,9 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
    * @param {Object} cancelSignal
    * @returns {Object}
    */;
-  _proto._createRebufferingController = function _createRebufferingController(playbackObserver, manifest, speed, cancelSignal) {
+  _proto._createRebufferingController = function _createRebufferingController(playbackObserver, manifest, segmentBuffersStore, speed, cancelSignal) {
     var _this8 = this;
-    var rebufferingController = new rebuffering_controller/* default */.A(playbackObserver, manifest, speed);
+    var rebufferingController = new rebuffering_controller/* default */.A(playbackObserver, manifest, segmentBuffersStore, speed);
     // Bubble-up events
     rebufferingController.addEventListener("stalled", function (evt) {
       return _this8.trigger("stalled", evt);
@@ -21371,6 +21425,8 @@ var should_validate_metadata = __webpack_require__(2097);
 var browser_compatibility_types = __webpack_require__(9770);
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(443);
+// EXTERNAL MODULE: ./src/compat/is_seeking_approximate.ts
+var is_seeking_approximate = __webpack_require__(7913);
 ;// CONCATENATED MODULE: ./src/compat/should_prevent_seeking_at_0_initially.ts
 
 /**
@@ -21411,6 +21467,7 @@ var reference = __webpack_require__(8315);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -21503,7 +21560,7 @@ function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mu
         isAwaitingSeek = false;
         return;
       }
-      if (!isAwaitingSeek && !observation.seeking && observation.rebuffering === null && observation.readyState >= 1) {
+      if (!isAwaitingSeek && !observation.seeking && (is_seeking_approximate/* default */.A && observation.readyState >= 3 || observation.rebuffering === null) && observation.readyState >= 1) {
         stopListening();
         onPlayable();
       }
@@ -21720,64 +21777,25 @@ function initializeContentDecryption(mediaElement, keySystems, protectionRef, ca
 
 /***/ }),
 
-/***/ 3108:
+/***/ 3137:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   A: function() { return /* binding */ RebufferingController; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7387);
+/* harmony import */ var _compat_is_seeking_approximate__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7913);
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5151);
+/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(5575);
+/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9477);
+/* harmony import */ var _utils_event_emitter__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(79);
+/* harmony import */ var _utils_ranges__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3650);
+/* harmony import */ var _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
 
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  A: function() { return /* binding */ RebufferingController; }
-});
-
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
-var inheritsLoose = __webpack_require__(7387);
-// EXTERNAL MODULE: ./src/compat/browser_detection.ts
-var browser_detection = __webpack_require__(443);
-;// CONCATENATED MODULE: ./src/compat/is_seeking_approximate.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * On some devices (right now only seen on Tizen), seeking through the
- * `currentTime` property can lead to the browser re-seeking once the
- * segments have been loaded to improve seeking performances (for
- * example, by seeking right to an intra video frame).
- *
- * This can lead to conflicts with the RxPlayer code.
- *
- * This boolean is only `true` on the devices where this behavior has been
- * observed.
- */
-var isSeekingApproximate = browser_detection/* isTizen */.ZN;
-/* harmony default export */ var is_seeking_approximate = (isSeekingApproximate);
-// EXTERNAL MODULE: ./src/config.ts + 2 modules
-var config = __webpack_require__(5151);
-// EXTERNAL MODULE: ./src/errors/media_error.ts
-var media_error = __webpack_require__(5575);
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(9477);
-// EXTERNAL MODULE: ./src/utils/event_emitter.ts
-var event_emitter = __webpack_require__(79);
-// EXTERNAL MODULE: ./src/utils/ranges.ts
-var ranges = __webpack_require__(3650);
-// EXTERNAL MODULE: ./src/utils/task_canceller.ts
-var task_canceller = __webpack_require__(2507);
-;// CONCATENATED MODULE: ./src/core/init/utils/rebuffering_controller.ts
-
+function _createForOfIteratorHelperLoose(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (t) return (t = t.call(r)).next.bind(t); if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var o = 0; return function () { return o >= r.length ? { done: !0 } : { done: !1, value: r[o++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -21819,18 +21837,20 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
    * @param {Object} manifest - The Manifest of the currently-played content.
    * @param {Object} speed - The last speed set by the user
    */
-  function RebufferingController(playbackObserver, manifest, speed) {
+  function RebufferingController(playbackObserver, manifest, segmentBuffersStore, speed) {
     var _this;
     _this = _EventEmitter.call(this) || this;
     _this._playbackObserver = playbackObserver;
     _this._manifest = manifest;
+    _this._segmentBuffersStore = segmentBuffersStore;
     _this._speed = speed;
     _this._discontinuitiesStore = [];
     _this._isStarted = false;
-    _this._canceller = new task_canceller/* default */.Ay();
+    _this._canceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
+    _this._currentFreezeTimestamp = null;
     return _this;
   }
-  (0,inheritsLoose/* default */.A)(RebufferingController, _EventEmitter);
+  (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(RebufferingController, _EventEmitter);
   var _proto = RebufferingController.prototype;
   _proto.start = function start() {
     var _this2 = this;
@@ -21876,23 +21896,26 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         readyState = observation.readyState,
         rebuffering = observation.rebuffering,
         freezing = observation.freezing;
-      var _config$getCurrent = config/* default */.A.getCurrent(),
+      var _config$getCurrent = _config__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.getCurrent(),
         BUFFER_DISCONTINUITY_THRESHOLD = _config$getCurrent.BUFFER_DISCONTINUITY_THRESHOLD,
         FORCE_DISCONTINUITY_SEEK_DELAY = _config$getCurrent.FORCE_DISCONTINUITY_SEEK_DELAY,
         FREEZING_STALLED_DELAY = _config$getCurrent.FREEZING_STALLED_DELAY,
         UNFREEZING_SEEK_DELAY = _config$getCurrent.UNFREEZING_SEEK_DELAY,
         UNFREEZING_DELTA_POSITION = _config$getCurrent.UNFREEZING_DELTA_POSITION;
-      if (!observation.seeking && is_seeking_approximate && ignoredStallTimeStamp === null && lastSeekingPosition !== null && observation.position < lastSeekingPosition) {
-        log/* default */.A.debug("Init: the device appeared to have seeked back by itself.");
+      if (!observation.seeking && _compat_is_seeking_approximate__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A && ignoredStallTimeStamp === null && lastSeekingPosition !== null && observation.position < lastSeekingPosition) {
+        _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.debug("Init: the device appeared to have seeked back by itself.");
         var now = performance.now();
         ignoredStallTimeStamp = now;
       }
       lastSeekingPosition = observation.seeking ? Math.max((_a = observation.pendingInternalSeek) !== null && _a !== void 0 ? _a : 0, observation.position) : null;
+      if (_this2._checkDecipherabilityFreeze(observation)) {
+        return;
+      }
       if (freezing !== null) {
         var _now = performance.now();
         var referenceTimestamp = prevFreezingState === null ? freezing.timestamp : prevFreezingState.attemptTimestamp;
         if (_now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
-          log/* default */.A.warn("Init: trying to seek to un-freeze player");
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: trying to seek to un-freeze player");
           _this2._playbackObserver.setCurrentTime(_this2._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION);
           prevFreezingState = {
             attemptTimestamp: _now
@@ -21934,11 +21957,11 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         var _now2 = performance.now();
         if (_now2 - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
           playbackRateUpdater.stopRebuffering();
-          log/* default */.A.debug("Init: letting the device get out of a stall by itself");
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.debug("Init: letting the device get out of a stall by itself");
           _this2.trigger("stalled", stalledReason);
           return;
         } else {
-          log/* default */.A.warn("Init: ignored stall for too long, checking discontinuity", _now2 - ignoredStallTimeStamp);
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: ignored stall for too long, considering it", _now2 - ignoredStallTimeStamp);
         }
       }
       ignoredStallTimeStamp = null;
@@ -21954,9 +21977,9 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         if (skippableDiscontinuity !== null) {
           var realSeekTime = skippableDiscontinuity + 0.001;
           if (realSeekTime <= _this2._playbackObserver.getCurrentTime()) {
-            log/* default */.A.info("Init: position to seek already reached, no seeking", _this2._playbackObserver.getCurrentTime(), realSeekTime);
+            _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: position to seek already reached, no seeking", _this2._playbackObserver.getCurrentTime(), realSeekTime);
           } else {
-            log/* default */.A.warn("SA: skippable discontinuity found in the stream", position, realSeekTime);
+            _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("SA: skippable discontinuity found in the stream", position, realSeekTime);
             _this2._playbackObserver.setCurrentTime(realSeekTime);
             _this2.trigger("warning", generateDiscontinuityError(stalledPosition, realSeekTime));
             return;
@@ -21971,11 +21994,11 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
-      var nextBufferRangeGap = (0,ranges/* getNextRangeGap */.Td)(buffered, freezePosition);
+      var nextBufferRangeGap = (0,_utils_ranges__WEBPACK_IMPORTED_MODULE_5__/* .getNextRangeGap */ .Td)(buffered, freezePosition);
       if (_this2._speed.getValue() > 0 && nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
         var seekTo = freezePosition + nextBufferRangeGap + EPSILON;
         if (_this2._playbackObserver.getCurrentTime() < seekTo) {
-          log/* default */.A.warn("Init: discontinuity encountered inferior to the threshold", freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: discontinuity encountered inferior to the threshold", freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
           _this2._playbackObserver.setCurrentTime(seekTo);
           _this2.trigger("warning", generateDiscontinuityError(freezePosition, seekTo));
           return;
@@ -22035,7 +22058,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
     var rebufferingPos = (_a = observation.rebuffering.position) !== null && _a !== void 0 ? _a : currPos;
     var lockedPeriodStart = period.start;
     if (currPos < lockedPeriodStart && Math.abs(rebufferingPos - lockedPeriodStart) < 1) {
-      log/* default */.A.warn("Init: rebuffering because of a future locked stream.\n" + "Trying to unlock by seeking to the next Period");
+      _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: rebuffering because of a future locked stream.\n" + "Trying to unlock by seeking to the next Period");
       this._playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
     }
   }
@@ -22045,9 +22068,78 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
    */;
   _proto.destroy = function destroy() {
     this._canceller.cancel();
+  }
+  /**
+   * Support of contents with DRM on all the platforms out there is a pain in
+   * the *ss considering all the DRM-related bugs there are.
+   *
+   * We found out a frequent issue which is to be unable to play despite having
+   * all the decryption keys to play what is currently buffered.
+   * When this happens, re-creating the buffers from scratch, with a reload, is
+   * usually sufficient to unlock the situation.
+   *
+   * Although we prefer providing more targeted fixes or telling to platform
+   * developpers to fix their implementation, it's not always possible.
+   * We thus resorted to developping an heuristic which detects such situation
+   * and reload in that case.
+   *
+   * @param {Object} observation - The last playback observation produced, it
+   * has to be recent (just triggered for example).
+   * @returns {boolean} - Returns `true` if it seems to be such kind of
+   * decipherability freeze, in which case this method already performed the
+   * right handling steps.
+   */;
+  _proto._checkDecipherabilityFreeze = function _checkDecipherabilityFreeze(observation) {
+    var readyState = observation.readyState,
+      rebuffering = observation.rebuffering,
+      freezing = observation.freezing;
+    var bufferGap = observation.bufferGap !== undefined && isFinite(observation.bufferGap) ? observation.bufferGap : 0;
+    if (this._segmentBuffersStore === null || bufferGap < 6 || rebuffering === null && freezing === null || readyState > 1) {
+      this._currentFreezeTimestamp = null;
+      return false;
+    }
+    var now = performance.now();
+    if (this._currentFreezeTimestamp === null) {
+      this._currentFreezeTimestamp = now;
+    }
+    var rebufferingForTooLong = rebuffering !== null && now - rebuffering.timestamp > 4000;
+    var frozenForTooLong = freezing !== null && now - freezing.timestamp > 4000;
+    if ((rebufferingForTooLong || frozenForTooLong) && this._currentFreezeTimestamp > 4000) {
+      var statusAudio = this._segmentBuffersStore.getStatus("audio");
+      var statusVideo = this._segmentBuffersStore.getStatus("video");
+      var hasOnlyDecipherableSegments = true;
+      var isClear = true;
+      for (var _i = 0, _arr = [statusAudio, statusVideo]; _i < _arr.length; _i++) {
+        var status = _arr[_i];
+        if (status.type === "initialized") {
+          for (var _iterator = _createForOfIteratorHelperLoose(status.value.getInventory()), _step; !(_step = _iterator()).done;) {
+            var segment = _step.value;
+            var representation = segment.infos.representation;
+            if (representation.decipherable === false) {
+              _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: we have undecipherable segments left in the buffer, reloading");
+              this._currentFreezeTimestamp = null;
+              this.trigger("needsReload", null);
+              return true;
+            } else if (representation.contentProtections !== undefined) {
+              isClear = false;
+              if (representation.decipherable !== true) {
+                hasOnlyDecipherableSegments = false;
+              }
+            }
+          }
+        }
+      }
+      if (!isClear && hasOnlyDecipherableSegments) {
+        _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: we are frozen despite only having decipherable " + "segments left in the buffer, reloading");
+        this._currentFreezeTimestamp = null;
+        this.trigger("needsReload", null);
+        return true;
+      }
+    }
+    return false;
   };
   return RebufferingController;
-}(event_emitter/* default */.A);
+}(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A);
 /**
  * @param {Array.<Object>} discontinuitiesStore
  * @param {Object} manifest
@@ -22079,14 +22171,14 @@ function findSeekableDiscontinuity(discontinuitiesStore, manifest, stalledPositi
           if (nextPeriod !== null) {
             discontinuityEnd = nextPeriod.start + EPSILON;
           } else {
-            log/* default */.A.warn("Init: discontinuity at Period's end but no next Period");
+            _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: discontinuity at Period's end but no next Period");
           }
         } else if (stalledPosition < end + EPSILON) {
           discontinuityEnd = end + EPSILON;
         }
       }
       if (discontinuityEnd !== undefined) {
-        log/* default */.A.info("Init: discontinuity found", stalledPosition, discontinuityEnd);
+        _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: discontinuity found", stalledPosition, discontinuityEnd);
         maxDiscontinuityEnd = maxDiscontinuityEnd !== null && maxDiscontinuityEnd > discontinuityEnd ? maxDiscontinuityEnd : discontinuityEnd;
       }
     }
@@ -22155,7 +22247,7 @@ function updateDiscontinuitiesStore(discontinuitiesStore, evt, observation) {
  * @returns {Error}
  */
 function generateDiscontinuityError(stalledPosition, seekTo) {
-  return new media_error/* default */.A("DISCONTINUITY_ENCOUNTERED", "A discontinuity has been encountered at position " + String(stalledPosition) + ", seeked at position " + String(seekTo));
+  return new _errors__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A("DISCONTINUITY_ENCOUNTERED", "A discontinuity has been encountered at position " + String(stalledPosition) + ", seeked at position " + String(seekTo));
 }
 /**
  * Manage playback speed, allowing to force a playback rate of `0` when
@@ -22174,7 +22266,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
    * @param {Object} speed
    */
   function PlaybackRateUpdater(playbackObserver, speed) {
-    this._speedUpdateCanceller = new task_canceller/* default */.Ay();
+    this._speedUpdateCanceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
     this._isRebuffering = false;
     this._playbackObserver = playbackObserver;
     this._isDisposed = false;
@@ -22193,7 +22285,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
     }
     this._isRebuffering = true;
     this._speedUpdateCanceller.cancel();
-    log/* default */.A.info("Init: Pause playback to build buffer");
+    _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: Pause playback to build buffer");
     this._playbackObserver.setPlaybackRate(0);
   }
   /**
@@ -22207,7 +22299,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
       return;
     }
     this._isRebuffering = false;
-    this._speedUpdateCanceller = new task_canceller/* default */.Ay();
+    this._speedUpdateCanceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
     this._updateSpeed();
   }
   /**
@@ -22224,7 +22316,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
   _proto2._updateSpeed = function _updateSpeed() {
     var _this3 = this;
     this._speed.onUpdate(function (lastSpeed) {
-      log/* default */.A.info("Init: Resume playback speed", lastSpeed);
+      _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: Resume playback speed", lastSpeed);
       _this3._playbackObserver.setPlaybackRate(lastSpeed);
     }, {
       clearSignal: this._speedUpdateCanceller.signal,
@@ -30052,10 +30144,14 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
   /**
    * Estimate a minimum bound for the content from the last set segment time
    * and buffer depth.
-   * Consider that it is only an estimation, not the real value.
+   * Consider that it is only an estimate, not the real value.
+   * @param {number} segmentDuration - In DASH, the buffer depth actually also
+   * depend on a corresponding's segment duration (e.g. a segment become
+   * unavailable once the `timeShiftBufferDepth` + its duration has elapsed).
+   * This argument can thus be set the approximate duration of a segment.
    * @return {number|undefined}
    */;
-  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime() {
+  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime(segmentDuration) {
     var _a;
     if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
@@ -30064,7 +30160,7 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
     if (maximumBound === undefined) {
       return undefined;
     }
-    var minimumBound = maximumBound - this._timeShiftBufferDepth;
+    var minimumBound = maximumBound - (this._timeShiftBufferDepth + segmentDuration);
     return minimumBound;
   }
   /**
@@ -31203,6 +31299,7 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
 
 
 
+
 // eslint-disable-next-line max-len
 
 /**
@@ -31600,14 +31697,15 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
    * available due to timeshifting.
    */;
   _proto._refreshTimeline = function _refreshTimeline() {
+    var _a, _b;
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     if (!this._isDynamic) {
       return;
     }
-    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
-    if (firstPosition == null) {
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(((_b = (_a = this._index.timeline[0]) === null || _a === void 0 ? void 0 : _a.duration) !== null && _b !== void 0 ? _b : 0) / this._index.timescale);
+    if ((0,is_null_or_undefined/* default */.A)(firstPosition)) {
       return; // we don't know yet
     }
     var scaledFirstPosition = (0,index_helpers/* toIndexTime */.vb)(firstPosition, this._index);
@@ -32171,7 +32269,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     var _this$_index = this._index,
       duration = _this$_index.duration,
       timescale = _this$_index.timescale;
-    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(duration / timescale);
     if (firstPosition === undefined) {
       return undefined;
     }
@@ -33493,6 +33591,7 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
   var mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   var availabilityStartTime = parseAvailabilityStartTime(rootAttributes, args.referenceDateTime);
   var timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  var maxSegmentDuration = rootAttributes.maxSegmentDuration;
   var clockOffset = args.externalClockOffset,
     unsafelyBaseOnPreviousManifest = args.unsafelyBaseOnPreviousManifest;
   var externalClockOffset = args.externalClockOffset;
@@ -33586,6 +33685,20 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
     // can go even lower in terms of depth
     minimumTime = minimumSafePosition;
     timeshiftDepth = timeShiftBufferDepth !== null && timeShiftBufferDepth !== void 0 ? timeShiftBufferDepth : null;
+    if (timeshiftDepth !== null) {
+      // The DASH spec implies that a segment is still available after a given
+      // `timeShiftBufferDepth` for a time equal to its duration
+      // (What I interpret from "ISO/IEC 23009-1 fifth edition 2022-08
+      // A.3.4 Media Segment list restrictions).
+      //
+      // This `timeshiftDepth` property is global for the whole Manifest (and
+      // not per segment), thus we cannot do exactly that, but we can take the
+      // anounced `maxSegmentDuration` by default instead. This may be a little
+      // too optimistic, but would in reality not lead to a lot of issues as
+      // this `timeshiftDepth` property is not the one that should be relied on
+      // to know which segment can or cannot be requested anymore.
+      timeshiftDepth += maxSegmentDuration !== null && maxSegmentDuration !== void 0 ? maxSegmentDuration : 0;
+    }
     if (timeshiftDepth !== null && minimumTime !== undefined && livePosition - minimumTime > timeshiftDepth) {
       timeshiftDepth = livePosition - minimumTime;
     }
@@ -37295,7 +37408,12 @@ function applyExtent(element, extent) {
       log/* default */.A.warn("TTML Parser: unhandled extent unit:", firstExtent[2]);
     }
     if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
-      element.style.height = secondExtent[1] + secondExtent[2];
+      var toNum = Number(secondExtent[1]);
+      if (secondExtent[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
+        element.style.width = "80%";
+      } else {
+        element.style.height = secondExtent[1] + secondExtent[2];
+      }
     } else if (secondExtent[2] === "c") {
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-height", secondExtent[1]);
@@ -37375,12 +37493,11 @@ function applyFontSize(element, fontSize) {
  */
 
 
-
 /**
- * @param {HTMLElement} element
+ * @param {HTMLElement} _element
  * @param {string} lineHeight
  */
-function applyLineHeight(element, lineHeight) {
+function applyLineHeight(_element, lineHeight) {
   var trimmedLineHeight = lineHeight.trim();
   var splittedLineHeight = trimmedLineHeight.split(" ");
   if (trimmedLineHeight === "auto") {
@@ -37391,10 +37508,10 @@ function applyLineHeight(element, lineHeight) {
     return;
   }
   if (firstLineHeight[2] === "px" || firstLineHeight[2] === "%" || firstLineHeight[2] === "em") {
-    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
+    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
   } else if (firstLineHeight[2] === "c") {
-    addClassName(element, "proportional-style");
-    element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
+    // addClassName(element, "proportional-style");
+    // element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
   } else {
     log/* default */.A.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
   }
@@ -37443,7 +37560,13 @@ function applyOrigin(element, origin) {
       log/* default */.A.warn("TTML Parser: unhandled origin unit:", firstOrigin[2]);
     }
     if (secondOrigin[2] === "px" || secondOrigin[2] === "%" || secondOrigin[2] === "em") {
-      element.style.top = secondOrigin[1] + secondOrigin[2];
+      var toNum = Number(secondOrigin[1]);
+      if (secondOrigin[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
+        element.style.bottom = "5%";
+        element.style.left = "10%";
+      } else {
+        element.style.top = secondOrigin[1] + secondOrigin[2];
+      }
     } else if (secondOrigin[2] === "c") {
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-top", secondOrigin[1]);
@@ -53656,7 +53779,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.3";
+    _this.version = /* PLAYER_VERSION */"3.33.4-canal.2024083000";
     _this.log = src_log/* default */.A;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -56144,7 +56267,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
  * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
  */
 Player._priv_currentlyUsedVideoElements = new WeakSet();
-Player.version = /* PLAYER_VERSION */"3.33.3";
+Player.version = /* PLAYER_VERSION */"3.33.4-canal.2024083000";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
