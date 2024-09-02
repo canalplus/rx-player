@@ -68,7 +68,12 @@ async function run() {
               `npm run ${name}`,
             )}]:`,
           );
-          console.log(`${indentation}   ${val}\n`);
+          const nbLength = String(currCommandNb).length;
+          let numberSpace = "";
+          for (let i = 0; i < nbLength; i++) {
+            numberSpace += " ";
+          }
+          console.log(`${indentation}${numberSpace}  ${val}\n`);
           currCommandNb++;
         } else if (typeof val === "object") {
           console.log(`${indentation}\x1b[33m${name}\x1b[37m\n`);
