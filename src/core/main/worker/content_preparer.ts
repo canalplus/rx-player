@@ -26,7 +26,7 @@ import type { IManifestRefreshSettings } from "../../fetchers";
 import { ManifestFetcher, SegmentFetcherCreator } from "../../fetchers";
 import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
-import DecipherabilityFreezeDetector from "../common/DecipherabilityFreezeDetector";
+import FreezeResolver from "../common/FreezeResolver";
 import { limitVideoResolution, throttleVideoBitrate } from "./globals";
 import sendMessage, { formatErrorForSender } from "./send_message";
 import TrackChoiceSetter from "./track_choice_setter";
@@ -84,7 +84,13 @@ export default class ContentPreparer {
 
       currentMediaSourceCanceller.linkToSignal(contentCanceller.signal);
 
-      const { contentId, url, hasText, transportOptions } = context;
+      const {
+        contentId,
+        url,
+        hasText,
+        transportOptions,
+        enableRepresentationDeprecation,
+      } = context;
       let manifest: IManifest | null = null;
 
       // TODO better way
@@ -148,13 +154,12 @@ export default class ContentPreparer {
           },
           currentMediaSourceCanceller.signal,
         );
-      const decipherabilityFreezeDetector = new DecipherabilityFreezeDetector(
-        segmentSinksStore,
-      );
+      const freezeResolver = new FreezeResolver(segmentSinksStore);
       this._currentContent = {
         cmcdDataBuilder,
         contentId,
-        decipherabilityFreezeDetector,
+        enableRepresentationDeprecation,
+        freezeResolver,
         mediaSource,
         manifest: null,
         manifestFetcher,
@@ -329,6 +334,12 @@ export interface IPreparedContentData {
    */
   cmcdDataBuilder: CmcdDataBuilder | null;
   /**
+   * If `true`, the RxPlayer can enable its "Representation deprecation"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationDeprecation: boolean;
+  /**
    * Interface to the MediaSource implementation, allowing to buffer audio
    * and video media segments.
    */
@@ -342,10 +353,10 @@ export interface IPreparedContentData {
    */
   manifest: IManifest | null;
   /**
-   * Specific module detecting freezing issues due to lower-level
-   * decipherability-related bugs.
+   * Specific module detecting freezing issues and trying to work-around
+   * them.
    */
-  decipherabilityFreezeDetector: DecipherabilityFreezeDetector;
+  freezeResolver: FreezeResolver;
   /**
    * Perform the adaptive logic, allowing to choose the best Representation for
    * the different types of media to load.
