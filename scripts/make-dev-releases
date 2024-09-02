@@ -34,12 +34,21 @@
 
 set -e
 
+# Log a line to sterr and exit with error code 1
+err() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
 if [ $# -eq 0 ]; then
   read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  echo ""
   if [ -z "${version}" ]; then
-    echo "Please enter a valid version number"
-    exit 1
+    # TODO SEMVER REGEX?
+    err "Please enter a valid version number next time."
   fi
+else
+  version=$1
 fi
 
 if [ $# -lt 2 ]; then
@@ -47,12 +56,35 @@ if [ $# -lt 2 ]; then
   if [ -z "${incr}" ]; then
     incr="00"
   fi
+else
+  incr=$2
 fi
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 date=$(date "+%Y%m%d")
 dev_branch="release/v${version}-dev.${date}${incr}"
 canal_branch="release/v${version}-canal.${date}${incr}"
+
+if ! [ -z $(git branch --list "$dev_branch") ]; then
+  err "Branch name "$dev_branch" already exists locally. Please delete it first."
+fi
+if ! [ -z $(git branch --list "$canal_branch") ]; then
+  err "Branch name "canal_branch" already exists locally. Please delete it first."
+fi
+if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$dev_branch") ]; then
+  err "Branch name "$dev_branch" already exists remotely. Please delete it first."
+fi
+if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$canal_branch") ]; then
+  err "Branch name "$canal_branch" already exists remotely. Please delete it first."
+fi
+
+if npm view rx-player@$version-dev.${date}${incr} >/dev/null 2>&1; then
+  err "Version already published to npm: $version-dev.${date}${incr}"
+fi
+
+if npm view rx-player@$version-canal.${date}${incr} >/dev/null 2>&1; then
+  err "Version already published to npm: $version-canal.${date}${incr}"
+fi
 
 git checkout -b ${dev_branch}
 ./scripts/update-version $version-dev.${date}${incr}
@@ -62,9 +94,9 @@ while true; do
   read -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
   echo ""
   case $yn in
-    [Yy]* ) break;;
-    [Nn]* ) exit;;
-    * ) echo "Please answer y or n.";;
+  [Yy]*) break ;;
+  [Nn]*) exit ;;
+  *) echo "Please answer y or n." ;;
   esac
 done
 git push origin ${dev_branch}
@@ -82,9 +114,9 @@ while true; do
   read -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
   echo ""
   case $yn in
-    [Yy]* ) break;;
-    [Nn]* ) exit;;
-    * ) echo "Please answer y or n.";;
+  [Yy]*) break ;;
+  [Nn]*) exit ;;
+  *) echo "Please answer y or n." ;;
   esac
 done
 npm publish --tag canal-v4
