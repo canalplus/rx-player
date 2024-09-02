@@ -27,7 +27,7 @@ import AdaptiveRepresentationSelector from "../../core/adaptive";
 import CmcdDataBuilder from "../../core/cmcd";
 import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
-import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
+import FreezeResolver from "../../core/main/common/FreezeResolver";
 import SegmentSinksStore from "../../core/segment_sinks";
 import type {
   IStreamOrchestratorOptions,
@@ -51,7 +51,7 @@ import type {
 } from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import assert from "../../utils/assert";
+import assert, { assertUnreachable } from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
@@ -666,9 +666,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       speed,
       cancelSignal,
     );
-    const decipherabilityFreezeDetector = new DecipherabilityFreezeDetector(
-      segmentSinksStore,
-    );
+    const freezeResolver = new FreezeResolver(segmentSinksStore);
 
     if (mayMediaElementFailOnUndecipherableData) {
       // On some devices, just reload immediately when data become undecipherable
@@ -683,9 +681,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       );
     }
 
+    // Handle "FREEZING" situation and try to un-freeze
     playbackObserver.listen(
       (observation) => {
-        if (decipherabilityFreezeDetector.needToReload(observation)) {
+        const freezeResolution = freezeResolver.onNewObservation(observation);
+        if (freezeResolution === null) {
+          return;
+        }
+
+        const triggerReload = () => {
           let position: number;
           const lastObservation = playbackObserver.getReference().getValue();
           if (lastObservation.position.isAwaitingFuturePosition()) {
@@ -698,6 +702,32 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             ? !playbackObserver.getIsPaused()
             : autoPlay;
           onReloadOrder({ position, autoPlay: autoplay });
+        };
+
+        switch (freezeResolution.type) {
+          case "reload": {
+            log.info("Init: Planning reload due to freeze");
+            triggerReload();
+            break;
+          }
+          case "flush": {
+            log.info("Init: Flushing buffer due to freeze");
+            const currentTime = playbackObserver.getCurrentTime();
+            const relativeResumingPosition = freezeResolution.value.relativeSeek;
+            const wantedSeekingTime = currentTime + relativeResumingPosition;
+            playbackObserver.setCurrentTime(wantedSeekingTime);
+            break;
+          }
+          case "deprecate-representations": {
+            const contents = freezeResolution.value;
+            if (this._settings.enableRepresentationDeprecation) {
+              manifest.deprecateRepresentations(contents);
+            }
+            triggerReload();
+            break;
+          }
+          default:
+            assertUnreachable(freezeResolution);
         }
       },
       { clearSignal: cancelSignal },
@@ -1151,6 +1181,12 @@ export interface IInitializeArguments {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+  /**
+   * If `true`, the RxPlayer can enable its "Representation deprecation"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationDeprecation: boolean;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */

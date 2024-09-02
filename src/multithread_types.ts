@@ -108,6 +108,12 @@ export interface IContentInitializationData {
    */
   cmcd?: ICmcdOptions | undefined;
   /**
+   * If `true`, the RxPlayer can enable its "Representation deprecation"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationDeprecation: boolean;
+  /**
    * URL at which the content's Manifest is accessible.
    * `undefined` if unknown.
    */
@@ -410,6 +416,8 @@ export interface ISerializedPlaybackObservation {
    * `undefined` if we cannot determine the buffer gap.
    */
   bufferGap: number | undefined;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
 }
 
 /**

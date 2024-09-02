@@ -94,11 +94,9 @@ export default function AdaptationStream(
   let previouslyEmittedBitrate: number | undefined;
 
   const initialRepIds = content.representations.getValue().representationIds;
-  const initialRepresentations = content.adaptation.representations.filter(
-    (r) =>
-      arrayIncludes(initialRepIds, r.id) &&
-      r.decipherable !== false &&
-      r.isSupported !== false,
+  const initialRepresentations = getRepresentationList(
+    content.adaptation.representations,
+    initialRepIds,
   );
 
   /** Emit the list of Representation for the adaptive logic. */
@@ -160,8 +158,13 @@ export default function AdaptationStream(
         cancelCurrentStreams.cancel();
       }
       const newRepIds = content.representations.getValue().representationIds;
-      const newRepresentations = content.adaptation.representations.filter((r) =>
-        arrayIncludes(newRepIds, r.id),
+
+      // NOTE: We expect that the rest of the RxPlayer code is already handling
+      // cases where the list of playable `Representation` changes:
+      // decipherability updates, `Representation` deprecation etc.
+      const newRepresentations = getRepresentationList(
+        content.adaptation.representations,
+        newRepIds,
       );
       representationsList.setValueIfChanged(newRepresentations);
       cancelCurrentStreams = new TaskCanceller();
@@ -492,4 +495,36 @@ export default function AdaptationStream(
     }
     return bufferGoalRatio;
   }
+}
+
+/**
+ * Construct the list of the `Representation` to play, based on what's supported
+ * and what the API seem to authorize.
+ * @param {Array.<Object>} availableRepresentations - All available
+ * Representation in the current `Adaptation`, including unsupported ones.
+ * @param {Array.<string>} authorizedRepIds - The subset of `Representation`
+ * that the API authorize us to play.
+ * @returns {Array.<Object>}
+ */
+function getRepresentationList(
+  availableRepresentations: IRepresentation[],
+  authorizedRepIds: string[],
+): IRepresentation[] {
+  const filteredRepresentations = availableRepresentations.filter(
+    (r) =>
+      arrayIncludes(authorizedRepIds, r.id) &&
+      r.decipherable !== false &&
+      !r.deprecated &&
+      r.isSupported !== false,
+  );
+  if (filteredRepresentations.length > 0) {
+    return filteredRepresentations;
+  }
+  // Retry without deprecated `Representation`
+  return availableRepresentations.filter(
+    (r) =>
+      arrayIncludes(authorizedRepIds, r.id) &&
+      r.decipherable !== false &&
+      r.isSupported !== false,
+  );
 }
