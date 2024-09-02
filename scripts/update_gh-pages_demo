@@ -23,8 +23,7 @@ current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version=$(cat VERSION)
 
 if ! [ "$current_branch" == "stable" ]; then
-  echo $current_branch
-  echo "ERROR: The current branch should be \"stable\""
+  echo "ERROR: Updating the gh-pages demo is only possible from the \"stable\" branch"
   exit 1;
 fi
 
