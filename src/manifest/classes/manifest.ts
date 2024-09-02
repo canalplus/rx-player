@@ -63,7 +63,7 @@ interface IManifestParsingOptions {
 }
 
 /** Representation affected by a `decipherabilityUpdate` event. */
-export interface IDecipherabilityUpdateElement {
+export interface IUpdatedRepresentationInfo {
   manifest: IManifestMetadata;
   period: IPeriodMetadata;
   adaptation: IAdaptationMetadata;
@@ -75,9 +75,14 @@ export interface IManifestEvents {
   /** The Manifest has been updated */
   manifestUpdate: IPeriodsUpdateResult;
   /** Some Representation's decipherability status has been updated */
-  decipherabilityUpdate: IDecipherabilityUpdateElement[];
+  decipherabilityUpdate: IUpdatedRepresentationInfo[];
   /** Some Representation's support status has been updated */
   supportUpdate: null;
+  /**
+   * Some `Representation` have been "deprecated", meaning we should avoid
+   * playing them.
+   */
+  deprecationUpdate: IUpdatedRepresentationInfo[];
 }
 
 /**
@@ -542,6 +547,45 @@ export default class Manifest
   }
 
   /**
+   * Mark some `Representation` as being "deprecated", meaning we should not
+   * attempt to load it anymore, unless forced.
+   * @param {Array.<Object>} items
+   */
+  public deprecateRepresentations(
+    items: Array<{
+      period: Period;
+      adaptation: Adaptation;
+      representation: Representation;
+    }>,
+  ) {
+    const updates = [];
+    for (const item of items) {
+      const period = this.getPeriod(item.period.id);
+      if (period === undefined) {
+        continue;
+      }
+      const adaptation = period.getAdaptation(item.adaptation.id);
+      if (adaptation === undefined) {
+        continue;
+      }
+      const representation = adaptation.getRepresentation(item.representation.id);
+      if (representation === undefined) {
+        continue;
+      }
+      representation.deprecated = true;
+      updates.push({
+        manifest: this,
+        period,
+        adaptation,
+        representation,
+      });
+    }
+    if (updates.length > 0) {
+      this.trigger("deprecationUpdate", updates);
+    }
+  }
+
+  /**
    * @deprecated only returns adaptations for the first period
    * @returns {Array.<Object>}
    */
@@ -715,8 +759,8 @@ function updateDeciperability(
     adaptation: Adaptation;
     representation: Representation;
   }) => boolean | undefined,
-): IDecipherabilityUpdateElement[] {
-  const updates: IDecipherabilityUpdateElement[] = [];
+): IUpdatedRepresentationInfo[] {
+  const updates: IUpdatedRepresentationInfo[] = [];
   for (const period of manifest.periods) {
     for (const adaptation of period.getAdaptations()) {
       let hasOnlyUndecipherableRepresentations = true;

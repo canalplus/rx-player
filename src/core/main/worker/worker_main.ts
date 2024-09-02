@@ -516,6 +516,7 @@ function loadOrReloadPreparedContent(
   const {
     contentId,
     cmcdDataBuilder,
+    enableRepresentationDeprecation,
     manifest,
     mediaSource,
     representationEstimator,
@@ -524,14 +525,6 @@ function loadOrReloadPreparedContent(
   } = preparedContent;
   const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
   playbackObservationRef.onUpdate((observation) => {
-    if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
-      handleMediaSourceReload({
-        timeOffset: 0,
-        minimumPosition: 0,
-        maximumPosition: Infinity,
-      });
-    }
-
     // Synchronize SegmentSinks with what has been buffered.
     ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
       const segmentSinkStatus = segmentSinksStore.getStatus(tType);
@@ -539,6 +532,48 @@ function loadOrReloadPreparedContent(
         segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
       }
     });
+
+    const freezeResolution = preparedContent.freezeResolver.onNewObservation(observation);
+    if (freezeResolution !== null) {
+      switch (freezeResolution.type) {
+        case "reload": {
+          log.info("WP: Planning reload due to freeze");
+          handleMediaSourceReload({
+            timeOffset: 0,
+            minimumPosition: 0,
+            maximumPosition: Infinity,
+          });
+          break;
+        }
+        case "flush": {
+          log.info("WP: Flushing buffer due to freeze");
+          sendMessage({
+            type: WorkerMessageType.NeedsBufferFlush,
+            contentId,
+            value: {
+              relativeResumingPosition: freezeResolution.value.relativeSeek,
+              relativePosHasBeenDefaulted: false,
+            },
+          });
+          break;
+        }
+        case "deprecate-representations": {
+          log.info("WP: Planning Representation deprecation due to freeze");
+          const content = freezeResolution.value;
+          if (enableRepresentationDeprecation) {
+            manifest.deprecateRepresentations(content);
+          }
+          handleMediaSourceReload({
+            timeOffset: 0,
+            minimumPosition: 0,
+            maximumPosition: Infinity,
+          });
+          break;
+        }
+        default:
+          assertUnreachable(freezeResolution);
+      }
+    }
   });
 
   const initialPeriod =
