@@ -237,10 +237,17 @@ export default class FreezeResolver {
         return { type: "reload", value: null };
       }
     }
+
+    let freezingTs = null;
+    if (freezing !== null) {
+      freezingTs = freezing.timestamp;
+    } else if (rebuffering !== null) {
+      freezingTs = rebuffering.timestamp;
+    }
     if (
-      freezing !== null &&
+      freezingTs !== null &&
       !observation.position.isAwaitingFuturePosition() &&
-      now - freezing.timestamp > UNFREEZING_SEEK_DELAY
+      now - freezingTs > UNFREEZING_SEEK_DELAY
     ) {
       this._lastFlushAttempt = {
         timestamp: now,
