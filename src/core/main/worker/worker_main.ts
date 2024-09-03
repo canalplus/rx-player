@@ -744,6 +744,7 @@ function loadOrReloadPreparedContent(
           }
         }
 
+        contentTimeBoundariesObserver.onPeriodCleared(value.type, value.period);
         preparedContent.trackChoiceSetter.removeTrackSetter(value.period.id, value.type);
         sendMessage({
           type: WorkerMessageType.PeriodStreamCleared,
