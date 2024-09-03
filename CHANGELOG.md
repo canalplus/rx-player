@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v4.2.0-dev.2024090300 (2024-09-03)
 
 ### Features
 
