@@ -18,8 +18,8 @@ This directory actually exports two completely isolated type of fetchers:
 
 - The **Manifest fetcher** is used to download and parse the manifest file.
 
-- The **SegmentFetcherCreator** is used to create Segment fetchers, allowing to download
-  and parse media segments.
+- The **SegmentQueueCreator** is used to create `SegmentQueue` objects, allowing to
+  download and parse media segments.
 
 ## The Manifest fetcher
 
@@ -32,22 +32,23 @@ parsing of the Manifest file.
 It also regularly refreshes the Manifest, based on its attributes and other criteria, like
 performances when doing that.
 
-## The SegmentFetcherCreator
+## The SegmentQueueCreator
 
-The SegmentFetcherCreator allows to easily perform segment downloads for the rest of the
+The SegmentQueueCreator allows to easily perform segment downloads for the rest of the
 code. This is the part of the code that interacts with the transport protocols - defined
-in `stc/transports` - to load and parse media segments.
+in `src/transports` - to load and parse media segments.
 
-To do so, the SegmentFetcherCreator creates "segment fetchers" of different types
-(example: a video or audio segment fetcher) when you ask for it. Through those fetchers,
-you can then schedule various segment requests with a given priority.
+To do so, the SegmentQueueCreator creates `SegmentQueue` classes of different types
+(example: a video or audio `SegmentQueue`) when you ask for it. Through those
+`SegmentQueue`, you can then schedule various a FIFO queue of segment requests each with a
+given priority.
 
 The priority of this request is then corroborated with the priority of all requests
-currently pending in the SegmentFetcherCreator (and not only with those on the current
-segment fetcher) to know when the request should effectively be done - more prioritary
+currently pending in the SegmentQueueCreator (and not only with those on the current
+`SegmentQueue`) to know when the request should effectively be done - more prioritary
 requests will be done first.
 
-During the lifecycle of the request, the segment fetcher will communicate about data and
+During the lifecycle of the request, the `SegmentQueue` will communicate about data and
 metrics through several means - documented in the code.
 
 ### Priorization
@@ -64,7 +65,7 @@ If the request has no priorization number, the lowest priorization number (the h
 priority) will be set on it: `0`
 
 Basically, any new request will have their priorization number compared to the one of the
-current request(s) done by the SegmentFetcherCreator:
+current request(s) done by the SegmentQueueCreator:
 
 - if no request is already pending, we perform the request immediately
 

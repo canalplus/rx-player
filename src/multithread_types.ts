@@ -8,7 +8,7 @@ import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_s
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
-  ISegmentFetcherCreatorBackoffOptions,
+  ISegmentQueueCreatorBackoffOptions,
   IInbandEvent,
   IPausedPlaybackObservation,
   IRepresentationsChoice,
@@ -140,7 +140,7 @@ export interface IContentInitializationData {
    */
   manifestRetryOptions: Omit<IManifestFetcherSettings, "cmcdDataBuilder">;
   /** Options relative to the fetching of media segments. */
-  segmentRetryOptions: ISegmentFetcherCreatorBackoffOptions;
+  segmentRetryOptions: ISegmentQueueCreatorBackoffOptions;
 }
 
 export interface ILogLevelUpdateMessage {
