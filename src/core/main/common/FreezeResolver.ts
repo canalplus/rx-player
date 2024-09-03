@@ -247,7 +247,9 @@ export default class FreezeResolver {
     if (
       freezingTs !== null &&
       !observation.position.isAwaitingFuturePosition() &&
-      now - freezingTs > UNFREEZING_SEEK_DELAY
+      now - freezingTs > UNFREEZING_SEEK_DELAY &&
+      (this._lastFlushAttempt === null ||
+        now - this._lastFlushAttempt.timestamp > UNFREEZING_SEEK_DELAY * 2)
     ) {
       this._lastFlushAttempt = {
         timestamp: now,
