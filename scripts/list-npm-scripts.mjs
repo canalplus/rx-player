@@ -59,7 +59,7 @@ async function run() {
     console.log("\n");
     executeNpmScript(wantedScript);
 
-    // TODO: that shouldn't be needed no? We may have missed to free a resource.
+    // Ensure script is terminated here
     process.exit(0);
 
     function recusivelyDiplayGroupCommands(groupEntries, indentation = "") {
@@ -133,10 +133,14 @@ async function getChoice(maxNb) {
 function executeNpmScript(script) {
   const emphasizedCmdStr = emphasize(`npm run ${script}`);
   console.log(`Executing: ${emphasizedCmdStr}`);
-  execSync(`npm run ${script}`, {
-    shell: true,
-    stdio: ["inherit", "inherit", "inherit"],
-  });
+  try {
+    execSync(`npm run ${script}`, {
+      shell: true,
+      stdio: ["inherit", "inherit", "inherit"],
+    });
+  } catch (err) {
+    process.exit(err.status);
+  }
 }
 
 /**
