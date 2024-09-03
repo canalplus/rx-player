@@ -82,6 +82,15 @@ export default class FreezeResolver {
   };
 
   /**
+   * Monotonically-raising timestamp before which we will just ignore freezing
+   * situations.
+   *
+   * To avoid flushing/reloading in a loop, we ignore for some time playback
+   * measure before retrying to unstuck playback.
+   */
+  private _ignoreFreezeUntil: number | null;
+
+  /**
    * Information on the last attempt to un-freeze playback by "flushing" buffers.
    *
    * `null` if we never attempted to flush buffers.
@@ -109,6 +118,7 @@ export default class FreezeResolver {
   constructor(segmentSinksStore: SegmentSinksStore) {
     this._segmentSinksStore = segmentSinksStore;
     this._decipherabilityFreezeStartingTimestamp = null;
+    this._ignoreFreezeUntil = null;
     this._lastFlushAttempt = null;
     this._lastSegmentInfo = {
       audio: [],
@@ -135,19 +145,25 @@ export default class FreezeResolver {
     const now = getMonotonicTimeStamp();
     this._addPositionToHistory(observation, now);
 
-    const { readyState, rebuffering, freezing, fullyLoaded } = observation;
-    const polledPosition = observation.position.getPolled();
-    const bufferGap =
-      observation.bufferGap !== undefined && isFinite(observation.bufferGap)
-        ? observation.bufferGap
-        : 0;
+    if (this._ignoreFreezeUntil !== null && now < this._ignoreFreezeUntil) {
+      return null;
+    }
+    this._ignoreFreezeUntil = null;
 
     const {
       UNFREEZING_SEEK_DELAY,
       UNFREEZING_DELTA_POSITION,
       FREEZING_FLUSH_FAILURE_DELAY,
     } = config.getCurrent();
+    const { readyState, rebuffering, freezing, fullyLoaded } = observation;
 
+    const freezingPosition = observation.position.getPolled();
+    const bufferGap =
+      observation.bufferGap !== undefined && isFinite(observation.bufferGap)
+        ? observation.bufferGap
+        : 0;
+
+    /** If set to `true`, we consider playback "frozen" */
     const isFrozen =
       freezing !== null ||
       // When rebuffering, `freezing` might be not set as we're actively pausing
@@ -161,79 +177,125 @@ export default class FreezeResolver {
       return null;
     }
 
+    /**
+     * If `true`, we recently tried to "flush" to unstuck playback but playback
+     * is still stuck
+     */
     const recentFlushAttemptFailed =
       this._lastFlushAttempt !== null &&
       now - this._lastFlushAttempt.timestamp < FREEZING_FLUSH_FAILURE_DELAY.MAXIMUM &&
       now - this._lastFlushAttempt.timestamp >= FREEZING_FLUSH_FAILURE_DELAY.MINIMUM &&
-      Math.abs(polledPosition - this._lastFlushAttempt.position) <
+      Math.abs(freezingPosition - this._lastFlushAttempt.position) <
         FREEZING_FLUSH_FAILURE_DELAY.POSITION_DELTA;
 
     if (recentFlushAttemptFailed) {
       log.warn(
         "FR: A recent flush seemed to have no effect on freeze, checking for transitions",
       );
+
+      /** Contains Representation we might want to deprecate after the following algorithm */
       const toDeprecate = [];
+
       for (const ttype of ["audio", "video"] as const) {
         const segmentList = this._lastSegmentInfo[ttype];
         if (segmentList.length === 0) {
-          break;
+          // There's no buffered segment for that type, go to next type
+          continue;
         }
-        let initialOccurenceOfLastSegment = segmentList[segmentList.length - 1];
-        let recentQualityChangeSegment: IPlayedHistoryEntry | undefined;
+
+        /** Played history information on the current segment we're stuck on. */
+        let currentSegmentEntry = segmentList[segmentList.length - 1];
+        if (currentSegmentEntry.segment === null) {
+          // No segment currently played for that given type, go to next type
+          continue;
+        }
+
+        /** Metadata on the segment currently being played. */
+        const currentSegment = currentSegmentEntry.segment;
+
+        /**
+         * Set to the first previous segment which is linked to a different
+         * Representation.
+         */
+        let previousRepresentationEntry: IPlayedHistoryEntry | undefined;
+
+        // Now find `previousRepresentationEntry` and `currentSegmentEntry`.
         for (let i = segmentList.length - 2; i >= 0; i--) {
           const segment = segmentList[i];
           if (segment.segment === null) {
-            recentQualityChangeSegment = segment;
+            // Before the current segment, there was no segment being played
+            previousRepresentationEntry = segment;
             break;
           } else if (
             segment.segment.infos.representation.uniqueId !==
-              initialOccurenceOfLastSegment.segment?.infos.representation.uniqueId &&
-            initialOccurenceOfLastSegment.timestamp - segment.timestamp < 5000
+              currentSegment.infos.representation.uniqueId &&
+            currentSegmentEntry.timestamp - segment.timestamp < 5000
           ) {
-            recentQualityChangeSegment = segment;
+            // Before the current segment, there was a segment of a different
+            // Representation being played
+            previousRepresentationEntry = segment;
             break;
           } else if (
-            initialOccurenceOfLastSegment.segment !== null &&
-            segment.segment.start === initialOccurenceOfLastSegment.segment.start
+            currentSegment !== null &&
+            segment.segment.start === currentSegment.start &&
+            // Ignore history entry concerning the same segment more than 3
+            // seconds of playback behind - we don't want to compare things
+            // that happended too long ago.
+            freezingPosition - segment.position < 3000
           ) {
-            initialOccurenceOfLastSegment = segment;
+            // We're still playing the last segment at that point, update it.
+            //
+            // (We may be playing, or be freezing, on the current segment for some
+            // time, this allows to consider a more precize timestamp at which we
+            // switched segments).
+            currentSegmentEntry = segment;
           }
         }
+
         if (
-          recentQualityChangeSegment !== undefined &&
-          recentQualityChangeSegment.segment !== null
+          previousRepresentationEntry === undefined ||
+          previousRepresentationEntry.segment === null
         ) {
-          if (initialOccurenceOfLastSegment.segment === null) {
-            log.debug("FR: Freeze when beginning to play a content, reloading");
-            return { type: "reload", value: null };
-          } else if (
-            initialOccurenceOfLastSegment.segment.infos.period.id !==
-            recentQualityChangeSegment.segment.infos.period.id
-          ) {
-            log.debug("FR: Freeze when switching Period, reloading");
-            return { type: "reload", value: null };
-          } else if (
-            initialOccurenceOfLastSegment.segment.infos.representation.uniqueId !==
-            recentQualityChangeSegment.segment.infos.representation.uniqueId
-          ) {
-            log.warn(
-              "FR: Freeze when switching Representation, deprecating",
-              initialOccurenceOfLastSegment.segment.infos.representation.bitrate,
-            );
-            toDeprecate.push({
-              adaptation: initialOccurenceOfLastSegment.segment.infos.adaptation,
-              period: initialOccurenceOfLastSegment.segment.infos.period,
-              representation: initialOccurenceOfLastSegment.segment.infos.representation,
-            });
-          }
+          log.debug(
+            "FR: Freeze when beginning to play a content, try deprecating this quality",
+          );
+          toDeprecate.push({
+            adaptation: currentSegment.infos.adaptation,
+            period: currentSegment.infos.period,
+            representation: currentSegment.infos.representation,
+          });
+        } else if (
+          currentSegment.infos.period.id !==
+          previousRepresentationEntry.segment.infos.period.id
+        ) {
+          log.debug("FR: Freeze when switching Period, reloading");
+          this._decipherabilityFreezeStartingTimestamp = null;
+          this._ignoreFreezeUntil = now + 6000;
+          return { type: "reload", value: null };
+        } else if (
+          currentSegment.infos.representation.uniqueId !==
+          previousRepresentationEntry.segment.infos.representation.uniqueId
+        ) {
+          log.warn(
+            "FR: Freeze when switching Representation, deprecating",
+            currentSegment.infos.representation.bitrate,
+          );
+          toDeprecate.push({
+            adaptation: currentSegment.infos.adaptation,
+            period: currentSegment.infos.period,
+            representation: currentSegment.infos.representation,
+          });
         }
       }
 
       if (toDeprecate.length > 0) {
         this._decipherabilityFreezeStartingTimestamp = null;
+        this._ignoreFreezeUntil = now + 6000;
         return { type: "deprecate-representations", value: toDeprecate };
       } else {
+        log.debug("FR: Reloading because flush doesn't work");
         this._decipherabilityFreezeStartingTimestamp = null;
+        this._ignoreFreezeUntil = now + 6000;
         return { type: "reload", value: null };
       }
     }
@@ -247,15 +309,15 @@ export default class FreezeResolver {
     if (
       freezingTs !== null &&
       !observation.position.isAwaitingFuturePosition() &&
-      now - freezingTs > UNFREEZING_SEEK_DELAY &&
-      (this._lastFlushAttempt === null ||
-        now - this._lastFlushAttempt.timestamp > UNFREEZING_SEEK_DELAY * 2)
+      now - freezingTs > UNFREEZING_SEEK_DELAY
     ) {
       this._lastFlushAttempt = {
         timestamp: now,
-        position: polledPosition + UNFREEZING_DELTA_POSITION,
+        position: freezingPosition + UNFREEZING_DELTA_POSITION,
       };
 
+      this._decipherabilityFreezeStartingTimestamp = null;
+      this._ignoreFreezeUntil = now + 6000;
       return {
         type: "flush",
         value: { relativeSeek: UNFREEZING_DELTA_POSITION },
@@ -290,6 +352,7 @@ export default class FreezeResolver {
                 "FR: we have undecipherable segments left in the buffer, reloading",
               );
               this._decipherabilityFreezeStartingTimestamp = null;
+              this._ignoreFreezeUntil = now + 6000;
               return { type: "reload", value: null };
             } else if (representation.contentProtections !== undefined) {
               isClear = false;
@@ -307,6 +370,7 @@ export default class FreezeResolver {
             "segments left in the buffer, reloading",
         );
         this._decipherabilityFreezeStartingTimestamp = null;
+        this._ignoreFreezeUntil = now + 6000;
         return { type: "reload", value: null };
       }
     }
@@ -329,7 +393,10 @@ export default class FreezeResolver {
       const status = this._segmentSinksStore.getStatus(ttype);
       if (status.type === "initialized") {
         for (const segment of status.value.getLastKnownInventory()) {
-          if (segment.start <= position && segment.end > position) {
+          if (
+            (segment.bufferedStart ?? segment.start) <= position &&
+            (segment.bufferedEnd ?? segment.end) > position
+          ) {
             this._lastSegmentInfo[ttype].push({
               segment,
               position,
