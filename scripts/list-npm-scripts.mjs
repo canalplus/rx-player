@@ -12,7 +12,7 @@
 import { existsSync, readFileSync } from "fs";
 import readline from "readline";
 import { join } from "path";
-import { spawn } from "child_process";
+import { execSync } from "child_process";
 readline.emitKeypressEvents(process.stdin);
 
 run();
@@ -58,6 +58,9 @@ async function run() {
     const wantedScript = commandArray[cmdChoiceNum - 1];
     console.log("\n");
     executeNpmScript(wantedScript);
+
+    // TODO: that shouldn't be needed no? We may have missed to free a resource.
+    process.exit(0);
 
     function recusivelyDiplayGroupCommands(groupEntries, indentation = "") {
       groupEntries.forEach(([name, val]) => {
@@ -130,20 +133,10 @@ async function getChoice(maxNb) {
 function executeNpmScript(script) {
   const emphasizedCmdStr = emphasize(`npm run ${script}`);
   console.log(`Executing: ${emphasizedCmdStr}`);
-  const cmd = spawn("npm", ["run", script], {
-    stdio: "inherit",
-    stderr: "inherit",
+  execSync(`npm run ${script}`, {
+    shell: true,
+    stdio: ["inherit", "inherit", "inherit"],
   });
-  process.on("SIGINT", function () {
-    cmd.kill("SIGINT");
-  });
-  process.on("SIGTERM", function () {
-    cmd.kill("SIGTERM");
-  });
-  cmd.on("error", (d) => {
-    process.stderr.write(`Error while executing command: ${d}`);
-  });
-  cmd.on("exit", (c) => process.exit(c));
 }
 
 /**
