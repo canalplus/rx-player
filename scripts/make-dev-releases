@@ -62,9 +62,19 @@ fi
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 date=$(date "+%Y%m%d")
-dev_branch="release/v${version}-dev.${date}${incr}"
-canal_branch="release/v${version}-canal.${date}${incr}"
+dev_version="${version}-dev.${date}${incr}"
+canal_version="${version}-canal.${date}${incr}"
+dev_branch="release/v${dev_version}"
+canal_branch="release/v${canal_version}"
 
+if [ -n "$(git status --porcelain doc)" ]; then
+  echo "ERROR: Please commit your modifications to \"${current_branch}\" first"
+  exit 1
+fi
+
+echo "This script will create the dev versions: $dev_version and $canal_version"
+
+echo "checking that the branches do not already exist locally or remotely..."
 if ! [ -z $(git branch --list "$dev_branch") ]; then
   err "Branch name "$dev_branch" already exists locally. Please delete it first."
 fi
@@ -78,12 +88,65 @@ if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/h
   err "Branch name "$canal_branch" already exists remotely. Please delete it first."
 fi
 
-if npm view rx-player@$version-dev.${date}${incr} >/dev/null 2>&1; then
+echo "checking that the versions are not already published on npm..."
+if npm view rx-player@$dev_version >/dev/null 2>&1; then
   err "Version already published to npm: $version-dev.${date}${incr}"
 fi
 
-if npm view rx-player@$version-canal.${date}${incr} >/dev/null 2>&1; then
+if npm view rx-player@$canal_version >/dev/null 2>&1; then
   err "Version already published to npm: $version-canal.${date}${incr}"
+fi
+
+# Make dev Changelog
+npm run releases:changelog -- $dev_version -d
+
+$EDITOR CHANGELOG.md
+
+if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
+  echo "-- Current CHANGELOG.md Status: --"
+  echo ""
+  git status CHANGELOG.md
+
+  while :; do
+    echo ""
+    echo "We will push this CHANGELOG.md update to ${current_branch}."
+    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
+    echo ""
+
+    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
+      echo ""
+      echo ""
+      echo "+- help -------------------------------------------------+"
+      echo "| y: commit and continue                                 |"
+      echo "| d: see diff                                            |"
+      echo "| s: see status                                          |"
+      echo "| a: abort script from here                              |"
+      echo "| c: skip CHANGELOG.md update and go to the next step    |"
+      echo "| h: see this help                                       |"
+      echo "+--------------------------------------------------------+"
+    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
+      git add CHANGELOG.md
+      git commit -m "Update CHANGELOG.md for v$dev_version"
+      git push git@github.com:canalplus/rx-player.git $current_branch
+      break
+    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
+      git diff CHANGELOG.md || true # ignore when return 1
+    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
+      git status CHANGELOG.md
+    elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
+      echo "exiting"
+      exit 0
+    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
+      git checkout CHANGELOG.md
+    else
+      echo "invalid input"
+    fi
+  done
+fi
+
+if [ -n "$(git status --porcelain doc)" ]; then
+  echo "ERROR: Unexpected diff in \"${current_branch}\""
+  exit 1
 fi
 
 git checkout -b ${dev_branch}

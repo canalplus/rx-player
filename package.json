@@ -177,6 +177,7 @@
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
     "list": "node scripts/list-npm-scripts.mjs",
     "prepublishOnly": "npm run build:all",
+    "releases:changelog": "./scripts/update_changelog.mjs",
     "releases:demo": "./scripts/update_gh-pages_demo",
     "releases:dev": "./scripts/make-dev-releases",
     "releases:doc": "./scripts/update_gh-pages_doc",

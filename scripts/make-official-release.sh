@@ -84,6 +84,7 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Please commit your modifications first"
 fi
 
+echo "Checking current branch is synchronized with remote..."
 check_branch_synchronized_with_remote
 
 if [ $# -eq 0 ]; then
@@ -97,6 +98,9 @@ else
   version=$1
 fi
 
+emphasized_log "This script will create the official version: $version"
+
+echo "checking that the branche does not already exist locally or remotely..."
 if ! [ -z $(git branch --list "release/v$version") ]; then
   err "Branch name "release/v$version" already exists locally. Please delete it first."
 fi
@@ -105,6 +109,7 @@ if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/h
   err "Branch name "release/v$version" already exists remotely. Please delete it first."
 fi
 
+echo "checking that the version are not already published on npm..."
 if npm view rx-player@$version >/dev/null 2>&1; then
   err "Version already published to npm: $version"
 fi
@@ -127,6 +132,58 @@ fi
 
 if [ -n "$(git status --porcelain)" ]; then
   err "Error after doing rebases: updated files"
+fi
+
+# Make Changelog
+npm run releases:changelog -- $version
+
+$EDITOR CHANGELOG.md
+
+if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
+  echo "-- Current CHANGELOG.md Status: --"
+  echo ""
+  git status CHANGELOG.md
+
+  while :; do
+    echo ""
+    echo "We will push this CHANGELOG.md update to $base_branch."
+    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
+    echo ""
+
+    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
+      echo ""
+      echo ""
+      echo "+- help -------------------------------------------------+"
+      echo "| y: commit and continue                                 |"
+      echo "| d: see diff                                            |"
+      echo "| s: see status                                          |"
+      echo "| a: abort script from here                              |"
+      echo "| c: skip CHANGELOG.md update and go to the next step    |"
+      echo "| h: see this help                                       |"
+      echo "+--------------------------------------------------------+"
+    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
+      git add CHANGELOG.md
+      git commit -m "Update CHANGELOG.md for v$version"
+      git push git@github.com:canalplus/rx-player.git $base_branch
+      break
+    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
+      git diff CHANGELOG.md || true # ignore when return 1
+    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
+      git status CHANGELOG.md
+    elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
+      echo "exiting"
+      exit 0
+    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
+      git checkout CHANGELOG.md
+    else
+      echo "invalid input"
+    fi
+  done
+fi
+
+if [ -n "$(git status --porcelain doc)" ]; then
+  echo "ERROR: Unexpected diff in \"$base_branch\""
+  exit 1
 fi
 
 emphasized_log "Creating \"release/v$version\" branch..."
