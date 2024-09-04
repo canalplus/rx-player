@@ -23,9 +23,8 @@ current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version=$(cat VERSION)
 
 if ! [ "$current_branch" == "stable" ]; then
-  echo $current_branch
-  echo "ERROR: The current branch should be \"stable\""
-  exit 1;
+  echo "ERROR: Updating the gh-pages documentation is only possible from the \"stable\" branch"
+  exit 1
 fi
 
 # Generate documentation
@@ -33,7 +32,7 @@ npm run doc
 
 if [ -n "$(git status --porcelain doc)" ]; then
   echo "ERROR: Please commit your modifications to \"stable\""
-  exit 1;
+  exit 1
 fi
 
 tmpDir=$(mktemp -d)
@@ -54,7 +53,7 @@ rm -rf doc
 mv $tmpDir/* "versions/$current_version/doc"
 ln -s "./versions/$current_version/doc" doc
 mv $tmpDemoList generate_demo_list.mjs
-mv $tmpDocList  generate_documentation_list.mjs
+mv $tmpDocList generate_documentation_list.mjs
 
 node generate_documentation_list.mjs
 rm generate_documentation_list.mjs
@@ -65,7 +64,7 @@ if [ -n "$(git status --porcelain doc "versions/$current_version/doc" documentat
   echo ""
   git status doc "versions/$current_version/doc" documentation_pages_by_version.html
 
-  while : ; do
+  while :; do
     echo ""
     echo "We will push the documentation to gh-pages."
     REPLY=""
@@ -98,8 +97,8 @@ if [ -n "$(git status --porcelain doc "versions/$current_version/doc" documentat
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
       git checkout doc "versions/$current_version/doc" documentation_pages_by_version.html
-    elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push doc "versions/$current_version/doc" documentation_pages_by_version.html
+    elif [[ $REPLY =~ ^[Tt]$ ]]; then
+      git stash save -u doc "versions/$current_version/doc" documentation_pages_by_version.html
       break
     fi
   done
