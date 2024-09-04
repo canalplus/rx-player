@@ -24,7 +24,7 @@ import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import generateEmbeds from "./generate_embeds.mjs";
 import runBundler from "./run_bundler.mjs";
-import removeDir from "./remove_dir.mjs";
+import removeDir from "./utils/remove_dir.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
