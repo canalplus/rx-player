@@ -1,12 +1,10 @@
 name: RxPlayer Demo Checks
 
 on:
-  push:
-    branches: [stable, dev, legacy-v3]
-    paths:
-      - demo/**
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - demo/**
 
 jobs:
   scripts_lint:

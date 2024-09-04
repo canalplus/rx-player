@@ -1,12 +1,10 @@
 name: RxPlayer Script Checks
 
 on:
-  push:
-    branches: [stable, dev, legacy-v3]
-    paths:
-      - scripts/**
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - scripts/**
 
 jobs:
   scripts_lint:
