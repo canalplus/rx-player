@@ -1,3 +1,4 @@
+import config from "../config";
 import { isPlayStation5 } from "./browser_detection";
 
 /**
@@ -13,6 +14,9 @@ import { isPlayStation5 } from "./browser_detection";
  *
  * Consequently, we have to specifically consider platforms with that
  * fail-on-undecipherable-data issue, to perform a work-around in that case.
+ * @returns {boolean}
  */
-const mayMediaElementFailOnUndecipherableData = isPlayStation5;
-export default mayMediaElementFailOnUndecipherableData;
+export default function mayMediaElementFailOnUndecipherableData(): boolean {
+  const { FORCE_MEDIA_ELEMENT_FAIL_ON_UNDECIPHERABLE_DATA } = config.getCurrent();
+  return FORCE_MEDIA_ELEMENT_FAIL_ON_UNDECIPHERABLE_DATA || isPlayStation5;
+}

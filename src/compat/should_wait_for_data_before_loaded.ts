@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isSafariMobile } from "./browser_detection";
 
 /**
@@ -25,7 +26,8 @@ import { isSafariMobile } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldWaitForDataBeforeLoaded(isDirectfile: boolean): boolean {
-  if (isDirectfile && isSafariMobile) {
+  const { FORCE_DONT_WAIT_FOR_DATA_BEFORE_LOADED } = config.getCurrent();
+  if (FORCE_DONT_WAIT_FOR_DATA_BEFORE_LOADED || (isDirectfile && isSafariMobile)) {
     return false;
   } else {
     return true;

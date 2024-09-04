@@ -1,3 +1,4 @@
+import config from "../config";
 import { isPanasonic, isPhilipsNetTv, isWebOs } from "./browser_detection";
 
 /**
@@ -15,5 +16,6 @@ import { isPanasonic, isPhilipsNetTv, isWebOs } from "./browser_detection";
  * @returns {boolean}
  */
 export default function canReuseMediaKeys(): boolean {
-  return !isWebOs && !isPhilipsNetTv && !isPanasonic;
+  const { FORCE_CANNOT_REUSE_MEDIA_KEYS } = config.getCurrent();
+  return !(FORCE_CANNOT_REUSE_MEDIA_KEYS || isWebOs || isPhilipsNetTv || isPanasonic);
 }

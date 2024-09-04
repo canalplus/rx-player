@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isSamsungBrowser } from "./browser_detection";
 
 /**
@@ -23,5 +24,6 @@ import { isSamsungBrowser } from "./browser_detection";
  * @returns {boolean}
  */
 export default function shouldValidateMetadata(): boolean {
-  return isSamsungBrowser;
+  const { FORCE_SHOULD_VALIDATE_METADATA } = config.getCurrent();
+  return FORCE_SHOULD_VALIDATE_METADATA || isSamsungBrowser;
 }

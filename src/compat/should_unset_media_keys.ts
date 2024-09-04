@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isIE11 } from "./browser_detection";
 
 /**
@@ -23,5 +24,6 @@ import { isIE11 } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldUnsetMediaKeys(): boolean {
-  return isIE11;
+  const { FORCE_SHOULD_UNSET_MEDIA_KEYS } = config.getCurrent();
+  return FORCE_SHOULD_UNSET_MEDIA_KEYS || isIE11;
 }

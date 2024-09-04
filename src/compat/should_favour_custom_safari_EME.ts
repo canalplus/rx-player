@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { isSafariDesktop, isSafariMobile } from "./browser_detection";
 import { WebKitMediaKeysConstructor } from "./eme/custom_media_keys/webkit_media_keys_constructor";
 
@@ -25,5 +26,9 @@ import { WebKitMediaKeysConstructor } from "./eme/custom_media_keys/webkit_media
  * @returns {boolean}
  */
 export default function shouldFavourCustomSafariEME(): boolean {
-  return (isSafariDesktop || isSafariMobile) && WebKitMediaKeysConstructor !== undefined;
+  const { FORCE_SHOULD_FAVOUR_CUSTOM_SAFARI_EME } = config.getCurrent();
+  return (
+    FORCE_SHOULD_FAVOUR_CUSTOM_SAFARI_EME ||
+    ((isSafariDesktop || isSafariMobile) && WebKitMediaKeysConstructor !== undefined)
+  );
 }
