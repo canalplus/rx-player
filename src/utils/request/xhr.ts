@@ -254,7 +254,7 @@ export default function request<T>(
 function toJSONForIE(data: string): unknown {
   try {
     return JSON.parse(data);
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }

@@ -1,12 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-restricted-properties */
-
+import type { IKeySystemOption } from "../../../../public_types";
+import type IContentDecryptor from "../../content_decryptor";
+import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
 import {
   MediaKeysImpl,
   MediaKeySystemAccessImpl,
@@ -22,7 +17,9 @@ describe("decrypt - global tests - media key system access", () => {
   const videoElt = document.createElement("video");
 
   /** Default keySystems configuration used in our tests. */
-  const ksConfig = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
+  const ksConfig: IKeySystemOption[] = [
+    { type: "com.widevine.alpha", getLicense: neverCalledFn },
+  ];
 
   beforeEach(() => {
     vi.resetModules();
@@ -57,17 +54,15 @@ describe("decrypt - global tests - media key system access", () => {
     });
 
     // == test ==
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
-    const error: any = await testContentDecryptorError(
-      ContentDecryptor,
-      videoElt,
-      ksConfig,
-    );
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
+    const error = await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual("CREATE_MEDIA_KEYS_ERROR: No non no");
     expect(error.name).toEqual("EncryptedMediaError");
-    expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
+    expect((error as Error & { code?: string | undefined }).code).toEqual(
+      "CREATE_MEDIA_KEYS_ERROR",
+    );
   });
 
   it("should throw if createMediaKeys rejects", async () => {
@@ -87,17 +82,15 @@ describe("decrypt - global tests - media key system access", () => {
     });
 
     // == test ==
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
-    const error: any = await testContentDecryptorError(
-      ContentDecryptor,
-      videoElt,
-      ksConfig,
-    );
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
+    const error = await testContentDecryptorError(ContentDecryptor, videoElt, ksConfig);
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toEqual("CREATE_MEDIA_KEYS_ERROR: No non no");
     expect(error.name).toEqual("EncryptedMediaError");
-    expect(error.code).toEqual("CREATE_MEDIA_KEYS_ERROR");
+    expect((error as Error & { code?: string | undefined }).code).toEqual(
+      "CREATE_MEDIA_KEYS_ERROR",
+    );
   });
 
   it("should go into the WaitingForAttachment state if createMediaKeys resolves", async () => {
@@ -106,13 +99,14 @@ describe("decrypt - global tests - media key system access", () => {
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange = 0;
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
+      contentDecryptor.addEventListener("stateChange", (newState) => {
         receivedStateChange++;
         try {
           expect(newState).toEqual(ContentDecryptorState.WaitingForAttachment);
@@ -142,14 +136,15 @@ describe("decrypt - global tests - media key system access", () => {
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
-      contentDecryptor1.addEventListener("stateChange", (state1: any) => {
+      contentDecryptor1.addEventListener("stateChange", (state1) => {
         receivedStateChange1++;
         try {
           if (receivedStateChange1 === 2) {
@@ -170,7 +165,7 @@ describe("decrypt - global tests - media key system access", () => {
           const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
-          contentDecryptor2.addEventListener("stateChange", (state2: any) => {
+          contentDecryptor2.addEventListener("stateChange", (state2) => {
             receivedStateChange2++;
             try {
               if (receivedStateChange2 === 2) {
@@ -208,14 +203,15 @@ describe("decrypt - global tests - media key system access", () => {
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
-      contentDecryptor1.addEventListener("stateChange", (state1: any) => {
+      contentDecryptor1.addEventListener("stateChange", (state1) => {
         receivedStateChange1++;
         try {
           if (receivedStateChange1 === 2) {
@@ -236,7 +232,7 @@ describe("decrypt - global tests - media key system access", () => {
           const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
-          contentDecryptor2.addEventListener("stateChange", (state2: any) => {
+          contentDecryptor2.addEventListener("stateChange", (state2) => {
             receivedStateChange2++;
             try {
               if (receivedStateChange2 === 2) {
@@ -274,15 +270,16 @@ describe("decrypt - global tests - media key system access", () => {
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
 
     return new Promise<void>((res, rej) => {
       const contentDecryptor1 = new ContentDecryptor(videoElt, ksConfig);
       let receivedStateChange1 = 0;
       contentDecryptor1.addEventListener("error", rej);
-      contentDecryptor1.addEventListener("stateChange", (state1: any) => {
+      contentDecryptor1.addEventListener("stateChange", (state1) => {
         receivedStateChange1++;
         try {
           if (receivedStateChange1 === 2) {
@@ -303,7 +300,7 @@ describe("decrypt - global tests - media key system access", () => {
           const contentDecryptor2 = new ContentDecryptor(videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
-          contentDecryptor2.addEventListener("stateChange", (state2: any) => {
+          contentDecryptor2.addEventListener("stateChange", (state2) => {
             receivedStateChange2++;
             try {
               if (receivedStateChange2 === 2) {
@@ -340,12 +337,13 @@ describe("decrypt - global tests - media key system access", () => {
     const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
 
     // == test ==
-    const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptorState = (await vi.importActual("../../types"))
+      .ContentDecryptorState as typeof IContentDecryptorState;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     const contentDecryptor = new ContentDecryptor(videoElt, ksConfig);
     return new Promise<void>((res) => {
-      contentDecryptor.addEventListener("stateChange", (newState: any) => {
+      contentDecryptor.addEventListener("stateChange", (newState) => {
         if (newState === ContentDecryptorState.WaitingForAttachment) {
           contentDecryptor.removeEventListener("stateChange");
           contentDecryptor.attach();

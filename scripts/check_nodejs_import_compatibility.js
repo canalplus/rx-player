@@ -57,6 +57,4 @@ if (typeof Tools !== "object" || Tools === null) {
   throw new Error('Invalid "Tools" object exported.');
 }
 
-/* eslint-disable no-console */
 console.log("SUCCESS!");
-/* eslint-enable no-console */

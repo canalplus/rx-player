@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 
 /**
  * =================
@@ -167,14 +166,10 @@ function spawnProm(command, args, errorOnCode) {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
     `Usage: node build_worker.mjs [options]
 Options:
   -h, --help             Display this help
   -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)`,
-    /* eslint-enable indent */
   );
-  /* eslint-enable no-console */
 }

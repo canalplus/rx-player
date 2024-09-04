@@ -56,29 +56,32 @@ function parsePeriodChildren(
       continue;
     }
     switch (currentElement.tagName) {
-      case "BaseURL":
+      case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
         if (baseURLObj !== undefined) {
           baseURLs.push(baseURLObj);
         }
         warnings = warnings.concat(baseURLWarnings);
         break;
+      }
 
-      case "AdaptationSet":
+      case "AdaptationSet": {
         const [adaptation, adaptationWarnings] =
           createAdaptationSetIntermediateRepresentation(currentElement);
         adaptations.push(adaptation);
         warnings = warnings.concat(adaptationWarnings);
         break;
+      }
 
-      case "EventStream":
+      case "EventStream": {
         const [eventStream, eventStreamWarnings] =
           createEventStreamIntermediateRepresentation(currentElement, fullMpd);
         eventStreams.push(eventStream);
         warnings = warnings.concat(eventStreamWarnings);
         break;
+      }
 
-      case "SegmentTemplate":
+      case "SegmentTemplate": {
         const [parsedSegmentTemplate, segmentTemplateWarnings] =
           parseSegmentTemplate(currentElement);
         segmentTemplate = parsedSegmentTemplate;
@@ -86,8 +89,9 @@ function parsePeriodChildren(
           warnings = warnings.concat(segmentTemplateWarnings);
         }
         break;
+      }
 
-      case "ContentProtection":
+      case "ContentProtection": {
         const [contentProtection, contentProtectionWarnings] =
           parseContentProtection(currentElement);
         if (contentProtectionWarnings.length > 0) {
@@ -97,6 +101,7 @@ function parsePeriodChildren(
           contentProtections.push(contentProtection);
         }
         break;
+      }
     }
   }
 

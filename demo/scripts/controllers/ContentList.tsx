@@ -306,7 +306,7 @@ function ContentList({
           });
         },
         () => {
-          /* eslint-disable-next-line no-console */
+          // eslint-disable-next-line no-console
           console.error("Could not construct key systems option");
         },
       );
@@ -335,7 +335,7 @@ function ContentList({
           });
         },
         () => {
-          /* eslint-disable-next-line no-console */
+          // eslint-disable-next-line no-console
           console.error("Could not construct key systems option");
         },
       );
@@ -547,7 +547,7 @@ function ContentList({
     const contents = contentList[transportType] ?? [];
     const firstEnabledContentIndex = contents.findIndex((c) => c.id === storedContent.id);
     if (firstEnabledContentIndex < 0) {
-      /* eslint-disable-next-line no-console */
+      // eslint-disable-next-line no-console
       console.warn("Stored content not found in local storage.");
       changeSelectedContent(0, contents[0]);
     } else {
@@ -563,7 +563,7 @@ function ContentList({
     const content = contentsToSelect[contentChoiceIndex];
     if (content) {
       if (content.id === undefined) {
-        /* eslint-disable-next-line no-console */
+        // eslint-disable-next-line no-console
         console.error("Cannot erase: no id on the content");
         return;
       }

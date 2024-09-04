@@ -27,6 +27,15 @@ export interface ITypeWithFeatures {
 
 export type ISupportWithFeatures = "" | "Maybe" | "Not Supported" | "Probably";
 
+type IGlobalScopeWithMSMediaKeysFeatures = typeof globalScope & {
+  MSMediaKeys: {
+    isTypeSupportedWithFeatures: (
+      type: string,
+      features: string | null,
+    ) => ISupportWithFeatures;
+  };
+};
+
 /**
  * @returns {Promise}
  */
@@ -37,11 +46,12 @@ function isTypeSupportedWithFeaturesAPIAvailable(): Promise<void> {
         "MediaCapabilitiesProber >>> API_CALL: " + "MSMediaKeys API not available",
       );
     }
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    if (!("isTypeSupportedWithFeatures" in (globalScope as any).MSMediaKeys)) {
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    if (
+      !(
+        "isTypeSupportedWithFeatures" in
+        (globalScope as IGlobalScopeWithMSMediaKeysFeatures).MSMediaKeys
+      )
+    ) {
       throw new Error(
         "MediaCapabilitiesProber >>> API_CALL: " +
           "isTypeSupportedWithFeatures not available",
@@ -74,17 +84,9 @@ export default function probeTypeWithFeatures(
 
     const features = formatConfig(config);
 
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     const result: ISupportWithFeatures = (
-      globalScope as any
+      globalScope as IGlobalScopeWithMSMediaKeysFeatures
     ).MSMediaKeys.isTypeSupportedWithFeatures(type, features);
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
 
     function formatSupport(support: ISupportWithFeatures): [ProberStatus] {
       if (support === "") {

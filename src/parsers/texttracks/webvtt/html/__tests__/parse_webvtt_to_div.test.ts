@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IParseWebVTT from "../parse_webvtt_to_div";
 
 describe("parsers - webvtt - parseWebVTT", () => {
   beforeEach(() => {
@@ -12,14 +7,14 @@ describe("parsers - webvtt - parseWebVTT", () => {
   });
 
   it("should throw if text is empty", async () => {
-    const parseWebVTT = ((await vi.importActual("../parse_webvtt_to_div")) as any)
-      .default;
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
+      .default as typeof IParseWebVTT;
     expect(() => parseWebVTT("", 0)).toThrowError("Can't parse WebVTT: Invalid File.");
   });
 
   it("should throw if file seems to be invalid", async () => {
-    const parseWebVTT = ((await vi.importActual("../parse_webvtt_to_div")) as any)
-      .default;
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
+      .default as typeof IParseWebVTT;
     expect(() => parseWebVTT("WEBWTT\n", 0)).toThrowError(
       "Can't parse WebVTT: Invalid File.",
     );
@@ -76,8 +71,8 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = ((await vi.importActual("../parse_webvtt_to_div")) as any)
-      .default;
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
+      .default as typeof IParseWebVTT;
     expect(parseWebVTT("WEBVTT\n", 0)).toEqual([
       {
         element: document.createElement("div"),
@@ -143,8 +138,8 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = ((await vi.importActual("../parse_webvtt_to_div")) as any)
-      .default;
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
+      .default as typeof IParseWebVTT;
     expect(parseWebVTT("WEBVTT\n", 0)).toEqual([]);
     expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
     expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);

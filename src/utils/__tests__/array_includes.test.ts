@@ -1,19 +1,19 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import arrayIncludes from "../array_includes";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable no-restricted-properties */
-
-/* eslint-disable @typescript-eslint/unbound-method */
+// eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
 const initialArrayIncludes = Array.prototype.includes;
-/* eslint-enable @typescript-eslint/unbound-method */
+
 describe("utils - array-includes", () => {
   beforeEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Array.prototype as any).includes = undefined;
+    // @ts-expect-error: We're setting `includes` to `undefined` to
+    // specifically test our own implementation
+    // eslint-disable-next-line no-restricted-properties
+    Array.prototype.includes = undefined;
   });
 
   afterEach(() => {
+    // eslint-disable-next-line no-restricted-properties
     Array.prototype.includes = initialArrayIncludes;
   });
 

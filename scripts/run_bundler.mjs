@@ -179,9 +179,7 @@ export default async function runBundler(inputFile, options) {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
     `Usage: node run_bundler.mjs input-file [options]
 Available options:
   -h, --help                  Display this help message
@@ -193,7 +191,5 @@ Available options:
                               symbol) on the bundle.
   -s, --silent                Don't log to stdout/stderr when bundling
   -w, --watch                 Re-build each time either the files it depends on changed`,
-    /* eslint-enable indent */
   );
-  /* eslint-enable no-console */
 }

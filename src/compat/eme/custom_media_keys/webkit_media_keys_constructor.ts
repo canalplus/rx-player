@@ -26,8 +26,6 @@ interface IWebKitMediaKeysConstructor {
 
 let WebKitMediaKeysConstructor: undefined | IWebKitMediaKeysConstructor;
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 const { WebKitMediaKeys } = globalScope as typeof globalThis & {
   WebKitMediaKeys?: IWebKitMediaKeysConstructor;
 };
@@ -35,13 +33,12 @@ const { WebKitMediaKeys } = globalScope as typeof globalThis & {
 if (
   WebKitMediaKeys !== undefined &&
   typeof WebKitMediaKeys.isTypeSupported === "function" &&
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof WebKitMediaKeys.prototype.createSession === "function" &&
   typeof (HTMLMediaElement.prototype as IMediaElement).webkitSetMediaKeys === "function"
 ) {
   WebKitMediaKeysConstructor = WebKitMediaKeys;
 }
-/* eslint-enable @typescript-eslint/no-unsafe-assignment */
-/* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
 export type { IWebKitMediaKeys };
 export { WebKitMediaKeysConstructor };

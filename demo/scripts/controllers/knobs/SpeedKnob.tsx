@@ -32,7 +32,7 @@ function SpeedKnob({
         if (rate !== undefined) {
           player.actions.setPlaybackRate(rate);
         } else {
-          /* eslint-disable-next-line no-console */
+          // eslint-disable-next-line no-console
           console.error("Error: playback rate not found");
         }
       }

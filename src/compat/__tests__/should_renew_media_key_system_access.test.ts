@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IShouldRenewMediaKeySystemAccess from "../should_renew_media_key_system_access";
 
 describe("compat - shouldRenewMediaKeySystemAccess", () => {
   beforeEach(() => {
@@ -17,10 +12,10 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
         isIE11: false,
       };
     });
-    const shouldRenewMediaKeySystemAccess = (await vi.importActual(
-      "../should_renew_media_key_system_access",
-    )) as any;
-    expect(shouldRenewMediaKeySystemAccess.default()).toBe(false);
+    const shouldRenewMediaKeySystemAccess = (
+      await vi.importActual("../should_renew_media_key_system_access")
+    ).default as typeof IShouldRenewMediaKeySystemAccess;
+    expect(shouldRenewMediaKeySystemAccess()).toBe(false);
   });
 
   it("should return true if we are on IE11", async () => {
@@ -29,12 +24,9 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
         isIE11: true,
       };
     });
-    const shouldRenewMediaKeySystemAccess = (await vi.importActual(
-      "../should_renew_media_key_system_access",
-    )) as any;
-    expect(shouldRenewMediaKeySystemAccess.default()).toBe(true);
-  });
-  beforeEach(() => {
-    vi.resetModules();
+    const shouldRenewMediaKeySystemAccess = (
+      await vi.importActual("../should_renew_media_key_system_access")
+    ).default as typeof IShouldRenewMediaKeySystemAccess;
+    expect(shouldRenewMediaKeySystemAccess()).toBe(true);
   });
 });

@@ -1,14 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-restricted-properties */
-
 import type { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
+import type { IKeySystemOption } from "../../../../public_types";
+import type IContentDecryptor from "../../content_decryptor";
 import {
   defaultKSConfig,
   defaultPRRecommendationKSConfig,
@@ -17,7 +10,7 @@ import {
   testContentDecryptorError,
 } from "./utils";
 
-export function requestMediaKeySystemAccessNoMediaKeys(
+function requestMediaKeySystemAccessNoMediaKeys(
   keySystem: string,
   config: MediaKeySystemConfiguration[],
 ): Promise<ICustomMediaKeySystemAccess> {
@@ -64,21 +57,22 @@ function removeCapabiltiesFromConfig(
  * @returns {Promise}
  */
 async function checkIncompatibleKeySystemsErrorMessage(
-  keySystemsConfigs: unknown[],
+  keySystemsConfigs: IKeySystemOption[],
 ): Promise<void> {
   const mediaElement = document.createElement("video");
-  const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-    .default;
+  const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+    .default as typeof IContentDecryptor;
 
-  const error: any = await testContentDecryptorError(
+  const error = await testContentDecryptorError(
     ContentDecryptor,
     mediaElement,
     keySystemsConfigs,
   );
-  expect(error).not.toBe(null);
   expect(error.message).toEqual(incompatibleMKSAErrorMessage);
   expect(error.name).toEqual("EncryptedMediaError");
-  expect(error.code).toEqual("INCOMPATIBLE_KEYSYSTEMS");
+  expect((error as Error & { code?: string | undefined }).code).toEqual(
+    "INCOMPATIBLE_KEYSYSTEMS",
+  );
 }
 
 describe("decrypt - global tests - media key system access", () => {
@@ -420,7 +414,7 @@ describe("decrypt - global tests - media key system access", () => {
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "foo", getLicense: neverCalledFn, persistentLicenseConfig: null },
+      { type: "foo", getLicense: neverCalledFn },
     ]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
@@ -446,7 +440,6 @@ describe("decrypt - global tests - media key system access", () => {
       {
         type: "foo",
         getLicense: neverCalledFn,
-        persistentLicenseConfig: undefined,
       },
     ]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
@@ -965,20 +958,20 @@ describe("decrypt - global tests - media key system access", () => {
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
     const mockRequestMediaKeySystemAccess = vi
       .fn()
-      .mockImplementation((keyType, conf) => {
+      .mockImplementation((keyType: string, conf: MediaKeySystemConfiguration[]) => {
         return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
       });
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const config = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error: any) => {
+      contentDecryptor.addEventListener("error", (error) => {
         rej(error);
       });
       setTimeout(() => {
@@ -995,7 +988,7 @@ describe("decrypt - global tests - media key system access", () => {
   it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
     const mockRequestMediaKeySystemAccess = vi
       .fn()
-      .mockImplementation((keyType, conf) => {
+      .mockImplementation((keyType: string, conf: MediaKeySystemConfiguration[]) => {
         if (keyType === "some-other-working-key-system") {
           return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
         }
@@ -1004,8 +997,8 @@ describe("decrypt - global tests - media key system access", () => {
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const config = [
         { type: "com.widevine.alpha", getLicense: neverCalledFn },
@@ -1014,7 +1007,7 @@ describe("decrypt - global tests - media key system access", () => {
 
       const mediaElement = document.createElement("video");
       const contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error: any) => {
+      contentDecryptor.addEventListener("error", (error) => {
         rej(error);
       });
       setTimeout(() => {
@@ -1040,20 +1033,20 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should not continue to check if the ContentDecryptor is disposed from", async () => {
-    let contentDecryptor: any = null;
+    let contentDecryptor: IContentDecryptor | null = null;
     let rmksHasBeenCalled = false;
     const mockRequestMediaKeySystemAccess = vi.fn().mockImplementation(() => {
       return Promise.resolve().then(() => {
         rmksHasBeenCalled = true;
-        contentDecryptor.dispose();
+        contentDecryptor?.dispose();
         return Promise.reject("nope");
       });
     });
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
@@ -1063,7 +1056,7 @@ describe("decrypt - global tests - media key system access", () => {
         { type: "baz", getLicense: neverCalledFn },
       ];
       contentDecryptor = new ContentDecryptor(mediaElement, config);
-      contentDecryptor.addEventListener("error", (error: any) => {
+      contentDecryptor.addEventListener("error", (error) => {
         rej(error);
       });
       setTimeout(() => {
@@ -1088,8 +1081,8 @@ describe("decrypt - global tests - media key system access", () => {
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-      .default;
+    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+      .default as typeof IContentDecryptor;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 

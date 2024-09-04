@@ -27,9 +27,8 @@ export default function probeMatchMedia(
   config: IMediaConfiguration,
 ): Promise<[ProberStatus]> {
   return new Promise((resolve) => {
-    /* eslint-disable @typescript-eslint/unbound-method */
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     if (typeof globalScope.matchMedia !== "function") {
-      /* eslint-enable @typescript-eslint/unbound-method */
       throw new Error(
         "MediaCapabilitiesProber >>> API_CALL: " + "matchMedia not available",
       );

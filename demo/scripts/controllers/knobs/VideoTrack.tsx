@@ -46,7 +46,7 @@ function VideoTrackKnob({
         if (track !== undefined) {
           player.actions.setVideoTrack(track);
         } else {
-          /* eslint-disable-next-line no-console */
+          // eslint-disable-next-line no-console
           console.error("Error: video track not found");
         }
       } else {

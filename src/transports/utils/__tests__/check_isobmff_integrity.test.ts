@@ -1,10 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { OtherError as IOtherError } from "../../../errors";
+import type ICheckISOBMFFIntegrity from "../check_isobmff_integrity";
 
 describe("transports utils - checkISOBMFFIntegrity", () => {
   beforeEach(() => {
@@ -16,9 +12,8 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const checkISOBMFFIntegrity = (
-      (await vi.importActual("../check_isobmff_integrity")) as any
-    ).default;
+    const checkISOBMFFIntegrity = (await vi.importActual("../check_isobmff_integrity"))
+      .default as typeof ICheckISOBMFFIntegrity;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     expect(() => checkISOBMFFIntegrity(myUint8Array, true)).not.toThrow();
     expect(mockFindCompleteBox).toHaveBeenCalledTimes(2);
@@ -31,9 +26,8 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const checkISOBMFFIntegrity = (
-      (await vi.importActual("../check_isobmff_integrity")) as any
-    ).default;
+    const checkISOBMFFIntegrity = (await vi.importActual("../check_isobmff_integrity"))
+      .default as typeof ICheckISOBMFFIntegrity;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     expect(() => checkISOBMFFIntegrity(myUint8Array, false)).not.toThrow();
     expect(mockFindCompleteBox).toHaveBeenCalledTimes(2);
@@ -46,10 +40,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
-    const checkISOBMFFIntegrity = (
-      (await vi.importActual("../check_isobmff_integrity")) as any
-    ).default;
+    const OtherError = (await vi.importActual("../../../errors"))
+      .OtherError as typeof IOtherError;
+    const checkISOBMFFIntegrity = (await vi.importActual("../check_isobmff_integrity"))
+      .default as typeof ICheckISOBMFFIntegrity;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
     try {
@@ -58,10 +52,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as typeof OtherError).name).toEqual("OtherError");
-    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
-    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
-    expect((error as typeof OtherError).message).toEqual(
+    expect((error as IOtherError).name).toEqual("OtherError");
+    expect((error as IOtherError).type).toEqual("OTHER_ERROR");
+    expect((error as IOtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as IOtherError).message).toEqual(
       "INTEGRITY_ERROR: Incomplete `ftyp` box",
     );
   });
@@ -71,10 +65,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
-    const checkISOBMFFIntegrity = (
-      (await vi.importActual("../check_isobmff_integrity")) as any
-    ).default;
+    const OtherError = (await vi.importActual("../../../errors"))
+      .OtherError as typeof IOtherError;
+    const checkISOBMFFIntegrity = (await vi.importActual("../check_isobmff_integrity"))
+      .default as typeof ICheckISOBMFFIntegrity;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
     try {
@@ -83,10 +77,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as typeof OtherError).name).toEqual("OtherError");
-    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
-    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
-    expect((error as typeof OtherError).message).toEqual(
+    expect((error as IOtherError).name).toEqual("OtherError");
+    expect((error as IOtherError).type).toEqual("OTHER_ERROR");
+    expect((error as IOtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as IOtherError).message).toEqual(
       "INTEGRITY_ERROR: Incomplete `moov` box",
     );
   });
@@ -96,10 +90,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
-    const checkISOBMFFIntegrity = (
-      (await vi.importActual("../check_isobmff_integrity")) as any
-    ).default;
+    const OtherError = (await vi.importActual("../../../errors"))
+      .OtherError as typeof IOtherError;
+    const checkISOBMFFIntegrity = (await vi.importActual("../check_isobmff_integrity"))
+      .default as typeof ICheckISOBMFFIntegrity;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
     try {
@@ -108,10 +102,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as typeof OtherError).name).toEqual("OtherError");
-    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
-    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
-    expect((error as typeof OtherError).message).toEqual(
+    expect((error as IOtherError).name).toEqual("OtherError");
+    expect((error as IOtherError).type).toEqual("OTHER_ERROR");
+    expect((error as IOtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as IOtherError).message).toEqual(
       "INTEGRITY_ERROR: Incomplete `moof` box",
     );
   });
@@ -121,10 +115,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
     vi.doMock("../../../parsers/containers/isobmff", () => ({
       findCompleteBox: mockFindCompleteBox,
     }));
-    const OtherError = ((await vi.importActual("../../../errors")) as any).OtherError;
-    const checkISOBMFFIntegrity = (
-      (await vi.importActual("../check_isobmff_integrity")) as any
-    ).default;
+    const OtherError = (await vi.importActual("../../../errors"))
+      .OtherError as typeof IOtherError;
+    const checkISOBMFFIntegrity = (await vi.importActual("../check_isobmff_integrity"))
+      .default as typeof ICheckISOBMFFIntegrity;
     const myUint8Array = new Uint8Array([0, 1, 2]);
     let error: unknown = null;
     try {
@@ -133,10 +127,10 @@ describe("transports utils - checkISOBMFFIntegrity", () => {
       error = e;
     }
     expect(error).toBeInstanceOf(OtherError);
-    expect((error as typeof OtherError).name).toEqual("OtherError");
-    expect((error as typeof OtherError).type).toEqual("OTHER_ERROR");
-    expect((error as typeof OtherError).code).toEqual("INTEGRITY_ERROR");
-    expect((error as typeof OtherError).message).toEqual(
+    expect((error as IOtherError).name).toEqual("OtherError");
+    expect((error as IOtherError).type).toEqual("OTHER_ERROR");
+    expect((error as IOtherError).code).toEqual("INTEGRITY_ERROR");
+    expect((error as IOtherError).message).toEqual(
       "INTEGRITY_ERROR: Incomplete `mdat` box",
     );
   });

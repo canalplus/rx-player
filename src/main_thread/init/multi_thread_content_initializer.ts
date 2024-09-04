@@ -741,7 +741,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.ManifestUpdate:
+        case WorkerMessageType.ManifestUpdate: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -761,6 +761,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           this._updateCodecSupport(manifest);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
+        }
 
         case WorkerMessageType.UpdatePlaybackRate:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -893,7 +894,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.DiscontinuityUpdate:
+        case WorkerMessageType.DiscontinuityUpdate: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -915,6 +916,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             position: msgData.value.position,
           });
           break;
+        }
 
         case WorkerMessageType.PushTextData: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -1733,7 +1735,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             clearSignal: this._currentMediaSourceCanceller.signal,
           },
         );
-      } catch (err) {
+      } catch (_err) {
         const error = new OtherError(
           "NONE",
           "Unknown error when creating the MediaSource",
@@ -1922,18 +1924,11 @@ function bindNumberReferencesToWorker(
       (newVal) => {
         // NOTE: The TypeScript checks have already been made by this function's
         // overload, but the body here is not aware of that.
-        /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        /* eslint-disable @typescript-eslint/no-unsafe-call */
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         sendMessage(worker, {
           type: MainThreadMessageType.ReferenceUpdate,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           value: { name: ref[1] as any, newVal: newVal as any },
         });
-        /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-enable @typescript-eslint/no-explicit-any */
-        /* eslint-enable @typescript-eslint/no-unsafe-call */
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       },
       { clearSignal: cancellationSignal, emitCurrentValue: true },
     );
@@ -1952,7 +1947,7 @@ function formatWorkerError(sentError: ISentError): IPlayerError {
         ),
       );
     case "MediaError":
-      /* eslint-disable-next-line */
+      // eslint-disable-next-line
       return new MediaError(sentError.code as any, sentError.reason, {
         tracks: sentError.tracks,
       });

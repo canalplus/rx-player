@@ -363,10 +363,11 @@ export function generateAdaptationSetAttrParser(
       case AttributeName.AvailabilityTimeComplete:
         adaptationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
         break;
-      case AttributeName.Label:
+      case AttributeName.Label: {
         const label = parseString(textDecoder, linearMemory.buffer, ptr, len);
         adaptationAttrs.label = label;
         break;
+      }
 
       // TODO
       // case AttributeName.StartsWithSap:

@@ -1,10 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { IPeriodIntermediateRepresentation } from "../../node_parser_types";
 import type { IParsedPeriodsContext } from "../get_periods_time_infos";
-// https://github.com/typescript-eslint/typescript-eslint/issues/2315
-/* eslint-disable no-duplicate-imports */
 import getPeriodsTimeInformation from "../get_periods_time_infos";
-/* eslint-enable no-duplicate-imports */
 
 describe("DASH Parser - getPeriodsTimeInformation", () => {
   it("should guess duration and end from next period.", () => {

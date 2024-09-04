@@ -1,16 +1,14 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { IRepresentationContext } from "../../../public_types";
+import type { IParsedAdaptation, IParsedRepresentation } from "../../../parsers/manifest";
+import type {
+  IRepresentationContext,
+  IRepresentationFilterRepresentation,
+} from "../../../public_types";
+import type IAdaptation from "../adaptation";
 import CodecSupportCache from "../codec_support_cache";
-import type Representation from "../representation";
+import type { IRepresentationIndex } from "../representation_index";
 
-const minimalRepresentationIndex = {
+const minimalRepresentationIndex: IRepresentationIndex = {
   getInitSegment() {
     return null;
   },
@@ -38,11 +36,20 @@ const minimalRepresentationIndex = {
   canBeOutOfSyncError(): true {
     return true;
   },
-  isFinished(): true {
+  isStillAwaitingFutureSegments() {
+    return false;
+  },
+  isInitialized(): true {
     return true;
   },
   awaitSegmentBetween(): undefined {
     return;
+  },
+  initialize() {
+    /* noop */
+  },
+  addPredictedSegments() {
+    /* noop */
   },
   _replace() {
     /* noop */
@@ -51,7 +58,7 @@ const minimalRepresentationIndex = {
     /* noop */
   },
 };
-const mockDefaultRepresentationImpl = vi.fn((arg) => {
+const mockDefaultRepresentationImpl = vi.fn((arg: IParsedRepresentation) => {
   return {
     bitrate: arg.bitrate,
     id: arg.id,
@@ -76,8 +83,9 @@ describe("Manifest - Adaptation", () => {
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const args = { id: "12", representations: [], type: "video" };
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const args: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation = new Adaptation(args, codecSupportCache);
     expect(adaptation.id).toBe("12");
@@ -102,8 +110,9 @@ describe("Manifest - Adaptation", () => {
       default: mockNormalize,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const args1 = {
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const args1: IParsedAdaptation = {
       id: "12",
       representations: [],
       language: "fr",
@@ -117,11 +126,11 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).toHaveBeenCalledWith("fr");
     mockNormalize.mockClear();
 
-    const args2 = {
+    const args2: IParsedAdaptation = {
       id: "12",
       representations: [],
       language: "toto",
-      type: "video",
+      type: "video" as const,
     };
     const adaptation2 = new Adaptation(args2, codecSupportCache);
     expect(adaptation2.language).toBe("toto");
@@ -139,8 +148,9 @@ describe("Manifest - Adaptation", () => {
       default: mockNormalize,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const args1 = { id: "12", representations: [], type: "video" };
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const args1: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation1 = new Adaptation(args1, codecSupportCache);
     expect(adaptation1.language).toBe(undefined);
@@ -153,12 +163,28 @@ describe("Manifest - Adaptation", () => {
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 20, id: "rep3", index: minimalRepresentationIndex };
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const rep1 = {
+      bitrate: 10,
+      id: "rep1",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep2 = {
+      bitrate: 30,
+      id: "rep2",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep3 = {
+      bitrate: 20,
+      id: "rep3",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12", representations, type: "text" as const };
+    const args: IParsedAdaptation = { id: "12", representations, type: "text" };
 
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation = new Adaptation(args, codecSupportCache);
@@ -188,11 +214,11 @@ describe("Manifest - Adaptation", () => {
     expect(parsedRepresentations[1].id).toEqual("rep3");
     expect(parsedRepresentations[2].id).toEqual("rep2");
 
-    expect(adaptation.getRepresentation("rep2").bitrate).toEqual(30);
+    expect(adaptation.getRepresentation("rep2")?.bitrate).toEqual(30);
   });
 
   it("should execute the representationFilter if given", async () => {
-    const mockRepresentation = vi.fn((arg) => {
+    const mockRepresentation = vi.fn((arg: IParsedRepresentation) => {
       return {
         bitrate: arg.bitrate,
         id: arg.id,
@@ -208,24 +234,62 @@ describe("Manifest - Adaptation", () => {
       default: mockRepresentation,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30, id: "rep3", index: minimalRepresentationIndex };
-    const rep4 = { bitrate: 40, id: "rep4", index: minimalRepresentationIndex };
-    const rep5 = { bitrate: 50, id: "rep5", index: minimalRepresentationIndex };
-    const rep6 = { bitrate: 60, id: "rep6", index: minimalRepresentationIndex };
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const rep1 = {
+      bitrate: 10,
+      id: "rep1",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep2 = {
+      bitrate: 20,
+      id: "rep2",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep3 = {
+      bitrate: 30,
+      id: "rep3",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep4 = {
+      bitrate: 40,
+      id: "rep4",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep5 = {
+      bitrate: 50,
+      id: "rep5",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep6 = {
+      bitrate: 60,
+      id: "rep6",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
     const representations = [rep1, rep2, rep3, rep4, rep5, rep6];
 
     const representationFilter = vi.fn(
-      (representation: Representation, adaptationInfos: IRepresentationContext) => {
-        if (adaptationInfos.language === "fr" && representation.bitrate < 40) {
+      (
+        representation: IRepresentationFilterRepresentation,
+        adaptationInfos: IRepresentationContext,
+      ) => {
+        if (
+          adaptationInfos.language === "fr" &&
+          representation.bitrate !== undefined &&
+          representation.bitrate < 40
+        ) {
           return false;
         }
         return true;
       },
     );
-    const args = {
+    const args: IParsedAdaptation = {
       id: "12",
       language: "fr",
       representations,
@@ -243,7 +307,7 @@ describe("Manifest - Adaptation", () => {
     expect(parsedRepresentations[2].id).toEqual("rep6");
 
     expect(adaptation.getRepresentation("rep2")).toBe(undefined);
-    expect(adaptation.getRepresentation("rep4").id).toEqual("rep4");
+    expect(adaptation.getRepresentation("rep4")?.id).toEqual("rep4");
   });
 
   it("should set an isDub value if one", async () => {
@@ -255,9 +319,10 @@ describe("Manifest - Adaptation", () => {
       default: mockNormalize,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
 
-    const args1 = {
+    const args1: IParsedAdaptation = {
       id: "12",
       representations: [],
       isDub: false,
@@ -270,7 +335,12 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.isDub).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = { id: "12", representations: [], isDub: true, type: "video" };
+    const args2: IParsedAdaptation = {
+      id: "12",
+      representations: [],
+      isDub: true,
+      type: "video",
+    };
     const adaptation2 = new Adaptation(args2, codecSupportCache);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
@@ -287,9 +357,10 @@ describe("Manifest - Adaptation", () => {
       default: mockNormalize,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
 
-    const args1 = {
+    const args1: IParsedAdaptation = {
       id: "12",
       representations: [],
       closedCaption: false,
@@ -302,7 +373,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.isClosedCaption).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = {
+    const args2: IParsedAdaptation = {
       id: "12",
       representations: [],
       closedCaption: true,
@@ -325,9 +396,10 @@ describe("Manifest - Adaptation", () => {
       default: mockNormalize,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
 
-    const args1 = {
+    const args1: IParsedAdaptation = {
       id: "12",
       representations: [],
       audioDescription: false,
@@ -340,7 +412,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.isAudioDescription).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = {
+    const args2: IParsedAdaptation = {
       id: "12",
       representations: [],
       audioDescription: true,
@@ -362,9 +434,10 @@ describe("Manifest - Adaptation", () => {
       default: mockNormalize,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
 
-    const args1 = { id: "12", representations: [], type: "video" };
+    const args1: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation1 = new Adaptation(args1, codecSupportCache, {
       isManuallyAdded: false,
@@ -374,7 +447,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.manuallyAdded).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = { id: "12", representations: [], type: "video" };
+    const args2: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const adaptation2 = new Adaptation(args2, codecSupportCache, {
       isManuallyAdded: true,
     });
@@ -389,17 +462,33 @@ describe("Manifest - Adaptation", () => {
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const rep1 = {
+      bitrate: 10,
+      id: "rep1",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep2 = {
+      bitrate: 20,
+      id: "rep2",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep3 = {
+      bitrate: 30,
+      id: "rep2",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12", representations, type: "text" as const };
+    const args: IParsedAdaptation = { id: "12", representations, type: "text" as const };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation = new Adaptation(args, codecSupportCache);
 
-    expect(adaptation.getRepresentation("rep1").bitrate).toEqual(10);
-    expect(adaptation.getRepresentation("rep2").bitrate).toEqual(20);
+    expect(adaptation.getRepresentation("rep1")?.bitrate).toEqual(10);
+    expect(adaptation.getRepresentation("rep2")?.bitrate).toEqual(20);
   });
 
   it("should return undefined in `getRepresentation` if no representation is found with this Id", async () => {
@@ -407,12 +496,28 @@ describe("Manifest - Adaptation", () => {
       default: mockDefaultRepresentationImpl,
     }));
 
-    const Adaptation = ((await vi.importActual("../adaptation")) as any).default;
-    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
+    const Adaptation = (await vi.importActual("../adaptation"))
+      .default as typeof IAdaptation;
+    const rep1 = {
+      bitrate: 10,
+      id: "rep1",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep2 = {
+      bitrate: 20,
+      id: "rep2",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
+    const rep3 = {
+      bitrate: 30,
+      id: "rep2",
+      cdnMetadata: [],
+      index: minimalRepresentationIndex,
+    };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12", representations, type: "text" as const };
+    const args: IParsedAdaptation = { id: "12", representations, type: "text" as const };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation = new Adaptation(args, codecSupportCache);
 

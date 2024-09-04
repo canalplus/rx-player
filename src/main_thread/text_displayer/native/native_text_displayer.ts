@@ -163,7 +163,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
       try {
         _videoElement.removeChild(_trackElement);
-      } catch (e) {
+      } catch (_e) {
         log.warn("NTD: Can't remove track element from the video");
       }
     }
@@ -186,7 +186,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
       try {
         _videoElement.removeChild(_trackElement);
-      } catch (e) {
+      } catch (_e) {
         log.warn("NTD: Can't remove track element from the video");
       }
     }
@@ -243,15 +243,11 @@ export interface INativeTextTracksBufferSegmentData {
  * a hack to tell TypeScript to perform that check.
  */
 if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  /* eslint-disable @typescript-eslint/ban-ts-comment */
-  // @ts-ignore
+  // @ts-expect-error: uncalled function just for type checking
   function _checkType(input: ITextTrackSegmentData): void {
     function checkEqual(_arg: INativeTextTracksBufferSegmentData): void {
       /* nothing */
     }
     checkEqual(input);
   }
-  /* eslint-enable @typescript-eslint/no-unused-vars */
-  /* eslint-enable @typescript-eslint/ban-ts-comment */
 }

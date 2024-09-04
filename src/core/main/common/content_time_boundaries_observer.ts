@@ -616,10 +616,10 @@ function getEndingPositionFromAdaptation(
    * This variable allows to optimize the logic here when this is the case.
    */
   let lastIndex: IRepresentationIndex | undefined;
-  for (let i = 0; i < representations.length; i++) {
-    if (representations[i].index !== lastIndex) {
-      lastIndex = representations[i].index;
-      const lastPosition = representations[i].index.getEnd();
+  for (const representation of representations) {
+    if (representation.index !== lastIndex) {
+      lastIndex = representation.index;
+      const lastPosition = representation.index.getEnd();
       if (lastPosition === undefined) {
         // we cannot tell
         return undefined;

@@ -110,7 +110,6 @@ class WebkitMediaKeySession
 
   public update(license: BufferSource): Promise<void> {
     return new Promise((resolve, reject) => {
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       if (
         this._nativeSession === undefined ||
         this._nativeSession.update === undefined ||
@@ -127,14 +126,11 @@ class WebkitMediaKeySession
         } else {
           uInt8Arraylicense = new Uint8Array(license.buffer);
         }
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         resolve(this._nativeSession.update(uInt8Arraylicense));
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       } catch (err) {
         reject(err);
       }
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     });
   }
 
@@ -176,9 +172,8 @@ class WebkitMediaKeySession
         reject("No session to close.");
         return;
       }
-      /* eslint-disable @typescript-eslint/no-floating-promises */
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this._nativeSession.close();
-      /* eslint-enable @typescript-eslint/no-floating-promises */
       resolve();
     });
   }
@@ -192,11 +187,7 @@ class WebkitMediaKeySession
   }
 
   get sessionId(): string {
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
     return this._nativeSession?.sessionId ?? "";
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
   }
 
   private _listenEvent(session: MediaKeySession): void {
@@ -206,9 +197,6 @@ class WebkitMediaKeySession
       this.trigger(evt.type, evt);
     };
 
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach((evt) => {
       session.addEventListener(evt, onEvent);
       session.addEventListener(`webkit${evt}`, onEvent);
@@ -222,9 +210,6 @@ class WebkitMediaKeySession
         },
       );
     };
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
   }
 }
 

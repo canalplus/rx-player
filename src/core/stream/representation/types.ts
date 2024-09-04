@@ -333,7 +333,6 @@ export interface IRepresentationsChoice {
    * How the Streams should react if another, not currently authorized,
    * Representation was previously playing.
    */
-  /* eslint-disable @typescript-eslint/no-duplicate-type-constituents */
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
   switchingMode: IVideoRepresentationsSwitchingMode | IAudioRepresentationsSwitchingMode;
-  /* eslint-enable @typescript-eslint/no-duplicate-type-constituents */
 }

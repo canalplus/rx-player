@@ -282,12 +282,13 @@ export default class PersistentSessionsStore {
             }
             break;
 
-          case 3:
+          case 3: {
             const formatted = initData.values.getFormattedValues();
             if (areInitializationValuesCompatible(formatted, entry.values)) {
               return i;
             }
             break;
+          }
 
           case 2: {
             const { initData: concatInitData, initDataHash: concatHash } =

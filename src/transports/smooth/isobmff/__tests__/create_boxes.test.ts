@@ -1,10 +1,12 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
+  createFRMABox as ICreateFRMABox,
+  createFreeBox as ICreateFreeBox,
+  createHDLRBox as ICreateHDLRBox,
+  createMDHDBox as ICreateMDHDBox,
+  createSMHDBox as ICreateSMHDBox,
+  createVMHDBox as ICreateVMHDBox,
+} from "../create_boxes";
 
 describe("Smooth - ISOBMFF - boxes creation", () => {
   beforeEach(() => {
@@ -19,8 +21,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createVMHDBox = ((await vi.importActual("../create_boxes")) as any)
-        .createVMHDBox;
+      const createVMHDBox = (await vi.importActual("../create_boxes"))
+        .createVMHDBox as typeof ICreateVMHDBox;
       expect(createVMHDBox()).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith("vmhd", vmhdContent);
@@ -34,8 +36,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createFreeBox = ((await vi.importActual("../create_boxes")) as any)
-        .createFreeBox;
+      const createFreeBox = (await vi.importActual("../create_boxes"))
+        .createFreeBox as typeof ICreateFreeBox;
       expect(createFreeBox(8)).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith("free", new Uint8Array([]));
@@ -51,8 +53,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createFreeBox = ((await vi.importActual("../create_boxes")) as any)
-        .createFreeBox;
+      const createFreeBox = (await vi.importActual("../create_boxes"))
+        .createFreeBox as typeof ICreateFreeBox;
       expect(() => createFreeBox(7)).toThrow();
       expect(() => createFreeBox(6)).toThrow();
       expect(() => createFreeBox(5)).toThrow();
@@ -70,8 +72,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createFreeBox = ((await vi.importActual("../create_boxes")) as any)
-        .createFreeBox;
+      const createFreeBox = (await vi.importActual("../create_boxes"))
+        .createFreeBox as typeof ICreateFreeBox;
       expect(() => createFreeBox(-1)).toThrow();
       expect(mockCreateBox).not.toHaveBeenCalled();
     });
@@ -82,8 +84,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createFreeBox = ((await vi.importActual("../create_boxes")) as any)
-        .createFreeBox;
+      const createFreeBox = (await vi.importActual("../create_boxes"))
+        .createFreeBox as typeof ICreateFreeBox;
       expect(() => createFreeBox(-Infinity)).toThrow();
       expect(() => createFreeBox(+Infinity)).toThrow();
       expect(mockCreateBox).not.toHaveBeenCalled();
@@ -97,8 +99,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createHDLRBox = ((await vi.importActual("../create_boxes")) as any)
-        .createHDLRBox;
+      const createHDLRBox = (await vi.importActual("../create_boxes"))
+        .createHDLRBox as typeof ICreateHDLRBox;
       expect(createHDLRBox("audio")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith(
@@ -151,8 +153,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createHDLRBox = ((await vi.importActual("../create_boxes")) as any)
-        .createHDLRBox;
+      const createHDLRBox = (await vi.importActual("../create_boxes"))
+        .createHDLRBox as typeof ICreateHDLRBox;
       expect(createHDLRBox("video")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith(
@@ -205,8 +207,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createHDLRBox = ((await vi.importActual("../create_boxes")) as any)
-        .createHDLRBox;
+      const createHDLRBox = (await vi.importActual("../create_boxes"))
+        .createHDLRBox as typeof ICreateHDLRBox;
       expect(createHDLRBox("hint")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith(
@@ -256,8 +258,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createMDHDBox = ((await vi.importActual("../create_boxes")) as any)
-        .createMDHDBox;
+      const createMDHDBox = (await vi.importActual("../create_boxes"))
+        .createMDHDBox as typeof ICreateMDHDBox;
 
       expect(createMDHDBox(8)).toBe(box);
 
@@ -291,8 +293,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createSMHDBox = ((await vi.importActual("../create_boxes")) as any)
-        .createSMHDBox;
+      const createSMHDBox = (await vi.importActual("../create_boxes"))
+        .createSMHDBox as typeof ICreateSMHDBox;
       expect(createSMHDBox()).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith("smhd", smhdContent);
@@ -311,8 +313,8 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       vi.doMock("../../../../parsers/containers/isobmff", () => {
         return { createBox: mockCreateBox };
       });
-      const createFRMABox = ((await vi.importActual("../create_boxes")) as any)
-        .createFRMABox;
+      const createFRMABox = (await vi.importActual("../create_boxes"))
+        .createFRMABox as typeof ICreateFRMABox;
       expect(createFRMABox("foo")).toBe(box);
       expect(mockCreateBox).toHaveBeenCalledTimes(1);
       expect(mockCreateBox).toHaveBeenCalledWith("frma", dataFormatToBytes);

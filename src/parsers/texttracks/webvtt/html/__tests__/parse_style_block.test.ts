@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IParseStyleBlock from "../parse_style_block";
 
 describe("parsers - webvtt - parseStyleBlock", () => {
   beforeEach(() => {
@@ -20,8 +15,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",
@@ -45,8 +40,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global:
@@ -64,8 +59,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;",
@@ -92,8 +87,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       global:
         "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
@@ -116,8 +111,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;",
@@ -138,8 +133,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;  background-color: dark;",
@@ -167,8 +162,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;",
@@ -197,8 +192,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;  color: salmon;",
@@ -226,8 +221,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;  color: salmon;",
@@ -248,8 +243,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;",
@@ -269,8 +264,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         return mockCreateDefaultStyleElements();
       },
     }));
-    const parseStyleBlock = ((await vi.importActual("../parse_style_block")) as any)
-      .default;
+    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
+      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",

@@ -44,8 +44,7 @@ export default function getTimeRangesForContent(
   const accumulator: IRange[] = [];
   const inventory = segmentSink.getLastKnownInventory();
 
-  for (let i = 0; i < inventory.length; i++) {
-    const chunk = inventory[i];
+  for (const chunk of inventory) {
     const hasContent = contents.some((content) => {
       return (
         chunk.infos.period.id === content.period.id &&

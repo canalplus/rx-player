@@ -1,15 +1,8 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-restricted-properties */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { IPlayerError } from "../../../../public_types";
+import type { IKeySystemOption, IPlayerError } from "../../../../public_types";
 import { concat } from "../../../../utils/byte_parsing";
+import type IContentDecryptor from "../../content_decryptor";
+import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
 import {
   formatFakeChallengeFromInitData,
   MediaKeySessionImpl,
@@ -315,7 +308,7 @@ async function checkGetLicense({
   vi.spyOn(MediaKeysImpl.prototype, "createSession").mockReturnValue(mediaKeySession);
   const mockUpdate = vi.spyOn(mediaKeySession, "update");
   let remainingRetries = nbRetries;
-  const mockGetLicense = vi.fn(() => {
+  const mockGetLicense = vi.fn((): BufferSource | Promise<BufferSource | null> | null => {
     const callIdx = nbRetries - remainingRetries;
     const timeout = getTimeout(callIdx);
     if (remainingRetries === 0) {
@@ -342,16 +335,17 @@ async function checkGetLicense({
     return Promise.reject(new Error("AAAA"));
   });
   mockCompat();
-  const { ContentDecryptorState } = (await vi.importActual("../../types")) as any;
-  const ContentDecryptor = ((await vi.importActual("../../content_decryptor")) as any)
-    .default;
+  const ContentDecryptorState = (await vi.importActual("../../types"))
+    .ContentDecryptorState as typeof IContentDecryptorState;
+  const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
+    .default as typeof IContentDecryptor;
   return new Promise((res, rej) => {
     // == vars ==
     /** Default keySystems configuration used in our tests. */
     const maxRetries = configuredRetries === undefined ? 2 : configuredRetries;
     const shouldFail = nbRetries > maxRetries;
     let warningsLeft = nbRetries;
-    const ksConfig = [
+    const ksConfig: IKeySystemOption[] = [
       {
         type: "com.widevine.alpha",
         getLicense: mockGetLicense,
@@ -384,7 +378,7 @@ async function checkGetLicense({
       contentDecryptor.attach();
     });
 
-    contentDecryptor.addEventListener("error", (error: unknown) => {
+    contentDecryptor.addEventListener("error", (error: Error) => {
       if (shouldFail) {
         try {
           checkKeyLoadError(error);
@@ -404,7 +398,7 @@ async function checkGetLicense({
           rej(e);
         }
       } else {
-        rej(new Error(`Unexpected error: ${error}`));
+        rej(new Error(`Unexpected error: ${error.toString()}`));
       }
     });
 
@@ -425,7 +419,7 @@ async function checkGetLicense({
           rej(e);
         }
       } else {
-        rej(new Error(`Unexpected warning: ${warning}`));
+        rej(new Error(`Unexpected warning: ${warning.toString()}`));
       }
     });
 

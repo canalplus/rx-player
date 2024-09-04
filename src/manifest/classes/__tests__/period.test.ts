@@ -1,12 +1,8 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type { IParsedAdaptation, IParsedPeriod } from "../../../parsers/manifest";
 import type Adaptation from "../adaptation";
 import CodecSupportCache from "../codec_support_cache";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IPeriod from "../period";
 
 describe("Manifest - Period", () => {
   beforeEach(() => {
@@ -14,7 +10,7 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no adaptation is given", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
+    const mockAdaptation = vi.fn((arg: IParsedAdaptation) => ({
       ...arg,
       supportStatus: {
         hasSupportedCodec: undefined,
@@ -27,9 +23,9 @@ describe("Manifest - Period", () => {
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const args = { id: "12", adaptations: {}, start: 0 };
-    let period = null;
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     try {
@@ -55,20 +51,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no audio nor video adaptation is given", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const fooAda1 = {
       type: "foo",
       id: "54",
@@ -80,8 +79,12 @@ describe("Manifest - Period", () => {
       representations: [{}],
     };
     const foo = [fooAda1, fooAda2];
-    const args = { id: "12", adaptations: { foo }, start: 0 };
-    let period = null;
+    const args: IParsedPeriod = {
+      id: "12",
+      adaptations: { foo },
+      start: 0,
+    } as unknown as IParsedPeriod;
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
@@ -111,22 +114,25 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if only empty audio and/or video adaptations is given", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const args = { id: "12", adaptations: { video: [], audio: [] }, start: 0 };
-    let period = null;
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     try {
@@ -154,20 +160,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if we are left with no audio representation", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -211,8 +220,12 @@ describe("Manifest - Period", () => {
       },
     };
     const audio = [audioAda1, audioAda2];
-    const args = { id: "12", adaptations: { video, audio }, start: 0 };
-    let period = null;
+    const args: IParsedPeriod = {
+      id: "12",
+      adaptations: { video, audio },
+      start: 0,
+    } as unknown as IParsedPeriod;
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     try {
@@ -240,20 +253,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no audio Adaptation is supported", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: arg.type !== "audio",
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: arg.type !== "audio",
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -278,7 +294,11 @@ describe("Manifest - Period", () => {
         return videoAda3;
       },
     };
-    const video = [videoAda1, videoAda2, videoAda3];
+    const video: IParsedAdaptation[] = [
+      videoAda1,
+      videoAda2,
+      videoAda3,
+    ] as unknown as IParsedAdaptation[];
 
     const audioAda1 = {
       type: "audio",
@@ -296,9 +316,16 @@ describe("Manifest - Period", () => {
         return audioAda1;
       },
     };
-    const audio = [audioAda1, audioAda2];
-    const args = { id: "12", adaptations: { video, audio }, start: 0 };
-    let period = null;
+    const audio: IParsedAdaptation[] = [
+      audioAda1,
+      audioAda2,
+    ] as unknown as IParsedAdaptation[];
+    const args: IParsedPeriod = {
+      id: "12",
+      adaptations: { video, audio },
+      start: 0,
+    };
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     try {
@@ -328,20 +355,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if we are left with no video representation", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -366,7 +396,11 @@ describe("Manifest - Period", () => {
         return videoAda3;
       },
     };
-    const video = [videoAda1, videoAda2, videoAda3];
+    const video: IParsedAdaptation[] = [
+      videoAda1,
+      videoAda2,
+      videoAda3,
+    ] as unknown as IParsedAdaptation[];
 
     const audioAda1 = {
       type: "audio",
@@ -384,9 +418,12 @@ describe("Manifest - Period", () => {
         return audioAda2;
       },
     };
-    const audio = [audioAda1, audioAda2];
-    const args = { id: "12", adaptations: { video, audio }, start: 0 };
-    let period = null;
+    const audio: IParsedAdaptation[] = [
+      audioAda1,
+      audioAda2,
+    ] as unknown as IParsedAdaptation[];
+    const args: IParsedPeriod = { id: "12", adaptations: { video, audio }, start: 0 };
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     try {
@@ -414,20 +451,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no video adaptation is supported", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: arg.type !== "video",
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: arg.type !== "video",
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -452,7 +492,11 @@ describe("Manifest - Period", () => {
         return videoAda3;
       },
     };
-    const video = [videoAda1, videoAda2, videoAda3];
+    const video: IParsedAdaptation[] = [
+      videoAda1,
+      videoAda2,
+      videoAda3,
+    ] as unknown as IParsedAdaptation[];
 
     const audioAda1 = {
       type: "audio",
@@ -470,9 +514,9 @@ describe("Manifest - Period", () => {
         return audioAda2;
       },
     };
-    const audio = [audioAda1, audioAda2];
+    const audio = [audioAda1, audioAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video, audio }, start: 0 };
-    let period = null;
+    let period: IPeriod | null = null;
     let errorReceived: unknown = null;
     const unsupportedAdaptations: Adaptation[] = [];
     try {
@@ -500,20 +544,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should set a parsing error if an unsupported adaptation is given", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: arg.id !== "56",
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: arg.id !== "56",
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
 
     const videoAda1 = {
       type: "video",
@@ -523,7 +570,7 @@ describe("Manifest - Period", () => {
         return videoAda1;
       },
     };
-    const video = [videoAda1];
+    const video = [videoAda1] as unknown as IParsedAdaptation[];
     const videoAda2 = {
       type: "video",
       id: "56",
@@ -532,7 +579,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video2 = [videoAda2];
+    const video2 = [videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video, video2 }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
@@ -543,7 +590,7 @@ describe("Manifest - Period", () => {
     expect(mockAdaptation).toHaveReturnedTimes(2);
     expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, codecSupportCache, {});
     expect(mockAdaptation).toHaveBeenCalledWith(videoAda2, codecSupportCache, {});
-    expect(mockAdaptation).toHaveReturnedWith(period.adaptations.video[0]);
+    expect(mockAdaptation).toHaveReturnedWith(period.adaptations.video?.[0]);
 
     const [adap] = unsupportedAdaptations;
     expect(adap.id).toBe("56");
@@ -551,20 +598,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should not set a parsing error if an empty unsupported adaptation is given", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
 
     const videoAda1 = {
       type: "video",
@@ -574,7 +624,7 @@ describe("Manifest - Period", () => {
         return videoAda1;
       },
     };
-    const video = [videoAda1];
+    const video = [videoAda1] as unknown as IParsedAdaptation[];
     const bar = undefined;
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
@@ -597,21 +647,24 @@ describe("Manifest - Period", () => {
   });
 
   it("should give a representationFilter to the adaptation", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     const representationFilter = vi.fn();
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -628,7 +681,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
@@ -653,20 +706,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should report if Adaptations are not supported", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: arg.id === "55",
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: arg.id === "55",
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -688,7 +744,7 @@ describe("Manifest - Period", () => {
       id: "12",
       representations: [{}],
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
@@ -702,20 +758,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should not report if an Adaptation has no Representation", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -737,7 +796,7 @@ describe("Manifest - Period", () => {
       id: "12",
       representations: [],
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const foo = [fooAda1];
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
@@ -747,20 +806,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should set the given start", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -777,7 +839,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video }, start: 72 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
@@ -789,20 +851,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should set a given duration", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -819,7 +884,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
@@ -831,20 +896,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should infer the end from the start and the duration", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -861,7 +929,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
@@ -873,20 +941,23 @@ describe("Manifest - Period", () => {
   });
 
   it("should return every Adaptations combined with `getAdaptations`", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -903,7 +974,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
 
     const audioAda1 = {
       type: "audio",
@@ -913,7 +984,7 @@ describe("Manifest - Period", () => {
         return audioAda1;
       },
     };
-    const audio = [audioAda1];
+    const audio = [audioAda1] as unknown as IParsedAdaptation[];
 
     const args = {
       id: "12",
@@ -926,26 +997,29 @@ describe("Manifest - Period", () => {
     const period = new Period(args, unsupportedAdaptations, codecSupportCache);
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.getAdaptations()).toHaveLength(3);
-    expect(period.getAdaptations()).toContain(period.adaptations.video[0]);
-    expect(period.getAdaptations()).toContain(period.adaptations.video[1]);
-    expect(period.getAdaptations()).toContain(period.adaptations.audio[0]);
+    expect(period.getAdaptations()).toContain(period.adaptations.video?.[0]);
+    expect(period.getAdaptations()).toContain(period.adaptations.video?.[1]);
+    expect(period.getAdaptations()).toContain(period.adaptations.audio?.[0]);
   });
 
   it("should return every Adaptations from a given type with `getAdaptationsForType`", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -962,7 +1036,7 @@ describe("Manifest - Period", () => {
         return videoAda2;
       },
     };
-    const video = [videoAda1, videoAda2];
+    const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
 
     const audioAda1 = {
       type: "audio",
@@ -972,7 +1046,7 @@ describe("Manifest - Period", () => {
         return audioAda1;
       },
     };
-    const audio = [audioAda1];
+    const audio = [audioAda1] as unknown as IParsedAdaptation[];
 
     const args = {
       id: "12",
@@ -987,31 +1061,36 @@ describe("Manifest - Period", () => {
 
     expect(period.getAdaptationsForType("video")).toHaveLength(2);
     expect(period.getAdaptationsForType("video")).toEqual([
-      period.adaptations.video[0],
-      period.adaptations.video[1],
+      period.adaptations.video?.[0],
+      period.adaptations.video?.[1],
     ]);
 
     expect(period.getAdaptationsForType("audio")).toHaveLength(1);
-    expect(period.getAdaptationsForType("audio")).toEqual([period.adaptations.audio[0]]);
+    expect(period.getAdaptationsForType("audio")).toEqual([
+      period.adaptations.audio?.[0],
+    ]);
 
     expect(period.getAdaptationsForType("text")).toHaveLength(0);
   });
 
   it("should return the first Adaptations with a given Id when calling `getAdaptation`", async () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
     }));
 
-    const Period = ((await vi.importActual("../period")) as any).default;
+    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -1036,7 +1115,7 @@ describe("Manifest - Period", () => {
         return videoAda3;
       },
     };
-    const video = [videoAda1, videoAda2, videoAda3];
+    const video = [videoAda1, videoAda2, videoAda3] as unknown as IParsedAdaptation[];
 
     const audioAda1 = {
       type: "audio",
@@ -1046,7 +1125,7 @@ describe("Manifest - Period", () => {
         return audioAda1;
       },
     };
-    const audio = [audioAda1];
+    const audio = [audioAda1] as unknown as IParsedAdaptation[];
 
     const args = {
       id: "12",
@@ -1058,20 +1137,23 @@ describe("Manifest - Period", () => {
     const codecSupportCache = new CodecSupportCache([]);
     const period = new Period(args, [], codecSupportCache);
     expect(unsupportedAdaptations).toHaveLength(0);
-    expect(period.getAdaptation("54")).toEqual(period.adaptations.video[0]);
-    expect(period.getAdaptation("55")).toEqual(period.adaptations.video[1]);
-    expect(period.getAdaptation("56")).toEqual(period.adaptations.audio[0]);
+    expect(period.getAdaptation("54")).toEqual(period.adaptations.video?.[0]);
+    expect(period.getAdaptation("55")).toEqual(period.adaptations.video?.[1]);
+    expect(period.getAdaptation("56")).toEqual(period.adaptations.audio?.[0]);
   });
 
   it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
-    const mockAdaptation = vi.fn((arg) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(
+      (arg: IParsedAdaptation): Adaptation =>
+        ({
+          ...arg,
+          supportStatus: {
+            hasSupportedCodec: undefined,
+            hasCodecWithUndefinedSupport: true,
+            isDecipherable: undefined,
+          },
+        }) as unknown as Adaptation,
+    );
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],

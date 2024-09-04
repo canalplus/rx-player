@@ -49,7 +49,7 @@ function SubtitlesKnob({
         if (track !== undefined) {
           player.actions.setTextTrack(track);
         } else {
-          /* eslint-disable-next-line no-console */
+          // eslint-disable-next-line no-console
           console.error("Error: subtitles track not found");
         }
       } else {

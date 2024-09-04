@@ -137,7 +137,6 @@ const DEFAULT_CONFIG = {
    */
   DEFAULT_MAX_VIDEO_BUFFER_SIZE: Infinity,
 
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
    * Maximum possible buffer ahead for each type of buffer, to avoid too much
    * memory usage when playing for a long time.
@@ -147,9 +146,7 @@ const DEFAULT_CONFIG = {
   MAXIMUM_MAX_BUFFER_AHEAD: {
     text: 5 * 60 * 60,
   } as Partial<Record<"audio" | "video" | "text", number>>,
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
    * Minimum possible buffer ahead for each type of buffer, to avoid Garbage
    * Collecting too much data when it would have adverse effects.
@@ -164,9 +161,7 @@ const DEFAULT_CONFIG = {
     // same text track.
     text: 2 * 60,
   } as Partial<Record<"audio" | "video" | "image" | "text", number>>,
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   /**
    * Maximum possible buffer behind for each type of buffer, to avoid too much
    * memory usage when playing for a long time.
@@ -176,7 +171,6 @@ const DEFAULT_CONFIG = {
   MAXIMUM_MAX_BUFFER_BEHIND: {
     text: 5 * 60 * 60,
   } as Partial<Record<"audio" | "video" | "text", number>>,
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
    * Default bitrate ceils initially set as the first content begins.
@@ -893,7 +887,6 @@ const DEFAULT_CONFIG = {
    * or "playready" as a keySystem.
    * @type {Object}
    */
-  /* eslint-disable @typescript-eslint/consistent-type-assertions */
   EME_KEY_SYSTEMS: {
     clearkey: ["webkit-org.w3.clearkey", "org.w3.clearkey"],
     widevine: ["com.widevine.alpha"],
@@ -905,7 +898,6 @@ const DEFAULT_CONFIG = {
     ],
     fairplay: ["com.apple.fps.1_0"],
   } as Partial<Record<string, string[]>>,
-  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
    * The Manifest parsing logic has a notion of "unsafeMode" which allows to

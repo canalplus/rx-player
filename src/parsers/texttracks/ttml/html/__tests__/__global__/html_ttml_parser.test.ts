@@ -164,8 +164,8 @@ describe("Global TTML HTML parsing tests", () => {
     let nbTextNodes = 0;
     {
       const textNodes = findTextNodes(res[5].element);
-      for (let i = 0; i < textNodes.length; i++) {
-        const parentElement = textNodes[i].parentElement;
+      for (const textNode of textNodes) {
+        const parentElement = textNode.parentElement;
         if (parentElement !== null) {
           expect(globalScope.getComputedStyle(parentElement).color).toEqual(
             "rgb(255, 255, 0)",
@@ -176,8 +176,8 @@ describe("Global TTML HTML parsing tests", () => {
     }
     {
       const textNodes = findTextNodes(res[6].element);
-      for (let i = 0; i < textNodes.length; i++) {
-        const parentElement = textNodes[i].parentElement;
+      for (const textNode of textNodes) {
+        const parentElement = textNode.parentElement;
         if (parentElement !== null) {
           expect(globalScope.getComputedStyle(parentElement).color).toEqual(
             "rgb(255, 255, 255)",
