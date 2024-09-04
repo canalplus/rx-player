@@ -61,7 +61,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     try {
       await probeDecodingInfos(configuration);
       resetDecodingInfos();
-    } catch ({ message }) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -83,7 +84,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     try {
       await probeDecodingInfos(configuration);
       resetDecodingInfos();
-    } catch ({ message }) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -105,7 +107,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     try {
       await probeDecodingInfos(configuration);
       resetDecodingInfos();
-    } catch ({ message }) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -125,7 +128,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     try {
       await probeDecodingInfos(configuration);
       resetDecodingInfos();
-    } catch ({ message }) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
@@ -142,7 +146,8 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     try {
       await probeDecodingInfos(configuration);
       resetDecodingInfos();
-    } catch ({ message }) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
