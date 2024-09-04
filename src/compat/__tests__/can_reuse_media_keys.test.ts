@@ -8,7 +8,12 @@ describe("Compat - canReuseMediaKeys", () => {
 
   it("should return true on most browsers", async () => {
     vi.doMock("../browser_detection", () => {
-      return { isWebOs: false, isPhilipsNetTv: false, isPanasonic: false };
+      return {
+        isA1KStb40xx: false,
+        isWebOs: false,
+        isPhilipsNetTv: false,
+        isPanasonic: false,
+      };
     });
     const canReuseMediaKeys = (await vi.importActual("../can_reuse_media_keys.ts"))
       .default as typeof ICanReuseMediaKeys;
@@ -18,6 +23,7 @@ describe("Compat - canReuseMediaKeys", () => {
   it("should return false on WebOs", async () => {
     vi.doMock("../browser_detection", () => {
       return {
+        isA1KStb40xx: false,
         isWebOs: true,
         isWebOs2022: false,
         isPanasonic: false,
@@ -32,6 +38,7 @@ describe("Compat - canReuseMediaKeys", () => {
   it("should return false on Panasonic", async () => {
     vi.doMock("../browser_detection", () => {
       return {
+        isA1KStb40xx: false,
         isWebOs: false,
         isWebOs2022: false,
         isPanasonic: true,
@@ -46,10 +53,26 @@ describe("Compat - canReuseMediaKeys", () => {
   it("should return false on Philips' NETTV", async () => {
     vi.doMock("../browser_detection", () => {
       return {
+        isA1KStb40xx: false,
         isWebOs: false,
         isWebOs2022: false,
         isPanasonic: false,
         isPhilipsNetTv: true,
+      };
+    });
+    const canReuseMediaKeys = (await vi.importActual("../can_reuse_media_keys.ts"))
+      .default as typeof ICanReuseMediaKeys;
+    expect(canReuseMediaKeys()).toBe(false);
+  });
+
+  it("should return false on A1 KSTB 40xxx", async () => {
+    vi.doMock("../browser_detection", () => {
+      return {
+        isA1KStb40xx: true,
+        isWebOs: false,
+        isWebOs2022: false,
+        isPanasonic: false,
+        isPhilipsNetTv: false,
       };
     });
     const canReuseMediaKeys = (await vi.importActual("../can_reuse_media_keys.ts"))

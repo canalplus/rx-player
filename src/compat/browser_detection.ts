@@ -79,6 +79,9 @@ let isPlayStation5 = false;
 /** `true` for the Xbox game consoles. */
 let isXbox = false;
 
+/** `true` for specific A1 STB: KSTB 40xx from Kaon Media. */
+let isA1KStb40xx = false;
+
 (function findCurrentBrowser(): void {
   if (isNode) {
     return;
@@ -167,24 +170,30 @@ let isXbox = false;
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
     isXbox = true;
+  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx")) {
+    isA1KStb40xx = true;
   }
 })();
 
 export {
+  // browsers
   isEdgeChromium,
+  isFirefox,
   isIE11,
   isIEOrEdge,
-  isFirefox,
+  isSafariDesktop,
+  isSafariMobile,
+
+  // specific devices
+  isA1KStb40xx,
   isPanasonic,
   isPhilipsNetTv,
   isPlayStation4,
   isPlayStation5,
-  isXbox,
-  isSafariDesktop,
-  isSafariMobile,
   isSamsungBrowser,
   isTizen,
   isWebOs,
   isWebOs2021,
   isWebOs2022,
+  isXbox,
 };
