@@ -1782,7 +1782,7 @@ function findFirstPlayableAdaptation(
         return false;
       }
       const playableRepresentations = adaptation.representations.filter(
-        (r) => isRepresentationPlayable(r) === true,
+        (r) => isRepresentationPlayable(r) === true && r.isResolutionSupported !== false,
       );
       return playableRepresentations.length > 0;
     },

@@ -27,20 +27,20 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../../../../src/log", () => {
+vi.mock("../../../../../src/log.ts", () => {
   return {
     default: mocks.fakeLogger,
   };
 });
-vi.mock("../../../../../src/utils/id_generator", () => ({
+vi.mock("../../../../../src/utils/id_generator.ts", () => ({
   default: mocks.fakeIdGenerator,
 }));
-vi.mock("../../../../../src/manifest/classes/period", () => ({
+vi.mock("../../../../../src/manifest/classes/period.ts", () => ({
   default: mocks.fakePeriod,
 }));
-vi.mock("../../../../../src/manifest/classes/update_periods", async () => {
+vi.mock("../../../../../src/manifest/classes/update_periods.ts", async () => {
   const updatePeriods = (
-    await vi.importActual("../../../../../src/manifest/classes/update_periods")
+    await vi.importActual("../../../../../src/manifest/classes/update_periods.ts")
   ).updatePeriods;
   return {
     replacePeriods: mocks.fakeReplacePeriods,
@@ -157,16 +157,12 @@ describe("Manifest - Manifest", () => {
 
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(mocks.fakePeriod).toHaveBeenCalledTimes(2);
-    expect(mocks.fakePeriod).toHaveBeenCalledWith(
-      period1,
-      new CodecSupportCache([]),
-      undefined,
-    );
-    expect(mocks.fakePeriod).toHaveBeenCalledWith(
-      period2,
-      new CodecSupportCache([]),
-      undefined,
-    );
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(period1, {
+      codecSupportCache: new CodecSupportCache([]),
+    });
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(period2, {
+      codecSupportCache: new CodecSupportCache([]),
+    });
 
     expect(manifest.periods).toEqual([
       { id: "foo0", adaptations: period1.adaptations },
@@ -216,16 +212,14 @@ describe("Manifest - Manifest", () => {
     expect(manifest).not.toBe(null);
 
     expect(mocks.fakePeriod).toHaveBeenCalledTimes(2);
-    expect(mocks.fakePeriod).toHaveBeenCalledWith(
-      period1,
-      new CodecSupportCache([]),
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(period1, {
+      codecSupportCache: new CodecSupportCache([]),
       representationFilter,
-    );
-    expect(mocks.fakePeriod).toHaveBeenCalledWith(
-      period2,
-      new CodecSupportCache([]),
+    });
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(period2, {
+      codecSupportCache: new CodecSupportCache([]),
       representationFilter,
-    );
+    });
     expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
     expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
@@ -262,16 +256,12 @@ describe("Manifest - Manifest", () => {
 
     const manifest = new Manifest(simpleFakeManifest, {});
     expect(mocks.fakePeriod).toHaveBeenCalledTimes(2);
-    expect(mocks.fakePeriod).toHaveBeenCalledWith(
-      period1,
-      new CodecSupportCache([]),
-      undefined,
-    );
-    expect(mocks.fakePeriod).toHaveBeenCalledWith(
-      period2,
-      new CodecSupportCache([]),
-      undefined,
-    );
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(period1, {
+      codecSupportCache: new CodecSupportCache([]),
+    });
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(period2, {
+      codecSupportCache: new CodecSupportCache([]),
+    });
 
     expect(manifest.periods).toEqual([
       { id: "foo0", start: 4, adaptations: adapP1, thumbnailTracks: [] },

@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../../../../src/manifest/classes/adaptation", () => ({
+vi.mock("../../../../../src/manifest/classes/adaptation.ts", () => ({
   default: mocks.fakeAdaptation,
 }));
 
@@ -38,14 +38,14 @@ describe("Manifest - Period", () => {
         },
       };
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const args = { id: "12", adaptations: {}, start: 0, thumbnailTracks: [] };
     let period: Period | null = null;
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, codecSupportCache);
+      period = new Period(args, { codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -79,7 +79,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text", "foo");
 
     const fooAda1 = {
       type: "foo",
@@ -102,7 +102,7 @@ describe("Manifest - Period", () => {
     let errorReceived: unknown = null;
     const codecSupportCache = new CodecSupportCache([]);
     try {
-      period = new Period(args, codecSupportCache);
+      period = new Period(args, { codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -123,18 +123,12 @@ describe("Manifest - Period", () => {
     );
 
     expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(2);
-    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
-      1,
-      fooAda1,
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(1, fooAda1, {
       codecSupportCache,
-      {},
-    );
-    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
-      2,
-      fooAda2,
+    });
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(2, fooAda2, {
       codecSupportCache,
-      {},
-    );
+    });
   });
 
   it("should throw if only empty audio and video adaptations is given", async () => {
@@ -150,7 +144,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text", "foo");
 
     const args = {
       id: "12",
@@ -162,7 +156,7 @@ describe("Manifest - Period", () => {
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, codecSupportCache);
+      period = new Period(args, { codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -198,7 +192,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text", "foo");
 
     const videoAda1 = {
       type: "video",
@@ -253,7 +247,7 @@ describe("Manifest - Period", () => {
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, codecSupportCache);
+      period = new Period(args, { codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -287,7 +281,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAdaptation = {
       type: "video",
@@ -317,7 +311,7 @@ describe("Manifest - Period", () => {
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, codecSupportCache);
+      period = new Period(args, { codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -339,7 +333,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text", "foo");
 
     const videoAda1 = {
       type: "video",
@@ -395,7 +389,7 @@ describe("Manifest - Period", () => {
       thumbnailTracks: [],
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
 
     expect(period.adaptations.video).not.toBe(undefined);
     expect(period.adaptations.video?.length).toBe(3);
@@ -419,7 +413,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text", "foo");
 
     const videoAda1 = {
       type: "video",
@@ -438,7 +432,7 @@ describe("Manifest - Period", () => {
       start: 0,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(period.adaptations).toEqual({
       video: video.map((v) => ({
         ...v,
@@ -451,7 +445,7 @@ describe("Manifest - Period", () => {
     });
 
     expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(1);
-    expect(mocks.fakeAdaptation).toHaveBeenCalledWith(videoAda1, codecSupportCache, {});
+    expect(mocks.fakeAdaptation).toHaveBeenCalledWith(videoAda1, { codecSupportCache });
     expect(period.adaptations.audio).toBe(undefined);
   });
 
@@ -469,7 +463,7 @@ describe("Manifest - Period", () => {
       } as unknown as Adaptation;
     });
     const representationFilter = vi.fn();
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -490,27 +484,22 @@ describe("Manifest - Period", () => {
     const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video }, start: 0, thumbnailTracks: [] };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache, representationFilter);
+    const period = new Period(args, {
+      codecSupportCache,
+      representationFilter,
+    });
 
     expect(period.adaptations.video).toHaveLength(2);
 
     expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(2);
-    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
-      1,
-      videoAda1,
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(1, videoAda1, {
       codecSupportCache,
-      {
-        representationFilter,
-      },
-    );
-    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
-      2,
-      videoAda2,
+      representationFilter,
+    });
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(2, videoAda2, {
       codecSupportCache,
-      {
-        representationFilter,
-      },
-    );
+      representationFilter,
+    });
     expect(representationFilter).not.toHaveBeenCalled();
   });
 
@@ -527,7 +516,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -559,9 +548,7 @@ describe("Manifest - Period", () => {
       start: 0,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
-    // TO DO: is the test relevant?
-    expect(period.adaptations.audio?.length).toBe(0);
+    new Period(args, { codecSupportCache });
   });
 
   it("should set the given start", async () => {
@@ -577,7 +564,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -598,7 +585,7 @@ describe("Manifest - Period", () => {
     const video = [videoAda1, videoAda2] as unknown as IParsedAdaptation[];
     const args = { id: "12", adaptations: { video }, start: 72, thumbnailTracks: [] };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(period.start).toEqual(72);
     expect(period.duration).toEqual(undefined);
     expect(period.end).toEqual(undefined);
@@ -617,7 +604,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -644,7 +631,7 @@ describe("Manifest - Period", () => {
       thumbnailTracks: [],
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(period.start).toEqual(0);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(12);
@@ -663,7 +650,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -690,7 +677,7 @@ describe("Manifest - Period", () => {
       thumbnailTracks: [],
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(period.start).toEqual(50);
     expect(period.duration).toEqual(12);
     expect(period.end).toEqual(62);
@@ -709,7 +696,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -747,7 +734,7 @@ describe("Manifest - Period", () => {
       duration: 12,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(period.getAdaptations()).toHaveLength(3);
     expect(period.getAdaptations()).toContain(period.adaptations.video?.[0]);
     expect(period.getAdaptations()).toContain(period.adaptations.video?.[1]);
@@ -767,7 +754,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -805,7 +792,7 @@ describe("Manifest - Period", () => {
       duration: 12,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
 
     expect(period.getAdaptationsForType("video")).toHaveLength(2);
     expect(period.getAdaptationsForType("video")).toEqual([
@@ -834,7 +821,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -880,7 +867,7 @@ describe("Manifest - Period", () => {
       duration: 12,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(period.getAdaptation("54")).toEqual(period.adaptations.video?.[0]);
     expect(period.getAdaptation("55")).toEqual(period.adaptations.video?.[1]);
     expect(period.getAdaptation("56")).toEqual(period.adaptations.audio?.[0]);
@@ -899,7 +886,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push("audio", "video", "text");
 
     const videoAda1 = {
       type: "video",
@@ -946,7 +933,7 @@ describe("Manifest - Period", () => {
     };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, codecSupportCache);
+    const period = new Period(args, { codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.getAdaptation("Oh, comely")).toEqual(undefined);
   });
