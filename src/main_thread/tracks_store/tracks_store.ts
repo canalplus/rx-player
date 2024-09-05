@@ -399,7 +399,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             return false;
           }
           const playableRepresentations = adaptation.representations.filter(
-            (r) => r.isSupported === true && r.decipherable !== false,
+            (r) =>
+              r.isCodecSupported === true &&
+              r.decipherable !== false &&
+              r.isResolutionSupported !== false,
           );
           return playableRepresentations.length > 0;
         },

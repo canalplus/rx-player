@@ -473,7 +473,11 @@ function createOrReuseSegmentSink(
  */
 function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
   const representations = adaptation.representations.filter((r) => {
-    return r.isSupported === true && r.decipherable !== false;
+    return (
+      r.isCodecSupported === true &&
+      r.decipherable !== false &&
+      r.isResolutionSupported !== false
+    );
   });
   if (representations.length === 0) {
     const noRepErr = new MediaError(

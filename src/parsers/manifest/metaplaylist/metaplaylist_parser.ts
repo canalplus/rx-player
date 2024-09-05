@@ -281,7 +281,6 @@ function createManifest(
           type: "text",
           language: track.language,
           closedCaption: track.closedCaption,
-          manuallyAdded: true,
           representations: [
             {
               bitrate: 0,

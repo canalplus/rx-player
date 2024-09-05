@@ -334,7 +334,8 @@ export default class CmcdDataBuilder {
     props.tb = content.adaptation.representations.reduce(
       (acc: number | undefined, representation: IRepresentation) => {
         if (
-          representation.isSupported !== true ||
+          representation.isCodecSupported !== true ||
+          representation.isResolutionSupported === false ||
           representation.decipherable === false
         ) {
           return acc;

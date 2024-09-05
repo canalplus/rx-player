@@ -952,6 +952,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           manifestLoader: undefined,
           segmentLoader: undefined,
           representationFilter: options.representationFilter,
+          enableResolutionChecks: options.experimentalOptions.enableResolutionChecks,
           __priv_manifestUpdateUrl,
           __priv_patchLastSegmentInSidx,
         };

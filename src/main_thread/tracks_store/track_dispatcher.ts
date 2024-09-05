@@ -188,7 +188,9 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
         playableRepresentations = trackInfo.adaptation.representations.filter(
           (representation) => {
             return (
-              representation.isSupported === true && representation.decipherable !== false
+              representation.isCodecSupported === true &&
+              representation.decipherable !== false &&
+              representation.isResolutionSupported !== false
             );
           },
         );
@@ -202,7 +204,10 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
           arrayIncludes(representationIds, r.id),
         );
         playableRepresentations = representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
+          (r) =>
+            r.isCodecSupported === true &&
+            r.decipherable !== false &&
+            r.isResolutionSupported !== false,
         );
         if (playableRepresentations.length === 0) {
           self.trigger("noPlayableLockedRepresentation", null);

@@ -98,7 +98,8 @@ export default function AdaptationStream(
     (r) =>
       arrayIncludes(initialRepIds, r.id) &&
       r.decipherable !== false &&
-      r.isSupported !== false,
+      r.isCodecSupported !== false &&
+      r.isResolutionSupported !== false,
   );
 
   /** Emit the list of Representation for the adaptive logic. */

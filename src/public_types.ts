@@ -182,6 +182,26 @@ export interface ILoadVideoOptions {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+
+  /**
+   * Options which may be removed or updated at any RxPlayer release.
+   *
+   * Most of those are options which we temporarily test before making
+   * them part of the RxPlayer API.
+   */
+  experimentalOptions?:
+    | {
+        /**
+         * If `true`, we will try to detect what's the highest supported video
+         * resolution on the current device and if found, we will avoid playing
+         * video Representation (i.e. qualities) with an higher resolution.
+         *
+         * An exception is made when the currently-chosen track only has seemlingly
+         * unsupported Representations, in which case we'll still atempt to play them.
+         */
+        enableResolutionChecks?: boolean | undefined;
+      }
+    | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -909,6 +929,16 @@ export interface IVideoRepresentation {
    * If `undefined`, we don't know yet if it is supported or not.
    */
   isCodecSupported?: boolean | undefined;
+  /**
+   * `true` if the resolution of this Representation is known to e supported on
+   * the current device.
+   *
+   * `false` if it is known to be unsupported and should thus not be played.
+   *
+   * `undefined` if we don't know if it is supported or not on the current
+   * device.
+   */
+  isResolutionSupported?: boolean | undefined;
   /**
    * If `true`, this Representation is known to be decipherable.
    * If `false`, it is known to be encrypted and not decipherable.
