@@ -150,6 +150,7 @@ export default function initializeWorkerMain() {
         currentLoadedContentTaskCanceller.signal.register(() => {
           currentContentObservationRef.finish();
         });
+        log.debug("WP: Loading new pepared content.");
         loadOrReloadPreparedContent(
           msg.value,
           contentPreparer,
@@ -487,6 +488,7 @@ function loadOrReloadPreparedContent(
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
   parentCancelSignal: CancellationSignal,
 ) {
+  log.debug("WP: Loading prepared content");
   const currentLoadCanceller = new TaskCanceller();
   currentLoadCanceller.linkToSignal(parentCancelSignal);
 
@@ -917,8 +919,15 @@ function loadOrReloadPreparedContent(
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel();
     }
+    log.debug(
+      "WP: Reloading MediaSource",
+      payload.timeOffset,
+      payload.minimumPosition,
+      payload.maximumPosition,
+    );
     contentPreparer.reloadMediaSource(payload).then(
       () => {
+        log.info("WP: MediaSource Reloaded, loading...");
         loadOrReloadPreparedContent(
           {
             initialTime: newInitialTime,

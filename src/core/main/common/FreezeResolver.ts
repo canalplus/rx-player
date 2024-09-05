@@ -306,6 +306,14 @@ export default class FreezeResolver {
     } else if (rebuffering !== null) {
       freezingTs = rebuffering.timestamp;
     }
+
+    log.info(
+      "FR: Freeze detected",
+      freezingTs,
+      now - (freezingTs ?? now),
+      observation.position.isAwaitingFuturePosition(),
+    );
+
     if (
       freezingTs !== null &&
       !observation.position.isAwaitingFuturePosition() &&
@@ -315,6 +323,7 @@ export default class FreezeResolver {
         timestamp: now,
         position: freezingPosition + UNFREEZING_DELTA_POSITION,
       };
+      log.debug("FR: trying to flush to un-freeze");
 
       this._decipherabilityFreezeStartingTimestamp = null;
       this._ignoreFreezeUntil = now + 6000;
@@ -330,6 +339,7 @@ export default class FreezeResolver {
     }
 
     if (this._decipherabilityFreezeStartingTimestamp === null) {
+      log.debug("FR: Start of a potential decipherability freeze detected");
       this._decipherabilityFreezeStartingTimestamp = now;
     }
     const rebufferingForTooLong =
@@ -340,6 +350,10 @@ export default class FreezeResolver {
       (rebufferingForTooLong || frozenForTooLong) &&
       getMonotonicTimeStamp() - this._decipherabilityFreezeStartingTimestamp > 4000
     ) {
+      log.debug(
+        "FR: Investigating long potential decipherability freeze",
+        this._decipherabilityFreezeStartingTimestamp,
+      );
       let hasOnlyDecipherableSegments = true;
       let isClear = true;
       for (const ttype of ["audio", "video"] as const) {
