@@ -159,7 +159,8 @@ export const DummyRepresentation = makeMockedClass<Representation>(
   },
   {
     id: "n/a",
-    isSupported: undefined,
+    isCodecSupported: undefined,
+    isResolutionSupported: undefined,
     index: new DummyRepresentationIndex(),
     chosenCodec: undefined,
     baseCodecs: [],

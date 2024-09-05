@@ -187,7 +187,9 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       if (repSettings === null) {
         // unlocking
         playableRepresentations = trackInfo.adaptation.representations.filter(
-          (representation) => isRepresentationPlayable(representation) === true,
+          (representation) =>
+            isRepresentationPlayable(representation) === true &&
+            representation.isResolutionSupported !== false,
         );
 
         // No need to remove the previous content when unlocking
@@ -199,7 +201,9 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
           arrayIncludes(representationIds, r.id),
         );
         playableRepresentations = representations.filter(
-          (representation) => isRepresentationPlayable(representation) === true,
+          (representation) =>
+            isRepresentationPlayable(representation) === true &&
+            representation.isResolutionSupported !== false,
         );
         if (playableRepresentations.length === 0) {
           self.trigger("noPlayableLockedRepresentation", null);

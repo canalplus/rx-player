@@ -70,20 +70,27 @@ export default class Period implements IPeriodMetadata {
   /**
    * @constructor
    * @param {Object} args
-   * @param {function|undefined} [representationFilter]
+   * @param {Object} options
+   * @param {function|undefined} [options.representationFilter]
+   * @param {boolean|undefined} [options.enableResolutionChecks]
+   * @param {Object|undefined} [options.codecSupportCache]
    */
   constructor(
     args: IParsedPeriod,
-    cachedCodecSupport: CodecSupportCache,
-    representationFilter?: IRepresentationFilter | undefined,
+    options: {
+      codecSupportCache: CodecSupportCache;
+      enableResolutionChecks?: boolean | undefined;
+      representationFilter?: IRepresentationFilter | undefined;
+    },
   ) {
+    const { enableResolutionChecks, codecSupportCache, representationFilter } = options;
     this.id = args.id;
 
-    this.adaptations = createAdaptationsObject(
-      args.adaptations,
-      cachedCodecSupport,
+    this.adaptations = createAdaptationsObject(args.adaptations, {
+      codecSupportCache,
+      enableResolutionChecks,
       representationFilter,
-    );
+    });
 
     if (isArrayEmpty(this.adaptations.video) && isArrayEmpty(this.adaptations.audio)) {
       throw new MediaError(
@@ -126,11 +133,11 @@ export default class Period implements IPeriodMetadata {
    * `Adaptation`s objects which are now known to have no supported
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
-   * @param {Array.<Object>} cachedCodecSupport
+   * @param {Array.<Object>} codecSupportCache
    */
   refreshCodecSupport(
     unsupportedAdaptations: Adaptation[],
-    cachedCodecSupport: CodecSupportCache,
+    codecSupportCache: CodecSupportCache,
   ) {
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
@@ -145,7 +152,7 @@ export default class Period implements IPeriodMetadata {
           continue;
         }
         const wasSupported = adaptation.supportStatus.hasSupportedCodec;
-        adaptation.refreshCodecSupport(cachedCodecSupport);
+        adaptation.refreshCodecSupport(codecSupportCache);
         if (
           wasSupported !== false &&
           adaptation.supportStatus.hasSupportedCodec === false
@@ -314,14 +321,16 @@ function isArrayEmpty(array: unknown[] | undefined) {
  * Creates an object representing adaptations grouped by track type,
  * from the given parsed adaptations.
  * @param {Object} adaptations
- * @param {Object} cachedCodecSupport
- * @param {Object|undefined}representationFilter
+ * @param {Object} config
  * @returns {Object}
  */
 function createAdaptationsObject(
   adaptations: IParsedAdaptations,
-  cachedCodecSupport: CodecSupportCache,
-  representationFilter: IRepresentationFilter | undefined,
+  config: {
+    codecSupportCache: CodecSupportCache;
+    enableResolutionChecks?: boolean | undefined;
+    representationFilter?: IRepresentationFilter | undefined;
+  },
 ): Partial<Record<ITrackType, Adaptation[]>> {
   const manifestAdaptations: IManifestAdaptations = {};
   for (const [type, adaptationsForType] of Object.entries(adaptations)) {
@@ -330,9 +339,7 @@ function createAdaptationsObject(
     }
     manifestAdaptations[type as ITrackType] = adaptationsForType
       .map((adaptation): Adaptation => {
-        const newAdaptation = new Adaptation(adaptation, cachedCodecSupport, {
-          representationFilter,
-        });
+        const newAdaptation = new Adaptation(adaptation, config);
         return newAdaptation;
       })
       .filter(

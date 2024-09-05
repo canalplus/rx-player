@@ -133,6 +133,7 @@ interface IParsedLoadVideoOptionsBase {
   /** @see ILoadVideoOptions.experimentalOptions */
   experimentalOptions: {
     enableRepresentationAvoidance: boolean;
+    enableResolutionChecks: boolean;
   };
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
@@ -577,6 +578,8 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     experimentalOptions: {
       enableRepresentationAvoidance:
         options.experimentalOptions?.enableRepresentationAvoidance === true,
+      enableResolutionChecks:
+        options.experimentalOptions?.enableResolutionChecks === true,
     },
   };
 }
