@@ -65,7 +65,7 @@ function createAdaptation(type: "audio" | "video" | "text", id: string): Adaptat
       new DummyRepresentation({
         id: `${id}-repr`,
         decipherable: true,
-        isSupported: true,
+        isCodecSupported: true,
       }),
     ],
     supportStatus: {

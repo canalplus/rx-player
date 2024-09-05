@@ -126,7 +126,7 @@ describe("API - Public API", () => {
             baseCodecs: ["avc1"],
             chosenCodec: "avc1",
             uniqueId: "unique1",
-            isSupported: true,
+            isCodecSupported: true,
           },
         };
         vi.spyOn(player, "__priv_getCurrentRepresentations").mockReturnValue(
@@ -162,7 +162,7 @@ describe("API - Public API", () => {
             baseCodecs: ["mp4a"],
             chosenCodec: "mp4a",
             uniqueId: "unique2",
-            isSupported: true,
+            isCodecSupported: true,
           },
         };
         vi.spyOn(player, "__priv_getCurrentRepresentations").mockReturnValue(
@@ -534,7 +534,7 @@ describe("API - Public API", () => {
             baseCodecs: ["avc1"],
             chosenCodec: "avc1",
             uniqueId: "unique1",
-            isSupported: true,
+            isCodecSupported: true,
           } satisfies IRepresentationMetadata,
         });
         expect(spy).toHaveBeenCalledWith(
@@ -587,7 +587,7 @@ describe("API - Public API", () => {
             baseCodecs: ["mp4a"],
             chosenCodec: "mp4a",
             uniqueId: "unique2",
-            isSupported: true,
+            isCodecSupported: true,
           } satisfies IRepresentationMetadata,
         });
         expect(spy).toHaveBeenCalledWith(

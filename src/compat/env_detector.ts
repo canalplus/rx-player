@@ -84,6 +84,8 @@ const DEVICES = {
   StreamaMdp1001S: 111,
   /** Devices running either Windows 10 or Windows 11. */
   Windows10Or11: 112,
+  /** Hisense manufacturer */
+  Hisense: 112,
 } as const;
 
 /** Interface giving information on the current environment where the RxPlayer runs. */
@@ -231,6 +233,11 @@ function resetEnvironment(): void {
     navigator.userAgent.indexOf("Philips") !== -1
   ) {
     EnvDetector.device = DEVICES.PhilipsNetTv;
+  } else if (
+    navigator.userAgent.indexOf("Hisense") !== -1 &&
+    navigator.userAgent.indexOf("VIDAA") !== -1
+  ) {
+    EnvDetector.device = DEVICES.Hisense;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     EnvDetector.device = DEVICES.Panasonic;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {

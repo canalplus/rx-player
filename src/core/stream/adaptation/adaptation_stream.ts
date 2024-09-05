@@ -608,6 +608,7 @@ function getRepresentationList(
     (r) =>
       arrayIncludes(authorizedRepIds, r.id) &&
       !r.shouldBeAvoided &&
+      r.isResolutionSupported !== false &&
       r.isPlayable() !== false,
   );
   if (filteredRepresentations.length > 0) {

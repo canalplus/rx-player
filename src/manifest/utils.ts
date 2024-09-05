@@ -246,7 +246,10 @@ export function toAudioTrack(
     audioDescription: adaptation.isAudioDescription === true,
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
+      ? adaptation.representations.filter(
+          (r) =>
+            isRepresentationPlayable(r) === true && r.isResolutionSupported !== false,
+        )
       : adaptation.representations
     ).map(toAudioRepresentation),
     label: adaptation.label,
@@ -290,7 +293,9 @@ export function toVideoTrack(
           const representations = (
             filterPlayable
               ? trickModeAdaptation.representations.filter(
-                  (r) => isRepresentationPlayable(r) === true,
+                  (r) =>
+                    isRepresentationPlayable(r) === true &&
+                    r.isResolutionSupported !== false,
                 )
               : trickModeAdaptation.representations
           ).map(toVideoRepresentation);
@@ -309,7 +314,10 @@ export function toVideoTrack(
   const videoTrack: IVideoTrack = {
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
+      ? adaptation.representations.filter(
+          (r) =>
+            isRepresentationPlayable(r) === true && r.isResolutionSupported !== false,
+        )
       : adaptation.representations
     ).map(toVideoRepresentation),
     label: adaptation.label,
@@ -333,14 +341,14 @@ export function toVideoTrack(
 export function toAudioRepresentation(
   representation: IRepresentationMetadata,
 ): IAudioRepresentation {
-  const { id, bitrate, chosenCodec, isSpatialAudio, isSupported, decipherable } =
+  const { id, bitrate, chosenCodec, isSpatialAudio, isCodecSupported, decipherable } =
     representation;
   return {
     id,
     bitrate,
     codec: chosenCodec,
     isSpatialAudio,
-    isCodecSupported: isSupported,
+    isCodecSupported,
     decipherable,
   };
 }
@@ -360,7 +368,8 @@ export function toVideoRepresentation(
     height,
     chosenCodec,
     hdrInfo,
-    isSupported,
+    isCodecSupported,
+    isResolutionSupported,
     decipherable,
     contentProtections,
   } = representation;
@@ -372,7 +381,8 @@ export function toVideoRepresentation(
     height,
     codec: chosenCodec,
     hdrInfo,
-    isCodecSupported: isSupported,
+    isCodecSupported,
+    isResolutionSupported,
     decipherable,
     contentProtections:
       contentProtections !== undefined
@@ -414,7 +424,8 @@ export function isRepresentationPlayable(
   if (representation.decipherable === false) {
     return false;
   }
-  return representation.isSupported;
+  // XXX TODO: `isResolutionSupported`?
+  return representation.isCodecSupported;
 }
 
 /**
