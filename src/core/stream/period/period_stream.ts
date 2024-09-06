@@ -487,7 +487,7 @@ function createOrReuseSegmentSink(
  */
 function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
   const representations = adaptation.representations.filter(
-    (r) => r.isPlayable() !== false && r.isResolutionSupported !== false,
+    (r) => r.isPlayable() !== false,
   );
   if (representations.length > 0) {
     return representations[0].getMimeTypeString();
