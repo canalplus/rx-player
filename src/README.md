@@ -57,9 +57,9 @@ it:
    |  |                                                            |
 ---|--|----------- RxPlayer Core (May run in a WebWorker) ---------|---
    |  |                                                            |
-   |  |  (*Only if running in a WebWorker)
-   |  |  Exchange messages with the main
-   V  |  thread and process them.
+   |  |  (*Only if running in a WebWorker)                         +----+
+   |  |  Exchange messages with the main                                |
+   V  |  thread and process them.                                       |
   +---------------------------+         +----------------------------+  |
   |                           | creates |                            |  |
   |        Worker Main*       |-------->|       Manifest Fetcher     |  |
@@ -119,7 +119,7 @@ Stream (./core/stream)     |                                       \    |
 |                  (audio) v    (video) v     (text) v   uses                | |
 |                  +--------+   +--------+    +--------+ --->+-------------+ | |
 | (Representation- |        |   |        |    |        |   | |   Segment   | | |
-| Stream).         |Repre...|-+ |Repre...|-+  |Repre...|-+ | |   fetcher   |-+ |
+| Stream).         |Repre...|-+ |Repre...|-+  |Repre...|-+ | |    Queue    |-+ |
 | Download and push| Stream | | | Stream | |  | Stream | | | |(./core/fetc |   |
 | segments based on|        | | |        | |  |        | | | |hers/segment)|   |
 | the current      +--------+ | +--------+ |  +--------+ | | +-------------+   |
@@ -174,9 +174,9 @@ For the subdirectories and files in this directory not represented in that schem
 - `manifest` (_./manifest_): Defines a `Manifest` structure and its properties, a central
   structure of the player describing a content.
 
-- `multithread` (_./multithread_): Global code specific to the multithreaded "flavor" of
-  the RxPlayer, that is a specific RxPlayer class which may run its main logic in a
-  WebWorker to improve performance.
+- `PlaybackObserver` (./playback_observer): Defines `PlaybackObserver` instances, used by
+  many modules to obtain playback-related properties (such as the playing position, the
+  current playback speed etc.).
 
 - `parsers` (_./parsers_): Various parsers for several formats
 
