@@ -465,9 +465,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const rebufferingController = this._createRebufferingController(playbackObserver,
                                                                     manifest,
+                                                                    segmentBuffersStore,
                                                                     speed,
                                                                     cancelSignal);
-
+    rebufferingController.addEventListener("needsReload", () => {
+      // NOTE couldn't both be always calculated at event destination?
+      // Maybe there are exceptions?
+      const position = initialSeekPerformed.getValue() ?
+        playbackObserver.getCurrentTime() :
+        initialTime;
+      const autoplay = initialPlayPerformed.getValue() ?
+        !playbackObserver.getIsPaused() :
+        autoPlay;
+      onReloadOrder({ position, autoPlay: autoplay });
+    }, cancelSignal);
     const contentTimeBoundariesObserver = this
       ._createContentTimeBoundariesObserver(manifest,
                                             mediaSource,
@@ -805,11 +816,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _createRebufferingController(
     playbackObserver : PlaybackObserver,
     manifest : Manifest,
+    segmentBuffersStore : SegmentBuffersStore,
     speed : IReadOnlySharedReference<number>,
     cancelSignal : CancellationSignal
   ) : RebufferingController {
     const rebufferingController = new RebufferingController(playbackObserver,
                                                             manifest,
+                                                            segmentBuffersStore,
                                                             speed);
     // Bubble-up events
     rebufferingController.addEventListener("stalled",
