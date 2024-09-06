@@ -4,7 +4,7 @@ on:
     types: [opened, synchronize, reopened, labeled]
 
 jobs:
-  inform-autobuilt:
+  inform-autobuild:
     if: ${{github.repository != 'canalplus/rx-player' && github.event.action == 'opened'}}
     runs-on: [ubuntu-latest]
     permissions:
@@ -18,7 +18,8 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `You can deploy a built version of the RxPlayer with the current branch by adding the label \`deploy\` to the pull request.`
+              body: `You can deploy a built version of the RxPlayer with the current branch by adding the label \`deploy\` to the pull request.
+              This will create a release on your github fork with name \`autobuild.${{ github.sha }}\` `
             })
 
   publish-autobuild-package:
