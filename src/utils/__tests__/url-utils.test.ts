@@ -197,6 +197,18 @@ describe("utils - getRelativeUrl", () => {
     ).toBe("..");
   });
 
+  it("should handle it right when one of the input has a path of length 0", () => {
+    expect(getRelativeUrl("http://github.com/", "http://github.com/rx-player")).toBe(
+      "rx-player",
+    );
+    expect(
+      getRelativeUrl(
+        "http://github.com/rx-player",
+        "http://github.com/" /** Without a starting slash */,
+      ),
+    ).toBe("..");
+  });
+
   it("should fail if scheme is different", () => {
     expect(
       getRelativeUrl("http://foo.com/foo/bar/cil/emp", "https://foo.com/foo/bar/cil/emp"),
