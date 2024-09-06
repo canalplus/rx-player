@@ -1,10 +1,12 @@
 # Changelog
 
-## v3.33.4 (upcoming)
+## Current dev build: v3.33.4-dev.2024090600
 
 ### Bug fixes
 
 -   Compat: Fix autoPlay on Tizen when the content starts on a discontinuity [#1500]
+-   DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV and `KSTB40xx`
+    set-top boxes [#1519, #1538]
 
 ### Other improvements
 
