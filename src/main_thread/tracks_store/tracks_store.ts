@@ -30,6 +30,7 @@ import type {
 } from "../../manifest";
 import {
   getSupportedAdaptations,
+  isRepresentationPlayable,
   toAudioTrack,
   toTextTrack,
   toVideoTrack,
@@ -399,10 +400,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             return false;
           }
           const playableRepresentations = adaptation.representations.filter(
-            (r) =>
-              r.isCodecSupported === true &&
-              r.decipherable !== false &&
-              r.isResolutionSupported !== false,
+            (r) => isRepresentationPlayable(r) === true,
           );
           return playableRepresentations.length > 0;
         },

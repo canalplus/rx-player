@@ -16,6 +16,7 @@
 
 import config from "../../../../config";
 import type { IAdaptation, IPeriod } from "../../../../manifest";
+import { isRepresentationPlayable } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
 import type { IRange } from "../../../../utils/ranges";
@@ -189,9 +190,7 @@ export default function getAdaptationSwitchStrategy(
 function hasCompatibleCodec(adaptation: IAdaptation, segmentSinkCodec: string): boolean {
   return adaptation.representations.some(
     (rep) =>
-      rep.isCodecSupported === true &&
-      rep.decipherable !== false &&
-      rep.isResolutionSupported !== false &&
+      isRepresentationPlayable(rep) === true &&
       areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec),
   );
 }
