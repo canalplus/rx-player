@@ -1,0 +1,91 @@
+name: Publish preview package
+on: 
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  inform-preview:
+    if: ${{github.repository != 'canalplus/rx-player' && 
+      github.event.action == 'opened'}}
+    runs-on: [ubuntu-latest]
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `You can deploy a preview version of the RxPlayer with the current branch by adding the tag \`deploy\` to the pull request.`
+            })
+
+  publish-preview-package:
+    # This action only runs on forks because it pushes a new release.
+    # It is not wanted on the main repository as it would spam the releases.
+    if: ${{github.repository != 'canalplus/rx-player' && 
+      (github.event.action == 'opened' ||
+      github.event.action == 'synchronize' ||
+      github.event.action == 'reopened') &&
+      contains(github.event.pull_request.labels.*.name, 'deploy') ||
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'deploy'}}
+
+    runs-on: [ubuntu-latest]
+    permissions:
+      packages: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 20
+          scope: "@${{ github.repository_owner }}"
+          registry-url: "https://npm.pkg.github.com"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Library
+        run: npm run build
+
+      - name: Create Zip file
+        run: echo "npm-pack=$(npm pack)" >> $GITHUB_OUTPUT
+        id: npm-pack
+      
+      - name: Upload Zip to release
+        uses: svenstaro/upload-release-action@v2
+        id: upload-action
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.npm-pack.outputs.npm-pack }}
+          asset_name: rx-player.tgz
+          tag: "preview.${{ github.sha }}"
+          release_name: "preview.${{ github.sha }}"
+          overwrite: true
+          body: "This is my release text"
+
+      - name: Comment PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `A gzipped version of the branch has been deployed to the following URL:  
+            ${{steps.upload-action.outputs.browser_download_url}}  
+            
+            You can import it by changing your \`package.json\`:
+            \`\`\`json
+            "rx-player": "${{steps.upload-action.outputs.browser_download_url}}"
+            \`\`\`
+            Then run:
+            \`npm install\``
+            })
