@@ -9,10 +9,10 @@
  * scripts for very different matters are present.
  */
 
-const fs = require("fs");
-const readline = require("readline");
-const path = require("path");
-const { spawn } = require("child_process");
+import { existsSync, readFileSync } from "fs";
+import readline from "readline";
+import { join } from "path";
+import { execSync } from "child_process";
 readline.emitKeypressEvents(process.stdin);
 
 run();
@@ -59,16 +59,24 @@ async function run() {
     console.log("\n");
     executeNpmScript(wantedScript);
 
+    // Ensure script is terminated here
+    process.exit(0);
+
     function recusivelyDiplayGroupCommands(groupEntries, indentation = "") {
       groupEntries.forEach(([name, val]) => {
         if (typeof val === "string") {
           commandArray.push(name);
           console.log(
             `${indentation}${emphasize(currCommandNb + ".")} [${emphasize(
-              `npm run ${name}`
-            )}]:`
+              `npm run ${name}`,
+            )}]:`,
           );
-          console.log(`${indentation}   ${val}\n`);
+          const nbLength = String(currCommandNb).length;
+          let numberSpace = "";
+          for (let i = 0; i < nbLength; i++) {
+            numberSpace += " ";
+          }
+          console.log(`${indentation}${numberSpace}  ${val}\n`);
           currCommandNb++;
         } else if (typeof val === "object") {
           console.log(`${indentation}\x1b[33m${name}\x1b[37m\n`);
@@ -92,8 +100,7 @@ async function run() {
  * @returns {Promise.<number>}
  */
 async function getChoice(maxNb) {
-  const answer =
-    maxNb <= 9 ? await getSingleCharChoice() : await readAnyLengthChoice();
+  const answer = maxNb <= 9 ? await getSingleCharChoice() : await readAnyLengthChoice();
   if (
     answer == null ||
     answer == "" ||
@@ -126,20 +133,14 @@ async function getChoice(maxNb) {
 function executeNpmScript(script) {
   const emphasizedCmdStr = emphasize(`npm run ${script}`);
   console.log(`Executing: ${emphasizedCmdStr}`);
-  const cmd = spawn("npm", ["run", script], {
-    stdio: "inherit",
-    stderr: "inherit",
-  });
-  process.on("SIGINT", function () {
-    cmd.kill("SIGINT");
-  });
-  process.on("SIGTERM", function () {
-    cmd.kill("SIGTERM");
-  });
-  cmd.on("error", (d) => {
-    process.stderr.write(`Error while executing command: ${d}`);
-  });
-  cmd.on("exit", (c) => process.exit(c));
+  try {
+    execSync(`npm run ${script}`, {
+      shell: true,
+      stdio: ["inherit", "inherit", "inherit"],
+    });
+  } catch (err) {
+    process.exit(err.status);
+  }
 }
 
 /**
@@ -164,7 +165,7 @@ function readAnyLengthChoice() {
     rl.question("Your choice (leave empty to exit): ", (ans) => {
       rl.close();
       resolve(ans);
-    })
+    }),
   );
 }
 
@@ -197,11 +198,9 @@ function getSingleCharChoice() {
  * @returns {Object}
  */
 function getPackageJSONContent() {
-  const filename = path.join(process.cwd(), "package.json");
-  if (!fs.existsSync(filename)) {
-    throw new Error(
-      "`package.json` was not found in the current working directory."
-    );
+  const filename = join(process.cwd(), "package.json");
+  if (!existsSync(filename)) {
+    throw new Error("`package.json` was not found in the current working directory.");
   }
-  return JSON.parse(fs.readFileSync(filename, "utf8"));
+  return JSON.parse(readFileSync(filename, "utf8"));
 }
