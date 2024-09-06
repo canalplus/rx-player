@@ -574,20 +574,20 @@ export interface IKeySystemOption {
    * that it's just the `maxSessionCacheSize` which is for now too high.
    *
    * However if your problem doesn't disappear after setting
-   * `closeSessionsOnStop` to `true`, you may try `renewMediaKeys` next.
+   * `closeSessionsOnStop` to `true`, you may try `reuseMediaKeys` next.
    */
   closeSessionsOnStop?: boolean;
   /**
-   * If `true`, we will create a new `MediaKeys` instance (a JavaScript object
-   * needed to decrypt contents) if needed for that content.
+   * If set to `true` or if not set, we might rely on the previous `MediaKeys`
+   * if a compatible one is already set on the media element, allowing to
+   * potentially speed-up content playback.
    *
-   * If `false` or if not set, we might rely on the previous `MediaKeys` if a
-   * compatible one is already set on the media element, allowing to potentailly
-   * speed-up content playback.
+   * If set to `false`, we will create a new `MediaKeys` instance (a
+   * JavaScript object needed to decrypt contents) if needed for that content.
    *
    * We noticed that reusing a previous MediaKeys had led to errors on a few
    * devices. For example some smart TVs had shown errors after playing several
-   * encrypted contents, errors which disappeared if we "renewed" the
+   * encrypted contents, errors which disappeared if we renewed the
    * `MediaKeys` for each content.
    *
    * We should already be able to detect most of those cases in the RxPlayer
@@ -611,10 +611,10 @@ export interface IKeySystemOption {
    *     `closeSessionsOnStop`.
    *
    *   - If none of the precedent work-arounds work however, you can try setting
-   *     `renewMediaKeys` to `true`. If it fixes your problem, please open an
+   *     `reuseMediaKeys` to `false`. If it fixes your problem, please open an
    *     RxPlayer issue so we can add your device to our list.
    */
-  renewMediaKeys?: boolean | undefined;
+  reuseMediaKeys?: boolean | undefined;
   singleLicensePer?: "content" | "periods" | "init-data";
   /**
    * Maximum number of `MediaKeySession` that should be created on the same

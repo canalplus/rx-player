@@ -251,23 +251,23 @@ Note that if setting that property to `true` fixes your issue, it may be that it
 the [`maxSessionCacheSize`](#maxsessioncachesize) which is for now too high.
 
 However if your problem doesn't disappear after setting `closeSessionsOnStop` to `true`,
-you may try [`renewMediaKeys`](#renewmediakeys) next.
+you may try [`reuseMediaKeys`](#renewmediakeys) next.
 
-### renewMediaKeys
+### reuseMediaKeys
 
-If `true`, we will create a new `MediaKeys` instance (a JavaScript object needed to
-decrypt contents) if needed for that content.
+If set to `true` or if not set, the RxPlayer might rely on the previous `MediaKeys` if a
+compatible one is already set on the media element, allowing to potentially speed-up
+content playback.
 
-If `false` or if not set, we might rely on the previous `MediaKeys` if a compatible one is
-already set on the media element, allowing to potentailly speed-up content playback.
+If set to `false`, the RxPlayer will create a new `MediaKeys` instance (a JavaScript
+object needed to decrypt contents) if needed for that content.
 
-We noticed that reusing a previous MediaKeys had led to errors on a few devices. For
+We noticed that reusing a previous `MediaKeys` had led to errors on a few devices. For
 example some smart TVs had shown errors after playing several encrypted contents, errors
-which disappeared if we "renewed" the `MediaKeys` for each content.
+which disappeared if we renewed the `MediaKeys` for each content.
 
-We should already be able to detect most of those cases in the RxPlayer logic. However, it
-is still possible that we don't know yet of a device which also has problem with that
-optimization.
+The RxPlayer should already be able to detect most of those cases. However, it is still
+possible that we don't know yet of a device which also has problem with that optimization.
 
 If you have issues appearing only after playing multiple encrypted contents:
 
@@ -283,8 +283,8 @@ If you have issues appearing only after playing multiple encrypted contents:
   If that second option doesn't seem to have an effect, you can just set
   `closeSessionsOnStop`.
 
-- If none of the precedent work-arounds work however, you can try setting `renewMediaKeys`
-  to `true`. If it fixes your problem, please open an RxPlayer issue so we can add your
+- If none of the precedent work-arounds work however, you can try setting `reuseMediaKeys`
+  to `false`. If it fixes your problem, please open an RxPlayer issue so we can add your
   device to our list.
 
 ### singleLicensePer
