@@ -12,13 +12,13 @@ describe("Compat - canReuseMediaKeys", () => {
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true as const,
+        isA1KStb40xx: false,
         isWebOs: false,
         isPhilipsNetTv: false,
         isPanasonic: false,
       };
     });
-    const canReuseMediaKeys =
-      jest.requireActual("../can_reuse_media_keys.ts");
+    const canReuseMediaKeys = jest.requireActual("../can_reuse_media_keys.ts");
     expect(canReuseMediaKeys.default()).toBe(true);
   });
 
@@ -26,6 +26,7 @@ describe("Compat - canReuseMediaKeys", () => {
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true as const,
+        isA1KStb40xx: false,
         isWebOs: true,
         isWebOs2022: false,
         isPanasonic: false,
@@ -40,6 +41,7 @@ describe("Compat - canReuseMediaKeys", () => {
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true as const,
+        isA1KStb40xx: false,
         isWebOs: false,
         isWebOs2022: false,
         isPanasonic: true,
@@ -54,10 +56,26 @@ describe("Compat - canReuseMediaKeys", () => {
     jest.mock("../browser_detection", () => {
       return {
         __esModule: true as const,
+        isA1KStb40xx: false,
         isWebOs: false,
         isWebOs2022: false,
         isPanasonic: false,
         isPhilipsNetTv: true,
+      };
+    });
+    const canReuseMediaKeys = jest.requireActual("../can_reuse_media_keys.ts");
+    expect(canReuseMediaKeys.default()).toBe(false);
+  });
+
+  it("should return false on A1 KSTB 40xxx", () => {
+    jest.mock("../browser_detection", () => {
+      return {
+        __esModule: true as const,
+        isA1KStb40xx: true,
+        isWebOs: false,
+        isWebOs2022: false,
+        isPanasonic: false,
+        isPhilipsNetTv: false,
       };
     });
     const canReuseMediaKeys = jest.requireActual("../can_reuse_media_keys.ts");
