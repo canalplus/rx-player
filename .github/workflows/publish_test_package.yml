@@ -1,10 +1,10 @@
-name: Publish preview package
+name: Publish autobuild package
 on: 
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
 jobs:
-  inform-preview:
+  inform-autobuilt:
     if: ${{github.repository != 'canalplus/rx-player' && 
       github.event.action == 'opened'}}
     runs-on: [ubuntu-latest]
@@ -19,10 +19,10 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `You can deploy a preview version of the RxPlayer with the current branch by adding the label \`deploy\` to the pull request.`
+              body: `You can deploy a built version of the RxPlayer with the current branch by adding the label \`deploy\` to the pull request.`
             })
 
-  publish-preview-package:
+  publish-autobuild-package:
     # This action only runs on forks because it pushes a new release.
     # It is not wanted on the main repository as it would spam the releases.
     if: ${{github.repository != 'canalplus/rx-player' && 
@@ -66,8 +66,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ steps.npm-pack.outputs.npm-pack }}
           asset_name: rx-player.tgz
-          tag: "preview.${{ github.sha }}"
-          release_name: "preview.${{ github.sha }}"
+          tag: "autobuild.${{ github.sha }}"
+          release_name: "autobuild.${{ github.sha }}"
           overwrite: true
           body: "Autobuild from branch ${{github.ref_name}}, commit hash: ${{github.sha}}, date: ${{ github.event.repository.updated_at }}"
 
@@ -79,7 +79,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `A gzipped version of the branch has been deployed to the following URL:  
+              body: `A built version of the branch has been deployed to the following URL:  
             ${{steps.upload-action.outputs.browser_download_url}}  
             
             You can import it by changing your \`package.json\`:
