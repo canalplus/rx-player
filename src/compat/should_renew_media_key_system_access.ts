@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-import { isIE11 } from "./browser_detection";
+import { isIE11, isPlayStation5 } from "./browser_detection";
 
 /**
  * Returns true if the current target require the MediaKeySystemAccess to be
  * renewed on each content.
+ *
+ * On PlayStation 5:
+ * When trying to close a mediaKeySession with sessionType "persistent-license",
+ * the device is not able to close the session (InvalidStateError).
+ * This mean we are not able to close sessions and therefore once we reach the limit
+ * of sessions available on the device we cannot create new ones.
+ * The solution we found is to renew the mediaKeySystemAccess to make the MediaKeys
+ * unavailable, the browser will close by it's own the MediaKeySessions associated
+ * with that MediaKeys.
+ * Notice that we tried to only renew the MediaKeys with
+ * `keySystemAccess.createMediaKeys()`, but the device throw a "Permission Denied" error
+ * when creating too many mediaKeys.
  * @returns {Boolean}
  */
 export default function shouldRenewMediaKeySystemAccess(): boolean {
-  return isIE11;
+  return isIE11 || isPlayStation5;
 }
