@@ -1,6 +1,7 @@
 import { MediaError } from "../../errors";
 import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import objectAssign from "../../utils/object_assign";
 import { CancellationSignal } from "../../utils/task_canceller";
 import { ICompatHTMLMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
@@ -18,6 +19,7 @@ import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
 import {
+  ICustomMediaEncryptedEvent,
   ICustomMediaKeys,
 } from "./custom_media_keys/types";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
@@ -65,7 +67,7 @@ export interface IEmeApiImplementation {
    */
   onEncrypted : (
     target : IEventTargetLike,
-    listener : (evt : unknown) => void,
+    listener : (evt : ICustomMediaEncryptedEvent) => void,
     cancelSignal : CancellationSignal,
   ) => void;
 
@@ -149,8 +151,8 @@ function getEmeApiImplementation(
     let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
 
     if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== undefined) {
-      onEncrypted = createCompatibleEventListener(["needkey"]);
       const callbacks = getWebKitMediaKeysCallbacks();
+      onEncrypted = createOnEncryptedForWebkit();
       isTypeSupported = callbacks.isTypeSupported;
       createCustomMediaKeys = callbacks.createCustomMediaKeys;
       setMediaKeys = callbacks.setMediaKeys;
@@ -166,7 +168,7 @@ function getEmeApiImplementation(
         implementation = "older-webkit";
       // This is for WebKit with prefixed EME api
       } else if (WebKitMediaKeysConstructor !== undefined) {
-        onEncrypted = createCompatibleEventListener(["needkey"]);
+        onEncrypted = createOnEncryptedForWebkit();
         const callbacks = getWebKitMediaKeysCallbacks();
         isTypeSupported = callbacks.isTypeSupported;
         createCustomMediaKeys = callbacks.createCustomMediaKeys;
@@ -270,6 +272,33 @@ function getEmeApiImplementation(
            onEncrypted,
            setMediaKeys,
            implementation };
+}
+/**
+ * Create an event listener for the "webkitneedkey" event
+ * @returns
+ */
+function createOnEncryptedForWebkit(): IEmeApiImplementation["onEncrypted"] {
+  const compatibleEventListener = createCompatibleEventListener(
+    ["needkey"],
+    undefined /* prefixes */
+  );
+  const onEncrypted = (
+    target: IEventTargetLike,
+    listener: (event: ICustomMediaEncryptedEvent) => void,
+    cancelSignal: CancellationSignal
+  ) => {
+    compatibleEventListener(
+      target,
+      (event?: Event) => {
+        const patchedEvent = objectAssign(event as MediaEncryptedEvent, {
+          forceSessionRecreation: true,
+        });
+        listener(patchedEvent);
+      },
+      cancelSignal
+    );
+  };
+  return onEncrypted;
 }
 
 /**
