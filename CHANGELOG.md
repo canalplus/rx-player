@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024090500
+## Current dev build: v4.2.0-dev.2024090600
 
 ### Features
 
@@ -22,9 +22,12 @@
 - Work-around the "hulu issue" seen on firefox 129 and 130 (`1911283` and `1912238` on
   bugzilla) which also impacted the RxPlayer [#1495, #1498]
 - Fix rare cases where the active Period would not be advertised by the RxPlayer [#1502]
-- DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV [#1515]
+- DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV, and `KSTB40XX`
+  set-top boxes [#1515]
 - DRM/Compat: fix content not starting on Safari because key are never considered usable
   for a track [#1479, #1512]
+- MULTI_THREAD: Fix rare `CancellationError` error happening when reloading while a reload
+  is pending. [#1528]
 - MULTI_THREAD: fix wrong Period considered as current in multi-Period DASH contents with
   the multi-thread feature [#1527]
 
