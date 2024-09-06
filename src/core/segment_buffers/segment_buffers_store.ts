@@ -17,6 +17,7 @@
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
+import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import { CancellationSignal } from "../../utils/task_canceller";
 import {
@@ -233,7 +234,8 @@ export default class SegmentBuffersStore {
     }
     this._initializedSegmentBuffers[bufferType] = null;
     if (SegmentBuffersStore.isNative(bufferType)) {
-      this._onNativeBufferAddedOrDisabled.forEach(cb => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach(cb => cb());
+      assert(this._onNativeBufferAddedOrDisabled.length === 0);
     }
   }
 
@@ -273,7 +275,8 @@ export default class SegmentBuffersStore {
                                                               codec,
                                                               this._mediaSource);
       this._initializedSegmentBuffers[bufferType] = nativeSegmentBuffer;
-      this._onNativeBufferAddedOrDisabled.forEach(cb => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach(cb => cb());
+      assert(this._onNativeBufferAddedOrDisabled.length === 0);
       return nativeSegmentBuffer;
     }
 
