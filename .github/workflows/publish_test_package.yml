@@ -55,11 +55,11 @@ jobs:
       - name: Build Library
         run: npm run build
 
-      - name: Create Zip file
+      - name: Create archive
         run: echo "npm-pack=$(npm pack)" >> $GITHUB_OUTPUT
         id: npm-pack
       
-      - name: Upload Zip to release
+      - name: Upload archive to release
         uses: svenstaro/upload-release-action@v2
         id: upload-action
         with:
@@ -69,7 +69,7 @@ jobs:
           tag: "preview.${{ github.sha }}"
           release_name: "preview.${{ github.sha }}"
           overwrite: true
-          body: "This is my release text"
+          body: "Autobuild from branch ${{github.ref_name}}, commit hash: ${{github.sha}}, date: ${{ github.event.repository.updated_at }}"
 
       - name: Comment PR
         uses: actions/github-script@v6
