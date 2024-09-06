@@ -91,7 +91,8 @@ function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
 
   if (
     (baseParts.path[0] === "/" || newParts.path[0] === "/") &&
-    baseParts.path[0] !== newParts.path[0]
+    baseParts.path[0] !== newParts.path[0] &&
+    (baseParts.authority.length === 0 || newParts.authority.length === 0)
   ) {
     return null;
   }

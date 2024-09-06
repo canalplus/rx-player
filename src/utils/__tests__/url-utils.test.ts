@@ -182,6 +182,21 @@ describe("utils - getRelativeUrl", () => {
     ).toEqual(".");
   });
 
+  it("should handle it right when one of the input is just a domain name without a path", () => {
+    expect(
+      getRelativeUrl(
+        "http://github.com" /** Without a starting slash */,
+        "http://github.com/rx-player",
+      ),
+    ).toBe("rx-player");
+    expect(
+      getRelativeUrl(
+        "http://github.com/rx-player",
+        "http://github.com" /** Without a starting slash */,
+      ),
+    ).toBe("..");
+  });
+
   it("should fail if scheme is different", () => {
     expect(
       getRelativeUrl("http://foo.com/foo/bar/cil/emp", "https://foo.com/foo/bar/cil/emp"),
