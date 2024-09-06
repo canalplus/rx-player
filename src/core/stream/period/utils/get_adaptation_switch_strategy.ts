@@ -190,7 +190,6 @@ function hasCompatibleCodec(adaptation: IAdaptation, segmentSinkCodec: string): 
   return adaptation.representations.some(
     (rep) =>
       rep.isPlayable() === true &&
-      rep.isResolutionSupported !== false &&
       areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec),
   );
 }

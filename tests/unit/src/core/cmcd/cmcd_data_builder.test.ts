@@ -28,6 +28,10 @@ vi.mock("../../../../../src/utils/url-utils", () => ({
   getRelativeUrl: mockGetRelativeUrl,
 }));
 
+vi.mock("../../../../../src/manifest", () => ({
+  isRepresentationPlayable: (rep: any): boolean => rep._playable,
+}));
+
 /** Helpers */
 function makePlaybackObserver(
   overrides: Partial<{
@@ -57,10 +61,11 @@ function makePlaybackObserver(
   return { getReference, getCurrentTime, listen, obs };
 }
 
-function makeRepresentation(bitrate: number, playable = true) {
+function makeRepresentation(bitrate: number, playable = true): any {
   return {
     bitrate,
     isPlayable: vi.fn(() => (playable ? true : false)),
+    _playable: playable,
   };
 }
 

@@ -246,10 +246,7 @@ export function toAudioTrack(
     audioDescription: adaptation.isAudioDescription === true,
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) =>
-            isRepresentationPlayable(r) === true && r.isResolutionSupported !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
       : adaptation.representations
     ).map(toAudioRepresentation),
     label: adaptation.label,
@@ -293,9 +290,7 @@ export function toVideoTrack(
           const representations = (
             filterPlayable
               ? trickModeAdaptation.representations.filter(
-                  (r) =>
-                    isRepresentationPlayable(r) === true &&
-                    r.isResolutionSupported !== false,
+                  (r) => isRepresentationPlayable(r) === true,
                 )
               : trickModeAdaptation.representations
           ).map(toVideoRepresentation);
@@ -314,10 +309,7 @@ export function toVideoTrack(
   const videoTrack: IVideoTrack = {
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) =>
-            isRepresentationPlayable(r) === true && r.isResolutionSupported !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
       : adaptation.representations
     ).map(toVideoRepresentation),
     label: adaptation.label,
@@ -421,11 +413,14 @@ export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
 export function isRepresentationPlayable(
   representation: IRepresentationMetadata,
 ): boolean | undefined {
-  if (representation.decipherable === false) {
-    return false;
+  if (representation.isCodecSupported === undefined) {
+    return undefined;
   }
-  // XXX TODO: `isResolutionSupported`?
-  return representation.isCodecSupported;
+  return (
+    representation.isCodecSupported &&
+    representation.isResolutionSupported !== false &&
+    representation.decipherable !== false
+  );
 }
 
 /**
