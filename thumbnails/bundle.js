@@ -25446,7 +25446,9 @@
 
   // src/compat/patch_webkit_source_buffer.ts
   function patchWebkitSourceBuffer() {
-    if (!is_node_default && !isNullOrUndefined(global_scope_default.WebKitSourceBuffer) && global_scope_default.WebKitSourceBuffer.prototype.addEventListener === void 0) {
+    if (!is_node_default && !isNullOrUndefined(
+      global_scope_default.WebKitSourceBuffer
+    ) && global_scope_default.WebKitSourceBuffer.prototype.addEventListener === void 0) {
       const sourceBufferWebkitRef = global_scope_default.WebKitSourceBuffer;
       const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
       for (const fnName in EventEmitter.prototype) {
@@ -25459,22 +25461,23 @@
         queue_microtask_default(() => {
           this.trigger(eventName, val);
           this.updating = false;
-          this.trigger("updateend");
+          this.trigger("updateend", new Event("updateend"));
         });
       };
       sourceBufferWebkitProto.appendBuffer = function(data2) {
+        var _a, _b;
         if (this.updating) {
           throw new Error("updating");
         }
-        this.trigger("updatestart");
+        this.trigger("updatestart", new Event("updatestart"));
         this.updating = true;
         try {
           this.append(data2);
         } catch (error) {
-          this._emitUpdate("error", error);
+          (_a = this._emitUpdate) == null ? void 0 : _a.call(this, "error", error);
           return;
         }
-        this._emitUpdate("update");
+        (_b = this._emitUpdate) == null ? void 0 : _b.call(this, "update", new Event("update"));
       };
     }
   }
@@ -25745,7 +25748,7 @@
   // src/utils/monotonic_timestamp.ts
   var mainThreadTimestampDiff = new reference_default(0);
   var getMonotonicTimeStamp = typeof performance !== "undefined" ? (
-    /* eslint-disable-next-line no-restricted-properties */
+    // eslint-disable-next-line no-restricted-properties
     () => performance.now() + mainThreadTimestampDiff.getValue()
   ) : () => Date.now() + mainThreadTimestampDiff.getValue();
   var monotonic_timestamp_default = getMonotonicTimeStamp;
@@ -25806,16 +25809,15 @@
         this.info = level >= this._levels.INFO ? generateLogFn("info", console.info.bind(console)) : noop_default;
         this.debug = level >= this._levels.DEBUG ? generateLogFn("log", console.log.bind(console)) : noop_default;
       } else {
-        const produceLogFn = (logLevel, namespace) => {
+        const produceLogFn = (logLevel) => {
           return level >= this._levels[logLevel] ? (...args) => {
-            const now = monotonic_timestamp_default();
-            return logFn(logLevel, [now, namespace, ...args]);
+            return logFn(logLevel, args);
           } : noop_default;
         };
-        this.error = produceLogFn("ERROR", "error");
-        this.warn = produceLogFn("WARNING", "warn");
-        this.info = produceLogFn("INFO", "info");
-        this.debug = produceLogFn("DEBUG", "log");
+        this.error = produceLogFn("ERROR");
+        this.warn = produceLogFn("WARNING");
+        this.info = produceLogFn("INFO");
+        this.debug = produceLogFn("DEBUG");
       }
       this.trigger("onLogLevelChange", {
         level: this._currentLevel,
@@ -25878,9 +25880,11 @@
   var isWebOs2021 = false;
   var isWebOs2022 = false;
   var isPanasonic = false;
+  var isPhilipsNetTv = false;
   var isPlayStation4 = false;
   var isPlayStation5 = false;
   var isXbox = false;
+  var isA1KStb40xx = false;
   (function findCurrentBrowser() {
     var _a, _b, _c;
     if (is_node_default) {
@@ -25926,10 +25930,14 @@
       } else if (/[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) || /[Cc]hr[o0]me\/79/.test(navigator.userAgent)) {
         isWebOs2021 = true;
       }
+    } else if (navigator.userAgent.indexOf("NETTV") !== -1 && navigator.userAgent.indexOf("Philips") !== -1) {
+      isPhilipsNetTv = true;
     } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
       isPanasonic = true;
     } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
       isXbox = true;
+    } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx")) {
+      isA1KStb40xx = true;
     }
   })();
 
@@ -26097,7 +26105,6 @@
      * @type {Number}
      */
     DEFAULT_MAX_VIDEO_BUFFER_SIZE: Infinity,
-    /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer ahead for each type of buffer, to avoid too much
      * memory usage when playing for a long time.
@@ -26107,8 +26114,6 @@
     MAXIMUM_MAX_BUFFER_AHEAD: {
       text: 5 * 60 * 60
     },
-    /* eslint-enable @typescript-eslint/consistent-type-assertions */
-    /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Minimum possible buffer ahead for each type of buffer, to avoid Garbage
      * Collecting too much data when it would have adverse effects.
@@ -26123,8 +26128,6 @@
       // same text track.
       text: 2 * 60
     },
-    /* eslint-enable @typescript-eslint/consistent-type-assertions */
-    /* eslint-disable @typescript-eslint/consistent-type-assertions */
     /**
      * Maximum possible buffer behind for each type of buffer, to avoid too much
      * memory usage when playing for a long time.
@@ -26134,7 +26137,6 @@
     MAXIMUM_MAX_BUFFER_BEHIND: {
       text: 5 * 60 * 60
     },
-    /* eslint-enable @typescript-eslint/consistent-type-assertions */
     /**
      * Default bitrate ceils initially set as the first content begins.
      *
@@ -26811,7 +26813,6 @@
      * or "playready" as a keySystem.
      * @type {Object}
      */
-    /* eslint-disable @typescript-eslint/consistent-type-assertions */
     EME_KEY_SYSTEMS: {
       clearkey: ["webkit-org.w3.clearkey", "org.w3.clearkey"],
       widevine: ["com.widevine.alpha"],
@@ -26823,7 +26824,6 @@
       ],
       fairplay: ["com.apple.fps.1_0"]
     },
-    /* eslint-enable @typescript-eslint/consistent-type-assertions */
     /**
      * The Manifest parsing logic has a notion of "unsafeMode" which allows to
      * speed-up this process a lot with a small risk of de-synchronization with
@@ -27096,18 +27096,18 @@
      *     retry will be performed.
      * @type Number
      */
-    DEFAULT_MAX_THUMBNAIL_REQUESTS_RETRY_ON_ERROR: 0,
+    DEFAULT_MAX_THUMBNAIL_REQUESTS_RETRY_ON_ERROR: 1,
     /**
      * Default time interval after which a thumbnail request will timeout, in ms.
      * @type {Number}
      */
-    DEFAULT_THUMBNAIL_REQUEST_TIMEOUT: 7 * 1e3,
+    DEFAULT_THUMBNAIL_REQUEST_TIMEOUT: 10 * 1e3,
     /**
      * Default connection time after which a thumbnail request conncection will
      * timeout, in ms.
      * @type {Number}
      */
-    DEFAULT_THUMBNAIL_CONNECTION_TIMEOUT: 5 * 1e3
+    DEFAULT_THUMBNAIL_CONNECTION_TIMEOUT: 7 * 1e3
   };
   var default_config_default = DEFAULT_CONFIG;
 
@@ -27123,8 +27123,7 @@
       throw new TypeError("Cannot convert undefined or null to object");
     }
     const to = Object(target);
-    for (let i = 0; i < sources.length; i++) {
-      const source = sources[i];
+    for (const source of sources) {
       for (const key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
           to[key] = source[key];
@@ -27501,7 +27500,7 @@
   // src/compat/has_mse_in_worker.ts
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
-  var hasMseInWorker = typeof MediaSource === "function" && /* eslint-disable-next-line */
+  var hasMseInWorker = typeof MediaSource === "function" && // eslint-disable-next-line
   MediaSource.canConstructInDedicatedWorker === true;
   var has_mse_in_worker_default = hasMseInWorker;
 
@@ -27903,7 +27902,7 @@
   function toJSONForIE(data2) {
     try {
       return JSON.parse(data2);
-    } catch (e) {
+    } catch (_e) {
       return null;
     }
   }
@@ -28213,8 +28212,7 @@
 
   // src/features/add_features.ts
   function addFeatures(featureFuncList) {
-    for (let i = 0; i < featureFuncList.length; i++) {
-      const addFeature = featureFuncList[i];
+    for (const addFeature of featureFuncList) {
       if (typeof addFeature === "function") {
         addFeature(features_object_default);
       } else if (!isNullOrUndefined(addFeature) && typeof addFeature._addFeature === "function") {
@@ -28898,7 +28896,7 @@
      * @returns {Array.<Object>}
      */
     getEncryptionData(drmSystemId) {
-      var _a, _b;
+      var _a;
       const allInitData = this.getAllEncryptionData();
       const filtered = [];
       for (let i = 0; i < allInitData.length; i++) {
@@ -28907,7 +28905,7 @@
         for (let j = 0; j < initData.values.length; j++) {
           if (initData.values[j].systemId.toLowerCase() === drmSystemId.toLowerCase()) {
             if (!createdObjForType) {
-              const keyIds = (_b = (_a = this.contentProtections) == null ? void 0 : _a.keyIds) == null ? void 0 : _b.map((val) => val.keyId);
+              const keyIds = (_a = this.contentProtections) == null ? void 0 : _a.keyIds;
               filtered.push({
                 type: initData.type,
                 keyIds,
@@ -28949,11 +28947,11 @@
      * @returns {Array.<Object>}
      */
     getAllEncryptionData() {
-      var _a, _b;
+      var _a;
       if (this.contentProtections === void 0 || this.contentProtections.initData.length === 0) {
         return [];
       }
-      const keyIds = (_b = (_a = this.contentProtections) == null ? void 0 : _a.keyIds) == null ? void 0 : _b.map((val) => val.keyId);
+      const keyIds = (_a = this.contentProtections) == null ? void 0 : _a.keyIds;
       return this.contentProtections.initData.map((x) => {
         return { type: x.type, keyIds, values: x.values };
       });
@@ -28978,7 +28976,7 @@
       let hasUpdatedProtectionData = false;
       if (this.contentProtections === void 0) {
         this.contentProtections = {
-          keyIds: keyId !== void 0 ? [{ keyId }] : [],
+          keyIds: keyId !== void 0 ? [keyId] : [],
           initData: [{ type: initDataType, values: data2 }]
         };
         return true;
@@ -28986,17 +28984,17 @@
       if (keyId !== void 0) {
         const keyIds = this.contentProtections.keyIds;
         if (keyIds === void 0) {
-          this.contentProtections.keyIds = [{ keyId }];
+          this.contentProtections.keyIds = [keyId];
         } else {
           let foundKeyId = false;
           for (const knownKeyId of keyIds) {
-            if (areArraysOfNumbersEqual(knownKeyId.keyId, keyId)) {
+            if (areArraysOfNumbersEqual(knownKeyId, keyId)) {
               foundKeyId = true;
             }
           }
           if (!foundKeyId) {
             log_default.warn("Manifest: found unanounced key id.");
-            keyIds.push({ keyId });
+            keyIds.push(keyId);
           }
         }
       }
@@ -29129,9 +29127,7 @@
           if (representation.contentProtections !== void 0) {
             reprObject.contentProtections = {};
             if (representation.contentProtections.keyIds !== void 0) {
-              const keyIds = representation.contentProtections.keyIds.map(
-                ({ keyId }) => keyId
-              );
+              const keyIds = representation.contentProtections.keyIds;
               reprObject.contentProtections.keyIds = keyIds;
             }
           }
@@ -29755,7 +29751,8 @@
   init_define_LOGGER_LEVEL();
   var WebKitMediaKeysConstructor;
   var { WebKitMediaKeys } = global_scope_default;
-  if (WebKitMediaKeys !== void 0 && typeof WebKitMediaKeys.isTypeSupported === "function" && typeof WebKitMediaKeys.prototype.createSession === "function" && typeof HTMLMediaElement.prototype.webkitSetMediaKeys === "function") {
+  if (WebKitMediaKeys !== void 0 && typeof WebKitMediaKeys.isTypeSupported === "function" && // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  typeof WebKitMediaKeys.prototype.createSession === "function" && typeof HTMLMediaElement.prototype.webkitSetMediaKeys === "function") {
     WebKitMediaKeysConstructor = WebKitMediaKeys;
   }
 
@@ -29827,7 +29824,7 @@
   init_define_LOGGER_LEVEL();
   var MSMediaKeysConstructor;
   var { MSMediaKeys } = global_scope_default;
-  if (MSMediaKeys !== void 0 && MSMediaKeys.prototype !== void 0 && typeof MSMediaKeys.isTypeSupported === "function" && /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  if (MSMediaKeys !== void 0 && MSMediaKeys.prototype !== void 0 && typeof MSMediaKeys.isTypeSupported === "function" && // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MSMediaKeys.prototype.createSession === "function") {
     MSMediaKeysConstructor = MSMediaKeys;
   }
@@ -29979,7 +29976,7 @@
   init_define_LOGGER_LEVEL();
   var MozMediaKeysConstructor;
   var { MozMediaKeys } = global_scope_default;
-  if (MozMediaKeys !== void 0 && MozMediaKeys.prototype !== void 0 && typeof MozMediaKeys.isTypeSupported === "function" && /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  if (MozMediaKeys !== void 0 && MozMediaKeys.prototype !== void 0 && typeof MozMediaKeys.isTypeSupported === "function" && // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MozMediaKeys.prototype.createSession === "function") {
     MozMediaKeysConstructor = MozMediaKeys;
   }
@@ -30911,8 +30908,8 @@
       let isTypeSupported;
       let createCustomMediaKeys;
       if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== void 0) {
-        onEncrypted = createCompatibleEventListener(["needkey"]);
         const callbacks = getWebKitMediaKeysCallbacks();
+        onEncrypted = createOnEncryptedForWebkit();
         isTypeSupported = callbacks.isTypeSupported;
         createCustomMediaKeys = callbacks.createCustomMediaKeys;
         setMediaKeys2 = callbacks.setMediaKeys;
@@ -30926,7 +30923,7 @@
           setMediaKeys2 = callbacks.setMediaKeys;
           implementation = "older-webkit";
         } else if (WebKitMediaKeysConstructor !== void 0) {
-          onEncrypted = createCompatibleEventListener(["needkey"]);
+          onEncrypted = createOnEncryptedForWebkit();
           const callbacks = getWebKitMediaKeysCallbacks();
           isTypeSupported = callbacks.isTypeSupported;
           createCustomMediaKeys = callbacks.createCustomMediaKeys;
@@ -31020,6 +31017,25 @@
       setMediaKeys: setMediaKeys2,
       implementation
     };
+  }
+  function createOnEncryptedForWebkit() {
+    const compatibleEventListener = createCompatibleEventListener(
+      ["needkey"],
+      void 0
+    );
+    const onEncrypted = (target, listener, cancelSignal) => {
+      compatibleEventListener(
+        target,
+        (event) => {
+          const patchedEvent = object_assign_default(event, {
+            forceSessionRecreation: true
+          });
+          listener(patchedEvent);
+        },
+        cancelSignal
+      );
+    };
+    return onEncrypted;
   }
   function defaultSetMediaKeys(elt, mediaKeys) {
     try {
@@ -31916,14 +31932,14 @@
     return false;
   }
   function getInitData(encryptedEvent) {
-    const { initData, initDataType } = encryptedEvent;
+    const { initData, initDataType, forceSessionRecreation } = encryptedEvent;
     if (isNullOrUndefined(initData)) {
       log_default.warn("Compat: No init data found on media encrypted event.");
       return null;
     }
     const initDataBytes = new Uint8Array(initData);
     const values = getInitializationDataValues(initDataBytes);
-    return { type: initDataType, values };
+    return { type: initDataType, values, forceSessionRecreation };
   }
 
   // src/compat/eme/load_session.ts
@@ -32006,6 +32022,7 @@
   async function attachMediaKeys(mediaElement, {
     emeImplementation,
     keySystemOptions,
+    askedConfiguration,
     loadedSessionsStore,
     mediaKeySystemAccess,
     mediaKeys
@@ -32021,7 +32038,8 @@
       keySystemOptions,
       mediaKeySystemAccess,
       mediaKeys,
-      loadedSessionsStore
+      loadedSessionsStore,
+      askedConfiguration
     });
     if (mediaElement.mediaKeys === mediaKeys) {
       return;
@@ -32251,7 +32269,7 @@
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
   function canReuseMediaKeys() {
-    return !isWebOs && !isPanasonic;
+    return !isWebOs && !isPhilipsNetTv && !isPanasonic && !isA1KStb40xx;
   }
 
   // src/main_thread/decrypt/find_key_system.ts
@@ -32335,7 +32353,11 @@
     if (codecsA === "" || codecsB === "") {
       return false;
     }
-    if (codecsA.split(".")[0] !== codecsB.split(".")[0]) {
+    let initialPartA = codecsA.split(".")[0];
+    initialPartA = initialPartA === "hev1" ? "hvc1" : initialPartA;
+    let initialPartB = codecsB.split(".")[0];
+    initialPartB = initialPartB === "hev1" ? "hvc1" : initialPartB;
+    if (initialPartA !== initialPartB) {
       return false;
     }
     return true;
@@ -32372,7 +32394,7 @@
   }
 
   // src/main_thread/decrypt/find_key_system.ts
-  function checkCachedMediaKeySystemAccess(keySystems, currentKeySystemAccess, currentKeySystemOptions) {
+  function checkCachedMediaKeySystemAccess(keySystems, askedConfiguration, currentKeySystemAccess, currentKeySystemOptions) {
     const mksConfiguration = currentKeySystemAccess.getConfiguration();
     if (shouldRenewMediaKeySystemAccess() || isNullOrUndefined(mksConfiguration)) {
       return null;
@@ -32392,7 +32414,8 @@
     if (firstCompatibleOption !== void 0) {
       return {
         keySystemOptions: firstCompatibleOption,
-        keySystemAccess: currentKeySystemAccess
+        keySystemAccess: currentKeySystemAccess,
+        askedConfiguration
       };
     }
     return null;
@@ -32486,6 +32509,28 @@
       persistentState,
       sessionTypes
     };
+    if (audioCapabilitiesConfig !== void 0) {
+      if (videoCapabilitiesConfig !== void 0) {
+        return [wantedMediaKeySystemConfiguration];
+      }
+      return [
+        wantedMediaKeySystemConfiguration,
+        __spreadProps(__spreadValues({}, wantedMediaKeySystemConfiguration), {
+          // Re-try without `videoCapabilities` in case the EME implementation is
+          // buggy
+          videoCapabilities: void 0
+        })
+      ];
+    } else if (videoCapabilitiesConfig !== void 0) {
+      return [
+        wantedMediaKeySystemConfiguration,
+        __spreadProps(__spreadValues({}, wantedMediaKeySystemConfiguration), {
+          // Re-try without `audioCapabilities` in case the EME implementation is
+          // buggy
+          audioCapabilities: void 0
+        })
+      ];
+    }
     return [
       wantedMediaKeySystemConfiguration,
       // Some legacy implementations have issues with `audioCapabilities` and
@@ -32497,16 +32542,15 @@
       })
     ];
   }
-  function extractCodecSupportListFromConfiguration(audioCapabilitiesConfig, videoCapabilitiesConfig, mksConfiguration) {
-    var _a, _b;
-    const { EME_DEFAULT_AUDIO_CODECS, EME_DEFAULT_VIDEO_CODECS } = config_default.getCurrent();
-    const testedAudioCodecs = (audioCapabilitiesConfig == null ? void 0 : audioCapabilitiesConfig.type) === "contentType" ? audioCapabilitiesConfig == null ? void 0 : audioCapabilitiesConfig.value : EME_DEFAULT_AUDIO_CODECS;
-    const testedVideoCodecs = (videoCapabilitiesConfig == null ? void 0 : videoCapabilitiesConfig.type) === "contentType" ? videoCapabilitiesConfig.value : EME_DEFAULT_VIDEO_CODECS;
-    const testedCodecs = testedAudioCodecs.concat(testedVideoCodecs);
-    const supportedVideoCodecs = (_a = mksConfiguration.videoCapabilities) == null ? void 0 : _a.map(
+  function extractCodecSupportListFromConfiguration(initialConfiguration, mksConfiguration) {
+    var _a, _b, _c, _d, _e, _f;
+    const testedAudioCodecs = (_b = (_a = initialConfiguration.audioCapabilities) == null ? void 0 : _a.map((v) => v.contentType)) != null ? _b : [];
+    const testedVideoCodecs = (_d = (_c = initialConfiguration.videoCapabilities) == null ? void 0 : _c.map((v) => v.contentType)) != null ? _d : [];
+    const testedCodecs = testedAudioCodecs.concat(testedVideoCodecs).filter((c) => c !== void 0);
+    const supportedVideoCodecs = (_e = mksConfiguration.videoCapabilities) == null ? void 0 : _e.map(
       (entry) => entry.contentType
     );
-    const supportedAudioCodecs = (_b = mksConfiguration.audioCapabilities) == null ? void 0 : _b.map(
+    const supportedAudioCodecs = (_f = mksConfiguration.audioCapabilities) == null ? void 0 : _f.map(
       (entry) => entry.contentType
     );
     const supportedCodecs = [
@@ -32534,6 +32578,7 @@
       if (eme_default.implementation === currentState.emeImplementation.implementation) {
         const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(
           keySystemsConfigs,
+          currentState.askedConfiguration,
           currentState.mediaKeySystemAccess,
           currentState.keySystemOptions
         );
@@ -32543,10 +32588,10 @@
             type: "reuse-media-key-system-access",
             value: {
               mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+              askedConfiguration: cachedKeySystemAccess.askedConfiguration,
               options: cachedKeySystemAccess.keySystemOptions,
               codecSupport: extractCodecSupportListFromConfiguration(
-                cachedKeySystemAccess.keySystemOptions.audioCapabilitiesConfig,
-                cachedKeySystemAccess.keySystemOptions.videoCapabilitiesConfig,
+                cachedKeySystemAccess.askedConfiguration,
                 cachedKeySystemAccess.keySystemAccess.getConfiguration()
               )
             }
@@ -32590,28 +32635,32 @@
       log_default.debug(
         `DRM: Request keysystem access ${keyType},${index + 1} of ${keySystemsType.length}`
       );
-      try {
-        const keySystemAccess = await testKeySystem(keyType, keySystemConfigurations);
-        log_default.info("DRM: Found compatible keysystem", keyType, index + 1);
-        return {
-          type: "create-media-key-system-access",
-          value: {
-            options: keySystemOptions,
-            mediaKeySystemAccess: keySystemAccess,
-            codecSupport: extractCodecSupportListFromConfiguration(
-              keySystemOptions.audioCapabilitiesConfig,
-              keySystemOptions.videoCapabilitiesConfig,
-              keySystemAccess.getConfiguration()
-            )
+      let keySystemAccess;
+      for (let configIdx = 0; configIdx < keySystemConfigurations.length; configIdx++) {
+        const keySystemConfiguration = keySystemConfigurations[configIdx];
+        try {
+          keySystemAccess = await testKeySystem(keyType, [keySystemConfiguration]);
+          log_default.info("DRM: Found compatible keysystem", keyType, index + 1);
+          return {
+            type: "create-media-key-system-access",
+            value: {
+              options: keySystemOptions,
+              mediaKeySystemAccess: keySystemAccess,
+              askedConfiguration: keySystemConfiguration,
+              codecSupport: extractCodecSupportListFromConfiguration(
+                keySystemConfiguration,
+                keySystemAccess.getConfiguration()
+              )
+            }
+          };
+        } catch (_) {
+          log_default.debug("DRM: Rejected access to keysystem", keyType, index + 1, configIdx);
+          if (cancelSignal.cancellationError !== null) {
+            throw cancelSignal.cancellationError;
           }
-        };
-      } catch (_) {
-        log_default.debug("DRM: Rejected access to keysystem", keyType, index + 1);
-        if (cancelSignal.cancellationError !== null) {
-          throw cancelSignal.cancellationError;
         }
-        return recursivelyTestKeySystems(index + 1);
       }
+      return recursivelyTestKeySystems(index + 1);
     }
   }
   async function testKeySystem(keyType, keySystemConfigurations) {
@@ -33451,18 +33500,19 @@
                   return i;
                 }
               } else {
-                const formatted2 = initData.values.getFormattedValues();
-                if (areInitializationValuesCompatible(formatted2, entry.values)) {
+                const formatted = initData.values.getFormattedValues();
+                if (areInitializationValuesCompatible(formatted, entry.values)) {
                   return i;
                 }
               }
               break;
-            case 3:
+            case 3: {
               const formatted = initData.values.getFormattedValues();
               if (areInitializationValuesCompatible(formatted, entry.values)) {
                 return i;
               }
               break;
+            }
             case 2: {
               const { initData: concatInitData, initDataHash: concatHash } = getConcatenatedInitDataInfo();
               if (entry.initDataHash === concatHash) {
@@ -33630,7 +33680,7 @@
     if (cancelSignal.cancellationError !== null) {
       throw cancelSignal.cancellationError;
     }
-    const { options, mediaKeySystemAccess, codecSupport } = evt.value;
+    const { options, mediaKeySystemAccess, askedConfiguration, codecSupport } = evt.value;
     const currentState = media_keys_infos_store_default.getState(mediaElement);
     const persistentSessionsStore = createPersistentSessionsStorage(options);
     if (canReuseMediaKeys() && currentState !== null && evt.type === "reuse-media-key-system-access") {
@@ -33639,6 +33689,7 @@
         return {
           mediaKeys: mediaKeys2,
           mediaKeySystemAccess,
+          askedConfiguration,
           stores: { loadedSessionsStore: loadedSessionsStore2, persistentSessionsStore },
           options,
           codecSupport
@@ -33651,6 +33702,7 @@
     return {
       mediaKeys,
       mediaKeySystemAccess,
+      askedConfiguration,
       stores: { loadedSessionsStore, persistentSessionsStore },
       options,
       codecSupport
@@ -34342,7 +34394,7 @@
         return;
       }
       const { mediaElement, mediaKeysInfo } = this._stateData.data;
-      const { options, mediaKeys, mediaKeySystemAccess, stores } = mediaKeysInfo;
+      const { options, mediaKeys, mediaKeySystemAccess, stores, askedConfiguration } = mediaKeysInfo;
       const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
       if (shouldDisableLock) {
         this._stateData = {
@@ -34362,6 +34414,7 @@
         loadedSessionsStore: stores.loadedSessionsStore,
         mediaKeySystemAccess,
         mediaKeys,
+        askedConfiguration,
         keySystemOptions: options
       };
       log_default.debug("DRM: Attaching current MediaKeys");
@@ -34713,6 +34766,11 @@
       if (compatibleSessionInfo === void 0) {
         return false;
       }
+      const forceSessionRecreation = initializationData.forceSessionRecreation;
+      if (forceSessionRecreation === true) {
+        this.removeSessionForInitData(initializationData, mediaKeysData);
+        return false;
+      }
       const blacklistedSessionError = compatibleSessionInfo.blacklistedSessionError;
       if (!isNullOrUndefined(blacklistedSessionError)) {
         if (initializationData.type === void 0 || initializationData.content === void 0) {
@@ -34774,6 +34832,36 @@
         this._currentSessions.splice(indexOf, 1);
       }
       return false;
+    }
+    /**
+     * Remove the session corresponding to the initData provided, and close it.
+     * It does nothing if no session was found for this initData.
+     * @param {Object} initData : The initialization data corresponding to the session
+     * that need to be removed
+     * @param {Object} mediaKeysData : The media keys data
+     */
+    removeSessionForInitData(initData, mediaKeysData) {
+      const { stores } = mediaKeysData;
+      const entry = stores.loadedSessionsStore.reuse(initData);
+      if (entry !== null) {
+        stores.loadedSessionsStore.closeSession(entry.mediaKeySession).catch(
+          () => log_default.error("DRM: Cannot close the session from the loaded session store")
+        );
+      }
+      const compatibleSessionInfo = arrayFind(
+        this._currentSessions,
+        (x) => x.record.isCompatibleWith(initData)
+      );
+      if (compatibleSessionInfo === void 0) {
+        return;
+      }
+      const indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
+      if (indexOf !== -1) {
+        log_default.debug(
+          "DRM: A session from a processed init is removed due to forceSessionRecreation policy."
+        );
+        this._currentSessions.splice(indexOf, 1);
+      }
     }
     /**
      * Callback that should be called if an error that made the current
@@ -34953,8 +35041,8 @@
     for (const adaptation of adaptations) {
       for (const representation of adaptation.representations) {
         if (representation.contentProtections !== void 0 && representation.contentProtections.keyIds !== void 0) {
-          for (const kidInf of representation.contentProtections.keyIds) {
-            set2.add(kidInf.keyId);
+          for (const kid of representation.contentProtections.keyIds) {
+            set2.add(kid);
           }
         }
       }
@@ -35174,8 +35262,7 @@
   }
   function getPeriodForTime(manifest, time) {
     let nextPeriod = null;
-    for (let i = manifest.periods.length - 1; i >= 0; i--) {
-      const period = manifest.periods[i];
+    for (const period of manifest.periods) {
       if (periodContainsTime(period, time, nextPeriod)) {
         return period;
       }
@@ -35290,7 +35377,8 @@
       codecs,
       hdrInfo,
       isSupported,
-      decipherable
+      decipherable,
+      contentProtections
     } = representation;
     return {
       id,
@@ -35301,7 +35389,10 @@
       codec: codecs == null ? void 0 : codecs[0],
       hdrInfo,
       isCodecSupported: isSupported,
-      decipherable
+      decipherable,
+      contentProtections: contentProtections !== void 0 ? {
+        keyIds: contentProtections.keyIds
+      } : void 0
     };
   }
   function toTaggedTrack(adaptation) {
@@ -35324,17 +35415,17 @@
       if (contentKIDs !== void 0) {
         for (const elt of contentKIDs) {
           for (const blacklistedKeyId of blacklistedKeyIds) {
-            if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
+            if (areArraysOfNumbersEqual(blacklistedKeyId, elt)) {
               return false;
             }
           }
           for (const whitelistedKeyId of whitelistedKeyIds) {
-            if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
+            if (areArraysOfNumbersEqual(whitelistedKeyId, elt)) {
               return true;
             }
           }
           for (const delistedKeyId of delistedKeyIds) {
-            if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
+            if (areArraysOfNumbersEqual(delistedKeyId, elt)) {
               return void 0;
             }
           }
@@ -35602,19 +35693,16 @@
           "No supported audio and video tracks."
         );
       }
-      if (args.thumbnailTrack !== null) {
-        this.thumbnailTrack = {
-          mimeType: args.thumbnailTrack.mimeType,
-          index: args.thumbnailTrack.index,
-          cdnMetadata: args.thumbnailTrack.cdnMetadata,
-          height: args.thumbnailTrack.height,
-          width: args.thumbnailTrack.width,
-          horizontalTiles: args.thumbnailTrack.horizontalTiles,
-          verticalTiles: args.thumbnailTrack.verticalTiles
-        };
-      } else {
-        this.thumbnailTrack = null;
-      }
+      this.thumbnailTracks = args.thumbnailTracks.map((thumbnailTrack) => ({
+        id: thumbnailTrack.id,
+        mimeType: thumbnailTrack.mimeType,
+        index: thumbnailTrack.index,
+        cdnMetadata: thumbnailTrack.cdnMetadata,
+        height: thumbnailTrack.height,
+        width: thumbnailTrack.width,
+        horizontalTiles: thumbnailTrack.horizontalTiles,
+        verticalTiles: thumbnailTrack.verticalTiles
+      }));
       this.duration = args.duration;
       this.start = args.start;
       if (!isNullOrUndefined(this.duration) && !isNullOrUndefined(this.start)) {
@@ -35745,13 +35833,14 @@
         id: this.id,
         streamEvents: this.streamEvents,
         adaptations,
-        thumbnailTrack: this.thumbnailTrack === null ? null : {
-          mimeType: this.thumbnailTrack.mimeType,
-          height: this.thumbnailTrack.height,
-          width: this.thumbnailTrack.width,
-          horizontalTiles: this.thumbnailTrack.horizontalTiles,
-          verticalTiles: this.thumbnailTrack.verticalTiles
-        }
+        thumbnailTracks: this.thumbnailTracks.map((thumbnailTrack) => ({
+          id: thumbnailTrack.id,
+          mimeType: thumbnailTrack.mimeType,
+          height: thumbnailTrack.height,
+          width: thumbnailTrack.width,
+          horizontalTiles: thumbnailTrack.horizontalTiles,
+          verticalTiles: thumbnailTrack.verticalTiles
+        }))
       };
     }
   };
@@ -37441,6 +37530,188 @@ ${event}`
     });
   }
 
+  // src/main_thread/render_thumbnail.ts
+  init_define_ENVIRONMENT();
+  init_define_LOGGER_LEVEL();
+  async function renderThumbnail(contentInfos, options) {
+    const { time, container } = options;
+    if (contentInfos === null || contentInfos.fetchThumbnailDataCallback === null || contentInfos.manifest === null) {
+      return Promise.reject(
+        new ThumbnailRenderingError(
+          "NO_CONTENT",
+          "Cannot get thumbnail: no content loaded"
+        )
+      );
+    }
+    const { thumbnailRequestsInfo, currentContentCanceller } = contentInfos;
+    const canceller = new TaskCanceller();
+    canceller.linkToSignal(currentContentCanceller.signal);
+    let imageUrl;
+    const olderTaskSameContainer = thumbnailRequestsInfo.pendingRequests.get(container);
+    olderTaskSameContainer == null ? void 0 : olderTaskSameContainer.cancel();
+    thumbnailRequestsInfo.pendingRequests.set(container, canceller);
+    const onFinished = () => {
+      canceller.cancel();
+      thumbnailRequestsInfo.pendingRequests.delete(container);
+      setTimeout(() => {
+        if (imageUrl !== void 0) {
+          URL.revokeObjectURL(imageUrl);
+        }
+      }, 0);
+    };
+    try {
+      const period = getPeriodForTime(contentInfos.manifest, time);
+      if (period === void 0) {
+        throw new ThumbnailRenderingError("NO_THUMBNAIL", "Wanted Period not found.");
+      }
+      const thumbnailTracks = period.thumbnailTracks;
+      const thumbnailTrack = options.thumbnailTrackId !== void 0 ? arrayFind(thumbnailTracks, (t) => t.id === options.thumbnailTrackId) : thumbnailTracks[0];
+      if (thumbnailTrack === void 0) {
+        if (options.thumbnailTrackId !== void 0) {
+          throw new ThumbnailRenderingError(
+            "NO_THUMBNAIL",
+            "Given `thumbnailTrackId` not found"
+          );
+        } else {
+          throw new ThumbnailRenderingError(
+            "NO_THUMBNAIL",
+            "Wanted Period has no thumbnail track."
+          );
+        }
+      }
+      const { lastResponse } = thumbnailRequestsInfo;
+      let res;
+      if (lastResponse !== null && lastResponse.thumbnailTrackId === thumbnailTrack.id && lastResponse.periodId === period.id) {
+        const previousThumbs = lastResponse.response.thumbnails;
+        if (previousThumbs.length > 0 && time >= previousThumbs[0].start && time < previousThumbs[previousThumbs.length - 1].end) {
+          res = lastResponse.response;
+        }
+      }
+      if (res === void 0) {
+        res = await contentInfos.fetchThumbnailDataCallback(
+          period.id,
+          thumbnailTrack.id,
+          time
+        );
+        thumbnailRequestsInfo.lastResponse = {
+          response: res,
+          periodId: period.id,
+          thumbnailTrackId: thumbnailTrack.id
+        };
+      }
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (context === null) {
+        throw new ThumbnailRenderingError(
+          "RENDERING",
+          "Cannot display thumbnail: cannot create canvas context"
+        );
+      }
+      let foundIdx;
+      for (let i = 0; i < res.thumbnails.length; i++) {
+        if (res.thumbnails[i].start <= time && res.thumbnails[i].end > time) {
+          foundIdx = i;
+          break;
+        }
+      }
+      if (foundIdx === void 0) {
+        throw new Error("Cannot display thumbnail: time not found in fetched data");
+      }
+      const image = new Image();
+      const blob = new Blob([res.data], { type: res.mimeType });
+      imageUrl = URL.createObjectURL(blob);
+      image.src = imageUrl;
+      canvas.height = res.thumbnails[foundIdx].height;
+      canvas.width = res.thumbnails[foundIdx].width;
+      return new Promise((resolve, reject) => {
+        image.onload = () => {
+          try {
+            context.drawImage(
+              image,
+              res.thumbnails[foundIdx].offsetX,
+              res.thumbnails[foundIdx].offsetY,
+              res.thumbnails[foundIdx].width,
+              res.thumbnails[foundIdx].height,
+              0,
+              0,
+              res.thumbnails[foundIdx].width,
+              res.thumbnails[foundIdx].height
+            );
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
+            canvas.className = "__rx-thumbnail__";
+            clearPreviousThumbnails();
+            container.appendChild(canvas);
+            resolve();
+          } catch (srcError) {
+            reject(
+              new ThumbnailRenderingError(
+                "RENDERING",
+                "Could not draw the image in a canvas"
+              )
+            );
+          }
+          onFinished();
+        };
+        image.onerror = () => {
+          if (options.keepPreviousThumbnailOnError !== true) {
+            clearPreviousThumbnails();
+          }
+          reject(
+            new ThumbnailRenderingError(
+              "RENDERING",
+              "Could not load the corresponding image in the DOM"
+            )
+          );
+          onFinished();
+        };
+      });
+    } catch (srcError) {
+      if (options.keepPreviousThumbnailOnError !== true) {
+        clearPreviousThumbnails();
+      }
+      if (srcError !== null && srcError === canceller.signal.cancellationError) {
+        const error = new ThumbnailRenderingError(
+          "ABORTED",
+          "Thumbnail rendering has been aborted"
+        );
+        throw error;
+      }
+      const formattedErr = formatError(srcError, {
+        defaultCode: "NONE",
+        defaultReason: "Unknown error"
+      });
+      let returnedError;
+      if (formattedErr.type === "NETWORK_ERROR") {
+        returnedError = new ThumbnailRenderingError("LOADING", formattedErr.message);
+      } else {
+        returnedError = new ThumbnailRenderingError("NOT_FOUND", formattedErr.message);
+      }
+      onFinished();
+      throw returnedError;
+    }
+    function clearPreviousThumbnails() {
+      for (let i = container.children.length - 1; i >= 0; i--) {
+        const child = container.children[i];
+        if (child.className === "__rx-thumbnail__") {
+          container.removeChild(child);
+        }
+      }
+    }
+  }
+  var ThumbnailRenderingError = class _ThumbnailRenderingError extends Error {
+    /**
+     * @param {string} code
+     * @param {string} message
+     */
+    constructor(code, message) {
+      super(errorMessage(code, message));
+      Object.setPrototypeOf(this, _ThumbnailRenderingError.prototype);
+      this.name = "ThumbnailRenderingError";
+      this.code = code;
+    }
+  };
+
   // src/main_thread/tracks_store/index.ts
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
@@ -38250,8 +38521,11 @@ ${event}`
      * `null` if audio tracks were disabled and `undefined` if the Period is not
      * known.
      */
-    getChosenAudioTrack(periodObj) {
-      return isNullOrUndefined(periodObj.audio.storedSettings) ? null : toAudioTrack(periodObj.audio.storedSettings.adaptation, true);
+    getChosenAudioTrack(periodObj, filterPlayableRepresentations) {
+      return isNullOrUndefined(periodObj.audio.storedSettings) ? null : toAudioTrack(
+        periodObj.audio.storedSettings.adaptation,
+        filterPlayableRepresentations
+      );
     }
     /**
      * Returns an object describing the chosen text track for the given text
@@ -38276,11 +38550,14 @@ ${event}`
      * @param {Object} periodObj - The concerned Period's object
      * @returns {Object|null} - The video track chosen for this Period
      */
-    getChosenVideoTrack(periodObj) {
+    getChosenVideoTrack(periodObj, filterPlayableRepresentations) {
       if (isNullOrUndefined(periodObj.video.storedSettings)) {
         return null;
       }
-      return toVideoTrack(periodObj.video.storedSettings.adaptation, true);
+      return toVideoTrack(
+        periodObj.video.storedSettings.adaptation,
+        filterPlayableRepresentations
+      );
     }
     /**
      * Returns all available audio tracks for a given Period, as an array of
@@ -38289,15 +38566,21 @@ ${event}`
      * Returns `undefined` if the given Period's id is not known.
      *
      * @param {Object} periodObj - The concerned Period's object
+     * @param {boolean} filterPlayableRepresentations - If `true`, only
+     * representations considered to be "playable" will be included in the
+     * returned response.
+     * If `false`, the response should contain all linked representations.
      * @returns {Array.<Object>}
      */
-    getAvailableAudioTracks(periodObj) {
+    getAvailableAudioTracks(periodObj, filterPlayableRepresentations) {
       const storedSettings = periodObj.audio.storedSettings;
       const currentId = !isNullOrUndefined(storedSettings) ? storedSettings.adaptation.id : null;
       const adaptations = getSupportedAdaptations(periodObj.period, "audio");
       return adaptations.map((adaptation) => {
         const active = currentId === null ? false : currentId === adaptation.id;
-        return object_assign_default(toAudioTrack(adaptation, true), { active });
+        return object_assign_default(toAudioTrack(adaptation, filterPlayableRepresentations), {
+          active
+        });
       });
     }
     /**
@@ -38325,15 +38608,19 @@ ${event}`
      * Returns `undefined` if the given Period's id is not known.
      *
      * @param {Object} periodObj - The concerned Period's object
+     * @param {boolean} filterPlayableRepresentations - If `true`, only
+     * representations considered to be "playable" will be included in the
+     * returned response.
+     * If `false`, the response should contain all linked representations.
      * @returns {Array.<Object>}
      */
-    getAvailableVideoTracks(periodObj) {
+    getAvailableVideoTracks(periodObj, filterPlayableRepresentations) {
       const storedSettings = periodObj.video.storedSettings;
       const currentId = isNullOrUndefined(storedSettings) ? void 0 : storedSettings.adaptation.id;
       const adaptations = getSupportedAdaptations(periodObj.period, "video");
       return adaptations.map((adaptation) => {
         const active = currentId === null ? false : currentId === adaptation.id;
-        const track = toVideoTrack(adaptation, true);
+        const track = toVideoTrack(adaptation, filterPlayableRepresentations);
         const trickModeTracks = track.trickModeTracks !== void 0 ? track.trickModeTracks.map((trickModeAdaptation) => {
           const isActive = currentId === null ? false : currentId === trickModeAdaptation.id;
           return object_assign_default(trickModeAdaptation, { active: isActive });
@@ -38841,11 +39128,10 @@ ${event}`
     }
     const requestConfig = (_c = options.requestConfig) != null ? _c : {};
     return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       __priv_patchLastSegmentInSidx: options.__priv_patchLastSegmentInSidx,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       __priv_manifestUpdateUrl: options.__priv_manifestUpdateUrl,
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
       checkManifestIntegrity: options.checkManifestIntegrity,
       autoPlay,
@@ -39070,8 +39356,8 @@ ${event}`
      */
     static _priv_registerVideoElement(videoElement) {
       if (_Player._priv_currentlyUsedVideoElements.has(videoElement)) {
-        const errMsg = "The video element is already attached to another RxPlayer instance.\nMake sure to dispose the previous instance with player.dispose() before creating a new player instance attaching that video element.";
-        console.warn(errMsg);
+        const errorMessage2 = "The video element is already attached to another RxPlayer instance.\nMake sure to dispose the previous instance with player.dispose() before creating a new player instance attaching that video element.";
+        console.warn(errorMessage2);
       }
       _Player._priv_currentlyUsedVideoElements.add(videoElement);
     }
@@ -39386,97 +39672,48 @@ ${event}`
         }
       };
     }
-    async renderThumbnail(container, time) {
-      if (this._priv_contentInfos === null || this._priv_contentInfos.fetchThumbnailDataCallback === null) {
-        return Promise.reject("Cannot get thumbnail: no content loaded");
+    /**
+     * Returns either an array decribing the various thumbnail tracks that can be
+     * encountered at the given time, or `null` if no thumbnail track is available
+     * at that time.
+     * @param {number} time - The position to check for thumbnail tracks, in
+     * seconds.
+     * @returns {Array.<Object>|null}
+     */
+    getThumbnailMetadata({ time }) {
+      if (this._priv_contentInfos === null || this._priv_contentInfos.manifest === null) {
+        return null;
       }
-      const { pendingThumbnailRequests, currentContentCanceller } = this._priv_contentInfos;
-      const canceller = new TaskCanceller();
-      canceller.linkToSignal(currentContentCanceller.signal);
-      let imageUrl;
-      const olderTask = pendingThumbnailRequests.get(container);
-      olderTask == null ? void 0 : olderTask.cancel();
-      pendingThumbnailRequests.set(container, canceller);
-      const onFinished = () => {
-        canceller.cancel();
-        pendingThumbnailRequests.delete(container);
-        setTimeout(() => {
-          if (imageUrl !== void 0) {
-            URL.revokeObjectURL(imageUrl);
-          }
-        }, 0);
-      };
-      try {
-        const res = await this._priv_contentInfos.fetchThumbnailDataCallback(time);
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        if (context === null) {
-          throw new Error("Cannot display thumbnail: cannot create canvas context");
-        }
-        let foundIdx;
-        for (let i = 0; i < res.thumbnails.length; i++) {
-          if (res.thumbnails[i].start <= time && res.thumbnails[i].end > time) {
-            foundIdx = i;
-            break;
-          }
-        }
-        if (foundIdx === void 0) {
-          throw new Error("Cannot display thumbnail: time not found in fetched data");
-        }
-        const image = new Image();
-        const blob = new Blob([res.data], { type: res.mimeType });
-        imageUrl = URL.createObjectURL(blob);
-        image.src = imageUrl;
-        canvas.height = res.thumbnails[foundIdx].height;
-        canvas.width = res.thumbnails[foundIdx].width;
-        return new Promise((resolve, reject) => {
-          image.onload = () => {
-            context.drawImage(
-              image,
-              res.thumbnails[foundIdx].offsetX,
-              res.thumbnails[foundIdx].offsetY,
-              res.thumbnails[foundIdx].width,
-              res.thumbnails[foundIdx].height,
-              0,
-              0,
-              res.thumbnails[foundIdx].width,
-              res.thumbnails[foundIdx].height
-            );
-            canvas.style.width = "100%";
-            canvas.style.height = "100%";
-            canvas.className = "__rx-thumbnail__";
-            clearPreviousThumbnails();
-            container.appendChild(canvas);
-            resolve();
-            onFinished();
-          };
-          image.onerror = () => {
-            clearPreviousThumbnails();
-            reject(new Error("Could not load the corresponding image in the DOM"));
-            onFinished();
-          };
-        });
-      } catch (err) {
-        if (err !== null && err === canceller.signal.cancellationError) {
-          const error = new ThumbnailRenderingError(
-            "ABORTED",
-            "Thumbnail rendering has been aborted"
-          );
-          clearPreviousThumbnails();
-          throw error;
-        }
-        clearPreviousThumbnails();
-        onFinished();
-        throw err;
+      const period = getPeriodForTime(this._priv_contentInfos.manifest, time);
+      if (period === void 0 || period.thumbnailTracks.length === 0) {
+        return null;
       }
-      function clearPreviousThumbnails() {
-        for (let i = container.children.length - 1; i >= 0; i--) {
-          const child = container.children[i];
-          if (child.className === "__rx-thumbnail__") {
-            container.removeChild(child);
-          }
-        }
-      }
+      return period.thumbnailTracks.map((t) => {
+        return {
+          id: t.id,
+          width: Math.floor(t.width / t.horizontalTiles),
+          height: Math.floor(t.height / t.verticalTiles),
+          mimeType: t.mimeType
+        };
+      });
+    }
+    /**
+     * Render inside the given `container` the thumbnail corresponding to the
+     * given time.
+     *
+     * If no thumbnail is available at that time or if the RxPlayer does not succeed
+     * to load or render it, reject the corresponding Promise and remove the
+     * potential previous thumbnail from the container.
+     *
+     * If a new `renderThumbnail` call is made with the same `container` before it
+     * had time to finish, the Promise is also rejected but the previous thumbnail
+     * potentially found in the container is untouched.
+     *
+     * @param {Object|undefined} options
+     * @returns {Promise}
+     */
+    async renderThumbnail(options) {
+      return renderThumbnail(this._priv_contentInfos, options);
     }
     /**
      * From given options, initialize content playback.
@@ -39712,7 +39949,10 @@ ${event}`
         useWorker,
         segmentSinkMetricsCallback: null,
         fetchThumbnailDataCallback: null,
-        pendingThumbnailRequests: /* @__PURE__ */ new Map()
+        thumbnailRequestsInfo: {
+          pendingRequests: /* @__PURE__ */ new Map(),
+          lastResponse: null
+        }
       };
       initializer.addEventListener("error", (error) => {
         this._priv_onFatalError(error, contentInfos);
@@ -39820,11 +40060,12 @@ ${event}`
             this._priv_reloadingMetadata.reloadInPause = true;
             this._priv_reloadingMetadata.reloadPosition = playbackObserver.getReference().getValue().position.getPolled();
             break;
-          default:
+          default: {
             const o = playbackObserver.getReference().getValue();
             this._priv_reloadingMetadata.reloadInPause = o.paused;
             this._priv_reloadingMetadata.reloadPosition = o.position.getWanted();
             break;
+          }
         }
       };
       let playPauseEventsCanceller = null;
@@ -39932,11 +40173,10 @@ ${event}`
      * @returns {HTMLMediaElement|null} - The HTMLMediaElement used (`null` when
      * disposed)
      */
-    /* eslint-disable @typescript-eslint/no-restricted-types */
+    // eslint-disable-next-line @typescript-eslint/no-restricted-types
     getVideoElement() {
       return this.videoElement;
     }
-    /* eslint-enable @typescript-eslint/no-restricted-types */
     /**
      * Returns the player's current state.
      * @returns {string} - The current Player's state
@@ -40486,11 +40726,11 @@ ${event}`
     /**
      * Returns every available audio tracks for a given Period - or the current
      * one if no `periodId` is given.
-     * @param {string|undefined} [periodId]
+     * @param {string|Object|undefined} [arg]
      * @returns {Array.<Object>}
      */
-    getAvailableAudioTracks(periodId) {
-      var _a;
+    getAvailableAudioTracks(arg) {
+      var _a, _b;
       if (this._priv_contentInfos === null) {
         return [];
       }
@@ -40498,12 +40738,20 @@ ${event}`
       if (isDirectFile) {
         return (_a = mediaElementTracksStore == null ? void 0 : mediaElementTracksStore.getAvailableAudioTracks()) != null ? _a : [];
       }
+      let periodId;
+      let filterPlayableRepresentations;
+      if (typeof arg === "string") {
+        periodId = arg;
+      } else {
+        periodId = arg == null ? void 0 : arg.periodId;
+        filterPlayableRepresentations = (_b = arg == null ? void 0 : arg.filterPlayableRepresentations) != null ? _b : true;
+      }
       return this._priv_callTracksStoreGetterSetter(
         periodId,
         [],
         (tcm, periodRef) => {
           var _a2;
-          return (_a2 = tcm.getAvailableAudioTracks(periodRef)) != null ? _a2 : [];
+          return (_a2 = tcm.getAvailableAudioTracks(periodRef, filterPlayableRepresentations)) != null ? _a2 : [];
         }
       );
     }
@@ -40533,11 +40781,11 @@ ${event}`
     }
     /**
      * Returns every available video tracks for the current Period.
-     * @param {string|undefined} [periodId]
+     * @param {string|Object|undefined} [arg]
      * @returns {Array.<Object>}
      */
-    getAvailableVideoTracks(periodId) {
-      var _a;
+    getAvailableVideoTracks(arg) {
+      var _a, _b;
       if (this._priv_contentInfos === null) {
         return [];
       }
@@ -40545,21 +40793,30 @@ ${event}`
       if (isDirectFile) {
         return (_a = mediaElementTracksStore == null ? void 0 : mediaElementTracksStore.getAvailableVideoTracks()) != null ? _a : [];
       }
+      let periodId;
+      let filterPlayableRepresentations;
+      if (typeof arg === "string") {
+        periodId = arg;
+      } else {
+        periodId = arg == null ? void 0 : arg.periodId;
+        filterPlayableRepresentations = (_b = arg == null ? void 0 : arg.filterPlayableRepresentations) != null ? _b : true;
+      }
       return this._priv_callTracksStoreGetterSetter(
         periodId,
         [],
         (tcm, periodRef) => {
           var _a2;
-          return (_a2 = tcm.getAvailableVideoTracks(periodRef)) != null ? _a2 : [];
+          return (_a2 = tcm.getAvailableVideoTracks(periodRef, filterPlayableRepresentations)) != null ? _a2 : [];
         }
       );
     }
     /**
      * Returns currently chosen audio language for the current Period.
-     * @param {string|undefined} [periodId]
+     * @param {string|Object|undefined} [arg]
      * @returns {Object|null|undefined}
      */
-    getAudioTrack(periodId) {
+    getAudioTrack(arg) {
+      var _a;
       if (this._priv_contentInfos === null) {
         return void 0;
       }
@@ -40570,10 +40827,18 @@ ${event}`
         }
         return mediaElementTracksStore.getChosenAudioTrack();
       }
+      let periodId;
+      let filterPlayableRepresentations;
+      if (typeof arg === "string") {
+        periodId = arg;
+      } else {
+        periodId = arg == null ? void 0 : arg.periodId;
+        filterPlayableRepresentations = (_a = arg == null ? void 0 : arg.filterPlayableRepresentations) != null ? _a : true;
+      }
       return this._priv_callTracksStoreGetterSetter(
         periodId,
         void 0,
-        (tcm, periodRef) => tcm.getChosenAudioTrack(periodRef)
+        (tcm, periodRef) => tcm.getChosenAudioTrack(periodRef, filterPlayableRepresentations)
       );
     }
     /**
@@ -40600,10 +40865,11 @@ ${event}`
     }
     /**
      * Returns currently chosen video track for the current Period.
-     * @param {string|undefined} [periodId]
+     * @param {string|Object|undefined} [arg]
      * @returns {Object|null|undefined}
      */
-    getVideoTrack(periodId) {
+    getVideoTrack(arg) {
+      var _a;
       if (this._priv_contentInfos === null) {
         return void 0;
       }
@@ -40614,10 +40880,18 @@ ${event}`
         }
         return mediaElementTracksStore.getChosenVideoTrack();
       }
+      let periodId;
+      let filterPlayableRepresentations;
+      if (typeof arg === "string") {
+        periodId = arg;
+      } else {
+        periodId = arg == null ? void 0 : arg.periodId;
+        filterPlayableRepresentations = (_a = arg == null ? void 0 : arg.filterPlayableRepresentations) != null ? _a : true;
+      }
       return this._priv_callTracksStoreGetterSetter(
         periodId,
         void 0,
-        (tcm, periodRef) => tcm.getChosenVideoTrack(periodRef)
+        (tcm, periodRef) => tcm.getChosenVideoTrack(periodRef, filterPlayableRepresentations)
       );
     }
     /**
@@ -40637,7 +40911,7 @@ ${event}`
           const audioId = typeof arg === "string" ? arg : arg.trackId;
           mediaElementTracksStore == null ? void 0 : mediaElementTracksStore.setAudioTrackById(audioId);
           return;
-        } catch (e) {
+        } catch (_e) {
           throw new Error("player: unknown audio track");
         }
       }
@@ -40683,7 +40957,7 @@ ${event}`
           const textId = typeof arg === "string" ? arg : arg.trackId;
           mediaElementTracksStore == null ? void 0 : mediaElementTracksStore.setTextTrackById(textId);
           return;
-        } catch (e) {
+        } catch (_e) {
           throw new Error("player: unknown text track");
         }
       }
@@ -40737,7 +41011,7 @@ ${event}`
           const videoId = typeof arg === "string" ? arg : arg.trackId;
           mediaElementTracksStore == null ? void 0 : mediaElementTracksStore.setVideoTrackById(videoId);
           return;
-        } catch (e) {
+        } catch (_e) {
           throw new Error("player: unknown video track");
         }
       }
@@ -41159,10 +41433,10 @@ ${event}`
             }
             switch (elt.adaptation.type) {
               case "audio":
-                isCurrent = ((_a = tStore.getChosenAudioTrack(periodRef)) == null ? void 0 : _a.id) === elt.adaptation.id;
+                isCurrent = ((_a = tStore.getChosenAudioTrack(periodRef, false)) == null ? void 0 : _a.id) === elt.adaptation.id;
                 break;
               case "video":
-                isCurrent = ((_b = tStore.getChosenVideoTrack(periodRef)) == null ? void 0 : _b.id) === elt.adaptation.id;
+                isCurrent = ((_b = tStore.getChosenVideoTrack(periodRef, false)) == null ? void 0 : _b.id) === elt.adaptation.id;
                 break;
               case "text":
                 isCurrent = ((_c = tStore.getChosenTextTrack(periodRef)) == null ? void 0 : _c.id) === elt.adaptation.id;
@@ -41229,11 +41503,11 @@ ${event}`
       if (!isNullOrUndefined(tracksStore)) {
         const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
         if (periodRef) {
-          const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+          const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
           this._priv_triggerEventIfNotStopped("audioTrackChange", audioTrack, cancelSignal);
           const textTrack = tracksStore.getChosenTextTrack(periodRef);
           this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
-          const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+          const videoTrack = tracksStore.getChosenVideoTrack(periodRef, true);
           this._priv_triggerEventIfNotStopped("videoTrackChange", videoTrack, cancelSignal);
         }
       } else {
@@ -41353,26 +41627,29 @@ ${event}`
           return;
         }
         switch (type) {
-          case "audio":
-            const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+          case "audio": {
+            const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
             this._priv_triggerEventIfNotStopped(
               "audioTrackChange",
               audioTrack,
               cancelSignal
             );
             break;
-          case "text":
+          }
+          case "text": {
             const textTrack = tracksStore.getChosenTextTrack(periodRef);
             this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
             break;
-          case "video":
-            const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+          }
+          case "video": {
+            const videoTrack = tracksStore.getChosenVideoTrack(periodRef, true);
             this._priv_triggerEventIfNotStopped(
               "videoTrackChange",
               videoTrack,
               cancelSignal
             );
             break;
+          }
         }
       }
     }
@@ -41436,9 +41713,9 @@ ${event}`
       }
       this.trigger(
         // !!! undocumented API :O !!!
-        /* eslint-disable-next-line */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         "__priv_bitrateEstimateChange",
-        /* eslint-disable-next-line */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         { type, bitrate }
       );
     }
@@ -41623,23 +41900,25 @@ ${event}`
         return;
       }
       switch (trackType) {
-        case "video":
-          const videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
+        case "video": {
+          const videoTracks = tracksStore.getAvailableVideoTracks(periodRef, true);
           this._priv_triggerEventIfNotStopped(
             "availableVideoTracksChange",
             videoTracks != null ? videoTracks : [],
             cancelSignal
           );
           break;
-        case "audio":
-          const audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
+        }
+        case "audio": {
+          const audioTracks = tracksStore.getAvailableAudioTracks(periodRef, true);
           this._priv_triggerEventIfNotStopped(
             "availableAudioTracksChange",
             audioTracks != null ? audioTracks : [],
             cancelSignal
           );
           break;
-        case "text":
+        }
+        case "text": {
           const textTracks = tracksStore.getAvailableTextTracks(periodRef);
           this._priv_triggerEventIfNotStopped(
             "availableTextTracksChange",
@@ -41647,6 +41926,7 @@ ${event}`
             cancelSignal
           );
           break;
+        }
         default:
           assertUnreachable(trackType);
       }
@@ -41685,18 +41965,6 @@ ${event}`
   Player.version = /* PLAYER_VERSION */
   "4.1.0";
   var public_api_default = Player;
-  var ThumbnailRenderingError = class _ThumbnailRenderingError extends Error {
-    /**
-     * @param {string} code
-     * @param {string} message
-     */
-    constructor(code, message) {
-      super(errorMessage(code, message));
-      Object.setPrototypeOf(this, _ThumbnailRenderingError.prototype);
-      this.name = "ThumbnailRenderingError";
-      this.code = code;
-    }
-  };
 
   // src/main_thread/api/index.ts
   var api_default = public_api_default;
@@ -43690,8 +43958,8 @@ ${event}`
           addPayload(toAdd, headerName);
         }
       };
-      addNumberProperty("br", "object");
       addNumberProperty("bl", "request");
+      addNumberProperty("br", "object");
       addBooleanProperty("bs", "status");
       addStringProperty("cid", "session");
       addNumberProperty("d", "object");
@@ -44572,7 +44840,7 @@ ${event}`
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
 
-  // src/core/fetchers/segment/segment_fetcher_creator.ts
+  // src/core/fetchers/segment/segment_queue_creator.ts
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
 
@@ -44864,6 +45132,382 @@ ${event}`
     };
   }
 
+  // src/core/fetchers/segment/segment_queue.ts
+  init_define_ENVIRONMENT();
+  init_define_LOGGER_LEVEL();
+  var SegmentQueue = class extends EventEmitter {
+    /**
+     * Create a new `SegmentQueue`.
+     *
+     * @param {Object} segmentFetcher - Interface to facilitate the download of
+     * segments.
+     */
+    constructor(segmentFetcher) {
+      super();
+      this._segmentFetcher = segmentFetcher;
+      this._currentContentInfo = null;
+    }
+    /**
+     * Returns the initialization segment currently being requested.
+     * Returns `null` if no initialization segment request is pending.
+     * @returns {Object | null}
+     */
+    getRequestedInitSegment() {
+      var _a, _b, _c;
+      return (_c = (_b = (_a = this._currentContentInfo) == null ? void 0 : _a.initSegmentRequest) == null ? void 0 : _b.segment) != null ? _c : null;
+    }
+    /**
+     * Returns the media segment currently being requested.
+     * Returns `null` if no media segment request is pending.
+     * @returns {Object | null}
+     */
+    getRequestedMediaSegment() {
+      var _a, _b, _c;
+      return (_c = (_b = (_a = this._currentContentInfo) == null ? void 0 : _a.mediaSegmentRequest) == null ? void 0 : _b.segment) != null ? _c : null;
+    }
+    /**
+     * Return an object allowing to schedule segment requests linked to the given
+     * content.
+     * The `SegmentQueue` will emit events as it loads and parses initialization
+     * and media segments.
+     *
+     * Calling this method resets all previous queues that were previously started
+     * on the same instance.
+     *
+     * @param {Object} content - The context of the Representation you want to
+     * load segments for.
+     * @param {boolean} hasInitSegment - Declare that an initialization segment
+     * will need to be downloaded.
+     *
+     * A `SegmentQueue` ALWAYS wait for the initialization segment to be
+     * loaded and parsed before parsing a media segment.
+     *
+     * In cases where no initialization segment exist, this would lead to the
+     * `SegmentQueue` waiting indefinitely for it.
+     *
+     * By setting that value to `false`, you anounce to the `SegmentQueue`
+     * that it should not wait for an initialization segment before parsing a
+     * media segment.
+     * @returns {Object} - `SharedReference` on which the queue of segment for
+     * that content can be communicated and updated. See type for more
+     * information.
+     */
+    resetForContent(content, hasInitSegment) {
+      var _a;
+      (_a = this._currentContentInfo) == null ? void 0 : _a.currentCanceller.cancel();
+      const downloadQueue = new reference_default({
+        initSegment: null,
+        segmentQueue: []
+      });
+      const currentCanceller = new TaskCanceller();
+      currentCanceller.signal.register(() => {
+        downloadQueue.finish();
+      });
+      const currentContentInfo = {
+        content,
+        downloadQueue,
+        initSegmentInfoRef: hasInitSegment ? new reference_default(void 0) : new reference_default(null),
+        currentCanceller,
+        initSegmentRequest: null,
+        mediaSegmentRequest: null,
+        mediaSegmentAwaitingInitMetadata: null
+      };
+      this._currentContentInfo = currentContentInfo;
+      downloadQueue.onUpdate(
+        (queue) => {
+          const { segmentQueue } = queue;
+          if (segmentQueue.length > 0 && segmentQueue[0].segment.id === currentContentInfo.mediaSegmentAwaitingInitMetadata) {
+            return;
+          }
+          const currentSegmentRequest = currentContentInfo.mediaSegmentRequest;
+          if (segmentQueue.length === 0) {
+            if (currentSegmentRequest === null) {
+              return;
+            }
+            log_default.debug(
+              "SQ: no more media segment to request. Cancelling queue.",
+              content.adaptation.type
+            );
+            this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+            return;
+          } else if (currentSegmentRequest === null) {
+            log_default.debug(
+              "SQ: Media segments now need to be requested. Starting queue.",
+              content.adaptation.type,
+              segmentQueue.length
+            );
+            this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+            return;
+          } else {
+            const nextItem = segmentQueue[0];
+            if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
+              log_default.debug(
+                "SQ: Next media segment changed, cancelling previous",
+                content.adaptation.type
+              );
+              this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+              return;
+            }
+            if (currentSegmentRequest.priority !== nextItem.priority) {
+              log_default.debug(
+                "SQ: Priority of next media segment changed, updating",
+                content.adaptation.type,
+                currentSegmentRequest.priority,
+                nextItem.priority
+              );
+              this._segmentFetcher.updatePriority(
+                currentSegmentRequest.request,
+                nextItem.priority
+              );
+            }
+            return;
+          }
+        },
+        { emitCurrentValue: true, clearSignal: currentCanceller.signal }
+      );
+      downloadQueue.onUpdate(
+        (next) => {
+          var _a2;
+          const initSegmentRequest = currentContentInfo.initSegmentRequest;
+          if (next.initSegment !== null && initSegmentRequest !== null) {
+            if (next.initSegment.priority !== initSegmentRequest.priority) {
+              this._segmentFetcher.updatePriority(
+                initSegmentRequest.request,
+                next.initSegment.priority
+              );
+            }
+            return;
+          } else if (((_a2 = next.initSegment) == null ? void 0 : _a2.segment.id) === (initSegmentRequest == null ? void 0 : initSegmentRequest.segment.id)) {
+            return;
+          }
+          if (next.initSegment === null) {
+            log_default.debug(
+              "SQ: no more init segment to request. Cancelling queue.",
+              content.adaptation.type
+            );
+          }
+          this._restartInitSegmentDownloadingQueue(currentContentInfo, next.initSegment);
+        },
+        { emitCurrentValue: true, clearSignal: currentCanceller.signal }
+      );
+      return downloadQueue;
+    }
+    /**
+     * Stop the currently-active `SegmentQueue`.
+     *
+     * Do nothing if no queue is active.
+     */
+    stop() {
+      var _a;
+      (_a = this._currentContentInfo) == null ? void 0 : _a.currentCanceller.cancel();
+      this._currentContentInfo = null;
+    }
+    /**
+     * Internal logic performing media segment requests.
+     */
+    _restartMediaSegmentDownloadingQueue(contentInfo) {
+      if (contentInfo.mediaSegmentRequest !== null) {
+        contentInfo.mediaSegmentRequest.canceller.cancel();
+      }
+      const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
+      const { segmentQueue } = downloadQueue.getValue();
+      const currentNeededSegment = segmentQueue[0];
+      const recursivelyRequestSegments = (startingSegment) => {
+        if (currentCanceller !== null && currentCanceller.isUsed()) {
+          contentInfo.mediaSegmentRequest = null;
+          return;
+        }
+        if (startingSegment === void 0) {
+          contentInfo.mediaSegmentRequest = null;
+          this.trigger("emptyQueue", null);
+          return;
+        }
+        const canceller = new TaskCanceller();
+        const unlinkCanceller = currentCanceller === null ? noop_default : canceller.linkToSignal(currentCanceller.signal);
+        const { segment, priority } = startingSegment;
+        const context = object_assign_default({ segment }, content);
+        let isComplete = false;
+        let isWaitingOnInitSegment = false;
+        canceller.signal.register(() => {
+          contentInfo.mediaSegmentRequest = null;
+          if (isComplete) {
+            return;
+          }
+          if (contentInfo.mediaSegmentAwaitingInitMetadata === segment.id) {
+            contentInfo.mediaSegmentAwaitingInitMetadata = null;
+          }
+          isComplete = true;
+          isWaitingOnInitSegment = false;
+        });
+        const emitChunk = (parsed) => {
+          assert(parsed.segmentType === "media", "Should have loaded a media segment.");
+          this.trigger("parsedMediaSegment", object_assign_default({}, parsed, { segment }));
+        };
+        const continueToNextSegment = () => {
+          const lastQueue = downloadQueue.getValue().segmentQueue;
+          if (lastQueue.length === 0) {
+            isComplete = true;
+            this.trigger("emptyQueue", null);
+            return;
+          } else if (lastQueue[0].segment.id === segment.id) {
+            lastQueue.shift();
+          }
+          isComplete = true;
+          recursivelyRequestSegments(lastQueue[0]);
+        };
+        const request2 = this._segmentFetcher.createRequest(
+          context,
+          priority,
+          {
+            /**
+             * Callback called when the request has to be retried.
+             * @param {Error} error
+             */
+            onRetry: (error) => {
+              this.trigger("requestRetry", { segment, error });
+            },
+            /**
+             * Callback called when the request has to be interrupted and
+             * restarted later.
+             */
+            beforeInterrupted() {
+              log_default.info(
+                "SQ: segment request interrupted temporarly.",
+                segment.id,
+                segment.time
+              );
+            },
+            /**
+             * Callback called when a decodable chunk of the segment is available.
+             * @param {Function} parse - Function allowing to parse the segment.
+             */
+            onChunk: (parse2) => {
+              const initTimescale = initSegmentInfoRef.getValue();
+              if (initTimescale !== void 0) {
+                emitChunk(parse2(initTimescale != null ? initTimescale : void 0));
+              } else {
+                isWaitingOnInitSegment = true;
+                initSegmentInfoRef.waitUntilDefined(
+                  (actualTimescale) => {
+                    emitChunk(parse2(actualTimescale != null ? actualTimescale : void 0));
+                  },
+                  { clearSignal: canceller.signal }
+                );
+              }
+            },
+            /** Callback called after all chunks have been sent. */
+            onAllChunksReceived: () => {
+              if (!isWaitingOnInitSegment) {
+                this.trigger("fullyLoadedSegment", segment);
+              } else {
+                contentInfo.mediaSegmentAwaitingInitMetadata = segment.id;
+                initSegmentInfoRef.waitUntilDefined(
+                  () => {
+                    contentInfo.mediaSegmentAwaitingInitMetadata = null;
+                    isWaitingOnInitSegment = false;
+                    this.trigger("fullyLoadedSegment", segment);
+                  },
+                  { clearSignal: canceller.signal }
+                );
+              }
+            },
+            /**
+             * Callback called right after the request ended but before the next
+             * requests are scheduled. It is used to schedule the next segment.
+             */
+            beforeEnded: () => {
+              unlinkCanceller();
+              contentInfo.mediaSegmentRequest = null;
+              if (isWaitingOnInitSegment) {
+                initSegmentInfoRef.waitUntilDefined(continueToNextSegment, {
+                  clearSignal: canceller.signal
+                });
+              } else {
+                continueToNextSegment();
+              }
+            }
+          },
+          canceller.signal
+        );
+        request2.catch((error) => {
+          unlinkCanceller();
+          if (!isComplete) {
+            isComplete = true;
+            this.stop();
+            this.trigger("error", error);
+          }
+        });
+        contentInfo.mediaSegmentRequest = { segment, priority, request: request2, canceller };
+      };
+      recursivelyRequestSegments(currentNeededSegment);
+    }
+    /**
+     * Internal logic performing initialization segment requests.
+     * @param {Object} contentInfo
+     * @param {Object} queuedInitSegment
+     */
+    _restartInitSegmentDownloadingQueue(contentInfo, queuedInitSegment) {
+      const { content, initSegmentInfoRef } = contentInfo;
+      if (contentInfo.initSegmentRequest !== null) {
+        contentInfo.initSegmentRequest.canceller.cancel();
+      }
+      if (queuedInitSegment === null) {
+        return;
+      }
+      const canceller = new TaskCanceller();
+      const unlinkCanceller = contentInfo.currentCanceller === null ? noop_default : canceller.linkToSignal(contentInfo.currentCanceller.signal);
+      const { segment, priority } = queuedInitSegment;
+      const context = object_assign_default({ segment }, content);
+      let isComplete = false;
+      const request2 = this._segmentFetcher.createRequest(
+        context,
+        priority,
+        {
+          onRetry: (err) => {
+            this.trigger("requestRetry", { segment, error: err });
+          },
+          beforeInterrupted: () => {
+            log_default.info("SQ: init segment request interrupted temporarly.", segment.id);
+          },
+          beforeEnded: () => {
+            unlinkCanceller();
+            contentInfo.initSegmentRequest = null;
+            isComplete = true;
+          },
+          onChunk: (parse2) => {
+            var _a;
+            const parsed = parse2(void 0);
+            assert(parsed.segmentType === "init", "Should have loaded an init segment.");
+            this.trigger("parsedInitSegment", object_assign_default({}, parsed, { segment }));
+            if (parsed.segmentType === "init") {
+              initSegmentInfoRef.setValue((_a = parsed.initTimescale) != null ? _a : null);
+            }
+          },
+          onAllChunksReceived: () => {
+            this.trigger("fullyLoadedSegment", segment);
+          }
+        },
+        canceller.signal
+      );
+      request2.catch((error) => {
+        unlinkCanceller();
+        if (!isComplete) {
+          isComplete = true;
+          this.stop();
+          this.trigger("error", error);
+        }
+      });
+      canceller.signal.register(() => {
+        contentInfo.initSegmentRequest = null;
+        if (isComplete) {
+          return;
+        }
+        isComplete = true;
+      });
+      contentInfo.initSegmentRequest = { segment, priority, request: request2, canceller };
+    }
+  };
+
   // src/core/fetchers/segment/task_prioritizer.ts
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
@@ -45060,8 +45704,7 @@ ${event}`
      * `this._prioritySteps.low`).
      */
     _interruptCancellableTasks() {
-      for (let i = 0; i < this._pendingTasks.length; i++) {
-        const pendingObj = this._pendingTasks[i];
+      for (const pendingObj of this._pendingTasks) {
         if (pendingObj.priority >= this._prioritySteps.low) {
           this._interruptPendingTask(pendingObj);
           return this._interruptCancellableTasks();
@@ -45124,8 +45767,8 @@ ${event}`
     return arrayFindIndex(queue, (elt) => elt.taskFn === taskFn);
   }
 
-  // src/core/fetchers/segment/segment_fetcher_creator.ts
-  var SegmentFetcherCreator = class {
+  // src/core/fetchers/segment/segment_queue_creator.ts
+  var SegmentQueueCreator = class {
     /**
      * @param {Object} transport
      * @param {Object} cdnPrioritizer
@@ -45146,13 +45789,15 @@ ${event}`
       this._cmcdDataBuilder = cmcdDataBuilder;
     }
     /**
-     * Create a segment fetcher, allowing to easily perform segment requests.
+     * Create a `SegmentQueue`, allowing to easily perform segment requests.
      * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
      * "video", etc.)
      * @param {Object} eventListeners
-     * @returns {Object}
+     * @returns {Object} - `SegmentQueue`, which is an abstraction allowing to
+     * perform a queue of segment requests for a given media type (here defined by
+     * `bufferType`) with associated priorities.
      */
-    createSegmentFetcher(bufferType, eventListeners) {
+    createSegmentQueue(bufferType, eventListeners) {
       const requestOptions = getSegmentFetcherRequestOptions(this._backoffOptions);
       const pipelines = this._transport[bufferType];
       const segmentFetcher = createSegmentFetcher({
@@ -45163,12 +45808,16 @@ ${event}`
         eventListeners,
         requestOptions
       });
-      return applyPrioritizerToSegmentFetcher(this._prioritizer, segmentFetcher);
+      const prioritizedSegmentFetcher = applyPrioritizerToSegmentFetcher(
+        this._prioritizer,
+        segmentFetcher
+      );
+      return new SegmentQueue(prioritizedSegmentFetcher);
     }
   };
 
   // src/core/fetchers/segment/index.ts
-  var segment_default = SegmentFetcherCreator;
+  var segment_default = SegmentQueueCreator;
 
   // src/core/fetchers/thumbnails/index.ts
   init_define_ENVIRONMENT();
@@ -45837,10 +46486,10 @@ ${event}`
     const { representations } = adaptation;
     let min = null;
     let lastIndex;
-    for (let i = 0; i < representations.length; i++) {
-      if (representations[i].index !== lastIndex) {
-        lastIndex = representations[i].index;
-        const lastPosition = representations[i].index.getEnd();
+    for (const representation of representations) {
+      if (representation.index !== lastIndex) {
+        lastIndex = representation.index;
+        const lastPosition = representation.index.getEnd();
         if (lastPosition === void 0) {
           return void 0;
         }
@@ -45968,13 +46617,15 @@ ${event}`
   // src/core/main/common/get_thumbnail_data.ts
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
-  async function getThumbnailData(manifest, fetchThumbnails, time) {
-    const period = manifest.getPeriodForTime(time);
+  async function getThumbnailData(fetchThumbnails, manifest, periodId, thumbnailTrackId, time) {
+    const period = manifest.getPeriod(periodId);
     if (period === void 0) {
       throw new Error("Wanted Period not found.");
     }
-    const thumbnailTrack = period.thumbnailTrack;
-    if (thumbnailTrack === null) {
+    const thumbnailTrack = arrayFind(period.thumbnailTracks, (t) => {
+      return t.id === thumbnailTrackId;
+    });
+    if (thumbnailTrack === void 0) {
       throw new Error("Wanted Period has no thumbnail track.");
     }
     const wantedThumbnail = thumbnailTrack.index.getSegments(time, 1)[0];
@@ -46937,8 +47588,7 @@ ${event}`
       return currentLetter;
     }
     let str = "";
-    for (let i = 0; i < inventory.length; i++) {
-      const chunk = inventory[i];
+    for (const chunk of inventory) {
       if (chunk.bufferedStart !== void 0 && chunk.bufferedEnd !== void 0) {
         const periodId = chunk.infos.period.id;
         const representationId = chunk.infos.representation.id;
@@ -46947,11 +47597,14 @@ ${event}`
         if (encounteredPeriod === void 0) {
           currentLetter = generateNewLetter(chunk.infos);
           encounteredReps[periodId] = { [representationId]: currentLetter };
-        } else if (encounteredPeriod[representationId] === void 0) {
-          currentLetter = generateNewLetter(chunk.infos);
-          encounteredPeriod[representationId] = currentLetter;
         } else {
-          currentLetter = encounteredPeriod[representationId];
+          const previousLetter = encounteredPeriod[representationId];
+          if (previousLetter === void 0) {
+            currentLetter = generateNewLetter(chunk.infos);
+            encounteredPeriod[representationId] = currentLetter;
+          } else {
+            currentLetter = previousLetter;
+          }
         }
         if (lastChunk === null) {
           str += `${chunk.bufferedStart.toFixed(2)}|${currentLetter}|`;
@@ -47522,7 +48175,7 @@ ${event}`
         return Promise.resolve();
       }
       return createCancellablePromise(cancelWaitSignal, (res) => {
-        let onAddedOrDisabled;
+        let onAddedOrDisabled = noop_default;
         const removeCallback = () => {
           const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
           if (indexOf >= 0) {
@@ -47557,7 +48210,8 @@ ${event}`
       }
       this._initializedSegmentSinks[bufferType] = null;
       if (_SegmentSinksStore.isNative(bufferType)) {
-        this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
+        this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
+        assert(this._onNativeBufferAddedOrDisabled.length === 0);
       }
     }
     /**
@@ -47596,7 +48250,8 @@ ${event}`
           this._mediaSource
         );
         this._initializedSegmentSinks[bufferType] = nativeSegmentSink;
-        this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
+        this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
+        assert(this._onNativeBufferAddedOrDisabled.length === 0);
         return nativeSegmentSink;
       }
       if (!isNullOrUndefined(memorizedSegmentSink)) {
@@ -47765,359 +48420,6 @@ ${event}`
   // src/core/stream/representation/representation_stream.ts
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
-
-  // src/core/stream/representation/utils/downloading_queue.ts
-  init_define_ENVIRONMENT();
-  init_define_LOGGER_LEVEL();
-  var DownloadingQueue = class extends EventEmitter {
-    /**
-     * Create a new `DownloadingQueue`.
-     *
-     * @param {Object} content - The context of the Representation you want to
-     * load segments for.
-     * @param {Object} downloadQueue - Queue of segments you want to load.
-     * @param {Object} segmentFetcher - Interface to facilitate the download of
-     * segments.
-     * @param {boolean} hasInitSegment - Declare that an initialization segment
-     * will need to be downloaded.
-     *
-     * A `DownloadingQueue` ALWAYS wait for the initialization segment to be
-     * loaded and parsed before parsing a media segment.
-     *
-     * In cases where no initialization segment exist, this would lead to the
-     * `DownloadingQueue` waiting indefinitely for it.
-     *
-     * By setting that value to `false`, you anounce to the `DownloadingQueue`
-     * that it should not wait for an initialization segment before parsing a
-     * media segment.
-     */
-    constructor(content, downloadQueue, segmentFetcher, hasInitSegment) {
-      super();
-      this._content = content;
-      this._currentCanceller = null;
-      this._downloadQueue = downloadQueue;
-      this._initSegmentRequest = null;
-      this._mediaSegmentRequest = null;
-      this._segmentFetcher = segmentFetcher;
-      this._initSegmentInfoRef = new reference_default(void 0);
-      this._mediaSegmentAwaitingInitMetadata = null;
-      if (!hasInitSegment) {
-        this._initSegmentInfoRef.setValue(null);
-      }
-    }
-    /**
-     * Returns the initialization segment currently being requested.
-     * Returns `null` if no initialization segment request is pending.
-     * @returns {Object | null}
-     */
-    getRequestedInitSegment() {
-      return this._initSegmentRequest === null ? null : this._initSegmentRequest.segment;
-    }
-    /**
-     * Returns the media segment currently being requested.
-     * Returns `null` if no media segment request is pending.
-     * @returns {Object | null}
-     */
-    getRequestedMediaSegment() {
-      return this._mediaSegmentRequest === null ? null : this._mediaSegmentRequest.segment;
-    }
-    /**
-     * Start the current downloading queue, emitting events as it loads and parses
-     * initialization and media segments.
-     */
-    start() {
-      if (this._currentCanceller !== null) {
-        return;
-      }
-      this._currentCanceller = new TaskCanceller();
-      this._downloadQueue.onUpdate(
-        (queue) => {
-          const { segmentQueue } = queue;
-          if (segmentQueue.length > 0 && segmentQueue[0].segment.id === this._mediaSegmentAwaitingInitMetadata) {
-            return;
-          }
-          const currentSegmentRequest = this._mediaSegmentRequest;
-          if (segmentQueue.length === 0) {
-            if (currentSegmentRequest === null) {
-              return;
-            }
-            log_default.debug(
-              "Stream: no more media segment to request. Cancelling queue.",
-              this._content.adaptation.type
-            );
-            this._restartMediaSegmentDownloadingQueue();
-            return;
-          } else if (currentSegmentRequest === null) {
-            log_default.debug(
-              "Stream: Media segments now need to be requested. Starting queue.",
-              this._content.adaptation.type,
-              segmentQueue.length
-            );
-            this._restartMediaSegmentDownloadingQueue();
-            return;
-          } else {
-            const nextItem = segmentQueue[0];
-            if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
-              log_default.debug(
-                "Stream: Next media segment changed, cancelling previous",
-                this._content.adaptation.type
-              );
-              this._restartMediaSegmentDownloadingQueue();
-              return;
-            }
-            if (currentSegmentRequest.priority !== nextItem.priority) {
-              log_default.debug(
-                "Stream: Priority of next media segment changed, updating",
-                this._content.adaptation.type,
-                currentSegmentRequest.priority,
-                nextItem.priority
-              );
-              this._segmentFetcher.updatePriority(
-                currentSegmentRequest.request,
-                nextItem.priority
-              );
-            }
-            return;
-          }
-        },
-        { emitCurrentValue: true, clearSignal: this._currentCanceller.signal }
-      );
-      this._downloadQueue.onUpdate(
-        (next) => {
-          var _a;
-          const initSegmentRequest = this._initSegmentRequest;
-          if (next.initSegment !== null && initSegmentRequest !== null) {
-            if (next.initSegment.priority !== initSegmentRequest.priority) {
-              this._segmentFetcher.updatePriority(
-                initSegmentRequest.request,
-                next.initSegment.priority
-              );
-            }
-            return;
-          } else if (((_a = next.initSegment) == null ? void 0 : _a.segment.id) === (initSegmentRequest == null ? void 0 : initSegmentRequest.segment.id)) {
-            return;
-          }
-          if (next.initSegment === null) {
-            log_default.debug(
-              "Stream: no more init segment to request. Cancelling queue.",
-              this._content.adaptation.type
-            );
-          }
-          this._restartInitSegmentDownloadingQueue(next.initSegment);
-        },
-        { emitCurrentValue: true, clearSignal: this._currentCanceller.signal }
-      );
-    }
-    stop() {
-      var _a;
-      (_a = this._currentCanceller) == null ? void 0 : _a.cancel();
-      this._currentCanceller = null;
-    }
-    /**
-     * Internal logic performing media segment requests.
-     */
-    _restartMediaSegmentDownloadingQueue() {
-      if (this._mediaSegmentRequest !== null) {
-        this._mediaSegmentRequest.canceller.cancel();
-      }
-      const { segmentQueue } = this._downloadQueue.getValue();
-      const currentNeededSegment = segmentQueue[0];
-      const recursivelyRequestSegments = (startingSegment) => {
-        if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
-          this._mediaSegmentRequest = null;
-          return;
-        }
-        if (startingSegment === void 0) {
-          this._mediaSegmentRequest = null;
-          this.trigger("emptyQueue", null);
-          return;
-        }
-        const canceller = new TaskCanceller();
-        const unlinkCanceller = this._currentCanceller === null ? noop_default : canceller.linkToSignal(this._currentCanceller.signal);
-        const { segment, priority } = startingSegment;
-        const context = object_assign_default({ segment }, this._content);
-        let isComplete = false;
-        let isWaitingOnInitSegment = false;
-        canceller.signal.register(() => {
-          this._mediaSegmentRequest = null;
-          if (isComplete) {
-            return;
-          }
-          if (this._mediaSegmentAwaitingInitMetadata === segment.id) {
-            this._mediaSegmentAwaitingInitMetadata = null;
-          }
-          isComplete = true;
-          isWaitingOnInitSegment = false;
-        });
-        const emitChunk = (parsed) => {
-          assert(parsed.segmentType === "media", "Should have loaded a media segment.");
-          this.trigger("parsedMediaSegment", object_assign_default({}, parsed, { segment }));
-        };
-        const continueToNextSegment = () => {
-          const lastQueue = this._downloadQueue.getValue().segmentQueue;
-          if (lastQueue.length === 0) {
-            isComplete = true;
-            this.trigger("emptyQueue", null);
-            return;
-          } else if (lastQueue[0].segment.id === segment.id) {
-            lastQueue.shift();
-          }
-          isComplete = true;
-          recursivelyRequestSegments(lastQueue[0]);
-        };
-        const request2 = this._segmentFetcher.createRequest(
-          context,
-          priority,
-          {
-            /**
-             * Callback called when the request has to be retried.
-             * @param {Error} error
-             */
-            onRetry: (error) => {
-              this.trigger("requestRetry", { segment, error });
-            },
-            /**
-             * Callback called when the request has to be interrupted and
-             * restarted later.
-             */
-            beforeInterrupted() {
-              log_default.info(
-                "Stream: segment request interrupted temporarly.",
-                segment.id,
-                segment.time
-              );
-            },
-            /**
-             * Callback called when a decodable chunk of the segment is available.
-             * @param {Function} parse - Function allowing to parse the segment.
-             */
-            onChunk: (parse2) => {
-              const initTimescale = this._initSegmentInfoRef.getValue();
-              if (initTimescale !== void 0) {
-                emitChunk(parse2(initTimescale != null ? initTimescale : void 0));
-              } else {
-                isWaitingOnInitSegment = true;
-                this._initSegmentInfoRef.waitUntilDefined(
-                  (actualTimescale) => {
-                    emitChunk(parse2(actualTimescale != null ? actualTimescale : void 0));
-                  },
-                  { clearSignal: canceller.signal }
-                );
-              }
-            },
-            /** Callback called after all chunks have been sent. */
-            onAllChunksReceived: () => {
-              if (!isWaitingOnInitSegment) {
-                this.trigger("fullyLoadedSegment", segment);
-              } else {
-                this._mediaSegmentAwaitingInitMetadata = segment.id;
-                this._initSegmentInfoRef.waitUntilDefined(
-                  () => {
-                    this._mediaSegmentAwaitingInitMetadata = null;
-                    isWaitingOnInitSegment = false;
-                    this.trigger("fullyLoadedSegment", segment);
-                  },
-                  { clearSignal: canceller.signal }
-                );
-              }
-            },
-            /**
-             * Callback called right after the request ended but before the next
-             * requests are scheduled. It is used to schedule the next segment.
-             */
-            beforeEnded: () => {
-              unlinkCanceller();
-              this._mediaSegmentRequest = null;
-              if (isWaitingOnInitSegment) {
-                this._initSegmentInfoRef.waitUntilDefined(continueToNextSegment, {
-                  clearSignal: canceller.signal
-                });
-              } else {
-                continueToNextSegment();
-              }
-            }
-          },
-          canceller.signal
-        );
-        request2.catch((error) => {
-          unlinkCanceller();
-          if (!isComplete) {
-            isComplete = true;
-            this.stop();
-            this.trigger("error", error);
-          }
-        });
-        this._mediaSegmentRequest = { segment, priority, request: request2, canceller };
-      };
-      recursivelyRequestSegments(currentNeededSegment);
-    }
-    /**
-     * Internal logic performing initialization segment requests.
-     * @param {Object} queuedInitSegment
-     */
-    _restartInitSegmentDownloadingQueue(queuedInitSegment) {
-      if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
-        return;
-      }
-      if (this._initSegmentRequest !== null) {
-        this._initSegmentRequest.canceller.cancel();
-      }
-      if (queuedInitSegment === null) {
-        return;
-      }
-      const canceller = new TaskCanceller();
-      const unlinkCanceller = this._currentCanceller === null ? noop_default : canceller.linkToSignal(this._currentCanceller.signal);
-      const { segment, priority } = queuedInitSegment;
-      const context = object_assign_default({ segment }, this._content);
-      let isComplete = false;
-      const request2 = this._segmentFetcher.createRequest(
-        context,
-        priority,
-        {
-          onRetry: (err) => {
-            this.trigger("requestRetry", { segment, error: err });
-          },
-          beforeInterrupted: () => {
-            log_default.info("Stream: init segment request interrupted temporarly.", segment.id);
-          },
-          beforeEnded: () => {
-            unlinkCanceller();
-            this._initSegmentRequest = null;
-            isComplete = true;
-          },
-          onChunk: (parse2) => {
-            var _a;
-            const parsed = parse2(void 0);
-            assert(parsed.segmentType === "init", "Should have loaded an init segment.");
-            this.trigger("parsedInitSegment", object_assign_default({}, parsed, { segment }));
-            if (parsed.segmentType === "init") {
-              this._initSegmentInfoRef.setValue((_a = parsed.initTimescale) != null ? _a : null);
-            }
-          },
-          onAllChunksReceived: () => {
-            this.trigger("fullyLoadedSegment", segment);
-          }
-        },
-        canceller.signal
-      );
-      request2.catch((error) => {
-        unlinkCanceller();
-        if (!isComplete) {
-          isComplete = true;
-          this.stop();
-          this.trigger("error", error);
-        }
-      });
-      canceller.signal.register(() => {
-        this._initSegmentRequest = null;
-        if (isComplete) {
-          return;
-        }
-        isComplete = true;
-      });
-      this._initSegmentRequest = { segment, priority, request: request2, canceller };
-    }
-  };
 
   // src/core/stream/representation/utils/get_buffer_status.ts
   init_define_ENVIRONMENT();
@@ -48360,8 +48662,7 @@ ${event}`
           return false;
         }
       }
-      for (let i = 0; i < reusableSegments.length; i++) {
-        const completeSeg = reusableSegments[i];
+      for (const completeSeg of reusableSegments) {
         const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
         if (completeSeg.status === 1 /* FullyLoaded */ && areFromSamePeriod) {
           const completeSegInfos = completeSeg.infos.segment;
@@ -48819,7 +49120,7 @@ ${event}`
     options,
     playbackObserver,
     segmentSink,
-    segmentFetcher,
+    segmentQueue,
     terminate
   }, callbacks, parentCancelSignal) {
     const { period, adaptation, representation } = content;
@@ -48839,13 +49140,6 @@ ${event}`
         segmentSink.freeInitSegment(initSegmentState.uniqueId);
       }
     });
-    const lastSegmentQueue = new reference_default(
-      {
-        initSegment: null,
-        segmentQueue: []
-      },
-      segmentsLoadingCanceller.signal
-    );
     const hasInitSegment = initSegmentState.segment !== null;
     if (!hasInitSegment) {
       initSegmentState.isLoaded = true;
@@ -48863,42 +49157,55 @@ ${event}`
         }
       }
     }
-    const downloadingQueue = new DownloadingQueue(
-      content,
-      lastSegmentQueue,
-      segmentFetcher,
-      hasInitSegment
-    );
-    downloadingQueue.addEventListener("error", (err) => {
+    segmentQueue.addEventListener("error", (err) => {
       if (segmentsLoadingCanceller.signal.isCancelled()) {
         return;
       }
       globalCanceller.cancel();
       callbacks.error(err);
     });
-    downloadingQueue.addEventListener("parsedInitSegment", onParsedChunk);
-    downloadingQueue.addEventListener("parsedMediaSegment", onParsedChunk);
-    downloadingQueue.addEventListener("emptyQueue", checkStatus);
-    downloadingQueue.addEventListener("requestRetry", (payload) => {
-      callbacks.warning(payload.error);
-      if (segmentsLoadingCanceller.signal.isCancelled()) {
-        return;
-      }
-      const retriedSegment = payload.segment;
-      const { index } = representation;
-      if (index.isSegmentStillAvailable(retriedSegment) === false) {
-        checkStatus();
-      } else if (index.canBeOutOfSyncError(payload.error, retriedSegment)) {
-        callbacks.manifestMightBeOufOfSync();
-      }
-    });
-    downloadingQueue.addEventListener("fullyLoadedSegment", (segment) => {
-      segmentSink.signalSegmentComplete(object_assign_default({ segment }, content)).catch(onFatalBufferError);
-    });
-    downloadingQueue.start();
+    segmentQueue.addEventListener(
+      "parsedInitSegment",
+      onParsedChunk,
+      segmentsLoadingCanceller.signal
+    );
+    segmentQueue.addEventListener(
+      "parsedMediaSegment",
+      onParsedChunk,
+      segmentsLoadingCanceller.signal
+    );
+    segmentQueue.addEventListener(
+      "emptyQueue",
+      checkStatus,
+      segmentsLoadingCanceller.signal
+    );
+    segmentQueue.addEventListener(
+      "requestRetry",
+      (payload) => {
+        callbacks.warning(payload.error);
+        if (segmentsLoadingCanceller.signal.isCancelled()) {
+          return;
+        }
+        const retriedSegment = payload.segment;
+        const { index } = representation;
+        if (index.isSegmentStillAvailable(retriedSegment) === false) {
+          checkStatus();
+        } else if (index.canBeOutOfSyncError(payload.error, retriedSegment)) {
+          callbacks.manifestMightBeOufOfSync();
+        }
+      },
+      segmentsLoadingCanceller.signal
+    );
+    segmentQueue.addEventListener(
+      "fullyLoadedSegment",
+      (segment) => {
+        segmentSink.signalSegmentComplete(object_assign_default({ segment }, content)).catch(onFatalBufferError);
+      },
+      segmentsLoadingCanceller.signal
+    );
+    const segmentsToLoadRef = segmentQueue.resetForContent(content, hasInitSegment);
     segmentsLoadingCanceller.signal.register(() => {
-      downloadingQueue.removeEventListener();
-      downloadingQueue.stop();
+      segmentQueue.stop();
     });
     playbackObserver.listen(checkStatus, {
       includeLastObservation: false,
@@ -48963,30 +49270,30 @@ ${event}`
       }
       const terminateVal = terminate.getValue();
       if (terminateVal === null) {
-        lastSegmentQueue.setValue({
+        segmentsToLoadRef.setValue({
           initSegment: neededInitSegment,
           segmentQueue: neededSegments
         });
       } else if (terminateVal.urgent) {
         log_default.debug("Stream: Urgent switch, terminate now.", bufferType);
-        lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
-        lastSegmentQueue.finish();
+        segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
+        segmentsToLoadRef.finish();
         segmentsLoadingCanceller.cancel();
         callbacks.terminating();
         return;
       } else {
         const mostNeededSegment = neededSegments[0];
-        const initSegmentRequest = downloadingQueue.getRequestedInitSegment();
-        const currentSegmentRequest = downloadingQueue.getRequestedMediaSegment();
+        const initSegmentRequest = segmentQueue.getRequestedInitSegment();
+        const currentSegmentRequest = segmentQueue.getRequestedMediaSegment();
         const nextQueue = currentSegmentRequest === null || mostNeededSegment === void 0 || currentSegmentRequest.id !== mostNeededSegment.segment.id ? [] : [mostNeededSegment];
         const nextInit = initSegmentRequest === null ? null : neededInitSegment;
-        lastSegmentQueue.setValue({
+        segmentsToLoadRef.setValue({
           initSegment: nextInit,
           segmentQueue: nextQueue
         });
         if (nextQueue.length === 0 && nextInit === null) {
           log_default.debug("Stream: No request left, terminate", bufferType);
-          lastSegmentQueue.finish();
+          segmentsToLoadRef.finish();
           segmentsLoadingCanceller.cancel();
           callbacks.terminating();
           return;
@@ -49194,7 +49501,7 @@ ${event}`
     options,
     representationEstimator,
     segmentSink,
-    segmentFetcherCreator,
+    segmentQueueCreator,
     wantedBufferAhead,
     maxVideoBufferSize
   }, callbacks, parentCancelSignal) {
@@ -49222,7 +49529,7 @@ ${event}`
       playbackObserver,
       adapStreamCanceller.signal
     );
-    const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
+    const segmentQueue = segmentQueueCreator.createSegmentQueue(
       adaptation.type,
       /* eslint-disable @typescript-eslint/unbound-method */
       {
@@ -49447,7 +49754,7 @@ ${event}`
           playbackObserver,
           content: { representation, adaptation, period, manifest },
           segmentSink,
-          segmentFetcher,
+          segmentQueue,
           terminate: terminateCurrentStream,
           options: {
             bufferGoal,
@@ -49586,7 +49893,7 @@ ${event}`
     garbageCollectors,
     playbackObserver,
     representationEstimator,
-    segmentFetcherCreator,
+    segmentQueueCreator,
     segmentSinksStore,
     options,
     wantedBufferAhead,
@@ -49800,7 +50107,7 @@ ${event}`
           playbackObserver: adaptationPlaybackObserver,
           representationEstimator,
           segmentSink,
-          segmentFetcherCreator,
+          segmentQueueCreator,
           wantedBufferAhead,
           maxVideoBufferSize
         },
@@ -49946,8 +50253,7 @@ ${event}`
     }
     const accumulator = [];
     const inventory = segmentSink.getLastKnownInventory();
-    for (let i = 0; i < inventory.length; i++) {
-      const chunk = inventory[i];
+    for (const chunk of inventory) {
       const hasContent = contents.some((content) => {
         return chunk.infos.period.id === content.period.id && chunk.infos.adaptation.id === content.adaptation.id && chunk.infos.representation.id === content.representation.id;
       });
@@ -49969,7 +50275,7 @@ ${event}`
   }
 
   // src/core/stream/orchestrator/stream_orchestrator.ts
-  function StreamOrchestrator(content, playbackObserver, representationEstimator, segmentSinksStore, segmentFetcherCreator, options, callbacks, orchestratorCancelSignal) {
+  function StreamOrchestrator(content, playbackObserver, representationEstimator, segmentSinksStore, segmentQueueCreator, options, callbacks, orchestratorCancelSignal) {
     const { manifest, initialPeriod } = content;
     const { maxBufferAhead, maxBufferBehind, wantedBufferAhead, maxVideoBufferSize } = options;
     const {
@@ -50222,7 +50528,7 @@ ${event}`
         content: { manifest, period: basePeriod },
         garbageCollectors,
         maxVideoBufferSize,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         segmentSinksStore,
         options,
         playbackObserver,
@@ -50522,7 +50828,7 @@ ${event}`
           if (childNodes[j].nodeName === "track") {
             try {
               element.removeChild(childNodes[j]);
-            } catch (err) {
+            } catch (_err) {
               log_default.warn("Compat: Could not remove text track child from element.");
             }
           }
@@ -50881,7 +51187,7 @@ ${event}`
       const mediaSource = new MediaSource_();
       const handle = mediaSource.handle;
       this.handle = isNullOrUndefined(handle) ? (
-        /* eslint-disable-next-line @typescript-eslint/no-restricted-types */
+        // eslint-disable-next-line @typescript-eslint/no-restricted-types
         { type: "media-source", value: mediaSource }
       ) : { type: "handle", value: handle };
       this._mediaSource = mediaSource;
@@ -52633,7 +52939,7 @@ ${event}`
         bufferOptions
       );
       const cdnPrioritizer = new CdnPrioritizer(initCanceller.signal);
-      const segmentFetcherCreator = new segment_default(
+      const segmentQueueCreator = new segment_default(
         transport,
         cdnPrioritizer,
         this._cmcdDataBuilder,
@@ -52663,7 +52969,7 @@ ${event}`
           manifest,
           representationEstimator,
           cdnPrioritizer,
-          segmentFetcherCreator,
+          segmentQueueCreator,
           speed,
           bufferOptions: subBufferOptions
         };
@@ -52713,7 +53019,7 @@ ${event}`
         playbackObserver,
         representationEstimator,
         cdnPrioritizer,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         speed
       } = args;
       const { transport } = this._settings;
@@ -52894,12 +53200,18 @@ ${event}`
                     (resolve) => resolve(segmentSinksStore.getSegmentSinksMetrics())
                   );
                 },
-                getThumbnailData: async (time) => {
+                getThumbnailData: async (periodId, thumbnailTrackId, time) => {
                   const fetchThumbnails = thumbnails_default(
                     transport.thumbnails,
                     cdnPrioritizer
                   );
-                  return getThumbnailData(manifest, fetchThumbnails, time);
+                  return getThumbnailData(
+                    fetchThumbnails,
+                    manifest,
+                    periodId,
+                    thumbnailTrackId,
+                    time
+                  );
                 }
               });
             }
@@ -52918,7 +53230,7 @@ ${event}`
         coreObserver,
         representationEstimator,
         segmentSinksStore,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         bufferOptions,
         handleStreamOrchestratorCallbacks(),
         cancelSignal
@@ -53190,17 +53502,17 @@ ${event}`
       if (contentKIDs !== void 0) {
         for (const elt of contentKIDs) {
           for (const blacklistedKeyId of blacklistedKeyIds) {
-            if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
+            if (areArraysOfNumbersEqual(blacklistedKeyId, elt)) {
               return false;
             }
           }
           for (const whitelistedKeyId of whitelistedKeyIds) {
-            if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
+            if (areArraysOfNumbersEqual(whitelistedKeyId, elt)) {
               return true;
             }
           }
           for (const delistedKeyId of delistedKeyIds) {
-            if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
+            if (areArraysOfNumbersEqual(delistedKeyId, elt)) {
               return void 0;
             }
           }
@@ -54507,7 +54819,7 @@ ${event}`
         continue;
       }
       switch (attributeName) {
-        case "t":
+        case "t": {
           const start = parseInt(attributeVal, 10);
           if (isNaN(start)) {
             log_default.warn(`DASH: invalid t ("${attributeVal}")`);
@@ -54515,7 +54827,8 @@ ${event}`
             parsedS.start = start;
           }
           break;
-        case "d":
+        }
+        case "d": {
           const duration = parseInt(attributeVal, 10);
           if (isNaN(duration)) {
             log_default.warn(`DASH: invalid d ("${attributeVal}")`);
@@ -54523,7 +54836,8 @@ ${event}`
             parsedS.duration = duration;
           }
           break;
-        case "r":
+        }
+        case "r": {
           const repeatCount = parseInt(attributeVal, 10);
           if (isNaN(repeatCount)) {
             log_default.warn(`DASH: invalid r ("${attributeVal}")`);
@@ -54531,6 +54845,7 @@ ${event}`
             parsedS.repeatCount = repeatCount;
           }
           break;
+        }
       }
     }
     return parsedS;
@@ -54540,7 +54855,7 @@ ${event}`
     for (let j = 0; j < root.attributes.length; j++) {
       const attribute = root.attributes[j];
       switch (attribute.name) {
-        case "t":
+        case "t": {
           const start = parseInt(attribute.value, 10);
           if (isNaN(start)) {
             log_default.warn(`DASH: invalid t ("${attribute.value}")`);
@@ -54548,7 +54863,8 @@ ${event}`
             parsedS.start = start;
           }
           break;
-        case "d":
+        }
+        case "d": {
           const duration = parseInt(attribute.value, 10);
           if (isNaN(duration)) {
             log_default.warn(`DASH: invalid d ("${attribute.value}")`);
@@ -54556,7 +54872,8 @@ ${event}`
             parsedS.duration = duration;
           }
           break;
-        case "r":
+        }
+        case "r": {
           const repeatCount = parseInt(attribute.value, 10);
           if (isNaN(repeatCount)) {
             log_default.warn(`DASH: invalid r ("${attribute.value}")`);
@@ -54564,6 +54881,7 @@ ${event}`
             parsedS.repeatCount = repeatCount;
           }
           break;
+        }
       }
     }
     return parsedS;
@@ -55676,13 +55994,13 @@ ${event}`
       systemId = contentProtectionIr.attributes.schemeIdUri.substring(9).replace(/-/g, "").toLowerCase();
     }
     if (contentProtectionIr.attributes.keyId !== void 0 && contentProtectionIr.attributes.keyId.length > 0) {
-      const kidObj = { keyId: contentProtectionIr.attributes.keyId, systemId };
+      const kid = contentProtectionIr.attributes.keyId;
       if (representation.contentProtections === void 0) {
-        representation.contentProtections = { keyIds: [kidObj], initData: [] };
+        representation.contentProtections = { keyIds: [kid], initData: [] };
       } else if (representation.contentProtections.keyIds === void 0) {
-        representation.contentProtections.keyIds = [kidObj];
+        representation.contentProtections.keyIds = [kid];
       } else {
-        representation.contentProtections.keyIds.push(kidObj);
+        representation.contentProtections.keyIds.push(kid);
       }
     }
     if (systemId === void 0) {
@@ -55750,8 +56068,8 @@ ${event}`
   function getLastPositionFromAdaptation(adaptation) {
     const { representations } = adaptation;
     let min = null;
-    for (let i = 0; i < representations.length; i++) {
-      const lastPosition = representations[i].index.getLastAvailablePosition();
+    for (const representation of representations) {
+      const lastPosition = representation.index.getLastAvailablePosition();
       if (lastPosition === void 0) {
         return void 0;
       }
@@ -55826,8 +56144,8 @@ ${event}`
   function getFirstPositionFromAdaptation(adaptation) {
     const { representations } = adaptation;
     let max = null;
-    for (let i = 0; i < representations.length; i++) {
-      const firstPosition = representations[i].index.getFirstAvailablePosition();
+    for (const representation of representations) {
+      const firstPosition = representation.index.getFirstAvailablePosition();
       if (firstPosition === void 0) {
         return void 0;
       }
@@ -56132,13 +56450,13 @@ ${event}`
   init_define_ENVIRONMENT();
   init_define_LOGGER_LEVEL();
   var SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
-  function getThumbnailAdaptationSetInfo(adaptation) {
+  function getThumbnailAdaptationSetInfo(adaptation, representation) {
     var _a, _b, _c, _d;
     const thumbnailProp = (_d = arrayFind(
       (_a = adaptation.children.essentialProperties) != null ? _a : [],
       (p) => p.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" || p.schemeIdUri === "http://dashif.org/thumbnail_tile"
     )) != null ? _d : arrayFind(
-      (_c = (_b = adaptation.children.representations[0]) == null ? void 0 : _b.children.essentialProperties) != null ? _c : [],
+      (_c = (_b = representation != null ? representation : adaptation.children.representations[0]) == null ? void 0 : _b.children.essentialProperties) != null ? _c : [],
       (p) => p.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" || p.schemeIdUri === "http://dashif.org/thumbnail_tile"
     );
     if (thumbnailProp === void 0) {
@@ -56656,7 +56974,7 @@ ${event}`
   function parseAdaptationSets(adaptationsIR, context) {
     var _a, _b, _c, _d, _e, _f, _g;
     const parsedAdaptations = { video: [], audio: [], text: [] };
-    let parsedThumbnailTrack = null;
+    const parsedThumbnailTracks = [];
     const trickModeAdaptations = [];
     const adaptationSwitchingInfos = {};
     const parsedAdaptationsIDs = [];
@@ -56750,9 +57068,9 @@ ${event}`
       reprCtxt.unsafelyBaseOnPreviousAdaptation = (_g = (_f = context.unsafelyBaseOnPreviousPeriod) == null ? void 0 : _f.getAdaptation(adaptationID)) != null ? _g : null;
       const representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
       if (type === "thumbnails") {
-        const track = createThumbnailTrack(adaptation, representations);
+        const track = createThumbnailTracks(adaptation, representations);
         if (track !== null) {
-          parsedThumbnailTrack = track;
+          parsedThumbnailTracks.push(...track);
         }
         continue;
       }
@@ -56838,39 +57156,46 @@ ${event}`
     attach_trickmode_track_default(adaptationsPerType, trickModeAdaptations);
     return {
       adaptations: adaptationsPerType,
-      thumbnailTrack: parsedThumbnailTrack
+      thumbnailTracks: parsedThumbnailTracks
     };
   }
-  function createThumbnailTrack(adaptation, representations) {
-    const firstRepresentation = representations[0];
-    if (firstRepresentation !== void 0) {
-      if (firstRepresentation.mimeType === void 0) {
-        log_default.warn("DASH: Invalid thumbnails Representation, no mime-type");
-        return null;
+  function createThumbnailTracks(adaptation, representations) {
+    const tracks = [];
+    for (let i = 0; i < representations.length; i++) {
+      const representation = representations[i];
+      if (representation !== void 0) {
+        if (representation.mimeType === void 0) {
+          log_default.warn("DASH: Invalid thumbnails Representation, no mime-type");
+          continue;
+        }
+        const tileInfo = getThumbnailAdaptationSetInfo(
+          adaptation,
+          adaptation.children.representations[i]
+        );
+        if (tileInfo === null) {
+          continue;
+        }
+        if (representation.height === void 0) {
+          log_default.warn("DASH: Invalid thumbnails Representation, no height information");
+          continue;
+        }
+        if (representation.width === void 0) {
+          log_default.warn("DASH: Invalid thumbnails Representation, no width information");
+          continue;
+        }
+        tracks.push({
+          id: representation.id,
+          cdnMetadata: representation.cdnMetadata,
+          index: representation.index,
+          mimeType: representation.mimeType,
+          height: representation.height,
+          width: representation.width,
+          horizontalTiles: tileInfo.horizontalTiles,
+          verticalTiles: tileInfo.verticalTiles
+        });
       }
-      const tileInfo = getThumbnailAdaptationSetInfo(adaptation);
-      if (tileInfo === null) {
-        return null;
-      }
-      if (firstRepresentation.height === void 0) {
-        log_default.warn("DASH: Invalid thumbnails Representation, no height information");
-        return null;
-      }
-      if (firstRepresentation.width === void 0) {
-        log_default.warn("DASH: Invalid thumbnails Representation, no width information");
-        return null;
-      }
-      return {
-        cdnMetadata: firstRepresentation.cdnMetadata,
-        index: firstRepresentation.index,
-        mimeType: firstRepresentation.mimeType,
-        height: firstRepresentation.height,
-        width: firstRepresentation.width,
-        horizontalTiles: tileInfo.horizontalTiles,
-        verticalTiles: tileInfo.verticalTiles
-      };
     }
-    return null;
+    return tracks;
   }
   function compareAdaptations(a, b) {
     const priorityDiff = b[1].priority - a[1].priority;
@@ -56934,7 +57259,7 @@ ${event}`
         start: periodStart,
         unsafelyBaseOnPreviousPeriod
       };
-      const { adaptations, thumbnailTrack } = parseAdaptationSets(
+      const { adaptations, thumbnailTracks } = parseAdaptationSets(
         periodIR.children.adaptations,
         adapCtxt
       );
@@ -56951,7 +57276,7 @@ ${event}`
         start: periodStart,
         end: periodEnd,
         duration: periodDuration,
-        thumbnailTrack,
+        thumbnailTracks,
         adaptations,
         streamEvents
       };
@@ -57816,37 +58141,41 @@ ${event}`
       if (representationChildren[i].nodeType === Node.ELEMENT_NODE) {
         const currentElement = representationChildren[i];
         switch (currentElement.nodeName) {
-          case "BaseURL":
+          case "BaseURL": {
             const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
             if (baseURLObj !== void 0) {
               children.baseURLs.push(baseURLObj);
             }
             warnings = warnings.concat(baseURLWarnings);
             break;
+          }
           case "InbandEventStream":
             if (children.inbandEventStreams === void 0) {
               children.inbandEventStreams = [];
             }
             children.inbandEventStreams.push(parseScheme(currentElement));
             break;
-          case "SegmentBase":
+          case "SegmentBase": {
             const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
             children.segmentBase = segmentBase;
             if (segmentBaseWarnings.length > 0) {
               warnings = warnings.concat(segmentBaseWarnings);
             }
             break;
-          case "SegmentList":
+          }
+          case "SegmentList": {
             const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
             warnings = warnings.concat(segmentListWarnings);
             children.segmentList = segmentList;
             break;
-          case "SegmentTemplate":
+          }
+          case "SegmentTemplate": {
             const [segmentTemplate, segmentTemplateWarnings] = parseSegmentTemplate(currentElement);
             warnings = warnings.concat(segmentTemplateWarnings);
             children.segmentTemplate = segmentTemplate;
             break;
-          case "ContentProtection":
+          }
+          case "ContentProtection": {
             const [contentProtection, contentProtectionWarnings] = parseContentProtection2(currentElement);
             if (contentProtectionWarnings.length > 0) {
               warnings = warnings.concat(contentProtectionWarnings);
@@ -57855,6 +58184,7 @@ ${event}`
               contentProtections.push(contentProtection);
             }
             break;
+          }
           case "EssentialProperty":
             if (isNullOrUndefined(children.essentialProperties)) {
               children.essentialProperties = [parseScheme(currentElement)];
@@ -58010,7 +58340,7 @@ ${event}`
               children.accessibilities.push(parseScheme(currentElement));
             }
             break;
-          case "BaseURL":
+          case "BaseURL": {
             const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
             if (baseURLObj !== void 0) {
               children.baseURLs.push(baseURLObj);
@@ -58019,6 +58349,7 @@ ${event}`
               warnings = warnings.concat(baseURLWarnings);
             }
             break;
+          }
           case "ContentComponent":
             children.contentComponent = parseContentComponent(currentElement);
             break;
@@ -58035,19 +58366,21 @@ ${event}`
             }
             children.inbandEventStreams.push(parseScheme(currentElement));
             break;
-          case "Label":
+          case "Label": {
             const label = currentElement.textContent;
             if (label !== null && label !== void 0) {
               children.label = label;
             }
             break;
-          case "Representation":
+          }
+          case "Representation": {
             const [representation, representationWarnings] = createRepresentationIntermediateRepresentation(currentElement);
             children.representations.push(representation);
             if (representationWarnings.length > 0) {
               warnings = warnings.concat(representationWarnings);
             }
             break;
+          }
           case "Role":
             if (isNullOrUndefined(children.roles)) {
               children.roles = [parseScheme(currentElement)];
@@ -58062,28 +58395,31 @@ ${event}`
               children.supplementalProperties.push(parseScheme(currentElement));
             }
             break;
-          case "SegmentBase":
+          case "SegmentBase": {
             const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
             children.segmentBase = segmentBase;
             if (segmentBaseWarnings.length > 0) {
               warnings = warnings.concat(segmentBaseWarnings);
             }
             break;
-          case "SegmentList":
+          }
+          case "SegmentList": {
             const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
             children.segmentList = segmentList;
             if (segmentListWarnings.length > 0) {
               warnings = warnings.concat(segmentListWarnings);
             }
             break;
-          case "SegmentTemplate":
+          }
+          case "SegmentTemplate": {
             const [segmentTemplate, segmentTemplateWarnings] = parseSegmentTemplate(currentElement);
             children.segmentTemplate = segmentTemplate;
             if (segmentTemplateWarnings.length > 0) {
               warnings = warnings.concat(segmentTemplateWarnings);
             }
             break;
-          case "ContentProtection":
+          }
+          case "ContentProtection": {
             const [contentProtection, contentProtectionWarnings] = parseContentProtection2(currentElement);
             if (contentProtectionWarnings.length > 0) {
               warnings = warnings.concat(contentProtectionWarnings);
@@ -58092,6 +58428,7 @@ ${event}`
               contentProtections.push(contentProtection);
             }
             break;
+          }
         }
       }
     }
@@ -58328,13 +58665,14 @@ ${event}`
       if (element.childNodes[i].nodeType === Node.ELEMENT_NODE) {
         const currentElement = element.childNodes[i];
         switch (currentElement.nodeName) {
-          case "Event":
+          case "Event": {
             const [event, eventWarnings] = parseEvent(currentElement);
             eventStreamIR.children.events.push(event);
             if (eventWarnings.length > 0) {
               warnings = warnings.concat(eventWarnings);
             }
             break;
+          }
         }
       }
     }
@@ -58383,31 +58721,35 @@ ${event}`
       if (periodChildren[i].nodeType === Node.ELEMENT_NODE) {
         const currentElement = periodChildren[i];
         switch (currentElement.nodeName) {
-          case "BaseURL":
+          case "BaseURL": {
             const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
             if (baseURLObj !== void 0) {
               baseURLs.push(baseURLObj);
             }
             warnings = warnings.concat(baseURLWarnings);
             break;
-          case "AdaptationSet":
+          }
+          case "AdaptationSet": {
             const [adaptation, adaptationWarnings] = createAdaptationSetIntermediateRepresentation(currentElement);
             adaptations.push(adaptation);
             warnings = warnings.concat(adaptationWarnings);
             break;
-          case "EventStream":
+          }
+          case "EventStream": {
             const [eventStream, eventStreamWarnings] = parseEventStream(currentElement);
             eventStreams.push(eventStream);
             warnings = warnings.concat(eventStreamWarnings);
             break;
-          case "SegmentTemplate":
+          }
+          case "SegmentTemplate": {
             const [parsedSegmentTemplate, segmentTemplateWarnings] = parseSegmentTemplate(currentElement);
             segmentTemplate = parsedSegmentTemplate;
             if (segmentTemplateWarnings.length > 0) {
               warnings = warnings.concat(segmentTemplateWarnings);
             }
             break;
-          case "ContentProtection":
+          }
+          case "ContentProtection": {
             const [contentProtection, contentProtectionWarnings] = parseContentProtection2(currentElement);
             if (contentProtectionWarnings.length > 0) {
               warnings = warnings.concat(contentProtectionWarnings);
@@ -58416,6 +58758,7 @@ ${event}`
               contentProtections.push(contentProtection);
             }
             break;
+          }
         }
       }
     }
@@ -58484,26 +58827,29 @@ ${event}`
       if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
         const currentNode = mpdChildren[i];
         switch (currentNode.nodeName) {
-          case "BaseURL":
+          case "BaseURL": {
             const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
             if (baseURLObj !== void 0) {
               baseURLs.push(baseURLObj);
             }
             warnings = warnings.concat(baseURLWarnings);
             break;
+          }
           case "Location":
             locations.push(currentNode.textContent === null ? "" : currentNode.textContent);
             break;
-          case "Period":
+          case "Period": {
             const [period, periodWarnings] = createPeriodIntermediateRepresentation(currentNode);
             periods.push(period);
             warnings = warnings.concat(periodWarnings);
             break;
-          case "UTCTiming":
+          }
+          case "UTCTiming": {
             const utcTiming = parseScheme(currentNode);
             utcTimings.push(utcTiming);
             break;
-          case "ContentProtection":
+          }
+          case "ContentProtection": {
             const [contentProtection, contentProtectionWarnings] = parseContentProtection2(currentNode);
             if (contentProtectionWarnings.length > 0) {
               warnings = warnings.concat(contentProtectionWarnings);
@@ -58512,6 +58858,7 @@ ${event}`
               contentProtections.push(contentProtection);
             }
             break;
+          }
         }
       }
     }
@@ -60351,7 +60698,7 @@ ${event}`
     const height = thumbnailTrack.height / thumbnailTrack.verticalTiles;
     const width = thumbnailTrack.width / thumbnailTrack.horizontalTiles;
     const thumbnails = [];
-    const tileDuration = (wantedThumbnail.end - wantedThumbnail.time) / (thumbnailTrack.horizontalTiles * thumbnailTrack.horizontalTiles);
+    const tileDuration = (wantedThumbnail.end - wantedThumbnail.time) / (thumbnailTrack.horizontalTiles * thumbnailTrack.verticalTiles);
     let start = wantedThumbnail.time;
     for (let row = 0; row < thumbnailTrack.verticalTiles; row++) {
       for (let column = 0; column < thumbnailTrack.horizontalTiles; column++) {
@@ -62935,8 +63282,8 @@ ${event}`
     const lines = srtStr.split(/\r\n|\n|\r/);
     const cueBlocks = getCueBlocks(lines);
     const cues = [];
-    for (let i = 0; i < cueBlocks.length; i++) {
-      const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
+    for (const cueBlock of cueBlocks) {
+      const cueObject = parseCueBlock(cueBlock, timeOffset);
       if (cueObject !== null) {
         const htmlCue = toHTML(cueObject);
         if (htmlCue !== null) {
@@ -63203,8 +63550,7 @@ ${event}`
     const recursivelyBrowsedIndexes = [];
     function resolveStyleInheritance(styleElt, index) {
       recursivelyBrowsedIndexes.push(index);
-      for (let j = 0; j < styleElt.extendsStyles.length; j++) {
-        const extendedStyleID = styleElt.extendsStyles[j];
+      for (const extendedStyleID of styleElt.extendsStyles) {
         const extendedStyleIndex = arrayFindIndex(styles, (x) => x.id === extendedStyleID);
         if (extendedStyleIndex < 0) {
           log_default.warn("TTML Parser: unknown style inheritance: " + extendedStyleID);
@@ -63568,7 +63914,7 @@ ${event}`
   var hasClassList;
   function addClassName(elt, className) {
     if (hasClassList === void 0) {
-      hasClassList = elt.classList !== void 0 && /* eslint-disable @typescript-eslint/unbound-method */
+      hasClassList = elt.classList !== void 0 && // eslint-disable-next-line @typescript-eslint/unbound-method
       typeof elt.classList.add === "function";
     }
     if (hasClassList) {
@@ -64090,7 +64436,7 @@ ${event}`
           if (isNonEmptyString(backgroundColor)) {
             style.backgroundColor = backgroundColor;
           } else {
-            delete style.backgroundColor;
+            style.backgroundColor = "";
           }
           const el = createTextElement(currentNode, style, shouldTrimWhiteSpaceFromParent);
           elements.push(el);
@@ -64185,12 +64531,12 @@ ${event}`
   function parseTTMLToDiv(str, timeOffset) {
     const parsedCues = parseTTMLString(str, timeOffset);
     const cues = [];
-    for (let i = 0; i < parsedCues.length; i++) {
-      const { paragraphStyle } = parsedCues[i];
+    for (const parsedCue of parsedCues) {
+      const { paragraphStyle } = parsedCue;
       if (shouldApplyDefaultTTMLStyle(paragraphStyle)) {
         applyDefaultTTMLStyle(paragraphStyle);
       }
-      const cue = parseCue(parsedCues[i]);
+      const cue = parseCue(parsedCue);
       if (cue !== null) {
         cues.push(cue);
       }
@@ -65376,11 +65722,11 @@ ${event}`
         return;
       }
       this.refresh();
-      for (let i = 0; i < nextSegments.length; i++) {
+      for (const nextSeg of nextSegments) {
         _addSegmentInfos2(
           this.timeline,
           this.timescale,
-          nextSegments[i],
+          nextSeg,
           currentSegment.privateInfos.smoothMediaSegment
         );
       }
@@ -65566,7 +65912,7 @@ ${event}`
         root,
         (res, _name, node) => {
           switch (_name) {
-            case "QualityLevel":
+            case "QualityLevel": {
               const qualityLevel = parseQualityLevel(node, adaptationType);
               if (qualityLevel === null) {
                 return res;
@@ -65575,6 +65921,7 @@ ${event}`
                 res.qualityLevels.push(qualityLevel);
               }
               break;
+            }
             case "c":
               res.cNodes.push(node);
               break;
@@ -65608,10 +65955,7 @@ ${event}`
         if (protections.length > 0) {
           firstProtection = protections[0];
           protections.forEach((protection) => {
-            const keyId = protection.keyId;
-            protection.keySystems.forEach((keySystem) => {
-              keyIDs.push({ keyId, systemId: keySystem.systemId });
-            });
+            keyIDs.push(protection.keyId);
           });
         }
         const segmentPrivateInfos = {
@@ -65845,7 +66189,7 @@ ${event}`
             end: periodEnd,
             id: "gen-smooth-period-0",
             start: periodStart,
-            thumbnailTrack: null
+            thumbnailTracks: []
           }
         ],
         suggestedPresentationDelay,
@@ -66537,10 +66881,10 @@ ${event}`
       }
     }
     if (tfrfSegments !== void 0) {
-      for (let i = 0; i < tfrfSegments.length; i++) {
+      for (const tfrfSeg of tfrfSegments) {
         nextSegments.push({
-          time: tfrfSegments[i].time,
-          duration: tfrfSegments[i].duration,
+          time: tfrfSeg.time,
+          duration: tfrfSeg.duration,
           timescale: initTimescale
         });
       }
@@ -67337,7 +67681,7 @@ ${event}`
     } else if (typeof data2 === "string") {
       try {
         parsedData = JSON.parse(data2);
-      } catch (error) {
+      } catch (_error) {
         throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
       }
     } else {
@@ -67358,8 +67702,7 @@ ${event}`
       throw new Error("MPL Parser: No content found.");
     }
     const ressources = [];
-    for (let i = 0; i < contents.length; i++) {
-      const content = contents[i];
+    for (const content of contents) {
       if (isNullOrUndefined(content.url) || isNullOrUndefined(content.startTime) || isNullOrUndefined(content.endTime) || isNullOrUndefined(content.transport)) {
         throw new Error("MPL Parser: Malformed content.");
       }
@@ -67508,7 +67851,7 @@ ${event}`
           adaptations,
           duration: currentPeriod.duration,
           start: contentOffset + currentPeriod.start,
-          thumbnailTrack: currentPeriod.thumbnailTrack
+          thumbnailTracks: currentPeriod.thumbnailTracks
         };
         manifestPeriods.push(newPeriod);
       }
@@ -68261,12 +68604,12 @@ ${event}`
             if (((_z = this._currentContentInfo) == null ? void 0 : _z.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
-            const period2 = arrayFind(
+            const period = arrayFind(
               this._currentContentInfo.manifest.periods,
               (p) => p.id === msgData.value.periodId
             );
-            if (period2 !== void 0) {
-              this.trigger("activePeriodChanged", { period: period2 });
+            if (period !== void 0) {
+              this.trigger("activePeriodChanged", { period });
             }
             break;
           }
@@ -68274,29 +68617,29 @@ ${event}`
             if (((_A = this._currentContentInfo) == null ? void 0 : _A.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
-            const period2 = arrayFind(
+            const period = arrayFind(
               this._currentContentInfo.manifest.periods,
               (p) => p.id === msgData.value.periodId
             );
-            if (period2 === void 0) {
+            if (period === void 0) {
               return;
             }
             if (msgData.value.adaptationId === null) {
               this.trigger("adaptationChange", {
-                period: period2,
+                period,
                 adaptation: null,
                 type: msgData.value.type
               });
               return;
             }
-            const adaptations = (_B = period2.adaptations[msgData.value.type]) != null ? _B : [];
+            const adaptations = (_B = period.adaptations[msgData.value.type]) != null ? _B : [];
             const adaptation = arrayFind(
               adaptations,
               (a) => a.id === msgData.value.adaptationId
             );
             if (adaptation !== void 0) {
               this.trigger("adaptationChange", {
-                period: period2,
+                period,
                 adaptation,
                 type: msgData.value.type
               });
@@ -68307,22 +68650,22 @@ ${event}`
             if (((_C = this._currentContentInfo) == null ? void 0 : _C.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
-            const period2 = arrayFind(
+            const period = arrayFind(
               this._currentContentInfo.manifest.periods,
               (p) => p.id === msgData.value.periodId
             );
-            if (period2 === void 0) {
+            if (period === void 0) {
               return;
             }
             if (msgData.value.representationId === null) {
               this.trigger("representationChange", {
-                period: period2,
+                period,
                 type: msgData.value.type,
                 representation: null
               });
               return;
             }
-            const adaptations = (_D = period2.adaptations[msgData.value.type]) != null ? _D : [];
+            const adaptations = (_D = period.adaptations[msgData.value.type]) != null ? _D : [];
             const adaptation = arrayFind(
               adaptations,
               (a) => a.id === msgData.value.adaptationId
@@ -68336,7 +68679,7 @@ ${event}`
             );
             if (representation !== void 0) {
               this.trigger("representationChange", {
-                period: period2,
+                period,
                 type: msgData.value.type,
                 representation
               });
@@ -68353,13 +68696,13 @@ ${event}`
             if (((_F = this._currentContentInfo) == null ? void 0 : _F.contentId) !== msgData.contentId) {
               return;
             }
-            const manifest2 = msgData.value.manifest;
-            this._currentContentInfo.manifest = manifest2;
-            this._updateCodecSupport(manifest2);
+            const manifest = msgData.value.manifest;
+            this._currentContentInfo.manifest = manifest;
+            this._updateCodecSupport(manifest);
             this._startPlaybackIfReady(playbackStartParams);
             break;
           }
-          case "manifest-update" /* ManifestUpdate */:
+          case "manifest-update" /* ManifestUpdate */: {
             if (((_G = this._currentContentInfo) == null ? void 0 : _G.contentId) !== msgData.contentId) {
               return;
             }
@@ -68377,6 +68720,7 @@ ${event}`
             this._updateCodecSupport(manifest);
             this.trigger("manifestUpdate", msgData.value.updates);
             break;
+          }
           case "update-playback-rate" /* UpdatePlaybackRate */:
             if (((_K = this._currentContentInfo) == null ? void 0 : _K.contentId) !== msgData.contentId) {
               return;
@@ -68402,16 +68746,16 @@ ${event}`
             if (((_N = this._currentContentInfo) == null ? void 0 : _N.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
-            const period2 = arrayFind(
+            const period = arrayFind(
               this._currentContentInfo.manifest.periods,
               (p) => p.id === msgData.value.periodId
             );
-            if (period2 === void 0) {
+            if (period === void 0) {
               return;
             }
             (_O = this._currentContentInfo.rebufferingController) == null ? void 0 : _O.onLockedStream(
               msgData.value.bufferType,
-              period2
+              period
             );
             break;
           }
@@ -68419,11 +68763,11 @@ ${event}`
             if (((_P = this._currentContentInfo) == null ? void 0 : _P.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
-            const period2 = arrayFind(
+            const period = arrayFind(
               this._currentContentInfo.manifest.periods,
               (p) => p.id === msgData.value.periodId
             );
-            if (period2 === void 0) {
+            if (period === void 0) {
               return;
             }
             const ref = new reference_default(
@@ -68468,7 +68812,7 @@ ${event}`
               });
             });
             this.trigger("periodStreamReady", {
-              period: period2,
+              period,
               type: msgData.value.bufferType,
               adaptationRef: ref
             });
@@ -68478,20 +68822,20 @@ ${event}`
             if (((_Q = this._currentContentInfo) == null ? void 0 : _Q.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
-            const period2 = arrayFind(
+            const period = arrayFind(
               this._currentContentInfo.manifest.periods,
               (p) => p.id === msgData.value.periodId
             );
-            if (period2 === void 0) {
+            if (period === void 0) {
               return;
             }
             this.trigger("periodStreamCleared", {
-              period: period2,
+              period,
               type: msgData.value.bufferType
             });
             break;
           }
-          case "discontinuity-update" /* DiscontinuityUpdate */:
+          case "discontinuity-update" /* DiscontinuityUpdate */: {
             if (((_R = this._currentContentInfo) == null ? void 0 : _R.contentId) !== msgData.contentId || this._currentContentInfo.manifest === null) {
               return;
             }
@@ -68510,6 +68854,7 @@ ${event}`
               position: msgData.value.position
             });
             break;
+          }
           case "push-text-data" /* PushTextData */: {
             if (((_T = this._currentContentInfo) == null ? void 0 : _T.contentId) !== msgData.contentId) {
               return;
@@ -69070,7 +69415,7 @@ ${event}`
           cancelSignal.register(rejectFn);
         });
       };
-      const _getThumbnailsData = (time) => {
+      const _getThumbnailsData = (periodId, thumbnailTrackId, time) => {
         if (this._currentContentInfo === null) {
           return Promise.reject(new Error("Cannot fetch thumbnails: No content loaded."));
         }
@@ -69079,7 +69424,7 @@ ${event}`
         sendMessage(this._settings.worker, {
           type: "thumbnail-request" /* ThumbnailDataRequest */,
           contentId: this._currentContentInfo.contentId,
-          value: { requestId, time }
+          value: { requestId, periodId, thumbnailTrackId, time }
         });
         return new Promise((resolve, reject) => {
           this._awaitingRequests.pendingThumbnailFetching.set(requestId, {
@@ -69255,7 +69600,7 @@ ${event}`
               clearSignal: this._currentMediaSourceCanceller.signal
             }
           );
-        } catch (err) {
+        } catch (_err) {
           const error = new OtherError(
             "NONE",
             "Unknown error when creating the MediaSource"
@@ -69271,6 +69616,7 @@ ${event}`
         (newVal) => {
           sendMessage(worker, {
             type: "ref-update" /* ReferenceUpdate */,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             value: { name: ref[1], newVal }
           });
         },
@@ -70204,7 +70550,8 @@ ${event}`
       const _a = initOpts, { debugElement, textTrackElement } = _a, constructorOpts = __objRest(_a, ["debugElement", "textTrackElement"]);
       const player = new minimal_default(constructorOpts);
       let debugEltInstance;
-      window.player = window.rxPlayer = player;
+      window.player = player;
+      window.rxPlayer = player;
       linkPlayerEventsToState(player, state, abortSignal);
       const catchUpModeController = new CatchUpModeController(player, state);
       abortSignal.addEventListener("abort", () => {
@@ -70288,8 +70635,16 @@ ${event}`
         unmute() {
           player.unMute();
         },
-        getThumbnailData(time) {
-          return player.renderThumbnail(state.get("imageThumbnailContainerElement"), time);
+        getThumbnailMetadata(time) {
+          const metadata = player.getThumbnailMetadata({ time });
+          return metadata != null ? metadata : [];
+        },
+        renderThumbnail(time, thumbnailTrackId) {
+          return player.renderThumbnail({
+            container: state.get("imageThumbnailContainerElement"),
+            time,
+            thumbnailTrackId
+          });
         },
         setDefaultVideoRepresentationSwitchingMode(mode) {
           state.update("defaultVideoRepresentationsSwitchingMode", mode);
@@ -70821,7 +71176,7 @@ ${event}`
     const imageThumbnailElement = useModuleState(player, "imageThumbnailContainerElement");
     const parentElementRef = React10.useRef(null);
     const [shouldDisplaySpinner, setShouldDisplaySpinner] = React10.useState(true);
-    const roundedTime = Math.round(time);
+    const ceiledTime = Math.ceil(time);
     React10.useEffect(() => {
       if (showVideoThumbnail) {
         return;
@@ -70867,7 +71222,7 @@ ${event}`
           if (videoThumbnailLoader === null) {
             return;
           }
-          videoThumbnailLoader.setTime(roundedTime).then(hideSpinner).catch((err) => {
+          videoThumbnailLoader.setTime(ceiledTime).then(hideSpinner).catch((err) => {
             if (typeof err === "object" && err !== null && err.code === "ABORTED") {
               return;
             } else {
@@ -70876,11 +71231,25 @@ ${event}`
             }
           });
         } else {
-          console.time("request");
-          player.actions.getThumbnailData(roundedTime).then(() => {
-            console.timeEnd("request");
+          const metadata = player.actions.getThumbnailMetadata(ceiledTime);
+          const thumbnailTrack = metadata.reduce((acc, t) => {
+            if (acc === null || acc.height === void 0) {
+              return t;
+            }
+            if (t.height === void 0) {
+              return acc;
+            }
+            if (acc.height > t.height) {
+              return t.height > 100 ? t : acc;
+            } else {
+              return acc.height > 100 ? acc : t;
+            }
+          }, null);
+          if (thumbnailTrack === null) {
             hideSpinner();
-          }).catch((err) => {
+            return;
+          }
+          player.actions.renderThumbnail(ceiledTime, thumbnailTrack.id).then(hideSpinner).catch((err) => {
             if (typeof err === "object" && err !== null && err.code === "ABORTED") {
               return;
             } else {
@@ -70912,8 +71281,7 @@ ${event}`
         }
         setShouldDisplaySpinner(false);
       }
-    }, [roundedTime, videoThumbnailLoader, parentElementRef]);
-    imageThumbnailElement.style.display = shouldDisplaySpinner ? "none" : "block";
+    }, [ceiledTime, videoThumbnailLoader, parentElementRef]);
     return /* @__PURE__ */ React10.createElement(
       "div",
       {
@@ -71008,17 +71376,19 @@ ${event}`
       return /* @__PURE__ */ React11.createElement("div", { className: "progress-bar-parent", ref: wrapperElementRef }, /* @__PURE__ */ React11.createElement("div", { className: "progress-bar-wrapper" }));
     }
     let thumbnailElement = null;
-    const xThumbnailPosition = tipPosition - toolTipOffset;
-    if (imageTime !== null) {
-      thumbnailElement = /* @__PURE__ */ React11.createElement(
-        ThumbnailPreview,
-        {
-          xPosition: xThumbnailPosition,
-          time: imageTime != null ? imageTime : 0,
-          player,
-          showVideoThumbnail: enableVideoThumbnails
-        }
-      );
+    if (thumbnailIsVisible) {
+      const xThumbnailPosition = tipPosition - toolTipOffset;
+      if (imageTime !== null) {
+        thumbnailElement = /* @__PURE__ */ React11.createElement(
+          ThumbnailPreview,
+          {
+            xPosition: xThumbnailPosition,
+            time: imageTime,
+            player,
+            showVideoThumbnail: enableVideoThumbnails
+          }
+        );
+      }
     }
     return /* @__PURE__ */ React11.createElement("div", { className: "progress-bar-parent", ref: wrapperElementRef }, timeIndicatorVisible ? /* @__PURE__ */ React11.createElement(
       ToolTip_default,
@@ -71475,11 +71845,11 @@ ${event}`
           const serverCertificate = xhr.response;
           resolve(serverCertificate);
         } else {
-          reject();
+          reject(new Error("Could not fetch serverCertificate: HTTP Status Error"));
         }
       };
-      xhr.onerror = (err) => {
-        reject(err);
+      xhr.onerror = () => {
+        reject(new Error("Could not fetch serverCertificate: Request Error"));
       };
       xhr.send();
     });
@@ -71857,6 +72227,12 @@ ${event}`
       live: false
     },
     {
+      name: "Live with thumbnail track",
+      url: "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest_thumbs.mpd",
+      transport: "dash",
+      live: true
+    },
+    {
       name: "Axinom CMAF multiple Audio and Text tracks Tears of steel",
       url: "https://media.axprod.net/TestVectors/Cmaf/clear_1080p_h264/manifest.mpd",
       transport: "dash",
@@ -71897,6 +72273,12 @@ ${event}`
       url: "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
       transport: "dash",
       live: true
+    },
+    {
+      name: "VOD with thumbnail track",
+      url: "https://dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd",
+      transport: "dash",
+      live: false
     },
     {
       name: "Super SpeedWay",
