@@ -35514,6 +35514,29 @@
               basePeriod[prop] = newPeriod[prop];
             }
           }
+          for (const removedThumbnailTrack of updatedPeriod.result.removedThumbnailTracks) {
+            for (let thumbIdx = 0; thumbIdx < basePeriod.thumbnailTracks.length; thumbIdx++) {
+              if (basePeriod.thumbnailTracks[thumbIdx].id === removedThumbnailTrack.id) {
+                basePeriod.thumbnailTracks.splice(thumbIdx, 1);
+                break;
+              }
+            }
+          }
+          for (const updatedThumbnailTrack of updatedPeriod.result.updatedThumbnailTracks) {
+            const newThumbnailTrack = updatedThumbnailTrack;
+            for (let thumbIdx = 0; thumbIdx < basePeriod.thumbnailTracks.length; thumbIdx++) {
+              if (basePeriod.thumbnailTracks[thumbIdx].id === newThumbnailTrack.id) {
+                const baseThumbnailTrack = basePeriod.thumbnailTracks[thumbIdx];
+                for (const prop of Object.keys(newThumbnailTrack)) {
+                  baseThumbnailTrack[prop] = newThumbnailTrack[prop];
+                }
+                break;
+              }
+            }
+          }
+          for (const addedThumbnailTrack of updatedPeriod.result.addedThumbnailTracks) {
+            basePeriod.thumbnailTracks.push(addedThumbnailTrack);
+          }
           for (const removedAdaptation of updatedPeriod.result.removedAdaptations) {
             const ttype = removedAdaptation.trackType;
             const adaptationsForType = (_a = basePeriod.adaptations[ttype]) != null ? _a : [];
@@ -35856,12 +35879,62 @@
     const res = {
       updatedAdaptations: [],
       removedAdaptations: [],
-      addedAdaptations: []
+      addedAdaptations: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
+      addedThumbnailTracks: []
     };
     oldPeriod.start = newPeriod.start;
     oldPeriod.end = newPeriod.end;
     oldPeriod.duration = newPeriod.duration;
     oldPeriod.streamEvents = newPeriod.streamEvents;
+    const oldThumbnailTracks = oldPeriod.thumbnailTracks;
+    const newThumbnailTracks = newPeriod.thumbnailTracks;
+    for (let j = 0; j < oldThumbnailTracks.length; j++) {
+      const oldThumbnailTrack = oldThumbnailTracks[j];
+      const newThumbnailTrackIdx = arrayFindIndex(
+        newThumbnailTracks,
+        (a) => a.id === oldThumbnailTrack.id
+      );
+      if (newThumbnailTrackIdx === -1) {
+        log_default.warn(
+          'Manifest: ThumbnailTrack "' + oldThumbnailTracks[j].id + '" not found when merging.'
+        );
+        const [removed] = oldThumbnailTracks.splice(j, 1);
+        j--;
+        res.removedThumbnailTracks.push({
+          id: removed.id
+        });
+      } else {
+        const [newThumbnailTrack] = newThumbnailTracks.splice(newThumbnailTrackIdx, 1);
+        oldThumbnailTrack.mimeType = newThumbnailTrack.mimeType;
+        oldThumbnailTrack.height = newThumbnailTrack.height;
+        oldThumbnailTrack.width = newThumbnailTrack.width;
+        oldThumbnailTrack.horizontalTiles = newThumbnailTrack.horizontalTiles;
+        oldThumbnailTrack.verticalTiles = newThumbnailTrack.verticalTiles;
+        oldThumbnailTrack.cdnMetadata = newThumbnailTrack.cdnMetadata;
+        if (updateType === 0 /* Full */) {
+          oldThumbnailTrack.index._replace(newThumbnailTrack.index);
+        } else {
+          oldThumbnailTrack.index._update(newThumbnailTrack.index);
+        }
+        res.updatedThumbnailTracks.push({
+          id: oldThumbnailTrack.id,
+          mimeType: oldThumbnailTrack.mimeType,
+          height: oldThumbnailTrack.height,
+          width: oldThumbnailTrack.width,
+          horizontalTiles: oldThumbnailTrack.horizontalTiles,
+          verticalTiles: oldThumbnailTrack.verticalTiles
+        });
+      }
+    }
+    if (newThumbnailTracks.length > 0) {
+      log_default.warn(
+        `Manifest: ${newThumbnailTracks.length} new Thumbnail tracks found when merging.`
+      );
+      res.addedThumbnailTracks.push(...newThumbnailTracks);
+      oldPeriod.thumbnailTracks.push(...newThumbnailTracks);
+    }
     const oldAdaptations = oldPeriod.getAdaptations();
     const newAdaptations = newPeriod.getAdaptations();
     for (let j = 0; j < oldAdaptations.length; j++) {
