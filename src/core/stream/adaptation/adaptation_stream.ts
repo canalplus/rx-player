@@ -2,7 +2,6 @@ import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
 import type { IRepresentation } from "../../../manifest";
-import { isRepresentationPlayable } from "../../../manifest";
 import arrayIncludes from "../../../utils/array_includes";
 import { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
@@ -96,7 +95,7 @@ export default function AdaptationStream(
 
   const initialRepIds = content.representations.getValue().representationIds;
   const initialRepresentations = content.adaptation.representations.filter(
-    (r) => arrayIncludes(initialRepIds, r.id) && isRepresentationPlayable(r) !== false,
+    (r) => arrayIncludes(initialRepIds, r.id) && r.isPlayable() !== false,
   );
 
   /** Emit the list of Representation for the adaptive logic. */

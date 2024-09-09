@@ -18,7 +18,7 @@ import config from "../../../config";
 import { formatError, MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IAdaptation, IPeriod } from "../../../manifest";
-import { isRepresentationPlayable, toTaggedTrack } from "../../../manifest";
+import { toTaggedTrack } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { ITrackType } from "../../../public_types";
 import arrayFind from "../../../utils/array_find";
@@ -473,7 +473,7 @@ function createOrReuseSegmentSink(
  */
 function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
   const representations = adaptation.representations.filter(
-    (r) => isRepresentationPlayable(r) !== false,
+    (r) => r.isPlayable() !== false,
   );
   if (representations.length === 0) {
     const noRepErr = new MediaError(
