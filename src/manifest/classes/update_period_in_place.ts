@@ -18,6 +18,7 @@ import log from "../../log";
 import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
 import type { ITrackType } from "../../public_types";
 import arrayFindIndex from "../../utils/array_find_index";
+import type { IThumbnailTrackMetadata } from "../types";
 import type Period from "./period";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 
@@ -38,11 +39,76 @@ export default function updatePeriodInPlace(
     updatedAdaptations: [],
     removedAdaptations: [],
     addedAdaptations: [],
+    updatedThumbnailTracks: [],
+    removedThumbnailTracks: [],
+    addedThumbnailTracks: [],
   };
   oldPeriod.start = newPeriod.start;
   oldPeriod.end = newPeriod.end;
   oldPeriod.duration = newPeriod.duration;
   oldPeriod.streamEvents = newPeriod.streamEvents;
+
+  const oldThumbnailTracks = oldPeriod.thumbnailTracks;
+  const newThumbnailTracks = newPeriod.thumbnailTracks;
+  for (let j = 0; j < oldThumbnailTracks.length; j++) {
+    const oldThumbnailTrack = oldThumbnailTracks[j];
+    const newThumbnailTrackIdx = arrayFindIndex(
+      newThumbnailTracks,
+      (a) => a.id === oldThumbnailTrack.id,
+    );
+
+    if (newThumbnailTrackIdx === -1) {
+      log.warn(
+        'Manifest: ThumbnailTrack "' +
+          oldThumbnailTracks[j].id +
+          '" not found when merging.',
+      );
+      const [removed] = oldThumbnailTracks.splice(j, 1);
+      j--;
+      res.removedThumbnailTracks.push({
+        id: removed.id,
+      });
+    } else {
+      const [newThumbnailTrack] = newThumbnailTracks.splice(newThumbnailTrackIdx, 1);
+      oldThumbnailTrack.mimeType = newThumbnailTrack.mimeType;
+      oldThumbnailTrack.height = newThumbnailTrack.height;
+      oldThumbnailTrack.width = newThumbnailTrack.width;
+      oldThumbnailTrack.horizontalTiles = newThumbnailTrack.horizontalTiles;
+      oldThumbnailTrack.verticalTiles = newThumbnailTrack.verticalTiles;
+      oldThumbnailTrack.cdnMetadata = newThumbnailTrack.cdnMetadata;
+      if (updateType === MANIFEST_UPDATE_TYPE.Full) {
+        oldThumbnailTrack.index._replace(newThumbnailTrack.index);
+      } else {
+        oldThumbnailTrack.index._update(newThumbnailTrack.index);
+      }
+      res.updatedThumbnailTracks.push({
+        id: oldThumbnailTrack.id,
+        mimeType: oldThumbnailTrack.mimeType,
+        height: oldThumbnailTrack.height,
+        width: oldThumbnailTrack.width,
+        horizontalTiles: oldThumbnailTrack.horizontalTiles,
+        verticalTiles: oldThumbnailTrack.verticalTiles,
+      });
+    }
+  }
+
+  if (newThumbnailTracks.length > 0) {
+    log.warn(
+      `Manifest: ${newThumbnailTracks.length} new Thumbnail tracks ` +
+        "found when merging.",
+    );
+    res.addedThumbnailTracks.push(
+      ...newThumbnailTracks.map((t) => ({
+        id: t.id,
+        mimeType: t.mimeType,
+        height: t.height,
+        width: t.width,
+        horizontalTiles: t.horizontalTiles,
+        verticalTiles: t.verticalTiles,
+      })),
+    );
+    oldPeriod.thumbnailTracks.push(...newThumbnailTracks);
+  }
 
   const oldAdaptations = oldPeriod.getAdaptations();
   const newAdaptations = newPeriod.getAdaptations();
@@ -160,4 +226,13 @@ export interface IUpdatedPeriodResult {
   }>;
   /** Adaptation that have been added to the Period. */
   addedAdaptations: IAdaptationMetadata[];
+
+  /** Information on Thumbnail Tracks that have been updated. */
+  updatedThumbnailTracks: IThumbnailTrackMetadata[];
+  /** Thumbnail tracks that have been removed from the Period. */
+  removedThumbnailTracks: Array<{
+    id: string;
+  }>;
+  /** Thumbnail tracks that have been added to the Period. */
+  addedThumbnailTracks: IThumbnailTrackMetadata[];
 }
