@@ -291,4 +291,14 @@ describe("utils - getRelativeUrl", () => {
       expect(getRelativeUrl(baseURL, example.input)).toBe(example.output);
     });
   });
+
+  it("should succeed on two relative URLs", () => {
+    expect(getRelativeUrl("../url/a", "../url/a/b")).toEqual("a/b");
+    expect(getRelativeUrl("../url/a", "../url/b/c")).toEqual("b/c");
+  });
+
+  it("should return null if the relation between the two URLs is unclear", () => {
+    expect(getRelativeUrl("/url/a", "url/a/b")).toEqual(null);
+    expect(getRelativeUrl("url/a", "/url/a/b")).toEqual(null);
+  });
 });

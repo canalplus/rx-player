@@ -90,9 +90,12 @@ function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
   }
   if (
     // if base and new path are mixed between absolute and relative path, return null
-    (baseParts.path[0] === "." &&
-      (newParts.path[0] === "/" || newParts.path[0] === "")) ||
-    (newParts.path[0] === "." && (baseParts.path[0] === "/" || baseParts.path[0] === ""))
+    (baseParts.path[0] !== undefined &&
+      baseParts.path[0] !== "/" &&
+      newParts.path[0] === "/") ||
+    (newParts.path[0] !== undefined &&
+      newParts.path[0] !== "/" &&
+      baseParts.path[0] === "/")
   ) {
     return null;
   }
