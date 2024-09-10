@@ -1,11 +1,11 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024090600
+## Current dev build: v4.2.0-dev.2024091000
 
 ### Features
 
 - Add `cmcd` object to `loadVideo` options to enable CMCD (Common Media Client Data)
-  [#1461]
+  [#1461, #1518]
 - Add `checkManifestIntegrity` `loadVideo` option as a temporary work-around when you
   suspect your packager or CDN to sometimes deliver corrupted data [#1471]
 - Add `contentProtections` to the `representations` of the tracks API to know if they're
