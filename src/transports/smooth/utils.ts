@@ -16,7 +16,7 @@
 
 import type { ISegment, IRepresentation } from "../../manifest";
 import type { ICdnMetadata } from "../../parsers/manifest";
-import resolveURL from "../../utils/resolve_url";
+import { resolveURL } from "../../utils/url-utils";
 
 /**
  * Returns `true` if the given Representation refers to segments in an MP4

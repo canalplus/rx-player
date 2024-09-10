@@ -19,9 +19,9 @@ import startsWith from "./starts_with";
 // Scheme part of an url (e.g. "http://").
 const schemeRe = /^(?:[a-z]+:)?\/\//i;
 
-/** 
+/**
  * Match the different components of an URL.
- * 
+ *
  *     foo://example.com:8042/over/there?name=ferret#nose
        \_/   \______________/\_________/ \_________/ \__/
         |           |            |            |        |
@@ -66,6 +66,85 @@ function getFilenameIndexInUrl(url: string): number {
   }
 
   return indexOfLastSlash + 1;
+}
+
+/**
+ * Take two URLs and try to construct a relative URL for the second (`newUrl`)
+ * relative to the first (`baseUrl`).
+ *
+ * Returns `null` if they appear to be on different domains, depend on
+ * different schemes or if we don't have enough information to compute the
+ * relative URL.
+ * @param {string} baseUrl
+ * @param {string} newUrl
+ * @returns {string}
+ */
+function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
+  const baseParts = parseURL(baseUrl);
+  const newParts = parseURL(newUrl);
+  if (
+    baseParts.scheme !== newParts.scheme ||
+    baseParts.authority !== newParts.authority
+  ) {
+    return null;
+  }
+  if (
+    // if base and new path are mixed between absolute and relative path, return null
+    (baseParts.path[0] !== undefined &&
+      baseParts.path[0] !== "/" &&
+      newParts.path[0] === "/") ||
+    (newParts.path[0] !== undefined &&
+      newParts.path[0] !== "/" &&
+      baseParts.path[0] === "/")
+  ) {
+    return null;
+  }
+
+  const baseNormalizedPath = removeDotSegment(baseParts.path);
+  const newNormalizedPath = removeDotSegment(newParts.path);
+  let relativePath: string | undefined;
+  if (baseNormalizedPath === newNormalizedPath) {
+    relativePath = "";
+  } else {
+    const basePathSplitted = baseNormalizedPath.split("/");
+    // remove everything after the last trailing /
+    basePathSplitted.pop();
+
+    const newPathSplitted = newNormalizedPath.split("/");
+
+    while (
+      basePathSplitted.length > 0 &&
+      newPathSplitted.length > 0 &&
+      basePathSplitted[0] === newPathSplitted[0]
+    ) {
+      basePathSplitted.shift();
+      newPathSplitted.shift();
+    }
+
+    while (basePathSplitted.length > 0) {
+      basePathSplitted.shift();
+      newPathSplitted.unshift("..");
+    }
+    let pathJoined = newPathSplitted.join("/");
+    if (pathJoined.endsWith("../") || pathJoined.endsWith("./")) {
+      pathJoined = pathJoined.slice(0, pathJoined.length - 1);
+    }
+    relativePath = pathJoined === "" ? "." : pathJoined;
+  }
+
+  let result = relativePath;
+  if (relativePath === "" && newParts.query === baseParts.query) {
+    // path and query is the same, we don't need to rewrite it
+  } else if (newParts.query) {
+    result += "?";
+    result += newParts.query;
+  }
+
+  if (newParts.fragment) {
+    result += "#";
+    result += newParts.fragment;
+  }
+  return result;
 }
 
 /**
@@ -259,7 +338,7 @@ function mergePaths(baseParts: IParsedURL, relativePath: string): string {
  * @param {...(string|undefined)} args - The URL segments to resolve.
  * @returns {string} The resolved URL as a string.
  */
-export function resolveURL(...args: Array<string | undefined>): string {
+function resolveURL(...args: Array<string | undefined>): string {
   const filteredArgs = args.filter((val) => val !== "");
   const len = filteredArgs.length;
   if (len === 0) {
@@ -276,5 +355,4 @@ export function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl };
-export default resolveURL;
+export { getFilenameIndexInUrl, getRelativeUrl, resolveURL };

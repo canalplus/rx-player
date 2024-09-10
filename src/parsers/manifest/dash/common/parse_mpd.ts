@@ -20,7 +20,7 @@ import type { IManifest } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import { getFilenameIndexInUrl } from "../../../../utils/resolve_url";
+import { getFilenameIndexInUrl } from "../../../../utils/url-utils";
 import type { IParsedManifest } from "../../types";
 import type {
   IMPDIntermediateRepresentation,

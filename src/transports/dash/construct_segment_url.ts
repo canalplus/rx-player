@@ -16,7 +16,7 @@
 
 import type { ISegment } from "../../manifest";
 import type { ICdnMetadata } from "../../parsers/manifest";
-import resolveURL from "../../utils/resolve_url";
+import { resolveURL } from "../../utils/url-utils";
 
 export default function constructSegmentUrl(
   wantedCdn: ICdnMetadata | null,
