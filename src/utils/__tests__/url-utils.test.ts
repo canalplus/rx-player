@@ -159,17 +159,17 @@ describe("utils - getFilenameIndexInUrl", () => {
 describe("utils - getRelativeUrl", () => {
   it("should succeed on two absolute URLs on the same domain", () => {
     expect(
-      getRelativeUrl("https://foo.com/foo/bar/cil", "https://foo.com/foo/bar/cil/diub"),
+      getRelativeUrl("https://foo.com/foo/bar/cil/", "https://foo.com/foo/bar/cil/diub"),
     ).toEqual("diub");
     expect(
       getRelativeUrl(
-        "https://foo.com/foo/bar/cil",
+        "https://foo.com/foo/bar/cil/",
         "https://foo.com/foo/bar/cil/diub/emp",
       ),
     ).toEqual("diub/emp");
     expect(
       getRelativeUrl(
-        "https://foo.com/foo/bar/cil/diub/emp",
+        "https://foo.com/foo/bar/cil/diub/emp/",
         "https://foo.com/foo/bar/cil/f/g/h/i",
       ),
     ).toEqual("../../f/g/h/i");
@@ -179,7 +179,7 @@ describe("utils - getRelativeUrl", () => {
         "https://foo.com/foo/bar/cil/emp",
         "https://foo.com/foo/bar/cil/emp",
       ),
-    ).toEqual(".");
+    ).toEqual("");
   });
 
   it("should handle it right when one of the input is just a domain name without a path", () => {
@@ -188,10 +188,10 @@ describe("utils - getRelativeUrl", () => {
         "http://github.com" /** Without a starting slash */,
         "http://github.com/rx-player",
       ),
-    ).toBe("rx-player");
+    ).toBe("/rx-player");
     expect(
       getRelativeUrl(
-        "http://github.com/rx-player",
+        "http://github.com/rx-player/",
         "http://github.com" /** Without a starting slash */,
       ),
     ).toBe("..");
@@ -203,8 +203,8 @@ describe("utils - getRelativeUrl", () => {
     );
     expect(
       getRelativeUrl(
-        "http://github.com/rx-player",
-        "http://github.com/" /** Without a starting slash */,
+        "http://github.com/rx-player/",
+        "http://github.com" /** Without a starting slash */,
       ),
     ).toBe("..");
   });
@@ -235,33 +235,60 @@ describe("utils - getRelativeUrl", () => {
   });
 
   it('should output "." if the URL points to the same file', () => {
-    expect(getRelativeUrl("../url", "../url")).toEqual(".");
+    expect(getRelativeUrl("../url", "../url")).toEqual("");
     expect(
       getRelativeUrl(
         "https://foo.com/foo/bar/cil/diub/emp",
         "https://foo.com/foo/bar/cil/diub/emp",
       ),
-    ).toEqual(".");
+    ).toEqual("");
     expect(
       getRelativeUrl(
         "https://foo.com/foo/bar/cil/diub/emp",
         "https://foo.com/foo/bar/../bar/cil/diub/emp",
       ),
-    ).toEqual(".");
+    ).toEqual("");
   });
 
   it("should succeed on two relative URLs", () => {
-    expect(getRelativeUrl("../url/a", "../url/a/b")).toEqual("b");
-    expect(getRelativeUrl("../url/a", "../url/b/c")).toEqual("../b/c");
+    expect(getRelativeUrl("../url/a", "../url/a/b")).toEqual("a/b");
+    expect(getRelativeUrl("../url/a", "../url/b/c")).toEqual("b/c");
   });
 
   it("should fail if one seems to be relative to the domain's root, yet we don't know it", () => {
-    expect(getRelativeUrl("/url/a", "../url/b/c")).toEqual(null);
+    expect(getRelativeUrl("/url/a", "../../../url/b/c")).toEqual(null);
     expect(getRelativeUrl("./url/a", "/url/b/c")).toEqual(null);
-    expect(getRelativeUrl("http://foo.com/url/a", "/url/b/c")).toEqual(null);
+    expect(getRelativeUrl("http://foo.com/url/a", "../url/b/c")).toEqual(null);
   });
 
   it("should succeed if both seem to be relative to the domain's root, even if we don't know it", () => {
-    expect(getRelativeUrl("/url/a", "/url/b/c")).toEqual("../b/c");
+    expect(getRelativeUrl("/url/a", "/url/b/c")).toEqual("b/c");
+  });
+
+  const normalExamples = [
+    { input: "http://a/b/c/g", output: "g" },
+    { input: "http://a/b/c/g/", output: "g/" },
+    { input: "http://a/g", output: "../../g" },
+    { input: "http://a/b/c/d;p?y", output: "?y" },
+    { input: "http://a/b/c/g?y", output: "g?y" },
+    { input: "http://a/b/c/d;p?q#s", output: "#s" },
+    { input: "http://a/b/c/g#s", output: "g#s" },
+    { input: "http://a/b/c/g?y#s", output: "g?y#s" },
+    { input: "http://a/b/c/;x", output: ";x" },
+    { input: "http://a/b/c/g;x", output: "g;x" },
+    { input: "http://a/b/c/g;x?y#s", output: "g;x?y#s" },
+    { input: "http://a/b/c/d;p?q", output: "" },
+    { input: "http://a/b/c/", output: "." },
+    { input: "http://a/b/", output: ".." },
+    { input: "http://a/b/g", output: "../g" },
+    { input: "http://a/", output: "../.." },
+    { input: "http://a/g", output: "../../g" },
+  ];
+  normalExamples.forEach((example) => {
+    it("should conform to RFC 3986 normal examples - case: " + example.input, () => {
+      const baseURL: string = "http://a/b/c/d;p?q";
+      // https://datatracker.ietf.org/doc/html/rfc3986#section-5.4.1
+      expect(getRelativeUrl(baseURL, example.input)).toBe(example.output);
+    });
   });
 });

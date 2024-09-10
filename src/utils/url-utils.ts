@@ -88,43 +88,60 @@ function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
   ) {
     return null;
   }
-
   if (
-    (baseParts.path[0] === "/" || newParts.path[0] === "/") &&
-    baseParts.path[0] !== newParts.path[0] &&
-    (baseParts.authority.length === 0 || newParts.authority.length === 0)
+    // if base and new path are mixed between absolute and relative path, return null
+    (baseParts.path[0] === "." &&
+      (newParts.path[0] === "/" || newParts.path[0] === "")) ||
+    (newParts.path[0] === "." && (baseParts.path[0] === "/" || baseParts.path[0] === ""))
   ) {
     return null;
   }
 
   const baseNormalizedPath = removeDotSegment(baseParts.path);
   const newNormalizedPath = removeDotSegment(newParts.path);
+  let relativePath: string | undefined;
+  if (baseNormalizedPath === newNormalizedPath) {
+    relativePath = "";
+  } else {
+    const basePathSplitted = baseNormalizedPath.split("/");
+    // remove everything after the last trailing /
+    basePathSplitted.pop();
 
-  const basePathSplitted = baseNormalizedPath.split("/");
-  if (basePathSplitted[0] === "") {
-    basePathSplitted.shift();
+    const newPathSplitted = newNormalizedPath.split("/");
+
+    while (
+      basePathSplitted.length > 0 &&
+      newPathSplitted.length > 0 &&
+      basePathSplitted[0] === newPathSplitted[0]
+    ) {
+      basePathSplitted.shift();
+      newPathSplitted.shift();
+    }
+
+    while (basePathSplitted.length > 0) {
+      basePathSplitted.shift();
+      newPathSplitted.unshift("..");
+    }
+    let pathJoined = newPathSplitted.join("/");
+    if (pathJoined.endsWith("../") || pathJoined.endsWith("./")) {
+      pathJoined = pathJoined.slice(0, pathJoined.length - 1);
+    }
+    relativePath = pathJoined === "" ? "." : pathJoined;
   }
 
-  const newPathSplitted = newNormalizedPath.split("/");
-  if (newPathSplitted[0] === "") {
-    newPathSplitted.shift();
+  let result = relativePath;
+  if (relativePath === "" && newParts.query === baseParts.query) {
+    // path and query is the same, we don't need to rewrite it
+  } else if (newParts.query) {
+    result += "?";
+    result += newParts.query;
   }
 
-  while (
-    basePathSplitted.length > 0 &&
-    newPathSplitted.length > 0 &&
-    basePathSplitted[0] === newPathSplitted[0]
-  ) {
-    basePathSplitted.shift();
-    newPathSplitted.shift();
+  if (newParts.fragment) {
+    result += "#";
+    result += newParts.fragment;
   }
-
-  while (basePathSplitted.length > 0) {
-    basePathSplitted.shift();
-    newPathSplitted.unshift("..");
-  }
-
-  return newPathSplitted.length === 0 ? "." : newPathSplitted.join("/");
+  return result;
 }
 
 /**
