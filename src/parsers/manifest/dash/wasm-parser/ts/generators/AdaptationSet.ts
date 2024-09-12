@@ -27,6 +27,7 @@ import { parseFloatOrBool, parseString } from "../utils";
 import { generateBaseUrlAttrParser } from "./BaseURL";
 import { generateContentComponentAttrParser } from "./ContentComponent";
 import { generateContentProtectionAttrParser } from "./ContentProtection";
+import { generateLabelElementParser } from "./Label";
 import {
   generateRepresentationAttrParser,
   generateRepresentationChildrenParser,
@@ -209,6 +210,15 @@ export function generateAdaptationSetChildrenParser(
         break;
       }
 
+      case TagName.Label: {
+        parsersStack.pushParsers(
+          nodeId,
+          noop, // Label as treated like an attribute
+          generateLabelElementParser(adaptationSetChildren, linearMemory),
+        );
+        break;
+      }
+
       default:
         // Allows to make sure we're not mistakenly closing a re-opened
         // tag.
@@ -363,11 +373,6 @@ export function generateAdaptationSetAttrParser(
       case AttributeName.AvailabilityTimeComplete:
         adaptationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
         break;
-      case AttributeName.Label: {
-        const label = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        adaptationAttrs.label = label;
-        break;
-      }
 
       // TODO
       // case AttributeName.StartsWithSap:
