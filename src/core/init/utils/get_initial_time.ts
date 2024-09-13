@@ -16,7 +16,7 @@
 
 import config from "../../../config";
 import log from "../../../log";
-import Manifest from "../../../manifest";
+import type Manifest from "../../../manifest";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 
 /**
@@ -33,21 +33,21 @@ import isNullOrUndefined from "../../../utils/is_null_or_undefined";
  */
 export interface IInitialTimeOptions {
   /** If set, we should begin at this position, in seconds. */
-  position? : number | null | undefined;
+  position?: number | null | undefined;
   /** If set, we should begin at this unix timestamp, in seconds. */
-  wallClockTime? : number | null | undefined;
+  wallClockTime?: number | null | undefined;
   /**
    * If set, we should begin at this position relative to the content's start,
    * in seconds.
    */
-  fromFirstPosition? : number | null | undefined;
+  fromFirstPosition?: number | null | undefined;
   /**
    * If set, we should begin at this position relative to the content's maximum
    * seekable position, in seconds.
    *
    * It should consequently in most cases be a negative value.
    */
-  fromLastPosition? : number | null | undefined;
+  fromLastPosition?: number | null | undefined;
   /**
    * If set, we should begin at this position relative to the content's live
    * edge if it makes sense, in seconds.
@@ -58,12 +58,12 @@ export interface IInitialTimeOptions {
    * content, that position is relative to the content's maximum position
    * instead.
    */
-  fromLivePosition? : number | null | undefined;
+  fromLivePosition?: number | null | undefined;
   /**
    * If set, we should begin at this position relative to the whole duration of
    * the content, in percentage.
    */
-  percentage? : number | null | undefined;
+  percentage?: number | null | undefined;
 }
 
 /**
@@ -80,41 +80,37 @@ export interface IInitialTimeOptions {
  * @returns {Number}
  */
 export default function getInitialTime(
-  manifest : Manifest,
-  lowLatencyMode : boolean,
-  startAt? : IInitialTimeOptions
-) : number {
+  manifest: Manifest,
+  lowLatencyMode: boolean,
+  startAt?: IInitialTimeOptions,
+): number {
   if (!isNullOrUndefined(startAt)) {
     const min = manifest.getMinimumSafePosition();
     const max = manifest.getMaximumSafePosition();
     if (!isNullOrUndefined(startAt.position)) {
       log.debug("Init: using startAt.minimumPosition");
       return Math.max(Math.min(startAt.position, max), min);
-    }
-    else if (!isNullOrUndefined(startAt.wallClockTime)) {
+    } else if (!isNullOrUndefined(startAt.wallClockTime)) {
       log.debug("Init: using startAt.wallClockTime");
-      const ast = manifest.availabilityStartTime === undefined ?
-        0 :
-        manifest.availabilityStartTime;
+      const ast =
+        manifest.availabilityStartTime === undefined ? 0 : manifest.availabilityStartTime;
       const position = startAt.wallClockTime - ast;
       return Math.max(Math.min(position, max), min);
-    }
-    else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
+    } else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
       log.debug("Init: using startAt.fromFirstPosition");
       const { fromFirstPosition } = startAt;
-      return fromFirstPosition <= 0 ? min :
-                                      Math.min(max, min + fromFirstPosition);
+      return fromFirstPosition <= 0 ? min : Math.min(max, min + fromFirstPosition);
     } else if (!isNullOrUndefined(startAt.fromLastPosition)) {
       log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
-      return fromLastPosition >= 0 ? max :
-                                     Math.max(min, max + fromLastPosition);
+      return fromLastPosition >= 0 ? max : Math.max(min, max + fromLastPosition);
     } else if (!isNullOrUndefined(startAt.fromLivePosition)) {
       log.debug("Init: using startAt.fromLivePosition");
       const livePosition = manifest.getLivePosition() ?? max;
       const { fromLivePosition } = startAt;
-      return fromLivePosition >= 0 ? livePosition :
-                                     Math.max(min, livePosition + fromLivePosition);
+      return fromLivePosition >= 0
+        ? livePosition
+        : Math.max(min, livePosition + fromLivePosition);
     } else if (!isNullOrUndefined(startAt.percentage)) {
       log.debug("Init: using startAt.percentage");
       const { percentage } = startAt;
@@ -131,32 +127,37 @@ export default function getInitialTime(
 
   const minimumPosition = manifest.getMinimumSafePosition();
   if (manifest.isLive) {
-    const { suggestedPresentationDelay,
-            clockOffset } = manifest;
+    const { suggestedPresentationDelay, clockOffset } = manifest;
     const maximumPosition = manifest.getMaximumSafePosition();
-    let liveTime : number;
+    let liveTime: number;
     const { DEFAULT_LIVE_GAP } = config.getCurrent();
 
     if (clockOffset === undefined) {
-      log.info("Init: no clock offset found for a live content, " +
-               "starting close to maximum available position");
+      log.info(
+        "Init: no clock offset found for a live content, " +
+          "starting close to maximum available position",
+      );
       liveTime = maximumPosition;
     } else {
-      log.info("Init: clock offset found for a live content, " +
-               "checking if we can start close to it");
-      const ast = manifest.availabilityStartTime === undefined ?
-        0 :
-        manifest.availabilityStartTime;
+      log.info(
+        "Init: clock offset found for a live content, " +
+          "checking if we can start close to it",
+      );
+      const ast =
+        manifest.availabilityStartTime === undefined ? 0 : manifest.availabilityStartTime;
       const clockRelativeLiveTime = (performance.now() + clockOffset) / 1000 - ast;
-      liveTime = Math.min(maximumPosition,
-                          clockRelativeLiveTime);
+      liveTime = Math.min(maximumPosition, clockRelativeLiveTime);
     }
     const diffFromLiveTime =
-      suggestedPresentationDelay !== undefined ? suggestedPresentationDelay :
-      lowLatencyMode                           ? DEFAULT_LIVE_GAP.LOW_LATENCY :
-                                                 DEFAULT_LIVE_GAP.DEFAULT;
-    log.debug(`Init: ${liveTime} defined as the live time, applying a live gap` +
-              ` of ${diffFromLiveTime}`);
+      suggestedPresentationDelay !== undefined
+        ? suggestedPresentationDelay
+        : lowLatencyMode
+          ? DEFAULT_LIVE_GAP.LOW_LATENCY
+          : DEFAULT_LIVE_GAP.DEFAULT;
+    log.debug(
+      `Init: ${liveTime} defined as the live time, applying a live gap` +
+        ` of ${diffFromLiveTime}`,
+    );
     return Math.max(liveTime - diffFromLiveTime, minimumPosition);
   }
 

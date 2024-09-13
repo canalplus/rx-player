@@ -16,7 +16,7 @@
 
 import imageBuffer from "../../../core/segment_buffers/implementations/image";
 import bifParser from "../../../parsers/images/bif";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addBIFParserFeature from "../bif_parser";
 
 describe("Features list - BIF Parser", () => {

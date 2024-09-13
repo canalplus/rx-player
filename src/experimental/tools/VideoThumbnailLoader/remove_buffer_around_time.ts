@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import type { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * Remove buffer around wanted time, considering a margin around
@@ -34,21 +34,24 @@ export default function removeBufferAroundTime(
   sourceBuffer: AudioVideoSegmentBuffer,
   time: number,
   margin: number | undefined,
-  cancelSignal: CancellationSignal
+  cancelSignal: CancellationSignal,
 ): Promise<unknown> {
   const removalMargin = margin ?? 10 * 60;
   if (videoElement.buffered.length === 0) {
     return Promise.resolve();
   }
   const bufferRemovals = [];
-  if ((time - removalMargin) > 0) {
-    bufferRemovals.push(
-      sourceBuffer.removeBuffer(0, time - removalMargin, cancelSignal));
+  if (time - removalMargin > 0) {
+    bufferRemovals.push(sourceBuffer.removeBuffer(0, time - removalMargin, cancelSignal));
   }
-  if ((time + removalMargin) < videoElement.duration) {
-    bufferRemovals.push(sourceBuffer.removeBuffer(time + removalMargin,
-                                                  videoElement.duration,
-                                                  cancelSignal));
+  if (time + removalMargin < videoElement.duration) {
+    bufferRemovals.push(
+      sourceBuffer.removeBuffer(
+        time + removalMargin,
+        videoElement.duration,
+        cancelSignal,
+      ),
+    );
   }
   return Promise.all(bufferRemovals);
 }

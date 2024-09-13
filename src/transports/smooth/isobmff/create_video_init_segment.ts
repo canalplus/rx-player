@@ -42,15 +42,15 @@ import createInitSegment from "./create_init_segment";
  * @returns {Uint8Array}
  */
 export default function createVideoInitSegment(
-  timescale : number,
-  width : number,
-  height : number,
-  hRes : number,
-  vRes : number,
-  nalLength : number,
-  codecPrivateData : string,
-  keyId? : Uint8Array
-) : Uint8Array {
+  timescale: number,
+  width: number,
+  height: number,
+  hRes: number,
+  vRes: number,
+  nalLength: number,
+  codecPrivateData: string,
+  keyId?: Uint8Array,
+): Uint8Array {
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
   if (spsHex === undefined || ppsHex === undefined) {
     throw new Error("Smooth: unsupported codec private data.");

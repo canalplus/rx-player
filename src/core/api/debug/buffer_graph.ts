@@ -1,5 +1,5 @@
-import { Representation } from "../../../manifest";
-import { IBufferedChunk } from "../../segment_buffers";
+import type { Representation } from "../../../manifest";
+import type { IBufferedChunk } from "../../segment_buffers";
 
 const BUFFER_WIDTH_IN_SECONDS = 30 * 60;
 
@@ -18,27 +18,27 @@ const COLORS = [
 ];
 
 export interface ISegmentBufferGrapUpdateData {
-  currentTime : number;
-  inventory : IBufferedChunk[];
-  width : number;
-  height : number;
-  minimumPosition : number | undefined;
-  maximumPosition : number | undefined;
+  currentTime: number;
+  inventory: IBufferedChunk[];
+  width: number;
+  height: number;
+  minimumPosition: number | undefined;
+  maximumPosition: number | undefined;
 }
 
 export default class SegmentBufferGraph {
   /** Link buffered Representation to their corresponding color. */
-  private readonly _colorMap : WeakMap<Representation, string>;
+  private readonly _colorMap: WeakMap<Representation, string>;
 
   /** Current amount of colors chosen to represent the various Representation. */
-  private _currNbColors : number;
+  private _currNbColors: number;
 
   /** Canvas that will contain the buffer graph itself. */
-  private readonly _canvasElt : HTMLCanvasElement;
+  private readonly _canvasElt: HTMLCanvasElement;
 
-  private readonly _canvasCtxt : CanvasRenderingContext2D | null;
+  private readonly _canvasCtxt: CanvasRenderingContext2D | null;
 
-  constructor(canvasElt : HTMLCanvasElement) {
+  constructor(canvasElt: HTMLCanvasElement) {
     this._colorMap = new WeakMap();
     this._currNbColors = 0;
     this._canvasElt = canvasElt;
@@ -52,22 +52,17 @@ export default class SegmentBufferGraph {
     }
   }
 
-  public update(data : ISegmentBufferGrapUpdateData) : void {
+  public update(data: ISegmentBufferGrapUpdateData): void {
     if (this._canvasCtxt === null) {
       return;
     }
-    const {
-      inventory,
-      currentTime,
-      width,
-      height,
-    } = data;
+    const { inventory, currentTime, width, height } = data;
     this._canvasElt.style.width = `${width}px`;
     this._canvasElt.style.height = `${height}px`;
     this._canvasElt.width = width;
     this._canvasElt.height = height;
     this.clear();
-    let minimumPoint : number;
+    let minimumPoint: number;
     if (data.minimumPosition !== undefined) {
       if (inventory.length > 0) {
         minimumPoint = Math.min(data.minimumPosition, inventory[0].start);
@@ -77,17 +72,18 @@ export default class SegmentBufferGraph {
     } else {
       minimumPoint = inventory[0]?.start ?? 0;
     }
-    let maximumPoint : number;
+    let maximumPoint: number;
     if (data.maximumPosition !== undefined) {
       if (inventory.length > 0) {
-        maximumPoint = Math.max(data.maximumPosition,
-                                inventory[inventory.length - 1].end);
+        maximumPoint = Math.max(
+          data.maximumPosition,
+          inventory[inventory.length - 1].end,
+        );
       } else {
         maximumPoint = data.maximumPosition;
       }
     } else {
-      maximumPoint = inventory[inventory.length - 1]?.end ??
-        1000;
+      maximumPoint = inventory[inventory.length - 1]?.end ?? 1000;
     }
     minimumPoint = Math.min(currentTime, minimumPoint);
     maximumPoint = Math.max(currentTime, maximumPoint);
@@ -114,21 +110,25 @@ export default class SegmentBufferGraph {
       return;
     }
 
-    const currentRangesScaled = scaleSegments(inventory,
-                                              minimumPosition,
-                                              maximumPosition);
+    const currentRangesScaled = scaleSegments(
+      inventory,
+      minimumPosition,
+      maximumPosition,
+    );
 
     for (let i = 0; i < currentRangesScaled.length; i++) {
       this._paintRange(currentRangesScaled[i], width, height);
     }
 
     if (currentTime !== undefined) {
-      paintCurrentPosition(currentTime,
-                           minimumPosition,
-                           maximumPosition,
-                           this._canvasCtxt,
-                           width,
-                           height);
+      paintCurrentPosition(
+        currentTime,
+        minimumPosition,
+        maximumPosition,
+        this._canvasCtxt,
+        width,
+        height,
+      );
     }
   }
 
@@ -137,30 +137,19 @@ export default class SegmentBufferGraph {
    * @param {Object} rangeScaled - Buffered segment information with added
    * "scaling" information to know where it fits in the canvas.
    */
-  private _paintRange(
-    rangeScaled : IScaledChunk,
-    width : number,
-    height : number
-  ) : void {
+  private _paintRange(rangeScaled: IScaledChunk, width: number, height: number): void {
     if (this._canvasCtxt === null) {
       return;
     }
     const startX = rangeScaled.scaledStart * width;
     const endX = rangeScaled.scaledEnd * width;
     this._canvasCtxt.fillStyle = this._getColorForRepresentation(
-      rangeScaled.info.infos.representation
+      rangeScaled.info.infos.representation,
     );
-    this._canvasCtxt.fillRect(
-      Math.ceil(startX),
-      0,
-      Math.ceil(endX - startX),
-      height
-    );
+    this._canvasCtxt.fillRect(Math.ceil(startX), 0, Math.ceil(endX - startX), height);
   }
 
-  private _getColorForRepresentation(
-    representation : Representation
-  ) : string {
+  private _getColorForRepresentation(representation: Representation): string {
     const color = this._colorMap.get(representation);
     if (color !== undefined) {
       return color;
@@ -182,24 +171,26 @@ export default class SegmentBufferGraph {
  * @param {Object} canvasCtx - The canvas' 2D context
  */
 function paintCurrentPosition(
-  position : number,
-  minimumPosition : number,
-  maximumPosition : number,
-  canvasCtx : CanvasRenderingContext2D,
-  width : number,
-  height : number
+  position: number,
+  minimumPosition: number,
+  maximumPosition: number,
+  canvasCtx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
 ) {
-  if (typeof position === "number" &&
-      position >= minimumPosition &&
-      position < maximumPosition)
-  {
+  if (
+    typeof position === "number" &&
+    position >= minimumPosition &&
+    position < maximumPosition
+  ) {
     const lengthCanvas = maximumPosition - minimumPosition;
     canvasCtx.fillStyle = "#FF0000";
-    canvasCtx.fillRect(Math.ceil((position - minimumPosition) /
-                                    lengthCanvas * width) - 1,
-                       5,
-                       5,
-                       height);
+    canvasCtx.fillRect(
+      Math.ceil(((position - minimumPosition) / lengthCanvas) * width) - 1,
+      5,
+      5,
+      height,
+    );
   }
 }
 
@@ -212,20 +203,16 @@ function paintCurrentPosition(
  * @returns {Array.<Object>}
  */
 function scaleSegments(
-  bufferedData : IBufferedChunk[],
-  minimumPosition : number,
-  maximumPosition : number
-) : IScaledChunk[] {
+  bufferedData: IBufferedChunk[],
+  minimumPosition: number,
+  maximumPosition: number,
+): IScaledChunk[] {
   const scaledSegments = [];
   const wholeDuration = maximumPosition - minimumPosition;
   for (let i = 0; i < bufferedData.length; i++) {
     const info = bufferedData[i];
-    const start = info.bufferedStart === undefined ?
-      info.start :
-      info.bufferedStart;
-    const end = info.bufferedEnd === undefined ?
-      info.end :
-      info.bufferedEnd;
+    const start = info.bufferedStart === undefined ? info.start : info.bufferedStart;
+    const end = info.bufferedEnd === undefined ? info.end : info.bufferedEnd;
     if (end > minimumPosition && start < maximumPosition) {
       const startPoint = Math.max(start - minimumPosition, 0);
       const endPoint = Math.min(end - minimumPosition, maximumPosition);

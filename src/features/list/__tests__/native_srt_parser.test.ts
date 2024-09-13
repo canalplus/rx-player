@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import srtParser from "../../../parsers/texttracks/srt/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativesrtFeature from "../native_srt_parser";
 
 describe("Features list - native srt Parser", () => {

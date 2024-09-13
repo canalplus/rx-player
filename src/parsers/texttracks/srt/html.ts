@@ -28,9 +28,9 @@ import getCueBlocks from "./get_cue_blocks";
 import parseCueBlock from "./parse_cue";
 
 export interface ISRTHTMLCue {
-  start : number;
+  start: number;
   end: number;
-  element : HTMLElement;
+  element: HTMLElement;
 }
 
 /**
@@ -39,16 +39,16 @@ export interface ISRTHTMLCue {
  * @returns {Array.<Object>}
  */
 export default function parseSRTStringToHTML(
-  srtStr : string,
-  timeOffset : number
-) : ISRTHTMLCue[] {
+  srtStr: string,
+  timeOffset: number,
+): ISRTHTMLCue[] {
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
 
-  const cueBlocks : string[][] = getCueBlocks(lines);
+  const cueBlocks: string[][] = getCueBlocks(lines);
 
-  const cues : ISRTHTMLCue[] = [];
+  const cues: ISRTHTMLCue[] = [];
   for (let i = 0; i < cueBlocks.length; i++) {
     const cueObject = parseCueBlock(cueBlocks[i], timeOffset);
     if (cueObject != null) {
@@ -67,11 +67,11 @@ export default function parseSRTStringToHTML(
  * @param {Number} timeOffset
  * @returns {Object|null}
  */
-function toHTML(cueObj : {
-  start : number;
-  end : number;
-  payload : string[];
-}) : ISRTHTMLCue|null {
+function toHTML(cueObj: {
+  start: number;
+  end: number;
+  payload: string[];
+}): ISRTHTMLCue | null {
   const { start, end, payload } = cueObj;
 
   const pEl = document.createElement("div");
@@ -82,7 +82,8 @@ function toHTML(cueObj : {
   pEl.style.width = "100%";
   pEl.style.textAlign = "center";
   pEl.style.color = "#fff";
-  pEl.style.textShadow = "-1px -1px 2px #000," +
+  pEl.style.textShadow =
+    "-1px -1px 2px #000," +
     "1px -1px 2px #000," +
     "-1px 1px 2px #000," +
     "1px 1px 2px #000";
@@ -115,11 +116,11 @@ function toHTML(cueObj : {
  * @param {string} text
  * @returns {HTMLElement}
  */
-function generateSpansFromSRTText(text : string) : HTMLElement {
+function generateSpansFromSRTText(text: string): HTMLElement {
   const secureDiv = document.createElement("div");
   secureDiv.innerHTML = text;
 
-  const _loop = function(node : Node) : HTMLElement {
+  const _loop = function (node: Node): HTMLElement {
     const childNodes = node.childNodes;
     const span = document.createElement("span");
     span.className = "rxp-texttrack-span";
@@ -127,8 +128,7 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
     for (let i = 0; i < childNodes.length; i++) {
       const currentNode = childNodes[i];
       if (currentNode.nodeName === "#text") {
-        const linifiedText = (currentNode as Text).wholeText
-          .split("\n");
+        const linifiedText = (currentNode as Text).wholeText.split("\n");
 
         for (let line = 0; line < linifiedText.length; line++) {
           if (line !== 0) {
@@ -151,9 +151,10 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
         const spanChild = _loop(currentNode);
         spanChild.style.textDecoration = "underline";
         span.appendChild(spanChild);
-      } else if (isNodeFontWithColorProp(currentNode) &&
-                 typeof currentNode.color === "string")
-      {
+      } else if (
+        isNodeFontWithColorProp(currentNode) &&
+        typeof currentNode.color === "string"
+      ) {
         // TODO loop through attributes to find color?
         const spanChild = _loop(currentNode);
         spanChild.style.color = currentNode.color;
@@ -175,8 +176,6 @@ function generateSpansFromSRTText(text : string) : HTMLElement {
  * @param {Node} node
  * @returns {boolean}
  */
-function isNodeFontWithColorProp(
-  node : Node
-) : node is Node & { color : unknown } {
+function isNodeFontWithColorProp(node: Node): node is Node & { color: unknown } {
   return node.nodeName === "FONT" && "color" in node;
 }

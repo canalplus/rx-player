@@ -17,11 +17,8 @@
 import eme from "../../../../compat/eme";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
-import {
-  ICompatibleKeySystem,
-  IMediaConfiguration,
-  ProberStatus,
-} from "../types";
+import type { ICompatibleKeySystem, IMediaConfiguration } from "../types";
+import { ProberStatus } from "../types";
 
 export interface IMediaKeySystemInfos {
   name: string;
@@ -33,32 +30,39 @@ export interface IMediaKeySystemInfos {
  * @returns {Promise}
  */
 export default function probeDRMInfos(
-  mediaConfig: IMediaConfiguration
+  mediaConfig: IMediaConfiguration,
 ): Promise<[ProberStatus, ICompatibleKeySystem?]> {
   const keySystem = mediaConfig.keySystem;
   if (keySystem == null || keySystem.type == null) {
-    return Promise.reject("MediaCapabilitiesProber >>> API_CALL: " +
-      "Missing a type argument to request a media key system access.");
+    return Promise.reject(
+      "MediaCapabilitiesProber >>> API_CALL: " +
+        "Missing a type argument to request a media key system access.",
+    );
   }
 
   const type = keySystem.type;
-  const configuration = keySystem.configuration === undefined ? {} :
-                                                                keySystem.configuration;
+  const configuration =
+    keySystem.configuration === undefined ? {} : keySystem.configuration;
   const result: ICompatibleKeySystem = { type, configuration };
 
   if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
-    log.debug("MediaCapabilitiesProber >>> API_CALL: " +
-      "Your browser has no API to request a media key system access.");
+    log.debug(
+      "MediaCapabilitiesProber >>> API_CALL: " +
+        "Your browser has no API to request a media key system access.",
+    );
     // In that case, the API lack means that no EME workflow may be started.
     // So, the DRM configuration is not supported.
     return Promise.resolve([ProberStatus.NotSupported, result]);
   }
 
-  return eme.requestMediaKeySystemAccess(type, [configuration])
+  return eme
+    .requestMediaKeySystemAccess(type, [configuration])
     .then((keySystemAccess) => {
       result.compatibleConfiguration = keySystemAccess.getConfiguration();
-      const status : [ProberStatus, ICompatibleKeySystem?] =
-        [ProberStatus.Supported, result];
+      const status: [ProberStatus, ICompatibleKeySystem?] = [
+        ProberStatus.Supported,
+        result,
+      ];
       return status;
     })
     .catch(() => {

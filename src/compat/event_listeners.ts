@@ -16,28 +16,27 @@
 
 import config from "../config";
 import log from "../log";
-import { IEventEmitter } from "../utils/event_emitter";
+import type { IEventEmitter } from "../utils/event_emitter";
 import isNonEmptyString from "../utils/is_non_empty_string";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import noop from "../utils/noop";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../utils/reference";
-import { CancellationSignal } from "../utils/task_canceller";
-import {
+import type { IReadOnlySharedReference } from "../utils/reference";
+import SharedReference from "../utils/reference";
+import type { CancellationSignal } from "../utils/task_canceller";
+import type {
   ICompatDocument,
   ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
 } from "./browser_compatibility_types";
-import { ICustomMediaEncryptedEvent } from "./eme/custom_media_keys/types";
+import type { ICustomMediaEncryptedEvent } from "./eme/custom_media_keys/types";
 import isNode from "./is_node";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
-const pixelRatio = isNode ||
-                   window.devicePixelRatio == null ||
-                   window.devicePixelRatio === 0 ? 1 :
-                                                   window.devicePixelRatio;
+const pixelRatio =
+  isNode || window.devicePixelRatio == null || window.devicePixelRatio === 0
+    ? 1
+    : window.devicePixelRatio;
 
 /**
  * Find the first supported event from the list given.
@@ -45,19 +44,17 @@ const pixelRatio = isNode ||
  * @param {string} eventNameSuffix
  * @returns {Boolean}
  */
-function isEventSupported(
-  element : HTMLElement,
-  eventNameSuffix : string
-) : boolean {
+function isEventSupported(element: HTMLElement, eventNameSuffix: string): boolean {
   const clone = document.createElement(element.tagName);
   const eventName = "on" + eventNameSuffix;
   if (eventName in clone) {
     return true;
   } else {
     clone.setAttribute(eventName, "return;");
-    return typeof (
-      clone as HTMLElement & Partial<Record<string, unknown>>
-    )[eventName] === "function";
+    return (
+      typeof (clone as HTMLElement & Partial<Record<string, unknown>>)[eventName] ===
+      "function"
+    );
   }
 }
 
@@ -68,11 +65,10 @@ function isEventSupported(
  * @returns {string|undefined}
  */
 function findSupportedEvent(
-  element : HTMLElement,
-  eventNames : string[]
-) : string|undefined {
-  return eventNames
-    .filter((name) => isEventSupported(element, name))[0];
+  element: HTMLElement,
+  eventNames: string[],
+): string | undefined {
+  return eventNames.filter((name) => isEventSupported(element, name))[0];
 }
 
 /**
@@ -80,11 +76,14 @@ function findSupportedEvent(
  * @param {Array.<string>|undefined} prefixes
  * @returns {Array.<string>}
  */
-function eventPrefixed(eventNames : string[], prefixes? : string[]) : string[] {
-  return eventNames.reduce((parent : string[], name : string) =>
-    parent.concat((prefixes === undefined ? BROWSER_PREFIXES :
-                                            prefixes)
-      .map((p) => p + name)), []);
+function eventPrefixed(eventNames: string[], prefixes?: string[]): string[] {
+  return eventNames.reduce(
+    (parent: string[], name: string) =>
+      parent.concat(
+        (prefixes === undefined ? BROWSER_PREFIXES : prefixes).map((p) => p + name),
+      ),
+    [],
+  );
 }
 
 export interface IEventEmitterLike {
@@ -98,9 +97,7 @@ export interface IEventEmitterLike {
   ) => void;
 }
 
-export type IEventTargetLike = HTMLElement |
-                               IEventEmitterLike |
-                               IEventEmitter<unknown>;
+export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<unknown>;
 
 /**
  * Returns a function allowing to add event listeners for particular event(s)
@@ -134,20 +131,19 @@ function createCompatibleEventListener(
 
 function createCompatibleEventListener(
   eventNames: string[] | Array<"needkey" | "encrypted">,
-  prefixes?: string[]
-):
-  (
-    element: IEventTargetLike,
-    listener: (event?: Event | MediaEncryptedEvent) => void,
-    cancelSignal: CancellationSignal,
-  ) => void {
+  prefixes?: string[],
+): (
+  element: IEventTargetLike,
+  listener: (event?: Event | MediaEncryptedEvent) => void,
+  cancelSignal: CancellationSignal,
+) => void {
   let mem: string | undefined;
   const prefixedEvents = eventPrefixed(eventNames, prefixes);
 
   return (
     element: IEventTargetLike,
     listener: (event?: Event) => void,
-    cancelSignal: CancellationSignal
+    cancelSignal: CancellationSignal,
   ) => {
     if (cancelSignal.isCancelled()) {
       return;
@@ -167,16 +163,18 @@ function createCompatibleEventListener(
           }
         });
       } else {
-        if (__ENVIRONMENT__.CURRENT_ENV as number === __ENVIRONMENT__.DEV as number) {
-          log.warn(`compat: element ${element.tagName}` +
-                   " does not support any of these events: " +
-                   prefixedEvents.join(", "));
+        if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
+          log.warn(
+            `compat: element ${element.tagName}` +
+              " does not support any of these events: " +
+              prefixedEvents.join(", "),
+          );
         }
-        return ;
+        return;
       }
     }
 
-    prefixedEvents.forEach(eventName => {
+    prefixedEvents.forEach((eventName) => {
       let hasSetOnFn = false;
       if (typeof element.addEventListener === "function") {
         (element as IEventEmitterLike).addEventListener(eventName, listener);
@@ -200,7 +198,6 @@ function createCompatibleEventListener(
       });
     });
   };
-
 }
 
 /**
@@ -212,9 +209,9 @@ function createCompatibleEventListener(
  * @returns {Object}
  */
 function getDocumentVisibilityRef(
-  stopListening : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
-  let prefix : string|undefined;
+  stopListening: CancellationSignal,
+): IReadOnlySharedReference<boolean> {
+  let prefix: string | undefined;
 
   const doc = document as ICompatDocument;
   if (doc.hidden != null) {
@@ -227,18 +224,23 @@ function getDocumentVisibilityRef(
     prefix = "webkit";
   }
 
-  const hidden = isNonEmptyString(prefix) ? prefix + "Hidden" :
-                                            "hidden";
-  const visibilityChangeEvent = isNonEmptyString(prefix) ? prefix + "visibilitychange" :
-                                                           "visibilitychange";
+  const hidden = isNonEmptyString(prefix) ? prefix + "Hidden" : "hidden";
+  const visibilityChangeEvent = isNonEmptyString(prefix)
+    ? prefix + "visibilitychange"
+    : "visibilitychange";
 
   const isHidden = document[hidden as "hidden"];
   const ref = new SharedReference(!isHidden, stopListening);
 
-  addEventListener(document, visibilityChangeEvent, () => {
-    const isVisible = !(document[hidden as "hidden"]);
-    ref.setValueIfChanged(isVisible);
-  }, stopListening);
+  addEventListener(
+    document,
+    visibilityChangeEvent,
+    () => {
+      const isVisible = !document[hidden as "hidden"];
+      ref.setValueIfChanged(isVisible);
+    },
+    stopListening,
+  );
 
   return ref;
 }
@@ -252,27 +254,30 @@ function getDocumentVisibilityRef(
  * @returns {Object}
  */
 function getPageActivityRef(
-  stopListening : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
+  stopListening: CancellationSignal,
+): IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
-  let currentTimeout : number | undefined;
+  let currentTimeout: number | undefined;
   const ref = new SharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
   });
 
-  isDocVisibleRef.onUpdate(function onDocVisibilityChange(isVisible : boolean) : void {
-    clearTimeout(currentTimeout); // clear potential previous timeout
-    currentTimeout = undefined;
-    if (!isVisible) {
-      const { INACTIVITY_DELAY } = config.getCurrent();
-      currentTimeout = window.setTimeout(() => {
-        ref.setValueIfChanged(false);
-      }, INACTIVITY_DELAY);
-    }
-    ref.setValueIfChanged(true);
-  }, { clearSignal: stopListening, emitCurrentValue: true });
+  isDocVisibleRef.onUpdate(
+    function onDocVisibilityChange(isVisible: boolean): void {
+      clearTimeout(currentTimeout); // clear potential previous timeout
+      currentTimeout = undefined;
+      if (!isVisible) {
+        const { INACTIVITY_DELAY } = config.getCurrent();
+        currentTimeout = window.setTimeout(() => {
+          ref.setValueIfChanged(false);
+        }, INACTIVITY_DELAY);
+      }
+      ref.setValueIfChanged(true);
+    },
+    { clearSignal: stopListening, emitCurrentValue: true },
+  );
 
   return ref;
 }
@@ -285,7 +290,7 @@ function getPageActivityRef(
  */
 function getVideoWidthFromPIPWindow(
   mediaElement: HTMLMediaElement,
-  pipWindow: ICompatPictureInPictureWindow
+  pipWindow: ICompatPictureInPictureWindow,
 ): number {
   const { width, height } = pipWindow;
   const videoRatio = mediaElement.clientHeight / mediaElement.clientWidth;
@@ -294,8 +299,8 @@ function getVideoWidthFromPIPWindow(
 }
 
 export interface IPictureInPictureEvent {
-  isEnabled : boolean;
-  pipWindow : ICompatPictureInPictureWindow | null;
+  isEnabled: boolean;
+  pipWindow: ICompatPictureInPictureWindow | null;
 }
 
 /**
@@ -306,42 +311,64 @@ export interface IPictureInPictureEvent {
  */
 function getPictureOnPictureStateRef(
   elt: HTMLMediaElement,
-  stopListening: CancellationSignal
+  stopListening: CancellationSignal,
 ): IReadOnlySharedReference<IPictureInPictureEvent> {
   const mediaElement = elt as ICompatHTMLMediaElement;
-  if (mediaElement.webkitSupportsPresentationMode === true &&
-      typeof mediaElement.webkitSetPresentationMode === "function")
-  {
+  if (
+    mediaElement.webkitSupportsPresentationMode === true &&
+    typeof mediaElement.webkitSetPresentationMode === "function"
+  ) {
     const isWebKitPIPEnabled =
       mediaElement.webkitPresentationMode === "picture-in-picture";
-    const ref = new SharedReference<IPictureInPictureEvent>({
-      isEnabled: isWebKitPIPEnabled,
-      pipWindow: null,
-    }, stopListening);
-    addEventListener(mediaElement, "webkitpresentationmodechanged", () => {
-      const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
-      ref.setValue({ isEnabled, pipWindow: null });
-    }, stopListening);
+    const ref = new SharedReference<IPictureInPictureEvent>(
+      {
+        isEnabled: isWebKitPIPEnabled,
+        pipWindow: null,
+      },
+      stopListening,
+    );
+    addEventListener(
+      mediaElement,
+      "webkitpresentationmodechanged",
+      () => {
+        const isEnabled = mediaElement.webkitPresentationMode === "picture-in-picture";
+        ref.setValue({ isEnabled, pipWindow: null });
+      },
+      stopListening,
+    );
     return ref;
   }
 
-  const isPIPEnabled = (
-    (document as ICompatDocument).pictureInPictureElement === mediaElement
+  const isPIPEnabled =
+    (document as ICompatDocument).pictureInPictureElement === mediaElement;
+  const ref = new SharedReference<IPictureInPictureEvent>(
+    { isEnabled: isPIPEnabled, pipWindow: null },
+    stopListening,
   );
-  const ref = new SharedReference<IPictureInPictureEvent>({ isEnabled: isPIPEnabled,
-                                                            pipWindow: null },
-                                                          stopListening);
-  addEventListener(mediaElement, "enterpictureinpicture", (evt) => {
-    ref.setValue({
-      isEnabled: true,
-      pipWindow: (evt as Event & {
-        pictureInPictureWindow? : ICompatPictureInPictureWindow;
-      }).pictureInPictureWindow ?? null,
-    });
-  }, stopListening);
-  addEventListener(mediaElement, "leavepictureinpicture", () => {
-    ref.setValue({ isEnabled: false, pipWindow: null });
-  }, stopListening);
+  addEventListener(
+    mediaElement,
+    "enterpictureinpicture",
+    (evt) => {
+      ref.setValue({
+        isEnabled: true,
+        pipWindow:
+          (
+            evt as Event & {
+              pictureInPictureWindow?: ICompatPictureInPictureWindow;
+            }
+          ).pictureInPictureWindow ?? null,
+      });
+    },
+    stopListening,
+  );
+  addEventListener(
+    mediaElement,
+    "leavepictureinpicture",
+    () => {
+      ref.setValue({ isEnabled: false, pipWindow: null });
+    },
+    stopListening,
+  );
   return ref;
 }
 
@@ -356,25 +383,23 @@ function getPictureOnPictureStateRef(
  * @returns {Object}
  */
 function getVideoVisibilityRef(
-  pipStatus : IReadOnlySharedReference<IPictureInPictureEvent>,
-  stopListening : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
+  pipStatus: IReadOnlySharedReference<IPictureInPictureEvent>,
+  stopListening: CancellationSignal,
+): IReadOnlySharedReference<boolean> {
   const isDocVisibleRef = getDocumentVisibilityRef(stopListening);
-  let currentTimeout : number | undefined;
+  let currentTimeout: number | undefined;
   const ref = new SharedReference(true, stopListening);
   stopListening.register(() => {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
   });
 
-  isDocVisibleRef.onUpdate(checkCurrentVisibility,
-                           { clearSignal: stopListening });
-  pipStatus.onUpdate(checkCurrentVisibility,
-                     { clearSignal: stopListening });
+  isDocVisibleRef.onUpdate(checkCurrentVisibility, { clearSignal: stopListening });
+  pipStatus.onUpdate(checkCurrentVisibility, { clearSignal: stopListening });
   checkCurrentVisibility();
   return ref;
 
-  function checkCurrentVisibility() : void {
+  function checkCurrentVisibility(): void {
     clearTimeout(currentTimeout);
     currentTimeout = undefined;
     if (pipStatus.getValue().isEnabled || isDocVisibleRef.getValue()) {
@@ -397,12 +422,14 @@ function getVideoVisibilityRef(
  * @returns {Object}
  */
 function getVideoWidthRef(
-  mediaElement : HTMLMediaElement,
-  pipStatusRef : IReadOnlySharedReference<IPictureInPictureEvent>,
-  stopListening : CancellationSignal
-) : IReadOnlySharedReference<number> {
-  const ref = new SharedReference<number>(mediaElement.clientWidth * pixelRatio,
-                                          stopListening);
+  mediaElement: HTMLMediaElement,
+  pipStatusRef: IReadOnlySharedReference<IPictureInPictureEvent>,
+  stopListening: CancellationSignal,
+): IReadOnlySharedReference<number> {
+  const ref = new SharedReference<number>(
+    mediaElement.clientWidth * pixelRatio,
+    stopListening,
+  );
   let clearPreviousEventListener = noop;
   pipStatusRef.onUpdate(checkVideoWidth, { clearSignal: stopListening });
   addEventListener(window, "resize", checkVideoWidth, stopListening);
@@ -426,7 +453,7 @@ function getVideoWidthRef(
       const firstWidth = getVideoWidthFromPIPWindow(mediaElement, pipWindow);
       const onPipResize = () => {
         ref.setValueIfChanged(
-          getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio
+          getVideoWidthFromPIPWindow(mediaElement, pipWindow) * pixelRatio,
         );
       };
       pipWindow.addEventListener("resize", onPipResize);
@@ -458,7 +485,7 @@ const onFullscreenChange = createCompatibleEventListener(
   ["fullscreenchange", "FullscreenChange"],
 
   // On IE11, fullscreen change events is called MSFullscreenChange
-  BROWSER_PREFIXES.concat("MS")
+  BROWSER_PREFIXES.concat("MS"),
 );
 
 /**
@@ -552,11 +579,11 @@ const onEnded = createCompatibleEventListener(["ended"]);
  * emits
  */
 function addEventListener(
-  elt : IEventEmitterLike,
-  evt : string,
-  listener : (x? : unknown) => void,
-  stopListening : CancellationSignal
-) : void {
+  elt: IEventEmitterLike,
+  evt: string,
+  listener: (x?: unknown) => void,
+  stopListening: CancellationSignal,
+): void {
   elt.addEventListener(evt, listener);
   stopListening.register(() => {
     elt.removeEventListener(evt, listener);

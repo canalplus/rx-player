@@ -2,9 +2,7 @@ import { expect } from "chai";
 import RxPlayer from "../../../src";
 import XHRMock from "../../utils/request_mock";
 import sleep from "../../utils/sleep.js";
-import {
-  waitForLoadedStateAfterLoadVideo,
-} from "../../utils/waitForPlayerState";
+import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 import {
   discontinuitiesBetweenPeriodsInfos,
   differentTypesDiscontinuitiesInfos,
@@ -34,17 +32,12 @@ describe("discontinuities handling", () => {
       this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
       player.setPlaybackRate(2);
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 118 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 118 } });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       await sleep(3000);
@@ -53,20 +46,15 @@ describe("discontinuities handling", () => {
       expect(discontinuitiesWarningReceived).to.equal(1);
     });
 
-    it("should seek to next Period when loading in discontinuity", async function() {
+    it("should seek to next Period when loading in discontinuity", async function () {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 121 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 121 } });
       expect(discontinuitiesWarningReceived).to.equal(0);
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPosition()).to.be.at.least(131);
@@ -74,19 +62,15 @@ describe("discontinuities handling", () => {
       expect(discontinuitiesWarningReceived).to.equal(1);
     });
 
-    it("should seek to next Period when seeking in discontinuity", async function() {
+    it("should seek to next Period when seeking in discontinuity", async function () {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true });
+      player.loadVideo({ url, transport, autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(122);
@@ -103,17 +87,12 @@ describe("discontinuities handling", () => {
       this.timeout(7000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
       player.setPlaybackRate(2);
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 118 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 118 } });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       await sleep(3000);
@@ -122,20 +101,15 @@ describe("discontinuities handling", () => {
       expect(discontinuitiesWarningReceived).to.equal(1);
     });
 
-    it("should seek to next Period when loading in discontinuity", async function() {
+    it("should seek to next Period when loading in discontinuity", async function () {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 121 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 121 } });
       expect(discontinuitiesWarningReceived).to.equal(0);
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPosition()).to.be.at.least(131);
@@ -143,19 +117,15 @@ describe("discontinuities handling", () => {
       expect(discontinuitiesWarningReceived).to.equal(1);
     });
 
-    it("should seek to next Period when seeking in discontinuity", async function() {
+    it("should seek to next Period when seeking in discontinuity", async function () {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true });
+      player.loadVideo({ url, transport, autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(122);
@@ -176,17 +146,12 @@ describe("discontinuities handling", () => {
       this.timeout(8000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
       player.setPlaybackRate(2);
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 22 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 22 } });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       await sleep(4000);
@@ -195,20 +160,15 @@ describe("discontinuities handling", () => {
       expect(discontinuitiesWarningReceived).to.equal(1);
     });
 
-    it("should seek over discontinuity when loading on one", async function() {
+    it("should seek over discontinuity when loading on one", async function () {
       this.timeout(4000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 25 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 25 } });
       expect(discontinuitiesWarningReceived).to.equal(0);
       await waitForLoadedStateAfterLoadVideo(player);
       expect(player.getPosition()).to.be.at.least(28);
@@ -216,19 +176,15 @@ describe("discontinuities handling", () => {
       expect(discontinuitiesWarningReceived).to.equal(1);
     });
 
-    it("should seek over discontinuity when seeking in one", async function() {
+    it("should seek over discontinuity when seeking in one", async function () {
       this.timeout(6000);
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
-        if (err.type === "MEDIA_ERROR" &&
-            err.code === "DISCONTINUITY_ENCOUNTERED")
-        {
+        if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true });
+      player.loadVideo({ url, transport, autoPlay: true });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
       player.seekTo(25);
@@ -247,10 +203,7 @@ describe("discontinuities handling", () => {
     const { url, transport } = notStartingAt0ManifestInfos;
     it("should seek over discontinuity when loading in it", async function () {
       this.timeout(7000);
-      player.loadVideo({ url,
-                         transport,
-                         autoPlay: true,
-                         startAt: { position: 0 } });
+      player.loadVideo({ url, transport, autoPlay: true, startAt: { position: 0 } });
       await waitForLoadedStateAfterLoadVideo(player);
       await sleep(2000);
       expect(player.getPosition()).to.be.above(12);

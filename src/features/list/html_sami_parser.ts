@@ -16,13 +16,13 @@
 
 import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import samiParser from "../../parsers/texttracks/sami/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse SAMI text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLSAMIFeature(features : IFeaturesObject) : void {
+function addHTMLSAMIFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.sami = samiParser;
   features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }

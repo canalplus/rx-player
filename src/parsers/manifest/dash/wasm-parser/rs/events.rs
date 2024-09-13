@@ -282,7 +282,7 @@ pub enum AttributeName {
     // SegmentTemplate
     EndNumber = 76, // f64
 
-    SupplementalCodecs = 77 // string
+    SupplementalCodecs = 77, // string
 }
 
 impl TagName {

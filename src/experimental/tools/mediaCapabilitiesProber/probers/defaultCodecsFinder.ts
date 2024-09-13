@@ -16,21 +16,21 @@
 
 import { MediaSource_ } from "../../../../compat";
 
- /**
-  * Check if one of given video codecs are supported for decode.
-  * These video codecs are chose for their wide proven compatibility and
-  * popularity.
-  * @returns {string}
-  */
+/**
+ * Check if one of given video codecs are supported for decode.
+ * These video codecs are chose for their wide proven compatibility and
+ * popularity.
+ * @returns {string}
+ */
 export function findDefaultVideoCodec(): string {
   const videoCodecs = [
-    "video/mp4;codecs=\"avc1.4d401e\"",
-    "video/mp4;codecs=\"avc1.42e01e\"",
-    "video/webm;codecs=\"vp8\"",
+    'video/mp4;codecs="avc1.4d401e"',
+    'video/mp4;codecs="avc1.42e01e"',
+    'video/webm;codecs="vp8"',
   ];
   /* eslint-disable @typescript-eslint/unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
-  /* eslint-enable @typescript-eslint/unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     throw new Error("Cannot check video codec support: No API available.");
   }
   for (const codec of videoCodecs) {
@@ -48,13 +48,10 @@ export function findDefaultVideoCodec(): string {
  * @returns {string}
  */
 export function findDefaultAudioCodec(): string {
-  const audioCodecs = [
-    "audio/mp4;codecs=\"mp4a.40.2\"",
-    "audio/webm;codecs=opus",
-  ];
+  const audioCodecs = ['audio/mp4;codecs="mp4a.40.2"', "audio/webm;codecs=opus"];
   /* eslint-disable @typescript-eslint/unbound-method */
   if (MediaSource_ == null || typeof MediaSource_.isTypeSupported !== "function") {
-  /* eslint-enable @typescript-eslint/unbound-method */
+    /* eslint-enable @typescript-eslint/unbound-method */
     throw new Error("Cannot check audio codec support: No API available.");
   }
   for (const codec of audioCodecs) {

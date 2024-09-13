@@ -24,14 +24,13 @@ import {
   parseScheme,
 } from "../utils";
 
-describe("dash parser helpers", function() {
-
+describe("dash parser helpers", function () {
   describe("parseBoolean", () => {
-    it("should return true if value is \"true\"", () => {
+    it('should return true if value is "true"', () => {
       expect(parseBoolean("true", "toto")).toEqual([true, null]);
     });
 
-    it("should return false if value is \"false\"", () => {
+    it('should return false if value is "false"', () => {
       expect(parseBoolean("false", "titi")).toEqual([false, null]);
     });
 
@@ -42,19 +41,19 @@ describe("dash parser helpers", function() {
       expect(parsed2[0]).toEqual(false);
       expect(parsed1[1]).toBeInstanceOf(MPDError);
       expect(parsed2[1]).toBeInstanceOf(MPDError);
-      expect(parsed1[1]?.message).toEqual(
-        "`ab` property is not a boolean value but \"\"");
+      expect(parsed1[1]?.message).toEqual('`ab` property is not a boolean value but ""');
       expect(parsed2[1]?.message).toEqual(
-        "`ba` property is not a boolean value but \"foo\"");
+        '`ba` property is not a boolean value but "foo"',
+      );
     });
   });
 
   describe("parseIntOrBoolean", () => {
-    it("should return true if value is \"true\"", () => {
+    it('should return true if value is "true"', () => {
       expect(parseIntOrBoolean("true", "toto")).toEqual([true, null]);
     });
 
-    it("should return false if value is \"false\"", () => {
+    it('should return false if value is "false"', () => {
       expect(parseIntOrBoolean("false", "toto")).toEqual([false, null]);
     });
 
@@ -73,9 +72,11 @@ describe("dash parser helpers", function() {
       expect(parsed1[1]).toBeInstanceOf(MPDError);
       expect(parsed2[1]).toBeInstanceOf(MPDError);
       expect(parsed1[1]?.message).toEqual(
-        "`ab` property is not a boolean nor an integer but \"\"");
+        '`ab` property is not a boolean nor an integer but ""',
+      );
       expect(parsed2[1]?.message).toEqual(
-        "`ba` property is not a boolean nor an integer but \"foo\"");
+        '`ba` property is not a boolean nor an integer but "foo"',
+      );
     });
   });
 
@@ -93,61 +94,60 @@ describe("dash parser helpers", function() {
       expect(parsed2[0]).toEqual(null);
       expect(parsed1[1]).toBeInstanceOf(MPDError);
       expect(parsed2[1]).toBeInstanceOf(MPDError);
-      expect(parsed1[1]?.message).toEqual(
-        "`ab` is in an invalid date format: \"foo bar\"");
+      expect(parsed1[1]?.message).toEqual('`ab` is in an invalid date format: "foo bar"');
       expect(parsed2[1]?.message).toEqual(
-        "`ba` is in an invalid date format: \"2047-41-52T30:40:50Z\"");
+        '`ba` is in an invalid date format: "2047-41-52T30:40:50Z"',
+      );
     });
   });
 
   describe("parseDuration", () => {
-    it("should correctly parse duration in ISO8061 format", function() {
+    it("should correctly parse duration in ISO8061 format", function () {
       expect(parseDuration("P18Y9M4DT11H9M8S", "fooba")).toEqual([591361748, null]);
     });
 
-    it("should correctly parse duration if missing the year", function() {
+    it("should correctly parse duration if missing the year", function () {
       expect(parseDuration("P9M4DT11H9M8S", "fooba")).toEqual([23713748, null]);
     });
 
-    it("should correctly parse duration if missing the month", function() {
+    it("should correctly parse duration if missing the month", function () {
       expect(parseDuration("P18Y4DT11H9M8S", "fooba")).toEqual([568033748, null]);
     });
 
-    it("should correctly parse duration if missing the day", function() {
+    it("should correctly parse duration if missing the day", function () {
       expect(parseDuration("P18Y9MT11H9M8S", "fooba")).toEqual([591016148, null]);
     });
 
-    it("should correctly parse duration if missing the hours", function() {
+    it("should correctly parse duration if missing the hours", function () {
       expect(parseDuration("P18Y9M4DT9M8S", "fooba")).toEqual([591322148, null]);
     });
 
-    it("should correctly parse duration if missing the minutes", function() {
+    it("should correctly parse duration if missing the minutes", function () {
       expect(parseDuration("P18Y9M4DT11H8S", "fooba")).toEqual([591361208, null]);
     });
 
-    it("should correctly parse duration if missing the seconds", function() {
+    it("should correctly parse duration if missing the seconds", function () {
       expect(parseDuration("P18Y9M4DT11H9M", "fooba")).toEqual([591361740, null]);
     });
 
-    it("should return null and an error if duration not in ISO8061 format", function() {
+    it("should return null and an error if duration not in ISO8061 format", function () {
       const parsed1 = parseDuration("1000", "fooba");
       expect(parsed1[0]).toEqual(null);
       expect(parsed1[1]).toBeInstanceOf(MPDError);
       expect(parsed1[1]?.message).toEqual(
-        "`fooba` property has an unrecognized format \"1000\"");
+        '`fooba` property has an unrecognized format "1000"',
+      );
     });
-    it("should return 0 and an error if given an empty string", function() {
+    it("should return 0 and an error if given an empty string", function () {
       const parsed = parseDuration("", "fooba");
       expect(parsed[0]).toEqual(0);
       expect(parsed[1]).toBeInstanceOf(MPDError);
-      expect(parsed[1]?.message).toEqual(
-        "`fooba` property is empty");
+      expect(parsed[1]?.message).toEqual("`fooba` property is empty");
     });
-
   });
 
   describe("parseByteRange", () => {
-    it("should correctly parse byte range", function() {
+    it("should correctly parse byte range", function () {
       const parsedByteRange = parseByteRange("1-1000", "tots");
       expect(parsedByteRange[0]).not.toEqual(null);
       expect(parsedByteRange[1]).toEqual(null);
@@ -155,64 +155,59 @@ describe("dash parser helpers", function() {
       expect((parsedByteRange[0] as [number, number])[0]).toEqual(1);
       expect((parsedByteRange[0] as [number, number])[1]).toEqual(1000);
     });
-    it("should return null and an error if can't parse given byte range", function() {
+    it("should return null and an error if can't parse given byte range", function () {
       const parsed1 = parseByteRange("main", "prop");
       expect(parsed1[0]).toEqual(null);
       expect(parsed1[1]).toBeInstanceOf(MPDError);
       expect(parsed1[1]?.message).toEqual(
-        "`prop` property has an unrecognized format \"main\"");
+        '`prop` property has an unrecognized format "main"',
+      );
     });
   });
 
   describe("parseScheme", () => {
     it("should correctly parse an element with no known attribute", () => {
-      const element1 = new DOMParser()
-        .parseFromString("<Foo />", "text/xml")
+      const element1 = new DOMParser().parseFromString("<Foo />", "text/xml")
         .childNodes[0] as Element;
-      expect(parseScheme(element1))
-        .toEqual({});
+      expect(parseScheme(element1)).toEqual({});
 
-      const element2 = new DOMParser()
-        .parseFromString("<Foo test=\"\" />", "text/xml")
+      const element2 = new DOMParser().parseFromString('<Foo test="" />', "text/xml")
         .childNodes[0] as Element;
-      expect(parseScheme(element2))
-        .toEqual({});
+      expect(parseScheme(element2)).toEqual({});
     });
 
     it("should correctly parse an element with a correct schemeIdUri attribute", () => {
-      const element1 = new DOMParser()
-        .parseFromString("<Foo schemeIdUri=\"foobar \" />", "text/xml")
-        .childNodes[0] as Element;
-      expect(parseScheme(element1))
-        .toEqual({ schemeIdUri: "foobar " });
+      const element1 = new DOMParser().parseFromString(
+        '<Foo schemeIdUri="foobar " />',
+        "text/xml",
+      ).childNodes[0] as Element;
+      expect(parseScheme(element1)).toEqual({ schemeIdUri: "foobar " });
 
-      const element2 = new DOMParser()
-        .parseFromString("<Foo schemeIdUri=\"\" />", "text/xml")
-        .childNodes[0] as Element;
-      expect(parseScheme(element2))
-        .toEqual({ schemeIdUri: "" });
+      const element2 = new DOMParser().parseFromString(
+        '<Foo schemeIdUri="" />',
+        "text/xml",
+      ).childNodes[0] as Element;
+      expect(parseScheme(element2)).toEqual({ schemeIdUri: "" });
     });
 
     it("should correctly parse an element with a correct value attribute", () => {
-      const element1 = new DOMParser()
-        .parseFromString("<Foo value=\"foobar \" />", "text/xml")
-        .childNodes[0] as Element;
-      expect(parseScheme(element1))
-        .toEqual({ value: "foobar " });
+      const element1 = new DOMParser().parseFromString(
+        '<Foo value="foobar " />',
+        "text/xml",
+      ).childNodes[0] as Element;
+      expect(parseScheme(element1)).toEqual({ value: "foobar " });
 
-      const element2 = new DOMParser()
-        .parseFromString("<Foo value=\"\" />", "text/xml")
+      const element2 = new DOMParser().parseFromString('<Foo value="" />', "text/xml")
         .childNodes[0] as Element;
-      expect(parseScheme(element2))
-        .toEqual({ value: "" });
+      expect(parseScheme(element2)).toEqual({ value: "" });
     });
 
     it("should correctly parse an element with both attributes", () => {
-      const element = new DOMParser()
-        .parseFromString("<Foo schemeIdUri=\"baz\" value=\"foobar \" />", "text/xml")
-        .childNodes[0] as Element;
-      expect(parseScheme(element))
-        .toEqual({ schemeIdUri: "baz", value: "foobar " });
+      const element = new DOMParser().parseFromString(
+        '<Foo schemeIdUri="baz" value="foobar " />',
+        "text/xml",
+      ).childNodes[0] as Element;
+      expect(parseScheme(element)).toEqual({ schemeIdUri: "baz", value: "foobar " });
     });
   });
 });

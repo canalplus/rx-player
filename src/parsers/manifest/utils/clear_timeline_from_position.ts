@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IIndexSegment } from "./index_helpers";
+import type { IIndexSegment } from "./index_helpers";
 
 /**
  * Remove segments which starts before the given `firstAvailablePosition` from
@@ -24,9 +24,9 @@ import { IIndexSegment } from "./index_helpers";
  * potential implicit segment from decremented `repeatCount` attributes.
  */
 export default function clearTimelineFromPosition(
-  timeline : IIndexSegment[],
-  firstAvailablePosition : number
-) : number {
+  timeline: IIndexSegment[],
+  firstAvailablePosition: number,
+): number {
   let nbEltsRemoved = 0;
   while (timeline.length > 0) {
     const firstElt = timeline[0];
@@ -39,28 +39,30 @@ export default function clearTimelineFromPosition(
     } else if (firstElt.repeatCount === 0) {
       timeline.shift();
       nbEltsRemoved += 1;
-    } else { // we have a segment repetition
+    } else {
+      // we have a segment repetition
       const nextElt = timeline[1];
       if (nextElt !== undefined && nextElt.start <= firstAvailablePosition) {
         timeline.shift();
         nbEltsRemoved += 1;
-      } else { // no next segment or next segment is available
+      } else {
+        // no next segment or next segment is available
         if (firstElt.duration <= 0) {
           return nbEltsRemoved;
         }
 
         let nextStart = firstElt.start + firstElt.duration;
         let nextRepeat = 1;
-        while (nextStart < firstAvailablePosition &&
-               nextRepeat <= firstElt.repeatCount)
-        {
+        while (nextStart < firstAvailablePosition && nextRepeat <= firstElt.repeatCount) {
           nextStart += firstElt.duration;
           nextRepeat++;
         }
-        if (nextRepeat > firstElt.repeatCount) { // every start is before
+        if (nextRepeat > firstElt.repeatCount) {
+          // every start is before
           timeline.shift();
           nbEltsRemoved = firstElt.repeatCount + 1;
-        } else { // some repetitions start after and some before
+        } else {
+          // some repetitions start after and some before
           const newRepeat = firstElt.repeatCount - nextRepeat;
           firstElt.start = nextStart;
           firstElt.repeatCount = newRepeat;

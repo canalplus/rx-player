@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICompatTextTrack } from "./browser_compatibility_types";
+import type { ICompatTextTrack } from "./browser_compatibility_types";
 import { isIEOrEdge } from "./browser_detection";
 
 /**
@@ -31,11 +31,9 @@ import { isIEOrEdge } from "./browser_detection";
  * @returns {Object}
  */
 export default function addTextTrack(
-  mediaElement : HTMLMediaElement,
-  hidden : boolean
-) : { track : ICompatTextTrack;
-      trackElement : HTMLTrackElement | undefined; }
-{
+  mediaElement: HTMLMediaElement,
+  hidden: boolean,
+): { track: ICompatTextTrack; trackElement: HTMLTrackElement | undefined } {
   let track;
   let trackElement;
 
@@ -43,10 +41,12 @@ export default function addTextTrack(
 
   if (isIEOrEdge) {
     const tracksLength = mediaElement.textTracks.length;
-    track = (tracksLength > 0 ? mediaElement.textTracks[tracksLength - 1] :
-                                mediaElement.addTextTrack(kind)) as ICompatTextTrack;
-    track.mode = hidden ? (track.HIDDEN ?? "hidden") :
-                          (track.SHOWING ?? "showing");
+    track = (
+      tracksLength > 0
+        ? mediaElement.textTracks[tracksLength - 1]
+        : mediaElement.addTextTrack(kind)
+    ) as ICompatTextTrack;
+    track.mode = hidden ? (track.HIDDEN ?? "hidden") : (track.SHOWING ?? "showing");
   } else {
     trackElement = document.createElement("track");
     mediaElement.appendChild(trackElement);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { Representation } from "../../../manifest";
 import arrayFind from "../../../utils/array_find";
 
 /**
@@ -26,24 +26,25 @@ import arrayFind from "../../../utils/array_find";
  * @returns {Array.<Object>}
  */
 export default function filterByWidth(
-  representations : Representation[],
-  width : number
-) : Representation[] {
+  representations: Representation[],
+  width: number,
+): Representation[] {
   const sortedRepsByWidth = representations
     .slice() // clone
     .sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
 
-  const repWithMaxWidth = arrayFind(sortedRepsByWidth, (representation) =>
-    typeof representation.width === "number" &&
-    representation.width >= width);
+  const repWithMaxWidth = arrayFind(
+    sortedRepsByWidth,
+    (representation) =>
+      typeof representation.width === "number" && representation.width >= width,
+  );
 
   if (repWithMaxWidth === undefined) {
     return representations;
   }
 
-  const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width :
-                                                               0;
-  return representations.filter(representation =>
-    typeof representation.width === "number" ? representation.width <= maxWidth :
-                                               true);
+  const maxWidth = typeof repWithMaxWidth.width === "number" ? repWithMaxWidth.width : 0;
+  return representations.filter((representation) =>
+    typeof representation.width === "number" ? representation.width <= maxWidth : true,
+  );
 }

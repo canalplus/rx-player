@@ -1,4 +1,3 @@
-
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -15,15 +14,9 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../../manifest";
-import {
-  ISegmentParser,
-  ITransportPipelines,
-} from "../../../transports";
+import type { Adaptation, Period, Representation } from "../../../manifest";
+import type Manifest from "../../../manifest";
+import type { ISegmentParser, ITransportPipelines } from "../../../transports";
 
 export interface IContentInfo {
   manifest: Manifest;
@@ -34,6 +27,7 @@ export interface IContentInfo {
 
 export type ILoaders = Partial<Record<string, ITransportPipelines>>;
 
-export type IThumbnailLoaderSegmentParser =
-  ISegmentParser<Uint8Array | ArrayBuffer | null,
-                 Uint8Array | ArrayBuffer | null>;
+export type IThumbnailLoaderSegmentParser = ISegmentParser<
+  Uint8Array | ArrayBuffer | null,
+  Uint8Array | ArrayBuffer | null
+>;

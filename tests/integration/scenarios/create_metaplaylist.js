@@ -9,15 +9,12 @@ import createMetaplaylist from "../../../src/experimental/tools/createMetaplayli
 
 describe("createMetaplaylist", () => {
   it("Should correclty create the metaplaylist without offset", async () => {
-    const contentsInfos = [{ url: manifestURL1,
-                             transport: "dash" },
-                           { url: manifestURL2,
-                             transport: "dash" },
-                           { url: manifestURL3,
-                             transport: "smooth" },
-                           { url: "test-URL",
-                             transport: "dash",
-                             duration: 100 } ];
+    const contentsInfos = [
+      { url: manifestURL1, transport: "dash" },
+      { url: manifestURL2, transport: "dash" },
+      { url: manifestURL3, transport: "smooth" },
+      { url: "test-URL", transport: "dash", duration: 100 },
+    ];
 
     const metaplaylist = await createMetaplaylist(contentsInfos);
     expect(metaplaylist.type).to.equal("MPL");
@@ -36,17 +33,13 @@ describe("createMetaplaylist", () => {
     expect(contents[3].endTime).to.equal(1071.8506666 + 100);
   });
 
-
   it("Should correclty create the metaplaylist with an offset", async () => {
-    const contentsInfos = [{ url: manifestURL1,
-                             transport: "dash" },
-                           { url: manifestURL2,
-                             transport: "dash" },
-                           { url: manifestURL3,
-                             transport: "smooth" },
-                           { url: "test-URL",
-                             transport: "dash",
-                             duration: 100 } ];
+    const contentsInfos = [
+      { url: manifestURL1, transport: "dash" },
+      { url: manifestURL2, transport: "dash" },
+      { url: manifestURL3, transport: "smooth" },
+      { url: "test-URL", transport: "dash", duration: 100 },
+    ];
 
     const metaplaylist = await createMetaplaylist(contentsInfos, 10);
     expect(metaplaylist.type).to.equal("MPL");
@@ -66,19 +59,16 @@ describe("createMetaplaylist", () => {
   });
 
   it("Should throw if there is an unsupported transport", async () => {
-    const contentsInfos = [{ url: manifestURL1,
-                             transport: "rtmp" },
-                           { url: manifestURL2,
-                             transport: "dash" },
-                           { url: manifestURL3,
-                             transport: "smooth" },
-                           { url: "test-URL",
-                             transport: "dash",
-                             duration: 100 } ];
+    const contentsInfos = [
+      { url: manifestURL1, transport: "rtmp" },
+      { url: manifestURL2, transport: "dash" },
+      { url: manifestURL3, transport: "smooth" },
+      { url: "test-URL", transport: "dash", duration: 100 },
+    ];
     let error;
     try {
       await createMetaplaylist(contentsInfos);
-    } catch(err) {
+    } catch (err) {
       error = err;
     }
 
@@ -87,19 +77,16 @@ describe("createMetaplaylist", () => {
   });
 
   it("Should throw if there is a dynamic manifest", async () => {
-    const contentsInfos = [{ url: manifestURL4,
-                             transport: "dash" },
-                           { url: manifestURL2,
-                             transport: "dash" },
-                           { url: manifestURL3,
-                             transport: "smooth" },
-                           { url: "test-URL",
-                             transport: "dash",
-                             duration: 100 } ];
+    const contentsInfos = [
+      { url: manifestURL4, transport: "dash" },
+      { url: manifestURL2, transport: "dash" },
+      { url: manifestURL3, transport: "smooth" },
+      { url: "test-URL", transport: "dash", duration: 100 },
+    ];
     let error;
     try {
       await createMetaplaylist(contentsInfos);
-    } catch(err) {
+    } catch (err) {
       error = err;
     }
 

@@ -24,7 +24,7 @@ export default class SimpleSet {
    * @type {Object}
    * @private
    */
-  private _hashes : Partial<Record<string, true>>;
+  private _hashes: Partial<Record<string, true>>;
 
   constructor() {
     this._hashes = {};
@@ -35,7 +35,7 @@ export default class SimpleSet {
    * Do not have any effect on already-added hashes
    * @param {string|number} x
    */
-  public add(x : string|number) : void {
+  public add(x: string | number): void {
     this._hashes[x] = true;
   }
 
@@ -44,7 +44,7 @@ export default class SimpleSet {
    * Do not have any effect on already-removed or inexistent hashes
    * @param {string|number} x
    */
-  public remove(x : string|number) : void {
+  public remove(x: string | number): void {
     delete this._hashes[x];
   }
 
@@ -53,7 +53,7 @@ export default class SimpleSet {
    * @param {string|number} x
    * @returns {boolean}
    */
-  public test(x : string|number) : boolean {
+  public test(x: string | number): boolean {
     return this._hashes.hasOwnProperty(x);
   }
 
@@ -61,7 +61,7 @@ export default class SimpleSet {
    * Returns true if there's currently no hash in this set.
    * @returns {boolean}
    */
-  public isEmpty() : boolean {
+  public isEmpty(): boolean {
     return Object.keys(this._hashes).length === 0;
   }
 }

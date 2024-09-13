@@ -48,9 +48,7 @@ describe("utils - objectAssign", () => {
     expect(objectAssign(obj, { a: 78 })).toBe(obj);
     expect(obj).toEqual({ a: 78, c: { d: "toto" } });
 
-    expect(objectAssign(obj,
-                        { c: { d: 55 } },
-                        { c: { d: 85 } })).toBe(obj);
+    expect(objectAssign(obj, { c: { d: 55 } }, { c: { d: 85 } })).toBe(obj);
     expect(obj).toEqual({ a: 78, c: { d: 85 } });
   });
 });

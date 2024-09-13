@@ -2,8 +2,8 @@ import { expect } from "chai";
 import RxPlayer from "../../../src";
 import { streamEventsInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
-import /* waitForPlayerState, */ {
-  waitForLoadedStateAfterLoadVideo,
+import {
+  /* waitForPlayerState, */ waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
 
 const EVENTS = streamEventsInfos.events;
@@ -12,9 +12,11 @@ describe("DASH Stream events", function () {
   let player;
 
   async function loadContent(position) {
-    player.loadVideo({ url: streamEventsInfos.url,
-                       transport: streamEventsInfos.transport,
-                       startAt: { position } });
+    player.loadVideo({
+      url: streamEventsInfos.url,
+      transport: streamEventsInfos.transport,
+      startAt: { position },
+    });
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
@@ -36,10 +38,8 @@ describe("DASH Stream events", function () {
     expect(receivedEvent.start).to.equal(wantedEvent.start);
     expect(receivedEvent.end).to.equal(wantedEvent.end);
     expect(receivedEvent.data.type).to.equal(wantedEvent.type);
-    expect(receivedEvent.data.value.schemeIdUri)
-      .to.equal(wantedEvent.schemeIdUri);
-    expect(receivedEvent.data.value.timescale)
-      .to.equal(wantedEvent.timescale);
+    expect(receivedEvent.data.value.schemeIdUri).to.equal(wantedEvent.schemeIdUri);
+    expect(receivedEvent.data.value.timescale).to.equal(wantedEvent.timescale);
 
     const elt = receivedEvent.data.value.element;
     expect(elt).to.be.instanceOf(Element);
@@ -69,13 +69,20 @@ describe("DASH Stream events", function () {
     await sleep(3000);
     player.pause();
 
-    expect(player.getPosition()).to.be
-      .within(startAt + 1, startAt + 5, "The initial position is not right");
+    expect(player.getPosition()).to.be.within(
+      startAt + 1,
+      startAt + 5,
+      "The initial position is not right",
+    );
 
-    expect(streamEventsReceived).to.have
-      .lengthOf(0, "We should not have received any streamEvent event");
-    expect(streamEventSkipReceived).to.have
-      .lengthOf(0, "We should not have received any streamEventSkipReceived event");
+    expect(streamEventsReceived).to.have.lengthOf(
+      0,
+      "We should not have received any streamEvent event",
+    );
+    expect(streamEventSkipReceived).to.have.lengthOf(
+      0,
+      "We should not have received any streamEventSkipReceived event",
+    );
   }
 
   it("should not send any event if none have been reached yet", async function () {
@@ -110,11 +117,15 @@ describe("DASH Stream events", function () {
     await loadContent(wantedEvent.start + 2);
     await sleep(100);
 
-    expect(streamEventSkipReceived).to.have
-      .lengthOf(0, "We should not have received any streamEventSkipReceived event");
+    expect(streamEventSkipReceived).to.have.lengthOf(
+      0,
+      "We should not have received any streamEventSkipReceived event",
+    );
 
-    expect(streamEventsReceived).to.have
-      .lengthOf(1, "We should have received one streamEvent event");
+    expect(streamEventsReceived).to.have.lengthOf(
+      1,
+      "We should have received one streamEvent event",
+    );
 
     const streamEvent = streamEventsReceived[0];
     checkEvent(streamEvent, wantedEvent);
@@ -131,7 +142,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
   });
 
-  it("should receive an event when playing through one", async function() {
+  it("should receive an event when playing through one", async function () {
     this.timeout(10000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -173,7 +184,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
   });
 
-  it("should call onExit when seeking out of an event", async function() {
+  it("should call onExit when seeking out of an event", async function () {
     this.timeout(10000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -216,7 +227,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
   });
 
-  it("should authorize setting no onExit function", async function() {
+  it("should authorize setting no onExit function", async function () {
     this.timeout(10000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -252,7 +263,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
   });
 
-  it("should do nothing if seeking multiple times in the same event", async function() {
+  it("should do nothing if seeking multiple times in the same event", async function () {
     this.timeout(5000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -310,7 +321,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
   });
 
-  it("should receive an event when seeking right into one", async function() {
+  it("should receive an event when seeking right into one", async function () {
     this.timeout(5000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -353,7 +364,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
   });
 
-  it("should receive multiple events when playing through a position with multiple events", async function() {
+  it("should receive multiple events when playing through a position with multiple events", async function () {
     this.timeout(15000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -421,7 +432,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(2);
   });
 
-  it("should receive multiple events when seeking in a position with multiple events", async function() {
+  it("should receive multiple events when seeking in a position with multiple events", async function () {
     this.timeout(15000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -463,7 +474,6 @@ describe("DASH Stream events", function () {
     checkEvent(eventReceived1, wantedEvent1);
     checkEvent(eventReceived2, wantedEvent2);
 
-
     let hasExited1 = false;
     eventReceived1.onExit = () => {
       hasExited1 = true;
@@ -492,7 +502,7 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(2);
   });
 
-  it("should receive multiple events when loading in a position with multiple events", async function() {
+  it("should receive multiple events when loading in a position with multiple events", async function () {
     this.timeout(15000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -539,7 +549,6 @@ describe("DASH Stream events", function () {
 
     player.play();
 
-
     let leftToWait = 50 - player.getPosition();
     await sleep(leftToWait * 700);
     expect(player.getPosition()).to.be.within(50, 54, "The position 3 is not right");
@@ -558,20 +567,20 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(2);
   });
 
-  it("should receive an event when skipping one", async function() {
+  it("should receive an event when skipping one", async function () {
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
 
     let hasExitedSomething = false;
     function onStreamEvent(evt) {
       streamEventsReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
     function onStreamEventSkip(evt) {
       streamEventSkipReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
@@ -593,20 +602,20 @@ describe("DASH Stream events", function () {
     checkEvent(eventReceived, wantedEvent);
   });
 
-  it("should receive multiple events when skipping multiple ones", async function() {
+  it("should receive multiple events when skipping multiple ones", async function () {
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
 
     let hasExitedSomething = false;
     function onStreamEvent(evt) {
       streamEventsReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
     function onStreamEventSkip(evt) {
       streamEventSkipReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
@@ -640,7 +649,7 @@ describe("DASH Stream events", function () {
     checkEvent(eventReceived2, wantedEvent2);
   });
 
-  it("should not exit events without a duration", async function() {
+  it("should not exit events without a duration", async function () {
     this.timeout(5000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -648,13 +657,13 @@ describe("DASH Stream events", function () {
     let hasExitedSomething = false;
     function onStreamEvent(evt) {
       streamEventsReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
     function onStreamEventSkip(evt) {
       streamEventSkipReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
@@ -676,7 +685,7 @@ describe("DASH Stream events", function () {
     checkEvent(eventReceived, wantedEvent);
   });
 
-  it("should receive an event and be able to set an exit even when the event is very short", async function() {
+  it("should receive an event and be able to set an exit even when the event is very short", async function () {
     this.timeout(5000);
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
@@ -684,13 +693,13 @@ describe("DASH Stream events", function () {
     let hasExitedSomething = false;
     function onStreamEvent(evt) {
       streamEventsReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }
     function onStreamEventSkip(evt) {
       streamEventSkipReceived.push(evt);
-      evt.onExit = function() {
+      evt.onExit = function () {
         hasExitedSomething = true;
       };
     }

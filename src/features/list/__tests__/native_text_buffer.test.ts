@@ -16,7 +16,7 @@
 
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativeTextBuffer from "../native_text_buffer";
 
 describe("Features list - native Text Buffer", () => {

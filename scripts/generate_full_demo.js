@@ -70,9 +70,7 @@ function generateFullDemo(options) {
     },
     optimization: {
       minimize: shouldMinify,
-      minimizer: shouldMinify ? [
-        new TerserPlugin(),
-      ] : [],
+      minimizer: shouldMinify ? [new TerserPlugin()] : [],
     },
     performance: {
       maxEntrypointSize: shouldMinify ? 1000000 : 2500000,
@@ -82,12 +80,14 @@ function generateFullDemo(options) {
       rules: [
         {
           test: /\.tsx?$/,
-          use: [{
-            loader: "ts-loader",
-            options: {
-              compilerOptions: { sourceMap: true },
+          use: [
+            {
+              loader: "ts-loader",
+              options: {
+                compilerOptions: { sourceMap: true },
+              },
             },
-          }],
+          ],
         },
         {
           test: /\.jsx?$/,
@@ -95,10 +95,7 @@ function generateFullDemo(options) {
             loader: "babel-loader",
             options: {
               cacheDirectory: true,
-              presets: [
-                "@babel/react",
-                ["@babel/env", { loose: true, modules: false }],
-              ],
+              presets: ["@babel/react", ["@babel/env", { loose: true, modules: false }]],
             },
           },
         },
@@ -113,7 +110,7 @@ function generateFullDemo(options) {
           CURRENT_ENV: isDevMode ? 1 : 0,
         },
         __LOGGER_LEVEL__: {
-          CURRENT_LEVEL: "\"INFO\"",
+          CURRENT_LEVEL: '"INFO"',
         },
       }),
     ],
@@ -124,23 +121,22 @@ function generateFullDemo(options) {
   const demoCompiler = Webpack(webpackDemoConfig);
   if (!options.watch) {
     /* eslint-disable no-console */
-    console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` +
-                "Building demo...");
+    console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` + "Building demo...");
     /* eslint-enable no-console */
     demoCompiler.run(onDemoResult);
   } else {
     /* eslint-disable no-console */
-    console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` +
-                "Building demo...");
+    console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` + "Building demo...");
     /* eslint-enable no-console */
-    const demoCompilerWatching = demoCompiler.watch({ aggregateTimeout: 300 },
-                                                    onDemoResult);
+    const demoCompilerWatching = demoCompiler.watch(
+      { aggregateTimeout: 300 },
+      onDemoResult,
+    );
 
     demoCompilerWatching.compiler.hooks.watchRun.intercept({
       call() {
         /* eslint-disable no-console */
-        console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` +
-                    "Re-building demo");
+        console.log(`\x1b[35m[${getHumanReadableHours()}]\x1b[0m ` + "Re-building demo");
         /* eslint-enable no-console */
       },
     });
@@ -155,28 +151,35 @@ function generateFullDemo(options) {
 function onDemoResult(err, stats) {
   if (err) {
     /* eslint-disable no-console */
-    console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m Could not compile demo:`,
-                  err);
+    console.error(
+      `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Could not compile demo:`,
+      err,
+    );
     /* eslint-enable no-console */
     return;
   }
 
-  if (stats.compilation.errors && stats.compilation.errors.length ||
-      stats.compilation.warnings && stats.compilation.warnings.length)
-  {
+  if (
+    (stats.compilation.errors && stats.compilation.errors.length) ||
+    (stats.compilation.warnings && stats.compilation.warnings.length)
+  ) {
     const errors = stats.compilation.errors || [];
     const warnings = stats.compilation.warnings || [];
     displayWebpackErrors(errors, warnings);
     /* eslint-disable no-console */
-    console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-                `Demo built with ${errors.length} error(s) and ` +
-                ` ${warnings.length} warning(s) ` +
-                `(in ${stats.endTime - stats.startTime} ms).`);
+    console.log(
+      `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+        `Demo built with ${errors.length} error(s) and ` +
+        ` ${warnings.length} warning(s) ` +
+        `(in ${stats.endTime - stats.startTime} ms).`,
+    );
     /* eslint-enable no-console */
   } else {
     /* eslint-disable no-console */
-    console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m Demo built ` +
-                `(in ${stats.endTime - stats.startTime} ms).`);
+    console.log(
+      `\x1b[32m[${getHumanReadableHours()}]\x1b[0m Demo built ` +
+        `(in ${stats.endTime - stats.startTime} ms).`,
+    );
     /* eslint-enable no-console */
   }
 }
@@ -188,14 +191,14 @@ function onDemoResult(err, stats) {
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node generate_full_demo.js [options]
+    /* eslint-disable indent */
+    `Usage: node generate_full_demo.js [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
   -w, --watch            Re-build each time either the demo or library files change`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

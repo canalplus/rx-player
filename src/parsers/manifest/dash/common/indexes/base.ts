@@ -15,18 +15,15 @@
  */
 
 import log from "../../../../../log";
-import {
-  IRepresentationIndex,
-  ISegment,
-} from "../../../../../manifest";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { IRepresentationIndex, ISegment } from "../../../../../manifest";
+import type { IEMSG } from "../../../../containers/isobmff";
+import type { IIndexSegment } from "../../../utils/index_helpers";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
-  IIndexSegment,
   toIndexTime,
 } from "../../../utils/index_helpers";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
 import getInitSegment from "./get_init_segment";
 import getSegmentsFromTimeline from "./get_segments_from_timeline";
 import { constructRepresentationUrl } from "./tokens";
@@ -51,35 +48,37 @@ export interface IBaseIndex {
    * T * timescale + indexTimeOffset
    * ```
    */
-  indexTimeOffset : number;
+  indexTimeOffset: number;
   /** Information on the initialization segment. */
-  initialization : {
-    /**
-     * URL path, to add to the wanted CDN, to access the initialization segment.
-     * `null` if no URL exists.
-     */
-    url: string | null;
-    /** possible byte range to request it. */
-    range?: [number, number] | undefined;
-  } | undefined;
+  initialization:
+    | {
+        /**
+         * URL path, to add to the wanted CDN, to access the initialization segment.
+         * `null` if no URL exists.
+         */
+        url: string | null;
+        /** possible byte range to request it. */
+        range?: [number, number] | undefined;
+      }
+    | undefined;
   /**
    * URL base to access any segment.
    * Can contain token to replace to convert it to real URLs.
    * `null` if no URL exists.
    */
-  segmentUrlTemplate : string | null;
+  segmentUrlTemplate: string | null;
   /** Number from which the first segments in this index starts with. */
-  startNumber? : number | undefined;
+  startNumber?: number | undefined;
   /** Number associated to the last segment in this index. */
-  endNumber? : number | undefined;
+  endNumber?: number | undefined;
   /** Every segments defined in this index. */
-  timeline : IIndexSegment[];
+  timeline: IIndexSegment[];
   /**
    * Timescale to convert a time given here into seconds.
    * This is done by this simple operation:
    * ``timeInSeconds = timeInIndex * timescale``
    */
-  timescale : number;
+  timescale: number;
 }
 
 /**
@@ -87,13 +86,13 @@ export interface IBaseIndex {
  * Most of the properties here are already defined in IBaseIndex.
  */
 export interface IBaseIndexIndexArgument {
-  timeline? : IIndexSegment[];
-  timescale? : number;
-  media? : string;
+  timeline?: IIndexSegment[];
+  timescale?: number;
+  media?: string;
   indexRange?: [number, number];
   initialization?: { media?: string; range?: [number, number] };
-  startNumber? : number;
-  endNumber? : number;
+  startNumber?: number;
+  endNumber?: number;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -108,21 +107,21 @@ export interface IBaseIndexIndexArgument {
    * The time given here is in the current
    * timescale (see timescale)
    */
-  presentationTimeOffset? : number;
+  presentationTimeOffset?: number;
 }
 
 /** Aditional context needed by a SegmentBase RepresentationIndex. */
 export interface IBaseIndexContextArgument {
   /** Start of the period concerned by this RepresentationIndex, in seconds. */
-  periodStart : number;
+  periodStart: number;
   /** End of the period concerned by this RepresentationIndex, in seconds. */
-  periodEnd : number|undefined;
+  periodEnd: number | undefined;
   /** ID of the Representation concerned. */
-  representationId? : string | undefined;
+  representationId?: string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number | undefined;
+  representationBitrate?: number | undefined;
   /** Allows to obtain the minimum and maximum positions of a content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  manifestBoundsCalculator: ManifestBoundsCalculator;
   /* Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
 }
@@ -136,30 +135,30 @@ export interface IBaseIndexContextArgument {
  * @returns {Boolean} - true if the segment has been added
  */
 function _addSegmentInfos(
-  index : IBaseIndex,
-  segmentInfos : { time : number;
-                   duration : number;
-                   timescale : number;
-                   count?: number;
-                   range?: [number, number]; }
-) : boolean {
+  index: IBaseIndex,
+  segmentInfos: {
+    time: number;
+    duration: number;
+    timescale: number;
+    count?: number;
+    range?: [number, number];
+  },
+): boolean {
   if (segmentInfos.timescale !== index.timescale) {
     const { timescale } = index;
-    index.timeline.push({ start: (segmentInfos.time / segmentInfos.timescale)
-                                 * timescale,
-                          duration: (segmentInfos.duration / segmentInfos.timescale)
-                                    * timescale,
-                          repeatCount: segmentInfos.count === undefined ?
-                            0 :
-                            segmentInfos.count,
-                          range: segmentInfos.range });
+    index.timeline.push({
+      start: (segmentInfos.time / segmentInfos.timescale) * timescale,
+      duration: (segmentInfos.duration / segmentInfos.timescale) * timescale,
+      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
+      range: segmentInfos.range,
+    });
   } else {
-    index.timeline.push({ start: segmentInfos.time,
-                          duration: segmentInfos.duration,
-                          repeatCount: segmentInfos.count === undefined ?
-                            0 :
-                            segmentInfos.count,
-                          range: segmentInfos.range });
+    index.timeline.push({
+      start: segmentInfos.time,
+      duration: segmentInfos.duration,
+      repeatCount: segmentInfos.count === undefined ? 0 : segmentInfos.count,
+      range: segmentInfos.range,
+    });
   }
   return true;
 }
@@ -171,19 +170,19 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * added) first.
    * @see isInitialized method
    */
-  private _isInitialized : boolean;
+  private _isInitialized: boolean;
 
   /** Underlying structure to retrieve segment information. */
-  private _index : IBaseIndex;
+  private _index: IBaseIndex;
 
   /** Absolute start of the period, timescaled and converted to index time. */
-  private _scaledPeriodStart : number;
+  private _scaledPeriodStart: number;
 
   /** Absolute end of the period, timescaled and converted to index time. */
-  private _scaledPeriodEnd : number | undefined;
+  private _scaledPeriodEnd: number | undefined;
 
   /** Allows to obtain the minimum and maximum positions of a content. */
-  private _manifestBoundsCalculator : ManifestBoundsCalculator;
+  private _manifestBoundsCalculator: ManifestBoundsCalculator;
 
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
@@ -192,28 +191,38 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Object} index
    * @param {Object} context
    */
-  constructor(index : IBaseIndexIndexArgument, context : IBaseIndexContextArgument) {
-    const { periodStart,
-            periodEnd,
-            representationId,
-            representationBitrate,
-            isEMSGWhitelisted } = context;
+  constructor(index: IBaseIndexIndexArgument, context: IBaseIndexContextArgument) {
+    const {
+      periodStart,
+      periodEnd,
+      representationId,
+      representationBitrate,
+      isEMSGWhitelisted,
+    } = context;
     const timescale = index.timescale ?? 1;
 
-    const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset : 0;
+    const presentationTimeOffset =
+      index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
 
     const indexTimeOffset = presentationTimeOffset - periodStart * timescale;
 
-    const initializationUrl = index.initialization?.media === undefined ?
-      null :
-      constructRepresentationUrl(index.initialization.media,
-                                 representationId,
-                                 representationBitrate);
+    const initializationUrl =
+      index.initialization?.media === undefined
+        ? null
+        : constructRepresentationUrl(
+            index.initialization.media,
+            representationId,
+            representationBitrate,
+          );
 
-    const segmentUrlTemplate = index.media === undefined ?
-      null :
-      constructRepresentationUrl(index.media, representationId, representationBitrate);
+    const segmentUrlTemplate =
+      index.media === undefined
+        ? null
+        : constructRepresentationUrl(
+            index.media,
+            representationId,
+            representationBitrate,
+          );
 
     // TODO If indexRange is either undefined or behind the initialization segment
     // the following logic will not work.
@@ -221,23 +230,27 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
     // not straightforward as we would need to clean-up the segment after that.
     // The following logic corresponds to 100% of tested cases, so good enough for
     // now.
-    const range : [number, number] | undefined =
-      index.initialization !== undefined ? index.initialization.range :
-      index.indexRange !== undefined ? [0, index.indexRange[0] - 1] :
-                                       undefined;
+    const range: [number, number] | undefined =
+      index.initialization !== undefined
+        ? index.initialization.range
+        : index.indexRange !== undefined
+          ? [0, index.indexRange[0] - 1]
+          : undefined;
 
-    this._index = { indexRange: index.indexRange,
-                    indexTimeOffset,
-                    initialization: { url: initializationUrl, range },
-                    segmentUrlTemplate,
-                    startNumber: index.startNumber,
-                    endNumber: index.endNumber,
-                    timeline: index.timeline ?? [],
-                    timescale };
+    this._index = {
+      indexRange: index.indexRange,
+      indexTimeOffset,
+      initialization: { url: initializationUrl, range },
+      segmentUrlTemplate,
+      startNumber: index.startNumber,
+      endNumber: index.endNumber,
+      timeline: index.timeline ?? [],
+      timescale,
+    };
     this._manifestBoundsCalculator = context.manifestBoundsCalculator;
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
-    this._scaledPeriodEnd = periodEnd == null ? undefined :
-                                                toIndexTime(periodEnd, this._index);
+    this._scaledPeriodEnd =
+      periodEnd == null ? undefined : toIndexTime(periodEnd, this._index);
     this._isInitialized = this._index.timeline.length > 0;
     this._isEMSGWhitelisted = isEMSGWhitelisted;
   }
@@ -246,7 +259,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Construct init Segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
+  getInitSegment(): ISegment {
     return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
@@ -264,20 +277,22 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Number} dur
    * @returns {Array.<Object>}
    */
-  getSegments(from : number, dur : number) : ISegment[] {
-    return getSegmentsFromTimeline(this._index,
-                                   from,
-                                   dur,
-                                   this._manifestBoundsCalculator,
-                                   this._scaledPeriodEnd,
-                                   this._isEMSGWhitelisted);
+  getSegments(from: number, dur: number): ISegment[] {
+    return getSegmentsFromTimeline(
+      this._index,
+      from,
+      dur,
+      this._manifestBoundsCalculator,
+      this._scaledPeriodEnd,
+      this._isEMSGWhitelisted,
+    );
   }
 
   /**
    * Returns false as no Segment-Base based index should need to be refreshed.
    * @returns {Boolean}
    */
-  shouldRefresh() : false {
+  shouldRefresh(): false {
     return false;
   }
 
@@ -285,30 +300,31 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Returns first position in index.
    * @returns {Number|null}
    */
-  getFirstAvailablePosition() : number|null {
+  getFirstAvailablePosition(): number | null {
     const index = this._index;
     if (index.timeline.length === 0) {
       return null;
     }
-    return fromIndexTime(Math.max(this._scaledPeriodStart,
-                                  index.timeline[0].start),
-                         index);
+    return fromIndexTime(
+      Math.max(this._scaledPeriodStart, index.timeline[0].start),
+      index,
+    );
   }
 
   /**
    * Returns last position in index.
    * @returns {Number|null}
    */
-  getLastAvailablePosition() : number|null {
+  getLastAvailablePosition(): number | null {
     const { timeline } = this._index;
     if (timeline.length === 0) {
       return null;
     }
     const lastTimelineElement = timeline[timeline.length - 1];
-    const lastTime = Math.min(getIndexSegmentEnd(lastTimelineElement,
-                                                 null,
-                                                 this._scaledPeriodEnd),
-                              this._scaledPeriodEnd ?? Infinity);
+    const lastTime = Math.min(
+      getIndexSegmentEnd(lastTimelineElement, null, this._scaledPeriodEnd),
+      this._scaledPeriodEnd ?? Infinity,
+    );
     return fromIndexTime(lastTime, this._index);
   }
 
@@ -341,7 +357,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Segments in a segmentBase scheme should stay available.
    * @returns {Boolean|undefined}
    */
-  isSegmentStillAvailable() : true {
+  isSegmentStillAvailable(): true {
     return true;
   }
 
@@ -349,7 +365,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * We do not check for discontinuity in SegmentBase-based indexes.
    * @returns {null}
    */
-  checkDiscontinuity() : null {
+  checkDiscontinuity(): null {
     return null;
   }
 
@@ -366,7 +382,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * @param {Array.<Object>} indexSegments
    * @returns {Array.<Object>}
    */
-  initializeIndex(indexSegments : IAddedIndexSegment[]) : void {
+  initializeIndex(indexSegments: IAddedIndexSegment[]): void {
     for (let i = 0; i < indexSegments.length; i++) {
       _addSegmentInfos(this._index, indexSegments[i]);
     }
@@ -378,7 +394,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * such segments should never fall out-of-sync.
    * @returns {Boolean}
    */
-  canBeOutOfSyncError() : false {
+  canBeOutOfSyncError(): false {
     return false;
   }
 
@@ -387,7 +403,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * should become available in the future.
    * @returns {Boolean}
    */
-  isStillAwaitingFutureSegments() : false {
+  isStillAwaitingFutureSegments(): false {
     return false;
   }
 
@@ -404,7 +420,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * Representation may be missing.
    * @returns {Boolean}
    */
-  isInitialized() : boolean {
+  isInitialized(): boolean {
     return this._isInitialized;
   }
 
@@ -413,14 +429,14 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
    * information from another one.
    * @param {Object} newIndex
    */
-  _replace(newIndex : BaseRepresentationIndex) : void {
+  _replace(newIndex: BaseRepresentationIndex): void {
     this._index = newIndex._index;
     this._isInitialized = newIndex._isInitialized;
     this._scaledPeriodEnd = newIndex._scaledPeriodEnd;
     this._isEMSGWhitelisted = newIndex._isEMSGWhitelisted;
   }
 
-  _update() : void {
+  _update(): void {
     log.error("Base RepresentationIndex: Cannot update a SegmentList");
   }
 }
@@ -431,14 +447,14 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
  */
 export interface IAddedIndexSegment {
   /** This segment start time, timescaled. */
-  time : number;
+  time: number;
   /** This segment difference between its end and start time, timescaled. */
-  duration : number;
+  duration: number;
   /** Dividing `time` or `duration` with this value allows to obtain seconds. */
-  timescale : number;
+  timescale: number;
   /**
    * Start and ending bytes (included) for the segment in the whole ISOBMFF
    * buffer.
    */
-  range : [number, number];
+  range: [number, number];
 }

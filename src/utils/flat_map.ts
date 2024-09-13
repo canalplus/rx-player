@@ -18,7 +18,7 @@
 type ArrayWithFlatMap<T> = T[] & {
   flatMap<U, This = undefined>(
     callback: (this: This, value: T, index: number, array: T[]) => U | U[],
-    thisArg?: This
+    thisArg?: This,
   ): U[];
 };
 
@@ -28,17 +28,14 @@ type ArrayWithFlatMap<T> = T[] & {
  * @param {Array.<*>} originalArray
  * @param {Function} fn
  */
-export default function flatMap<T, U>(
-  originalArray : T[],
-  fn: (arg: T) => U[]|U
-) : U[] {
+export default function flatMap<T, U>(originalArray: T[], fn: (arg: T) => U[] | U): U[] {
   /* eslint-disable @typescript-eslint/unbound-method */
   if (typeof (Array.prototype as ArrayWithFlatMap<T>).flatMap === "function") {
     return (originalArray as ArrayWithFlatMap<T>).flatMap(fn);
   }
   /* eslint-enable @typescript-eslint/unbound-method */
 
-  return originalArray.reduce((acc : U[], arg : T) : U[] => {
+  return originalArray.reduce((acc: U[], arg: T): U[] => {
     const r = fn(arg);
     if (Array.isArray(r)) {
       acc.push(...r);

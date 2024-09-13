@@ -16,7 +16,7 @@
 
 import log from "../../../../../../log";
 import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import { IIndexSegment } from "../../../../utils/index_helpers";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 
 /**
  * Translate parsed `S` node into Segment compatible with this index:
@@ -31,10 +31,10 @@ import { IIndexSegment } from "../../../../utils/index_helpers";
  * @returns {Object|null}
  */
 export default function convertElementsToIndexSegment(
-  item : { start? : number; repeatCount? : number; duration? : number },
-  previousItem : IIndexSegment|null,
-  nextItem : { start? : number; repeatCount? : number; duration? : number }|null
-) : IIndexSegment|null {
+  item: { start?: number; repeatCount?: number; duration?: number },
+  previousItem: IIndexSegment | null,
+  nextItem: { start?: number; repeatCount?: number; duration?: number } | null,
+): IIndexSegment | null {
   let start = item.start;
   let duration = item.duration;
   const repeatCount = item.repeatCount;
@@ -42,25 +42,28 @@ export default function convertElementsToIndexSegment(
     if (previousItem === null) {
       start = 0;
     } else if (!isNullOrUndefined(previousItem.duration)) {
-      start = previousItem.start +
-              (previousItem.duration * (previousItem.repeatCount + 1));
+      start = previousItem.start + previousItem.duration * (previousItem.repeatCount + 1);
     }
   }
-  if ((duration === undefined || isNaN(duration)) &&
-      nextItem !== null && nextItem.start !== undefined && !isNaN(nextItem.start) &&
-      start !== undefined && !isNaN(start)
+  if (
+    (duration === undefined || isNaN(duration)) &&
+    nextItem !== null &&
+    nextItem.start !== undefined &&
+    !isNaN(nextItem.start) &&
+    start !== undefined &&
+    !isNaN(start)
   ) {
     duration = nextItem.start - start;
   }
-  if ((start !== undefined && !isNaN(start)) &&
-      (duration !== undefined && !isNaN(duration)) &&
-      (repeatCount === undefined || !isNaN(repeatCount))
+  if (
+    start !== undefined &&
+    !isNaN(start) &&
+    duration !== undefined &&
+    !isNaN(duration) &&
+    (repeatCount === undefined || !isNaN(repeatCount))
   ) {
-    return { start,
-             duration,
-             repeatCount: repeatCount === undefined ? 0 :
-                                                      repeatCount };
+    return { start, duration, repeatCount: repeatCount === undefined ? 0 : repeatCount };
   }
-  log.warn("DASH: A \"S\" Element could not have been parsed.");
+  log.warn('DASH: A "S" Element could not have been parsed.');
   return null;
 }

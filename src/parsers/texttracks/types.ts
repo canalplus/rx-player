@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-import { ICompatVTTCue } from "../../compat";
+import type { ICompatVTTCue } from "../../compat";
 
 // Item returned by an HMTL text track parser
 export interface IHTMLCue {
-  start : number;
+  start: number;
   end: number;
-  element : HTMLElement;
+  element: HTMLElement;
 }
 
 // Function to parse texttracks into native VTT cues
-export type INativeTextTracksParserFn =
-  (texttrack : string, timeOffset : number, language? : string) =>
-    Array<ICompatVTTCue|TextTrackCue>;
+export type INativeTextTracksParserFn = (
+  texttrack: string,
+  timeOffset: number,
+  language?: string,
+) => Array<ICompatVTTCue | TextTrackCue>;
 
 // Function to parse texttracks into HTML cues
-export type IHTMLTextTracksParserFn =
-  (texttrack : string, timeOffset : number, language? : string) =>
-    IHTMLCue[];
+export type IHTMLTextTracksParserFn = (
+  texttrack: string,
+  timeOffset: number,
+  language?: string,
+) => IHTMLCue[];

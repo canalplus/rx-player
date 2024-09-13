@@ -15,23 +15,19 @@
  */
 
 import { MediaError } from "../../../../errors";
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../../../manifest";
-import { IPlayerError } from "../../../../public_types";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../../utils/reference";
-import { CancellationSignal } from "../../../../utils/task_canceller";
-import {
+import type { Adaptation, Period, Representation } from "../../../../manifest";
+import type Manifest from "../../../../manifest";
+import type { IPlayerError } from "../../../../public_types";
+import type { IReadOnlySharedReference } from "../../../../utils/reference";
+import SharedReference from "../../../../utils/reference";
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type {
   IABREstimate,
   IRepresentationEstimatorPlaybackObservation,
   IRepresentationEstimator,
   IRepresentationEstimatorCallbacks,
 } from "../../../adaptive";
-import { IReadOnlyPlaybackObserver } from "../../../api";
+import type { IReadOnlyPlaybackObserver } from "../../../api";
 
 /**
  * Produce estimates to know which Representation should be played.
@@ -52,42 +48,41 @@ import { IReadOnlyPlaybackObserver } from "../../../api";
  *     activities to improve the estimates given.
  */
 export default function getRepresentationEstimate(
-  content : { manifest : Manifest;
-              period : Period;
-              adaptation : Adaptation; },
-  representationEstimator : IRepresentationEstimator,
-  currentRepresentation : IReadOnlySharedReference<Representation | null>,
-  playbackObserver : IReadOnlyPlaybackObserver<
-    IRepresentationEstimatorPlaybackObservation
-  >,
-  onFatalError: (err : IPlayerError) => void,
-  cancellationSignal : CancellationSignal
-) : { estimateRef : IReadOnlySharedReference<IABREstimate>;
-      abrCallbacks : IRepresentationEstimatorCallbacks; }
-{
+  content: { manifest: Manifest; period: Period; adaptation: Adaptation },
+  representationEstimator: IRepresentationEstimator,
+  currentRepresentation: IReadOnlySharedReference<Representation | null>,
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
+  onFatalError: (err: IPlayerError) => void,
+  cancellationSignal: CancellationSignal,
+): {
+  estimateRef: IReadOnlySharedReference<IABREstimate>;
+  abrCallbacks: IRepresentationEstimatorCallbacks;
+} {
   const { manifest, adaptation } = content;
-  const representations = new SharedReference<Representation[]>(
-    [],
-    cancellationSignal);
+  const representations = new SharedReference<Representation[]>([], cancellationSignal);
   updateRepresentationsReference();
   manifest.addEventListener("decipherabilityUpdate", updateRepresentationsReference);
   const unregisterCleanUp = cancellationSignal.register(cleanUp);
-  const { estimates: estimateRef,
-          callbacks: abrCallbacks } = representationEstimator(content,
-                                                              currentRepresentation,
-                                                              representations,
-                                                              playbackObserver,
-                                                              cancellationSignal);
+  const { estimates: estimateRef, callbacks: abrCallbacks } = representationEstimator(
+    content,
+    currentRepresentation,
+    representations,
+    playbackObserver,
+    cancellationSignal,
+  );
   return { abrCallbacks, estimateRef };
 
-  function updateRepresentationsReference() : void {
+  function updateRepresentationsReference(): void {
     /** Representations for which a `RepresentationStream` can be created. */
     const newRepr = adaptation.getPlayableRepresentations();
     if (newRepr.length === 0) {
-      const noRepErr = new MediaError("NO_PLAYABLE_REPRESENTATION",
-                                      "No Representation in the chosen " +
-                                      adaptation.type + " Adaptation can be played",
-                                      { adaptation });
+      const noRepErr = new MediaError(
+        "NO_PLAYABLE_REPRESENTATION",
+        "No Representation in the chosen " +
+          adaptation.type +
+          " Adaptation can be played",
+        { adaptation },
+      );
       cleanUp();
       onFatalError(noRepErr);
       return;
@@ -96,14 +91,14 @@ export default function getRepresentationEstimate(
     const prevRepr = representations.getValue();
     if (prevRepr.length === newRepr.length) {
       if (prevRepr.every((r, idx) => r.id === newRepr[idx].id)) {
-        return ;
+        return;
       }
     }
     representations.setValue(newRepr);
   }
 
   /** Clean-up all resources taken here. */
-  function cleanUp() : void {
+  function cleanUp(): void {
     manifest.removeEventListener("decipherabilityUpdate", updateRepresentationsReference);
 
     // check to protect against the case where it is not yet defined.

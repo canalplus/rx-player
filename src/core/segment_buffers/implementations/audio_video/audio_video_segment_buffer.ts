@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  ICompatSourceBuffer,
-  tryToChangeSourceBufferType,
-} from "../../../../compat";
+import type { ICompatSourceBuffer } from "../../../../compat";
+import { tryToChangeSourceBufferType } from "../../../../compat";
 import config from "../../../../config";
 import log from "../../../../log";
 import { getLoggableSegmentId } from "../../../../manifest";
@@ -25,12 +23,10 @@ import assertUnreachable from "../../../../utils/assert_unreachable";
 import createCancellablePromise from "../../../../utils/create_cancellable_promise";
 import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
-import TaskCanceller, {
-  CancellationError,
-  CancellationSignal,
-} from "../../../../utils/task_canceller";
-import { IInsertedChunkInfos } from "../../inventory";
-import {
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller";
+import type { IInsertedChunkInfos } from "../../inventory";
+import type {
   IEndOfSegmentInfos,
   IEndOfSegmentOperation,
   IPushChunkInfos,
@@ -38,9 +34,8 @@ import {
   IPushOperation,
   IRemoveOperation,
   ISBOperation,
-  SegmentBuffer,
-  SegmentBufferOperation,
 } from "../types";
+import { SegmentBuffer, SegmentBufferOperation } from "../types";
 
 /**
  * Item added to the AudioVideoSegmentBuffer's queue before being processed into
@@ -156,11 +151,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    * @param {string} codec
    * @param {MediaSource} mediaSource
    */
-  constructor(
-    bufferType: "audio" | "video",
-    codec: string,
-    mediaSource: MediaSource
-  ) {
+  constructor(bufferType: "audio" | "video", codec: string, mediaSource: MediaSource) {
     super();
     log.info("AVSB: calling `mediaSource.addSourceBuffer`", codec);
     const sourceBuffer = mediaSource.addSourceBuffer(codec);
@@ -234,20 +225,20 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    */
   public pushChunk(
     infos: IPushChunkInfos<unknown>,
-    cancellationSignal: CancellationSignal
+    cancellationSignal: CancellationSignal,
   ): Promise<void> {
     assertDataIsBufferSource(infos.data.chunk);
     log.debug(
       "AVSB: receiving order to push data to the SourceBuffer",
       this.bufferType,
-      getLoggableSegmentId(infos.inventoryInfos)
+      getLoggableSegmentId(infos.inventoryInfos),
     );
     return this._addToQueue(
       {
         type: SegmentBufferOperation.Push,
         value: infos as IPushChunkInfos<BufferSource>,
       },
-      cancellationSignal
+      cancellationSignal,
     );
   }
 
@@ -261,17 +252,17 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
   public removeBuffer(
     start: number,
     end: number,
-    cancellationSignal: CancellationSignal
+    cancellationSignal: CancellationSignal,
   ): Promise<void> {
     log.debug(
       "AVSB: receiving order to remove data from the SourceBuffer",
       this.bufferType,
       start,
-      end
+      end,
     );
     return this._addToQueue(
       { type: SegmentBufferOperation.Remove, value: { start, end } },
-      cancellationSignal
+      cancellationSignal,
     );
   }
 
@@ -286,16 +277,16 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    */
   public endOfSegment(
     infos: IEndOfSegmentInfos,
-    cancellationSignal: CancellationSignal
+    cancellationSignal: CancellationSignal,
   ): Promise<void> {
     log.debug(
       "AVSB: receiving order for validating end of segment",
       this.bufferType,
-      getLoggableSegmentId(infos)
+      getLoggableSegmentId(infos),
     );
     return this._addToQueue(
       { type: SegmentBufferOperation.EndOfSegment, value: infos },
-      cancellationSignal
+      cancellationSignal,
     );
   }
 
@@ -315,7 +306,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    */
   public getPendingOperations(): Array<ISBOperation<BufferSource>> {
     const parseQueuedOperation = (
-      op: IAVSBQueueItem | IAVSBPendingTask
+      op: IAVSBQueueItem | IAVSBPendingTask,
     ): ISBOperation<BufferSource> => {
       // Had to be written that way for TypeScript
       switch (op.type) {
@@ -362,7 +353,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
       } catch (e) {
         log.warn(
           `AVSB: Failed to abort a ${this.bufferType} SourceBuffer:`,
-          e instanceof Error ? e : ""
+          e instanceof Error ? e : "",
         );
       }
     }
@@ -379,20 +370,15 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
         err instanceof Error
           ? err
           : new Error(
-            "An unknown error occured when doing operations " +
-              "on the SourceBuffer"
-          );
+              "An unknown error occured when doing operations " + "on the SourceBuffer",
+            );
       const task = this._pendingTask;
       if (
         task.type === SegmentBufferOperation.Push &&
         task.data.length === 0 &&
         task.inventoryData !== null
       ) {
-        this._segmentInventory.insertChunk(
-          task.inventoryData,
-          false,
-          performance.now()
-        );
+        this._segmentInventory.insertChunk(task.inventoryData, false, performance.now());
       }
       this._pendingTask = null;
       task.reject(error);
@@ -407,11 +393,10 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    */
   private _addToQueue(
     operation: ISBOperation<BufferSource>,
-    cancellationSignal: CancellationSignal
+    cancellationSignal: CancellationSignal,
   ): Promise<void> {
     return createCancellablePromise(cancellationSignal, (resolve, reject) => {
-      const shouldRestartQueue =
-        this._queue.length === 0 && this._pendingTask === null;
+      const shouldRestartQueue = this._queue.length === 0 && this._pendingTask === null;
       const queueItem = objectAssign({ resolve, reject }, operation);
       this._queue.push(queueItem);
       if (shouldRestartQueue) {
@@ -451,15 +436,12 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
               this._segmentInventory.insertChunk(
                 task.inventoryData,
                 true,
-                performance.now()
+                performance.now(),
               );
             }
             break;
           case SegmentBufferOperation.EndOfSegment:
-            this._segmentInventory.completeSegment(
-              task.value,
-              this.getBufferedRanges()
-            );
+            this._segmentInventory.completeSegment(task.value, this.getBufferedRanges());
             break;
           case SegmentBufferOperation.Remove:
             this.synchronizeInventory();
@@ -490,14 +472,12 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
         } catch (e) {
           this._pendingTask = objectAssign(
             { data: [], inventoryData: itemValue.inventoryInfos },
-            nextItem
+            nextItem,
           );
           const error =
             e instanceof Error
               ? e
-              : new Error(
-                "An unknown error occured when preparing a push operation"
-              );
+              : new Error("An unknown error occured when preparing a push operation");
           this._lastInitSegmentUniqueId = null; // initialize init segment as a security
           nextItem.reject(error);
           return;
@@ -505,7 +485,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 
         this._pendingTask = objectAssign(
           { data: dataToPush, inventoryData: itemValue.inventoryInfos },
-          nextItem
+          nextItem,
         );
       }
     }
@@ -516,7 +496,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
           // nothing to do, we will just acknowledge the segment.
           log.debug(
             "AVSB: Acknowledging complete segment",
-            getLoggableSegmentId(this._pendingTask.value)
+            getLoggableSegmentId(this._pendingTask.value),
           );
           this._flush();
           return;
@@ -530,19 +510,14 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
           log.debug(
             "AVSB: pushing segment",
             this.bufferType,
-            getLoggableSegmentId(this._pendingTask.inventoryData)
+            getLoggableSegmentId(this._pendingTask.inventoryData),
           );
           this._sourceBuffer.appendBuffer(segmentData);
           break;
 
         case SegmentBufferOperation.Remove:
           const { start, end } = this._pendingTask.value;
-          log.debug(
-            "AVSB: removing data from SourceBuffer",
-            this.bufferType,
-            start,
-            end
-          );
+          log.debug("AVSB: removing data from SourceBuffer", this.bufferType, start, end);
           this._sourceBuffer.remove(start, end);
           break;
 
@@ -565,9 +540,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
    * @param {Object} data
    * @returns {Object}
    */
-  private _preparePushOperation(
-    data: IPushedChunkData<BufferSource>
-  ): BufferSource[] {
+  private _preparePushOperation(data: IPushedChunkData<BufferSource>): BufferSource[] {
     // Push operation with both an init segment and a regular segment might
     // need to be separated into two steps
     const dataToPush = [];
@@ -576,10 +549,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 
     if (codec !== undefined && codec !== this.codec) {
       log.debug("AVSB: updating codec", codec);
-      hasUpdatedSourceBufferType = tryToChangeSourceBufferType(
-        this._sourceBuffer,
-        codec
-      );
+      hasUpdatedSourceBufferType = tryToChangeSourceBufferType(this._sourceBuffer, codec);
       if (hasUpdatedSourceBufferType) {
         this.codec = codec;
       } else {
@@ -593,7 +563,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
         "AVSB: updating timestampOffset",
         this.bufferType,
         this._sourceBuffer.timestampOffset,
-        newTimestampOffset
+        newTimestampOffset,
       );
       this._sourceBuffer.timestampOffset = newTimestampOffset;
     }
@@ -625,8 +595,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
 
     if (
       data.initSegmentUniqueId !== null &&
-      (hasUpdatedSourceBufferType ||
-        !this._isLastInitSegment(data.initSegmentUniqueId))
+      (hasUpdatedSourceBufferType || !this._isLastInitSegment(data.initSegmentUniqueId))
     ) {
       // Push initialization segment before the media segment
       const segmentData = this._initSegmentsMap.get(data.initSegmentUniqueId);
@@ -666,8 +635,7 @@ export default class AudioVideoSegmentBuffer extends SegmentBuffer {
  */
 function assertDataIsBufferSource(data: unknown): asserts data is BufferSource {
   if (
-    (__ENVIRONMENT__.CURRENT_ENV as number) ===
-    (__ENVIRONMENT__.PRODUCTION as number)
+    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
   ) {
     return;
   }

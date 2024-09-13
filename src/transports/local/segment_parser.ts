@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  getMDHDTimescale,
-  takePSSHOut,
-} from "../../parsers/containers/isobmff";
+import { getMDHDTimescale, takePSSHOut } from "../../parsers/containers/isobmff";
 import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
-import {
+import type {
   ISegmentContext,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
@@ -29,32 +26,35 @@ import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import inferSegmentContainer from "../utils/infer_segment_container";
 
 export default function segmentParser(
-  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
-                    isChunked : boolean; },
-  content : ISegmentContext,
-  initTimescale : number | undefined
-) : ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null> |
-    ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null>
-{
+  loadedSegment: { data: ArrayBuffer | Uint8Array | null; isChunked: boolean },
+  content: ISegmentContext,
+  initTimescale: number | undefined,
+):
+  | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null>
+  | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null> {
   const { period, adaptation, representation, segment } = content;
   const { data } = loadedSegment;
-  const appendWindow : [ number, number | undefined ] = [ period.start, period.end ];
+  const appendWindow: [number, number | undefined] = [period.start, period.end];
 
   if (data === null) {
     if (segment.isInit) {
-      return { segmentType: "init",
-               initializationData: null,
-               initializationDataSize: 0,
-               protectionDataUpdate: false,
-               initTimescale: undefined };
+      return {
+        segmentType: "init",
+        initializationData: null,
+        initializationDataSize: 0,
+        protectionDataUpdate: false,
+        initTimescale: undefined,
+      };
     }
-    return { segmentType: "media",
-             chunkData: null,
-             chunkSize: 0,
-             chunkInfos: null,
-             chunkOffset: 0,
-             protectionDataUpdate: false,
-             appendWindow };
+    return {
+      segmentType: "media",
+      chunkData: null,
+      chunkSize: 0,
+      chunkInfos: null,
+      chunkOffset: 0,
+      protectionDataUpdate: false,
+      appendWindow,
+    };
   }
 
   const chunkData = new Uint8Array(data);
@@ -75,27 +75,31 @@ export default function segmentParser(
   }
 
   if (segment.isInit) {
-    const timescale = containerType === "webm" ? getTimeCodeScale(chunkData, 0) :
-                                                 // assume ISOBMFF-compliance
-                                                 getMDHDTimescale(chunkData);
-    return { segmentType: "init",
-             initializationData: chunkData,
-             initializationDataSize: 0,
-             initTimescale: timescale ?? undefined,
-             protectionDataUpdate };
+    const timescale =
+      containerType === "webm"
+        ? getTimeCodeScale(chunkData, 0)
+        : // assume ISOBMFF-compliance
+          getMDHDTimescale(chunkData);
+    return {
+      segmentType: "init",
+      initializationData: chunkData,
+      initializationDataSize: 0,
+      initTimescale: timescale ?? undefined,
+      protectionDataUpdate,
+    };
   }
 
-  const chunkInfos = seemsToBeMP4 ? getISOBMFFTimingInfos(chunkData,
-                                                          false,
-                                                          segment,
-                                                          initTimescale) :
-                                    null; // TODO extract time info from webm
+  const chunkInfos = seemsToBeMP4
+    ? getISOBMFFTimingInfos(chunkData, false, segment, initTimescale)
+    : null; // TODO extract time info from webm
   const chunkOffset = segment.timestampOffset ?? 0;
-  return { segmentType: "media",
-           chunkData,
-           chunkSize: chunkData.length,
-           chunkInfos,
-           chunkOffset,
-           protectionDataUpdate: false,
-           appendWindow };
+  return {
+    segmentType: "media",
+    chunkData,
+    chunkSize: chunkData.length,
+    chunkInfos,
+    chunkOffset,
+    protectionDataUpdate: false,
+    appendWindow,
+  };
 }

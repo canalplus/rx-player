@@ -16,13 +16,13 @@
 
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to display text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeTextBuffer(features : IFeaturesObject) : void {
+function addNativeTextBuffer(features: IFeaturesObject): void {
   features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
 }
 

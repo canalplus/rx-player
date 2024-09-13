@@ -25,14 +25,15 @@
  * @param {Array.<Object>} ...sources
  * @returns {Object}
  */
-function objectAssign<T, U>(target : T, source : U) : T & U;
-function objectAssign<T, U, V>(target : T, source1 : U, source2 : V) : T & U & V;
+function objectAssign<T, U>(target: T, source: U): T & U;
+function objectAssign<T, U, V>(target: T, source1: U, source2: V): T & U & V;
 function objectAssign<T, U, V, W>(
-  target : T,
-  source1 : U,
-  source2 : V,
-  source3 : W) : T & U & V & W;
-function objectAssign<T, U>(target : T, ...sources : U[]) : T & U {
+  target: T,
+  source1: U,
+  source2: V,
+  source3: W,
+): T & U & V & W;
+function objectAssign<T, U>(target: T, ...sources: U[]): T & U {
   if (target === null || target === undefined) {
     throw new TypeError("Cannot convert undefined or null to object");
   }
@@ -53,8 +54,8 @@ function objectAssign<T, U>(target : T, ...sources : U[]) : T & U {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method, no-restricted-properties
-export default typeof Object.assign === "function" ?
-  // eslint-disable-next-line no-restricted-properties
-  Object.assign :
-  // eslint-disable-next-line  @typescript-eslint/unbound-method
-  objectAssign;
+export default typeof Object.assign === "function"
+  ? // eslint-disable-next-line no-restricted-properties
+    Object.assign
+  : // eslint-disable-next-line  @typescript-eslint/unbound-method
+    objectAssign;

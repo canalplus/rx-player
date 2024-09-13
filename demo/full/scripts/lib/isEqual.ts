@@ -7,9 +7,7 @@
  * @returns boolean
  */
 
-function isEqual<
-  T extends Record<string, unknown>,
->(obj1: T, obj2: T): boolean {
+function isEqual<T extends Record<string, unknown>>(obj1: T, obj2: T): boolean {
   if (obj1 === obj2) {
     return true;
   }

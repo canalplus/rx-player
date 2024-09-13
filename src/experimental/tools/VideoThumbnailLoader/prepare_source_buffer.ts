@@ -20,7 +20,7 @@ import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implement
 import log from "../../../log";
 import createCancellablePromise from "../../../utils/create_cancellable_promise";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * Open the media source and create the `AudioVideoSegmentBuffer`.
@@ -32,7 +32,7 @@ import { CancellationSignal } from "../../../utils/task_canceller";
 export default function prepareSourceBuffer(
   videoElement: HTMLVideoElement,
   codec: string,
-  cleanUpSignal: CancellationSignal
+  cleanUpSignal: CancellationSignal,
 ): Promise<AudioVideoSegmentBuffer> {
   return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
     if (MediaSource_ == null) {
@@ -40,8 +40,7 @@ export default function prepareSourceBuffer(
     }
 
     // make sure the media has been correctly reset
-    const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src :
-                                                        null;
+    const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src : null;
     resetMediaSource(videoElement, null, oldSrc);
 
     log.info("Init: Creating MediaSource");

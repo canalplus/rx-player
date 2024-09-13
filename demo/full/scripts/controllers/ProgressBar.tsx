@@ -29,36 +29,39 @@ function ProgressBar({
   const [timeIndicatorText, setTimeIndicatorText] = React.useState("");
   const [thumbnailIsVisible, setThumbnailIsVisible] = React.useState(false);
   const [tipPosition, setTipPosition] = React.useState(0);
-  const [image, setImage] = React.useState<Uint8Array|null>(null);
-  const [imageTime, setImageTime] = React.useState<number|null>(null);
+  const [image, setImage] = React.useState<Uint8Array | null>(null);
+  const [imageTime, setImageTime] = React.useState<number | null>(null);
 
   const wrapperElementRef = React.useRef<HTMLDivElement>(null);
 
-  const showTimeIndicator = React.useCallback((
-    wallClockTime: number,
-    clientX: number,
-  ): void => {
-    let hours;
-    let minutes;
-    let seconds;
-    if (isLive) {
-      const date = new Date(wallClockTime * 1000);
-      hours = date.getHours();
-      minutes = date.getMinutes();
-      seconds = date.getSeconds();
-    } else {
-      hours = Math.floor(wallClockTime / 3600);
-      minutes = Math.floor((wallClockTime - (hours * 3600)) / 60);
-      seconds = Math.floor(wallClockTime - ((minutes * 60) + (hours * 3600)));
-    }
-    const currentReadableTime = hours.toString().padStart(2, "0") + ":" +
-      minutes.toString().padStart(2, "0") + ":" +
-      seconds.toString().padStart(2, "0");
+  const showTimeIndicator = React.useCallback(
+    (wallClockTime: number, clientX: number): void => {
+      let hours;
+      let minutes;
+      let seconds;
+      if (isLive) {
+        const date = new Date(wallClockTime * 1000);
+        hours = date.getHours();
+        minutes = date.getMinutes();
+        seconds = date.getSeconds();
+      } else {
+        hours = Math.floor(wallClockTime / 3600);
+        minutes = Math.floor((wallClockTime - hours * 3600) / 60);
+        seconds = Math.floor(wallClockTime - (minutes * 60 + hours * 3600));
+      }
+      const currentReadableTime =
+        hours.toString().padStart(2, "0") +
+        ":" +
+        minutes.toString().padStart(2, "0") +
+        ":" +
+        seconds.toString().padStart(2, "0");
 
-    setTimeIndicatorVisible(true);
-    setTimeIndicatorPosition(clientX);
-    setTimeIndicatorText(currentReadableTime);
-  }, [isLive]);
+      setTimeIndicatorVisible(true);
+      setTimeIndicatorPosition(clientX);
+      setTimeIndicatorText(currentReadableTime);
+    },
+    [isLive],
+  );
 
   const hideTimeIndicator = React.useCallback((): void => {
     setTimeIndicatorVisible(false);
@@ -66,15 +69,12 @@ function ProgressBar({
     setTimeIndicatorText("");
   }, [isLive]);
 
-  const showVideoTumbnail = React.useCallback(
-    (ts: number, clientX: number): void => {
-      const timestampToMs = ts;
-      setThumbnailIsVisible(true);
-      setTipPosition(clientX);
-      setImageTime(timestampToMs);
-    },
-    []
-  );
+  const showVideoTumbnail = React.useCallback((ts: number, clientX: number): void => {
+    const timestampToMs = ts;
+    setThumbnailIsVisible(true);
+    setTipPosition(clientX);
+    setImageTime(timestampToMs);
+  }, []);
 
   const showImageThumbnail = React.useCallback(
     (ts: number, clientX: number): void => {
@@ -83,12 +83,9 @@ function ProgressBar({
       }
 
       const timestampToMs = ts * 1000;
-      const imageIndex = images.findIndex(i =>
-        i && i.ts > timestampToMs
-      );
-      const image = imageIndex === -1 ?
-        images[images.length - 1] :
-        images[imageIndex - 1];
+      const imageIndex = images.findIndex((i) => i && i.ts > timestampToMs);
+      const image =
+        imageIndex === -1 ? images[images.length - 1] : images[imageIndex - 1];
       if (!image) {
         return;
       }
@@ -96,7 +93,7 @@ function ProgressBar({
       setTipPosition(clientX);
       setImage(image.data);
     },
-    [images]
+    [images],
   );
 
   const showThumbnail = React.useCallback(
@@ -107,7 +104,7 @@ function ProgressBar({
         showImageThumbnail(ts, clientX);
       }
     },
-    [showVideoTumbnail, showImageThumbnail, enableVideoThumbnails]
+    [showVideoTumbnail, showImageThumbnail, enableVideoThumbnails],
   );
 
   const hideTumbnail = React.useCallback((): void => {
@@ -117,10 +114,13 @@ function ProgressBar({
     setImage(null);
   }, []);
 
-  const seek = React.useCallback((position: number): void => {
-    player.actions.seek(position);
-    onSeek();
-  }, [player]);
+  const seek = React.useCallback(
+    (position: number): void => {
+      player.actions.seek(position);
+      onSeek();
+    },
+    [player],
+  );
 
   const hideToolTips = React.useCallback(() => {
     hideTimeIndicator();
@@ -134,12 +134,13 @@ function ProgressBar({
       showTimeIndicator(wallClockTime, event.clientX);
       showThumbnail(position, event.clientX);
     },
-    [player, showTimeIndicator, showThumbnail]
+    [player, showTimeIndicator, showThumbnail],
   );
 
-  const toolTipOffset = wrapperElementRef.current !== null ?
-    wrapperElementRef.current.getBoundingClientRect().left :
-    0;
+  const toolTipOffset =
+    wrapperElementRef.current !== null
+      ? wrapperElementRef.current.getBoundingClientRect().left
+      : 0;
 
   if (!isContentLoaded) {
     return (
@@ -153,47 +154,36 @@ function ProgressBar({
   if (thumbnailIsVisible) {
     const xThumbnailPosition = tipPosition - toolTipOffset;
     if (enableVideoThumbnails && imageTime !== null) {
-      thumbnailElement = <VideoThumbnail
-        xPosition={xThumbnailPosition}
-        time={imageTime}
-        player={player}
-      />;
+      thumbnailElement = (
+        <VideoThumbnail xPosition={xThumbnailPosition} time={imageTime} player={player} />
+      );
     } else if (image !== null) {
-      thumbnailElement = <ImageThumbnail
-        image={image}
-        xPosition={xThumbnailPosition}
-      />;
+      thumbnailElement = <ImageThumbnail image={image} xPosition={xThumbnailPosition} />;
     }
   }
 
   return (
-    <div
-      className="progress-bar-parent"
-      ref={wrapperElementRef}
-    >
-      {
-        timeIndicatorVisible ?
-          <ToolTip
-            className="progress-tip"
-            text={timeIndicatorText}
-            xPosition={timeIndicatorPosition}
-            offset={toolTipOffset}
-          /> : null
-      }
+    <div className="progress-bar-parent" ref={wrapperElementRef}>
+      {timeIndicatorVisible ? (
+        <ToolTip
+          className="progress-tip"
+          text={timeIndicatorText}
+          xPosition={timeIndicatorPosition}
+          offset={toolTipOffset}
+        />
+      ) : null}
       {thumbnailElement}
-      {
-        currentTime === undefined ?
-          null :
-          <ProgressbarComponent
-            seek={seek}
-            onMouseOut={hideToolTips}
-            onMouseMove={onMouseMove}
-            position={currentTime}
-            minimumPosition={minimumPosition}
-            maximumPosition={livePosition ?? maximumPosition}
-            bufferGap={bufferGap}
-          />
-      }
+      {currentTime === undefined ? null : (
+        <ProgressbarComponent
+          seek={seek}
+          onMouseOut={hideToolTips}
+          onMouseMove={onMouseMove}
+          position={currentTime}
+          minimumPosition={minimumPosition}
+          maximumPosition={livePosition ?? maximumPosition}
+          bufferGap={bufferGap}
+        />
+      )}
     </div>
   );
 }

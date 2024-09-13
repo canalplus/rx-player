@@ -426,7 +426,7 @@ function checkGetLicense({
             expect(mockGetLicense).toHaveBeenNthCalledWith(
               i,
               challenge,
-              "license-request"
+              "license-request",
             );
           }
           expect(mockUpdate).toHaveBeenCalledTimes(0);
@@ -448,7 +448,7 @@ function checkGetLicense({
           expect(mockGetLicense).toHaveBeenNthCalledWith(
             requestIdx,
             challenge,
-            "license-request"
+            "license-request",
           );
         } catch (e) {
           rej(e);
@@ -501,7 +501,7 @@ function checkGetLicense({
             expect(mockGetLicense).toHaveBeenNthCalledWith(
               i,
               challenge,
-              "license-request"
+              "license-request",
             );
           }
           contentDecryptor.dispose();

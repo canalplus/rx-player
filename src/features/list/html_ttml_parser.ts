@@ -16,13 +16,13 @@
 
 import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import ttmlParser from "../../parsers/texttracks/ttml/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse TTML text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLTTMLFeature(features : IFeaturesObject) : void {
+function addHTMLTTMLFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.ttml = ttmlParser;
   features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }

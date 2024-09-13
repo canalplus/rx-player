@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-import getProbedConfiguration, { ICapabilitiesTypes } from "../capabilities";
+import type { ICapabilitiesTypes } from "../capabilities";
+import getProbedConfiguration from "../capabilities";
 import log from "../log";
-import probers, {
-  IResultsFromAPI,
-} from "../probers";
-import {
-  IMediaConfiguration,
-  ProberStatus,
-} from "../types";
+import type { IResultsFromAPI } from "../probers";
+import probers from "../probers";
+import type { IMediaConfiguration } from "../types";
+import { ProberStatus } from "../types";
 
 export type IBrowserAPIS =
-  "isTypeSupported" |
-  "isTypeSupportedWithFeatures" |
-  "matchMedia" |
-  "decodingInfos" |
-  "requestMediaKeySystemAccess" |
-  "getStatusForPolicy";
+  | "isTypeSupported"
+  | "isTypeSupportedWithFeatures"
+  | "matchMedia"
+  | "decodingInfos"
+  | "requestMediaKeySystemAccess"
+  | "getStatusForPolicy";
 
 export interface IProbedMediaConfiguration {
   globalStatus: ProberStatus;
@@ -59,9 +57,9 @@ export interface IProbedMediaConfiguration {
  */
 function probeMediaConfiguration(
   config: IMediaConfiguration,
-  browserAPIS: IBrowserAPIS[]
+  browserAPIS: IBrowserAPIS[],
 ): Promise<IProbedMediaConfiguration> {
-  let globalStatus : ProberStatus|undefined;
+  let globalStatus: ProberStatus | undefined;
   const resultsFromAPIS: Array<{
     APIName: ICapabilitiesTypes;
     result: IResultsFromAPI | undefined;
@@ -70,36 +68,38 @@ function probeMediaConfiguration(
   for (const browserAPI of browserAPIS) {
     const probeWithBrowser = probers[browserAPI];
     if (probeWithBrowser !== undefined) {
-      const prom = probeWithBrowser(config).then(([currentStatus, result]) => {
-        resultsFromAPIS.push({ APIName: browserAPI, result });
+      const prom = probeWithBrowser(config)
+        .then(([currentStatus, result]) => {
+          resultsFromAPIS.push({ APIName: browserAPI, result });
 
-        if (globalStatus == null) {
-          globalStatus = currentStatus;
-        } else {
-          switch (currentStatus) {
-            // Here, globalStatus can't be null. Hence, if the new current status is
-            // 'worse' than global status, then re-assign the latter.
-            case ProberStatus.NotSupported:
-              // `NotSupported` is either worse or equal.
-              globalStatus = ProberStatus.NotSupported;
-              break;
-            case ProberStatus.Unknown:
-              // `Unknown` is worse than 'Supported' only.
-              if (globalStatus === ProberStatus.Supported) {
-                globalStatus = ProberStatus.Unknown;
-              }
-              break;
-            default:
-              // new status is either `Supported` or unknown status. Global status
-              // shouldn't be changed.
-              break;
+          if (globalStatus == null) {
+            globalStatus = currentStatus;
+          } else {
+            switch (currentStatus) {
+              // Here, globalStatus can't be null. Hence, if the new current status is
+              // 'worse' than global status, then re-assign the latter.
+              case ProberStatus.NotSupported:
+                // `NotSupported` is either worse or equal.
+                globalStatus = ProberStatus.NotSupported;
+                break;
+              case ProberStatus.Unknown:
+                // `Unknown` is worse than 'Supported' only.
+                if (globalStatus === ProberStatus.Supported) {
+                  globalStatus = ProberStatus.Unknown;
+                }
+                break;
+              default:
+                // new status is either `Supported` or unknown status. Global status
+                // shouldn't be changed.
+                break;
+            }
           }
-        }
-      }).catch((error: unknown) => {
-        if (error instanceof Error) {
-          log.debug(error.message);
-        }
-      });
+        })
+        .catch((error: unknown) => {
+          if (error instanceof Error) {
+            log.debug(error.message);
+          }
+        });
       promises.push(prom);
     }
   }
@@ -109,8 +109,10 @@ function probeMediaConfiguration(
       globalStatus = ProberStatus.Unknown;
     }
 
-    const probedCapabilities =
-      getProbedConfiguration(config, resultsFromAPIS.map((a) => a.APIName));
+    const probedCapabilities = getProbedConfiguration(
+      config,
+      resultsFromAPIS.map((a) => a.APIName),
+    );
     const areUnprobedCapabilities =
       JSON.stringify(probedCapabilities).length !== JSON.stringify(config).length;
 
@@ -119,14 +121,18 @@ function probeMediaConfiguration(
     }
 
     if (areUnprobedCapabilities) {
-      log.warn("MediaCapabilitiesProber >>> PROBER: Some capabilities " +
-        "could not be probed, due to the incompatibility of browser APIs, or the " +
-        "lack of arguments to call them. See debug logs for more details.");
+      log.warn(
+        "MediaCapabilitiesProber >>> PROBER: Some capabilities " +
+          "could not be probed, due to the incompatibility of browser APIs, or the " +
+          "lack of arguments to call them. See debug logs for more details.",
+      );
     }
 
     if (log.hasLevel("INFO")) {
-      log.info("MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
-               JSON.stringify(probedCapabilities));
+      log.info(
+        "MediaCapabilitiesProber >>> PROBER: Probed capabilities: ",
+        JSON.stringify(probedCapabilities),
+      );
     }
 
     return { globalStatus, resultsFromAPIS };

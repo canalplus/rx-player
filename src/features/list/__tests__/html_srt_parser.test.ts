@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import srtParser from "../../../parsers/texttracks/srt/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLsrtFeature from "../html_srt_parser";
 
 describe("Features list - HTML srt Parser", () => {

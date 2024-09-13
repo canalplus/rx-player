@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import MediaElementTrackChoiceManager from "../../../core/api/tracks_management/media_element_track_choice_manager";
 import initDirectFile from "../../../core/init/directfile_content_initializer";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addDirectfileFeature from "../directfile";
 
 describe("Features list - Directfile", () => {
@@ -25,11 +25,14 @@ describe("Features list - Directfile", () => {
     const featureObject = {} as unknown as IFeaturesObject;
     addDirectfileFeature(featureObject);
     expect(featureObject).toEqual({
-      directfile: { initDirectFile,
-                    mediaElementTrackChoiceManager: MediaElementTrackChoiceManager },
+      directfile: {
+        initDirectFile,
+        mediaElementTrackChoiceManager: MediaElementTrackChoiceManager,
+      },
     });
     expect(featureObject.directfile?.initDirectFile).toEqual(initDirectFile);
-    expect(featureObject.directfile?.mediaElementTrackChoiceManager)
-      .toEqual(MediaElementTrackChoiceManager);
+    expect(featureObject.directfile?.mediaElementTrackChoiceManager).toEqual(
+      MediaElementTrackChoiceManager,
+    );
   });
 });

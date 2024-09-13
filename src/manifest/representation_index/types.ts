@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  Period,
-  Representation,
-} from "../../manifest";
-import { IEMSG } from "../../parsers/containers/isobmff";
-import {
+import type { Adaptation, Period, Representation } from "../../manifest";
+import type Manifest from "../../manifest";
+import type { IEMSG } from "../../parsers/containers/isobmff";
+import type {
   ILocalIndexSegment,
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
 } from "../../parsers/manifest/local";
-import { IPlayerError } from "../../public_types";
+import type { IPlayerError } from "../../public_types";
 
 /**
  * Supplementary information specific to Smooth Initialization segments.
@@ -37,13 +34,13 @@ export interface ISmoothInitSegmentPrivateInfos {
    * Needed because Smooth segment are created in JS based on timing information
    * as found in the Manifest.
    */
-  timescale : number;
-  codecPrivateData? : string | undefined;
-  bitsPerSample? : number | undefined;
-  channels? : number | undefined;
-  packetSize? : number | undefined;
-  samplingRate? : number | undefined;
-  protection? : { keyId : Uint8Array } | undefined;
+  timescale: number;
+  codecPrivateData?: string | undefined;
+  bitsPerSample?: number | undefined;
+  channels?: number | undefined;
+  packetSize?: number | undefined;
+  samplingRate?: number | undefined;
+  protection?: { keyId: Uint8Array } | undefined;
 }
 
 /**
@@ -55,30 +52,32 @@ export interface ISmoothMediaSegmentPrivateInfos {
    * Start time of the segment as announced in the Manifest, in the same
    * timescale than the one indicated through `ISmoothInitSegmentPrivateInfos`.
    */
-  time : number;
+  time: number;
   /**
    * Duration of the segment as announced in the Manifest, in the same timescale
    * than the one indicated through `ISmoothInitSegmentPrivateInfos`.
    */
-  duration : number;
+  duration: number;
 }
 
 /** Describes a given "real" Manifest for MetaPlaylist's segments. */
-export interface IBaseContentInfos { manifest: Manifest;
-                                     period: Period;
-                                     adaptation: Adaptation;
-                                     representation: Representation; }
+export interface IBaseContentInfos {
+  manifest: Manifest;
+  period: Period;
+  adaptation: Adaptation;
+  representation: Representation;
+}
 
 /** Supplementary information needed for segments in the "metaplaylist" transport. */
 export interface IMetaPlaylistPrivateInfos {
   /** The original transport protocol (e.g. "dash", "smooth" etc.) */
-  transportType : string;
+  transportType: string;
   /** The context this segment is in. */
-  baseContent : IBaseContentInfos;
+  baseContent: IBaseContentInfos;
   /** The segment originally created by this transport's RepresentationIndex. */
-  originalSegment : ISegment;
-  contentStart : number;
-  contentEnd? : number | undefined;
+  originalSegment: ISegment;
+  contentStart: number;
+  contentEnd?: number | undefined;
 }
 
 /**
@@ -87,13 +86,13 @@ export interface IMetaPlaylistPrivateInfos {
  */
 export interface ILocalManifestInitSegmentPrivateInfos {
   /** Callback used to load that segment. */
-  load : ILocalManifestInitSegmentLoader;
+  load: ILocalManifestInitSegmentLoader;
 }
 
 /** Supplementary information needed for media segments of the "local" transport. */
 export interface ILocalManifestSegmentPrivateInfos {
   /** Callback used to load that segment. */
-  load : ILocalManifestSegmentLoader;
+  load: ILocalManifestSegmentLoader;
 
   /**
    * Exact same segment than the one given in a local manifest.
@@ -101,7 +100,7 @@ export interface ILocalManifestSegmentPrivateInfos {
    * of retrieving the wanted segment (this task will generally be done by the
    * content downloader tool) when the RxPlayer asks for it.
    */
-  segment : ILocalIndexSegment;
+  segment: ILocalIndexSegment;
 }
 
 /**
@@ -113,34 +112,34 @@ export interface ILocalManifestSegmentPrivateInfos {
  */
 export interface IPrivateInfos {
   /** Smooth-specific information allowing to generate an initialization segment. */
-  smoothInitSegment? : ISmoothInitSegmentPrivateInfos;
+  smoothInitSegment?: ISmoothInitSegmentPrivateInfos;
 
   /** Smooth-specific information linked to all Smooth media segments. */
-  smoothMediaSegment? : ISmoothMediaSegmentPrivateInfos;
+  smoothMediaSegment?: ISmoothMediaSegmentPrivateInfos;
 
   /** Information that should be present on all MetaPlaylist segments. */
-  metaplaylistInfos? : IMetaPlaylistPrivateInfos;
+  metaplaylistInfos?: IMetaPlaylistPrivateInfos;
 
   /**
    * Local Manifest-specific information allowing to request the
    * initialization segment.
    */
-  localManifestInitSegment? : ILocalManifestInitSegmentPrivateInfos;
+  localManifestInitSegment?: ILocalManifestInitSegmentPrivateInfos;
 
   /** Local Manifest-specific information allowing to request any media segment. */
-  localManifestSegment? : ILocalManifestSegmentPrivateInfos;
+  localManifestSegment?: ILocalManifestSegmentPrivateInfos;
 
   /**
    * Function allowing to know if a given emsg's event name has been
    * explicitely authorized.
    */
-  isEMSGWhitelisted? : ((evt: IEMSG) => boolean);
+  isEMSGWhitelisted?: (evt: IEMSG) => boolean;
 }
 
 /** Represent a single Segment from a Representation. */
 export interface ISegment {
   /** ID of the Segment. Should be unique for this Representation. */
-  id : string;
+  id: string;
   /**
    * If true, this segment is an initialization segment with no decodable data.
    *
@@ -158,17 +157,17 @@ export interface ISegment {
    * Segments which are not purely an initialization segments are called "media
    * segments" in the code.
    */
-  isInit : boolean;
+  isInit: boolean;
   /**
    * Store supplementary information on a segment that can be later exploited by
    * the transport logic.
    */
-  privateInfos : IPrivateInfos;
+  privateInfos: IPrivateInfos;
   /**
    * Estimated time, in seconds, at which the concerned segment should be
    * offseted when decoded.
    */
-  timestampOffset? : number | undefined;
+  timestampOffset?: number | undefined;
   /**
    * Estimated start time for the segment, in seconds.
    * Note that some rounding errors and some differences between what the
@@ -177,7 +176,7 @@ export interface ISegment {
    *
    * `0` for initialization segments.
    */
-  time : number;
+  time: number;
   /**
    * Estimated end time for the segment, in seconds.
    * Note that some rounding errors and some differences between what the
@@ -186,7 +185,7 @@ export interface ISegment {
    *
    * `0` for initialization segments.
    */
-  end : number;
+  end: number;
   /**
    * Estimated duration for the segment, in seconds.
    *
@@ -206,7 +205,7 @@ export interface ISegment {
    *
    * `0` for initialization segments.
    */
-  duration : number;
+  duration: number;
   /**
    * Always set to 1 for API compatibility with v3.X.X.
    * This was intended for conversion of the `time` and `duration` properties
@@ -214,7 +213,7 @@ export interface ISegment {
    *
    * As both are always in seconds now, this property became unneeded.
    */
-  timescale : 1;
+  timescale: 1;
   /**
    * If `false`, this segment's `duration` property may not be the duration of
    * the full segment as it could still be in the process of being generated
@@ -224,7 +223,7 @@ export interface ISegment {
    * should be set to `true` even if the segment is still being
    * generated.
    */
-  complete : boolean;
+  complete: boolean;
   /**
    * Optional relative or absolute URL to load the resource.
    *
@@ -246,7 +245,7 @@ export interface ISegment {
    * should be directly requested instead.
    * In that way, it is equivalent to setting it to `null`.
    */
-  url : string | null;
+  url: string | null;
 
   /**
    * Optional byte range to retrieve the Segment from its URL(s).
@@ -255,7 +254,7 @@ export interface ISegment {
    * sadly documented in the API, so moving it is actuall a v3.X.X breaking
    * change.
    */
-  range? : [number, number] | undefined;
+  range?: [number, number] | undefined;
   /**
    * If set, the corresponding byte-range in the downloaded segment will
    * contain an index describing other Segments
@@ -264,7 +263,7 @@ export interface ISegment {
    * sadly documented in the API, so moving it is actuall a v3.X.X breaking
    * change.
    */
-  indexRange? : [number, number] | undefined;
+  indexRange?: [number, number] | undefined;
   /**
    * Optional number of the Segment.
    * TODO this should probably moved to `privateInfos` as this is
@@ -272,7 +271,7 @@ export interface ISegment {
    * sadly documented in the API, so moving it is actuall a v3.X.X breaking
    * change.
    */
-  number? : number | undefined;
+  number?: number | undefined;
 }
 
 /** Interface that should be implemented by any Representation's `index` value. */
@@ -284,7 +283,7 @@ export interface IRepresentationIndex {
    * `null` if there's no initialization segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment|null;
+  getInitSegment(): ISegment | null;
 
   /**
    * Returns an array of Segments needed for the amount of time given.
@@ -294,7 +293,7 @@ export interface IRepresentationIndex {
    * @returns {Array.<Object>} - The list of segments corresponding to your
    * wanted range.
    */
-  getSegments(up : number, duration : number) : ISegment[];
+  getSegments(up: number, duration: number): ISegment[];
 
   /**
    * Returns `true` if, from the given situation, the manifest has to be
@@ -305,7 +304,7 @@ export interface IRepresentationIndex {
    * currently wanted.
    * @returns {Boolean}
    */
-  shouldRefresh(up : number, to : number) : boolean;
+  shouldRefresh(up: number, to: number): boolean;
 
   /**
    * Returns the starting time, in seconds, of the earliest segment currently
@@ -314,7 +313,7 @@ export interface IRepresentationIndex {
    * Returns `undefined` if we cannot know this value.
    * @returns {Number|null}
    */
-  getFirstAvailablePosition() : number | null | undefined;
+  getFirstAvailablePosition(): number | null | undefined;
 
   /**
    * Returns the ending time, in seconds, of the last playable position
@@ -328,7 +327,7 @@ export interface IRepresentationIndex {
    * instead.
    * @returns {Number|null|undefined}
    */
-  getLastAvailablePosition() : number | null | undefined;
+  getLastAvailablePosition(): number | null | undefined;
 
   /**
    * Returns the ending time, in seconds, of the Representation once it is
@@ -340,7 +339,7 @@ export interface IRepresentationIndex {
    *
    * @returns {number|undefined}
    */
-  getEnd() : number | null | undefined;
+  getEnd(): number | null | undefined;
 
   /**
    * Returns `true` if a Segment returned by this index is still considered
@@ -350,7 +349,7 @@ export interface IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean|undefined}
    */
-  isSegmentStillAvailable(segment : ISegment) : boolean | undefined;
+  isSegmentStillAvailable(segment: ISegment): boolean | undefined;
 
   /**
    * Returns true if the `error` given following the request of `segment` can
@@ -367,7 +366,7 @@ export interface IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : IPlayerError, segment : ISegment) : boolean;
+  canBeOutOfSyncError(error: IPlayerError, segment: ISegment): boolean;
 
   /**
    * Checks if the given time - in seconds - is in a discontinuity.
@@ -381,7 +380,7 @@ export interface IRepresentationIndex {
    * `time`. If this is a number instead, there is one and that number is the
    * position for which a segment is available in seconds.
    */
-  checkDiscontinuity(time : number) : number | null;
+  checkDiscontinuity(time: number): number | null;
 
   /**
    * Returns `false` if the last segments in this index have already been
@@ -390,7 +389,7 @@ export interface IRepresentationIndex {
    * generated.
    * @returns {boolean}
    */
-  isStillAwaitingFutureSegments() : boolean;
+  isStillAwaitingFutureSegments(): boolean;
 
   /**
    * Returns `true` if this index has all the data it needs to give the list
@@ -412,15 +411,15 @@ export interface IRepresentationIndex {
    * segment parsing code.
    * @returns {boolean}
    */
-  isInitialized() : boolean;
+  isInitialized(): boolean;
 
-  awaitSegmentBetween(start : number, end : number) : boolean | undefined;
+  awaitSegmentBetween(start: number, end: number): boolean | undefined;
 
   /**
    * Replace the index with another one, such as after a Manifest update.
    * @param {Object} newIndex
    */
-  _replace(newIndex : IRepresentationIndex) : void;
+  _replace(newIndex: IRepresentationIndex): void;
 
   /**
    * Update the current index with a new, partial, version.
@@ -429,5 +428,5 @@ export interface IRepresentationIndex {
    * announced segments.
    * @param {Object} newIndex
    */
-  _update(newIndex : IRepresentationIndex) : void;
+  _update(newIndex: IRepresentationIndex): void;
 }

@@ -16,7 +16,6 @@
 
 import config from "../../../../../config";
 
-
 /**
  * In Javascript, numbers are encoded in a way that a floating number may be
  * represented internally with a rounding error.
@@ -29,4 +28,3 @@ import config from "../../../../../config";
 export function getSegmentTimeRoundingError(timescale: number): number {
   return config.getCurrent().DEFAULT_MAXIMUM_TIME_ROUNDING_ERROR * timescale;
 }
-

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-let hasClassList : boolean | undefined;
+let hasClassList: boolean | undefined;
 
 /**
  * Add className to an HTMLElement. Do nothing if the className was already
@@ -22,12 +22,13 @@ let hasClassList : boolean | undefined;
  * @param {HTMLElement} elt
  * @param {string} className
  */
-export default function addClassName(elt : HTMLElement, className : string) : void {
+export default function addClassName(elt: HTMLElement, className: string): void {
   if (hasClassList === undefined) {
-    hasClassList = elt.classList !== undefined &&
-                   /* eslint-disable @typescript-eslint/unbound-method */
-                   typeof elt.classList.add === "function";
-                   /* eslint-enable @typescript-eslint/unbound-method */
+    hasClassList =
+      elt.classList !== undefined &&
+      /* eslint-disable @typescript-eslint/unbound-method */
+      typeof elt.classList.add === "function";
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   if (hasClassList) {

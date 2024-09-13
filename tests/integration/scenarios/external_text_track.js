@@ -20,7 +20,6 @@ describe("external text track", function () {
   });
 
   it("should be able to add an external text track", async function () {
-
     player.loadVideo({
       transport: manifestInfos.transport,
       url: manifestInfos.url,
@@ -45,7 +44,6 @@ describe("external text track", function () {
   });
 
   it("should be able to add a closed caption text track", async function () {
-
     player.loadVideo({
       transport: manifestInfos.transport,
       url: manifestInfos.url,
@@ -67,11 +65,9 @@ describe("external text track", function () {
     expect(typeof textTracks[0].id).to.equal("string");
     expect(textTracks[0].id).to.not.equal("");
     expect(textTracks[0].active).to.equal(false);
-
   });
 
   it("should be able to add multiple external text tracks", async function () {
-
     player.loadVideo({
       transport: manifestInfos.transport,
       url: manifestInfos.url,
@@ -125,7 +121,6 @@ describe("external text track", function () {
   });
 
   it("should switch initially to external text track if set as default language", async function () {
-
     const waysOfWritingDefaultTextTrack = [
       "en",
       "eng",
@@ -187,7 +182,6 @@ describe("external text track", function () {
   });
 
   it("should switch initially to a closed caption external text track if set as default language", async function () {
-
     const waysOfWritingDefaultTextTrack = [
       { language: "en", closedCaption: true },
       { language: "eng", closedCaption: true },
@@ -237,7 +231,6 @@ describe("external text track", function () {
         defaultTextTrack,
       });
 
-
       await waitForLoadedStateAfterLoadVideo(player);
 
       const textTracks2 = player.getAvailableTextTracks();
@@ -246,7 +239,6 @@ describe("external text track", function () {
   });
 
   it("should not switch initially to external text track if not set as default language", async function () {
-
     const waysOfWritingDefaultTextTrack = [
       "fr",
       undefined,

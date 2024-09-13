@@ -21,11 +21,8 @@
 
 import config from "../../config";
 import log from "../../log";
-import {
-  ISupplementaryImageTrack,
-  ISupplementaryTextTrack,
-} from "../../manifest";
-import {
+import type { ISupplementaryImageTrack, ISupplementaryTextTrack } from "../../manifest";
+import type {
   IAudioTrackPreference,
   IAudioTrackSwitchingMode,
   IConstructorOptions,
@@ -44,61 +41,59 @@ import {
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import {
-  normalizeAudioTrack,
-  normalizeTextTrack,
-} from "../../utils/languages";
+import { normalizeAudioTrack, normalizeTextTrack } from "../../utils/languages";
 import objectAssign from "../../utils/object_assign";
 import warnOnce from "../../utils/warn_once";
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
-export type IParsedStartAtOption = { position : number } |
-                                   { wallClockTime : number } |
-                                   { percentage : number } |
-                                   { fromLastPosition : number } |
-                                   { fromLivePosition : number } |
-                                   { fromFirstPosition : number };
+export type IParsedStartAtOption =
+  | { position: number }
+  | { wallClockTime: number }
+  | { percentage: number }
+  | { fromLastPosition: number }
+  | { fromLivePosition: number }
+  | { fromFirstPosition: number };
 
 export interface IParsedTransportOptions {
-  aggressiveMode? : boolean | undefined;
-  checkMediaSegmentIntegrity? : boolean | undefined;
-  lowLatencyMode : boolean;
+  aggressiveMode?: boolean | undefined;
+  checkMediaSegmentIntegrity?: boolean | undefined;
+  lowLatencyMode: boolean;
   manifestLoader?: IManifestLoader | undefined;
-  referenceDateTime? : number | undefined;
-  representationFilter? : IRepresentationFilter | undefined;
-  segmentLoader? : ISegmentLoader | undefined;
-  serverSyncInfos? : IServerSyncInfos | undefined;
+  referenceDateTime?: number | undefined;
+  representationFilter?: IRepresentationFilter | undefined;
+  segmentLoader?: ISegmentLoader | undefined;
+  serverSyncInfos?: IServerSyncInfos | undefined;
   /* eslint-disable import/no-deprecated */
-  manifestUpdateUrl? : string | undefined;
-  supplementaryImageTracks? : ISupplementaryImageTrack[] | undefined;
-  supplementaryTextTracks? : ISupplementaryTextTrack[] | undefined;
+  manifestUpdateUrl?: string | undefined;
+  supplementaryImageTracks?: ISupplementaryImageTrack[] | undefined;
+  supplementaryTextTracks?: ISupplementaryTextTrack[] | undefined;
   /* eslint-enable import/no-deprecated */
 
-  __priv_patchLastSegmentInSidx? : boolean | undefined;
+  __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
 
 /** Options of the RxPlayer's constructor once parsed. */
 export interface IParsedConstructorOptions {
-  maxBufferAhead : number;
-  maxBufferBehind : number;
-  wantedBufferAhead : number;
-  maxVideoBufferSize : number;
-  limitVideoWidth : boolean;
-  throttleWhenHidden : boolean;
-  throttleVideoBitrateWhenHidden : boolean;
+  maxBufferAhead: number;
+  maxBufferBehind: number;
+  wantedBufferAhead: number;
+  maxVideoBufferSize: number;
+  limitVideoWidth: boolean;
+  throttleWhenHidden: boolean;
+  throttleVideoBitrateWhenHidden: boolean;
 
-  preferredAudioTracks : IAudioTrackPreference[];
-  preferredTextTracks : ITextTrackPreference[];
-  preferredVideoTracks : IVideoTrackPreference[];
+  preferredAudioTracks: IAudioTrackPreference[];
+  preferredTextTracks: ITextTrackPreference[];
+  preferredVideoTracks: IVideoTrackPreference[];
 
-  videoElement : HTMLMediaElement;
-  initialVideoBitrate : number;
-  initialAudioBitrate : number;
-  minAudioBitrate : number;
-  minVideoBitrate : number;
-  maxAudioBitrate : number;
-  maxVideoBitrate : number;
-  stopAtEnd : boolean;
+  videoElement: HTMLMediaElement;
+  initialVideoBitrate: number;
+  initialAudioBitrate: number;
+  minAudioBitrate: number;
+  minVideoBitrate: number;
+  maxAudioBitrate: number;
+  maxVideoBitrate: number;
+  stopAtEnd: boolean;
 }
 
 /**
@@ -106,22 +101,22 @@ export interface IParsedConstructorOptions {
  * `loadVideo` method exend.
  */
 interface IParsedLoadVideoOptionsBase {
-  url : string | undefined;
-  transport : string;
-  autoPlay : boolean;
-  initialManifest : ILoadedManifestFormat | undefined;
-  keySystems : IKeySystemOption[];
-  lowLatencyMode : boolean;
-  minimumManifestUpdateInterval : number;
+  url: string | undefined;
+  transport: string;
+  autoPlay: boolean;
+  initialManifest: ILoadedManifestFormat | undefined;
+  keySystems: IKeySystemOption[];
+  lowLatencyMode: boolean;
+  minimumManifestUpdateInterval: number;
   networkConfig: INetworkConfigOption;
-  transportOptions : IParsedTransportOptions;
-  defaultAudioTrack : IAudioTrackPreference|null|undefined;
-  defaultTextTrack : ITextTrackPreference|null|undefined;
-  startAt : IParsedStartAtOption|undefined;
-  manualBitrateSwitchingMode : "seamless"|"direct";
-  enableFastSwitching : boolean;
-  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
-  onCodecSwitch : "continue"|"reload";
+  transportOptions: IParsedTransportOptions;
+  defaultAudioTrack: IAudioTrackPreference | null | undefined;
+  defaultTextTrack: ITextTrackPreference | null | undefined;
+  startAt: IParsedStartAtOption | undefined;
+  manualBitrateSwitchingMode: "seamless" | "direct";
+  enableFastSwitching: boolean;
+  audioTrackSwitchingMode: IAudioTrackSwitchingMode;
+  onCodecSwitch: "continue" | "reload";
 }
 
 /**
@@ -129,8 +124,8 @@ interface IParsedLoadVideoOptionsBase {
  * `textTrackMode` is asked.
  */
 interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
-  textTrackMode : "native";
-  hideNativeSubtitle : boolean;
+  textTrackMode: "native";
+  hideNativeSubtitle: boolean;
 }
 
 /**
@@ -138,8 +133,8 @@ interface IParsedLoadVideoOptionsNative extends IParsedLoadVideoOptionsBase {
  * `textTrackMode` is asked.
  */
 interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
-  textTrackMode : "html";
-  textTrackElement : HTMLElement;
+  textTrackMode: "html";
+  textTrackElement: HTMLElement;
 }
 
 /**
@@ -147,8 +142,8 @@ interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
  * `loadVideo` method.
  */
 export type IParsedLoadVideoOptions =
-  IParsedLoadVideoOptionsNative |
-  IParsedLoadVideoOptionsHTML;
+  | IParsedLoadVideoOptionsNative
+  | IParsedLoadVideoOptionsHTML;
 
 /**
  * Parse options given to the API constructor and set default options as found
@@ -160,39 +155,41 @@ export type IParsedLoadVideoOptions =
  * @returns {Object}
  */
 function parseConstructorOptions(
-  options : IConstructorOptions
-) : IParsedConstructorOptions {
-  let maxBufferAhead : number;
-  let maxBufferBehind : number;
-  let wantedBufferAhead : number;
-  let maxVideoBufferSize : number;
+  options: IConstructorOptions,
+): IParsedConstructorOptions {
+  let maxBufferAhead: number;
+  let maxBufferBehind: number;
+  let wantedBufferAhead: number;
+  let maxVideoBufferSize: number;
 
-  let throttleWhenHidden : boolean;
-  let throttleVideoBitrateWhenHidden : boolean;
+  let throttleWhenHidden: boolean;
+  let throttleVideoBitrateWhenHidden: boolean;
 
-  let preferredAudioTracks : IAudioTrackPreference[];
-  let preferredTextTracks : ITextTrackPreference[];
-  let preferredVideoTracks : IVideoTrackPreference[];
+  let preferredAudioTracks: IAudioTrackPreference[];
+  let preferredTextTracks: ITextTrackPreference[];
+  let preferredVideoTracks: IVideoTrackPreference[];
 
-  let videoElement : HTMLMediaElement;
-  let initialVideoBitrate : number;
-  let initialAudioBitrate : number;
-  let minAudioBitrate : number;
-  let minVideoBitrate : number;
-  let maxAudioBitrate : number;
-  let maxVideoBitrate : number;
+  let videoElement: HTMLMediaElement;
+  let initialVideoBitrate: number;
+  let initialAudioBitrate: number;
+  let minAudioBitrate: number;
+  let minVideoBitrate: number;
+  let maxAudioBitrate: number;
+  let maxVideoBitrate: number;
 
-  const { DEFAULT_INITIAL_BITRATES,
-          DEFAULT_LIMIT_VIDEO_WIDTH,
-          DEFAULT_MIN_BITRATES,
-          DEFAULT_MAX_BITRATES,
-          DEFAULT_MAX_BUFFER_AHEAD,
-          DEFAULT_MAX_BUFFER_BEHIND,
-          DEFAULT_MAX_VIDEO_BUFFER_SIZE,
-          DEFAULT_STOP_AT_END,
-          DEFAULT_THROTTLE_WHEN_HIDDEN,
-          DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
-          DEFAULT_WANTED_BUFFER_AHEAD } = config.getCurrent();
+  const {
+    DEFAULT_INITIAL_BITRATES,
+    DEFAULT_LIMIT_VIDEO_WIDTH,
+    DEFAULT_MIN_BITRATES,
+    DEFAULT_MAX_BITRATES,
+    DEFAULT_MAX_BUFFER_AHEAD,
+    DEFAULT_MAX_BUFFER_BEHIND,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+    DEFAULT_STOP_AT_END,
+    DEFAULT_THROTTLE_WHEN_HIDDEN,
+    DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN,
+    DEFAULT_WANTED_BUFFER_AHEAD,
+  } = config.getCurrent();
 
   if (isNullOrUndefined(options.maxBufferAhead)) {
     maxBufferAhead = DEFAULT_MAX_BUFFER_AHEAD;
@@ -234,14 +231,15 @@ function parseConstructorOptions(
     }
   }
 
-
-  const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth) ?
-    DEFAULT_LIMIT_VIDEO_WIDTH :
-    !!options.limitVideoWidth;
+  const limitVideoWidth = isNullOrUndefined(options.limitVideoWidth)
+    ? DEFAULT_LIMIT_VIDEO_WIDTH
+    : !!options.limitVideoWidth;
 
   if (!isNullOrUndefined(options.throttleWhenHidden)) {
-    warnOnce("`throttleWhenHidden` API is deprecated. Consider using " +
-             "`throttleVideoBitrateWhenHidden` instead.");
+    warnOnce(
+      "`throttleWhenHidden` API is deprecated. Consider using " +
+        "`throttleVideoBitrateWhenHidden` instead.",
+    );
 
     throttleWhenHidden = !!options.throttleWhenHidden;
   } else {
@@ -253,10 +251,11 @@ function parseConstructorOptions(
   if (throttleWhenHidden) {
     throttleVideoBitrateWhenHidden = false;
   } else {
-    throttleVideoBitrateWhenHidden =
-      isNullOrUndefined(options.throttleVideoBitrateWhenHidden) ?
-        DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN :
-        !!options.throttleVideoBitrateWhenHidden;
+    throttleVideoBitrateWhenHidden = isNullOrUndefined(
+      options.throttleVideoBitrateWhenHidden,
+    )
+      ? DEFAULT_THROTTLE_VIDEO_BITRATE_WHEN_HIDDEN
+      : !!options.throttleVideoBitrateWhenHidden;
   }
 
   if (options.preferredTextTracks !== undefined) {
@@ -349,9 +348,11 @@ function parseConstructorOptions(
     if (isNaN(maxVideoBitrate)) {
       throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
     } else if (minVideoBitrate > maxVideoBitrate) {
-      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" +
-                      `${maxVideoBitrate}", is inferior to the set minVideoBitrate, "` +
-                      `${minVideoBitrate}"`);
+      throw new Error(
+        'Invalid maxVideoBitrate parameter. Its value, "' +
+          `${maxVideoBitrate}", is inferior to the set minVideoBitrate, "` +
+          `${minVideoBitrate}"`,
+      );
     }
   }
 
@@ -362,33 +363,38 @@ function parseConstructorOptions(
     if (isNaN(maxAudioBitrate)) {
       throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
     } else if (minAudioBitrate > maxAudioBitrate) {
-      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" +
-                      `${maxAudioBitrate}", is inferior to the set minAudioBitrate, "` +
-                      `${minAudioBitrate}"`);
+      throw new Error(
+        'Invalid maxAudioBitrate parameter. Its value, "' +
+          `${maxAudioBitrate}", is inferior to the set minAudioBitrate, "` +
+          `${minAudioBitrate}"`,
+      );
     }
   }
 
-  const stopAtEnd = isNullOrUndefined(options.stopAtEnd) ? DEFAULT_STOP_AT_END :
-                                                           !!options.stopAtEnd;
+  const stopAtEnd = isNullOrUndefined(options.stopAtEnd)
+    ? DEFAULT_STOP_AT_END
+    : !!options.stopAtEnd;
 
-  return { maxBufferAhead,
-           maxBufferBehind,
-           limitVideoWidth,
-           videoElement,
-           wantedBufferAhead,
-           maxVideoBufferSize,
-           throttleWhenHidden,
-           throttleVideoBitrateWhenHidden,
-           preferredAudioTracks,
-           preferredTextTracks,
-           preferredVideoTracks,
-           initialAudioBitrate,
-           initialVideoBitrate,
-           minAudioBitrate,
-           minVideoBitrate,
-           maxAudioBitrate,
-           maxVideoBitrate,
-           stopAtEnd };
+  return {
+    maxBufferAhead,
+    maxBufferBehind,
+    limitVideoWidth,
+    videoElement,
+    wantedBufferAhead,
+    maxVideoBufferSize,
+    throttleWhenHidden,
+    throttleVideoBitrateWhenHidden,
+    preferredAudioTracks,
+    preferredTextTracks,
+    preferredVideoTracks,
+    initialAudioBitrate,
+    initialVideoBitrate,
+    minAudioBitrate,
+    minVideoBitrate,
+    maxAudioBitrate,
+    maxVideoBitrate,
+    stopAtEnd,
+  };
 }
 
 /**
@@ -401,20 +407,25 @@ function checkReloadOptions(options?: {
   keySystems?: IKeySystemOption[];
   autoPlay?: boolean;
 }): void {
-  if (options === null ||
-      (typeof options !== "object" && options !== undefined)) {
+  if (options === null || (typeof options !== "object" && options !== undefined)) {
     throw new Error("API: reload - Invalid options format.");
   }
-  if (options?.reloadAt === null ||
-      (typeof options?.reloadAt !== "object" && options?.reloadAt !== undefined)) {
+  if (
+    options?.reloadAt === null ||
+    (typeof options?.reloadAt !== "object" && options?.reloadAt !== undefined)
+  ) {
     throw new Error("API: reload - Invalid 'reloadAt' option format.");
   }
-  if (typeof options?.reloadAt?.position !== "number" &&
-      options?.reloadAt?.position !== undefined) {
+  if (
+    typeof options?.reloadAt?.position !== "number" &&
+    options?.reloadAt?.position !== undefined
+  ) {
     throw new Error("API: reload - Invalid 'reloadAt.position' option format.");
   }
-  if (typeof options?.reloadAt?.relative !== "number" &&
-      options?.reloadAt?.relative !== undefined) {
+  if (
+    typeof options?.reloadAt?.relative !== "number" &&
+    options?.reloadAt?.relative !== undefined
+  ) {
     throw new Error("API: reload - Invalid 'reloadAt.relative' option format.");
   }
   if (!Array.isArray(options?.keySystems) && options?.keySystems !== undefined) {
@@ -437,23 +448,23 @@ function checkReloadOptions(options?: {
  * @param {Object} ctx - The player context, needed for some default values.
  * @returns {Object}
  */
-function parseLoadVideoOptions(
-  options : ILoadVideoOptions
-) : IParsedLoadVideoOptions {
-  let url : string|undefined;
-  let transport : string;
-  let keySystems : IKeySystemOption[];
-  let textTrackMode : "native"|"html";
-  let textTrackElement : HTMLElement|undefined;
-  let startAt : IParsedStartAtOption|undefined;
+function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOptions {
+  let url: string | undefined;
+  let transport: string;
+  let keySystems: IKeySystemOption[];
+  let textTrackMode: "native" | "html";
+  let textTrackElement: HTMLElement | undefined;
+  let startAt: IParsedStartAtOption | undefined;
 
-  const { DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
-          DEFAULT_AUTO_PLAY,
-          DEFAULT_CODEC_SWITCHING_BEHAVIOR,
-          DEFAULT_ENABLE_FAST_SWITCHING,
-          DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
-          DEFAULT_SHOW_NATIVE_SUBTITLE,
-          DEFAULT_TEXT_TRACK_MODE } = config.getCurrent();
+  const {
+    DEFAULT_AUDIO_TRACK_SWITCHING_MODE,
+    DEFAULT_AUTO_PLAY,
+    DEFAULT_CODEC_SWITCHING_BEHAVIOR,
+    DEFAULT_ENABLE_FAST_SWITCHING,
+    DEFAULT_MANUAL_BITRATE_SWITCHING_MODE,
+    DEFAULT_SHOW_NATIVE_SUBTITLE,
+    DEFAULT_TEXT_TRACK_MODE,
+  } = config.getCurrent();
 
   if (isNullOrUndefined(options)) {
     throw new Error("No option set on loadVideo");
@@ -465,11 +476,13 @@ function parseLoadVideoOptions(
     isNullOrUndefined(options.transportOptions?.initialManifest) &&
     isNullOrUndefined(options.transportOptions?.manifestLoader)
   ) {
-    throw new Error("Unable to load a content: no url set on loadVideo.\n" +
-                    "Please provide at least either an `url` argument, a " +
-                    "`transportOptions.initialManifest` option or a " +
-                    "`transportOptions.manifestLoader` option so the RxPlayer " +
-                    "can load the content.");
+    throw new Error(
+      "Unable to load a content: no url set on loadVideo.\n" +
+        "Please provide at least either an `url` argument, a " +
+        "`transportOptions.initialManifest` option or a " +
+        "`transportOptions.manifestLoader` option so the RxPlayer " +
+        "can load the content.",
+    );
   }
 
   if (isNullOrUndefined(options.transport)) {
@@ -479,75 +492,90 @@ function parseLoadVideoOptions(
   }
 
   if (!isNullOrUndefined(options.transportOptions?.aggressiveMode)) {
-    warnOnce("`transportOptions.aggressiveMode` is deprecated and won't " +
-             "be present in the next major version. " +
-             "Please open an issue if you still need this.");
+    warnOnce(
+      "`transportOptions.aggressiveMode` is deprecated and won't " +
+        "be present in the next major version. " +
+        "Please open an issue if you still need this.",
+    );
   }
 
-  const autoPlay = isNullOrUndefined(options.autoPlay) ? DEFAULT_AUTO_PLAY :
-                                                         !!options.autoPlay;
+  const autoPlay = isNullOrUndefined(options.autoPlay)
+    ? DEFAULT_AUTO_PLAY
+    : !!options.autoPlay;
 
   if (isNullOrUndefined(options.keySystems)) {
     keySystems = [];
   } else {
-    keySystems = Array.isArray(options.keySystems) ? options.keySystems :
-                                                     [options.keySystems];
+    keySystems = Array.isArray(options.keySystems)
+      ? options.keySystems
+      : [options.keySystems];
     for (const keySystem of keySystems) {
-      if (typeof keySystem.type !== "string" ||
-          typeof keySystem.getLicense !== "function"
+      if (
+        typeof keySystem.type !== "string" ||
+        typeof keySystem.getLicense !== "function"
       ) {
-        throw new Error("Invalid key system given: Missing type string or " +
-                        "getLicense callback");
+        throw new Error(
+          "Invalid key system given: Missing type string or " + "getLicense callback",
+        );
       }
       if (!isNullOrUndefined(keySystem.onKeyStatusesChange)) {
-        warnOnce("`keySystems[].onKeyStatusesChange` is deprecated and won't " +
-                 "be present in the next major version. " +
-                 "Please open an issue if you still need this.");
+        warnOnce(
+          "`keySystems[].onKeyStatusesChange` is deprecated and won't " +
+            "be present in the next major version. " +
+            "Please open an issue if you still need this.",
+        );
       }
       if (!isNullOrUndefined(keySystem.throwOnLicenseExpiration)) {
-        warnOnce("`keySystems[].throwOnLicenseExpiration` is deprecated and won't " +
-                 "be present in the next major version. " +
-                 "Please open an issue if you still need this.");
+        warnOnce(
+          "`keySystems[].throwOnLicenseExpiration` is deprecated and won't " +
+            "be present in the next major version. " +
+            "Please open an issue if you still need this.",
+        );
       }
     }
   }
 
-  const lowLatencyMode = options.lowLatencyMode === undefined ?
-    false :
-    !!options.lowLatencyMode;
-  const transportOptsArg = typeof options.transportOptions === "object" &&
-                                  options.transportOptions !== null ?
-    options.transportOptions :
-    {};
+  const lowLatencyMode =
+    options.lowLatencyMode === undefined ? false : !!options.lowLatencyMode;
+  const transportOptsArg =
+    typeof options.transportOptions === "object" && options.transportOptions !== null
+      ? options.transportOptions
+      : {};
 
   const initialManifest = options.transportOptions?.initialManifest;
   const minimumManifestUpdateInterval =
     options.transportOptions?.minimumManifestUpdateInterval ?? 0;
 
   let audioTrackSwitchingMode = isNullOrUndefined(options.audioTrackSwitchingMode)
-                                  ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
-                                  : options.audioTrackSwitchingMode;
+    ? DEFAULT_AUDIO_TRACK_SWITCHING_MODE
+    : options.audioTrackSwitchingMode;
   if (!arrayIncludes(["seamless", "direct", "reload"], audioTrackSwitchingMode)) {
-    log.warn("The `audioTrackSwitchingMode` loadVideo option must match one of " +
-             "the following strategy name:\n" +
-             "- `seamless`\n" +
-             "- `direct`\n" +
-             "- `reload`\n" +
-             "If badly set, " + DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
-             " strategy will be used as default");
+    log.warn(
+      "The `audioTrackSwitchingMode` loadVideo option must match one of " +
+        "the following strategy name:\n" +
+        "- `seamless`\n" +
+        "- `direct`\n" +
+        "- `reload`\n" +
+        "If badly set, " +
+        DEFAULT_AUDIO_TRACK_SWITCHING_MODE +
+        " strategy will be used as default",
+    );
     audioTrackSwitchingMode = DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
   }
 
   let onCodecSwitch = isNullOrUndefined(options.onCodecSwitch)
-                        ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
-                        : options.onCodecSwitch;
+    ? DEFAULT_CODEC_SWITCHING_BEHAVIOR
+    : options.onCodecSwitch;
   if (!arrayIncludes(["continue", "reload"], onCodecSwitch)) {
-    log.warn("The `onCodecSwitch` loadVideo option must match one of " +
-             "the following string:\n" +
-             "- `continue`\n" +
-             "- `reload`\n" +
-             "If badly set, " + DEFAULT_CODEC_SWITCHING_BEHAVIOR +
-             " will be used as default");
+    log.warn(
+      "The `onCodecSwitch` loadVideo option must match one of " +
+        "the following string:\n" +
+        "- `continue`\n" +
+        "- `reload`\n" +
+        "If badly set, " +
+        DEFAULT_CODEC_SWITCHING_BEHAVIOR +
+        " will be used as default",
+    );
     onCodecSwitch = DEFAULT_CODEC_SWITCHING_BEHAVIOR;
   }
 
@@ -564,43 +592,54 @@ function parseLoadVideoOptions(
   delete transportOptions.minimumManifestUpdateInterval;
 
   if (options.supplementaryTextTracks !== undefined) {
-    warnOnce("The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
-             "Please use the `TextTrackRenderer` tool instead.");
-    const supplementaryTextTracks =
-      Array.isArray(options.supplementaryTextTracks) ?
-        options.supplementaryTextTracks : [options.supplementaryTextTracks];
+    warnOnce(
+      "The `supplementaryTextTracks` loadVideo option is deprecated.\n" +
+        "Please use the `TextTrackRenderer` tool instead.",
+    );
+    const supplementaryTextTracks = Array.isArray(options.supplementaryTextTracks)
+      ? options.supplementaryTextTracks
+      : [options.supplementaryTextTracks];
 
     for (const supplementaryTextTrack of supplementaryTextTracks) {
-      if (typeof supplementaryTextTrack.language !== "string" ||
-          typeof supplementaryTextTrack.mimeType !== "string" ||
-          typeof supplementaryTextTrack.url !== "string"
+      if (
+        typeof supplementaryTextTrack.language !== "string" ||
+        typeof supplementaryTextTrack.mimeType !== "string" ||
+        typeof supplementaryTextTrack.url !== "string"
       ) {
-        throw new Error("Invalid supplementary text track given. " +
-                        "Missing either language, mimetype or url");
+        throw new Error(
+          "Invalid supplementary text track given. " +
+            "Missing either language, mimetype or url",
+        );
       }
     }
     transportOptions.supplementaryTextTracks = supplementaryTextTracks;
   }
   if (options.supplementaryImageTracks !== undefined) {
-    warnOnce("The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
-             "Please use the `parseBifThumbnails` tool instead.");
-    const supplementaryImageTracks =
-      Array.isArray(options.supplementaryImageTracks) ?
-        options.supplementaryImageTracks : [options.supplementaryImageTracks];
+    warnOnce(
+      "The `supplementaryImageTracks` loadVideo option is deprecated.\n" +
+        "Please use the `parseBifThumbnails` tool instead.",
+    );
+    const supplementaryImageTracks = Array.isArray(options.supplementaryImageTracks)
+      ? options.supplementaryImageTracks
+      : [options.supplementaryImageTracks];
     for (const supplementaryImageTrack of supplementaryImageTracks) {
-      if (typeof supplementaryImageTrack.mimeType !== "string" ||
-          typeof supplementaryImageTrack.url !== "string"
+      if (
+        typeof supplementaryImageTrack.mimeType !== "string" ||
+        typeof supplementaryImageTrack.url !== "string"
       ) {
-        throw new Error("Invalid supplementary image track given. " +
-                        "Missing either mimetype or url");
+        throw new Error(
+          "Invalid supplementary image track given. " + "Missing either mimetype or url",
+        );
       }
     }
     transportOptions.supplementaryImageTracks = supplementaryImageTracks;
   }
 
   if (!isNullOrUndefined(options.transportOptions?.manifestUpdateUrl)) {
-    warnOnce("`manifestUpdateUrl` API is deprecated, please open an issue if you" +
-             " still rely on this.");
+    warnOnce(
+      "`manifestUpdateUrl` API is deprecated, please open an issue if you" +
+        " still rely on this.",
+    );
   }
 
   if (isNullOrUndefined(options.textTrackMode)) {
@@ -613,16 +652,20 @@ function parseLoadVideoOptions(
   }
 
   if (!isNullOrUndefined(options.defaultAudioTrack)) {
-    warnOnce("The `defaultAudioTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredAudioTracks` constructor option or the" +
-             "`setPreferredAudioTracks` method instead");
+    warnOnce(
+      "The `defaultAudioTrack` loadVideo option is deprecated.\n" +
+        "Please use the `preferredAudioTracks` constructor option or the" +
+        "`setPreferredAudioTracks` method instead",
+    );
   }
   const defaultAudioTrack = normalizeAudioTrack(options.defaultAudioTrack);
 
   if (!isNullOrUndefined(options.defaultTextTrack)) {
-    warnOnce("The `defaultTextTrack` loadVideo option is deprecated.\n" +
-             "Please use the `preferredTextTracks` constructor option or the" +
-             "`setPreferredTextTracks` method instead");
+    warnOnce(
+      "The `defaultTextTrack` loadVideo option is deprecated.\n" +
+        "Please use the `preferredTextTracks` constructor option or the" +
+        "`setPreferredTextTracks` method instead",
+    );
   }
   const defaultTextTrack = normalizeTextTrack(options.defaultTextTrack);
 
@@ -631,37 +674,39 @@ function parseLoadVideoOptions(
     warnOnce("The `hideNativeSubtitle` loadVideo option is deprecated");
     hideNativeSubtitle = !!options.hideNativeSubtitle;
   }
-  const manualBitrateSwitchingMode = options.manualBitrateSwitchingMode ??
-                                     DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
+  const manualBitrateSwitchingMode =
+    options.manualBitrateSwitchingMode ?? DEFAULT_MANUAL_BITRATE_SWITCHING_MODE;
 
-  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching) ?
-    DEFAULT_ENABLE_FAST_SWITCHING :
-    options.enableFastSwitching;
+  const enableFastSwitching = isNullOrUndefined(options.enableFastSwitching)
+    ? DEFAULT_ENABLE_FAST_SWITCHING
+    : options.enableFastSwitching;
 
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if (isNullOrUndefined(options.textTrackElement)) {
-      throw new Error("You have to provide a textTrackElement " +
-                      "in \"html\" textTrackMode.");
+      throw new Error(
+        "You have to provide a textTrackElement " + 'in "html" textTrackMode.',
+      );
     } else if (!(options.textTrackElement instanceof HTMLElement)) {
       throw new Error("textTrackElement should be an HTMLElement.");
     } else {
       textTrackElement = options.textTrackElement;
     }
   } else if (!isNullOrUndefined(options.textTrackElement)) {
-    log.warn("API: You have set a textTrackElement without being in " +
-             "an \"html\" textTrackMode. It will be ignored.");
+    log.warn(
+      "API: You have set a textTrackElement without being in " +
+        'an "html" textTrackMode. It will be ignored.',
+    );
   }
 
   if (!isNullOrUndefined(options.startAt)) {
-    if ("wallClockTime" in options.startAt
-    && options.startAt.wallClockTime instanceof Date
+    if (
+      "wallClockTime" in options.startAt &&
+      options.startAt.wallClockTime instanceof Date
     ) {
-      const wallClockTime = (options.startAt as { wallClockTime : Date })
-        .wallClockTime.getTime() / 1000;
-      startAt = objectAssign({},
-                             options.startAt,
-                             { wallClockTime });
+      const wallClockTime =
+        (options.startAt as { wallClockTime: Date }).wallClockTime.getTime() / 1000;
+      startAt = objectAssign({}, options.startAt, { wallClockTime });
     } else {
       startAt = options.startAt as IParsedStartAtOption;
     }
@@ -671,30 +716,28 @@ function parseLoadVideoOptions(
 
   // TODO without cast
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
-  return { autoPlay,
-           defaultAudioTrack,
-           defaultTextTrack,
-           enableFastSwitching,
-           hideNativeSubtitle,
-           keySystems,
-           initialManifest,
-           lowLatencyMode,
-           manualBitrateSwitchingMode,
-           audioTrackSwitchingMode,
-           minimumManifestUpdateInterval,
-           networkConfig,
-           onCodecSwitch,
-           startAt,
-           textTrackElement,
-           textTrackMode,
-           transport,
-           transportOptions,
-           url } as IParsedLoadVideoOptions;
+  return {
+    autoPlay,
+    defaultAudioTrack,
+    defaultTextTrack,
+    enableFastSwitching,
+    hideNativeSubtitle,
+    keySystems,
+    initialManifest,
+    lowLatencyMode,
+    manualBitrateSwitchingMode,
+    audioTrackSwitchingMode,
+    minimumManifestUpdateInterval,
+    networkConfig,
+    onCodecSwitch,
+    startAt,
+    textTrackElement,
+    textTrackMode,
+    transport,
+    transportOptions,
+    url,
+  } as IParsedLoadVideoOptions;
   /* eslint-enable @typescript-eslint/consistent-type-assertions */
 }
 
-export {
-  checkReloadOptions,
-  parseConstructorOptions,
-  parseLoadVideoOptions,
-};
+export { checkReloadOptions, parseConstructorOptions, parseLoadVideoOptions };

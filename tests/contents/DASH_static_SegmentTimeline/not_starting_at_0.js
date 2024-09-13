@@ -1,9 +1,11 @@
-const BASE_URL = "http://" +
-               /* eslint-disable no-undef */
-               __TEST_CONTENT_SERVER__.URL + ":" +
-               __TEST_CONTENT_SERVER__.PORT +
-               /* eslint-enable no-undef */
-               "/DASH_static_SegmentTimeline/media/";
+const BASE_URL =
+  "http://" +
+  /* eslint-disable no-undef */
+  __TEST_CONTENT_SERVER__.URL +
+  ":" +
+  __TEST_CONTENT_SERVER__.PORT +
+  /* eslint-enable no-undef */
+  "/DASH_static_SegmentTimeline/media/";
 export default {
   url: BASE_URL + "not_starting_at_0.mpd",
   transport: "dash",
@@ -64,7 +66,6 @@ export default {
           {
             id: "video-video-video/mp4",
             representations: [
-
               {
                 id: "video=400000",
                 bitrate: 400000,
@@ -204,7 +205,6 @@ export default {
                   ],
                 },
               },
-
             ],
           },
         ],

@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-export interface IHTMLCue { start : number;
-                            end : number;
-                            element : HTMLElement; }
+export interface IHTMLCue {
+  start: number;
+  end: number;
+  element: HTMLElement;
+}
 
-export interface ICuesGroup { start : number;
-                              end : number;
-                              cues : IHTMLCue[]; }
+export interface ICuesGroup {
+  start: number;
+  end: number;
+  cues: IHTMLCue[];
+}

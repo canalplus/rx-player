@@ -38,7 +38,7 @@ const BUILD_ARTEFACTS_TO_REMOVE = [
   "experimental",
   "tools",
   "types",
-  "logger"
+  "logger",
 ];
 
 generateBuild();
@@ -60,10 +60,7 @@ async function generateBuild() {
     console.log(" 📦 Generating imported files from templates...");
     await generateImportFilesFromTemplates();
   } catch (err) {
-    console.error(
-      "Fatal error:",
-      err instanceof Error ? err.message : err
-    );
+    console.error("Fatal error:", err instanceof Error ? err.message : err);
     process.exit(1);
   }
 
@@ -75,10 +72,12 @@ async function generateBuild() {
  * @returns {Promise}
  */
 async function removePreviousBuildArtefacts() {
-  await Promise.all(BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
-    const relativePath = path.join(ROOT_DIR, name);
-    return removeFile(relativePath);
-  }));
+  await Promise.all(
+    BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
+      const relativePath = path.join(ROOT_DIR, name);
+      return removeFile(relativePath);
+    }),
+  );
 }
 
 /**
@@ -86,15 +85,15 @@ async function removePreviousBuildArtefacts() {
  * @returns {Promise}
  */
 async function compile() {
-    // Sadly TypeScript compiler API seems to be sub-par.
-    // I did not find for example how to exclude some files (our unit tests)
-    // easily by running typescript directly from NodeJS.
-    // So we just spawn a separate process running tsc:
-    await spawnProm(
-      "npx tsc -p",
-      [path.join(ROOT_DIR, "tsconfig.modules.json")],
-      (code) => new Error(`Compilation process exited with code ${code}`),
-    );
+  // Sadly TypeScript compiler API seems to be sub-par.
+  // I did not find for example how to exclude some files (our unit tests)
+  // easily by running typescript directly from NodeJS.
+  // So we just spawn a separate process running tsc:
+  await spawnProm(
+    "npx tsc -p",
+    [path.join(ROOT_DIR, "tsconfig.modules.json")],
+    (code) => new Error(`Compilation process exited with code ${code}`),
+  );
 }
 
 /**
@@ -134,13 +133,12 @@ function removeFile(fileName) {
  */
 function spawnProm(command, args, errorOnCode) {
   return new Promise((res, rej) => {
-    spawn(command, args, { shell: true, stdio: "inherit" })
-      .on("close", (code) => {
-        if (code !== 0) {
-          rej(errorOnCode(code));
-        }
-        res();
-      });
+    spawn(command, args, { shell: true, stdio: "inherit" }).on("close", (code) => {
+      if (code !== 0) {
+        rej(errorOnCode(code));
+      }
+      res();
+    });
   });
 }
 
@@ -155,9 +153,9 @@ async function copyDir(src, dest) {
     let srcPath = path.join(src, entry.name);
     let destPath = path.join(dest, entry.name);
 
-    entry.isDirectory() ?
-      await copyDir(srcPath, destPath) :
-      await fs.copyFile(srcPath, destPath);
+    entry.isDirectory()
+      ? await copyDir(srcPath, destPath)
+      : await fs.copyFile(srcPath, destPath);
   }
 }
 

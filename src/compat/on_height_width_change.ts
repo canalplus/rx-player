@@ -15,45 +15,54 @@
  */
 
 import log from "../log";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../utils/reference";
-import { CancellationSignal } from "../utils/task_canceller";
+import type { IReadOnlySharedReference } from "../utils/reference";
+import SharedReference from "../utils/reference";
+import type { CancellationSignal } from "../utils/task_canceller";
 import isNode from "./is_node";
 
-export interface IResolution { width : number;
-                               height : number; }
+export interface IResolution {
+  width: number;
+  height: number;
+}
 
 interface IResizeObserverConstructor {
   /* eslint-disable @typescript-eslint/prefer-function-type */
-  new(callback: IResizeObserverCallback) : IResizeObserver;
+  new (callback: IResizeObserverCallback): IResizeObserver;
   /* eslint-enable @typescript-eslint/prefer-function-type */
 }
 
-interface IResizeObserver { observe(target : Element) : void;
-                            unobserve(target : Element) : void;
-                            disconnect() : void; }
+interface IResizeObserver {
+  observe(target: Element): void;
+  unobserve(target: Element): void;
+  disconnect(): void;
+}
 
-type IResizeObserverCallback  = (entries: IResizeObserverEntry[],
-                                 observer: IResizeObserver) => void;
+type IResizeObserverCallback = (
+  entries: IResizeObserverEntry[],
+  observer: IResizeObserver,
+) => void;
 
-interface IResizeObserverEntry { readonly target : Element;
-                                 readonly contentRect : IDOMRectReadOnly; }
+interface IResizeObserverEntry {
+  readonly target: Element;
+  readonly contentRect: IDOMRectReadOnly;
+}
 
-interface IDOMRectReadOnly { readonly x: number;
-                             readonly y: number;
-                             readonly width: number;
-                             readonly height: number;
-                             readonly top: number;
-                             readonly right: number;
-                             readonly bottom: number;
-                             readonly left: number; }
+interface IDOMRectReadOnly {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-const _ResizeObserver : IResizeObserverConstructor |
-                        undefined = isNode ? undefined :
-                                             window.ResizeObserver;
+const _ResizeObserver: IResizeObserverConstructor | undefined = isNode
+  ? undefined
+  : window.ResizeObserver;
 /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
@@ -69,20 +78,23 @@ const _ResizeObserver : IResizeObserverConstructor |
  * @returns {Object}
  */
 export default function onHeightWidthChange(
-  element : HTMLElement,
-  interval : number,
-  cancellationSignal : CancellationSignal
-) : IReadOnlySharedReference<IResolution> {
+  element: HTMLElement,
+  interval: number,
+  cancellationSignal: CancellationSignal,
+): IReadOnlySharedReference<IResolution> {
   const { height: initHeight, width: initWidth } = element.getBoundingClientRect();
-  const ref = new SharedReference<IResolution>({
-    height: initHeight,
-    width: initWidth,
-  }, cancellationSignal);
-  let lastHeight : number = initHeight;
-  let lastWidth : number = initWidth;
+  const ref = new SharedReference<IResolution>(
+    {
+      height: initHeight,
+      width: initWidth,
+    },
+    cancellationSignal,
+  );
+  let lastHeight: number = initHeight;
+  let lastWidth: number = initWidth;
 
   if (_ResizeObserver !== undefined) {
-    const resizeObserver = new _ResizeObserver(entries => {
+    const resizeObserver = new _ResizeObserver((entries) => {
       if (entries.length === 0) {
         log.error("Compat: Resized but no observed element.");
         return;

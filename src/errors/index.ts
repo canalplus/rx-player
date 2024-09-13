@@ -17,33 +17,25 @@
 import AssertionError from "./assertion_error";
 import CustomLoaderError from "./custom_loader_error";
 import EncryptedMediaError from "./encrypted_media_error";
-import {
-  ErrorCodes,
-  ErrorTypes,
-  IErrorCode,
-  IErrorType,
-  NetworkErrorTypes,
-} from "./error_codes";
+import type { IErrorCode, IErrorType } from "./error_codes";
+import { ErrorCodes, ErrorTypes, NetworkErrorTypes } from "./error_codes";
 import formatError from "./format_error";
 import isKnownError from "./is_known_error";
-import MediaError, {
-  IMediaErrorTrackContext,
-} from "./media_error";
+import type { IMediaErrorTrackContext } from "./media_error";
+import MediaError from "./media_error";
 import NetworkError from "./network_error";
 import OtherError from "./other_error";
 import RequestError from "./request_error";
 
+export type { IErrorCode, IErrorType, IMediaErrorTrackContext };
 export {
   AssertionError,
   CustomLoaderError,
   EncryptedMediaError,
   ErrorCodes,
   ErrorTypes,
-  IErrorCode,
-  IErrorType,
-  IMediaErrorTrackContext,
   formatError,
-  MediaError as MediaError,
+  MediaError,
   NetworkError,
   OtherError,
   RequestError,

@@ -185,10 +185,10 @@ describe("compat - enableAudioTrack", () => {
     ];
     Object.defineProperty(fakeAudioTracks[0], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track1IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track1WasDisabled++;
         } else {
@@ -199,10 +199,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[1], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track2IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track2WasDisabled++;
         } else {
@@ -213,10 +213,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[2], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track3IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track3WasDisabled++;
         } else {
@@ -283,10 +283,10 @@ describe("compat - enableAudioTrack", () => {
     ];
     Object.defineProperty(fakeAudioTracks[0], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track1IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track1WasDisabled++;
         } else {
@@ -297,10 +297,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[1], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track2IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track2WasDisabled++;
         } else {
@@ -311,10 +311,10 @@ describe("compat - enableAudioTrack", () => {
     });
     Object.defineProperty(fakeAudioTracks[2], "enabled", {
       enumerable: true,
-      get() : boolean {
+      get(): boolean {
         return track3IsEnabled;
       },
-      set(enabled : boolean) {
+      set(enabled: boolean) {
         if (!enabled) {
           track3WasDisabled++;
         } else {

@@ -2,8 +2,7 @@
 
 ## Description
 
-The different bitrates available for the current audio track in bits per
-seconds.
+The different bitrates available for the current audio track in bits per seconds.
 
 <div class="note">
 Note for multi-Period contents:
@@ -25,8 +24,8 @@ this method returns an empty array.
 const bitrates = player.getAvailableAudioBitrates();
 ```
 
-- **return value** `Array.<Number>`: the available audio bitrates for the
-  current track of the current Period.
+- **return value** `Array.<Number>`: the available audio bitrates for the current track of
+  the current Period.
 
 ## Example
 
@@ -35,7 +34,7 @@ const audioBitrates = player.getAvailableAudioBitrates();
 if (audioBitrates.length) {
   console.log(
     "The current audio is available in the following bitrates",
-    audioBitrates.join(", ")
+    audioBitrates.join(", "),
   );
 }
 ```

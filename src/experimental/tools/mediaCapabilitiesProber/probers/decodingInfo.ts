@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  IMediaConfiguration,
-  ProberStatus,
-} from "../types";
+import type { IMediaConfiguration } from "../types";
+import { ProberStatus } from "../types";
 
 export interface IDecodingInfos {
   supported: boolean;
@@ -32,16 +30,18 @@ export interface IDecodingInfos {
 function isMediaCapabilitiesAPIAvailable(): Promise<void> {
   return new Promise((resolve) => {
     if (!("mediaCapabilities" in navigator)) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "MediaCapabilities API not available");
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " + "MediaCapabilities API not available",
+      );
     }
     /* eslint-disable @typescript-eslint/no-explicit-any */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     if (!("decodingInfo" in (navigator as any).mediaCapabilities)) {
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-        "Decoding Info not available");
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " + "Decoding Info not available",
+      );
     }
     resolve();
   });
@@ -52,44 +52,50 @@ function isMediaCapabilitiesAPIAvailable(): Promise<void> {
  * @returns {Promise}
  */
 export default function probeDecodingInfos(
-  config: IMediaConfiguration
+  config: IMediaConfiguration,
 ): Promise<[ProberStatus]> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return isMediaCapabilitiesAPIAvailable().then(() => {
-    const hasVideoConfig = (
-      config.type !== undefined && config.type.length > 0 &&
+    const hasVideoConfig =
+      config.type !== undefined &&
+      config.type.length > 0 &&
       config.video !== undefined &&
       config.video.bitrate !== undefined &&
-      config.video.contentType !== undefined && config.video.contentType.length > 0 &&
-      config.video.framerate !== undefined && config.video.framerate.length > 0 &&
+      config.video.contentType !== undefined &&
+      config.video.contentType.length > 0 &&
+      config.video.framerate !== undefined &&
+      config.video.framerate.length > 0 &&
       config.video.height !== undefined &&
-      config.video.width !== undefined
-    );
+      config.video.width !== undefined;
 
-    const hasAudioConfig = (
-      config.type !== undefined && config.type.length > 0 &&
+    const hasAudioConfig =
+      config.type !== undefined &&
+      config.type.length > 0 &&
       config.audio !== undefined &&
       config.audio.bitrate !== undefined &&
-      config.audio.channels !== undefined && config.audio.channels.length > 0 &&
-      config.audio.contentType !== undefined && config.audio.contentType.length > 0 &&
-      config.audio.samplerate !== undefined
-    );
+      config.audio.channels !== undefined &&
+      config.audio.channels.length > 0 &&
+      config.audio.contentType !== undefined &&
+      config.audio.contentType.length > 0 &&
+      config.audio.samplerate !== undefined;
 
     if (!hasVideoConfig && !hasAudioConfig) {
-      throw new Error("MediaCapabilitiesProber >>> API_CALL: " +
-      "Not enough arguments for calling mediaCapabilites.");
+      throw new Error(
+        "MediaCapabilitiesProber >>> API_CALL: " +
+          "Not enough arguments for calling mediaCapabilites.",
+      );
     }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     /* eslint-disable @typescript-eslint/no-unsafe-call */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-return */
-    return (navigator as any).mediaCapabilities.decodingInfo(config)
+    return (navigator as any).mediaCapabilities
+      .decodingInfo(config)
       .then((result: IDecodingInfos) => {
-        return [
-          result.supported ? ProberStatus.Supported : ProberStatus.NotSupported,
-        ];
-      }).catch(() => {
+        return [result.supported ? ProberStatus.Supported : ProberStatus.NotSupported];
+      })
+      .catch(() => {
         return [ProberStatus.NotSupported];
       });
     /* eslint-enable @typescript-eslint/no-explicit-any */

@@ -14,12 +14,7 @@ import type {
 } from "../lib/defaultOptionsValues";
 import type { ILoadVideoOptions } from "../../../../src/public_types";
 
-const {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} = React;
+const { useCallback, useEffect, useRef, useState } = React;
 
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
@@ -32,12 +27,13 @@ function Player(): JSX.Element {
   const [enableVideoThumbnails, setEnableVideoThumbnails] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [playerOpts, setPlayerOpts] = useState<IConstructorSettings>(
-    defaultOptionsValues.player
+    defaultOptionsValues.player,
   );
-  const [loadVideoOpts, setLoadVideoOpts] =
-    useState<ILoadVideoSettings>(defaultOptionsValues.loadVideo);
+  const [loadVideoOpts, setLoadVideoOpts] = useState<ILoadVideoSettings>(
+    defaultOptionsValues.loadVideo,
+  );
   const [hasUpdatedPlayerOptions, setHasUpdatedPlayerOptions] = useState(false);
-  const displaySpinnerTimeoutRef = useRef<number|null>(null);
+  const displaySpinnerTimeoutRef = useRef<number | null>(null);
 
   const videoElementRef = useRef<HTMLVideoElement>(null);
   const textTrackElementRef = useRef<HTMLDivElement>(null);
@@ -113,10 +109,7 @@ function Player(): JSX.Element {
   }, [playerModule]);
 
   const createNewPlayerModule = useCallback(() => {
-    if (
-      videoElementRef.current === null ||
-      textTrackElementRef.current === null
-    ) {
+    if (videoElementRef.current === null || textTrackElementRef.current === null) {
       return;
     }
     if (playerModule) {
@@ -129,8 +122,8 @@ function Player(): JSX.Element {
           videoElement: videoElementRef.current,
           textTrackElement: textTrackElementRef.current,
         },
-        playerOpts
-      )
+        playerOpts,
+      ),
     );
     setPlayerModule(playerMod);
     return playerMod;
@@ -155,23 +148,21 @@ function Player(): JSX.Element {
     }
   }, [playerModule]);
 
-  const startContent = useCallback((contentInfo: ILoadVideoOptions) => {
-    let playerMod = playerModule;
-    if (playerMod === null || hasUpdatedPlayerOptions) {
-      setHasUpdatedPlayerOptions(false);
-      const created = createNewPlayerModule();
-      if (created === undefined) {
-        return;
+  const startContent = useCallback(
+    (contentInfo: ILoadVideoOptions) => {
+      let playerMod = playerModule;
+      if (playerMod === null || hasUpdatedPlayerOptions) {
+        setHasUpdatedPlayerOptions(false);
+        const created = createNewPlayerModule();
+        if (created === undefined) {
+          return;
+        }
+        playerMod = created;
       }
-      playerMod = created;
-    }
-    loadContent(playerMod, contentInfo, loadVideoOpts);
-  }, [
-    playerModule,
-    hasUpdatedPlayerOptions,
-    createNewPlayerModule,
-    loadVideoOpts,
-  ]);
+      loadContent(playerMod, contentInfo, loadVideoOpts);
+    },
+    [playerModule, hasUpdatedPlayerOptions, createNewPlayerModule, loadVideoOpts],
+  );
 
   const stopVideo = useCallback(() => {
     playerModule?.actions.stop();
@@ -185,12 +176,13 @@ function Player(): JSX.Element {
     setDisplaySettings(!displaySettings);
   }, [displaySettings]);
 
-  const updatePlayerOptions = useCallback((
-    cb: React.SetStateAction<IConstructorSettings>
-  ) => {
-    setHasUpdatedPlayerOptions(true);
-    setPlayerOpts(cb);
-  }, []);
+  const updatePlayerOptions = useCallback(
+    (cb: React.SetStateAction<IConstructorSettings>) => {
+      setHasUpdatedPlayerOptions(true);
+      setPlayerOpts(cb);
+    },
+    [],
+  );
 
   return (
     <section className="video-player-section">
@@ -207,10 +199,7 @@ function Player(): JSX.Element {
           updateLoadVideoOptions={setLoadVideoOpts}
           showOptions={showOptions}
         />
-        <div
-          className="video-player-wrapper"
-          ref={playerWrapperElementRef}
-        >
+        <div className="video-player-wrapper" ref={playerWrapperElementRef}>
           <div className="video-screen-parent">
             <div
               className="video-screen"
@@ -221,52 +210,39 @@ function Player(): JSX.Element {
               }}
               onClick={() => onVideoClick()}
             >
-              { playerModule ? <ErrorDisplayer player={playerModule} /> : null }
-              {
-                autoPlayBlocked ?
-                  <div className="video-player-manual-play-container" >
-                    <img
-                      className="video-player-manual-play"
-                      alt="Play"
-                      src="./assets/play.svg"/>
-                  </div> :
-                  null
-              }
-              {
-                !autoPlayBlocked && displaySpinner ?
+              {playerModule ? <ErrorDisplayer player={playerModule} /> : null}
+              {autoPlayBlocked ? (
+                <div className="video-player-manual-play-container">
                   <img
-                    src="./assets/spinner.gif"
-                    className="video-player-spinner"
-                  /> :
-                  null
-              }
-              <div
-                className="text-track"
-                ref={textTrackElementRef}
-              />
+                    className="video-player-manual-play"
+                    alt="Play"
+                    src="./assets/play.svg"
+                  />
+                </div>
+              ) : null}
+              {!autoPlayBlocked && displaySpinner ? (
+                <img src="./assets/spinner.gif" className="video-player-spinner" />
+              ) : null}
+              <div className="text-track" ref={textTrackElementRef} />
               <video ref={videoElementRef} />
-
             </div>
-            {
-              playerModule ?
-                <PlayerKnobsSettings
-                  close={closeSettings}
-                  shouldDisplay={displaySettings}
-                  player={playerModule}
-                /> :
-                null
-            }
-          </div>
-          {
-            playerModule && playerWrapperElementRef ?
-              <ControlBar
+            {playerModule ? (
+              <PlayerKnobsSettings
+                close={closeSettings}
+                shouldDisplay={displaySettings}
                 player={playerModule}
-                playerWrapperElementRef={playerWrapperElementRef}
-                toggleSettings={toggleSettings}
-                stopVideo={stopVideo}
-                enableVideoThumbnails={enableVideoThumbnails}
-              /> : null
-          }
+              />
+            ) : null}
+          </div>
+          {playerModule && playerWrapperElementRef ? (
+            <ControlBar
+              player={playerModule}
+              playerWrapperElementRef={playerWrapperElementRef}
+              toggleSettings={toggleSettings}
+              stopVideo={stopVideo}
+              enableVideoThumbnails={enableVideoThumbnails}
+            />
+          ) : null}
         </div>
         <ChartsManager player={playerModule} />
       </div>
@@ -277,7 +253,7 @@ function Player(): JSX.Element {
 function loadContent(
   playerModule: IPlayerModule,
   contentInfo: ILoadVideoOptions,
-  loadVideoOpts: ILoadVideoSettings
+  loadVideoOpts: ILoadVideoSettings,
 ) {
   if (contentInfo.lowLatencyMode) {
     playerModule.actions.enableLiveCatchUp();

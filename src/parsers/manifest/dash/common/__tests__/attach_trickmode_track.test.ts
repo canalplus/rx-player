@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  IParsedAdaptations,
-  IParsedAdaptation,
-} from "../../../types";
+import type { IParsedAdaptations, IParsedAdaptation } from "../../../types";
 import attachTrickModeTrack from "../attach_trickmode_track";
 
 describe("attachTrickModeTrack", () => {
@@ -25,8 +22,10 @@ describe("attachTrickModeTrack", () => {
     const trickModeTracks = [
       { adaptation: { type: "video" }, trickModeAttachedAdaptationIds: ["1", "3"] },
       { adaptation: { type: "audio" }, trickModeAttachedAdaptationIds: ["1"] },
-    ] as Array<{ adaptation : IParsedAdaptation;
-                 trickModeAttachedAdaptationIds : string[]; }>;
+    ] as Array<{
+      adaptation: IParsedAdaptation;
+      trickModeAttachedAdaptationIds: string[];
+    }>;
 
     const adaptations = {
       video: [
@@ -46,17 +45,13 @@ describe("attachTrickModeTrack", () => {
 
     expect(adaptations).toEqual({
       video: [
-        { id: "1",
-          trickModeTracks: [{ type: "video" },
-                            { type: "audio" }] },
+        { id: "1", trickModeTracks: [{ type: "video" }, { type: "audio" }] },
         { id: "2", trickModeTracks: undefined },
         { id: "3", trickModeTracks: [{ type: "video" }] },
         { id: "4", trickModeTracks: undefined },
       ],
       audio: [
-        { id: "1",
-          trickModeTracks: [{ type: "video" },
-                            { type: "audio" }] },
+        { id: "1", trickModeTracks: [{ type: "video" }, { type: "audio" }] },
         { id: "2", trickModeTracks: undefined },
         { id: "3", trickModeTracks: [{ type: "video" }] },
       ],

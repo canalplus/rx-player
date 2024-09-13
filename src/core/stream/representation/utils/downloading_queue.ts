@@ -15,14 +15,10 @@
  */
 
 import log from "../../../../log";
-import Manifest, {
-  Adaptation,
-  ISegment,
-  Period,
-  Representation,
-} from "../../../../manifest";
-import { IPlayerError } from "../../../../public_types";
-import {
+import type { Adaptation, ISegment, Period, Representation } from "../../../../manifest";
+import type Manifest from "../../../../manifest";
+import type { IPlayerError } from "../../../../public_types";
+import type {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
 } from "../../../../transports";
@@ -30,12 +26,11 @@ import assert from "../../../../utils/assert";
 import EventEmitter from "../../../../utils/event_emitter";
 import noop from "../../../../utils/noop";
 import objectAssign from "../../../../utils/object_assign";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../../utils/reference";
+import type { IReadOnlySharedReference } from "../../../../utils/reference";
+import SharedReference from "../../../../utils/reference";
 import TaskCanceller from "../../../../utils/task_canceller";
-import { IPrioritizedSegmentFetcher } from "../../../fetchers";
-import { IQueuedSegment } from "../types";
+import type { IPrioritizedSegmentFetcher } from "../../../fetchers";
+import type { IQueuedSegment } from "../types";
 
 /**
  * Class scheduling segment downloads for a single Representation.
@@ -45,48 +40,46 @@ import { IQueuedSegment } from "../types";
  * an utilis of the `RepresentationStream` like here.
  * @class DownloadingQueue
  */
-export default class DownloadingQueue<T>
-  extends EventEmitter<IDownloadingQueueEvent<T>>
-{
+export default class DownloadingQueue<T> extends EventEmitter<IDownloadingQueueEvent<T>> {
   /** Context of the Representation that will be loaded through this DownloadingQueue. */
-  private _content : IDownloadingQueueContext;
+  private _content: IDownloadingQueueContext;
   /**
    * Current queue of segments scheduled for download.
    *
    * Segments whose request are still pending are still in that queue. Segments
    * are only removed from it once their request has succeeded.
    */
-  private _downloadQueue : IReadOnlySharedReference<IDownloadQueueItem>;
+  private _downloadQueue: IReadOnlySharedReference<IDownloadQueueItem>;
   /**
    * Allows to stop listening to queue updates and stop performing requests.
    * Set to `null` if the DownloadingQueue is not started right now.
    */
-  private _currentCanceller : TaskCanceller | null;
+  private _currentCanceller: TaskCanceller | null;
   /**
    * Pending request for the initialization segment.
    * `null` if no request is pending for it.
    */
-  private _initSegmentRequest : ISegmentRequestObject|null;
+  private _initSegmentRequest: ISegmentRequestObject | null;
   /**
    * Pending request for a media (i.e. non-initialization) segment.
    * `null` if no request is pending for it.
    */
-  private _mediaSegmentRequest : ISegmentRequestObject|null;
+  private _mediaSegmentRequest: ISegmentRequestObject | null;
   /** Interface used to load segments. */
-  private _segmentFetcher : IPrioritizedSegmentFetcher<T>;
+  private _segmentFetcher: IPrioritizedSegmentFetcher<T>;
   /**
    * Emit the timescale anounced in the initialization segment once parsed.
    * `undefined` when this is not yet known.
    * `null` when no initialization segment or timescale exists.
    */
-  private _initSegmentInfoRef : SharedReference<number | undefined | null>;
+  private _initSegmentInfoRef: SharedReference<number | undefined | null>;
   /**
    * Some media segment might have been loaded and are only awaiting for the
    * initialization segment to be parsed before being parsed themselves.
    * This string will contain the `id` property of that segment if one exist or
    * `null` if no segment is awaiting an init segment.
    */
-  private _mediaSegmentAwaitingInitMetadata : string | null;
+  private _mediaSegmentAwaitingInitMetadata: string | null;
 
   /**
    * Create a new `DownloadingQueue`.
@@ -111,9 +104,9 @@ export default class DownloadingQueue<T>
    */
   constructor(
     content: IDownloadingQueueContext,
-    downloadQueue : IReadOnlySharedReference<IDownloadQueueItem>,
-    segmentFetcher : IPrioritizedSegmentFetcher<T>,
-    hasInitSegment : boolean
+    downloadQueue: IReadOnlySharedReference<IDownloadQueueItem>,
+    segmentFetcher: IPrioritizedSegmentFetcher<T>,
+    hasInitSegment: boolean,
   ) {
     super();
     this._content = content;
@@ -134,9 +127,8 @@ export default class DownloadingQueue<T>
    * Returns `null` if no initialization segment request is pending.
    * @returns {Object | null}
    */
-  public getRequestedInitSegment() : ISegment | null {
-    return this._initSegmentRequest === null ? null :
-                                               this._initSegmentRequest.segment;
+  public getRequestedInitSegment(): ISegment | null {
+    return this._initSegmentRequest === null ? null : this._initSegmentRequest.segment;
   }
 
   /**
@@ -144,89 +136,110 @@ export default class DownloadingQueue<T>
    * Returns `null` if no media segment request is pending.
    * @returns {Object | null}
    */
-  public getRequestedMediaSegment() : ISegment | null {
-    return this._mediaSegmentRequest === null ? null :
-                                                this._mediaSegmentRequest.segment;
+  public getRequestedMediaSegment(): ISegment | null {
+    return this._mediaSegmentRequest === null ? null : this._mediaSegmentRequest.segment;
   }
 
   /**
    * Start the current downloading queue, emitting events as it loads and parses
    * initialization and media segments.
    */
-  public start() : void {
+  public start(): void {
     if (this._currentCanceller !== null) {
-      return ;
+      return;
     }
     this._currentCanceller = new TaskCanceller();
 
     // Listen for asked media segments
-    this._downloadQueue.onUpdate((queue) => {
-      const { segmentQueue } = queue;
+    this._downloadQueue.onUpdate(
+      (queue) => {
+        const { segmentQueue } = queue;
 
-      if (segmentQueue.length > 0 &&
-          segmentQueue[0].segment.id === this._mediaSegmentAwaitingInitMetadata)
-      {
-        // The most needed segment is still the same one, and there's no need to
-        // update its priority as the request already ended, just quit.
-        return;
-      }
-
-      const currentSegmentRequest = this._mediaSegmentRequest;
-      if (segmentQueue.length === 0) {
-        if (currentSegmentRequest === null) {
-          // There's nothing to load but there's already no request pending.
+        if (
+          segmentQueue.length > 0 &&
+          segmentQueue[0].segment.id === this._mediaSegmentAwaitingInitMetadata
+        ) {
+          // The most needed segment is still the same one, and there's no need to
+          // update its priority as the request already ended, just quit.
           return;
         }
-        log.debug("Stream: no more media segment to request. Cancelling queue.",
-                  this._content.adaptation.type);
-        this._restartMediaSegmentDownloadingQueue();
-        return;
-      } else if (currentSegmentRequest === null) {
-        // There's no request although there are needed segments: start requests
-        log.debug("Stream: Media segments now need to be requested. Starting queue.",
-                  this._content.adaptation.type, segmentQueue.length);
-        this._restartMediaSegmentDownloadingQueue();
-        return;
-      } else {
-        const nextItem = segmentQueue[0];
-        if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
-          // The most important request if for another segment, request it
-          log.debug("Stream: Next media segment changed, cancelling previous",
-                    this._content.adaptation.type);
+
+        const currentSegmentRequest = this._mediaSegmentRequest;
+        if (segmentQueue.length === 0) {
+          if (currentSegmentRequest === null) {
+            // There's nothing to load but there's already no request pending.
+            return;
+          }
+          log.debug(
+            "Stream: no more media segment to request. Cancelling queue.",
+            this._content.adaptation.type,
+          );
           this._restartMediaSegmentDownloadingQueue();
           return;
+        } else if (currentSegmentRequest === null) {
+          // There's no request although there are needed segments: start requests
+          log.debug(
+            "Stream: Media segments now need to be requested. Starting queue.",
+            this._content.adaptation.type,
+            segmentQueue.length,
+          );
+          this._restartMediaSegmentDownloadingQueue();
+          return;
+        } else {
+          const nextItem = segmentQueue[0];
+          if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
+            // The most important request if for another segment, request it
+            log.debug(
+              "Stream: Next media segment changed, cancelling previous",
+              this._content.adaptation.type,
+            );
+            this._restartMediaSegmentDownloadingQueue();
+            return;
+          }
+          if (currentSegmentRequest.priority !== nextItem.priority) {
+            // The priority of the most important request has changed, update it
+            log.debug(
+              "Stream: Priority of next media segment changed, updating",
+              this._content.adaptation.type,
+              currentSegmentRequest.priority,
+              nextItem.priority,
+            );
+            this._segmentFetcher.updatePriority(
+              currentSegmentRequest.request,
+              nextItem.priority,
+            );
+          }
+          return;
         }
-        if (currentSegmentRequest.priority !== nextItem.priority) {
-          // The priority of the most important request has changed, update it
-          log.debug("Stream: Priority of next media segment changed, updating",
-                    this._content.adaptation.type,
-                    currentSegmentRequest.priority,
-                    nextItem.priority);
-          this._segmentFetcher.updatePriority(currentSegmentRequest.request,
-                                              nextItem.priority);
-        }
-        return;
-      }
-    }, { emitCurrentValue: true, clearSignal: this._currentCanceller.signal });
+      },
+      { emitCurrentValue: true, clearSignal: this._currentCanceller.signal },
+    );
 
     // Listen for asked init segment
-    this._downloadQueue.onUpdate((next) => {
-      const initSegmentRequest = this._initSegmentRequest;
-      if (next.initSegment !== null && initSegmentRequest !== null) {
-        if (next.initSegment.priority !== initSegmentRequest.priority) {
-          this._segmentFetcher.updatePriority(initSegmentRequest.request,
-                                              next.initSegment.priority);
+    this._downloadQueue.onUpdate(
+      (next) => {
+        const initSegmentRequest = this._initSegmentRequest;
+        if (next.initSegment !== null && initSegmentRequest !== null) {
+          if (next.initSegment.priority !== initSegmentRequest.priority) {
+            this._segmentFetcher.updatePriority(
+              initSegmentRequest.request,
+              next.initSegment.priority,
+            );
+          }
+          return;
+        } else if (next.initSegment?.segment.id === initSegmentRequest?.segment.id) {
+          return;
         }
-        return;
-      } else if (next.initSegment?.segment.id === initSegmentRequest?.segment.id) {
-        return ;
-      }
-      if (next.initSegment === null) {
-        log.debug("Stream: no more init segment to request. Cancelling queue.",
-                  this._content.adaptation.type);
-      }
-      this._restartInitSegmentDownloadingQueue(next.initSegment);
-    }, { emitCurrentValue: true, clearSignal: this._currentCanceller.signal });
+        if (next.initSegment === null) {
+          log.debug(
+            "Stream: no more init segment to request. Cancelling queue.",
+            this._content.adaptation.type,
+          );
+        }
+        this._restartInitSegmentDownloadingQueue(next.initSegment);
+      },
+      { emitCurrentValue: true, clearSignal: this._currentCanceller.signal },
+    );
   }
 
   public stop() {
@@ -237,15 +250,15 @@ export default class DownloadingQueue<T>
   /**
    * Internal logic performing media segment requests.
    */
-  private _restartMediaSegmentDownloadingQueue() : void {
+  private _restartMediaSegmentDownloadingQueue(): void {
     if (this._mediaSegmentRequest !== null) {
       this._mediaSegmentRequest.canceller.cancel();
     }
     const { segmentQueue } = this._downloadQueue.getValue();
     const currentNeededSegment = segmentQueue[0];
     const recursivelyRequestSegments = (
-      startingSegment : IQueuedSegment | undefined
-    ) : void  => {
+      startingSegment: IQueuedSegment | undefined,
+    ): void => {
       if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
         this._mediaSegmentRequest = null;
         return;
@@ -256,9 +269,10 @@ export default class DownloadingQueue<T>
         return;
       }
       const canceller = new TaskCanceller();
-      const unlinkCanceller = this._currentCanceller === null ?
-        noop :
-        canceller.linkToSignal(this._currentCanceller.signal);
+      const unlinkCanceller =
+        this._currentCanceller === null
+          ? noop
+          : canceller.linkToSignal(this._currentCanceller.signal);
 
       const { segment, priority } = startingSegment;
       const context = objectAssign({ segment }, this._content);
@@ -287,15 +301,13 @@ export default class DownloadingQueue<T>
         isWaitingOnInitSegment = false;
       });
       const emitChunk = (
-        parsed : ISegmentParserParsedInitChunk<T> |
-                 ISegmentParserParsedMediaChunk<T>
-      ) : void => {
+        parsed: ISegmentParserParsedInitChunk<T> | ISegmentParserParsedMediaChunk<T>,
+      ): void => {
         assert(parsed.segmentType === "media", "Should have loaded a media segment.");
         this.trigger("parsedMediaSegment", objectAssign({}, parsed, { segment }));
       };
 
-
-      const continueToNextSegment = () : void => {
+      const continueToNextSegment = (): void => {
         const lastQueue = this._downloadQueue.getValue().segmentQueue;
         if (lastQueue.length === 0) {
           isComplete = true;
@@ -309,83 +321,96 @@ export default class DownloadingQueue<T>
       };
 
       /** Scheduled actual segment request. */
-      const request = this._segmentFetcher.createRequest(context, priority, {
-        /**
-         * Callback called when the request has to be retried.
-         * @param {Error} error
-         */
-        onRetry: (error : IPlayerError) : void => {
-          this.trigger("requestRetry", { segment, error });
-        },
+      const request = this._segmentFetcher.createRequest(
+        context,
+        priority,
+        {
+          /**
+           * Callback called when the request has to be retried.
+           * @param {Error} error
+           */
+          onRetry: (error: IPlayerError): void => {
+            this.trigger("requestRetry", { segment, error });
+          },
 
-        /**
-         * Callback called when the request has to be interrupted and
-         * restarted later.
-         */
-        beforeInterrupted() {
-          log.info("Stream: segment request interrupted temporarly.",
-                   segment.id,
-                   segment.time);
-        },
+          /**
+           * Callback called when the request has to be interrupted and
+           * restarted later.
+           */
+          beforeInterrupted() {
+            log.info(
+              "Stream: segment request interrupted temporarly.",
+              segment.id,
+              segment.time,
+            );
+          },
 
-        /**
-         * Callback called when a decodable chunk of the segment is available.
-         * @param {Function} parse - Function allowing to parse the segment.
-         */
-        onChunk: (
-          parse : (
-            initTimescale : number | undefined
-          ) => ISegmentParserParsedInitChunk<T> | ISegmentParserParsedMediaChunk<T>
-        ) : void => {
-          const initTimescale = this._initSegmentInfoRef.getValue();
-          if (initTimescale !== undefined) {
-            emitChunk(parse(initTimescale ?? undefined));
-          } else {
-            isWaitingOnInitSegment = true;
+          /**
+           * Callback called when a decodable chunk of the segment is available.
+           * @param {Function} parse - Function allowing to parse the segment.
+           */
+          onChunk: (
+            parse: (
+              initTimescale: number | undefined,
+            ) => ISegmentParserParsedInitChunk<T> | ISegmentParserParsedMediaChunk<T>,
+          ): void => {
+            const initTimescale = this._initSegmentInfoRef.getValue();
+            if (initTimescale !== undefined) {
+              emitChunk(parse(initTimescale ?? undefined));
+            } else {
+              isWaitingOnInitSegment = true;
 
-            // We could also technically call `waitUntilDefined` in both cases,
-            // but I found it globally clearer to segregate the two cases,
-            // especially to always have a meaningful `isWaitingOnInitSegment`
-            // boolean which is a very important variable.
-            this._initSegmentInfoRef.waitUntilDefined((actualTimescale) => {
-              emitChunk(parse(actualTimescale ?? undefined));
-            }, { clearSignal: canceller.signal });
-          }
-        },
+              // We could also technically call `waitUntilDefined` in both cases,
+              // but I found it globally clearer to segregate the two cases,
+              // especially to always have a meaningful `isWaitingOnInitSegment`
+              // boolean which is a very important variable.
+              this._initSegmentInfoRef.waitUntilDefined(
+                (actualTimescale) => {
+                  emitChunk(parse(actualTimescale ?? undefined));
+                },
+                { clearSignal: canceller.signal },
+              );
+            }
+          },
 
-        /** Callback called after all chunks have been sent. */
-        onAllChunksReceived: () : void => {
-          if (!isWaitingOnInitSegment) {
-            this.trigger("fullyLoadedSegment", segment);
-          } else {
-            this._mediaSegmentAwaitingInitMetadata = segment.id;
-            this._initSegmentInfoRef.waitUntilDefined(() => {
-              this._mediaSegmentAwaitingInitMetadata = null;
-              isWaitingOnInitSegment = false;
+          /** Callback called after all chunks have been sent. */
+          onAllChunksReceived: (): void => {
+            if (!isWaitingOnInitSegment) {
               this.trigger("fullyLoadedSegment", segment);
-            }, { clearSignal: canceller.signal });
-          }
+            } else {
+              this._mediaSegmentAwaitingInitMetadata = segment.id;
+              this._initSegmentInfoRef.waitUntilDefined(
+                () => {
+                  this._mediaSegmentAwaitingInitMetadata = null;
+                  isWaitingOnInitSegment = false;
+                  this.trigger("fullyLoadedSegment", segment);
+                },
+                { clearSignal: canceller.signal },
+              );
+            }
+          },
+
+          /**
+           * Callback called right after the request ended but before the next
+           * requests are scheduled. It is used to schedule the next segment.
+           */
+          beforeEnded: (): void => {
+            unlinkCanceller();
+            this._mediaSegmentRequest = null;
+
+            if (isWaitingOnInitSegment) {
+              this._initSegmentInfoRef.waitUntilDefined(continueToNextSegment, {
+                clearSignal: canceller.signal,
+              });
+            } else {
+              continueToNextSegment();
+            }
+          },
         },
+        canceller.signal,
+      );
 
-        /**
-         * Callback called right after the request ended but before the next
-         * requests are scheduled. It is used to schedule the next segment.
-         */
-        beforeEnded: () : void => {
-          unlinkCanceller();
-          this._mediaSegmentRequest = null;
-
-          if (isWaitingOnInitSegment) {
-            this._initSegmentInfoRef.waitUntilDefined(continueToNextSegment,
-                                                      { clearSignal: canceller.signal });
-          } else {
-            continueToNextSegment();
-          }
-        },
-
-      }, canceller.signal);
-
-      request.catch((error : unknown) => {
+      request.catch((error: unknown) => {
         unlinkCanceller();
         if (!isComplete) {
           isComplete = true;
@@ -404,8 +429,8 @@ export default class DownloadingQueue<T>
    * @param {Object} queuedInitSegment
    */
   private _restartInitSegmentDownloadingQueue(
-    queuedInitSegment : IQueuedSegment | null
-  ) : void {
+    queuedInitSegment: IQueuedSegment | null,
+  ): void {
     if (this._currentCanceller !== null && this._currentCanceller.isUsed()) {
       return;
     }
@@ -413,13 +438,14 @@ export default class DownloadingQueue<T>
       this._initSegmentRequest.canceller.cancel();
     }
     if (queuedInitSegment === null) {
-      return ;
+      return;
     }
 
     const canceller = new TaskCanceller();
-    const unlinkCanceller = this._currentCanceller === null ?
-      noop :
-      canceller.linkToSignal(this._currentCanceller.signal);
+    const unlinkCanceller =
+      this._currentCanceller === null
+        ? noop
+        : canceller.linkToSignal(this._currentCanceller.signal);
     const { segment, priority } = queuedInitSegment;
     const context = objectAssign({ segment }, this._content);
 
@@ -429,33 +455,41 @@ export default class DownloadingQueue<T>
      */
     let isComplete = false;
 
-    const request = this._segmentFetcher.createRequest(context, priority, {
-      onRetry: (err : IPlayerError) : void => {
-        this.trigger("requestRetry", { segment, error: err });
+    const request = this._segmentFetcher.createRequest(
+      context,
+      priority,
+      {
+        onRetry: (err: IPlayerError): void => {
+          this.trigger("requestRetry", { segment, error: err });
+        },
+        beforeInterrupted: () => {
+          log.info("Stream: init segment request interrupted temporarly.", segment.id);
+        },
+        beforeEnded: () => {
+          unlinkCanceller();
+          this._initSegmentRequest = null;
+          isComplete = true;
+        },
+        onChunk: (
+          parse: (
+            x: undefined,
+          ) => ISegmentParserParsedInitChunk<T> | ISegmentParserParsedMediaChunk<T>,
+        ): void => {
+          const parsed = parse(undefined);
+          assert(parsed.segmentType === "init", "Should have loaded an init segment.");
+          this.trigger("parsedInitSegment", objectAssign({}, parsed, { segment }));
+          if (parsed.segmentType === "init") {
+            this._initSegmentInfoRef.setValue(parsed.initTimescale ?? null);
+          }
+        },
+        onAllChunksReceived: (): void => {
+          this.trigger("fullyLoadedSegment", segment);
+        },
       },
-      beforeInterrupted: () => {
-        log.info("Stream: init segment request interrupted temporarly.", segment.id);
-      },
-      beforeEnded: () => {
-        unlinkCanceller();
-        this._initSegmentRequest = null;
-        isComplete = true;
-      },
-      onChunk: (parse : (x : undefined) => ISegmentParserParsedInitChunk<T> |
-                                           ISegmentParserParsedMediaChunk<T>) : void => {
-        const parsed = parse(undefined);
-        assert(parsed.segmentType === "init", "Should have loaded an init segment.");
-        this.trigger("parsedInitSegment", objectAssign({}, parsed, { segment }));
-        if (parsed.segmentType === "init") {
-          this._initSegmentInfoRef.setValue(parsed.initTimescale ?? null);
-        }
-      },
-      onAllChunksReceived: () : void => {
-        this.trigger("fullyLoadedSegment", segment);
-      },
-    }, canceller.signal);
+      canceller.signal,
+    );
 
-    request.catch((error : unknown) => {
+    request.catch((error: unknown) => {
       unlinkCanceller();
       if (!isComplete) {
         isComplete = true;
@@ -494,7 +528,7 @@ export interface IDownloadingQueueEvent<T> {
    * In that case, an `IParsedInitSegmentEvent` will always be sent before any
    * `IParsedSegmentEvent` event is sent.
    */
-  parsedInitSegment : IParsedInitSegmentPayload<T>;
+  parsedInitSegment: IParsedInitSegmentPayload<T>;
   /**
    * Notify that a media chunk (decodable sub-part of a media segment) has been
    * loaded and parsed.
@@ -510,38 +544,40 @@ export interface IDownloadingQueueEvent<T> {
    * You will know that all `IParsedSegmentEvent` have been loaded for a given
    * segment once you received the corresponding event.
    */
-  parsedMediaSegment : IParsedSegmentPayload<T>;
+  parsedMediaSegment: IParsedSegmentPayload<T>;
   /** Notify that a media or initialization segment has been fully-loaded. */
-  fullyLoadedSegment : ISegment;
+  fullyLoadedSegment: ISegment;
   /**
    * Notify that a media or initialization segment request is retried.
    * This happened most likely because of an HTTP error.
    */
-  requestRetry : IRequestRetryPayload;
+  requestRetry: IRequestRetryPayload;
   /**
    * Notify that the media segment queue is now empty.
    * This can be used to re-check if any segment are now needed.
    */
-  emptyQueue : null;
+  emptyQueue: null;
   /**
    * Notify that a fatal error happened (such as request failures), which has
    * completely stopped the downloading queue.
    *
    * You may still restart the queue after receiving this event.
    */
-  error : unknown;
+  error: unknown;
 }
 
 /** Payload for a `parsedInitSegment` event. */
-export type IParsedInitSegmentPayload<T> = ISegmentParserParsedInitChunk<T> &
-                                           { segment : ISegment };
+export type IParsedInitSegmentPayload<T> = ISegmentParserParsedInitChunk<T> & {
+  segment: ISegment;
+};
 /** Payload for a `parsedMediaSegment` event. */
-export type IParsedSegmentPayload<T> = ISegmentParserParsedMediaChunk<T> &
-                                       { segment : ISegment };
+export type IParsedSegmentPayload<T> = ISegmentParserParsedMediaChunk<T> & {
+  segment: ISegment;
+};
 /** Payload for a `requestRetry` event. */
 export interface IRequestRetryPayload {
-  segment : ISegment;
-  error : IPlayerError;
+  segment: ISegment;
+  error: IPlayerError;
 }
 
 /**
@@ -560,7 +596,7 @@ export interface IDownloadQueueItem {
    * set to `true`, no media segment will be parsed before the initialization
    * segment has been loaded and parsed.
    */
-  initSegment : IQueuedSegment | null;
+  initSegment: IQueuedSegment | null;
 
   /**
    * The queue of media segments currently needed for download.
@@ -575,29 +611,29 @@ export interface IDownloadQueueItem {
    *   - The `DownloadingQueue`'s `hasInitSegment` constructor option has been
    *     set to `false`.
    */
-  segmentQueue : IQueuedSegment[];
+  segmentQueue: IQueuedSegment[];
 }
 
 /** Object describing a pending Segment request. */
 interface ISegmentRequestObject {
   /** The segment the request is for. */
-  segment : ISegment;
+  segment: ISegment;
   /** The request itself. Can be used to update its priority. */
   request: Promise<void>;
   /** Last set priority of the segment request (lower number = higher priority). */
-  priority : number;
+  priority: number;
   /** Allows to cancel that segment from being requested. */
-  canceller : TaskCanceller;
+  canceller: TaskCanceller;
 }
 
 /** Context for segments downloaded through the DownloadingQueue. */
 export interface IDownloadingQueueContext {
   /** Adaptation linked to the segments you want to load. */
-  adaptation : Adaptation;
+  adaptation: Adaptation;
   /** Manifest linked to the segments you want to load. */
-  manifest : Manifest;
+  manifest: Manifest;
   /** Period linked to the segments you want to load. */
-  period : Period;
+  period: Period;
   /** Representation linked to the segments you want to load. */
-  representation : Representation;
+  representation: Representation;
 }

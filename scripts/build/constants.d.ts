@@ -50,4 +50,4 @@ declare const enum __FEATURES__ {
   SMOOTH = IS_DISABLED,
 }
 
-declare const __RX_PLAYER_DEBUG_MODE__ : boolean | undefined;
+declare const __RX_PLAYER_DEBUG_MODE__: boolean | undefined;

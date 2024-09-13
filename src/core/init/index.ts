@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-export {
-  ContentInitializer,
+export type {
   IContentInitializerEvents,
   IAdaptationChangeEventPayload,
   IStallingSituation,
 } from "./types";
+export { ContentInitializer } from "./types";

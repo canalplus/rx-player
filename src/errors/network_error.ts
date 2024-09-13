@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  ErrorTypes,
-  INetworkErrorCode,
-  INetworkErrorType,
-  NetworkErrorTypes,
-} from "./error_codes";
+import type { INetworkErrorCode, INetworkErrorType } from "./error_codes";
+import { ErrorTypes, NetworkErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
-import RequestError from "./request_error";
+import type RequestError from "./request_error";
 
 /**
  * Error linked to network interactions (requests).
@@ -65,8 +61,10 @@ export default class NetworkError extends Error {
    * @param {number} httpErrorCode
    * @returns {Boolean}
    */
-  isHttpError(httpErrorCode : number) : boolean {
-    return this.errorType === NetworkErrorTypes.ERROR_HTTP_CODE &&
-           this.status === httpErrorCode;
+  isHttpError(httpErrorCode: number): boolean {
+    return (
+      this.errorType === NetworkErrorTypes.ERROR_HTTP_CODE &&
+      this.status === httpErrorCode
+    );
   }
 }

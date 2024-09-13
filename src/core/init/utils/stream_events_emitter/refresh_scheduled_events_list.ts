@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../../manifest";
+import type Manifest from "../../../../manifest";
 import areSameStreamEvents from "./are_same_stream_events";
-import {
-  INonFiniteStreamEventPayload,
-  IStreamEventPayload,
-} from "./types";
+import type { INonFiniteStreamEventPayload, IStreamEventPayload } from "./types";
 
 /**
  * Refresh local scheduled events list
@@ -28,10 +25,10 @@ import {
  * @returns {Array.<Object>}
  */
 function refreshScheduledEventsList(
-  oldScheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
-  manifest: Manifest
-): Array<IStreamEventPayload|INonFiniteStreamEventPayload> {
-  const scheduledEvents: Array<IStreamEventPayload|INonFiniteStreamEventPayload> = [];
+  oldScheduledEvents: Array<IStreamEventPayload | INonFiniteStreamEventPayload>,
+  manifest: Manifest,
+): Array<IStreamEventPayload | INonFiniteStreamEventPayload> {
+  const scheduledEvents: Array<IStreamEventPayload | INonFiniteStreamEventPayload> = [];
   const { periods } = manifest;
   for (let i = 0; i < periods.length; i++) {
     const period = periods[i];
@@ -46,26 +43,25 @@ function refreshScheduledEventsList(
       }
 
       const element = data.value.element;
-      const actualData = { type: data.type,
-                           value: { ...data.value, element } };
+      const actualData = { type: data.type, value: { ...data.value, element } };
       if (end === undefined) {
-        const newScheduledEvent = { start,
-                                    id,
-                                    data: actualData,
-                                    publicEvent: { start,
-                                                   data: actualData } };
+        const newScheduledEvent = {
+          start,
+          id,
+          data: actualData,
+          publicEvent: { start, data: actualData },
+        };
         scheduledEvents.push(newScheduledEvent);
       } else {
-        const newScheduledEvent = { start,
-                                    end,
-                                    id,
-                                    data: actualData,
-                                    publicEvent: { start,
-                                                   end,
-                                                   data: actualData } };
+        const newScheduledEvent = {
+          start,
+          end,
+          id,
+          data: actualData,
+          publicEvent: { start, end, data: actualData },
+        };
         scheduledEvents.push(newScheduledEvent);
       }
-
     });
   }
   return scheduledEvents;

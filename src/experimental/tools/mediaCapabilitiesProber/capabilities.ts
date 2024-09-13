@@ -14,67 +14,41 @@
  * limitations under the License.
  */
 
-import {
-  ICapabilities,
-  IMediaConfiguration,
-} from "./types";
-import {
-  extend,
-  filterConfigurationWithCapabilities,
-} from "./utils";
+import type { ICapabilities, IMediaConfiguration } from "./types";
+import { extend, filterConfigurationWithCapabilities } from "./utils";
 
 export type ICapabilitiesTypes =
-  "decodingInfos" |
-  "getStatusForPolicy" |
-  "isTypeSupported" |
-  "isTypeSupportedWithFeatures" |
-  "matchMedia" |
-  "requestMediaKeySystemAccess";
+  | "decodingInfos"
+  | "getStatusForPolicy"
+  | "isTypeSupported"
+  | "isTypeSupportedWithFeatures"
+  | "matchMedia"
+  | "requestMediaKeySystemAccess";
 
 const decodingInfos: ICapabilities = [
   "type",
   {
-    video: [
-      "contentType",
-      "width",
-      "height",
-      "bitrate",
-      "framerate",
-      "bitsPerComponent",
-    ],
+    video: ["contentType", "width", "height", "bitrate", "framerate", "bitsPerComponent"],
   },
   {
-    audio: [
-      "contentType",
-      "channels",
-      "bitrate",
-      "samplerate",
-    ],
+    audio: ["contentType", "channels", "bitrate", "samplerate"],
   },
 ];
 
-const getStatusForPolicy: ICapabilities = [
-  "hdcp",
-];
+const getStatusForPolicy: ICapabilities = ["hdcp"];
 
 const isTypeSupported: ICapabilities = [
   {
-    video: [
-      "contentType",
-    ],
+    video: ["contentType"],
   },
   {
-    audio: [
-      "contentType",
-    ],
+    audio: ["contentType"],
   },
 ];
 
 const matchMedia: ICapabilities = [
   {
-    display: [
-      "colorSpace",
-    ],
+    display: ["colorSpace"],
   },
 ];
 
@@ -100,22 +74,10 @@ const requestMediaKeySystemAccess: ICapabilities = [
 const isTypeSupportedWithFeatures: ICapabilities = [
   "type",
   {
-    video: [
-      "contentType",
-      "width",
-      "height",
-      "bitrate",
-      "framerate",
-      "bitsPerComponent",
-    ],
+    video: ["contentType", "width", "height", "bitrate", "framerate", "bitsPerComponent"],
   },
   {
-    audio: [
-      "contentType",
-      "channels",
-      "bitrate",
-      "samplerate",
-    ],
+    audio: ["contentType", "channels", "bitrate", "samplerate"],
   },
   "hdcp",
   {
@@ -135,16 +97,11 @@ const isTypeSupportedWithFeatures: ICapabilities = [
     ],
   },
   {
-    display: [
-      "colorSpace",
-      "width",
-      "height",
-      "bitsPerComponent",
-    ],
+    display: ["colorSpace", "width", "height", "bitsPerComponent"],
   },
 ];
 
-const capabilites: {[key: string]: ICapabilities} = {
+const capabilites: { [key: string]: ICapabilities } = {
   decodingInfos,
   getStatusForPolicy,
   isTypeSupported,
@@ -161,9 +118,12 @@ const capabilites: {[key: string]: ICapabilities} = {
  */
 export default function getProbedConfiguration(
   config: IMediaConfiguration,
-  probers: ICapabilitiesTypes[]
-) : IMediaConfiguration {
+  probers: ICapabilitiesTypes[],
+): IMediaConfiguration {
   const target: ICapabilities = [];
-  extend(target, probers.map((prober) => capabilites[prober]));
+  extend(
+    target,
+    probers.map((prober) => capabilites[prober]),
+  );
   return filterConfigurationWithCapabilities(target, config);
 }

@@ -16,13 +16,12 @@
 
 import { isWebOs } from "../../compat/browser_detection";
 import log from "../../log";
-import { IKeySystemOption } from "../../public_types";
+import type { IKeySystemOption } from "../../public_types";
 import noop from "../../utils/noop";
-import { CancellationSignal } from "../../utils/task_canceller";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import { disableMediaKeys } from "./attach_media_keys";
-import getMediaKeysInfos, {
-  IMediaKeysInfos,
-} from "./get_media_keys";
+import type { IMediaKeysInfos } from "./get_media_keys";
+import getMediaKeysInfos from "./get_media_keys";
 
 /**
  * Get media keys infos from key system configs then attach media keys to media element.
@@ -34,10 +33,13 @@ import getMediaKeysInfos, {
 export default async function initMediaKeys(
   mediaElement: HTMLMediaElement,
   keySystemsConfigs: IKeySystemOption[],
-  cancelSignal: CancellationSignal
+  cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {
-  const mediaKeysInfo =
-    await getMediaKeysInfos(mediaElement, keySystemsConfigs, cancelSignal);
+  const mediaKeysInfo = await getMediaKeysInfos(
+    mediaElement,
+    keySystemsConfigs,
+    cancelSignal,
+  );
 
   const { mediaKeys } = mediaKeysInfo;
   const shouldDisableOldMediaKeys =

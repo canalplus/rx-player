@@ -18,21 +18,19 @@ import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import startsWith from "../../../utils/starts_with";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
-import {
+import type {
   ICustomMediaKeys,
   ICustomMediaKeySession,
   ICustomMediaKeyStatusMap,
   IMediaKeySessionEvents,
 } from "./types";
-import {
-  IWebKitMediaKeys,
-  WebKitMediaKeysConstructor,
-} from "./webkit_media_keys_constructor";
+import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
+import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
-  _setVideo: (videoElement: HTMLMediaElement) => void;
+  _setVideo: (videoElement: HTMLMediaElement) => Promise<unknown>;
   createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
   setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
@@ -55,9 +53,9 @@ function isFairplayKeyType(keyType: string): boolean {
  */
 function setWebKitMediaKeys(
   videoElement: HTMLMediaElement,
-  mediaKeys: unknown
+  mediaKeys: unknown,
 ): Promise<unknown> {
-  const elt : ICompatHTMLMediaElement = videoElement;
+  const elt: ICompatHTMLMediaElement = videoElement;
   return wrapInPromise(() => {
     if (elt.webkitSetMediaKeys === undefined) {
       throw new Error("No webKitMediaKeys API.");
@@ -85,10 +83,10 @@ class WebkitMediaKeySession
   private readonly _videoElement: HTMLMediaElement;
   private readonly _keyType: string;
   private _nativeSession: undefined | MediaKeySession;
-  private _serverCertificate: Uint8Array | undefined;
+  private _serverCertificate: Uint8Array | undefined;
 
-  private _closeSession : () => void;
-  private _unbindSession : () => void;
+  private _closeSession: () => void;
+  private _unbindSession: () => void;
 
   /**
    * @param {HTMLMediaElement} mediaElement
@@ -98,7 +96,7 @@ class WebkitMediaKeySession
   constructor(
     mediaElement: HTMLMediaElement,
     keyType: string,
-    serverCertificate?: Uint8Array
+    serverCertificate?: Uint8Array,
   ) {
     super();
     this._serverCertificate = serverCertificate;
@@ -114,12 +112,14 @@ class WebkitMediaKeySession
     this.expiration = NaN;
   }
 
-  public update(license: BufferSource) : Promise<void> {
+  public update(license: BufferSource): Promise<void> {
     return new Promise((resolve, reject) => {
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      if (this._nativeSession === undefined ||
-          this._nativeSession.update === undefined ||
-          typeof this._nativeSession.update !== "function") {
+      if (
+        this._nativeSession === undefined ||
+        this._nativeSession.update === undefined ||
+        typeof this._nativeSession.update !== "function"
+      ) {
         return reject("Unavailable WebKit key session.");
       }
       try {
@@ -142,10 +142,7 @@ class WebkitMediaKeySession
     });
   }
 
-  public generateRequest(
-    _initDataType: string,
-    initData: ArrayBuffer
-  ): Promise<void> {
+  public generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
     return new Promise((resolve) => {
       const elt = this._videoElement as ICompatHTMLMediaElement;
       if (elt.webkitKeys?.createSession === undefined) {
@@ -156,15 +153,15 @@ class WebkitMediaKeySession
       if (isFairplayKeyType(this._keyType)) {
         if (this._serverCertificate === undefined) {
           throw new Error(
-            "A server certificate is needed for creating fairplay session.");
+            "A server certificate is needed for creating fairplay session.",
+          );
         }
         formattedInitData = getWebKitFairplayInitData(initData, this._serverCertificate);
       } else {
         formattedInitData = initData;
       }
 
-      const keySession =
-        elt.webkitKeys.createSession("video/mp4", formattedInitData);
+      const keySession = elt.webkitKeys.createSession("video/mp4", formattedInitData);
       if (keySession === undefined || keySession === null) {
         throw new Error("Impossible to get the key sessions");
       }
@@ -206,28 +203,28 @@ class WebkitMediaKeySession
     /* eslint-enable @typescript-eslint/no-unsafe-return */
   }
 
-  private _listenEvent(session: MediaKeySession) : void {
+  private _listenEvent(session: MediaKeySession): void {
     this._unbindSession(); // If previous session was linked
 
-    const onEvent = (evt : Event) => {
+    const onEvent = (evt: Event) => {
       this.trigger(evt.type, evt);
     };
 
     /* eslint-disable @typescript-eslint/no-unsafe-call */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-return */
-    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-      .forEach(evt => {
-        session.addEventListener(evt, onEvent);
-        session.addEventListener(`webkit${evt}`, onEvent);
-      });
+    ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach((evt) => {
+      session.addEventListener(evt, onEvent);
+      session.addEventListener(`webkit${evt}`, onEvent);
+    });
 
     this._unbindSession = () => {
-      ["keymessage", "message", "keyadded", "ready", "keyerror", "error"]
-        .forEach(evt => {
+      ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach(
+        (evt) => {
           session.removeEventListener(evt, onEvent);
           session.removeEventListener(`webkit${evt}`, onEvent);
-        });
+        },
+      );
     };
     /* eslint-disable @typescript-eslint/no-unsafe-return */
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -258,13 +255,14 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
   }
 
   createSession(/* sessionType */): ICustomMediaKeySession {
-    if (this._videoElement === undefined ||
-        this._mediaKeys === undefined) {
+    if (this._videoElement === undefined || this._mediaKeys === undefined) {
       throw new Error("Video not attached to the MediaKeys");
     }
-    return new WebkitMediaKeySession(this._videoElement,
-                                     this._keyType,
-                                     this._serverCertificate);
+    return new WebkitMediaKeySession(
+      this._videoElement,
+      this._keyType,
+      this._serverCertificate,
+    );
   }
 
   setServerCertificate(serverCertificate: Uint8Array): Promise<void> {
@@ -273,30 +271,30 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
   }
 }
 
-export default function getWebKitMediaKeysCallbacks() : {
+export default function getWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => WebKitCustomMediaKeys;
   setMediaKeys: (
     elt: HTMLMediaElement,
-    mediaKeys: MediaKeys|ICustomMediaKeys|null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
   if (WebKitMediaKeysConstructor === undefined) {
     throw new Error("No WebKitMediaKeys API.");
   }
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
-  const createCustomMediaKeys = (keyType: string) =>
-    new WebKitCustomMediaKeys(keyType);
+  const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
     elt: HTMLMediaElement,
-    mediaKeys: MediaKeys|ICustomMediaKeys|null
+    mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {
       return setWebKitMediaKeys(elt, mediaKeys);
     }
     if (!(mediaKeys instanceof WebKitCustomMediaKeys)) {
-      throw new Error("Custom setMediaKeys is supposed to be called " +
-                      "with webkit custom MediaKeys.");
+      throw new Error(
+        "Custom setMediaKeys is supposed to be called " + "with webkit custom MediaKeys.",
+      );
     }
     return mediaKeys._setVideo(elt);
   };

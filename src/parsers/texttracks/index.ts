@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export {
+export type {
   IHTMLCue,
   INativeTextTracksParserFn,
   IHTMLTextTracksParserFn,

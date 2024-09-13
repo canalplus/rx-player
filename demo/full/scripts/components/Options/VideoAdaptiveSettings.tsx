@@ -38,29 +38,25 @@ function VideoAdaptiveSettings({
 }): JSX.Element {
   /* Value of the `initialVideoBitrate` input */
   const [initialVideoBitrateStr, setInitialVideoBitrateStr] = useState(
-    String(initialVideoBitrate)
+    String(initialVideoBitrate),
   );
   /* Value of the `minVideoBitrate` input */
-  const [minVideoBitrateStr, setMinVideoBitrateStr] = useState(
-    String(minVideoBitrate)
-  );
+  const [minVideoBitrateStr, setMinVideoBitrateStr] = useState(String(minVideoBitrate));
   /* Value of the `maxVideoBitrate` input */
-  const [maxVideoBitrateStr, setMaxVideoBitrateStr] = useState(
-    String(maxVideoBitrate)
-  );
+  const [maxVideoBitrateStr, setMaxVideoBitrateStr] = useState(String(maxVideoBitrate));
   /*
    * Keep track of the "limit minVideoBitrate" toggle:
    * `false` == checkbox enabled
    */
   const [isMinVideoBitrateLimited, setMinVideoBitrateLimit] = useState(
-    minVideoBitrate !== 0
+    minVideoBitrate !== 0,
   );
   /*
    * Keep track of the "limit maxVideoBitrate" toggle:
    * `false` == checkbox enabled
    */
   const [isMaxVideoBitrateLimited, setMaxVideoBitrateLimit] = useState(
-    maxVideoBitrate !== Infinity
+    maxVideoBitrate !== Infinity,
   );
 
   // Update initialVideoBitrate when its linked text change
@@ -69,51 +65,43 @@ function VideoAdaptiveSettings({
     // no quick and easy way to disable this in react.
     // This is not too problematic so I put up with it.
     let newBitrate = parseFloat(initialVideoBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_INITIAL_VIDEO_BITRATE :
-      newBitrate;
+    newBitrate = isNaN(newBitrate) ? DEFAULT_INITIAL_VIDEO_BITRATE : newBitrate;
     onInitialVideoBitrateChange(newBitrate);
   }, [initialVideoBitrateStr]);
 
   // Update minVideoBitrate when its linked text change
   useEffect(() => {
     let newBitrate = parseFloat(minVideoBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_MIN_VIDEO_BITRATE :
-      newBitrate;
+    newBitrate = isNaN(newBitrate) ? DEFAULT_MIN_VIDEO_BITRATE : newBitrate;
     onMinVideoBitrateChange(newBitrate);
   }, [minVideoBitrateStr]);
 
   // Update maxVideoBitrate when its linked text change
   useEffect(() => {
     let newBitrate = parseFloat(maxVideoBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_MAX_VIDEO_BITRATE :
-      newBitrate;
+    newBitrate = isNaN(newBitrate) ? DEFAULT_MAX_VIDEO_BITRATE : newBitrate;
     onMaxVideoBitrateChange(newBitrate);
   }, [maxVideoBitrateStr]);
 
-  const onChangeLimitMinVideoBitrate = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited) {
-        setMinVideoBitrateLimit(false);
-        setMinVideoBitrateStr(String(0));
-      } else {
-        setMinVideoBitrateLimit(true);
-        setMinVideoBitrateStr(String(DEFAULT_MIN_VIDEO_BITRATE));
-      }
-    }, []);
+  const onChangeLimitMinVideoBitrate = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMinVideoBitrateLimit(false);
+      setMinVideoBitrateStr(String(0));
+    } else {
+      setMinVideoBitrateLimit(true);
+      setMinVideoBitrateStr(String(DEFAULT_MIN_VIDEO_BITRATE));
+    }
+  }, []);
 
-  const onChangeLimitMaxVideoBitrate = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited) {
-        setMaxVideoBitrateLimit(false);
-        setMaxVideoBitrateStr(String(Infinity));
-      } else {
-        setMaxVideoBitrateLimit(true);
-        setMaxVideoBitrateStr(String(DEFAULT_MAX_VIDEO_BITRATE));
-      }
-    }, []);
+  const onChangeLimitMaxVideoBitrate = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMaxVideoBitrateLimit(false);
+      setMaxVideoBitrateStr(String(Infinity));
+    } else {
+      setMaxVideoBitrateLimit(true);
+      setMaxVideoBitrateStr(String(DEFAULT_MAX_VIDEO_BITRATE));
+    }
+  }, []);
 
   const onInitialVideoBitrateResetClick = useCallback(() => {
     setInitialVideoBitrateStr(String(DEFAULT_INITIAL_VIDEO_BITRATE));
@@ -143,12 +131,10 @@ function VideoAdaptiveSettings({
           onResetClick={onInitialVideoBitrateResetClick}
         />
         <span className="option-desc">
-          {
-            initialVideoBitrate === 0 ?
-              "Starts loading the lowest video bitrate" :
-              `Starts with a video bandwidth estimate of ${initialVideoBitrate}` +
-              " bits per seconds."
-          }
+          {initialVideoBitrate === 0
+            ? "Starts loading the lowest video bitrate"
+            : `Starts with a video bandwidth estimate of ${initialVideoBitrate}` +
+              " bits per seconds."}
         </span>
       </li>
       <li>
@@ -172,12 +158,10 @@ function VideoAdaptiveSettings({
           Do not limit
         </Checkbox>
         <span className="option-desc">
-          {
-            !isMinVideoBitrateLimited || minVideoBitrate <= 0 ?
-              "Not limiting the lowest video bitrate reachable through the adaptive logic" :
-              "Limiting the lowest video bitrate reachable through the adaptive " +
-              `logic to ${minVideoBitrate} bits per seconds`
-          }
+          {!isMinVideoBitrateLimited || minVideoBitrate <= 0
+            ? "Not limiting the lowest video bitrate reachable through the adaptive logic"
+            : "Limiting the lowest video bitrate reachable through the adaptive " +
+              `logic to ${minVideoBitrate} bits per seconds`}
         </span>
       </li>
       <li>
@@ -204,12 +188,10 @@ function VideoAdaptiveSettings({
           </Checkbox>
         </div>
         <span className="option-desc">
-          {
-            !isMaxVideoBitrateLimited || maxVideoBitrate === Infinity ?
-              "Not limiting the highest video bitrate reachable through the adaptive logic" :
-              "Limiting the highest video bitrate reachable through the adaptive " +
-              `logic to ${maxVideoBitrate} bits per seconds`
-          }
+          {!isMaxVideoBitrateLimited || maxVideoBitrate === Infinity
+            ? "Not limiting the highest video bitrate reachable through the adaptive logic"
+            : "Limiting the highest video bitrate reachable through the adaptive " +
+              `logic to ${maxVideoBitrate} bits per seconds`}
         </span>
       </li>
       <li>
@@ -224,9 +206,9 @@ function VideoAdaptiveSettings({
             Limit Video Width
           </Checkbox>
           <span className="option-desc">
-            {limitVideoWidth ?
-              "Limiting video width to the current <video> element's width" :
-              "Not limiting video width to the current <video> element's width"}
+            {limitVideoWidth
+              ? "Limiting video width to the current <video> element's width"
+              : "Not limiting video width to the current <video> element's width"}
           </span>
         </div>
       </li>
@@ -242,9 +224,9 @@ function VideoAdaptiveSettings({
             Throttle Video Bitrate When Hidden
           </Checkbox>
           <span className="option-desc">
-            {throttleVideoBitrateWhenHidden ?
-              "Throttling the video bitrate when the page is hidden for a time" :
-              "Not throttling the video bitrate when the page is hidden for a time"}
+            {throttleVideoBitrateWhenHidden
+              ? "Throttling the video bitrate when the page is hidden for a time"
+              : "Not throttling the video bitrate when the page is hidden for a time"}
           </span>
         </div>
       </li>

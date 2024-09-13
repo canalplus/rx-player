@@ -24,7 +24,7 @@ describe("utils - assert", () => {
     let error;
     try {
       assertUnreachable(4 as never);
-    } catch (e : unknown) {
+    } catch (e: unknown) {
       error = e;
     }
 

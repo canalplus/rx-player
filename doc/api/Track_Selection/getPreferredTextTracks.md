@@ -5,8 +5,8 @@
 Returns the current list of preferred text tracks - by order of preference.
 
 This returns the data in the same format that it was given to either the
-`preferredTextTracks` constructor option or the last `setPreferredTextTracks` if
-it was called:
+`preferredTextTracks` constructor option or the last `setPreferredTextTracks` if it was
+called:
 
 ```js
 {
@@ -25,4 +25,4 @@ it was called:
 const preferences = player.getPreferredTextTracks();
 ```
 
- - **return value** `Array.<Object|null>`
+- **return value** `Array.<Object|null>`

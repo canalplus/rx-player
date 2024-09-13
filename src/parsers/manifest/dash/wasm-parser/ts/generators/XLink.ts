@@ -15,15 +15,11 @@
  */
 
 import noop from "../../../../../../utils/noop";
-import { IPeriodIntermediateRepresentation } from "../../../node_parser_types";
-import ParsersStack, {
-  IChildrenParser,
-} from "../parsers_stack";
+import type { IPeriodIntermediateRepresentation } from "../../../node_parser_types";
+import type { IChildrenParser } from "../parsers_stack";
+import type ParsersStack from "../parsers_stack";
 import { TagName } from "../types";
-import {
-  generatePeriodAttrParser,
-  generatePeriodChildrenParser,
-} from "./Period";
+import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period";
 
 /**
  * Generate a "children parser" when an XLink has been loaded.
@@ -34,23 +30,25 @@ import {
  * @returns {Function}
  */
 export function generateXLinkChildrenParser(
-  xlinkObj : { periods: IPeriodIntermediateRepresentation[] },
-  linearMemory : WebAssembly.Memory,
-  parsersStack : ParsersStack,
-  fullMpd : ArrayBuffer
-)  : IChildrenParser {
-  return function onRootChildren(nodeId : TagName) {
+  xlinkObj: { periods: IPeriodIntermediateRepresentation[] },
+  linearMemory: WebAssembly.Memory,
+  parsersStack: ParsersStack,
+  fullMpd: ArrayBuffer,
+): IChildrenParser {
+  return function onRootChildren(nodeId: TagName) {
     switch (nodeId) {
       case TagName.Period: {
-        const period = { children: { adaptations: [],
-                                     baseURLs: [],
-                                     eventStreams: [] },
-                         attributes: {} };
+        const period = {
+          children: { adaptations: [], baseURLs: [], eventStreams: [] },
+          attributes: {},
+        };
         xlinkObj.periods.push(period);
-        const childrenParser = generatePeriodChildrenParser(period.children,
-                                                            linearMemory,
-                                                            parsersStack,
-                                                            fullMpd);
+        const childrenParser = generatePeriodChildrenParser(
+          period.children,
+          linearMemory,
+          parsersStack,
+          fullMpd,
+        );
         const attributeParser = generatePeriodAttrParser(period.attributes, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { ISegment } from "../../../../../manifest";
-import { IPrivateInfos } from "../../../../../manifest/representation_index/types";
-import { IEMSG } from "../../../../containers/isobmff";
+import type { ISegment } from "../../../../../manifest";
+import type { IPrivateInfos } from "../../../../../manifest/representation_index/types";
+import type { IEMSG } from "../../../../containers/isobmff";
 
 /**
  * Construct init segment for the given index.
@@ -25,31 +25,34 @@ import { IEMSG } from "../../../../containers/isobmff";
  * @returns {Object}
  */
 export default function getInitSegment(
-  index: { timescale: number;
-           initialization?: { url: string | null;
-                              range?: [number, number] | undefined; } |
-                            undefined;
-           indexRange?: [number, number] | undefined;
-           indexTimeOffset : number; },
-  isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean
-) : ISegment {
+  index: {
+    timescale: number;
+    initialization?:
+      | { url: string | null; range?: [number, number] | undefined }
+      | undefined;
+    indexRange?: [number, number] | undefined;
+    indexTimeOffset: number;
+  },
+  isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean,
+): ISegment {
   const { initialization } = index;
-  const privateInfos : IPrivateInfos = {};
+  const privateInfos: IPrivateInfos = {};
   if (isEMSGWhitelisted !== undefined) {
     privateInfos.isEMSGWhitelisted = isEMSGWhitelisted;
   }
 
-  return { id: "init",
-           isInit: true,
-           time: 0,
-           end: 0,
-           duration: 0,
-           timescale: 1,
-           range: initialization != null ? initialization.range :
-                                           undefined,
-           indexRange: index.indexRange,
-           url: initialization?.url ?? null,
-           complete: true,
-           privateInfos,
-           timestampOffset: -(index.indexTimeOffset / index.timescale) };
+  return {
+    id: "init",
+    isInit: true,
+    time: 0,
+    end: 0,
+    duration: 0,
+    timescale: 1,
+    range: initialization != null ? initialization.range : undefined,
+    indexRange: index.indexRange,
+    url: initialization?.url ?? null,
+    complete: true,
+    privateInfos,
+    timestampOffset: -(index.indexTimeOffset / index.timescale),
+  };
 }

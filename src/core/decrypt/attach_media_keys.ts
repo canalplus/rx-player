@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import eme, {
+import type {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
   IEmeApiImplementation,
 } from "../../compat/eme";
+import eme from "../../compat/eme";
 import log from "../../log";
-import { IKeySystemOption } from "../../public_types";
-import { CancellationSignal } from "../../utils/task_canceller";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
+import type { IKeySystemOption } from "../../public_types";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type LoadedSessionsStore from "./utils/loaded_sessions_store";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 
 /**
@@ -31,18 +32,17 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @param {Object} mediaElement
  * @returns {Promise}
  */
-export function disableMediaKeys(
-  mediaElement : HTMLMediaElement
-): Promise<unknown> {
+export function disableMediaKeys(mediaElement: HTMLMediaElement): Promise<unknown> {
   MediaKeysInfosStore.setState(mediaElement, null);
-  return eme.setMediaKeys(mediaElement, null)
+  return eme
+    .setMediaKeys(mediaElement, null)
     .then(() => {
       log.info("DRM: MediaKeys disabled with success");
     })
     .catch((err) => {
       log.error(
         "DRM: Could not disable MediaKeys",
-        err instanceof Error ? err : "Unknown Error"
+        err instanceof Error ? err : "Unknown Error",
       );
     });
 }
@@ -57,20 +57,22 @@ export function disableMediaKeys(
  * @returns {Promise}
  */
 export default async function attachMediaKeys(
-  mediaElement : HTMLMediaElement,
-  { emeImplementation,
+  mediaElement: HTMLMediaElement,
+  {
+    emeImplementation,
     keySystemOptions,
     askedConfiguration,
     loadedSessionsStore,
     mediaKeySystemAccess,
-    mediaKeys } : IMediaKeysState,
-  cancelSignal : CancellationSignal
-) : Promise<void> {
+    mediaKeys,
+  }: IMediaKeysState,
+  cancelSignal: CancellationSignal,
+): Promise<void> {
   const previousState = MediaKeysInfosStore.getState(mediaElement);
-  const closeAllSessions = previousState !== null &&
-                           previousState.loadedSessionsStore !== loadedSessionsStore ?
-                             previousState.loadedSessionsStore.closeAllSessions() :
-                             Promise.resolve();
+  const closeAllSessions =
+    previousState !== null && previousState.loadedSessionsStore !== loadedSessionsStore
+      ? previousState.loadedSessionsStore.closeAllSessions()
+      : Promise.resolve();
 
   await closeAllSessions;
 
@@ -89,17 +91,18 @@ export default async function attachMediaKeys(
     askedConfiguration,
   });
   if (mediaElement.mediaKeys === mediaKeys) {
-    return ;
+    return;
   }
   log.info("DRM: Attaching MediaKeys to the media element");
-  emeImplementation.setMediaKeys(mediaElement, mediaKeys)
+  emeImplementation
+    .setMediaKeys(mediaElement, mediaKeys)
     .then(() => {
       log.info("DRM: MediaKeys attached with success");
     })
     .catch((err) => {
       log.error(
         "DRM: Could not set MediaKeys",
-        err instanceof Error ? err : "Unknown Error"
+        err instanceof Error ? err : "Unknown Error",
       );
     });
 }
@@ -107,15 +110,13 @@ export default async function attachMediaKeys(
 /** MediaKeys and associated state attached to a media element. */
 export interface IMediaKeysState {
   /** Options set when the MediaKeys has been attached. */
-  keySystemOptions : IKeySystemOption;
+  keySystemOptions: IKeySystemOption;
   /** LoadedSessionsStore associated to the MediaKeys instance. */
-  loadedSessionsStore : LoadedSessionsStore;
+  loadedSessionsStore: LoadedSessionsStore;
   /** The MediaKeySystemAccess allowing to create MediaKeys instances. */
-  mediaKeySystemAccess: MediaKeySystemAccess |
-                        ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
   /** The MediaKeys instance to attach to the media element. */
-  mediaKeys : MediaKeys |
-              ICustomMediaKeys;
+  mediaKeys: MediaKeys | ICustomMediaKeys;
   /**
    * The MediaKeySystemConfiguration that has been provided to the
    * `requestMediaKeySystemAccess` API.
@@ -126,5 +127,5 @@ export interface IMediaKeysState {
    * Different EME implementation might for example be used while debugging or
    * work-arounding EME-linked device issues.
    */
-  emeImplementation : IEmeApiImplementation;
+  emeImplementation: IEmeApiImplementation;
 }

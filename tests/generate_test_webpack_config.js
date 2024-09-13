@@ -13,26 +13,24 @@ const Webpack = require("webpack");
  * requesting the content server.
  * @returns {Object} - The Webpack config
  */
-module.exports = function generateTestWebpackConfig({
-  contentServerInfo
-}) {
+module.exports = function generateTestWebpackConfig({ contentServerInfo }) {
   return {
     mode: "development",
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
       fallback: {
-        "assert": false,
-        "util": false,
-        "fs": false,
-        "tls": false,
-        "net": false,
-        "path": false,
-        "zlib": false,
-        "http": false,
-        "https": false,
-        "stream": false,
-        "crypto": false,
-      }
+        assert: false,
+        util: false,
+        fs: false,
+        tls: false,
+        net: false,
+        path: false,
+        zlib: false,
+        http: false,
+        https: false,
+        stream: false,
+        crypto: false,
+      },
     },
     module: {
       rules: [
@@ -75,7 +73,7 @@ module.exports = function generateTestWebpackConfig({
           CURRENT_ENV: 1,
         },
         __LOGGER_LEVEL__: {
-          CURRENT_LEVEL: "\"NONE\"",
+          CURRENT_LEVEL: '"NONE"',
         },
       }),
     ],

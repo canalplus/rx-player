@@ -16,7 +16,7 @@
 
 /* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
-import { IFeaturesObject } from "../../../features/types";
+import type { IFeaturesObject } from "../../../features/types";
 import metaplaylist from "../../../transports/metaplaylist";
 import addLocalManifestFeature from "../metaplaylist";
 
@@ -29,7 +29,6 @@ describe("Features list - METAPLAYLIST", () => {
       mediaSourceInit: MediaSourceContentInitializer,
     });
     expect(featureObject.transports.metaplaylist).toBe(metaplaylist);
-    expect(featureObject.mediaSourceInit)
-      .toBe(MediaSourceContentInitializer);
+    expect(featureObject.mediaSourceInit).toBe(MediaSourceContentInitializer);
   });
 });

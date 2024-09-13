@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {
+import type {
   ISegmentFetcher,
   ISegmentLoaderContent,
 } from "../../../core/fetchers/segment/segment_fetcher";
-import { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
+import type { AudioVideoSegmentBuffer } from "../../../core/segment_buffers/implementations";
 import log from "../../../log";
-import { CancellationSignal } from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 
 /**
  * @param {Object} segmentInfo
@@ -30,48 +30,56 @@ import { CancellationSignal } from "../../../utils/task_canceller";
  * @returns {Promise}
  */
 export default function loadAndPushSegment(
-  segmentInfo : ISegmentLoaderContent,
+  segmentInfo: ISegmentLoaderContent,
   segmentBuffer: AudioVideoSegmentBuffer,
   segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>,
-  initSegmentUniqueId : string | null,
-  cancelSignal: CancellationSignal
+  initSegmentUniqueId: string | null,
+  cancelSignal: CancellationSignal,
 ): Promise<unknown> {
-  const pushOperations : Array<Promise<unknown>> = [];
-  return segmentFetcher(segmentInfo, {
-    onChunk(parseChunk) {
-      const parsed = parseChunk(undefined);
-      let isInitSegment : boolean;
-      let data : BufferSource | null;
-      let timestampOffset : number;
-      const codec = segmentInfo.representation.getMimeTypeString();
-      if (parsed.segmentType === "init") {
-        isInitSegment = true;
-        data = parsed.initializationData;
-        timestampOffset = 0;
-        if (initSegmentUniqueId !== null) {
-          segmentBuffer.declareInitSegment(initSegmentUniqueId, data);
+  const pushOperations: Array<Promise<unknown>> = [];
+  return segmentFetcher(
+    segmentInfo,
+    {
+      onChunk(parseChunk) {
+        const parsed = parseChunk(undefined);
+        let isInitSegment: boolean;
+        let data: BufferSource | null;
+        let timestampOffset: number;
+        const codec = segmentInfo.representation.getMimeTypeString();
+        if (parsed.segmentType === "init") {
+          isInitSegment = true;
+          data = parsed.initializationData;
+          timestampOffset = 0;
+          if (initSegmentUniqueId !== null) {
+            segmentBuffer.declareInitSegment(initSegmentUniqueId, data);
+          }
+        } else {
+          isInitSegment = false;
+          data = parsed.chunkData;
+          timestampOffset = parsed.chunkOffset;
         }
-      } else {
-        isInitSegment = false;
-        data = parsed.chunkData;
-        timestampOffset = parsed.chunkOffset;
-      }
-      const pushOperation = segmentBuffer.pushChunk({
-        data: { initSegmentUniqueId,
-                chunk: isInitSegment ? null :
-                                       data,
-                appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
-                timestampOffset,
-                codec },
-        inventoryInfos: null,
-      }, cancelSignal);
-      pushOperations.push(pushOperation);
+        const pushOperation = segmentBuffer.pushChunk(
+          {
+            data: {
+              initSegmentUniqueId,
+              chunk: isInitSegment ? null : data,
+              appendWindow: [segmentInfo.period.start, segmentInfo.period.end],
+              timestampOffset,
+              codec,
+            },
+            inventoryInfos: null,
+          },
+          cancelSignal,
+        );
+        pushOperations.push(pushOperation);
+      },
+      onAllChunksReceived() {
+        return;
+      },
+      onRetry(error) {
+        log.warn("Retrying segment request", error);
+      },
     },
-    onAllChunksReceived() {
-      return ;
-    },
-    onRetry(error) {
-      log.warn("Retrying segment request", error);
-    },
-  }, cancelSignal).then(() => Promise.all(pushOperations));
+    cancelSignal,
+  ).then(() => Promise.all(pushOperations));
 }

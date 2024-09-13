@@ -25,10 +25,10 @@
 
 describe("compat - browser compatibility types", () => {
   interface IFakeWindow {
-    MediaSource? : unknown;
-    MozMediaSource? : unknown;
-    WebKitMediaSource? : unknown;
-    MSMediaSource? : unknown;
+    MediaSource?: unknown;
+    MozMediaSource?: unknown;
+    WebKitMediaSource?: unknown;
+    MSMediaSource?: unknown;
   }
   const win = window as IFakeWindow;
   beforeEach(() => {
@@ -36,8 +36,7 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should set the MediaSource to `undefined` when running nodejs", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: true }));
+    jest.mock("../is_node", () => ({ __esModule: true as const, default: true }));
 
     const origMediaSource = win.MediaSource;
     const origMozMediaSource = win.MozMediaSource;
@@ -59,8 +58,7 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use the native MediaSource if defined", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../is_node", () => ({ __esModule: true as const, default: false }));
 
     const origMediaSource = win.MediaSource;
     const origMozMediaSource = win.MozMediaSource;
@@ -82,8 +80,7 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use MozMediaSource if defined and MediaSource is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../is_node", () => ({ __esModule: true as const, default: false }));
 
     const origMediaSource = win.MediaSource;
     const origMozMediaSource = win.MozMediaSource;
@@ -105,8 +102,7 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use WebKitMediaSource if defined and MediaSource is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../is_node", () => ({ __esModule: true as const, default: false }));
 
     const origMediaSource = win.MediaSource;
     const origMozMediaSource = win.MozMediaSource;
@@ -128,8 +124,7 @@ describe("compat - browser compatibility types", () => {
   });
 
   it("should use MSMediaSource if defined and MediaSource is not", () => {
-    jest.mock("../is_node", () => ({ __esModule: true as const,
-                                     default: false }));
+    jest.mock("../is_node", () => ({ __esModule: true as const, default: false }));
 
     const origMediaSource = win.MediaSource;
     const origMozMediaSource = win.MozMediaSource;

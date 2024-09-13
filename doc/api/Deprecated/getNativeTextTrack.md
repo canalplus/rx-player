@@ -8,8 +8,7 @@ APIs</a>).
 
 ## Description
 
-Returns the first text track of the video's element, null if none.
-This is equivalent to:
+Returns the first text track of the video's element, null if none. This is equivalent to:
 
 ```js
 const el = player.getVideoElement();
@@ -19,7 +18,7 @@ const textTrack = el.textTracks.length ? el.textTracks[0] : null;
 ## Syntax
 
 ```js
-player.getNativeTextTrack()
+player.getNativeTextTrack();
 ```
 
-  - **return value** `TextTrack|null`
+- **return value** `TextTrack|null`

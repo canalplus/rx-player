@@ -30,38 +30,36 @@ describe("DASH live - UTCTimings", () => {
 
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
 
       await sleep(100);
       await xhrMock.flush();
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521446, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553521748, 3);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521446, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553521748, 3);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
       xhrMock.lock();
 
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
-      player.loadVideo({ url: manifestInfos.url,
-                         transport:manifestInfos.transport,
-                         transportOptions: {
-                           serverSyncInfos: {
-                             serverTimestamp,
-                             clientTime: performance.now(),
-                           },
-                         } });
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport: manifestInfos.transport,
+        transportOptions: {
+          serverSyncInfos: {
+            serverTimestamp,
+            clientTime: performance.now(),
+          },
+        },
+      });
 
       await sleep(100);
       await xhrMock.flush();
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521746, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 
@@ -81,16 +79,16 @@ describe("DASH live - UTCTimings", () => {
     });
 
     it("should fetch the clock and then calculate the right bounds", async () => {
-      xhrMock.respondTo("GET",
-                        "https://time.akamai.com/?iso",
-                        [ 200,
-                          { "Content-Type": "text/plain"},
-                          "2019-03-25T13:49:08.014Z"]);
+      xhrMock.respondTo("GET", "https://time.akamai.com/?iso", [
+        200,
+        { "Content-Type": "text/plain" },
+        "2019-03-25T13:49:08.014Z",
+      ]);
       xhrMock.lock();
 
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
 
       await sleep(100);
@@ -100,8 +98,7 @@ describe("DASH live - UTCTimings", () => {
       await sleep(100);
       await xhrMock.flush(); // Once for the init segment
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521446, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521446, 1);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -110,7 +107,7 @@ describe("DASH live - UTCTimings", () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         transportOptions: {
           serverSyncInfos: {
             serverTimestamp,
@@ -122,14 +119,12 @@ describe("DASH live - UTCTimings", () => {
       await sleep(100);
       await xhrMock.flush();
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521746, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 
-  describe("DASH live content (SegmentTemplate + Without Timing)", function() {
+  describe("DASH live content (SegmentTemplate + Without Timing)", function () {
     const { manifestInfos } = WithoutTimings;
     let player;
     let xhrMock;
@@ -149,7 +144,7 @@ describe("DASH live - UTCTimings", () => {
 
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
 
       await sleep(100);
@@ -158,16 +153,12 @@ describe("DASH live - UTCTimings", () => {
 
       const { availabilityStartTime } = player.getManifest();
       const timeShiftBufferDepth = 5 * 60;
-      const maximumPosition = (Date.now()) / 1000 -
-        availabilityStartTime;
-      const minimumPosition = maximumPosition -
-        timeShiftBufferDepth -
-        2 /* segment duration */;
+      const maximumPosition = Date.now() / 1000 - availabilityStartTime;
+      const minimumPosition =
+        maximumPosition - timeShiftBufferDepth - 2; /* segment duration */
 
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(minimumPosition, 6);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(maximumPosition, 3);
+      expect(player.getMinimumPosition()).to.be.closeTo(minimumPosition, 6);
+      expect(player.getMaximumPosition()).to.be.closeTo(maximumPosition, 3);
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -176,7 +167,7 @@ describe("DASH live - UTCTimings", () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         transportOptions: {
           serverSyncInfos: {
             serverTimestamp,
@@ -188,10 +179,8 @@ describe("DASH live - UTCTimings", () => {
       await sleep(100);
       await xhrMock.flush();
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521746, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 
@@ -215,18 +204,16 @@ describe("DASH live - UTCTimings", () => {
 
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
       });
 
       await sleep(100);
       await xhrMock.flush();
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521446, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521446, 1);
 
-      const requestsDone = xhrMock.getLockedXHR().map(r => r.url);
-      expect(requestsDone)
-        .not.to.include("https://time.akamai.com/?iso");
+      const requestsDone = xhrMock.getLockedXHR().map((r) => r.url);
+      expect(requestsDone).not.to.include("https://time.akamai.com/?iso");
     });
 
     it("should consider `serverSyncInfos` if provided", async () => {
@@ -235,7 +222,7 @@ describe("DASH live - UTCTimings", () => {
       const serverTimestamp = +new Date("2019-03-25T13:54:08.000Z");
       player.loadVideo({
         url: manifestInfos.url,
-        transport:manifestInfos.transport,
+        transport: manifestInfos.transport,
         transportOptions: {
           serverSyncInfos: {
             serverTimestamp,
@@ -247,10 +234,8 @@ describe("DASH live - UTCTimings", () => {
       await sleep(100);
       await xhrMock.flush();
       await sleep(100);
-      expect(player.getMinimumPosition()).to.be
-        .closeTo(1553521746, 1);
-      expect(player.getMaximumPosition()).to.be
-        .closeTo(1553522048, 1);
+      expect(player.getMinimumPosition()).to.be.closeTo(1553521746, 1);
+      expect(player.getMaximumPosition()).to.be.closeTo(1553522048, 1);
     });
   });
 });

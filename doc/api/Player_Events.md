@@ -2,8 +2,8 @@
 
 ## Overview
 
-To communicate about events (like an error or the update of the current video
-bitrate) the player use the event listener pattern.
+To communicate about events (like an error or the update of the current video bitrate) the
+player use the event listener pattern.
 
 As [documented in the API](./Basic_Methods/addEventListener.md), you can call
 `addEventListener` to register a callback for a particular event, like:
@@ -14,8 +14,8 @@ player.addEventListener("videoBitrateChange", (newVideoBitrate) => {
 });
 ```
 
-You can unregister a callback through the `removeEventListener` API,
-documented [here](./Basic_Methods/removeEventListener.md).
+You can unregister a callback through the `removeEventListener` API, documented
+[here](./Basic_Methods/removeEventListener.md).
 
 ## Basic events
 
@@ -27,11 +27,11 @@ _payload type_: `string`
 
 Emit the current state of the player, every time it changes.
 
-This is the event to catch if you want to know when the player is playing, is
-paused, is rebuffering, is ended or is stopped.
+This is the event to catch if you want to know when the player is playing, is paused, is
+rebuffering, is ended or is stopped.
 
-As it is a central part of our API and can be difficult concept to understand,
-we have a special [page of documentation on player states](./Player_States.md).
+As it is a central part of our API and can be difficult concept to understand, we have a
+special [page of documentation on player states](./Player_States.md).
 
 ### error
 
@@ -39,11 +39,10 @@ _payload type_: `Error`
 
 Triggered when a fatal error happened.
 
-A fatal error is an error that led the player to stop playing the current
-content.
+A fatal error is an error that led the player to stop playing the current content.
 
-The payload is the corresponding error. See [the Player
-Error](./Player_Errors.md) documentation for more information.
+The payload is the corresponding error. See [the Player Error](./Player_Errors.md)
+documentation for more information.
 
 ### warning
 
@@ -51,19 +50,19 @@ _payload type_: `Error`
 
 Triggered each time a minor error happened.
 
-This error won't lead the RxPlayer to stop the content. It can for example be
-an HTTP request error, some minor error detected in the content or the current
-position being to far below the minimum playable position.
+This error won't lead the RxPlayer to stop the content. It can for example be an HTTP
+request error, some minor error detected in the content or the current position being to
+far below the minimum playable position.
 
-The payload is the corresponding error. See [the Player
-Error](./Player_Errors.md) documentation for more information.
+The payload is the corresponding error. See [the Player Error](./Player_Errors.md)
+documentation for more information.
 
 ### positionUpdate
 
 _payload type_: `Object`
 
-Emit information about the current position at most every seconds (also emits
-every time various player events are received).
+Emit information about the current position at most every seconds (also emits every time
+various player events are received).
 
 The object emitted as the following properties:
 
@@ -71,66 +70,62 @@ The object emitted as the following properties:
 
 - `duration` (`Number`): The duration of the content.
 
-- `bufferGap` (`Number`): The gap, in seconds, between the current
-  position and the end of the current buffered range.
+- `bufferGap` (`Number`): The gap, in seconds, between the current position and the end of
+  the current buffered range.
 
 - `playbackRate` (`Number`): The current playback rate the content is on.
 
-- `liveGap` (`Number|undefined`): Only for live contents. The gap between
-  the current position and the "live edge".
-  Might not be set for `directfile` contents.
+- `liveGap` (`Number|undefined`): Only for live contents. The gap between the current
+  position and the "live edge". Might not be set for `directfile` contents.
 
-- `maximumBufferTime` (`Number|undefined`): The maximum time until which
-  the buffer can currently be filled. That is:
+- `maximumBufferTime` (`Number|undefined`): The maximum time until which the buffer can
+  currently be filled. That is:
 
   - for static contents (like VoD), the duration.
 
-  - for dynamic contents (like live contents), the current maximum available
-    position (live edge for live contents) minus a security margin we added to
-    avoid buffering ahead of it.
+  - for dynamic contents (like live contents), the current maximum available position
+    (live edge for live contents) minus a security margin we added to avoid buffering
+    ahead of it.
 
-- `wallClockTime` (`Number|undefined`): Only for live contents. The
-  current time converted to wall-clock time in seconds.
-  That is the real live position (and not the position as announced by the
-  video element).
+- `wallClockTime` (`Number|undefined`): Only for live contents. The current time converted
+  to wall-clock time in seconds. That is the real live position (and not the position as
+  announced by the video element).
 
 ### play
 
 Emitted when the `RxPlayer`'s `videoElement` is no longer considered paused.
 
-This event is generally triggered when and if the
-[`play`](./Basic_Methods/play.md) method has succeeded.
+This event is generally triggered when and if the [`play`](./Basic_Methods/play.md) method
+has succeeded.
 
-Note that this event can be sent even if the [player's state](./Player_States.md)
-doesn't currently allow playback, for example when in the `"LOADING"` or
-`"BUFFERING"` states, among other.
-It shouldn't be sent however when the player's state is `"STOPPED"` which is
+Note that this event can be sent even if the [player's state](./Player_States.md) doesn't
+currently allow playback, for example when in the `"LOADING"` or `"BUFFERING"` states,
+among other. It shouldn't be sent however when the player's state is `"STOPPED"` which is
 when no content is loading nor loaded.
 
 ### pause
 
 Emitted when the `RxPlayer`'s `videoElement` is now considered paused.
 
-This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method
-has succeeded, when the content has ended or due to other rare occurences: for
-example if we could not automatically play after a `"LOADING"` or `"RELOADING"`
-state due to [the browser's autoplay policies](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide).
+This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method has
+succeeded, when the content has ended or due to other rare occurences: for example if we
+could not automatically play after a `"LOADING"` or `"RELOADING"` state due to
+[the browser's autoplay policies](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide).
 
-Note that this event can be sent even if the [player's state](./Player_States.md)
-doesn't currently allow playback, for example when in the `"LOADING"` or
-`"BUFFERING"` states, among other.
-It shouldn't be sent however when the player's state is `"STOPPED"` which is
+Note that this event can be sent even if the [player's state](./Player_States.md) doesn't
+currently allow playback, for example when in the `"LOADING"` or `"BUFFERING"` states,
+among other. It shouldn't be sent however when the player's state is `"STOPPED"` which is
 when no content is loading nor loaded.
 
 ### seeking
 
-Emitted when a "seek" operation (to "move"/"skip" to another position) begins
-on the currently loaded content.
+Emitted when a "seek" operation (to "move"/"skip" to another position) begins on the
+currently loaded content.
 
 ### seeked
 
-Emitted when a "seek" operation (to "move"/"skip" to another position) on the
-currently loaded content has finished
+Emitted when a "seek" operation (to "move"/"skip" to another position) on the currently
+loaded content has finished
 
 ## Track selection events
 
@@ -140,60 +135,55 @@ This chapter describes events linked to the current audio, video or text track.
 
 _payload type_: `Array.<Object>`
 
-Triggered when the currently available audio tracks might have changed (e.g.: at
-the beginning of the content, when period changes...) for the currently-playing
-Period.
+Triggered when the currently available audio tracks might have changed (e.g.: at the
+beginning of the content, when period changes...) for the currently-playing Period.
 
-_The event might also rarely be emitted even if the list of available audio
-tracks did not really change - as the RxPlayer might send it in situations where
-there's a chance it had without thoroughly checking it._
+_The event might also rarely be emitted even if the list of available audio tracks did not
+really change - as the RxPlayer might send it in situations where there's a chance it had
+without thoroughly checking it._
 
 The array emitted contains object describing each available audio track:
 
-- `active` (`Boolean`): Whether the track is the one currently active or
-  not.
+- `active` (`Boolean`): Whether the track is the one currently active or not.
 
-- `id` (`string`): The id used to identify the track. Use it for
-  setting the track via `setAudioTrack`.
+- `id` (`string`): The id used to identify the track. Use it for setting the track via
+  `setAudioTrack`.
 
-- `language` (`string`): The language the audio track is in, as set in
-  the [Manifest](../Getting_Started/Glossary.md#manifest).
+- `language` (`string`): The language the audio track is in, as set in the
+  [Manifest](../Getting_Started/Glossary.md#manifest).
 
-- `normalized` (`string`): An attempt to translate the `language`
-  property into an ISO 639-3 language code (for now only support translations
-  from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
-  fails (no corresponding ISO 639-3 language code is found), it will equal the
-  value of `language`
+- `normalized` (`string`): An attempt to translate the `language` property into an ISO
+  639-3 language code (for now only support translations from ISO 639-1 and ISO 639-2
+  language codes). If the translation attempt fails (no corresponding ISO 639-3 language
+  code is found), it will equal the value of `language`
 
-- `audioDescription` (`Boolean`): Whether the track is an audio
-  description of what is happening at the screen.
+- `audioDescription` (`Boolean`): Whether the track is an audio description of what is
+  happening at the screen.
 
-- `dub` (`Boolean|undefined`): If set to `true`, this audio track is a
-  "dub", meaning it was recorded in another language than the original.
-  If set to `false`, we know that this audio track is in an original language.
-  This property is `undefined` if we do not known whether it is in an original
-  language.
+- `dub` (`Boolean|undefined`): If set to `true`, this audio track is a "dub", meaning it
+  was recorded in another language than the original. If set to `false`, we know that this
+  audio track is in an original language. This property is `undefined` if we do not known
+  whether it is in an original language.
 
-- `label` (`string|undefined`): A human readable label that may be displayed in
-  the user interface providing a choice between audio tracks.
+- `label` (`string|undefined`): A human readable label that may be displayed in the user
+  interface providing a choice between audio tracks.
 
   This information is usually set only if the current Manifest contains one.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
-  attributes:
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track,
+  with attributes:
 
-  - `id` (`string`): The id used to identify this Representation.
-    No other Representation from this track will have the same `id`.
+  - `id` (`string`): The id used to identify this Representation. No other Representation
+    from this track will have the same `id`.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per seconds.
 
-  - `codec` (`string|undefined`): The audio codec the Representation is
-    in, as announced in the corresponding Manifest.
+  - `codec` (`string|undefined`): The audio codec the Representation is in, as announced
+    in the corresponding Manifest.
 
-  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
-    has spatial audio.
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation has
+    spatial audio.
 
 This event only concerns the currently-playing Period.
 
@@ -201,42 +191,38 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Object>`
 
-Triggered when the currently available video tracks might change (e.g.: at the
-beginning of the content, when period changes...) for the currently-playing
-Period.
+Triggered when the currently available video tracks might change (e.g.: at the beginning
+of the content, when period changes...) for the currently-playing Period.
 
-_The event might also rarely be emitted even if the list of available video
-tracks did not really change - as the RxPlayer might send it in situations where
-there's a chance it had without thoroughly checking it._
+_The event might also rarely be emitted even if the list of available video tracks did not
+really change - as the RxPlayer might send it in situations where there's a chance it had
+without thoroughly checking it._
 
 The array emitted contains object describing each available video track:
 
-- `id` (`string`): The id used to identify the track. Use it for
-  setting the track via `setVideoTrack`.
+- `id` (`string`): The id used to identify the track. Use it for setting the track via
+  `setVideoTrack`.
 
-- `active` (`Boolean`): Whether this track is the one currently
-  active or not.
+- `active` (`Boolean`): Whether this track is the one currently active or not.
 
-- `label` (`string|undefined`): A human readable label that may be displayed in
-  the user interface providing a choice between video tracks.
+- `label` (`string|undefined`): A human readable label that may be displayed in the user
+  interface providing a choice between video tracks.
 
   This information is usually set only if the current Manifest contains one.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
-  attributes:
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track,
+  with attributes:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per seconds.
 
   - `width` (`Number|undefined`): The width of video, in pixels.
 
   - `height` (`Number|undefined`): The height of video, in pixels.
 
-  - `codec` (`string|undefined`): The codec given in standard MIME type
-    format.
+  - `codec` (`string|undefined`): The codec given in standard MIME type format.
 
   - `frameRate` (`string|undefined`): The video framerate.
 
@@ -246,44 +232,41 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Array.<Object>`
 
-Triggered when the currently available text tracks might change (e.g.: at the
-beginning of the content, when period changes...) for the currently-playing
-Period.
+Triggered when the currently available text tracks might change (e.g.: at the beginning of
+the content, when period changes...) for the currently-playing Period.
 
-_The event might also rarely be emitted even if the list of available text
-tracks did not really change - as the RxPlayer might send it in situations where
-there's a chance it had without thoroughly checking it._
+_The event might also rarely be emitted even if the list of available text tracks did not
+really change - as the RxPlayer might send it in situations where there's a chance it had
+without thoroughly checking it._
 
 The array emitted contains object describing each available text track:
 
-- `id` (`string`): The id used to identify the track. Use it for
-  setting the track via `setTextTrack`.
+- `id` (`string`): The id used to identify the track. Use it for setting the track via
+  `setTextTrack`.
 
 - `language` (`string`): The language the text track is in, as set in the
   [Manifest](../Getting_Started/Glossary.md#manifest).
 
-- `normalized` (`string`): An attempt to translate the `language`
-  property into an ISO 639-3 language code (for now only support translations
-  from ISO 639-1 and ISO 639-2 language codes). If the translation attempt
-  fails (no corresponding ISO 639-3 language code is found), it will equal the
-  value of `language`
+- `normalized` (`string`): An attempt to translate the `language` property into an ISO
+  639-3 language code (for now only support translations from ISO 639-1 and ISO 639-2
+  language codes). If the translation attempt fails (no corresponding ISO 639-3 language
+  code is found), it will equal the value of `language`
 
-- `label` (`string|undefined`): A human readable label that may be displayed in
-  the user interface providing a choice between text tracks.
+- `label` (`string|undefined`): A human readable label that may be displayed in the user
+  interface providing a choice between text tracks.
 
   This information is usually set only if the current Manifest contains one.
 
-- `closedCaption` (`Boolean`): Whether the track is specially adapted for
-  the hard of hearing or not.
+- `closedCaption` (`Boolean`): Whether the track is specially adapted for the hard of
+  hearing or not.
 
-- `forced` (`Boolean`): If `true` this text track is meant to be displayed by
-  default if no other text track is selected.
+- `forced` (`Boolean`): If `true` this text track is meant to be displayed by default if
+  no other text track is selected.
 
-  It is often used to clarify dialogue, alternate languages, texted graphics or
-  location and person identification.
+  It is often used to clarify dialogue, alternate languages, texted graphics or location
+  and person identification.
 
-- `active` (`Boolean`): Whether the track is the one currently active or
-  not.
+- `active` (`Boolean`): Whether the track is the one currently active or not.
 
 This event only concerns the currently-playing Period.
 
@@ -291,37 +274,34 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Object|null`
 
-Information about the current audio track, each time it changes (the last
-received segment got a new one).
+Information about the current audio track, each time it changes (the last received segment
+got a new one).
 
-The payload is an object describing the new track, with the following
-properties:
+The payload is an object describing the new track, with the following properties:
 
 - `id` (`Number|string`): The id used to identify the track.
 - `language` (`string`): The language the audio track is in.
-- `audioDescription` (`Boolean`): Whether the track is an audio
-  description of what is happening at the screen.
-- `dub` (`Boolean|undefined`): If set to `true`, this audio track is a
-  "dub", meaning it was recorded in another language than the original.
-  If set to `false`, we know that this audio track is in an original language.
-  This property is `undefined` if we do not known whether it is in an original
-  language.
-- `label` (`string|undefined`): A human readable label that may be displayed in
-  the user interface providing a choice between audio tracks.
+- `audioDescription` (`Boolean`): Whether the track is an audio description of what is
+  happening at the screen.
+- `dub` (`Boolean|undefined`): If set to `true`, this audio track is a "dub", meaning it
+  was recorded in another language than the original. If set to `false`, we know that this
+  audio track is in an original language. This property is `undefined` if we do not known
+  whether it is in an original language.
+- `label` (`string|undefined`): A human readable label that may be displayed in the user
+  interface providing a choice between audio tracks.
 
   This information is usually set only if the current Manifest contains one.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
-  attributes:
-  - `id` (`string`): The id used to identify this Representation.
-    No other Representation from this track will have the same `id`.
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
-  - `codec` (`string|undefined`): The audio codec the Representation is
-    in, as announced in the corresponding Manifest.
-  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation
-    has spatial audio.
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track,
+  with attributes:
+  - `id` (`string`): The id used to identify this Representation. No other Representation
+    from this track will have the same `id`.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per seconds.
+  - `codec` (`string|undefined`): The audio codec the Representation is in, as announced
+    in the corresponding Manifest.
+  - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation has
+    spatial audio.
 
 This event only concerns the currently-playing Period.
 
@@ -329,27 +309,26 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Object|null`
 
-Information about the current text track, each time it changes (the last
-received segment got a new one).
+Information about the current text track, each time it changes (the last received segment
+got a new one).
 
-The payload is an object describing the new track, with the following
-properties:
+The payload is an object describing the new track, with the following properties:
 
 - `id` (`Number|string`): The id used to identify the track.
 
 - `language` (`string`): The language the text track is in.
 
-- `closedCaption` (`Boolean`): Whether the track is specially adapted for
-  the hard of hearing or not.
+- `closedCaption` (`Boolean`): Whether the track is specially adapted for the hard of
+  hearing or not.
 
-- `forced` (`Boolean`): If `true` this text track is meant to be displayed by
-  default if no other text track is selected.
+- `forced` (`Boolean`): If `true` this text track is meant to be displayed by default if
+  no other text track is selected.
 
-  It is often used to clarify dialogue, alternate languages, texted graphics or
-  location and person identification.
+  It is often used to clarify dialogue, alternate languages, texted graphics or location
+  and person identification.
 
-- `label` (`string|undefined`): A human readable label that may be displayed in
-  the user interface providing a choice between text tracks.
+- `label` (`string|undefined`): A human readable label that may be displayed in the user
+  interface providing a choice between text tracks.
 
   This information is usually set only if the current Manifest contains one.
 
@@ -359,54 +338,50 @@ This event only concerns the currently-playing Period.
 
 _payload type_: `Object|null`
 
-Information about the current video track, each time it changes (the last
-received segment got a new one).
+Information about the current video track, each time it changes (the last received segment
+got a new one).
 
-The payload is an object describing the new track, with the following
-properties:
+The payload is an object describing the new track, with the following properties:
 
-- `id` (`string`): The id used to identify the track. Use it for setting
-  the track via `setVideoTrack`.
+- `id` (`string`): The id used to identify the track. Use it for setting the track via
+  `setVideoTrack`.
 
-- `label` (`string|undefined`): A human readable label that may be displayed in
-  the user interface providing a choice between video tracks.
+- `label` (`string|undefined`): A human readable label that may be displayed in the user
+  interface providing a choice between video tracks.
 
   This information is usually set only if the current Manifest contains one.
 
 - `representations` (`Array.<Object>`):
-  [Representations](../Getting_Started/Glossary.md#representation) of this video track, with
-  attributes:
+  [Representations](../Getting_Started/Glossary.md#representation) of this video track,
+  with attributes:
 
   - `id` (`string`): The id used to identify this Representation.
 
-  - `bitrate` (`Number`): The bitrate of this Representation, in bits per
-    seconds.
+  - `bitrate` (`Number`): The bitrate of this Representation, in bits per seconds.
 
   - `width` (`Number|undefined`): The width of video, in pixels.
 
   - `height` (`Number|undefined`): The height of video, in pixels.
 
-  - `codec` (`string|undefined`): The codec given in standard MIME type
-    format.
+  - `codec` (`string|undefined`): The codec given in standard MIME type format.
 
   - `frameRate` (`string|undefined`): The video framerate.
 
-- `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track
-  is a trick mode track. This type of tracks proposes video content that is
-  often encoded with a very low framerate with the purpose to be played more
-  efficiently at a much higher speed.
+- `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track is a trick mode
+  track. This type of tracks proposes video content that is often encoded with a very low
+  framerate with the purpose to be played more efficiently at a much higher speed.
 
-  To enter or exit a mode where trickmode tracks are used instead of regular
-  non-trickmode ones, you can use the `setPlaybackRate` function.
+  To enter or exit a mode where trickmode tracks are used instead of regular non-trickmode
+  ones, you can use the `setPlaybackRate` function.
 
-- `trickModeTracks` (`Object | undefined`): Trick mode video tracks
-  attached to this video track.
+- `trickModeTracks` (`Object | undefined`): Trick mode video tracks attached to this video
+  track.
 
-  Each of those objects contain the same properties that a regular video track
-  (same properties than what is documented here).
+  Each of those objects contain the same properties that a regular video track (same
+  properties than what is documented here).
 
-  It this property is either `undefined` or not set, then this track has no
-  linked trickmode video track.
+  It this property is either `undefined` or not set, then this track has no linked
+  trickmode video track.
 
 A `null` payload means that video track has been disabled.
 
@@ -430,12 +405,10 @@ This chapter describes events linked to audio and/or video bitrates and quality.
 
 _payload type_: `Array.<Number>`
 
-Triggered when the currently available audio bitrates change (e.g.: at the
-beginning of the content, when switching the current audio track, when period
-changes...).
+Triggered when the currently available audio bitrates change (e.g.: at the beginning of
+the content, when switching the current audio track, when period changes...).
 
-The payload is an array of the different bitrates available, in bits per
-seconds.
+The payload is an array of the different bitrates available, in bits per seconds.
 
 This event only concerns the currently-playing Period.
 
@@ -448,12 +421,10 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Array.<Number>`
 
-Triggered when the currently available video bitrates change (e.g.: at the
-beginning of the content, when switching the current video track, when period
-changes...).
+Triggered when the currently available video bitrates change (e.g.: at the beginning of
+the content, when switching the current video track, when period changes...).
 
-The payload is an array of the different bitrates available, in bits per
-seconds.
+The payload is an array of the different bitrates available, in bits per seconds.
 
 This event only concerns the currently-playing Period.
 
@@ -466,8 +437,8 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Number`
 
-The payload is the new audio bitrate, in bits per seconds. It is emitted every
-time it changes (based on the last received segment).
+The payload is the new audio bitrate, in bits per seconds. It is emitted every time it
+changes (based on the last received segment).
 
 `-1` when the bitrate is not known.
 
@@ -482,8 +453,8 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Number`
 
-The payload is the new video bitrate, in bits per seconds. It is emitted every
-time it changes (based on the last received segment).
+The payload is the new video bitrate, in bits per seconds. It is emitted every time it
+changes (based on the last received segment).
 
 `-1` when the bitrate is not known.
 
@@ -498,20 +469,19 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Object`
 
-Information about the last bitrate estimation performed, by type of buffer
-(`audio`, `video` etc.).
+Information about the last bitrate estimation performed, by type of buffer (`audio`,
+`video` etc.).
 
 Note that this event is sent only if the corresponding buffer type has multiple
-[Representations](../Getting_Started/Glossary.md#representation) for the given content (as bitrate
-estimations are only useful in that case).
+[Representations](../Getting_Started/Glossary.md#representation) for the given content (as
+bitrate estimations are only useful in that case).
 
 The payload is an object with the following properties:
 
 - `type` (`string`): The buffer type
 
-- `bitrate` (`Number`): The last estimated bandwidth for this buffer type,
-  in bits per seconds.
-  This bitrate is smoothed by doing a (complex) mean on an extended period of
+- `bitrate` (`Number`): The last estimated bandwidth for this buffer type, in bits per
+  seconds. This bitrate is smoothed by doing a (complex) mean on an extended period of
   time, so it often does not link directly to the current calculated bitrate.
 
 <div class="warning">
@@ -521,17 +491,18 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 ## Playback information
 
-This chapter describes events describing miscellaneous information about the
-current content.
+This chapter describes events describing miscellaneous information about the current
+content.
 
 ### periodChange
 
 _payload type_: `Object`
 
-Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen changes.
+Triggered when the current [Period](../Getting_Started/Glossary.md#period) being seen
+changes.
 
-The payload is the corresponding Period. See [the Manifest
-documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-period-object)
+The payload is the corresponding Period. See
+[the Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-period-object)
 for more information.
 
 <div class="warning">
@@ -543,44 +514,42 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Array.<Object>`
 
-Triggered when a or multiple Representation's decipherability status were
-updated. Which means either:
+Triggered when a or multiple Representation's decipherability status were updated. Which
+means either:
 
-- A Representation is found to be undecipherable (e.g. the key or license
-  request is refused)
+- A Representation is found to be undecipherable (e.g. the key or license request is
+  refused)
 - A Representation is found to be decipherable
 - A Representation's decipherability becomes undefined
 
 At this time, this event is only triggered if:
 
 - the current content is an encrypted content
-- Either the `fallbackOnLastTry` property was set to `true` on a rejected
-  `getLicense` call or one of the `fallbackOn` properties was set to true in
-  the `keySystems` loadVideo option.
+- Either the `fallbackOnLastTry` property was set to `true` on a rejected `getLicense`
+  call or one of the `fallbackOn` properties was set to true in the `keySystems` loadVideo
+  option.
 
-Following this event, the RxPlayer might remove from the current buffers any
-data linked to undecipherable Representation(s) (the video might twitch a little
-or reload) and update the list of available bitrates.
+Following this event, the RxPlayer might remove from the current buffers any data linked
+to undecipherable Representation(s) (the video might twitch a little or reload) and update
+the list of available bitrates.
 
-The payload of this event is an Array of objects, each representating a
-Representation whose decipherability's status has been updated.
+The payload of this event is an Array of objects, each representating a Representation
+whose decipherability's status has been updated.
 
 Each of those objects have the following properties:
 
-- `representation`: The Representation concerned (more information on its
-  structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-representation-object)).
-- `adaptation`: The Adaptation linked to that Representation (more information
-  on its structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure-of-an-adaptation-object)).
-- `period`: The Period linked to that Representation (more information on its
-  structure [in the Manifest
-  documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-period-object)).
-- `manifest`: The current Manifest (more information on its structure [in the
-  Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-manifest-object)).
+- `representation`: The Representation concerned (more information on its structure
+  [in the Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-representation-object)).
+- `adaptation`: The Adaptation linked to that Representation (more information on its
+  structure
+  [in the Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-an-adaptation-object)).
+- `period`: The Period linked to that Representation (more information on its structure
+  [in the Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-period-object)).
+- `manifest`: The current Manifest (more information on its structure
+  [in the Manifest documentation](./Miscellaneous/Manifest_Object.md#structure-of-a-manifest-object)).
 
-You can then know if any of those Representations are becoming decipherable or
-not through their `decipherable` property.
+You can then know if any of those Representations are becoming decipherable or not through
+their `decipherable` property.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -591,22 +560,20 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Object`
 
-Event triggered when the player encounters inband events in the stream. These
-events are included in the loaded and parsed chunks, and are often used to carry
-content metadata.
+Event triggered when the player encounters inband events in the stream. These events are
+included in the loaded and parsed chunks, and are often used to carry content metadata.
 
 Each event contains :
 
-- type (_type_: `String`) : defines the type of the event, specific to an
-  inband event from a streaming protocol.
+- type (_type_: `String`) : defines the type of the event, specific to an inband event
+  from a streaming protocol.
 - value (_type_: `Object`) : the actual parsed content of the event.
 
 The supported inband event types are :
 
-- "emsg" : The emsg (Event message box) provides inband signaling for generic
-  or MPEG-DASH specific events.
-  One ISOBMFF media segment may contain one or several boxes. The parsed event
-  contains :
+- "emsg" : The emsg (Event message box) provides inband signaling for generic or MPEG-DASH
+  specific events. One ISOBMFF media segment may contain one or several boxes. The parsed
+  event contains :
 
   - schemeIdUri (`String`)
   - value (`String`)
@@ -629,43 +596,38 @@ _payload type_: `Object`
 
 Event triggered when the player enters the time boundaries of a "stream event".
 
-"Stream events" are metadata that can be defined in various streaming protocols,
-which indicates that an application should trigger some action when a specific
-time is reached in the content.
+"Stream events" are metadata that can be defined in various streaming protocols, which
+indicates that an application should trigger some action when a specific time is reached
+in the content.
 
-Those events can either have only a start time or both a start time and an end
-time:
+Those events can either have only a start time or both a start time and an end time:
 
-- in the case where an event only has a start time, the RxPlayer will trigger
-  a `streamEvent` right when the user reaches that time.
+- in the case where an event only has a start time, the RxPlayer will trigger a
+  `streamEvent` right when the user reaches that time.
 
-  If we return multiple time at that position (for example, when a user seeks
-  back to it), you will receive a `streamEvent` as many times for that same
-  event.
+  If we return multiple time at that position (for example, when a user seeks back to it),
+  you will receive a `streamEvent` as many times for that same event.
 
-- in the case where an event has both a start and end time, the RxPlayer will
-  trigger a `streamEvent` when the current position goes inside these time
-  boundaries (between the start and end time).
-  This can happen while reaching the start during regular playback but also
-  when seeking at a position contained between the start and end time.
+- in the case where an event has both a start and end time, the RxPlayer will trigger a
+  `streamEvent` when the current position goes inside these time boundaries (between the
+  start and end time). This can happen while reaching the start during regular playback
+  but also when seeking at a position contained between the start and end time.
 
-  The `streamEvent` event will not be re-sent until the current position
-  "exits" those time boundaries. If the current position goes out of the
-  boundaries of that event and then goes into it again (most likely due to the
-  user seeking back into it), you will again receive a `streamEvent` for that
-  same event.
+  The `streamEvent` event will not be re-sent until the current position "exits" those
+  time boundaries. If the current position goes out of the boundaries of that event and
+  then goes into it again (most likely due to the user seeking back into it), you will
+  again receive a `streamEvent` for that same event.
 
-The payload of a `streamEvent` depends on the source of the event. For example,
-it will not have the same format when it comes from a Manifest than when it
-comes from the media container.
-All possible formats are described in the [stream event
-tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
+The payload of a `streamEvent` depends on the source of the event. For example, it will
+not have the same format when it comes from a Manifest than when it comes from the media
+container. All possible formats are described in the
+[stream event tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 
-Note: When an event has both a start and an end time, you can define a `onExit`
-callback on the payload. That callback will automatically be triggered when the
-current position goes after the end time or before the start time of that event.
-The `onExit` callback will only be called a single time at most and will only
-concern this iteration of the event (and not possible subsequent ones).
+Note: When an event has both a start and an end time, you can define a `onExit` callback
+on the payload. That callback will automatically be triggered when the current position
+goes after the end time or before the start time of that event. The `onExit` callback will
+only be called a single time at most and will only concern this iteration of the event
+(and not possible subsequent ones).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -676,26 +638,25 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 _payload type_: `Object`
 
-Event triggered when the player skipped the time boundaries of a "stream event"
-(you can refer to the [`streamEvent`](#streamevent) event for a
-definition of what a "stream event" is).
+Event triggered when the player skipped the time boundaries of a "stream event" (you can
+refer to the [`streamEvent`](#streamevent) event for a definition of what a "stream event"
+is).
 
-This means that the current position the player plays at, immediately changed
-from a time before the start time of a "stream event" to after its end time (or
-just after its end time for "stream event" without an end time).
+This means that the current position the player plays at, immediately changed from a time
+before the start time of a "stream event" to after its end time (or just after its end
+time for "stream event" without an end time).
 
-This is most likely due to the user seeking in the content. A "regular" content
-playback which continuously plays the content without seeking shouldn't trigger
-any `streamEventSkip` event.
+This is most likely due to the user seeking in the content. A "regular" content playback
+which continuously plays the content without seeking shouldn't trigger any
+`streamEventSkip` event.
 
-The payload of a `streamEventSkip` is the same than for a `streamEvent` and as
-such depends on the source of the event.
-All possible formats are described in the [stream event
-tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
+The payload of a `streamEventSkip` is the same than for a `streamEvent` and as such
+depends on the source of the event. All possible formats are described in the
+[stream event tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 
-Note that unlike `streamEvent` events, there's no point to define an `onExit`
-callback on the payload of a `streamEventSkip` event. This is because this event
-was not entered, and will thus not be exited.
+Note that unlike `streamEvent` events, there's no point to define an `onExit` callback on
+the payload of a `streamEventSkip` event. This is because this event was not entered, and
+will thus not be exited.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -704,8 +665,8 @@ This event is not sent in <i>DirectFile</i> mode (see
 
 ## Deprecated
 
-The following events are deprecated. They are still supported but we advise
-users to not use those as they might become not supported in the future.
+The following events are deprecated. They are still supported but we advise users to not
+use those as they might become not supported in the future.
 
 ### imageTrackUpdate
 
@@ -719,11 +680,10 @@ _payload type_: `Object`
 
 Triggered each time the current image playlist changes (has new images).
 
-Has the following property in its payload:
-_data_ (`Array.<Object>`): Every image data.
+Has the following property in its payload: _data_ (`Array.<Object>`): Every image data.
 
-Each image has a structure as defined in the [Images structure
-page](./Miscellaneous/images.md).
+Each image has a structure as defined in the
+[Images structure page](./Miscellaneous/images.md).
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
@@ -742,8 +702,7 @@ _payload type_: `Boolean`
 
 Triggered each time the video player goes/exits fullscreen mode.
 
-The payload is `true` if the player entered fullscreen, `false` if it exited
-it.
+The payload is `true` if the player entered fullscreen, `false` if it exited it.
 
 ### nativeTextTracksChange
 
@@ -755,17 +714,15 @@ APIs</a>).
 
 _payload type_: `Array.<TextTrackElement>`
 
-Triggered each times a new `<track>` element is removed or added to the media
-element.
+Triggered each times a new `<track>` element is removed or added to the media element.
 
-The payload is the array of `TextTrack` elements. The RxPlayer will only set
-a single `<track>` when a text track is set.
+The payload is the array of `TextTrack` elements. The RxPlayer will only set a single
+`<track>` when a text track is set.
 
 <div class="warning">
 This event is not sent in <i>DirectFile</i> mode (see
 <a href="./Loading_a_Content.md#transport">transport option</a>)
 </div>
-
 
 ### volumeChange
 

@@ -24,7 +24,7 @@ const webvtt1 = [
   "  background-image: linear-gradient(to bottom, dimgray, lightgray);",
   "  color: papayawhip;",
   "}",
-  "/* Style blocks cannot use blank lines nor \"dash dash greater than\" */",
+  '/* Style blocks cannot use blank lines nor "dash dash greater than" */',
   "",
   "NOTE comment blocks can be used between style blocks.",
   "",
@@ -52,14 +52,9 @@ describe("parsers - webvtt - getStyleBlocks", () => {
         "  background-image: linear-gradient(to bottom, dimgray, lightgray);",
         "  color: papayawhip;",
         "}",
-        "/* Style blocks cannot use blank lines nor \"dash dash greater than\" */",
+        '/* Style blocks cannot use blank lines nor "dash dash greater than" */',
       ],
-      [
-        "STYLE",
-        "::cue(b) {",
-        "  color: peachpuff;",
-        "}",
-      ],
+      ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
     ]);
   });
 });

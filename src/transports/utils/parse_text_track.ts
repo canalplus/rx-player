@@ -15,27 +15,19 @@
  */
 
 import log from "../../log";
-import {
-  Adaptation,
-  ISegment,
-  Representation,
-} from "../../manifest";
+import type { Adaptation, ISegment, Representation } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../utils/string_parsing";
-import {
-  IChunkTimeInfo,
-  ITextTrackSegmentData,
-} from "../types";
+import type { IChunkTimeInfo, ITextTrackSegmentData } from "../types";
 
 /**
  * Return plain text text track from the given ISOBMFF.
  * @param {Uint8Array} chunkBytes
  * @returns {string}
  */
-export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
+export function extractTextTrackFromISOBMFF(chunkBytes: Uint8Array): string {
   const mdat = getMDAT(chunkBytes);
-  return mdat === null ? "" :
-                         utf8ToStr(mdat);
+  return mdat === null ? "" : utf8ToStr(mdat);
 }
 
 /**
@@ -45,8 +37,8 @@ export function extractTextTrackFromISOBMFF(chunkBytes : Uint8Array) : string {
  * @returns {string}
  */
 export function getISOBMFFTextTrackFormat(
-  representation : Representation
-) : "ttml" | "vtt" {
+  representation: Representation,
+): "ttml" | "vtt" {
   const codec = representation.codec;
   if (codec === undefined) {
     throw new Error("Cannot parse subtitles: unknown format");
@@ -58,8 +50,7 @@ export function getISOBMFFTextTrackFormat(
     case "wvtt": // wvtt === WebVTT in MP4
       return "vtt";
   }
-  throw new Error("The codec used for the subtitles " +
-                  `"${codec}" is not managed yet.`);
+  throw new Error("The codec used for the subtitles " + `"${codec}" is not managed yet.`);
 }
 
 /**
@@ -68,8 +59,8 @@ export function getISOBMFFTextTrackFormat(
  * @returns {string}
  */
 export function getPlainTextTrackFormat(
-  representation : Representation
-) : "ttml" | "sami" | "vtt" | "srt" {
+  representation: Representation,
+): "ttml" | "sami" | "vtt" | "srt" {
   const { mimeType = "" } = representation;
   switch (representation.mimeType) {
     case "application/ttml+xml":
@@ -97,20 +88,20 @@ export function getPlainTextTrackFormat(
  * @returns {Object|null}
  */
 export function getISOBMFFEmbeddedTextTrackData(
-  { segment,
+  {
+    segment,
     adaptation,
-    representation } : { segment : ISegment;
-                         adaptation : Adaptation;
-                         representation : Representation; },
-  chunkBytes : Uint8Array,
-  chunkInfos : IChunkTimeInfo | null,
-  isChunked : boolean
-) : ITextTrackSegmentData | null {
+    representation,
+  }: { segment: ISegment; adaptation: Adaptation; representation: Representation },
+  chunkBytes: Uint8Array,
+  chunkInfos: IChunkTimeInfo | null,
+  isChunked: boolean,
+): ITextTrackSegmentData | null {
   if (segment.isInit) {
     return null;
   }
-  let startTime : number | undefined;
-  let endTime : number | undefined;
+  let startTime: number | undefined;
+  let endTime: number | undefined;
   if (chunkInfos === null) {
     if (!isChunked) {
       log.warn("Transport: Unavailable time data for current text track.");
@@ -129,11 +120,13 @@ export function getISOBMFFEmbeddedTextTrackData(
 
   const type = getISOBMFFTextTrackFormat(representation);
   const textData = extractTextTrackFromISOBMFF(chunkBytes);
-  return { data: textData,
-           type,
-           language: adaptation.language,
-           start: startTime,
-           end: endTime } ;
+  return {
+    data: textData,
+    type,
+    language: adaptation.language,
+    start: startTime,
+    end: endTime,
+  };
 }
 
 /**
@@ -144,14 +137,14 @@ export function getISOBMFFEmbeddedTextTrackData(
  * @returns {Object|null}
  */
 export function getPlainTextTrackData(
-  { segment,
+  {
+    segment,
     adaptation,
-    representation } : { segment : ISegment;
-                         adaptation : Adaptation;
-                         representation : Representation; },
-  textTrackData : string,
-  isChunked : boolean
-) : ITextTrackSegmentData | null {
+    representation,
+  }: { segment: ISegment; adaptation: Adaptation; representation: Representation },
+  textTrackData: string,
+  isChunked: boolean,
+): ITextTrackSegmentData | null {
   if (segment.isInit) {
     return null;
   }
@@ -168,9 +161,5 @@ export function getPlainTextTrackData(
   }
 
   const type = getPlainTextTrackFormat(representation);
-  return { data: textTrackData,
-           type,
-           language: adaptation.language,
-           start,
-           end };
+  return { data: textTrackData, type, language: adaptation.language, start, end };
 }

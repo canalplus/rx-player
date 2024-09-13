@@ -2,24 +2,23 @@
 
 ## Overview
 
-The RxPlayer comes with many features, even some you might never need.
-For example, you may only care for DASH with TTML subtitles and not about
-Smooth streaming, VTT or SRT parsing.
+The RxPlayer comes with many features, even some you might never need. For example, you
+may only care for DASH with TTML subtitles and not about Smooth streaming, VTT or SRT
+parsing.
 
-Because each implementation has its need, we permit multiple ways to import
-the player with limited features.
+Because each implementation has its need, we permit multiple ways to import the player
+with limited features.
 
-This customization can be done by importing the minimal version of the RxPlayer
-and then adding only the features your want.
-This allows to greatly reduce the final bundle size, if your bundler (esbuild,
-webpack, rollup, vite...) support
+This customization can be done by importing the minimal version of the RxPlayer and then
+adding only the features your want. This allows to greatly reduce the final bundle size,
+if your bundler (esbuild, webpack, rollup, vite...) support
 [tree-shaking](https://en.wikipedia.org/wiki/Tree_shaking), like most do.
 
 ## How it works
 
 If you imported the RxPlayer library through the npm package (like via the
-`npm install rx-player` command), you can import a minimal version of the player
-by importing it from `"rx-player/minimal"`:
+`npm install rx-player` command), you can import a minimal version of the player by
+importing it from `"rx-player/minimal"`:
 
 ```js
 import MinimalRxPlayer from "rx-player/minimal";
@@ -32,8 +31,8 @@ const player = new MinimalRxPlayer();
 player.setVolume(0.5);
 ```
 
-You then will need to add the features you want on it. Those can be accessed
-through the path `"rx-player/features"`:
+You then will need to add the features you want on it. Those can be accessed through the
+path `"rx-player/features"`:
 
 ```js
 // import the DASH and Smooth features, which will be added to the RxPlayer
@@ -57,11 +56,11 @@ import { DASH, SMOOTH } from "rx-player/features";
 MinimalRxPlayer.addFeatures([DASH, SMOOTH]);
 ```
 
-There is also "experimental" features. Such features can completely change from
-one version to the next - unlike regular features which just follows semantic
-versioning. This means that you may have to keep the concerned code up-to-date
-each time you depend on a new RxPlayer version.
-Such features are imported from `"rx-player/experimental/features"` instead:
+There is also "experimental" features. Such features can completely change from one
+version to the next - unlike regular features which just follows semantic versioning. This
+means that you may have to keep the concerned code up-to-date each time you depend on a
+new RxPlayer version. Such features are imported from `"rx-player/experimental/features"`
+instead:
 
 ```js
 import MinimalRxPlayer from "rx-player/minimal";
@@ -80,10 +79,8 @@ import { DASH_WASM } from "rx-player/experimental/features";
 MinimalRxPlayer.addFeatures([DASH, SMOOTH, DASH_WASM]);
 ```
 
-By using the minimal version, you will reduce the final bundle file **if
-tree-shaking is performed on the final code (like in webpack's production
-mode)**.
+By using the minimal version, you will reduce the final bundle file **if tree-shaking is
+performed on the final code (like in webpack's production mode)**.
 
-The key is just to know which feature does what.
-You can refer to the [RxPlayer Features documentation page](../api/RxPlayer_Features.md) for
-this.
+The key is just to know which feature does what. You can refer to the
+[RxPlayer Features documentation page](../api/RxPlayer_Features.md) for this.

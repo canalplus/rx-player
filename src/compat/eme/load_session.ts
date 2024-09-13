@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import { ICustomMediaKeySession } from "./custom_media_keys";
+import type { ICustomMediaKeySession } from "./custom_media_keys";
 
 const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
 
@@ -33,9 +33,9 @@ const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
  * @returns {Promise.<boolean>}
  */
 export default async function loadSession(
-  session : MediaKeySession | ICustomMediaKeySession,
-  sessionId : string
-) : Promise<boolean> {
+  session: MediaKeySession | ICustomMediaKeySession,
+  sessionId: string,
+): Promise<boolean> {
   log.info("DRM: Load persisted session", sessionId);
   const isLoaded = await session.load(sessionId);
 
@@ -48,10 +48,14 @@ export default async function loadSession(
   // MediaKeySession would not be populated directly as the load answer but
   // asynchronously after.
   return new Promise((resolve) => {
-    (session as MediaKeySession).addEventListener("keystatuseschange",
-                                                  resolveWithLoadedStatus);
-    const timeout = setTimeout(resolveWithLoadedStatus,
-                               EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES);
+    (session as MediaKeySession).addEventListener(
+      "keystatuseschange",
+      resolveWithLoadedStatus,
+    );
+    const timeout = setTimeout(
+      resolveWithLoadedStatus,
+      EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES,
+    );
 
     function resolveWithLoadedStatus() {
       cleanUp();
@@ -60,8 +64,10 @@ export default async function loadSession(
 
     function cleanUp() {
       clearTimeout(timeout);
-      (session as MediaKeySession).removeEventListener("keystatuseschange",
-                                                       resolveWithLoadedStatus);
+      (session as MediaKeySession).removeEventListener(
+        "keystatuseschange",
+        resolveWithLoadedStatus,
+      );
     }
   });
 }

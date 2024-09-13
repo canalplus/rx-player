@@ -19,12 +19,13 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 
 const CELL_RESOLUTION_REGEXP = /(\d+) (\d+)/;
 
-export interface ITTParameters { frameRate : number;
-                                 subFrameRate : number;
-                                 tickRate : number;
-                                 spaceStyle: "default"|"preserve";
-                                 cellResolution : { columns : number;
-                                                    rows : number; }; }
+export interface ITTParameters {
+  frameRate: number;
+  subFrameRate: number;
+  tickRate: number;
+  spaceStyle: "default" | "preserve";
+  cellResolution: { columns: number; rows: number };
+}
 
 /**
  * Returns global parameters from a TTML Document
@@ -32,7 +33,7 @@ export interface ITTParameters { frameRate : number;
  * @throws Error - Throws if the spacing style is invalid.
  * @returns {Object}
  */
-export default function getParameters(tt : Element) : ITTParameters {
+export default function getParameters(tt: Element): ITTParameters {
   const parsedFrameRate = tt.getAttribute("ttp:frameRate");
   const parsedSubFrameRate = tt.getAttribute("ttp:subFramRate");
   const parsedTickRate = tt.getAttribute("ttp:tickRate");
@@ -40,8 +41,7 @@ export default function getParameters(tt : Element) : ITTParameters {
   const parsedSpaceStyle = tt.getAttribute("xml:space");
   const parsedCellResolution = tt.getAttribute("ttp:cellResolution");
 
-  let cellResolution : { columns : number; rows : number } = { columns: 32,
-                                                               rows : 15 };
+  let cellResolution: { columns: number; rows: number } = { columns: 32, rows: 15 };
   if (parsedCellResolution !== null) {
     const extractedData = CELL_RESOLUTION_REGEXP.exec(parsedCellResolution);
     if (extractedData === null || extractedData.length < 3) {
@@ -55,13 +55,13 @@ export default function getParameters(tt : Element) : ITTParameters {
         cellResolution = { columns, rows };
       }
     }
-
   }
 
-  if (isNonEmptyString(parsedSpaceStyle) &&
-      parsedSpaceStyle !== "default" &&
-      parsedSpaceStyle !== "preserve")
-  {
+  if (
+    isNonEmptyString(parsedSpaceStyle) &&
+    parsedSpaceStyle !== "default" &&
+    parsedSpaceStyle !== "preserve"
+  ) {
     throw new Error("Invalid spacing style");
   }
 
@@ -73,22 +73,19 @@ export default function getParameters(tt : Element) : ITTParameters {
   if (isNaN(nbSubFrameRate) || nbSubFrameRate <= 0) {
     nbSubFrameRate = 1;
   }
-  let nbTickRate : number | undefined = Number(parsedTickRate);
+  let nbTickRate: number | undefined = Number(parsedTickRate);
   if (isNaN(nbTickRate) || nbTickRate <= 0) {
     nbTickRate = undefined;
   }
 
   let frameRate = nbFrameRate;
-  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate :
-                                                1;
+  const subFrameRate = nbSubFrameRate != null ? nbSubFrameRate : 1;
 
-  const spaceStyle = parsedSpaceStyle !== null ? parsedSpaceStyle :
-                                                 "default";
+  const spaceStyle = parsedSpaceStyle !== null ? parsedSpaceStyle : "default";
 
-  const tickRate = nbTickRate !== undefined ? nbTickRate :
-                                              nbFrameRate * nbSubFrameRate;
+  const tickRate = nbTickRate !== undefined ? nbTickRate : nbFrameRate * nbSubFrameRate;
 
-  if (parsedFrameRateMultiplier  !== null) {
+  if (parsedFrameRateMultiplier !== null) {
     const multiplierResults = /^(\d+) (\d+)$/g.exec(parsedFrameRateMultiplier);
     if (multiplierResults !== null) {
       const numerator = Number(multiplierResults[1]);
@@ -98,9 +95,5 @@ export default function getParameters(tt : Element) : ITTParameters {
     }
   }
 
-  return { cellResolution,
-           tickRate,
-           frameRate,
-           subFrameRate,
-           spaceStyle };
+  return { cellResolution, tickRate, frameRate, subFrameRate, spaceStyle };
 }

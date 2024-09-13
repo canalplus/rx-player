@@ -19,9 +19,10 @@ const launchStaticServer = require("./launch_static_server");
 
 require("./generate_standalone_demo");
 
-launchStaticServer(path.join(__dirname, "../demo/standalone/"),
-                   { certificatePath: path.join(__dirname, "../localhost.crt"),
-                     keyPath: path.join(__dirname, "../localhost.key"),
-                     verbose: true,
-                     httpPort: 8001,
-                     httpsPort: 8444 });
+launchStaticServer(path.join(__dirname, "../demo/standalone/"), {
+  certificatePath: path.join(__dirname, "../localhost.crt"),
+  keyPath: path.join(__dirname, "../localhost.key"),
+  verbose: true,
+  httpPort: 8001,
+  httpsPort: 8444,
+});

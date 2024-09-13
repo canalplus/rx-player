@@ -2,88 +2,90 @@ import * as Events from "./events";
 
 export const originalXHR = window.XMLHttpRequest;
 
-const XHR_STATES = { UNSENT: 0,
-                     OPENED: 1,
-                     HEADERS_RECEIVED: 2,
-                     LOADING: 3,
-                     DONE: 4 };
+const XHR_STATES = { UNSENT: 0, OPENED: 1, HEADERS_RECEIVED: 2, LOADING: 3, DONE: 4 };
 
-const STATUS_TEXTS = { 100: "Continue",
-                       101: "Switching Protocols",
-                       200: "OK",
-                       201: "Created",
-                       202: "Accepted",
-                       203: "Non-Authoritative Information",
-                       204: "No Content",
-                       205: "Reset Content",
-                       206: "Partial Content",
-                       207: "Multi-Status",
-                       300: "Multiple Choice",
-                       301: "Moved Permanently",
-                       302: "Found",
-                       303: "See Other",
-                       304: "Not Modified",
-                       305: "Use Proxy",
-                       307: "Temporary Redirect",
-                       400: "Bad Request",
-                       401: "Unauthorized",
-                       402: "Payment Required",
-                       403: "Forbidden",
-                       404: "Not Found",
-                       405: "Method Not Allowed",
-                       406: "Not Acceptable",
-                       407: "Proxy Authentication Required",
-                       408: "Request Timeout",
-                       409: "Conflict",
-                       410: "Gone",
-                       411: "Length Required",
-                       412: "Precondition Failed",
-                       413: "Request Entity Too Large",
-                       414: "Request-URI Too Long",
-                       415: "Unsupported Media Type",
-                       416: "Requested Range Not Satisfiable",
-                       417: "Expectation Failed",
-                       422: "Unprocessable Entity",
-                       500: "Internal Server Error",
-                       501: "Not Implemented",
-                       502: "Bad Gateway",
-                       503: "Service Unavailable",
-                       504: "Gateway Timeout",
-                       505: "HTTP Version Not Supported" };
+const STATUS_TEXTS = {
+  100: "Continue",
+  101: "Switching Protocols",
+  200: "OK",
+  201: "Created",
+  202: "Accepted",
+  203: "Non-Authoritative Information",
+  204: "No Content",
+  205: "Reset Content",
+  206: "Partial Content",
+  207: "Multi-Status",
+  300: "Multiple Choice",
+  301: "Moved Permanently",
+  302: "Found",
+  303: "See Other",
+  304: "Not Modified",
+  305: "Use Proxy",
+  307: "Temporary Redirect",
+  400: "Bad Request",
+  401: "Unauthorized",
+  402: "Payment Required",
+  403: "Forbidden",
+  404: "Not Found",
+  405: "Method Not Allowed",
+  406: "Not Acceptable",
+  407: "Proxy Authentication Required",
+  408: "Request Timeout",
+  409: "Conflict",
+  410: "Gone",
+  411: "Length Required",
+  412: "Precondition Failed",
+  413: "Request Entity Too Large",
+  414: "Request-URI Too Long",
+  415: "Unsupported Media Type",
+  416: "Requested Range Not Satisfiable",
+  417: "Expectation Failed",
+  422: "Unprocessable Entity",
+  500: "Internal Server Error",
+  501: "Not Implemented",
+  502: "Bad Gateway",
+  503: "Service Unavailable",
+  504: "Gateway Timeout",
+  505: "HTTP Version Not Supported",
+};
 
 // https://fetch.spec.whatwg.org/#forbidden-header-name
-const FORBIDDEN_HEADERS = [ "Accept-Charset",
-                            "Accept-Encoding",
-                            "Access-Control-Request-Headers",
-                            "Access-Control-Request-Method",
-                            "Connection",
-                            "Content-Length",
-                            "Content-Transfer-Encoding",
-                            "Cookie",
-                            "Cookie2",
-                            "DNT",
-                            "Date",
-                            "Expect",
-                            "Host",
-                            "Keep-Alive",
-                            "Origin",
-                            "Referer",
-                            "TE",
-                            "Trailer",
-                            "Transfer-Encoding",
-                            "Upgrade",
-                            "User-Agent",
-                            "Via" ];
+const FORBIDDEN_HEADERS = [
+  "Accept-Charset",
+  "Accept-Encoding",
+  "Access-Control-Request-Headers",
+  "Access-Control-Request-Method",
+  "Connection",
+  "Content-Length",
+  "Content-Transfer-Encoding",
+  "Cookie",
+  "Cookie2",
+  "DNT",
+  "Date",
+  "Expect",
+  "Host",
+  "Keep-Alive",
+  "Origin",
+  "Referer",
+  "TE",
+  "Trailer",
+  "Transfer-Encoding",
+  "Upgrade",
+  "User-Agent",
+  "Via",
+];
 
 function EventTargetHandler() {
   const self = this;
-  const events = [ "loadstart",
-                   "progress",
-                   "abort",
-                   "error",
-                   "load",
-                   "timeout",
-                   "loadend" ];
+  const events = [
+    "loadstart",
+    "progress",
+    "abort",
+    "error",
+    "load",
+    "timeout",
+    "loadend",
+  ];
 
   function addEventListener(eventName) {
     self.addEventListener(eventName, function (event) {
@@ -136,7 +138,7 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
   async: true,
 
   open(...args) {
-    const [ method, url, async, username, password ] = args;
+    const [method, url, async, username, password] = args;
     this.method = method;
     this.url = url;
     this.async = typeof async === "boolean" ? async : true;
@@ -164,8 +166,11 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
       this._onSetRequestHeader(name, value);
     }
     if (typeof value !== "string") {
-      throw new TypeError("By RFC7230, section 3.2.4, header values should " +
-                          " be strings. Got " + typeof value);
+      throw new TypeError(
+        "By RFC7230, section 3.2.4, header values should " +
+          " be strings. Got " +
+          typeof value,
+      );
     }
     if (this.readyState !== XHR_STATES.OPENED) {
       throw new Error("INVALID_STATE_ERR");
@@ -216,7 +221,6 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
       this._onSend(this);
     }
 
-
     // Only listen if setInterval and Date are a stubbed.
     if (typeof setInterval.clock === "object" && typeof Date.clock === "object") {
       const initiatedTime = Date.now();
@@ -232,12 +236,13 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
         // case, there should be no timeout. This will also prevent aborted
         // requests and fakeServerWithClock from triggering unnecessary
         // responses.
-        if (self.readyState === FakeXMLHttpRequest.UNSENT ||
-            self.readyState === FakeXMLHttpRequest.DONE)
-        {
+        if (
+          self.readyState === FakeXMLHttpRequest.UNSENT ||
+          self.readyState === FakeXMLHttpRequest.DONE
+        ) {
           clearInterval(clearIntervalId);
         } else if (typeof self.timeout === "number" && self.timeout > 0) {
-          if (Date.now() >= (initiatedTime + self.timeout)) {
+          if (Date.now() >= initiatedTime + self.timeout) {
             triggerTimeout(self);
             clearInterval(clearIntervalId);
           }
@@ -311,7 +316,9 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
   },
 
   uploadProgress(progressEventRaw) {
-    this.upload.dispatchEvent(new Events.ProgressEvent("progress", progressEventRaw, this.upload));
+    this.upload.dispatchEvent(
+      new Events.ProgressEvent("progress", progressEventRaw, this.upload),
+    );
   },
 
   downloadProgress(progressEventRaw) {
@@ -319,7 +326,7 @@ Object.assign(FakeXMLHttpRequest.prototype, Events.EventTarget, {
   },
 
   uploadError(error) {
-    this.upload.dispatchEvent(new Events.CustomEvent("error", {detail: error}));
+    this.upload.dispatchEvent(new Events.CustomEvent("error", { detail: error }));
   },
 
   overrideMimeType(type) {
@@ -364,7 +371,7 @@ function setResponseHeaders(fakeXhr, headers) {
     throw new Error("INVALID_STATE_ERR - " + fakeXhr.readyState);
   }
 
-  const responseHeaders = fakeXhr.responseHeaders = {};
+  const responseHeaders = (fakeXhr.responseHeaders = {});
 
   Object.keys(headers).forEach(function (header) {
     responseHeaders[header] = headers[header];
@@ -447,8 +454,9 @@ function toXML(text) {
       return null;
     }
 
-    return result.getElementsByTagNameNS(parsererrorNS, "parsererror")
-      .length ? null : result;
+    return result.getElementsByTagNameNS(parsererrorNS, "parsererror").length
+      ? null
+      : result;
   } catch (e) {}
   return null;
 }
@@ -466,10 +474,12 @@ function updateReadyState(fakeXhr, state) {
     return;
   }
 
-  const readyStateChangeEvent = new Events.Event("readystatechange",
-                                                 false,
-                                                 false,
-                                                 fakeXhr);
+  const readyStateChangeEvent = new Events.Event(
+    "readystatechange",
+    false,
+    false,
+    fakeXhr,
+  );
   let evtName, progress;
 
   if (typeof fakeXhr.onreadystatechange === "function") {
@@ -495,15 +505,9 @@ function updateReadyState(fakeXhr, state) {
       evtName = "load";
     }
 
-    fakeXhr.upload.dispatchEvent(new Events.ProgressEvent("progress",
-                                                          progress,
-                                                          fakeXhr));
-    fakeXhr.upload.dispatchEvent(new Events.ProgressEvent(evtName,
-                                                          progress,
-                                                          fakeXhr));
-    fakeXhr.upload.dispatchEvent(new Events.ProgressEvent("loadend",
-                                                          progress,
-                                                          fakeXhr));
+    fakeXhr.upload.dispatchEvent(new Events.ProgressEvent("progress", progress, fakeXhr));
+    fakeXhr.upload.dispatchEvent(new Events.ProgressEvent(evtName, progress, fakeXhr));
+    fakeXhr.upload.dispatchEvent(new Events.ProgressEvent("loadend", progress, fakeXhr));
 
     fakeXhr.dispatchEvent(new Events.ProgressEvent("progress", progress, fakeXhr));
     fakeXhr.dispatchEvent(new Events.ProgressEvent(evtName, progress, fakeXhr));
@@ -527,11 +531,10 @@ function setResponseBody(fakeXhr, body) {
     throw new Error("No headers received");
   }
   verifyResponseBodyType(body, fakeXhr.responseType);
-  const contentType = fakeXhr.overriddenMimeType ||
-                      fakeXhr.getResponseHeader("Content-Type");
+  const contentType =
+    fakeXhr.overriddenMimeType || fakeXhr.getResponseHeader("Content-Type");
 
-  const isTextResponse = fakeXhr.responseType === "" ||
-                         fakeXhr.responseType === "text";
+  const isTextResponse = fakeXhr.responseType === "" || fakeXhr.responseType === "text";
   clearResponse(fakeXhr);
 
   if (fakeXhr.async) {
@@ -548,9 +551,7 @@ function setResponseBody(fakeXhr, body) {
     } while (index < body.length);
   }
 
-  fakeXhr.response = convertResponseBody(fakeXhr.responseType,
-                                         contentType,
-                                         body);
+  fakeXhr.response = convertResponseBody(fakeXhr.responseType, contentType, body);
   if (isTextResponse) {
     fakeXhr.responseText = fakeXhr.response;
   }
@@ -569,13 +570,15 @@ function setResponseBody(fakeXhr, body) {
  */
 function resetOnOpen(fakeXhr, xhrArgs) {
   const realXHR = new originalXHR();
-  const methods = [ "open",
-                    "abort",
-                    "getResponseHeader",
-                    "getAllResponseHeaders",
-                    "addEventListener",
-                    "overrideMimeType",
-                    "removeEventListener" ];
+  const methods = [
+    "open",
+    "abort",
+    "getResponseHeader",
+    "getAllResponseHeaders",
+    "addEventListener",
+    "overrideMimeType",
+    "removeEventListener",
+  ];
 
   methods.forEach(function (method) {
     fakeXhr[method] = function (...args) {
@@ -630,18 +633,20 @@ function resetOnOpen(fakeXhr, xhrArgs) {
 
   function onReadyStateChangeAfter() {
     if (fakeXhr.onreadystatechange) {
-      fakeXhr.onreadystatechange.call(fakeXhr, { target: fakeXhr,
-                                                 currentTarget: fakeXhr });
+      fakeXhr.onreadystatechange.call(fakeXhr, {
+        target: fakeXhr,
+        currentTarget: fakeXhr,
+      });
     }
   }
 
   realXHR.addEventListener("readystatechange", onReadyStateChangeBefore);
   Object.keys(fakeXhr._listeners).forEach(function (event) {
     fakeXhr._listeners[event].forEach(function (handler) {
-      realXHR.addEventListener(event,
-                               handler.listener,
-                               { capture: handler.capture,
-                                 once: handler.once });
+      realXHR.addEventListener(event, handler.listener, {
+        capture: handler.capture,
+        once: handler.once,
+      });
     });
   });
 
@@ -664,13 +669,19 @@ function verifyResponseBodyType(body, responseType) {
   let error = null;
   if (responseType === "arraybuffer") {
     if (typeof body !== "string" && !(body instanceof ArrayBuffer)) {
-      error = new Error("Attempted to respond to fake XMLHttpRequest with " +
-                        body + ", which is not a string or ArrayBuffer.");
+      error = new Error(
+        "Attempted to respond to fake XMLHttpRequest with " +
+          body +
+          ", which is not a string or ArrayBuffer.",
+      );
       error.name = "InvalidBodyException";
     }
   } else if (typeof body !== "string") {
-    error = new Error("Attempted to respond to fake XMLHttpRequest with " +
-                      body + ", which is not a string.");
+    error = new Error(
+      "Attempted to respond to fake XMLHttpRequest with " +
+        body +
+        ", which is not a string.",
+    );
     error.name = "InvalidBodyException";
   }
 
@@ -696,8 +707,7 @@ function convertToArrayBuffer(body, encoding) {
  * @returns {boolean}
  */
 function isXmlContentType(contentType) {
-  return !contentType ||
-         /(text\/xml)|(application\/xml)|(\+xml)/.test(contentType);
+  return !contentType || /(text\/xml)|(application\/xml)|(\+xml)/.test(contentType);
 }
 
 /**
@@ -757,9 +767,11 @@ function requestErrorSteps(fakeXhr) {
   fakeXhr.requestHeaders = {};
   fakeXhr.responseHeaders = {};
 
-  if (fakeXhr.readyState !== XHR_STATES.UNSENT && fakeXhr.sendFlag
-      && fakeXhr.readyState !== XHR_STATES.DONE)
-  {
+  if (
+    fakeXhr.readyState !== XHR_STATES.UNSENT &&
+    fakeXhr.sendFlag &&
+    fakeXhr.readyState !== XHR_STATES.DONE
+  ) {
     updateReadyState(fakeXhr, XHR_STATES.DONE);
     fakeXhr.sendFlag = false;
   }

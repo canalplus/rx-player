@@ -15,12 +15,11 @@
  */
 
 import log from "../../log";
-import {
-  IRepresentationIndex,
-  ISegment,
-} from "./types";
+import type { IRepresentationIndex, ISegment } from "./types";
 
-export interface IStaticRepresentationIndexInfos { media: string }
+export interface IStaticRepresentationIndexInfos {
+  media: string;
+}
 
 /**
  * Simple RepresentationIndex implementation for static files.
@@ -28,12 +27,12 @@ export interface IStaticRepresentationIndexInfos { media: string }
  */
 export default class StaticRepresentationIndex implements IRepresentationIndex {
   /** URL at which the content is available. */
-  private readonly _url : string;
+  private readonly _url: string;
 
   /**
    * @param {Object} infos
    */
-  constructor(infos : IStaticRepresentationIndexInfos) {
+  constructor(infos: IStaticRepresentationIndexInfos) {
     this._url = infos.media;
   }
 
@@ -42,7 +41,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Just return null.
    * @returns {null}
    */
-  getInitSegment() : null {
+  getInitSegment(): null {
     return null;
   }
 
@@ -50,33 +49,37 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns the only Segment available here.
    * @returns {Array.<Object>}
    */
-  getSegments() : ISegment[] {
-    return [{ id: "0",
-              isInit: false,
-              number: 0,
-              url: this._url,
-              time: 0,
-              end: Number.MAX_VALUE,
-              duration: Number.MAX_VALUE,
-              complete: true,
-              privateInfos: {},
-              timescale: 1 }];
+  getSegments(): ISegment[] {
+    return [
+      {
+        id: "0",
+        isInit: false,
+        number: 0,
+        url: this._url,
+        time: 0,
+        end: Number.MAX_VALUE,
+        duration: Number.MAX_VALUE,
+        complete: true,
+        privateInfos: {},
+        timescale: 1,
+      },
+    ];
   }
 
   /**
    * Returns first position in index.
    * @returns {undefined}
    */
-  getFirstAvailablePosition() : undefined {
-    return ;
+  getFirstAvailablePosition(): undefined {
+    return;
   }
 
   /**
    * Returns last position in index.
    * @returns {undefined}
    */
-  getLastAvailablePosition() : undefined {
-    return ;
+  getLastAvailablePosition(): undefined {
+    return;
   }
 
   /**
@@ -84,7 +87,7 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * all segments are available.
    * @returns {number|null|undefined}
    */
-  getEnd() : undefined {
+  getEnd(): undefined {
     return;
   }
 
@@ -108,14 +111,14 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns false as a static file never need to be refreshed.
    * @returns {Boolean}
    */
-  shouldRefresh() : false {
+  shouldRefresh(): false {
     return false;
   }
 
   /**
    * @returns {null}
    */
-  checkDiscontinuity() : null {
+  checkDiscontinuity(): null {
     return null;
   }
 
@@ -123,36 +126,36 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
    * Returns true as a static file should never need lose availability.
    * @returns {Boolean}
    */
-  isSegmentStillAvailable() : true {
+  isSegmentStillAvailable(): true {
     return true;
   }
 
   /**
    * @returns {Boolean}
    */
-  canBeOutOfSyncError() : false {
+  canBeOutOfSyncError(): false {
     return false;
   }
 
   /**
    * @returns {Boolean}
    */
-  isStillAwaitingFutureSegments() : false {
+  isStillAwaitingFutureSegments(): false {
     return false;
   }
 
   /**
    * @returns {Boolean}
    */
-  isInitialized() : true {
+  isInitialized(): true {
     return true;
   }
 
-  _replace() : void {
+  _replace(): void {
     log.warn("Tried to replace a static RepresentationIndex");
   }
 
-  _update() : void {
+  _update(): void {
     log.warn("Tried to update a static RepresentationIndex");
   }
 }

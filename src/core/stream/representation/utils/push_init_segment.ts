@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  ISegment,
-  Period,
-  Representation,
-} from "../../../../manifest";
+import type { Adaptation, ISegment, Period, Representation } from "../../../../manifest";
+import type Manifest from "../../../../manifest";
 import objectAssign from "../../../../utils/object_assign";
-import { CancellationSignal } from "../../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../../api";
-import {
-  IPushedChunkData,
-  SegmentBuffer,
-} from "../../../segment_buffers";
-import {
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type { IReadOnlyPlaybackObserver } from "../../../api";
+import type { IPushedChunkData, SegmentBuffer } from "../../../segment_buffers";
+import type {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
 } from "../types";
@@ -47,39 +40,42 @@ export default async function pushInitSegment<T>(
     segment,
     segmentData,
     segmentBuffer,
-  } : {
-    playbackObserver : IReadOnlyPlaybackObserver<
-      IRepresentationStreamPlaybackObservation
-    >;
-    content: { adaptation : Adaptation;
-               manifest : Manifest;
-               period : Period;
-               representation : Representation; };
-    initSegmentUniqueId : string;
-    segmentData : T;
-    segment : ISegment;
-    segmentBuffer : SegmentBuffer;
+  }: {
+    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    content: {
+      adaptation: Adaptation;
+      manifest: Manifest;
+      period: Period;
+      representation: Representation;
+    };
+    initSegmentUniqueId: string;
+    segmentData: T;
+    segment: ISegment;
+    segmentBuffer: SegmentBuffer;
   },
-  cancelSignal : CancellationSignal
-) : Promise< IStreamEventAddedSegmentPayload<T> | null > {
+  cancelSignal: CancellationSignal,
+): Promise<IStreamEventAddedSegmentPayload<T> | null> {
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError;
   }
   const codec = content.representation.getMimeTypeString();
-  const data : IPushedChunkData<T> = { initSegmentUniqueId,
-                                       chunk: null,
-                                       timestampOffset: 0,
-                                       appendWindow: [ undefined, undefined ],
-                                       codec };
-  const inventoryInfos = objectAssign({ segment,
-                                        chunkSize: undefined,
-                                        start: 0,
-                                        end: 0 },
-                                      content);
-  await appendSegmentToBuffer(playbackObserver,
-                              segmentBuffer,
-                              { data, inventoryInfos },
-                              cancelSignal);
+  const data: IPushedChunkData<T> = {
+    initSegmentUniqueId,
+    chunk: null,
+    timestampOffset: 0,
+    appendWindow: [undefined, undefined],
+    codec,
+  };
+  const inventoryInfos = objectAssign(
+    { segment, chunkSize: undefined, start: 0, end: 0 },
+    content,
+  );
+  await appendSegmentToBuffer(
+    playbackObserver,
+    segmentBuffer,
+    { data, inventoryInfos },
+    cancelSignal,
+  );
   const buffered = segmentBuffer.getBufferedRanges();
   return { content, segment, buffered, segmentData };
 }

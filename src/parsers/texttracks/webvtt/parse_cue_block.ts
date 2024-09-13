@@ -21,18 +21,18 @@ import parseTimestamp from "./parse_timestamp";
  * @param {string} settingsString
  * @returns {Object}
  */
-function parseSettings(
-  settingsString : string
-) : Partial<Record<string, string>> {
+function parseSettings(settingsString: string): Partial<Record<string, string>> {
   const splittedSettings = settingsString.split(/ |\t/);
-  return splittedSettings
-    .reduce<Partial<Record<string, string>>>((acc, setting : string) => {
+  return splittedSettings.reduce<Partial<Record<string, string>>>(
+    (acc, setting: string) => {
       const splittedSetting = setting.split(":");
       if (splittedSetting.length === 2) {
         acc[splittedSetting[0]] = splittedSetting[1];
       }
       return acc;
-    }, {});
+    },
+    {},
+  );
 }
 
 /**
@@ -45,12 +45,8 @@ function parseSettings(
  * @returns {Object|null}
  */
 function parseTimeAndSettings(
-  timeString : string
-) : { start : number;
-      end : number;
-      settings : Partial<Record<string, string>>; } |
-    null
-{
+  timeString: string,
+): { start: number; end: number; settings: Partial<Record<string, string>> } | null {
   // RegExp for the timestamps + settings line.
   // Capture groups:
   //   1 -> start timestamp
@@ -71,16 +67,16 @@ function parseTimeAndSettings(
 
   const settings = parseSettings(matches[3]);
 
-  return { start,
-           end,
-           settings };
+  return { start, end, settings };
 }
 
-export interface IVTTCueObject { start : number;
-                                 end : number;
-                                 header : string | undefined;
-                                 settings: Partial<Record<string, string>>;
-                                 payload : string[]; }
+export interface IVTTCueObject {
+  start: number;
+  end: number;
+  header: string | undefined;
+  settings: Partial<Record<string, string>>;
+  payload: string[];
+}
 
 /**
  * Parse cue block into a cue object which contains:
@@ -93,13 +89,13 @@ export interface IVTTCueObject { start : number;
  * @returns {Object}
  */
 export default function parseCueBlock(
-  cueLines : string[],
-  timeOffset : number
-) : IVTTCueObject | null {
+  cueLines: string[],
+  timeOffset: number,
+): IVTTCueObject | null {
   const timingRegexp = /-->/;
-  let timeString : string;
+  let timeString: string;
   let payload;
-  let header : string|undefined;
+  let header: string | undefined;
 
   if (!timingRegexp.test(cueLines[0])) {
     if (!timingRegexp.test(cueLines[1])) {
@@ -120,9 +116,5 @@ export default function parseCueBlock(
   }
 
   const { start, end, settings } = timeAndSettings;
-  return { start: start + timeOffset,
-           end: end + timeOffset,
-           settings,
-           payload,
-           header };
+  return { start: start + timeOffset, end: end + timeOffset, settings, payload, header };
 }

@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import {
-  ErrorTypes,
-  IOtherErrorCode,
-} from "./error_codes";
+import type { IOtherErrorCode } from "./error_codes";
+import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
 /**

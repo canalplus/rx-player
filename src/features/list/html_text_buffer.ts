@@ -15,13 +15,13 @@
  */
 
 import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to display text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLTextBuffer(features : IFeaturesObject) : void {
+function addHTMLTextBuffer(features: IFeaturesObject): void {
   features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }
 

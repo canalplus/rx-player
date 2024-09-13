@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  IAdaptationType,
-  Representation,
-} from "../../manifest";
+import type { IAdaptationType, Representation } from "../../manifest";
 
 /**
  * Guess the type of container a segment is in based on Manifest information.
@@ -32,25 +29,25 @@ import {
  * @returns {string | undefined}
  */
 export default function inferSegmentContainer(
-  adaptationType : IAdaptationType,
-  representation : Representation
-) : "webm" | "mp4" | undefined {
+  adaptationType: IAdaptationType,
+  representation: Representation,
+): "webm" | "mp4" | undefined {
   if (adaptationType === "audio" || adaptationType === "video") {
-    if (representation.mimeType === "video/mp4" ||
-        representation.mimeType === "audio/mp4")
-    {
+    if (
+      representation.mimeType === "video/mp4" ||
+      representation.mimeType === "audio/mp4"
+    ) {
       return "mp4";
     }
-    if (representation.mimeType === "video/webm" ||
-        representation.mimeType === "audio/webm")
-    {
+    if (
+      representation.mimeType === "video/webm" ||
+      representation.mimeType === "audio/webm"
+    ) {
       return "webm";
     }
     return undefined;
   } else if (adaptationType === "text") {
-    return representation.mimeType === "application/mp4" ?
-      "mp4" :
-      undefined;
+    return representation.mimeType === "application/mp4" ? "mp4" : undefined;
   }
   return undefined;
 }

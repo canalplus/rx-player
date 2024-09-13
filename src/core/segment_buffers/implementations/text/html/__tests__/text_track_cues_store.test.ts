@@ -1,5 +1,5 @@
 import TextTrackCuesStore from "../text_track_cues_store";
-import { ICuesGroup } from "../types";
+import type { ICuesGroup } from "../types";
 
 /**
  * Mocks document.createElement to simplify comparison of cuesElement by returning
@@ -58,7 +58,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("bye"), start: 1, end: 2 }],
       1,
-      2
+      2,
     );
 
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
@@ -94,7 +94,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("hello"), start: 0, end: 1 }],
       0,
-      1
+      1,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });
@@ -139,7 +139,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("bye"), start: 1, end: 2 }],
       1,
-      2
+      2,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });
@@ -169,7 +169,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("hi"), start: 0, end: 1 }],
       0,
-      1
+      1,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });
@@ -204,7 +204,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("hi"), start: 0, end: 1 }],
       0,
-      1
+      1,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });
@@ -233,7 +233,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("how are you?"), start: 0, end: 2 }],
       0,
-      2
+      2,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });
@@ -268,7 +268,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("how are you?"), start: 1, end: 2 }],
       1,
-      2
+      2,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });
@@ -304,7 +304,7 @@ describe("TextTrackCuesStore - insert()", () => {
     textTrackCuesStore.insert(
       [{ element: createCueElement("hi"), start: 10, end: 12 }],
       10,
-      12
+      12,
     );
     expect(textTrackCuesStore["_cuesBuffer"]).toEqual(expectedCues);
   });

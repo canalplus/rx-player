@@ -26,13 +26,12 @@
  * @returns {boolean}
  */
 export default function updateProportionalElements(
-  currentHeight : number,
-  currentWidth : number,
-  resolution : { columns : number; rows : number },
-  textTrackElement : HTMLElement
-) : boolean {
-  const cellUnit = [ currentWidth / resolution.columns,
-                     currentHeight / resolution.rows];
+  currentHeight: number,
+  currentWidth: number,
+  resolution: { columns: number; rows: number },
+  textTrackElement: HTMLElement,
+): boolean {
+  const cellUnit = [currentWidth / resolution.columns, currentHeight / resolution.rows];
 
   const proportElts = textTrackElement.getElementsByClassName("proportional-style");
   for (let eltIdx = 0; eltIdx < proportElts.length; eltIdx++) {

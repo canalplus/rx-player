@@ -53,5 +53,4 @@ describe("utils - SimpleSet", () => {
     simpleSet.remove("a");
     expect(simpleSet.isEmpty()).toBe(true);
   });
-
 });

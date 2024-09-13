@@ -10,12 +10,7 @@ import {
 import useModuleState from "../lib/useModuleState";
 import type { IPlayerModule } from "../modules/player/index";
 
-const {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} = React;
+const { useCallback, useEffect, useMemo, useState } = React;
 
 /**
  * Simple fullscreen button.
@@ -29,16 +24,14 @@ function FullscreenButton({
   player,
   className,
 }: {
-  playerWrapperElementRef:  { current: HTMLElement | null };
+  playerWrapperElementRef: { current: HTMLElement | null };
   player: IPlayerModule;
   className: string;
 }): JSX.Element {
   const hasCurrentContent = useModuleState(player, "hasCurrentContent");
   const isInitiallyFullscreen = useMemo(() => isFullscreen(), []);
-  const [
-    isCurrentlyFullScreen,
-    setIsCurrentlyFullScreen,
-  ] = useState(isInitiallyFullscreen);
+  const [isCurrentlyFullScreen, setIsCurrentlyFullScreen] =
+    useState(isInitiallyFullscreen);
 
   useEffect(() => {
     const fullscreenListener = () => {
@@ -68,7 +61,7 @@ function FullscreenButton({
     <Button
       ariaLabel="Go/Quit fullscreen"
       className={"fullscreen-button " + className}
-      onClick={isCurrentlyFullScreen ? exitFullscreen : setFullscreen }
+      onClick={isCurrentlyFullScreen ? exitFullscreen : setFullscreen}
       disabled={!hasCurrentContent}
       value={String.fromCharCode(isCurrentlyFullScreen ? 0xf066 : 0xf065)}
     />

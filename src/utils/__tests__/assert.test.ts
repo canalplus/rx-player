@@ -17,9 +17,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import assert, {
-  assertInterface,
-} from "../assert";
+import assert, { assertInterface } from "../assert";
 
 describe("utils - assert", () => {
   it("should throw an error if the assertion is false", () => {
@@ -141,8 +139,7 @@ describe("utils - assertInterface", () => {
     if (!(error instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
-    expect(error.message)
-      .toBe(`${nameOfMyObj} should have property f as a function`);
+    expect(error.message).toBe(`${nameOfMyObj} should have property f as a function`);
     expect(error.name).toBe("AssertionError");
   });
 
@@ -178,8 +175,7 @@ describe("utils - assertInterface", () => {
     if (!(error instanceof Error)) {
       throw new Error("Impossible: already checked it was an Error instance");
     }
-    expect(error.message)
-      .toBe("object should have property f as a function");
+    expect(error.message).toBe("object should have property f as a function");
     expect(error.name).toBe("AssertionError");
   });
 
@@ -208,7 +204,7 @@ describe("utils - assertInterface", () => {
 
   /* eslint-disable max-len */
   it("should not consider inherited properties as part of the interface", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
 
     const nameOfMyObj = "toto titi";
     const myObj = {

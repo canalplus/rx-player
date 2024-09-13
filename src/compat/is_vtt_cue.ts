@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICompatVTTCue } from "./browser_compatibility_types";
+import type { ICompatVTTCue } from "./browser_compatibility_types";
 
 /**
  * Returns true if the given cue is an instance of a VTTCue.
@@ -22,8 +22,8 @@ import { ICompatVTTCue } from "./browser_compatibility_types";
  * @returns {boolean}
  */
 export default function isVTTCue(
-  cue : ICompatVTTCue|TextTrackCue
-) : cue is ICompatVTTCue {
+  cue: ICompatVTTCue | TextTrackCue,
+): cue is ICompatVTTCue {
   /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   return typeof window.VTTCue === "function" && cue instanceof window.VTTCue;
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */

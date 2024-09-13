@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Representation } from "../../../manifest";
+import type { Representation } from "../../../manifest";
 import arrayFindIndex from "../../../utils/array_find_index";
 
 /**
@@ -34,17 +34,21 @@ import arrayFindIndex from "../../../utils/array_find_index";
  * @returns {Representation|undefined}
  */
 export default function selectOptimalRepresentation(
-  representations : Representation[],
-  optimalBitrate : number,
-  minBitrate : number,
-  maxBitrate : number
-) : Representation {
-  const wantedBitrate = optimalBitrate <= minBitrate ? minBitrate :
-                        optimalBitrate >= maxBitrate ? maxBitrate :
-                                                       optimalBitrate;
+  representations: Representation[],
+  optimalBitrate: number,
+  minBitrate: number,
+  maxBitrate: number,
+): Representation {
+  const wantedBitrate =
+    optimalBitrate <= minBitrate
+      ? minBitrate
+      : optimalBitrate >= maxBitrate
+        ? maxBitrate
+        : optimalBitrate;
   const firstIndexTooHigh = arrayFindIndex(
     representations,
-    (representation) => representation.bitrate > wantedBitrate);
+    (representation) => representation.bitrate > wantedBitrate,
+  );
   if (firstIndexTooHigh === -1) {
     return representations[representations.length - 1];
   } else if (firstIndexTooHigh === 0) {

@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import { ICustomMediaKeys } from "../../compat/eme";
-import {
-  EncryptedMediaError,
-  isKnownError,
-} from "../../errors";
+import type { ICustomMediaKeys } from "../../compat/eme";
+import { EncryptedMediaError, isKnownError } from "../../errors";
 import log from "../../log";
-import { IPlayerError } from "../../public_types";
+import type { IPlayerError } from "../../public_types";
 import ServerCertificateStore from "./utils/server_certificate_store";
 
 /**
@@ -38,9 +35,9 @@ import ServerCertificateStore from "./utils/server_certificate_store";
  * @returns {Promise}
  */
 async function setServerCertificate(
-  mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : BufferSource
-) : Promise<unknown> {
+  mediaKeys: ICustomMediaKeys | MediaKeys,
+  serverCertificate: BufferSource,
+): Promise<unknown> {
   try {
     const res = await (mediaKeys as MediaKeys).setServerCertificate(serverCertificate);
     // Note: Even if `setServerCertificate` technically should return a
@@ -48,10 +45,12 @@ async function setServerCertificate(
     // Thus we prefer to return unknown here.
     return res;
   } catch (error) {
-    log.warn("DRM: mediaKeys.setServerCertificate returned an error",
-             error instanceof Error ? error : "");
-    const reason = error instanceof Error ? error.toString() :
-                                            "`setServerCertificate` error";
+    log.warn(
+      "DRM: mediaKeys.setServerCertificate returned an error",
+      error instanceof Error ? error : "",
+    );
+    const reason =
+      error instanceof Error ? error.toString() : "`setServerCertificate` error";
     throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
   }
 }
@@ -64,19 +63,23 @@ async function setServerCertificate(
  * @returns {Promise.<Object>}
  */
 export default async function trySettingServerCertificate(
-  mediaKeys : ICustomMediaKeys|MediaKeys,
-  serverCertificate : BufferSource
-) : Promise<{ type: "success"; value: unknown } |
-            { type: "already-has-one" } |
-            { type: "method-not-implemented" } |
-            { type: "error"; value: IPlayerError }> {
+  mediaKeys: ICustomMediaKeys | MediaKeys,
+  serverCertificate: BufferSource,
+): Promise<
+  | { type: "success"; value: unknown }
+  | { type: "already-has-one" }
+  | { type: "method-not-implemented" }
+  | { type: "error"; value: IPlayerError }
+> {
   if (ServerCertificateStore.hasOne(mediaKeys) === true) {
     log.info("DRM: The MediaKeys already has a server certificate, skipping...");
     return { type: "already-has-one" };
   }
   if (typeof mediaKeys.setServerCertificate !== "function") {
-    log.warn("DRM: Could not set the server certificate." +
-             " mediaKeys.setServerCertificate is not a function");
+    log.warn(
+      "DRM: Could not set the server certificate." +
+        " mediaKeys.setServerCertificate is not a function",
+    );
     return { type: "method-not-implemented" };
   }
 
@@ -91,15 +94,14 @@ export default async function trySettingServerCertificate(
     ServerCertificateStore.set(mediaKeys, serverCertificate);
     return { type: "success", value: result };
   } catch (error) {
-    const formattedErr = isKnownError(error) ?
-      error :
-      new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR",
-                              "Unknown error when setting the server certificate.");
+    const formattedErr = isKnownError(error)
+      ? error
+      : new EncryptedMediaError(
+          "LICENSE_SERVER_CERTIFICATE_ERROR",
+          "Unknown error when setting the server certificate.",
+        );
     return { type: "error" as const, value: formattedErr };
   }
 }
 
-export {
-  trySettingServerCertificate,
-  setServerCertificate,
-};
+export { trySettingServerCertificate, setServerCertificate };

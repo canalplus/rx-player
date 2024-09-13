@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-import { IFeaturesObject } from "../../../features/types";
+import type { IFeaturesObject } from "../../../features/types";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import DASHFeature from "../../../transports/dash";
 import dashWasmFeature from "../dash_wasm";
 
 describe("Features list - DASH WASM Parser", () => {
   it("should add DASH WASM parser in the current features", () => {
-    const mockInitialize = jest.spyOn(DashWasmParser.prototype, "initialize")
+    const mockInitialize = jest
+      .spyOn(DashWasmParser.prototype, "initialize")
       .mockImplementation(jest.fn());
 
     const DASH_WASM = dashWasmFeature;
@@ -33,9 +34,10 @@ describe("Features list - DASH WASM Parser", () => {
 
     expect(mockInitialize).toHaveBeenCalledTimes(1);
 
-    const featureObject = { transports: {},
-                            dashParsers: { js: null,
-                                           wasm: null } } as unknown as IFeaturesObject;
+    const featureObject = {
+      transports: {},
+      dashParsers: { js: null, wasm: null },
+    } as unknown as IFeaturesObject;
     DASH_WASM._addFeature(featureObject);
     expect(featureObject.transports).toEqual({ dash: DASHFeature });
     expect(featureObject.dashParsers.js).toEqual(null);

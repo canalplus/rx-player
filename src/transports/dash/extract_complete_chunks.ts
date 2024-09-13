@@ -26,35 +26,35 @@ import findCompleteBox from "../utils/find_complete_box";
  * @returns {Array}
  */
 export default function extractCompleteChunks(
-  buffer: Uint8Array
+  buffer: Uint8Array,
 ): [Uint8Array[] | null, Uint8Array | null] {
   let _position = 0;
-  const chunks : Uint8Array[] = [];
+  const chunks: Uint8Array[] = [];
   let currentBuffer = null;
   while (_position < buffer.length) {
     currentBuffer = buffer.subarray(_position, Infinity);
-    const moofIndex = findCompleteBox(currentBuffer, 0x6D6F6F66 /* moof */);
+    const moofIndex = findCompleteBox(currentBuffer, 0x6d6f6f66 /* moof */);
     if (moofIndex < 0) {
       // no moof, not a segment.
-      return [ chunks, currentBuffer ];
+      return [chunks, currentBuffer];
     }
     const moofLen = be4toi(buffer, moofIndex + _position);
     const moofEnd = _position + moofIndex + moofLen;
     if (moofEnd > buffer.length) {
       // not a complete moof segment
-      return [ chunks, currentBuffer ];
+      return [chunks, currentBuffer];
     }
 
-    const mdatIndex = findCompleteBox(currentBuffer, 0x6D646174 /* mdat */);
+    const mdatIndex = findCompleteBox(currentBuffer, 0x6d646174 /* mdat */);
     if (mdatIndex < 0) {
       // no mdat, not a segment.
-      return [ chunks, currentBuffer ];
+      return [chunks, currentBuffer];
     }
     const mdatLen = be4toi(buffer, mdatIndex + _position);
     const mdatEnd = _position + mdatIndex + mdatLen;
     if (mdatEnd > buffer.length) {
       // not a complete mdat segment
-      return [ chunks, currentBuffer ];
+      return [chunks, currentBuffer];
     }
 
     const maxEnd = Math.max(moofEnd, mdatEnd);

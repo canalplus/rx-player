@@ -1,12 +1,8 @@
-import {
-  IAdaptation,
-  IPeriod,
-  IRepresentation,
-} from "../../../../public_types";
+import type { IAdaptation, IPeriod, IRepresentation } from "../../../../public_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import { CancellationSignal } from "../../../../utils/task_canceller";
-import { IBufferType } from "../../../segment_buffers";
-import RxPlayer from "../../public_api";
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type { IBufferType } from "../../../segment_buffers";
+import type RxPlayer from "../../public_api";
 import SegmentBufferGraph from "../buffer_graph";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
 import {
@@ -17,12 +13,12 @@ import {
 } from "../utils";
 
 export default function createSegmentBufferGraph(
-  instance : RxPlayer,
-  bufferType : IBufferType,
-  title : string,
-  parentElt : HTMLElement,
-  cancelSignal : CancellationSignal
-) : HTMLElement {
+  instance: RxPlayer,
+  bufferType: IBufferType,
+  title: string,
+  parentElt: HTMLElement,
+  cancelSignal: CancellationSignal,
+): HTMLElement {
   const bufferGraphWrapper = createElement("div");
   const bufferTitle = createMetricTitle(title);
   const canvasElt = createGraphCanvas();
@@ -78,13 +74,18 @@ export default function createSegmentBufferGraph(
       for (let i = 0; i < inventory.length; i++) {
         const rangeInfo = inventory[i];
         const { bufferedStart, bufferedEnd, infos } = rangeInfo;
-        if (bufferedStart !== undefined && bufferedEnd !== undefined &&
-            currentTime >= bufferedStart && currentTime < bufferedEnd)
-        {
+        if (
+          bufferedStart !== undefined &&
+          bufferedEnd !== undefined &&
+          currentTime >= bufferedStart &&
+          currentTime < bufferedEnd
+        ) {
           currentRangeRepInfoElt.appendChild(createMetricTitle("play"));
-          currentRangeRepInfoElt.appendChild(createElement("span", {
-            textContent: constructRepresentationInfo(infos),
-          }));
+          currentRangeRepInfoElt.appendChild(
+            createElement("span", {
+              textContent: constructRepresentationInfo(infos),
+            }),
+          );
           break;
         }
       }
@@ -97,33 +98,35 @@ export default function createSegmentBufferGraph(
         const period = manifest.getPeriodForTime(currentTime);
         if (period !== undefined) {
           loadingRangeRepInfoElt.appendChild(createMetricTitle("load"));
-          loadingRangeRepInfoElt.appendChild(createElement("span", {
-            textContent: constructRepresentationInfo({
-              period,
-              adaptation: adap,
-              representation: rep,
+          loadingRangeRepInfoElt.appendChild(
+            createElement("span", {
+              textContent: constructRepresentationInfo({
+                period,
+                adaptation: adap,
+                representation: rep,
+              }),
             }),
-          }));
+          );
         }
       }
     }
   }
 }
 
-function constructRepresentationInfo(
-  content : {
-    period : IPeriod;
-    adaptation : IAdaptation;
-    representation : IRepresentation;
-  }
-) : string {
+function constructRepresentationInfo(content: {
+  period: IPeriod;
+  adaptation: IAdaptation;
+  representation: IRepresentation;
+}): string {
   const period = content.period;
-  const { language,
-          isAudioDescription,
-          isClosedCaption,
-          isTrickModeTrack,
-          isSignInterpreted,
-          type: bufferType } = content.adaptation;
+  const {
+    language,
+    isAudioDescription,
+    isClosedCaption,
+    isTrickModeTrack,
+    isSignInterpreted,
+    type: bufferType,
+  } = content.adaptation;
   const { id, height, width, bitrate, codec } = content.representation;
   let representationInfo = `"${id}" `;
   if (height !== undefined && width !== undefined) {

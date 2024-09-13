@@ -15,7 +15,7 @@
  */
 
 import { areSameContent } from "../../../manifest";
-import { IChunkContext } from "./types";
+import type { IChunkContext } from "./types";
 
 /**
  * Entry of a `BufferedHistory`, added when the initial buffered range of a
@@ -24,21 +24,20 @@ import { IChunkContext } from "./types";
  */
 export interface IBufferedHistoryEntry {
   /** `performance.now()` when the event happened. */
-  date : number;
+  date: number;
 
   /**
    * Timestamps of what has been buffered with that segment.
    * `null` if it has been immediately garbage collected.
    */
-  buffered : null | {
+  buffered: null | {
     /** Start time at which we observed that segment/chunk starts at, in seconds. */
     start: number;
     /** *End time at which we observed that segment/chunk ends at, in seconds. */
     end: number;
   };
   /** Content metadata linked to the segment, allowing to recognize it. */
-  context : IChunkContext;
-
+  context: IChunkContext;
 }
 
 /**
@@ -56,18 +55,18 @@ export interface IBufferedHistoryEntry {
  */
 export default class BufferedHistory {
   /** Complete recent history in chronological order (from oldest to newest) */
-  private _history : IBufferedHistoryEntry[];
+  private _history: IBufferedHistoryEntry[];
   /** Maximum time a history entry should be retained. */
-  private _lifetime : number;
+  private _lifetime: number;
   /** Maximum number of entries the `BufferedHistory`'s history should have. */
-  private _maxHistoryLength : number;
+  private _maxHistoryLength: number;
 
   /**
    * @param {number} lifetime - Maximum time a history entry should be retained.
    * @param {number} maxHistoryLength - Maximum number of entries the history
    * should have.
    */
-  constructor(lifetime : number, maxHistoryLength : number) {
+  constructor(lifetime: number, maxHistoryLength: number) {
     this._history = [];
     this._lifetime = lifetime;
     this._maxHistoryLength = maxHistoryLength;
@@ -83,25 +82,20 @@ export default class BufferedHistory {
    * @param {Array.<number>|null} buffered
    */
   public addBufferedSegment(
-    context : IChunkContext,
-    buffered : { start: number; end: number } | null
-  ) : void {
+    context: IChunkContext,
+    buffered: { start: number; end: number } | null,
+  ): void {
     const now = performance.now();
-    this._history.push({ date: now,
-                         buffered,
-                         context });
+    this._history.push({ date: now, buffered, context });
     this._cleanHistory(now);
-
   }
   /**
    * Returns all entries linked to the given segment.
    * @param {Object} context
    * @returns {Array.<Object>}
    */
-  public getHistoryFor(
-    context : IChunkContext
-  ) : IBufferedHistoryEntry[] {
-    return this._history.filter(el => areSameContent(el.context, context));
+  public getHistoryFor(context: IChunkContext): IBufferedHistoryEntry[] {
+    return this._history.filter((el) => areSameContent(el.context, context));
   }
 
   /**
@@ -109,7 +103,7 @@ export default class BufferedHistory {
    * clear older entries until it does.
    * @param {number} now - Current `performance.now()` result.
    */
-  private _cleanHistory(now : number) {
+  private _cleanHistory(now: number) {
     const historyEarliestLimit = now - this._lifetime;
     let firstKeptIndex = 0;
     for (const event of this._history) {

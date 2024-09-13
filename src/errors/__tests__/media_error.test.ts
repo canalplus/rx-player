@@ -41,7 +41,7 @@ describe("errors - MediaError", () => {
   });
 
   it("should filter in a valid error code", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const reason = "test";
     const mediaError = new MediaError("MEDIA_ERR_NETWORK", reason);
     mediaError.fatal = true;

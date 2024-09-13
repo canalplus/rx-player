@@ -15,11 +15,10 @@
  */
 
 import { concat } from "../../utils/byte_parsing";
-import fetchRequest, {
-  IFetchedDataObject,
-} from "../../utils/request/fetch";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { IFetchedDataObject } from "../../utils/request/fetch";
+import fetchRequest from "../../utils/request/fetch";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,
@@ -41,25 +40,24 @@ import extractCompleteChunks from "./extract_complete_chunks";
  * @returns {Promise}
  */
 export default function lowLatencySegmentLoader(
-  url : string,
-  content : ISegmentContext,
-  options : ISegmentLoaderOptions,
-  callbacks : ISegmentLoaderCallbacks<Uint8Array>,
-  cancelSignal : CancellationSignal
-) : Promise<ISegmentLoaderResultChunkedComplete> {
+  url: string,
+  content: ISegmentContext,
+  options: ISegmentLoaderOptions,
+  callbacks: ISegmentLoaderCallbacks<Uint8Array>,
+  cancelSignal: CancellationSignal,
+): Promise<ISegmentLoaderResultChunkedComplete> {
   const { segment } = content;
-  const headers = segment.range !== undefined ? { Range: byteRange(segment.range) } :
-                                                undefined;
-  let partialChunk : Uint8Array | null = null;
+  const headers =
+    segment.range !== undefined ? { Range: byteRange(segment.range) } : undefined;
+  let partialChunk: Uint8Array | null = null;
 
   /**
    * Called each time `fetch` has new data available.
    * @param {Object} info
    */
-  function onData(info : IFetchedDataObject) : void {
+  function onData(info: IFetchedDataObject): void {
     const chunk = new Uint8Array(info.chunk);
-    const concatenated = partialChunk !== null ? concat(partialChunk, chunk) :
-                                                 chunk;
+    const concatenated = partialChunk !== null ? concat(partialChunk, chunk) : chunk;
     const res = extractCompleteChunks(concatenated);
     const completeChunks = res[0];
     partialChunk = res[1];
@@ -71,19 +69,21 @@ export default function lowLatencySegmentLoader(
         return;
       }
     }
-    callbacks.onProgress({ duration: info.duration,
-                           size: info.size,
-                           totalSize: info.totalSize });
+    callbacks.onProgress({
+      duration: info.duration,
+      size: info.size,
+      totalSize: info.totalSize,
+    });
     if (cancelSignal.isCancelled()) {
       return;
     }
   }
 
-  return fetchRequest({ url,
-                        headers,
-                        onData,
-                        timeout: options.timeout,
-                        cancelSignal })
-    .then((res) => ({ resultType: "chunk-complete" as const,
-                      resultData: res }));
+  return fetchRequest({
+    url,
+    headers,
+    onData,
+    timeout: options.timeout,
+    cancelSignal,
+  }).then((res) => ({ resultType: "chunk-complete" as const, resultData: res }));
 }

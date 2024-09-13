@@ -21,8 +21,12 @@ const webmAudioSegments = ["deu", "eng", "fra", "ita", "spa"].map((lang) => {
 });
 
 const mp4VideoSegments = [
-  "0144p-0100k", "0240p-0400k", "0360p-0750k", "0480p-1000k", "0576p-1400k",
-].map(quality => {
+  "0144p-0100k",
+  "0240p-0400k",
+  "0360p-0750k",
+  "0480p-1000k",
+  "0576p-1400k",
+].map((quality) => {
   return {
     url: BASE_URL + "v-" + quality + "-libx264.mp4",
     path: path.join(__dirname, `./media/v-${quality}-libx264.mp4`),
@@ -31,8 +35,12 @@ const mp4VideoSegments = [
 });
 
 const webmVideoSegments = [
-  "0144p-0100k", "0240p-0300k", "0360p-0550k", "0480p-0750k", "0576p-1000k",
-].map(quality => {
+  "0144p-0100k",
+  "0240p-0300k",
+  "0360p-0550k",
+  "0480p-0750k",
+  "0576p-1000k",
+].map((quality) => {
   return {
     url: BASE_URL + "v-" + quality + "-vp9.webm",
     path: path.join(__dirname, `./media/v-${quality}-vp9.webm`),
@@ -40,7 +48,7 @@ const webmVideoSegments = [
   };
 });
 
-const textSegments = ["el", "en", "fr"].map(lang => {
+const textSegments = ["el", "en", "fr"].map((lang) => {
   return {
     url: BASE_URL + "s-" + lang + ".webvtt",
     path: path.join(__dirname, `./media/s-${lang}.webvtt`),

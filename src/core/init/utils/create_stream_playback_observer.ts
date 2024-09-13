@@ -14,34 +14,32 @@
  * limitations under the License.
  */
 
-import Manifest from "../../../manifest";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import {
+import type Manifest from "../../../manifest";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
   PlaybackObserver,
 } from "../../api";
-import { IStreamOrchestratorPlaybackObservation } from "../../stream";
+import type { IStreamOrchestratorPlaybackObservation } from "../../stream";
 
 /** Arguments needed to create the Stream's version of the PlaybackObserver. */
 export interface IStreamPlaybackObserverArguments {
   /** If true, the player will auto-play when `initialPlayPerformed` becomes `true`. */
-  autoPlay : boolean;
+  autoPlay: boolean;
   /** Manifest of the content being played */
-  manifest : Manifest;
+  manifest: Manifest;
   /** Becomes `true` after the initial play has been taken care of. */
-  initialPlayPerformed : IReadOnlySharedReference<boolean>;
+  initialPlayPerformed: IReadOnlySharedReference<boolean>;
   /** Becomes `true` after the initial seek has been taken care of. */
-  initialSeekPerformed : IReadOnlySharedReference<boolean>;
+  initialSeekPerformed: IReadOnlySharedReference<boolean>;
   /** The last speed requested by the user. */
-  speed : IReadOnlySharedReference<number>;
+  speed: IReadOnlySharedReference<number>;
   /** The time the player will seek when `initialSeekPerformed` becomes `true`. */
-  startTime : number;
+  startTime: number;
 }
 
 /**
@@ -54,24 +52,28 @@ export interface IStreamPlaybackObserverArguments {
  * @returns {Object}
  */
 export default function createStreamPlaybackObserver(
-  srcPlaybackObserver : PlaybackObserver,
-  { autoPlay,
+  srcPlaybackObserver: PlaybackObserver,
+  {
+    autoPlay,
     initialPlayPerformed,
     initialSeekPerformed,
     manifest,
     speed,
-    startTime } : IStreamPlaybackObserverArguments,
-  fnCancelSignal : CancellationSignal
-) : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
+    startTime,
+  }: IStreamPlaybackObserverArguments,
+  fnCancelSignal: CancellationSignal,
+): IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation> {
   return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
-    observationRef : IReadOnlySharedReference<IPlaybackObservation>,
-    parentObserverCancelSignal : CancellationSignal
-  ) : IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
+    observationRef: IReadOnlySharedReference<IPlaybackObservation>,
+    parentObserverCancelSignal: CancellationSignal,
+  ): IReadOnlySharedReference<IStreamOrchestratorPlaybackObservation> {
     const canceller = new TaskCanceller();
     canceller.linkToSignal(parentObserverCancelSignal);
     canceller.linkToSignal(fnCancelSignal);
-    const newRef = new SharedReference(constructStreamPlaybackObservation(),
-                                       canceller.signal);
+    const newRef = new SharedReference(
+      constructStreamPlaybackObservation(),
+      canceller.signal,
+    );
 
     speed.onUpdate(emitStreamPlaybackObservation, {
       clearSignal: canceller.signal,
@@ -87,7 +89,7 @@ export default function createStreamPlaybackObserver(
     function constructStreamPlaybackObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
-      let pendingPosition : number | undefined;
+      let pendingPosition: number | undefined;
       if (!initialSeekPerformed.getValue()) {
         pendingPosition = startTime;
       } else if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
@@ -98,10 +100,11 @@ export default function createStreamPlaybackObserver(
         // want to seek one second before the period's end (despite never
         // doing it).
         const lastPeriod = manifest.periods[manifest.periods.length - 1];
-        if (lastPeriod !== undefined &&
-            lastPeriod.end !== undefined &&
-            observation.position > lastPeriod.end)
-        {
+        if (
+          lastPeriod !== undefined &&
+          lastPeriod.end !== undefined &&
+          observation.position > lastPeriod.end
+        ) {
           pendingPosition = lastPeriod.end - 1;
         }
       }
@@ -116,9 +119,11 @@ export default function createStreamPlaybackObserver(
         duration: observation.duration,
         paused: {
           last: observation.paused,
-          pending: initialPlayPerformed.getValue()  ? undefined :
-                   !autoPlay === observation.paused ? undefined :
-                                                      !autoPlay,
+          pending: initialPlayPerformed.getValue()
+            ? undefined
+            : !autoPlay === observation.paused
+              ? undefined
+              : !autoPlay,
         },
         readyState: observation.readyState,
         speed: lastSpeed,

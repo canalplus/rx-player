@@ -16,29 +16,32 @@
 
 import log from "../log";
 import isNullOrUndefined from "./is_null_or_undefined";
-import { CancellationSignal } from "./task_canceller";
+import type { CancellationSignal } from "./task_canceller";
 
 export interface IEventEmitter<T> {
-  addEventListener<TEventName extends keyof T>(evt : TEventName,
-                                               fn : IListener<T, TEventName>) :
-                                                void;
-  removeEventListener<TEventName extends keyof T>(evt : TEventName,
-                                                  fn : IListener<T, TEventName>) :
-                                                   void;
+  addEventListener<TEventName extends keyof T>(
+    evt: TEventName,
+    fn: IListener<T, TEventName>,
+  ): void;
+  removeEventListener<TEventName extends keyof T>(
+    evt: TEventName,
+    fn: IListener<T, TEventName>,
+  ): void;
 }
 
 // Type of the argument in the listener's callback
-export type IEventPayload<TEventRecord, TEventName
-     extends keyof TEventRecord> = TEventRecord[TEventName];
+export type IEventPayload<
+  TEventRecord,
+  TEventName extends keyof TEventRecord,
+> = TEventRecord[TEventName];
 
 // Type of the listener function
-export type IListener<
-  TEventRecord,
-  TEventName extends keyof TEventRecord
-> = (args: IEventPayload<TEventRecord, TEventName>) => void;
+export type IListener<TEventRecord, TEventName extends keyof TEventRecord> = (
+  args: IEventPayload<TEventRecord, TEventName>,
+) => void;
 
 type IListeners<TEventRecord> = {
-  [P in keyof TEventRecord]? : Array<IListener<TEventRecord, P>>
+  [P in keyof TEventRecord]?: Array<IListener<TEventRecord, P>>;
 };
 
 /**
@@ -50,7 +53,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * @type {Object}
    * @private
    */
-  private _listeners : IListeners<T>;
+  private _listeners: IListeners<T>;
 
   constructor() {
     this._listeners = {};
@@ -67,10 +70,10 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * the event listener is automatically removed.
    */
   public addEventListener<TEventName extends keyof T>(
-    evt : TEventName,
-    fn : IListener<T, TEventName>,
-    cancellationSignal? : CancellationSignal
-  ) : void {
+    evt: TEventName,
+    fn: IListener<T, TEventName>,
+    cancellationSignal?: CancellationSignal,
+  ): void {
     const listeners = this._listeners[evt];
     if (!Array.isArray(listeners)) {
       this._listeners[evt] = [fn];
@@ -94,9 +97,9 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * event will be unregistered.
    */
   public removeEventListener<TEventName extends keyof T>(
-    evt? : TEventName,
-    fn? : IListener<T, TEventName>
-  ) : void {
+    evt?: TEventName,
+    fn?: IListener<T, TEventName>,
+  ): void {
     if (isNullOrUndefined(evt)) {
       this._listeners = {};
       return;
@@ -128,9 +131,9 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * callbacks will recieve this payload as argument.
    */
   protected trigger<TEventName extends keyof T>(
-    evt : TEventName,
-    arg : IEventPayload<T, TEventName>
-  ) : void {
+    evt: TEventName,
+    arg: IEventPayload<T, TEventName>,
+  ): void {
     const listeners = this._listeners[evt];
     if (!Array.isArray(listeners)) {
       return;

@@ -22,7 +22,7 @@
 import log from "../../../../../log";
 import { base64ToBytes } from "../../../../../utils/base64";
 import isNonEmptyString from "../../../../../utils/is_non_empty_string";
-import { IScheme } from "../../node_parser_types";
+import type { IScheme } from "../../node_parser_types";
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
@@ -41,12 +41,7 @@ const rangeRe = /([0-9]+)-([0-9]+)/;
  * formatting.
  * @returns {Array.<Boolean | Error | null>}
  */
-function parseBoolean(
-  val : string,
-  displayName : string
-) : [boolean,
-     MPDError | null]
-{
+function parseBoolean(val: string, displayName: string): [boolean, MPDError | null] {
   if (val === "true") {
     return [true, null];
   }
@@ -54,7 +49,8 @@ function parseBoolean(
     return [false, null];
   }
   const error = new MPDError(
-    `\`${displayName}\` property is not a boolean value but "${val}"`);
+    `\`${displayName}\` property is not a boolean value but "${val}"`,
+  );
   return [false, error];
 }
 
@@ -72,17 +68,15 @@ function parseBoolean(
  * @returns {Array.<number | Error | null>}
  */
 function parseMPDInteger(
-  val : string,
-  displayName : string
-) : [number | null,
-     MPDError | null]
-{
+  val: string,
+  displayName: string,
+): [number | null, MPDError | null] {
   const toInt = parseInt(val, 10);
   if (isNaN(toInt)) {
     const error = new MPDError(
-      `\`${displayName}\` property is not an integer value but "${val}"`);
+      `\`${displayName}\` property is not an integer value but "${val}"`,
+    );
     return [null, error];
-
   }
   return [toInt, null];
 }
@@ -101,20 +95,18 @@ function parseMPDInteger(
  * @returns {Array.<number | Error | null>}
  */
 function parseMPDFloat(
-  val : string,
-  displayName : string
-) : [number | null,
-     MPDError | null]
-{
+  val: string,
+  displayName: string,
+): [number | null, MPDError | null] {
   if (val === "INF") {
     return [Infinity, null];
   }
   const toInt = parseFloat(val);
   if (isNaN(toInt)) {
     const error = new MPDError(
-      `\`${displayName}\` property is not an integer value but "${val}"`);
+      `\`${displayName}\` property is not an integer value but "${val}"`,
+    );
     return [null, error];
-
   }
   return [toInt, null];
 }
@@ -133,10 +125,9 @@ function parseMPDFloat(
  * @returns {Array.<Boolean | number | Error | null>}
  */
 function parseIntOrBoolean(
-  val : string,
-  displayName : string
-) : [ boolean | number | null,
-      MPDError | null ] {
+  val: string,
+  displayName: string,
+): [boolean | number | null, MPDError | null] {
   if (val === "true") {
     return [true, null];
   }
@@ -146,7 +137,8 @@ function parseIntOrBoolean(
   const toInt = parseInt(val, 10);
   if (isNaN(toInt)) {
     const error = new MPDError(
-      `\`${displayName}\` property is not a boolean nor an integer but "${val}"`);
+      `\`${displayName}\` property is not a boolean nor an integer but "${val}"`,
+    );
     return [null, error];
   }
   return [toInt, null];
@@ -166,14 +158,14 @@ function parseIntOrBoolean(
  * @returns {Array.<Date | null | Error>}
  */
 function parseDateTime(
-  val : string,
-  displayName : string
-) : [number | null,
-     MPDError | null ] {
+  val: string,
+  displayName: string,
+): [number | null, MPDError | null] {
   const parsed = Date.parse(val);
   if (isNaN(parsed)) {
     const error = new MPDError(
-      `\`${displayName}\` is in an invalid date format: "${val}"`);
+      `\`${displayName}\` is in an invalid date format: "${val}"`,
+    );
     return [null, error];
   }
   return [new Date(Date.parse(val)).getTime() / 1000, null];
@@ -193,11 +185,9 @@ function parseDateTime(
  * @returns {Array.<number | Error | null>}
  */
 function parseDuration(
-  val : string,
-  displayName : string
-) : [number | null,
-     MPDError | null] {
-
+  val: string,
+  displayName: string,
+): [number | null, MPDError | null] {
   if (!isNonEmptyString(val)) {
     const error = new MPDError(`\`${displayName}\` property is empty`);
     return [0, error];
@@ -206,23 +196,18 @@ function parseDuration(
   const match = iso8601Duration.exec(val) as RegExpExecArray;
   if (match === null) {
     const error = new MPDError(
-      `\`${displayName}\` property has an unrecognized format "${val}"`);
+      `\`${displayName}\` property has an unrecognized format "${val}"`,
+    );
     return [null, error];
   }
 
   const duration =
-    (parseFloat(isNonEmptyString(match[2]) ? match[2] :
-                                             "0") * 365 * 24 * 60 * 60 +
-     parseFloat(isNonEmptyString(match[4]) ? match[4] :
-                                             "0") * 30 * 24 * 60 * 60 +
-     parseFloat(isNonEmptyString(match[6]) ? match[6] :
-                                             "0") * 24 * 60 * 60 +
-     parseFloat(isNonEmptyString(match[8]) ? match[8] :
-                                             "0") * 60 * 60 +
-     parseFloat(isNonEmptyString(match[10]) ? match[10] :
-                                              "0") * 60 +
-     parseFloat(isNonEmptyString(match[12]) ? match[12] :
-                                              "0"));
+    parseFloat(isNonEmptyString(match[2]) ? match[2] : "0") * 365 * 24 * 60 * 60 +
+    parseFloat(isNonEmptyString(match[4]) ? match[4] : "0") * 30 * 24 * 60 * 60 +
+    parseFloat(isNonEmptyString(match[6]) ? match[6] : "0") * 24 * 60 * 60 +
+    parseFloat(isNonEmptyString(match[8]) ? match[8] : "0") * 60 * 60 +
+    parseFloat(isNonEmptyString(match[10]) ? match[10] : "0") * 60 +
+    parseFloat(isNonEmptyString(match[12]) ? match[12] : "0");
   return [duration, null];
 }
 
@@ -240,13 +225,14 @@ function parseDuration(
  * @returns {Array.<Array.<number> | Error | null>}
  */
 function parseByteRange(
-  val : string,
-  displayName : string
-) : [ [number, number] | null, MPDError | null ] {
+  val: string,
+  displayName: string,
+): [[number, number] | null, MPDError | null] {
   const match = rangeRe.exec(val);
   if (match === null) {
     const error = new MPDError(
-      `\`${displayName}\` property has an unrecognized format "${val}"`);
+      `\`${displayName}\` property has an unrecognized format "${val}"`,
+    );
     return [null, error];
   } else {
     return [[+match[1], +match[2]], null];
@@ -267,14 +253,15 @@ function parseByteRange(
  * @returns {Uint8Array | Error | null>}
  */
 function parseBase64(
-  val : string,
-  displayName : string
-) : [ Uint8Array | null, MPDError | null ] {
+  val: string,
+  displayName: string,
+): [Uint8Array | null, MPDError | null] {
   try {
     return [base64ToBytes(val), null];
   } catch (_) {
     const error = new MPDError(
-      `\`${displayName}\` is not a valid base64 string: "${val}"`);
+      `\`${displayName}\` is not a valid base64 string: "${val}"`,
+    );
     return [null, error];
   }
 }
@@ -283,9 +270,9 @@ function parseBase64(
  * @param {Element} root
  * @returns {Object}
  */
-function parseScheme(root: Element) : IScheme {
-  let schemeIdUri : string|undefined;
-  let value : string|undefined;
+function parseScheme(root: Element): IScheme {
+  let schemeIdUri: string | undefined;
+  let value: string | undefined;
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];
 
@@ -299,8 +286,7 @@ function parseScheme(root: Element) : IScheme {
     }
   }
 
-  return { schemeIdUri,
-           value };
+  return { schemeIdUri, value };
 }
 
 /**
@@ -311,10 +297,7 @@ function parseScheme(root: Element) : IScheme {
  * error encountered.
  * @return {Function}
  */
-function ValueParser<T>(
-  dest : T,
-  warnings : Error[]
-) {
+function ValueParser<T>(dest: T, warnings: Error[]) {
   /**
    * Parse a single value and add it to the `dest` objects.
    * If an error arised while parsing, add it at the end of the `warnings` array.
@@ -324,17 +307,21 @@ function ValueParser<T>(
    * @param {string} displayName - The name of the key as it appears in the MPD.
    * This is used only in error formatting,
    */
-  return function(
-    val : string,
-    { asKey, parser, dashName } : {
-      asKey : keyof T;
-      parser : (
-        value : string,
-        displayName : string
+  return function (
+    val: string,
+    {
+      asKey,
+      parser,
+      dashName,
+    }: {
+      asKey: keyof T;
+      parser: (
+        value: string,
+        displayName: string,
       ) => [T[keyof T] | null, MPDError | null];
-      dashName : string;
-    }
-  ) : void {
+      dashName: string;
+    },
+  ): void {
     const [parsingResult, parsingError] = parser(val, dashName);
     if (parsingError !== null) {
       log.warn(parsingError.message);

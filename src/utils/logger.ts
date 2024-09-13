@@ -16,67 +16,56 @@
 
 import noop from "./noop";
 
-export type ILoggerLevel = "NONE" |
-                           "ERROR" |
-                           "WARNING" |
-                           "INFO" |
-                           "DEBUG";
+export type ILoggerLevel = "NONE" | "ERROR" | "WARNING" | "INFO" | "DEBUG";
 
 type IConsoleFn = (
-  ...args : Array<boolean | string | number | Error | null | undefined>
+  ...args: Array<boolean | string | number | Error | null | undefined>
 ) => void;
 
-const DEFAULT_LOG_LEVEL : ILoggerLevel = "NONE";
+const DEFAULT_LOG_LEVEL: ILoggerLevel = "NONE";
 
 /**
  * Logger implementation.
  * @class Logger
  */
 export default class Logger {
-  public error : IConsoleFn;
-  public warn : IConsoleFn;
-  public info : IConsoleFn;
-  public debug : IConsoleFn;
-  private _currentLevel : ILoggerLevel;
-  private readonly _levels : Record<ILoggerLevel, number>;
+  public error: IConsoleFn;
+  public warn: IConsoleFn;
+  public info: IConsoleFn;
+  public debug: IConsoleFn;
+  private _currentLevel: ILoggerLevel;
+  private readonly _levels: Record<ILoggerLevel, number>;
 
   constructor() {
     this.error = noop;
     this.warn = noop;
     this.info = noop;
     this.debug = noop;
-    this._levels = { NONE: 0,
-                     ERROR: 1,
-                     WARNING: 2,
-                     INFO: 3,
-                     DEBUG: 4 };
+    this._levels = { NONE: 0, ERROR: 1, WARNING: 2, INFO: 3, DEBUG: 4 };
     this._currentLevel = DEFAULT_LOG_LEVEL;
   }
 
   /**
    * @param {string} levelStr
    */
-  public setLevel(levelStr : string) : void {
-    let level : number;
+  public setLevel(levelStr: string): void {
+    let level: number;
     const foundLevel = this._levels[levelStr as ILoggerLevel];
     if (typeof foundLevel === "number") {
       level = foundLevel;
       this._currentLevel = levelStr as ILoggerLevel;
-    } else { // not found
+    } else {
+      // not found
       level = 0;
       this._currentLevel = "NONE";
     }
 
     /* eslint-disable no-invalid-this */
     /* eslint-disable no-console */
-    this.error = (level >= this._levels.ERROR) ? console.error.bind(console) :
-                                                 noop;
-    this.warn = (level >= this._levels.WARNING) ? console.warn.bind(console) :
-                                                  noop;
-    this.info = (level >= this._levels.INFO) ? console.info.bind(console) :
-                                               noop;
-    this.debug = (level >= this._levels.DEBUG) ? console.log.bind(console) :
-                                                 noop;
+    this.error = level >= this._levels.ERROR ? console.error.bind(console) : noop;
+    this.warn = level >= this._levels.WARNING ? console.warn.bind(console) : noop;
+    this.info = level >= this._levels.INFO ? console.info.bind(console) : noop;
+    this.debug = level >= this._levels.DEBUG ? console.log.bind(console) : noop;
     /* eslint-enable no-console */
     /* eslint-enable no-invalid-this */
   }
@@ -84,7 +73,7 @@ export default class Logger {
   /**
    * @returns {string}
    */
-  public getLevel() : ILoggerLevel {
+  public getLevel(): ILoggerLevel {
     return this._currentLevel;
   }
 
@@ -94,7 +83,7 @@ export default class Logger {
    * @param {string} logLevel
    * @returns {boolean}
    */
-  public hasLevel(logLevel : ILoggerLevel) : boolean {
+  public hasLevel(logLevel: ILoggerLevel): boolean {
     return this._levels[logLevel] >= this._levels[this._currentLevel];
   }
 }

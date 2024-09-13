@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IMPDAttributes } from "../node_parser_types";
+import type { IMPDAttributes } from "../node_parser_types";
 
 /**
  * Returns the base time of the Manifest.
@@ -22,9 +22,9 @@ import { IMPDAttributes } from "../node_parser_types";
  * @param {number|undefined}
  */
 export default function parseAvailabilityStartTime(
-  rootAttributes : IMPDAttributes,
-  referenceDateTime? : number
-) : number {
+  rootAttributes: IMPDAttributes,
+  referenceDateTime?: number,
+): number {
   if (rootAttributes.type !== "dynamic") {
     return 0;
   }

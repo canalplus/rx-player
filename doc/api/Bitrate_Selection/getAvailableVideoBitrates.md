@@ -2,8 +2,7 @@
 
 ## Description
 
-The different bitrates available for the current video track in bits per
-seconds.
+The different bitrates available for the current video track in bits per seconds.
 
 <div class="note">
 Note for multi-Period contents:
@@ -25,8 +24,8 @@ this method returns an empty array.
 const bitrates = player.getAvailableVideoBitrates();
 ```
 
-- **return value** `Array.<Number>`: the available video bitrates for the
-  current track of the current Period.
+- **return value** `Array.<Number>`: the available video bitrates for the current track of
+  the current Period.
 
 ## Example
 
@@ -35,7 +34,7 @@ const videoBitrates = player.getAvailableVideoBitrates();
 if (videoBitrates.length) {
   console.log(
     "The current video is available in the following bitrates",
-    videoBitrates.join(", ")
+    videoBitrates.join(", "),
   );
 }
 ```

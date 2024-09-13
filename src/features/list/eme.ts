@@ -15,13 +15,13 @@
  */
 
 import ContentDecryptor from "../../core/decrypt";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play encrypted contents
  * @param {Object} features
  */
-function addEMEFeature(features : IFeaturesObject) : void {
+function addEMEFeature(features: IFeaturesObject): void {
   features.decrypt = ContentDecryptor;
 }
 

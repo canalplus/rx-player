@@ -50,12 +50,11 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle1);
     expect(initialStyle1).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tutu",
-                 toti: "toti",
-                 tati: "totu" },
-        extendsStyles: [] },
+      {
+        id: "1",
+        style: { titi: "toto", tata: "tutu", toti: "toti", tati: "totu" },
+        extendsStyles: [],
+      },
       { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
       { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
@@ -66,17 +65,13 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle2);
     expect(initialStyle2).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tutu" },
-        extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tutu" }, extendsStyles: [] },
       { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
-      { id: "3",
-        style: { titu: "totu",
-                 tatu: "tatu",
-                 titi: "toto",
-                 tata: "tutu" },
-        extendsStyles: [] },
+      {
+        id: "3",
+        style: { titu: "totu", tatu: "tatu", titi: "toto", tata: "tutu" },
+        extendsStyles: [],
+      },
     ]);
     expect(logWarnMock).not.toHaveBeenCalled();
   });
@@ -90,14 +85,18 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tutu",
-                 toti: "toti",
-                 tati: "totu",
-                 titu: "totu",
-                 tatu: "tatu" },
-        extendsStyles: [] },
+      {
+        id: "1",
+        style: {
+          titi: "toto",
+          tata: "tutu",
+          toti: "toti",
+          tati: "totu",
+          titu: "totu",
+          tatu: "tatu",
+        },
+        extendsStyles: [],
+      },
       { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
       { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
@@ -113,11 +112,7 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tuto",
-                 teti: "teto" },
-        extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tuto", teti: "teto" }, extendsStyles: [] },
       { id: "2", style: { titi: "tito", tata: "titu" }, extendsStyles: [] },
       { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
     ]);
@@ -134,19 +129,16 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tuto",
-                 teti: "teto",
-                 four: "4",
-                 four2: "four2" },
-        extendsStyles: [] },
-      { id: "2",
-        style: { titi: "tito",
-                 tata: "titu",
-                 four: "4",
-                 four2: "four2" },
-        extendsStyles: [] },
+      {
+        id: "1",
+        style: { titi: "toto", tata: "tuto", teti: "teto", four: "4", four2: "four2" },
+        extendsStyles: [],
+      },
+      {
+        id: "2",
+        style: { titi: "tito", tata: "titu", four: "4", four2: "four2" },
+        extendsStyles: [],
+      },
       { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
       { id: "4", style: { four: "4", four2: "four2" }, extendsStyles: [] },
     ]);
@@ -164,23 +156,15 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle1);
     expect(initialStyle1).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tuto",
-                 tota: "tutu" },
-        extendsStyles: [] },
-      { id: "2",
-        style: { titi: "tito",
-                 teta: "tutu" },
-        extendsStyles: [] },
-      { id: "3",
-        style: { tata: "toto",
-                 tota: "tutu",
-                 titi: "toto" }, extendsStyles: [] },
+      { id: "1", style: { titi: "toto", tata: "tuto", tota: "tutu" }, extendsStyles: [] },
+      { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: [] },
+      { id: "3", style: { tata: "toto", tota: "tutu", titi: "toto" }, extendsStyles: [] },
     ]);
 
-    expect(logWarnMock)
-      .toHaveBeenNthCalledWith(1, "TTML Parser: infinite style inheritance loop avoided");
+    expect(logWarnMock).toHaveBeenNthCalledWith(
+      1,
+      "TTML Parser: infinite style inheritance loop avoided",
+    );
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     logWarnMock.mockReset();
 
@@ -192,28 +176,30 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle2);
     expect(initialStyle2).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tuto",
-                 teta: "tutu",
-                 tota: "tutu" },
-        extendsStyles: [] },
-      { id: "2",
-        style: { titi: "tito",
-                 teta: "tutu",
-                 tata: "toto",
-                 tota: "tutu" },
-        extendsStyles: [] },
-      { id: "3",
-        style: { tata: "toto",
-                 tota: "tutu",
-                 titi: "tito",
-                 teta: "tutu" }, extendsStyles: [] },
+      {
+        id: "1",
+        style: { titi: "toto", tata: "tuto", teta: "tutu", tota: "tutu" },
+        extendsStyles: [],
+      },
+      {
+        id: "2",
+        style: { titi: "tito", teta: "tutu", tata: "toto", tota: "tutu" },
+        extendsStyles: [],
+      },
+      {
+        id: "3",
+        style: { tata: "toto", tota: "tutu", titi: "tito", teta: "tutu" },
+        extendsStyles: [],
+      },
     ]);
-    expect(logWarnMock)
-      .toHaveBeenNthCalledWith(1, "TTML Parser: infinite style inheritance loop avoided");
-    expect(logWarnMock)
-      .toHaveBeenNthCalledWith(2, "TTML Parser: infinite style inheritance loop avoided");
+    expect(logWarnMock).toHaveBeenNthCalledWith(
+      1,
+      "TTML Parser: infinite style inheritance loop avoided",
+    );
+    expect(logWarnMock).toHaveBeenNthCalledWith(
+      2,
+      "TTML Parser: infinite style inheritance loop avoided",
+    );
     expect(logWarnMock).toHaveBeenCalledTimes(2);
   });
 
@@ -226,23 +212,18 @@ describe("resolve_styles_inheritance", () => {
     ];
     resolveStylesInheritance(initialStyle);
     expect(initialStyle).toEqual([
-      { id: "1",
-        style: { titi: "toto",
-                 tata: "tuto",
-                 teta: "tutu",
-                 tota: "tutu" },
-        extendsStyles: [] },
-      { id: "2",
-        style: { titi: "tito",
-                 teta: "tutu" },
-        extendsStyles: [] },
-      { id: "3",
-        style: { tata: "toto",
-                 tota: "tutu" },
-        extendsStyles: [] },
+      {
+        id: "1",
+        style: { titi: "toto", tata: "tuto", teta: "tutu", tota: "tutu" },
+        extendsStyles: [],
+      },
+      { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: [] },
+      { id: "3", style: { tata: "toto", tota: "tutu" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock)
-      .toHaveBeenNthCalledWith(1, "TTML Parser: unknown style inheritance: 6");
+    expect(logWarnMock).toHaveBeenNthCalledWith(
+      1,
+      "TTML Parser: unknown style inheritance: 6",
+    );
     expect(logWarnMock).toHaveBeenCalledTimes(1);
   });
 });

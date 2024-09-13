@@ -15,13 +15,14 @@
  */
 
 import config from "../../../../config";
-import Manifest from "../../../../manifest";
+import type Manifest from "../../../../manifest";
 import EventEmitter from "../../../../utils/event_emitter";
 import SharedReference from "../../../../utils/reference";
-import TaskCanceller, { CancellationSignal } from "../../../../utils/task_canceller";
-import { IPlaybackObservation, IReadOnlyPlaybackObserver } from "../../../api";
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import TaskCanceller from "../../../../utils/task_canceller";
+import type { IPlaybackObservation, IReadOnlyPlaybackObserver } from "../../../api";
 import refreshScheduledEventsList from "./refresh_scheduled_events_list";
-import {
+import type {
   INonFiniteStreamEventPayload,
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
@@ -37,17 +38,17 @@ interface IStreamEventsEmitterEvent {
  * Get events from manifest and emit each time an event has to be emitted
  */
 export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitterEvent> {
-  private _manifest : Manifest;
-  private _mediaElement : HTMLMediaElement;
-  private _playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>;
-  private _scheduledEventsRef : SharedReference<
+  private _manifest: Manifest;
+  private _mediaElement: HTMLMediaElement;
+  private _playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>;
+  private _scheduledEventsRef: SharedReference<
     Array<IStreamEventPayload | INonFiniteStreamEventPayload>
   >;
   private _eventsBeingPlayed: WeakMap<
-    IStreamEventPayload|INonFiniteStreamEventPayload,
+    IStreamEventPayload | INonFiniteStreamEventPayload,
     true
   >;
-  private _canceller : TaskCanceller | null;
+  private _canceller: TaskCanceller | null;
 
   /**
    * @param {Object} manifest
@@ -55,9 +56,9 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
    * @param {Object} playbackObserver
    */
   constructor(
-    manifest : Manifest,
-    mediaElement : HTMLMediaElement,
-    playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>
+    manifest: Manifest,
+    mediaElement: HTMLMediaElement,
+    playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   ) {
     super();
     this._manifest = manifest;
@@ -65,10 +66,12 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     this._playbackObserver = playbackObserver;
     this._canceller = null;
     this._scheduledEventsRef = new SharedReference<
-      Array<IStreamEventPayload|INonFiniteStreamEventPayload>
+      Array<IStreamEventPayload | INonFiniteStreamEventPayload>
     >([]);
-    this._eventsBeingPlayed =
-      new WeakMap<IStreamEventPayload|INonFiniteStreamEventPayload, true>();
+    this._eventsBeingPlayed = new WeakMap<
+      IStreamEventPayload | INonFiniteStreamEventPayload,
+      true
+    >();
   }
 
   public start(): void {
@@ -81,57 +84,69 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     const playbackObserver = this._playbackObserver;
     const mediaElement = this._mediaElement;
 
-
     let isPollingEvents = false;
     let cancelCurrentPolling = new TaskCanceller();
     cancelCurrentPolling.linkToSignal(cancelSignal);
 
-    this._manifest.addEventListener("manifestUpdate", () => {
-      const prev = this._scheduledEventsRef.getValue();
-      this._scheduledEventsRef.setValue(refreshScheduledEventsList(prev, this._manifest));
-    }, this._canceller.signal);
+    this._manifest.addEventListener(
+      "manifestUpdate",
+      () => {
+        const prev = this._scheduledEventsRef.getValue();
+        this._scheduledEventsRef.setValue(
+          refreshScheduledEventsList(prev, this._manifest),
+        );
+      },
+      this._canceller.signal,
+    );
     this._scheduledEventsRef.setValue(refreshScheduledEventsList([], this._manifest));
 
-    this._scheduledEventsRef.onUpdate(({ length: scheduledEventsLength }) => {
-      if (scheduledEventsLength === 0) {
-        if (isPollingEvents) {
-          cancelCurrentPolling.cancel();
-          cancelCurrentPolling = new TaskCanceller();
-          cancelCurrentPolling.linkToSignal(cancelSignal);
-          isPollingEvents = false;
+    this._scheduledEventsRef.onUpdate(
+      ({ length: scheduledEventsLength }) => {
+        if (scheduledEventsLength === 0) {
+          if (isPollingEvents) {
+            cancelCurrentPolling.cancel();
+            cancelCurrentPolling = new TaskCanceller();
+            cancelCurrentPolling.linkToSignal(cancelSignal);
+            isPollingEvents = false;
+          }
+          return;
+        } else if (isPollingEvents) {
+          return;
         }
-        return;
-      } else if (isPollingEvents) {
-        return;
-      }
-      isPollingEvents = true;
-      let oldObservation = constructObservation();
-      const checkStreamEvents = () => {
-        const newObservation = constructObservation();
-        this._emitStreamEvents(this._scheduledEventsRef.getValue(),
-                               oldObservation,
-                               newObservation,
-                               cancelCurrentPolling.signal);
-        oldObservation = newObservation;
-      };
+        isPollingEvents = true;
+        let oldObservation = constructObservation();
+        const checkStreamEvents = () => {
+          const newObservation = constructObservation();
+          this._emitStreamEvents(
+            this._scheduledEventsRef.getValue(),
+            oldObservation,
+            newObservation,
+            cancelCurrentPolling.signal,
+          );
+          oldObservation = newObservation;
+        };
 
-      const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config.getCurrent();
-      const intervalId = setInterval(checkStreamEvents,
-                                     STREAM_EVENT_EMITTER_POLL_INTERVAL);
-      playbackObserver.listen(checkStreamEvents,
-                              { includeLastObservation: false,
-                                clearSignal: cancelCurrentPolling.signal });
+        const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config.getCurrent();
+        const intervalId = setInterval(
+          checkStreamEvents,
+          STREAM_EVENT_EMITTER_POLL_INTERVAL,
+        );
+        playbackObserver.listen(checkStreamEvents, {
+          includeLastObservation: false,
+          clearSignal: cancelCurrentPolling.signal,
+        });
 
-      cancelCurrentPolling.signal.register(() => {
-        clearInterval(intervalId);
-      });
+        cancelCurrentPolling.signal.register(() => {
+          clearInterval(intervalId);
+        });
 
-      function constructObservation() {
-        const isSeeking = playbackObserver.getReference().getValue().seeking;
-        return { currentTime: mediaElement.currentTime,
-                 isSeeking };
-      }
-    }, { emitCurrentValue: true, clearSignal: cancelSignal });
+        function constructObservation() {
+          const isSeeking = playbackObserver.getReference().getValue().seeking;
+          return { currentTime: mediaElement.currentTime, isSeeking };
+        }
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
   }
 
   public stop(): void {
@@ -150,11 +165,11 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
    * @param {Object} stopSignal
    */
   private _emitStreamEvents(
-    scheduledEvents : Array<IStreamEventPayload|INonFiniteStreamEventPayload>,
-    oldObservation : { currentTime: number; isSeeking: boolean },
-    newObservation : { currentTime: number; isSeeking: boolean },
-    stopSignal : CancellationSignal
-  ) : void {
+    scheduledEvents: Array<IStreamEventPayload | INonFiniteStreamEventPayload>,
+    oldObservation: { currentTime: number; isSeeking: boolean },
+    newObservation: { currentTime: number; isSeeking: boolean },
+    stopSignal: CancellationSignal,
+  ): void {
     const { currentTime: previousTime } = oldObservation;
     const { isSeeking, currentTime } = newObservation;
     const eventsToSend: IStreamEvent[] = [];
@@ -163,32 +178,23 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     for (let i = 0; i < scheduledEvents.length; i++) {
       const event = scheduledEvents[i];
       const start = event.start;
-      const end = isFiniteStreamEvent(event) ? event.end :
-                                               undefined;
+      const end = isFiniteStreamEvent(event) ? event.end : undefined;
       const isBeingPlayed = this._eventsBeingPlayed.has(event);
       if (isBeingPlayed) {
-        if (start > currentTime ||
-            (end !== undefined && currentTime >= end)
-        ) {
+        if (start > currentTime || (end !== undefined && currentTime >= end)) {
           if (isFiniteStreamEvent(event)) {
             eventsToExit.push(event.publicEvent);
           }
           this._eventsBeingPlayed.delete(event);
         }
-      } else if (start <= currentTime &&
-                 end !== undefined &&
-                 currentTime < end) {
-        eventsToSend.push({ type: "stream-event",
-                            value: event.publicEvent });
+      } else if (start <= currentTime && end !== undefined && currentTime < end) {
+        eventsToSend.push({ type: "stream-event", value: event.publicEvent });
         this._eventsBeingPlayed.set(event, true);
-      } else if (previousTime < start &&
-                 currentTime >= (end ?? start)) {
+      } else if (previousTime < start && currentTime >= (end ?? start)) {
         if (isSeeking) {
-          eventsToSend.push({ type: "stream-event-skip",
-                              value: event.publicEvent });
+          eventsToSend.push({ type: "stream-event-skip", value: event.publicEvent });
         } else {
-          eventsToSend.push({ type: "stream-event",
-                              value: event.publicEvent });
+          eventsToSend.push({ type: "stream-event", value: event.publicEvent });
           if (isFiniteStreamEvent(event)) {
             eventsToExit.push(event.publicEvent);
           }
@@ -228,7 +234,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
  * @returns {Boolean}
  */
 function isFiniteStreamEvent(
-  evt: IStreamEventPayload|INonFiniteStreamEventPayload
+  evt: IStreamEventPayload | INonFiniteStreamEventPayload,
 ): evt is IStreamEventPayload {
   return (evt as IStreamEventPayload).end !== undefined;
 }
@@ -236,17 +242,14 @@ function isFiniteStreamEvent(
 /** Event emitted when a stream event is encountered. */
 interface IStreamEventEvent {
   type: "stream-event";
-  value: IPublicStreamEvent |
-         IPublicNonFiniteStreamEvent;
+  value: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
 }
 
 /** Event emitted when a stream event has just been skipped. */
 interface IStreamEventSkipEvent {
   type: "stream-event-skip";
-  value: IPublicStreamEvent |
-         IPublicNonFiniteStreamEvent;
+  value: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
 }
 
 /** Events sent by the `streamEventsEmitter`. */
-type IStreamEvent = IStreamEventEvent |
-                    IStreamEventSkipEvent;
+type IStreamEvent = IStreamEventEvent | IStreamEventSkipEvent;

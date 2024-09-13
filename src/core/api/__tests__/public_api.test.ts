@@ -74,16 +74,16 @@ describe("API - Public API", () => {
       });
     });
 
-//     describe("getNativeTextTrack", () => {
-//       it("should return null in getNativeTextTrack by default", () => {
-// eslint-disable import/no-deprecated
-//         expect(player.getNativeTextTrack()).toBe(null);
-// eslint-enable import/no-deprecated
-//       });
-//     });
+    //     describe("getNativeTextTrack", () => {
+    //       it("should return null in getNativeTextTrack by default", () => {
+    // eslint-disable import/no-deprecated
+    //         expect(player.getNativeTextTrack()).toBe(null);
+    // eslint-enable import/no-deprecated
+    //       });
+    //     });
 
     describe("getPlayerState", () => {
-      it("should return \"STOPPED\" in getPlayerState by default", () => {
+      it('should return "STOPPED" in getPlayerState by default', () => {
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         expect(player.getPlayerState()).toBe("STOPPED");
@@ -109,7 +109,7 @@ describe("API - Public API", () => {
     describe("getVideoDuration", () => {
       /* eslint-disable max-len */
       it("should return the video element initial duration in getVideoDuration by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
 
@@ -118,9 +118,7 @@ describe("API - Public API", () => {
         if (videoElement == null) {
           throw new Error("The API is disposed");
         }
-        expect(player.getVideoDuration()).toEqual(
-          videoElement.duration
-        );
+        expect(player.getVideoDuration()).toEqual(videoElement.duration);
       });
     });
 
@@ -326,7 +324,7 @@ describe("API - Public API", () => {
 
       /* eslint-disable max-len */
       it("should set the volume in setVolume by default if a volume has been given", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
@@ -485,7 +483,7 @@ describe("API - Public API", () => {
     describe("setMaxVideoBitrate/getMaxVideoBitrate", () => {
       /* eslint-disable max-len */
       it("should update the maximum video bitrate when calling setMaxVideoBitrate by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const oldMax = player.getMaxVideoBitrate();
@@ -514,22 +512,31 @@ describe("API - Public API", () => {
         const player = new PublicAPI();
         const oldMax = player.getMaxVideoBitrate();
 
-        expect(() => player.setMaxVideoBitrate(-1))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"-1\" is inferior the current " +
-                              "minimum video birate, \"0\"."));
+        expect(() => player.setMaxVideoBitrate(-1)).toThrow(
+          new Error(
+            "Invalid maximum video bitrate given. " +
+              'Its value, "-1" is inferior the current ' +
+              'minimum video birate, "0".',
+          ),
+        );
         expect(player.getMaxVideoBitrate()).toBe(oldMax);
 
-        expect(() => player.setMaxVideoBitrate(-Infinity))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"-Infinity\" is inferior the current " +
-                              "minimum video birate, \"0\"."));
+        expect(() => player.setMaxVideoBitrate(-Infinity)).toThrow(
+          new Error(
+            "Invalid maximum video bitrate given. " +
+              'Its value, "-Infinity" is inferior the current ' +
+              'minimum video birate, "0".',
+          ),
+        );
         expect(player.getMaxVideoBitrate()).toBe(oldMax);
 
-        expect(() => player.setMaxVideoBitrate(-100))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"-100\" is inferior the current " +
-                              "minimum video birate, \"0\"."));
+        expect(() => player.setMaxVideoBitrate(-100)).toThrow(
+          new Error(
+            "Invalid maximum video bitrate given. " +
+              'Its value, "-100" is inferior the current ' +
+              'minimum video birate, "0".',
+          ),
+        );
         expect(player.getMaxVideoBitrate()).toBe(oldMax);
       });
 
@@ -541,10 +548,13 @@ describe("API - Public API", () => {
         const oldMax = player.getMaxVideoBitrate();
 
         player.setMinVideoBitrate(50);
-        expect(() => player.setMaxVideoBitrate(49))
-          .toThrow(new Error("Invalid maximum video bitrate given. " +
-                             "Its value, \"49\" is inferior the current " +
-                              "minimum video birate, \"50\"."));
+        expect(() => player.setMaxVideoBitrate(49)).toThrow(
+          new Error(
+            "Invalid maximum video bitrate given. " +
+              'Its value, "49" is inferior the current ' +
+              'minimum video birate, "50".',
+          ),
+        );
         expect(player.getMaxVideoBitrate()).toBe(oldMax);
         player.setMinVideoBitrate(oldMin);
       });
@@ -567,7 +577,7 @@ describe("API - Public API", () => {
     describe("setMinAudioBitrate/getMinAudioBitrate", () => {
       /* eslint-disable max-len */
       it("should update the minimum audio bitrate when calling setMinAudioBitrate by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const oldMin = player.getMinAudioBitrate();
@@ -596,10 +606,13 @@ describe("API - Public API", () => {
         const oldMin = player.getMinAudioBitrate();
 
         player.setMaxAudioBitrate(49);
-        expect(() => player.setMinAudioBitrate(50))
-          .toThrow(new Error("Invalid minimum audio bitrate given. " +
-                             "Its value, \"50\" is superior the current " +
-                              "maximum audio birate, \"49\"."));
+        expect(() => player.setMinAudioBitrate(50)).toThrow(
+          new Error(
+            "Invalid minimum audio bitrate given. " +
+              'Its value, "50" is superior the current ' +
+              'maximum audio birate, "49".',
+          ),
+        );
         expect(player.getMinAudioBitrate()).toBe(oldMin);
         player.setMaxAudioBitrate(oldMax);
       });
@@ -619,11 +632,10 @@ describe("API - Public API", () => {
       });
     });
 
-
     describe("setMaxAudioBitrate/getMaxAudioBitrate", () => {
       /* eslint-disable max-len */
       it("should update the maximum audio bitrate when calling setMaxAudioBitrate by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         const oldMax = player.getMaxAudioBitrate();
@@ -652,22 +664,31 @@ describe("API - Public API", () => {
         const player = new PublicAPI();
         const oldMax = player.getMaxAudioBitrate();
 
-        expect(() => player.setMaxAudioBitrate(-1))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"-1\" is inferior the current " +
-                              "minimum audio birate, \"0\"."));
+        expect(() => player.setMaxAudioBitrate(-1)).toThrow(
+          new Error(
+            "Invalid maximum audio bitrate given. " +
+              'Its value, "-1" is inferior the current ' +
+              'minimum audio birate, "0".',
+          ),
+        );
         expect(player.getMaxAudioBitrate()).toBe(oldMax);
 
-        expect(() => player.setMaxAudioBitrate(-Infinity))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"-Infinity\" is inferior the current " +
-                              "minimum audio birate, \"0\"."));
+        expect(() => player.setMaxAudioBitrate(-Infinity)).toThrow(
+          new Error(
+            "Invalid maximum audio bitrate given. " +
+              'Its value, "-Infinity" is inferior the current ' +
+              'minimum audio birate, "0".',
+          ),
+        );
         expect(player.getMaxAudioBitrate()).toBe(oldMax);
 
-        expect(() => player.setMaxAudioBitrate(-100))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"-100\" is inferior the current " +
-                              "minimum audio birate, \"0\"."));
+        expect(() => player.setMaxAudioBitrate(-100)).toThrow(
+          new Error(
+            "Invalid maximum audio bitrate given. " +
+              'Its value, "-100" is inferior the current ' +
+              'minimum audio birate, "0".',
+          ),
+        );
         expect(player.getMaxAudioBitrate()).toBe(oldMax);
       });
 
@@ -679,10 +700,13 @@ describe("API - Public API", () => {
         const oldMax = player.getMaxAudioBitrate();
 
         player.setMinAudioBitrate(50);
-        expect(() => player.setMaxAudioBitrate(49))
-          .toThrow(new Error("Invalid maximum audio bitrate given. " +
-                             "Its value, \"49\" is inferior the current " +
-                              "minimum audio birate, \"50\"."));
+        expect(() => player.setMaxAudioBitrate(49)).toThrow(
+          new Error(
+            "Invalid maximum audio bitrate given. " +
+              'Its value, "49" is inferior the current ' +
+              'minimum audio birate, "50".',
+          ),
+        );
         expect(player.getMaxAudioBitrate()).toBe(oldMax);
         player.setMinAudioBitrate(oldMin);
       });
@@ -705,7 +729,7 @@ describe("API - Public API", () => {
     describe("getMaxBufferBehind/setMaxBufferBehind", () => {
       /* eslint-disable max-len */
       it("should update the max buffer behind through setMaxBufferBehind by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         player.setMaxBufferBehind(50);
@@ -719,7 +743,7 @@ describe("API - Public API", () => {
     describe("getMaxBufferAhead/setMaxBufferAhead", () => {
       /* eslint-disable max-len */
       it("should update the max buffer behind through setMaxBufferAhead by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         player.setMaxBufferAhead(50);
@@ -745,7 +769,7 @@ describe("API - Public API", () => {
     describe("getAvailableAudioTracks", () => {
       /* eslint-disable max-len */
       it("should return an empty array through getAvailableAudioTracks by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         expect(player.getAvailableAudioTracks()).toEqual([]);
@@ -763,7 +787,7 @@ describe("API - Public API", () => {
     describe("getAvailableVideoTracks", () => {
       /* eslint-disable max-len */
       it("should return an empty array through getAvailableVideoTracks by default", () => {
-      /* eslint-enable max-len */
+        /* eslint-enable max-len */
         const PublicAPI = jest.requireActual("../public_api").default;
         const player = new PublicAPI();
         expect(player.getAvailableVideoTracks()).toEqual([]);
@@ -853,7 +877,6 @@ describe("API - Public API", () => {
         expect(player.getMinimumPosition()).toBe(null);
       });
     });
-
 
     describe("Player instantiation", () => {
       /* eslint-disable-next-line max-len */

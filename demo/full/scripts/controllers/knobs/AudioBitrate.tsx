@@ -12,25 +12,24 @@ function AudioBitrateKnob({
   player,
   className,
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
   className?: string;
 }): JSX.Element {
   const audioBitrateAuto = useModuleState(player, "audioBitrateAuto");
   const audioBitrate = useModuleState(player, "audioBitrate");
-  const availableAudioBitrates =
-    useModuleState(player, "availableAudioBitrates");
+  const availableAudioBitrates = useModuleState(player, "availableAudioBitrates");
 
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {
     if (!availableAudioBitrates.length) {
       return [["Not available"], 0];
     }
     if (availableAudioBitrates.length > 1) {
-      const autoValue = audioBitrateAuto ?
-        `auto (${audioBitrate ?? "unknown"})` : "auto";
+      const autoValue = audioBitrateAuto ? `auto (${audioBitrate ?? "unknown"})` : "auto";
       return [
         [autoValue, ...availableAudioBitrates.map(String)],
-        audioBitrateAuto || audioBitrate === undefined ?
-          0 : (availableAudioBitrates.indexOf(audioBitrate) + 1 || 0)
+        audioBitrateAuto || audioBitrate === undefined
+          ? 0
+          : availableAudioBitrates.indexOf(audioBitrate) + 1 || 0,
       ];
     }
     return [availableAudioBitrates.map(String), 0];
@@ -48,7 +47,7 @@ function AudioBitrateKnob({
         console.error("Error: audio bitrate not found");
       }
     },
-    [availableAudioBitrates, player]
+    [availableAudioBitrates, player],
   );
 
   return (

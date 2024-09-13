@@ -3,18 +3,12 @@ import translateLanguageCode from "../../lib/translateLanguageCode";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";
-import type {
-  ITextTrack,
-  IAvailableTextTrack,
-} from "../../../../../src/public_types";
+import type { ITextTrack, IAvailableTextTrack } from "../../../../../src/public_types";
 
 const CLOSED_CAPTION_ICON = "(CC)"; // String.fromCharCode(0xf2a4);
 
-function findSubtitlesIndex(
-  language: ITextTrack,
-  languages: IAvailableTextTrack[]
-) {
-  return languages.findIndex(ln => ln.id === language.id);
+function findSubtitlesIndex(language: ITextTrack, languages: IAvailableTextTrack[]) {
+  return languages.findIndex((ln) => ln.id === language.id);
 }
 
 /**
@@ -35,34 +29,35 @@ function SubtitlesKnob({
   const options = React.useMemo(() => {
     return [
       "no subtitles",
-      ...availableSubtitles
-        .map(subtitle => {
-          return translateLanguageCode(subtitle.normalized) +
-            (subtitle.closedCaption ?
-              (" " + CLOSED_CAPTION_ICON) : "");
-        }),
+      ...availableSubtitles.map((subtitle) => {
+        return (
+          translateLanguageCode(subtitle.normalized) +
+          (subtitle.closedCaption ? " " + CLOSED_CAPTION_ICON : "")
+        );
+      }),
     ];
   }, [availableSubtitles]);
 
-  const currentLanguageIndex = currentSubtitle ?
-    findSubtitlesIndex(currentSubtitle, availableSubtitles) + 1
+  const currentLanguageIndex = currentSubtitle
+    ? findSubtitlesIndex(currentSubtitle, availableSubtitles) + 1
     : 0;
 
-  const onSubtitlesChange = React.useCallback((
-    { index }: { index: number }
-  ) => {
-    if (index > 0) {
-      const track = availableSubtitles[index - 1];
-      if (track !== undefined) {
-        player.actions.setTextTrack(track);
+  const onSubtitlesChange = React.useCallback(
+    ({ index }: { index: number }) => {
+      if (index > 0) {
+        const track = availableSubtitles[index - 1];
+        if (track !== undefined) {
+          player.actions.setTextTrack(track);
+        } else {
+          /* eslint-disable-next-line no-console */
+          console.error("Error: subtitles track not found");
+        }
       } else {
-        /* eslint-disable-next-line no-console */
-        console.error("Error: subtitles track not found");
+        player.actions.disableSubtitlesTrack();
       }
-    } else {
-      player.actions.disableSubtitlesTrack();
-    }
-  }, [availableSubtitles, player]);
+    },
+    [availableSubtitles, player],
+  );
 
   return (
     <Knob

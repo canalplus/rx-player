@@ -15,17 +15,17 @@
  */
 
 import StaticRepresentationIndex from "./static";
-import {
+import type {
   IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
 } from "./types";
 
-export {
+export type {
   IBaseContentInfos,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   ISegment,
-  StaticRepresentationIndex,
 };
+export { StaticRepresentationIndex };

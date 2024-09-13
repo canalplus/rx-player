@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-import Manifest, {
-  Adaptation,
-  ISegment,
-  Period,
-  Representation,
-} from "../../manifest";
-import { IPlayerError } from "../../public_types";
+import type { Adaptation, ISegment, Period, Representation } from "../../manifest";
+import type Manifest from "../../manifest";
+import type { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
-import SharedReference from "../../utils/reference";
-import { PlaybackObserver } from "../api";
-import SegmentBuffersStore, {
-  IBufferType,
-} from "../segment_buffers";
-import { IInbandEvent } from "../stream";
-import {
+import type SharedReference from "../../utils/reference";
+import type { PlaybackObserver } from "../api";
+import type { IBufferType } from "../segment_buffers";
+import type SegmentBuffersStore from "../segment_buffers";
+import type { IInbandEvent } from "../stream";
+import type {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
 } from "./utils/stream_events_emitter";
@@ -53,7 +48,7 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * future content without interrupting the previous one playing on a given
    * `HTMLMediaElement`.
    */
-  public abstract prepare() : void;
+  public abstract prepare(): void;
 
   /**
    * Actually starts playing the content linked to this `ContentInitializer` on
@@ -79,9 +74,9 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * intervals.
    */
   public abstract start(
-    mediaElement : HTMLMediaElement,
-    playbackObserver : PlaybackObserver
-  ) : void;
+    mediaElement: HTMLMediaElement,
+    playbackObserver: PlaybackObserver,
+  ): void;
 
   /**
    * Update URL of the content currently being played (e.g. DASH's MPD).
@@ -91,26 +86,26 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * DASH's MPD) will be refreshed immediately.
    */
   public abstract updateContentUrls(
-    urls : string[] | undefined,
-    refreshNow : boolean
-  ) : void;
+    urls: string[] | undefined,
+    refreshNow: boolean,
+  ): void;
 
   /**
    * Stop playing the content linked to this `ContentInitializer` on the
    * `HTMLMediaElement` linked to it and dispose of every resources taken while
    * trying to do so.
    */
-  public abstract dispose() : void;
+  public abstract dispose(): void;
 }
 
 /** Every events emitted by a `ContentInitializer`. */
 export interface IContentInitializerEvents {
   /** Event sent when a minor happened. */
-  warning : IPlayerError;
+  warning: IPlayerError;
   /** A fatal error occured, leading to the current content being stopped. */
-  error : unknown;
+  error: unknown;
   /** Event sent after the Manifest has been loaded and parsed for the first time. */
-  manifestReady : Manifest;
+  manifestReady: Manifest;
   /** Event sent after the Manifest has been updated. */
   manifestUpdate: null;
   /**
@@ -127,29 +122,29 @@ export interface IContentInitializerEvents {
     autoPlay: boolean;
   };
   /** Event sent after the player stalled. */
-  stalled : IStallingSituation;
+  stalled: IStallingSituation;
   /** Event sent when the player goes out of a stalling situation. */
-  unstalled : null;
+  unstalled: null;
   /**
    * Event sent just as the content is considered as "loaded".
    * From this point on, the user can reliably play/pause/resume the stream.
    */
-  loaded : { segmentBuffersStore: SegmentBuffersStore | null };
+  loaded: { segmentBuffersStore: SegmentBuffersStore | null };
   /**
    * Event sent after updating the decipherability status of at least one
    * Manifest's Representation.
    * This generally means that some Representation(s) were detected to be
    * undecipherable on the current device.
    */
-  decipherabilityUpdate: Array<{ manifest : Manifest;
-                                 period : Period;
-                                 adaptation : Adaptation;
-                                 representation : Representation; }>;
+  decipherabilityUpdate: Array<{
+    manifest: Manifest;
+    period: Period;
+    adaptation: Adaptation;
+    representation: Representation;
+  }>;
   /** Event emitted when a stream event is encountered. */
-  streamEvent: IPublicStreamEvent |
-               IPublicNonFiniteStreamEvent;
-  streamEventSkip: IPublicStreamEvent |
-                   IPublicNonFiniteStreamEvent;
+  streamEvent: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
+  streamEventSkip: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
   /** Emitted when a new `Period` is currently playing. */
   activePeriodChanged: {
     /** The Period we're now playing. */
@@ -161,9 +156,9 @@ export interface IContentInitializerEvents {
    */
   periodStreamReady: {
     /** The type of buffer linked to the `PeriodStream` we want to create. */
-    type : IBufferType;
+    type: IBufferType;
     /** The `Period` linked to the `PeriodStream` we have created. */
-    period : Period;
+    period: Period;
     /**
      * The Reference through which any Adaptation (i.e. track) choice should be
      * emitted for that `PeriodStream`.
@@ -175,7 +170,7 @@ export interface IContentInitializerEvents {
      * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
      * yourself.
      */
-    adaptationRef : SharedReference<Adaptation|null|undefined>;
+    adaptationRef: SharedReference<Adaptation | null | undefined>;
   };
   /**
    * A `PeriodStream` has been removed.
@@ -190,77 +185,73 @@ export interface IContentInitializerEvents {
      * The combination of this and `Period` should give you enough information
      * about which `PeriodStream` has been removed.
      */
-    type : IBufferType;
+    type: IBufferType;
     /**
      * The `Period` linked to the `PeriodStream` we just removed.
      *
      * The combination of this and `Period` should give you enough information
      * about which `PeriodStream` has been removed.
      */
-    period : Period;
+    period: Period;
   };
   /** Emitted when a new `Adaptation` is being considered. */
   adaptationChange: IAdaptationChangeEventPayload;
   /** Emitted as new bitrate estimates are done. */
   bitrateEstimationChange: {
     /** The type of buffer for which the estimation is done. */
-    type : IBufferType;
+    type: IBufferType;
     /**
      * The bitrate estimate, in bits per seconds. `undefined` when no bitrate
      * estimate is currently available.
      */
-    bitrate : number|undefined;
+    bitrate: number | undefined;
   };
   /** Emitted when a new `Representation` is being considered. */
   representationChange: {
     /** The type of buffer linked to that `RepresentationStream`. */
-    type : IBufferType;
+    type: IBufferType;
     /** The `Period` linked to the `RepresentationStream` we're creating. */
-    period : Period;
+    period: Period;
     /**
      * The `Representation` linked to the `RepresentationStream` we're creating.
      * `null` when we're choosing no Representation at all.
      */
-    representation : Representation |
-                     null;
+    representation: Representation | null;
   };
   /** Emitted after a new segment has been succesfully added to the SegmentBuffer */
   addedSegment: {
     /** Context about the content that has been added. */
-    content: { period : Period;
-               adaptation : Adaptation;
-               representation : Representation; };
+    content: { period: Period; adaptation: Adaptation; representation: Representation };
     /** The concerned Segment. */
-    segment : ISegment;
+    segment: ISegment;
     /** TimeRanges of the concerned SegmentBuffer after the segment was pushed. */
-    buffered : TimeRanges;
+    buffered: TimeRanges;
     /* The data pushed */
-    segmentData : unknown;
+    segmentData: unknown;
   };
   /**
    * Event emitted when one or multiple inband events (i.e. events inside a
    * given segment) have been encountered.
    */
-  inbandEvents : IInbandEvent[];
+  inbandEvents: IInbandEvent[];
 }
 
 export interface IAdaptationChangeEventPayload {
   /** The type of buffer for which the Representation is changing. */
-  type : IBufferType;
+  type: IBufferType;
   /** The `Period` linked to the `RepresentationStream` we're creating. */
-  period : Period;
+  period: Period;
   /**
    * The `Adaptation` linked to the `AdaptationStream` we're creating.
    * `null` when we're choosing no Adaptation at all.
    */
-  adaptation : Adaptation |
-    null;
+  adaptation: Adaptation | null;
 }
 
 export type IStallingSituation =
-  "seeking" | // Rebuffering after seeking
-  "not-ready" | // Rebuffering after low ready state
-  "internal-seek" | // Rebuffering after a seek happened inside the player
-  "buffering" | // Other rebuffering cases
-  "freezing"; // stalled for an unknown reason (might be waiting for
-              // a decryption key)
+  | "seeking" // Rebuffering after seeking
+  | "not-ready" // Rebuffering after low ready state
+  | "internal-seek" // Rebuffering after a seek happened inside the player
+  | "buffering" // Other rebuffering cases
+  | "freezing"; // stalled for an unknown reason (might be waiting for
+// a decryption key)

@@ -15,10 +15,10 @@
  */
 
 import features from "../../features";
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import request from "../../utils/request";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IImageTrackSegmentData,
   ILoadedImageSegmentFormat,
   ISegmentContext,
@@ -41,27 +41,28 @@ import constructSegmentUrl from "./construct_segment_url";
  * @returns {Promise}
  */
 export async function imageLoader(
-  wantedCdn : ICdnMetadata | null,
-  content : ISegmentContext,
-  options : ISegmentLoaderOptions,
-  cancelSignal : CancellationSignal,
-  callbacks : ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>
-) : Promise<ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat> |
-            ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>>
-{
+  wantedCdn: ICdnMetadata | null,
+  content: ISegmentContext,
+  options: ISegmentLoaderOptions,
+  cancelSignal: CancellationSignal,
+  callbacks: ISegmentLoaderCallbacks<ILoadedImageSegmentFormat>,
+): Promise<
+  | ISegmentLoaderResultSegmentLoaded<ILoadedImageSegmentFormat>
+  | ISegmentLoaderResultSegmentCreated<ILoadedImageSegmentFormat>
+> {
   const { segment } = content;
   const url = constructSegmentUrl(wantedCdn, segment);
   if (segment.isInit || url === null) {
-    return { resultType: "segment-created",
-             resultData: null };
+    return { resultType: "segment-created", resultData: null };
   }
-  const data = await request({ url,
-                               responseType: "arraybuffer",
-                               timeout: options.timeout,
-                               onProgress: callbacks.onProgress,
-                               cancelSignal });
-  return { resultType: "segment-loaded",
-           resultData: data };
+  const data = await request({
+    url,
+    responseType: "arraybuffer",
+    timeout: options.timeout,
+    onProgress: callbacks.onProgress,
+    cancelSignal,
+  });
+  return { resultType: "segment-loaded", resultData: data };
 }
 
 /**
@@ -71,20 +72,23 @@ export async function imageLoader(
  * @returns {Object}
  */
 export function imageParser(
-  loadedSegment : { data : ArrayBuffer | Uint8Array | null;
-                    isChunked : boolean; },
-  content : ISegmentContext
-) : ISegmentParserParsedMediaChunk< IImageTrackSegmentData | null > |
-    ISegmentParserParsedInitChunk< null > {
+  loadedSegment: { data: ArrayBuffer | Uint8Array | null; isChunked: boolean },
+  content: ISegmentContext,
+):
+  | ISegmentParserParsedMediaChunk<IImageTrackSegmentData | null>
+  | ISegmentParserParsedInitChunk<null> {
   const { segment, period } = content;
   const { data, isChunked } = loadedSegment;
 
-  if (content.segment.isInit) { // image init segment has no use
-    return { segmentType: "init",
-             initializationData: null,
-             initializationDataSize: 0,
-             protectionDataUpdate: false,
-             initTimescale: undefined };
+  if (content.segment.isInit) {
+    // image init segment has no use
+    return {
+      segmentType: "init",
+      initializationData: null,
+      initializationDataSize: 0,
+      protectionDataUpdate: false,
+      initTimescale: undefined,
+    };
   }
 
   if (isChunked) {
@@ -95,28 +99,32 @@ export function imageParser(
 
   // TODO image Parsing should be more on the buffer side, no?
   if (data === null || features.imageParser === null) {
-    return { segmentType: "media",
-             chunkData: null,
-             chunkSize: 0,
-             chunkInfos: { duration: segment.duration,
-                           time: segment.time },
-             chunkOffset,
-             protectionDataUpdate: false,
-             appendWindow: [period.start, period.end] };
+    return {
+      segmentType: "media",
+      chunkData: null,
+      chunkSize: 0,
+      chunkInfos: { duration: segment.duration, time: segment.time },
+      chunkOffset,
+      protectionDataUpdate: false,
+      appendWindow: [period.start, period.end],
+    };
   }
 
   const bifObject = features.imageParser(new Uint8Array(data));
   const thumbsData = bifObject.thumbs;
-  return { segmentType: "media",
-           chunkData: { data: thumbsData,
-                        start: 0,
-                        end: Number.MAX_VALUE,
-                        timescale: 1,
-                        type: "bif" },
-           chunkSize: undefined,
-           chunkInfos: { time: 0,
-                         duration: Number.MAX_VALUE },
-           chunkOffset,
-           protectionDataUpdate: false,
-           appendWindow: [period.start, period.end] };
+  return {
+    segmentType: "media",
+    chunkData: {
+      data: thumbsData,
+      start: 0,
+      end: Number.MAX_VALUE,
+      timescale: 1,
+      type: "bif",
+    },
+    chunkSize: undefined,
+    chunkInfos: { time: 0, duration: Number.MAX_VALUE },
+    chunkOffset,
+    protectionDataUpdate: false,
+    appendWindow: [period.start, period.end],
+  };
 }

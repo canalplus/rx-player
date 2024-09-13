@@ -23,8 +23,8 @@ import findEndOfCueBlock from "./find_end_of_cue_block";
  * array is a new line.
  * @returns {Array.<Array.<string>>}
  */
-export default function getCueBlocks(linified : string[]) : string[][] {
-  const cueBlocks : string[][] = [];
+export default function getCueBlocks(linified: string[]): string[][] {
+  const cueBlocks: string[][] = [];
   for (let i = 0; i < linified.length; i++) {
     if (isNonEmptyString(linified[i])) {
       const endOfCue = findEndOfCueBlock(linified, i);
@@ -35,9 +35,10 @@ export default function getCueBlocks(linified : string[]) : string[][] {
             cueBlocks.push(cueBlockCandidate);
           }
         } else {
-          if (cueBlockCandidate[1].indexOf("-->") >= 0 ||
-              cueBlockCandidate[0].indexOf("-->") >= 0)
-          {
+          if (
+            cueBlockCandidate[1].indexOf("-->") >= 0 ||
+            cueBlockCandidate[0].indexOf("-->") >= 0
+          ) {
             cueBlocks.push(cueBlockCandidate);
           }
         }

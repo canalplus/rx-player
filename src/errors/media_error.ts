@@ -14,41 +14,37 @@
  * limitations under the License.
  */
 
-import { Adaptation } from "../manifest";
-import {
-  IAudioTrack,
-  ITextTrack,
-  IVideoTrack,
-} from "../public_types";
-import {
-  ErrorTypes,
-  IMediaErrorCode,
-} from "./error_codes";
+import type { Adaptation } from "../manifest";
+import type { IAudioTrack, ITextTrack, IVideoTrack } from "../public_types";
+import type { IMediaErrorCode } from "./error_codes";
+import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
 interface IAudioTrackMediaErrorContext {
-  type : "audio";
-  track : IAudioTrack;
+  type: "audio";
+  track: IAudioTrack;
 }
 
 interface IVideoTrackMediaErrorContext {
-  type : "video";
-  track : IVideoTrack;
+  type: "video";
+  track: IVideoTrack;
 }
 
 interface ITextTrackMediaErrorContext {
-  type : "text";
-  track : ITextTrack;
+  type: "text";
+  track: ITextTrack;
 }
 
-export type IMediaErrorTrackContext = IAudioTrackMediaErrorContext |
-                                      IVideoTrackMediaErrorContext |
-                                      ITextTrackMediaErrorContext;
+export type IMediaErrorTrackContext =
+  | IAudioTrackMediaErrorContext
+  | IVideoTrackMediaErrorContext
+  | ITextTrackMediaErrorContext;
 
-type ICodeWithAdaptationType = "BUFFER_APPEND_ERROR" |
-                               "BUFFER_FULL_ERROR" |
-                               "NO_PLAYABLE_REPRESENTATION" |
-                               "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
+type ICodeWithAdaptationType =
+  | "BUFFER_APPEND_ERROR"
+  | "BUFFER_FULL_ERROR"
+  | "NO_PLAYABLE_REPRESENTATION"
+  | "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
 
 /**
  * Error linked to the media Playback.
@@ -69,22 +65,19 @@ export default class MediaError extends Error {
    * @param {Object|undefined} [context]
    */
   constructor(
-    code : ICodeWithAdaptationType,
-    reason : string,
+    code: ICodeWithAdaptationType,
+    reason: string,
     context: {
-      adaptation : Adaptation;
-    }
+      adaptation: Adaptation;
+    },
   );
+  constructor(code: Exclude<IMediaErrorCode, ICodeWithAdaptationType>, reason: string);
   constructor(
-    code : Exclude<IMediaErrorCode, ICodeWithAdaptationType>,
-    reason : string,
-  );
-  constructor(
-    code : IMediaErrorCode,
-    reason : string,
-    context? : {
-      adaptation? : Adaptation | undefined;
-    } | undefined
+    code: IMediaErrorCode,
+    reason: string,
+    context?: {
+      adaptation?: Adaptation | undefined;
+    },
   ) {
     super(errorMessage("MediaError", code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -99,16 +92,13 @@ export default class MediaError extends Error {
     if (adaptation !== undefined) {
       switch (adaptation.type) {
         case "audio":
-          this.trackInfo = { type: "audio",
-                             track: adaptation.toAudioTrack() };
+          this.trackInfo = { type: "audio", track: adaptation.toAudioTrack() };
           break;
         case "video":
-          this.trackInfo = { type: "video",
-                             track: adaptation.toVideoTrack() };
+          this.trackInfo = { type: "video", track: adaptation.toVideoTrack() };
           break;
         case "text":
-          this.trackInfo = { type: "text",
-                             track: adaptation.toTextTrack() };
+          this.trackInfo = { type: "text", track: adaptation.toTextTrack() };
           break;
       }
     }

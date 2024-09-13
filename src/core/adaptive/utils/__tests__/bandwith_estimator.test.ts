@@ -36,7 +36,7 @@ describe("ABR - BandwidthEstimator", () => {
 
   /* eslint-disable max-len */
   it("should calculate bitrate in function of consecutive request' durations and size", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const bwEstimator = new BandwidthEstimator();
     bwEstimator.addSample(8000, 1000000);
     expect(bwEstimator.getEstimate()).toBe(1000000);

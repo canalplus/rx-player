@@ -61,7 +61,9 @@ describe("utils - SortedList", () => {
 
   it("should throw when `getting` on an empty SortedList", () => {
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
-    expect(() => { sortedList.get(0); }).toThrow();
+    expect(() => {
+      sortedList.get(0);
+    }).toThrow();
   });
 
   it("should throw when getting outside the bounds of the SortedList", () => {
@@ -73,7 +75,9 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item3);
     sortedList.add(item1);
-    expect(() => { sortedList.get(4); }).toThrow();
+    expect(() => {
+      sortedList.get(4);
+    }).toThrow();
   });
 
   it("should throw when getting with a negative index", () => {
@@ -85,12 +89,14 @@ describe("utils - SortedList", () => {
     sortedList.add(item2);
     sortedList.add(item3);
     sortedList.add(item1);
-    expect(() => { sortedList.get(-1); }).toThrow();
+    expect(() => {
+      sortedList.get(-1);
+    }).toThrow();
   });
 
   /* eslint-disable max-len */
   it("should return the first added item which answer the predicate when calling `findFirst`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: 12 };
     const item2 = { start: 13 };
@@ -105,7 +111,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return undefined if no item answers the predicate when calling `findFirst`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: 12 };
     const item2 = { start: 13 };
@@ -119,7 +125,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return true when calling `has` if it has at least one time that item", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: 12 };
     const item2 = { start: 13 };
@@ -150,7 +156,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should remove first item corresponding to the element given to `removeElement` and return its index", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: 12 };
     const item2 = { start: 13 };
@@ -169,7 +175,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return undefined and do nothing if the element given to `removeElement` does not exist in the SortedList", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: 12 };
     const item2 = { start: 13 };
@@ -190,7 +196,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return the first element when calling `head` on an non-empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: -5 };
     const item2 = { start: 10 };
@@ -208,14 +214,14 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return undefined when calling `last` on an empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     expect(sortedList.last()).toBe(undefined);
   });
 
   /* eslint-disable max-len */
   it("should return the last element when calling `last` on an non-empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: -5 };
     const item2 = { start: 10 };
@@ -233,7 +239,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return undefined and do nothing when calling `shift` on an empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     expect(sortedList.length()).toBe(0);
     expect(sortedList.shift()).toBe(undefined);
@@ -242,7 +248,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return the first element and remove it when calling `shift` on an non-empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: -5 };
     const item2 = { start: 10 };
@@ -284,7 +290,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return undefined and do nothing when calling `pop` on an empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     expect(sortedList.length()).toBe(0);
     expect(sortedList.pop()).toBe(undefined);
@@ -293,7 +299,7 @@ describe("utils - SortedList", () => {
 
   /* eslint-disable max-len */
   it("should return the last element and remove it when calling `pop` on an non-empty `SortedList`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const sortedList = new SortedList<{ start: number }>((a, b) => a.start - b.start);
     const item1 = { start: -5 };
     const item2 = { start: 10 };

@@ -43,7 +43,7 @@ const urlComponentRegex =
  * @param {string} url
  * @returns {number}
  */
-function getFilenameIndexInUrl(url : string) : number {
+function getFilenameIndexInUrl(url: string): number {
   const indexOfLastSlash = url.lastIndexOf("/");
   if (indexOfLastSlash < 0) {
     return url.length;

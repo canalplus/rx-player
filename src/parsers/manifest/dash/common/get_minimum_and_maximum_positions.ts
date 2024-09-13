@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IParsedPeriod } from "../../types";
+import type { IParsedPeriod } from "../../types";
 import getMaximumPositions from "../../utils/get_maximum_positions";
 import getMinimumPosition from "../../utils/get_minimum_position";
 
@@ -22,18 +22,20 @@ import getMinimumPosition from "../../utils/get_minimum_position";
  * @param {Object} periods
  * @returns {Array.<number>}
  */
-export default function getMinimumAndMaximumPositions(
-  periods: IParsedPeriod[]
-) : { minimumSafePosition : number | undefined;
-      maximumSafePosition : number | undefined;
-      maximumUnsafePosition : number | undefined; } {
+export default function getMinimumAndMaximumPositions(periods: IParsedPeriod[]): {
+  minimumSafePosition: number | undefined;
+  maximumSafePosition: number | undefined;
+  maximumUnsafePosition: number | undefined;
+} {
   if (periods.length === 0) {
     throw new Error("DASH Parser: no period available for a dynamic content");
   }
 
   const minimumSafePosition = getMinimumPosition(periods);
   const maxPositions = getMaximumPositions(periods);
-  return { minimumSafePosition,
-           maximumSafePosition: maxPositions.safe,
-           maximumUnsafePosition: maxPositions.unsafe };
+  return {
+    minimumSafePosition,
+    maximumSafePosition: maxPositions.safe,
+    maximumUnsafePosition: maxPositions.unsafe,
+  };
 }

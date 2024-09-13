@@ -16,21 +16,18 @@
 
 import { events } from "../../../compat";
 import log from "../../../log";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
 
-const { onRemoveSourceBuffers,
-        onSourceOpen,
-        onSourceBufferUpdate } = events;
+const { onRemoveSourceBuffers, onSourceOpen, onSourceBufferUpdate } = events;
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.
  * @param {SourceBufferList} sourceBuffers
  * @returns {Array.<SourceBuffer>}
  */
-function getUpdatingSourceBuffers(sourceBuffers : SourceBufferList) : SourceBuffer[] {
-  const updatingSourceBuffers : SourceBuffer[] = [];
+function getUpdatingSourceBuffers(sourceBuffers: SourceBufferList): SourceBuffer[] {
+  const updatingSourceBuffers: SourceBuffer[] = [];
   for (let i = 0; i < sourceBuffers.length; i++) {
     const SourceBuffer = sourceBuffers[i];
     if (SourceBuffer.updating) {
@@ -50,13 +47,13 @@ function getUpdatingSourceBuffers(sourceBuffers : SourceBufferList) : SourceBuff
  * @param {Object} cancelSignal
  */
 export default function triggerEndOfStream(
-  mediaSource : MediaSource,
-  cancelSignal : CancellationSignal
-) : void {
+  mediaSource: MediaSource,
+  cancelSignal: CancellationSignal,
+): void {
   log.debug("Init: Trying to call endOfStream");
   if (mediaSource.readyState !== "open") {
     log.debug("Init: MediaSource not open, cancel endOfStream");
-    return ;
+    return;
   }
 
   const { sourceBuffers } = mediaSource;
@@ -65,7 +62,7 @@ export default function triggerEndOfStream(
   if (updatingSourceBuffers.length === 0) {
     log.info("Init: Triggering end of stream");
     mediaSource.endOfStream();
-    return ;
+    return;
   }
 
   log.debug("Init: Waiting SourceBuffers to be updated before calling endOfStream.");
@@ -73,16 +70,24 @@ export default function triggerEndOfStream(
   const innerCanceller = new TaskCanceller();
   innerCanceller.linkToSignal(cancelSignal);
   for (const sourceBuffer of updatingSourceBuffers) {
-    onSourceBufferUpdate(sourceBuffer, () => {
-      innerCanceller.cancel();
-      triggerEndOfStream(mediaSource, cancelSignal);
-    }, innerCanceller.signal);
+    onSourceBufferUpdate(
+      sourceBuffer,
+      () => {
+        innerCanceller.cancel();
+        triggerEndOfStream(mediaSource, cancelSignal);
+      },
+      innerCanceller.signal,
+    );
   }
 
-  onRemoveSourceBuffers(sourceBuffers, () => {
-    innerCanceller.cancel();
-    triggerEndOfStream(mediaSource, cancelSignal);
-  }, innerCanceller.signal);
+  onRemoveSourceBuffers(
+    sourceBuffers,
+    () => {
+      innerCanceller.cancel();
+      triggerEndOfStream(mediaSource, cancelSignal);
+    },
+    innerCanceller.signal,
+  );
 }
 
 /**
@@ -92,17 +97,21 @@ export default function triggerEndOfStream(
  * @param {Object} cancelSignal
  */
 export function maintainEndOfStream(
-  mediaSource : MediaSource,
-  cancelSignal : CancellationSignal
-) : void {
+  mediaSource: MediaSource,
+  cancelSignal: CancellationSignal,
+): void {
   let endOfStreamCanceller = new TaskCanceller();
   endOfStreamCanceller.linkToSignal(cancelSignal);
-  onSourceOpen(mediaSource, () => {
-    log.debug("Init: MediaSource re-opened while end-of-stream is active");
-    endOfStreamCanceller.cancel();
-    endOfStreamCanceller = new TaskCanceller();
-    endOfStreamCanceller.linkToSignal(cancelSignal);
-    triggerEndOfStream(mediaSource, endOfStreamCanceller.signal);
-  }, cancelSignal);
+  onSourceOpen(
+    mediaSource,
+    () => {
+      log.debug("Init: MediaSource re-opened while end-of-stream is active");
+      endOfStreamCanceller.cancel();
+      endOfStreamCanceller = new TaskCanceller();
+      endOfStreamCanceller.linkToSignal(cancelSignal);
+      triggerEndOfStream(mediaSource, endOfStreamCanceller.signal);
+    },
+    cancelSignal,
+  );
   triggerEndOfStream(mediaSource, endOfStreamCanceller.signal);
 }

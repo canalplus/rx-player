@@ -15,26 +15,18 @@
  */
 
 import { events } from "../../compat";
-import { ICustomMediaKeySession } from "../../compat/eme";
+import type { ICustomMediaKeySession } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
 import log from "../../log";
-import {
-  IKeySystemOption,
-  IPlayerError,
-} from "../../public_types";
+import type { IKeySystemOption, IPlayerError } from "../../public_types";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import retryPromiseWithBackoff, {
-  IBackoffOptions,
-} from "../../utils/retry_promise_with_backoff";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import type { IBackoffOptions } from "../../utils/retry_promise_with_backoff";
+import retryPromiseWithBackoff from "../../utils/retry_promise_with_backoff";
+import TaskCanceller, { CancellationSignal } from "../../utils/task_canceller";
 import checkKeyStatuses from "./utils/check_key_statuses";
 
-const { onKeyError,
-        onKeyMessage,
-        onKeyStatusesChange } = events;
+const { onKeyError, onKeyMessage, onKeyStatusesChange } = events;
 
 /**
  * Listen to various events from a MediaKeySession and react accordingly
@@ -46,12 +38,12 @@ const { onKeyError,
  * @param {Object} cancelSignal
  */
 export default function SessionEventsListener(
-  session : MediaKeySession | ICustomMediaKeySession,
-  keySystemOptions : IKeySystemOption,
-  keySystem : string,
-  callbacks : ISessionEventListenerCallbacks,
-  cancelSignal : CancellationSignal
-) : void {
+  session: MediaKeySession | ICustomMediaKeySession,
+  keySystemOptions: IKeySystemOption,
+  keySystem: string,
+  callbacks: ISessionEventListenerCallbacks,
+  cancelSignal: CancellationSignal,
+): void {
   log.info("DRM: Binding session events", session.sessionId);
   const { getLicenseConfig = {} } = keySystemOptions;
 
@@ -62,7 +54,8 @@ export default function SessionEventsListener(
   if (!isNullOrUndefined(session.closed)) {
     session.closed
       .then(() => manualCanceller.cancel())
-      .catch((err) => { // Should never happen
+      .catch((err) => {
+        // Should never happen
         if (cancelSignal.isCancelled()) {
           return;
         }
@@ -71,71 +64,87 @@ export default function SessionEventsListener(
       });
   }
 
-  onKeyError(session, (evt) => {
-    manualCanceller.cancel();
-    callbacks.onError(new EncryptedMediaError("KEY_ERROR", (evt as Event).type));
-  }, manualCanceller.signal);
-
-  onKeyStatusesChange(session, (keyStatusesEvent) => {
-    handleKeyStatusesChangeEvent(keyStatusesEvent as Event).catch(error => {
-      if (cancelSignal.isCancelled() ||
-          (manualCanceller.isUsed() && error instanceof CancellationSignal))
-      {
-        return;
-      }
+  onKeyError(
+    session,
+    (evt) => {
       manualCanceller.cancel();
-      callbacks.onError(error);
-    });
-  }, manualCanceller.signal);
+      callbacks.onError(new EncryptedMediaError("KEY_ERROR", (evt as Event).type));
+    },
+    manualCanceller.signal,
+  );
 
-  onKeyMessage(session, (evt) => {
-    const messageEvent = evt as MediaKeyMessageEvent;
-    const message = new Uint8Array(messageEvent.message);
-    const messageType = isNonEmptyString(messageEvent.messageType) ?
-      messageEvent.messageType :
-      "license-request";
-
-    log.info(`DRM: Received message event, type ${messageType}`,
-             session.sessionId);
-
-    const backoffOptions = getLicenseBackoffOptions(getLicenseConfig.retry);
-    retryPromiseWithBackoff(() => runGetLicense(message, messageType),
-                            backoffOptions,
-                            manualCanceller.signal)
-      .then((licenseObject) => {
-        if (manualCanceller.isUsed()) {
-          return Promise.resolve();
-        }
-        if (isNullOrUndefined(licenseObject)) {
-          log.info("DRM: No license given, skipping session.update");
-        } else {
-          try {
-            return updateSessionWithMessage(session, licenseObject);
-          } catch (err) {
-            manualCanceller.cancel();
-            callbacks.onError(err);
-          }
-        }
-      })
-      .catch((err : unknown) => {
-        if (manualCanceller.isUsed()) {
+  onKeyStatusesChange(
+    session,
+    (keyStatusesEvent) => {
+      handleKeyStatusesChangeEvent(keyStatusesEvent as Event).catch((error) => {
+        if (
+          cancelSignal.isCancelled() ||
+          (manualCanceller.isUsed() && error instanceof CancellationSignal)
+        ) {
           return;
         }
         manualCanceller.cancel();
-        const formattedError = formatGetLicenseError(err);
+        callbacks.onError(error);
+      });
+    },
+    manualCanceller.signal,
+  );
 
-        if (!isNullOrUndefined(err)) {
-          const { fallbackOnLastTry } = (err as { fallbackOnLastTry? : boolean });
-          if (fallbackOnLastTry === true) {
-            log.warn("DRM: Last `getLicense` attempt failed. " +
-                     "Blacklisting the current session.");
-            callbacks.onError(new BlacklistedSessionError(formattedError));
+  onKeyMessage(
+    session,
+    (evt) => {
+      const messageEvent = evt as MediaKeyMessageEvent;
+      const message = new Uint8Array(messageEvent.message);
+      const messageType = isNonEmptyString(messageEvent.messageType)
+        ? messageEvent.messageType
+        : "license-request";
+
+      log.info(`DRM: Received message event, type ${messageType}`, session.sessionId);
+
+      const backoffOptions = getLicenseBackoffOptions(getLicenseConfig.retry);
+      retryPromiseWithBackoff(
+        () => runGetLicense(message, messageType),
+        backoffOptions,
+        manualCanceller.signal,
+      )
+        .then((licenseObject) => {
+          if (manualCanceller.isUsed()) {
+            return Promise.resolve();
+          }
+          if (isNullOrUndefined(licenseObject)) {
+            log.info("DRM: No license given, skipping session.update");
+          } else {
+            try {
+              return updateSessionWithMessage(session, licenseObject);
+            } catch (err) {
+              manualCanceller.cancel();
+              callbacks.onError(err);
+            }
+          }
+        })
+        .catch((err: unknown) => {
+          if (manualCanceller.isUsed()) {
             return;
           }
-        }
-        callbacks.onError(formattedError);
-      });
-  }, manualCanceller.signal);
+          manualCanceller.cancel();
+          const formattedError = formatGetLicenseError(err);
+
+          if (!isNullOrUndefined(err)) {
+            const { fallbackOnLastTry } = err as { fallbackOnLastTry?: boolean };
+            if (fallbackOnLastTry === true) {
+              log.warn(
+                "DRM: Last `getLicense` attempt failed. " +
+                  "Blacklisting the current session.",
+              );
+              callbacks.onError(new BlacklistedSessionError(formattedError));
+              return;
+            }
+          }
+          callbacks.onError(formattedError);
+        });
+    },
+    manualCanceller.signal,
+  );
 
   checkAndHandleCurrentKeyStatuses();
   return;
@@ -143,9 +152,7 @@ export default function SessionEventsListener(
    * @param {Event} keyStatusesEvent
    * @returns {Promise}
    */
-  async function handleKeyStatusesChangeEvent(
-    keyStatusesEvent : Event
-  ) : Promise<void> {
+  async function handleKeyStatusesChangeEvent(keyStatusesEvent: Event): Promise<void> {
     log.info("DRM: keystatuseschange event received", session.sessionId);
 
     await Promise.all([
@@ -168,12 +175,15 @@ export default function SessionEventsListener(
           if (cancelSignal.isCancelled()) {
             return;
           }
-          const err = new EncryptedMediaError("KEY_STATUS_CHANGE_ERROR",
-                                              "Unknown `onKeyStatusesChange` error");
-          if  (!isNullOrUndefined(error) &&
-               isNonEmptyString((error as { message? : unknown }).message))
-          {
-            err.message = (error as { message : string }).message;
+          const err = new EncryptedMediaError(
+            "KEY_STATUS_CHANGE_ERROR",
+            "Unknown `onKeyStatusesChange` error",
+          );
+          if (
+            !isNullOrUndefined(error) &&
+            isNonEmptyString((error as { message?: unknown }).message)
+          ) {
+            err.message = (error as { message: string }).message;
           }
           throw err;
         }
@@ -192,12 +202,15 @@ export default function SessionEventsListener(
    *   - call warning callback for recoverable errors
    *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
    */
-  function checkAndHandleCurrentKeyStatuses() : void {
+  function checkAndHandleCurrentKeyStatuses(): void {
     if (manualCanceller.isUsed() || session.keyStatuses.size === 0) {
-      return ;
+      return;
     }
-    const { warning, blacklistedKeyIds, whitelistedKeyIds } =
-      checkKeyStatuses(session, keySystemOptions, keySystem);
+    const { warning, blacklistedKeyIds, whitelistedKeyIds } = checkKeyStatuses(
+      session,
+      keySystemOptions,
+      keySystem,
+    );
     if (warning !== undefined) {
       callbacks.onWarning(warning);
       if (manualCanceller.isUsed()) {
@@ -208,37 +221,38 @@ export default function SessionEventsListener(
   }
 
   function runGetLicense(
-    message : Uint8Array,
-    messageType : MediaKeyMessageType
-  ) : Promise<BufferSource | null> {
-    let timeoutId : number | undefined;
+    message: Uint8Array,
+    messageType: MediaKeyMessageType,
+  ): Promise<BufferSource | null> {
+    let timeoutId: number | undefined;
     return new Promise<BufferSource | null>((res, rej) => {
       try {
         log.debug("DRM: Calling `getLicense`", messageType);
         const getLicense = keySystemOptions.getLicense(message, messageType);
-        const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout) ?
-          10 * 1000 :
-          getLicenseConfig.timeout;
+        const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout)
+          ? 10 * 1000
+          : getLicenseConfig.timeout;
 
         if (getLicenseTimeout >= 0) {
           timeoutId = setTimeout(() => {
-            rej(new GetLicenseTimeoutError(
-              `"getLicense" timeout exceeded (${getLicenseTimeout} ms)`
-            ));
+            rej(
+              new GetLicenseTimeoutError(
+                `"getLicense" timeout exceeded (${getLicenseTimeout} ms)`,
+              ),
+            );
           }, getLicenseTimeout) as unknown as number;
         }
-        Promise.resolve(getLicense)
-          .then(clearTimeoutAndResolve, clearTimeoutAndReject);
+        Promise.resolve(getLicense).then(clearTimeoutAndResolve, clearTimeoutAndReject);
       } catch (err) {
         clearTimeoutAndReject(err);
       }
-      function clearTimeoutAndResolve(data : BufferSource | null) {
+      function clearTimeoutAndResolve(data: BufferSource | null) {
         if (timeoutId !== undefined) {
           clearTimeout(timeoutId);
         }
         res(data);
       }
-      function clearTimeoutAndReject(err : unknown) {
+      function clearTimeoutAndReject(err: unknown) {
         if (timeoutId !== undefined) {
           clearTimeout(timeoutId);
         }
@@ -253,19 +267,16 @@ export default function SessionEventsListener(
    * Equal to `2` if not defined.
    * @returns {Object}
    */
-  function getLicenseBackoffOptions(
-    numberOfRetry : number | undefined
-  ) : IBackoffOptions {
+  function getLicenseBackoffOptions(numberOfRetry: number | undefined): IBackoffOptions {
     return {
       totalRetry: numberOfRetry ?? 2,
       baseDelay: 200,
       maxDelay: 3000,
-      shouldRetry: (error : unknown) =>
+      shouldRetry: (error: unknown) =>
         error instanceof GetLicenseTimeoutError ||
         isNullOrUndefined(error) ||
-        (error as { noRetry? : boolean }).noRetry !== true,
-      onRetry: (error : unknown) =>
-        callbacks.onWarning(formatGetLicenseError(error)),
+        (error as { noRetry?: boolean }).noRetry !== true,
+      onRetry: (error: unknown) => callbacks.onWarning(formatGetLicenseError(error)),
     };
   }
 }
@@ -275,10 +286,10 @@ export interface ISessionEventListenerCallbacks {
    * Some key ids related to the current MediaKeySession have updated their
    * statuses.
    */
-  onKeyUpdate : (val : IKeyUpdateValue) => void;
-  onWarning : (val : IPlayerError) => void;
+  onKeyUpdate: (val: IKeyUpdateValue) => void;
+  onWarning: (val: IPlayerError) => void;
   /* eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents */
-  onError : (val : unknown | BlacklistedSessionError) => void;
+  onError: (val: unknown | BlacklistedSessionError) => void;
 }
 
 /**
@@ -287,19 +298,23 @@ export interface ISessionEventListenerCallbacks {
  * @param {*} error
  * @returns {Error}
  */
-function formatGetLicenseError(error: unknown) : IPlayerError {
+function formatGetLicenseError(error: unknown): IPlayerError {
   if (error instanceof GetLicenseTimeoutError) {
-    return new EncryptedMediaError("KEY_LOAD_TIMEOUT",
-                                   "The license server took too much time to " +
-                                   "respond.");
+    return new EncryptedMediaError(
+      "KEY_LOAD_TIMEOUT",
+      "The license server took too much time to " + "respond.",
+    );
   }
 
-  const err = new EncryptedMediaError("KEY_LOAD_ERROR",
-                                      "An error occured when calling `getLicense`.");
-  if (!isNullOrUndefined(error) &&
-      isNonEmptyString((error as { message? : unknown }).message))
-  {
-    err.message = (error as { message : string }).message;
+  const err = new EncryptedMediaError(
+    "KEY_LOAD_ERROR",
+    "An error occured when calling `getLicense`.",
+  );
+  if (
+    !isNullOrUndefined(error) &&
+    isNonEmptyString((error as { message?: unknown }).message)
+  ) {
+    err.message = (error as { message: string }).message;
   }
   return err;
 }
@@ -311,15 +326,14 @@ function formatGetLicenseError(error: unknown) : IPlayerError {
  * @returns {Promise}
  */
 async function updateSessionWithMessage(
-  session : MediaKeySession | ICustomMediaKeySession,
-  message : BufferSource
-) : Promise<void> {
+  session: MediaKeySession | ICustomMediaKeySession,
+  message: BufferSource,
+): Promise<void> {
   log.info("DRM: Updating MediaKeySession with message");
   try {
     await session.update(message);
   } catch (error) {
-    const reason = error instanceof Error ? error.toString() :
-                                            "`session.update` failed";
+    const reason = error instanceof Error ? error.toString() : "`session.update` failed";
     throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
   }
   log.info("DRM: MediaKeySession update succeeded.");
@@ -341,7 +355,7 @@ export interface IKeyUpdateValue {
    *
    * Note that a key id may only be blacklisted temporarily.
    */
-  blacklistedKeyIds : Uint8Array[];
+  blacklistedKeyIds: Uint8Array[];
   /*
    * The list of key ids linked to the corresponding MediaKeySession that are
    * now "whitelisted", i.e. the decryption keys they are linked to can be used
@@ -351,7 +365,7 @@ export interface IKeyUpdateValue {
    *
    * Note that a key id may only be whitelisted temporarily.
    */
-  whitelistedKeyIds : Uint8Array[];
+  whitelistedKeyIds: Uint8Array[];
 }
 
 /**

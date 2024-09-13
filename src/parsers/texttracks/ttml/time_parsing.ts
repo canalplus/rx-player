@@ -21,7 +21,7 @@
  * But rewritten to a more rx-player style.
  */
 
-import { ITTParameters } from "./get_parameters";
+import type { ITTParameters } from "./get_parameters";
 import {
   REGXP_TIME_COLON,
   REGXP_TIME_COLON_FRAMES,
@@ -37,25 +37,17 @@ import {
  * @param {Object} ttParams
  * @returns {Number|undefined}
  */
-function parseTime(
-  text : string,
-  ttParams : ITTParameters
-) : number|undefined|null {
+function parseTime(text: string, ttParams: ITTParameters): number | undefined | null {
   if (REGXP_TIME_COLON_FRAMES.test(text)) {
     return parseColonTimeWithFrames(ttParams, text);
-
   } else if (REGXP_TIME_COLON.test(text)) {
     return parseTimeFromRegExp(REGXP_TIME_COLON, text);
-
   } else if (REGXP_TIME_COLON_MS.test(text)) {
     return parseTimeFromRegExp(REGXP_TIME_COLON_MS, text);
-
   } else if (REGXP_TIME_FRAMES.test(text)) {
     return parseFramesTime(ttParams, text);
-
   } else if (REGXP_TIME_TICK.test(text)) {
     return parseTickTime(ttParams, text);
-
   } else if (REGXP_TIME_HMS.test(text)) {
     return parseTimeFromRegExp(REGXP_TIME_HMS, text);
   }
@@ -67,7 +59,7 @@ function parseTime(
  * @param {string} text
  * @returns {Number}
  */
-function parseFramesTime(ttParams : ITTParameters, text : string) : number {
+function parseFramesTime(ttParams: ITTParameters, text: string): number {
   // 75f or 75.5f
   // (We cast as we're sure the regexp is respected here)
   const results = REGXP_TIME_FRAMES.exec(text) as RegExpExecArray;
@@ -81,7 +73,7 @@ function parseFramesTime(ttParams : ITTParameters, text : string) : number {
  * @param {string} text
  * @returns {Number}
  */
-function parseTickTime(ttParams : ITTParameters, text : string) : number {
+function parseTickTime(ttParams: ITTParameters, text: string): number {
   // 50t or 50.5t
   // (We cast as we're sure the regexp is respected here)
   const results = REGXP_TIME_TICK.exec(text) as RegExpExecArray;
@@ -95,10 +87,7 @@ function parseTickTime(ttParams : ITTParameters, text : string) : number {
  * @param {string} text
  * @returns {Number}
  */
-function parseColonTimeWithFrames(
-  ttParams : ITTParameters,
-  text : string
-) : number {
+function parseColonTimeWithFrames(ttParams: ITTParameters, text: string): number {
   // 01:02:43:07 ("07" is frames) or 01:02:43:07.1 (subframes)
   // (We cast as we're sure the regexp is respected here)
   const results = REGXP_TIME_COLON_FRAMES.exec(text) as RegExpExecArray;
@@ -115,7 +104,7 @@ function parseColonTimeWithFrames(
   frames += subframes / ttParams.subFrameRate;
   seconds += frames / ttParams.frameRate;
 
-  return seconds + (minutes * 60) + (hours * 3600);
+  return seconds + minutes * 60 + hours * 3600;
 }
 
 /**
@@ -126,7 +115,7 @@ function parseColonTimeWithFrames(
  * @param {string} text
  * @returns {number|null}
  */
-function parseTimeFromRegExp(regex : RegExp, text : string) : number|null {
+function parseTimeFromRegExp(regex: RegExp, text: string): number | null {
   const results = regex.exec(text);
   if (results === null || results[0] === "") {
     return null;
@@ -150,7 +139,7 @@ function parseTimeFromRegExp(regex : RegExp, text : string) : number|null {
     milliseconds = 0;
   }
 
-  return (milliseconds / 1000) + seconds + (minutes * 60) + (hours * 3600);
+  return milliseconds / 1000 + seconds + minutes * 60 + hours * 3600;
 }
 
 export default parseTime;

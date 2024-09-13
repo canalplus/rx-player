@@ -16,18 +16,18 @@
 
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 
-interface IHSSManifestSegment { start : number;
-                                duration : number;
-                                repeatCount : number; }
+interface IHSSManifestSegment {
+  start: number;
+  duration: number;
+  repeatCount: number;
+}
 
 /**
  * Parse C nodes to build index timeline.
  * @param {Element} nodes
  */
-export default function parseCNodes(
-  nodes : Element[]
-) : IHSSManifestSegment[] {
-  return nodes.reduce<IHSSManifestSegment[]>((timeline, node , i) => {
+export default function parseCNodes(nodes: Element[]): IHSSManifestSegment[] {
+  return nodes.reduce<IHSSManifestSegment[]>((timeline, node, i) => {
     const dAttr = node.getAttribute("d");
     const tAttr = node.getAttribute("t");
     const rAttr = node.getAttribute("r");
@@ -36,10 +36,11 @@ export default function parseCNodes(
     let start = tAttr !== null ? +tAttr : undefined;
     let duration = dAttr !== null ? +dAttr : undefined;
 
-    if (i === 0) { // first node
-      start = start === undefined || isNaN(start) ? 0 :
-                                                    start;
-    } else { // from second node to the end
+    if (i === 0) {
+      // first node
+      start = start === undefined || isNaN(start) ? 0 : start;
+    } else {
+      // from second node to the end
       const prev = timeline[i - 1];
       if (start == null || isNaN(start)) {
         if (prev.duration == null || isNaN(prev.duration)) {
@@ -52,11 +53,9 @@ export default function parseCNodes(
       const nextNode = nodes[i + 1];
       if (nextNode !== undefined) {
         const nextTAttr = nextNode.getAttribute("t");
-        const nextStart = isNonEmptyString(nextTAttr) ? +nextTAttr :
-                                                        null;
+        const nextStart = isNonEmptyString(nextTAttr) ? +nextTAttr : null;
         if (nextStart === null) {
-          throw new Error(
-            "Can't build index timeline from Smooth Manifest.");
+          throw new Error("Can't build index timeline from Smooth Manifest.");
         }
         duration = nextStart - start;
       } else {

@@ -16,7 +16,7 @@
 
 /* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
-import { IFeaturesObject } from "../../../features/types";
+import type { IFeaturesObject } from "../../../features/types";
 import local from "../../../transports/local";
 import addLocalManifestFeature from "../local";
 
@@ -29,7 +29,6 @@ describe("Features list - LOCAL_MANIFEST", () => {
       mediaSourceInit: MediaSourceContentInitializer,
     });
     expect(featureObject.transports.local).toBe(local);
-    expect(featureObject.mediaSourceInit)
-      .toBe(MediaSourceContentInitializer);
+    expect(featureObject.mediaSourceInit).toBe(MediaSourceContentInitializer);
   });
 });

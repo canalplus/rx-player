@@ -4,15 +4,15 @@
 
 Set a maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to a video quality with a bitrate higher than that value.
+When the bitrate is chosen through adaptive streaming (i.e., not enforced manually through
+APIs such as `setVideoBitrate`), the player will never switch to a video quality with a
+bitrate higher than that value.
 
-The exception being when no quality has a lower bitrate, in which case the
-minimum quality will always be chosen instead.
+The exception being when no quality has a lower bitrate, in which case the minimum quality
+will always be chosen instead.
 
-For example, if you want that video qualities chosen automatically never have
-a bitrate higher than 1 Megabits per second you can call:
+For example, if you want that video qualities chosen automatically never have a bitrate
+higher than 1 Megabits per second you can call:
 
 ```js
 player.setMaxVideoBitrate(1e6);
@@ -25,11 +25,11 @@ Any limit can be removed just by setting that value to `Infinity`:
 player.setMaxVideoBitrate(Infinity);
 ```
 
-The effect of this method is persisted from content to content. As such, it can
-even be called when no content is currently loaded.
+The effect of this method is persisted from content to content. As such, it can even be
+called when no content is currently loaded.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the bitrate manually (for example
+by calling `setVideoBitrate`) bypass this limit completely.
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
@@ -43,7 +43,6 @@ this method has no effect.
 player.setMaxVideoBitrate(maxBitrate);
 ```
 
-  - **arguments**:
+- **arguments**:
 
-    1. _maxBitrate_ `number`: Upper video bitrate limit when adaptive streaming
-       is enabled.
+  1. _maxBitrate_ `number`: Upper video bitrate limit when adaptive streaming is enabled.

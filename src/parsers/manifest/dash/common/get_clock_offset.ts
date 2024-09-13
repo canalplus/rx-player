@@ -29,9 +29,7 @@ import log from "../../../../log";
  * @param {string} serverClock
  * @returns {number|undefined}
  */
-export default function getClockOffset(
-  serverClock: string
-): number | undefined {
+export default function getClockOffset(serverClock: string): number | undefined {
   const httpOffset = Date.parse(serverClock) - performance.now();
   if (isNaN(httpOffset)) {
     log.warn("DASH Parser: Invalid clock received: ", serverClock);

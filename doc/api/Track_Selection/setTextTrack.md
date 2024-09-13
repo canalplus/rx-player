@@ -4,9 +4,9 @@
 
 Change the current text (subtitles) track.
 
-The argument to this method is the wanted track's `id` property. This `id` can
-for example be obtained on the corresponding track object returned by the
-`getAvailableTextTracks` method.
+The argument to this method is the wanted track's `id` property. This `id` can for example
+be obtained on the corresponding track object returned by the `getAvailableTextTracks`
+method.
 
 <div class="note">
 Note for multi-Period contents:
@@ -47,6 +47,6 @@ This has two potential reasons :
 player.setTextTrack(textTrackId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _textTrackId_ `string|number`: The `id` of the track you want to set
+  1.  _textTrackId_ `string|number`: The `id` of the track you want to set

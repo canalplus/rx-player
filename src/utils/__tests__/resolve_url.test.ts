@@ -24,38 +24,38 @@ describe(`utils - resolveURL ${resolveURL.name}`, () => {
   it("should concatenate multiple URLs", () => {
     expect(resolveURL("http://toto.com/a")).toBe("http://toto.com/a");
     expect(
-      resolveURL("http://toto.com/a" /** Trailling slash missing */, "b/c/d/", "g.a")
+      resolveURL("http://toto.com/a" /** Trailling slash missing */, "b/c/d/", "g.a"),
     ).toBe("http://toto.com/b/c/d/g.a");
     expect(
-      resolveURL("http://toto.com/a/" /** With a trailling slash */, "b/c/d/", "g.a")
+      resolveURL("http://toto.com/a/" /** With a trailling slash */, "b/c/d/", "g.a"),
     ).toBe("http://toto.com/a/b/c/d/g.a");
   });
 
   it("should ignore empty strings when concatenating multiple URLs", () => {
     expect(resolveURL("", "http://toto.com/a", "")).toBe("http://toto.com/a");
     expect(resolveURL("http://toto.com/a/", "b/c/d/", "", "g.a")).toBe(
-      "http://toto.com/a/b/c/d/g.a"
+      "http://toto.com/a/b/c/d/g.a",
     );
   });
 
   it("should handle absolute path and keep the last one only", () => {
     expect(resolveURL("http://toto.com/a", "/b/c/d/", "/", "/g.a")).toBe(
-      "http://toto.com/g.a"
+      "http://toto.com/g.a",
     );
   });
 
   it("should reset the concatenation if a given string contains a scheme", () => {
     expect(resolveURL("http://toto.com/a", "b/c/d/", "torrent://g.a", "b")).toBe(
-      "torrent://g.a/b"
+      "torrent://g.a/b",
     );
   });
 
   it("should have a - fairly simple - algorithm to simplify parent directories", () => {
     expect(
-      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "../a")
+      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "../a"),
     ).toBe("torrent://g.a/b/c/a");
     expect(
-      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "../c/../../a")
+      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "../c/../../a"),
     ).toBe("torrent://g.a/b/a");
   });
 
@@ -63,10 +63,10 @@ describe(`utils - resolveURL ${resolveURL.name}`, () => {
   it("should have a - fairly simple - algorithm to simplify the current directory", () => {
     /* eslint-enable max-len */
     expect(
-      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "./a")
+      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "./a"),
     ).toBe("torrent://g.a/b/c/d/a");
     expect(
-      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "../c/.././a")
+      resolveURL("http://toto.com/a/", "b/c/d/", "torrent://g.a/b/c/d/", "../c/.././a"),
     ).toBe("torrent://g.a/b/c/a");
   });
 
@@ -144,7 +144,7 @@ describe(`utils - resolveURL ${resolveURL.name}`, () => {
     const baseURL = "http://username:password@example.com/";
     const relative = "bar";
     expect(resolveURL(baseURL, relative)).toBe(
-      "http://username:password@example.com/bar"
+      "http://username:password@example.com/bar",
     );
   });
 });

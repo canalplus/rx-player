@@ -1,10 +1,6 @@
 import * as React from "react";
 
-const {
-  useEffect,
-  useRef,
-  useState,
-} = React;
+const { useEffect, useRef, useState } = React;
 
 /**
  * React Component which Displays an Image thumbnail centered and on top of the
@@ -27,9 +23,9 @@ function ImageThumbnail({
   xPosition: number;
 }): JSX.Element {
   const wrapperEl = useRef<HTMLDivElement>(null);
-  const [ imageUrl, setImageUrl ] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   useEffect(() => {
-    const blob = new Blob([image], {type: "image/jpeg"});
+    const blob = new Blob([image], { type: "image/jpeg" });
     const url = URL.createObjectURL(blob);
     setImageUrl(url);
     return () => {
@@ -38,19 +34,13 @@ function ImageThumbnail({
   }, [image]);
   useEffect(() => {
     if (isNaN(+xPosition) || wrapperEl.current === null) {
-      return ;
+      return;
     }
     wrapperEl.current.style.transform = `translate(${xPosition}px, -136px)`;
   }, [xPosition]);
   return (
-    <div
-      className="thumbnail-wrapper"
-      ref={wrapperEl}
-    >
-      <img
-        className="thumbnail"
-        src={imageUrl}
-      />
+    <div className="thumbnail-wrapper" ref={wrapperEl}>
+      <img className="thumbnail" src={imageUrl} />
     </div>
   );
 }

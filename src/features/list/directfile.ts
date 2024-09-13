@@ -17,14 +17,14 @@
 // eslint-disable-next-line max-len
 import MediaElementTrackChoiceManager from "../../core/api/tracks_management/media_element_track_choice_manager";
 import directfile from "../../core/init/directfile_content_initializer";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play file natively played by the browser
  * (`directfile` transport)
  * @param {Object} features
  */
-function addDirectfileFeature(features : IFeaturesObject) : void {
+function addDirectfileFeature(features: IFeaturesObject): void {
   features.directfile = {
     initDirectFile: directfile,
     mediaElementTrackChoiceManager: MediaElementTrackChoiceManager,

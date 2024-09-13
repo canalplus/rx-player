@@ -15,46 +15,40 @@
  */
 
 import config from "../../../../config";
-import {
-  Adaptation,
-  Period,
-} from "../../../../manifest";
-import { IAudioTrackSwitchingMode } from "../../../../public_types";
+import type { Adaptation, Period } from "../../../../manifest";
+import type { IAudioTrackSwitchingMode } from "../../../../public_types";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
+import type { IRange } from "../../../../utils/ranges";
 import {
   convertToRanges,
   excludeFromRanges,
-  IRange,
   isTimeInRange,
   isTimeInRanges,
   keepRangeIntersection,
 } from "../../../../utils/ranges";
-import {
-  IBufferedChunk,
-  SegmentBuffer,
-} from "../../../segment_buffers";
+import type { IBufferedChunk, SegmentBuffer } from "../../../segment_buffers";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */
-  { type: "continue"; value: undefined } |
+  | { type: "continue"; value: undefined }
   /**
    * Clean the given ranges of time from the buffer, preferably avoiding time
    * around the current position to continue playback smoothly.
    */
-  { type: "clean-buffer"; value: Array<{ start: number; end: number }> } |
+  | { type: "clean-buffer"; value: Array<{ start: number; end: number }> }
   /**
    * Clean the given ranges of time from the buffer and try to flush the buffer
    * so that it is taken in account directly.
    */
-  { type: "flush-buffer"; value: Array<{ start: number; end: number }> } |
+  | { type: "flush-buffer"; value: Array<{ start: number; end: number }> }
   /** Reload completely the media buffers. */
-  { type: "needs-reload"; value: undefined };
+  | { type: "needs-reload"; value: undefined };
 
 export interface IAdaptationSwitchOptions {
   /** RxPlayer's behavior when switching the audio track. */
-  audioTrackSwitchingMode : IAudioTrackSwitchingMode;
+  audioTrackSwitchingMode: IAudioTrackSwitchingMode;
   /** Behavior when a new video and/or audio codec is encountered. */
-  onCodecSwitch : "continue" | "reload";
+  onCodecSwitch: "continue" | "reload";
 }
 
 /**
@@ -67,16 +61,17 @@ export interface IAdaptationSwitchOptions {
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
-  segmentBuffer : SegmentBuffer,
-  period : Period,
-  adaptation : Adaptation,
-  playbackInfo : { currentTime : number; readyState : number },
-  options : IAdaptationSwitchOptions
-) : IAdaptationSwitchStrategy {
-  if (segmentBuffer.codec !== undefined &&
-      options.onCodecSwitch === "reload" &&
-      !hasCompatibleCodec(adaptation, segmentBuffer.codec))
-  {
+  segmentBuffer: SegmentBuffer,
+  period: Period,
+  adaptation: Adaptation,
+  playbackInfo: { currentTime: number; readyState: number },
+  options: IAdaptationSwitchOptions,
+): IAdaptationSwitchStrategy {
+  if (
+    segmentBuffer.codec !== undefined &&
+    options.onCodecSwitch === "reload" &&
+    !hasCompatibleCodec(adaptation, segmentBuffer.codec)
+  ) {
     return { type: "needs-reload", value: undefined };
   }
 
@@ -86,8 +81,7 @@ export default function getAdaptationSwitchStrategy(
   }
   const bufferedRanges = convertToRanges(buffered);
   const start = period.start;
-  const end = period.end == null ? Infinity :
-                                   period.end;
+  const end = period.end == null ? Infinity : period.end;
   const intersection = keepRangeIntersection(bufferedRanges, [{ start, end }]);
   if (intersection.length === 0) {
     return { type: "continue", value: undefined };
@@ -97,15 +91,21 @@ export default function getAdaptationSwitchStrategy(
   const inventory = segmentBuffer.getInventory();
 
   // Continue if we have no other Adaptation buffered in the current Period
-  if (!inventory.some(buf => buf.infos.period.id === period.id &&
-                             buf.infos.adaptation.id !== adaptation.id))
-  {
+  if (
+    !inventory.some(
+      (buf) =>
+        buf.infos.period.id === period.id && buf.infos.adaptation.id !== adaptation.id,
+    )
+  ) {
     return { type: "continue", value: undefined };
   }
 
   /** Data already in the right Adaptation */
-  const adaptationInBuffer =
-    getBufferedRangesFromAdaptation(inventory, period, adaptation);
+  const adaptationInBuffer = getBufferedRangesFromAdaptation(
+    inventory,
+    period,
+    adaptation,
+  );
 
   /**
    * Data different from the wanted Adaptation in the Period's range.
@@ -121,25 +121,29 @@ export default function getAdaptationSwitchStrategy(
   const { currentTime } = playbackInfo;
   const { audioTrackSwitchingMode } = options;
 
-  const hasReloadSwitchingMode = adaptation.type === "video" ||
+  const hasReloadSwitchingMode =
+    adaptation.type === "video" ||
     (adaptation.type === "audio" && audioTrackSwitchingMode === "reload");
-  if (hasReloadSwitchingMode &&
-      // We're playing the current Period
-      isTimeInRange({ start, end }, currentTime) &&
-      // There is data for the current position or the codecs are differents
-      (playbackInfo.readyState > 1 || !adaptation.getPlayableRepresentations()
-        .some(rep =>
-          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""))) &&
-      // We're not playing the current wanted video Adaptation
-      !isTimeInRanges(adaptationInBuffer, currentTime))
-  {
+  if (
+    hasReloadSwitchingMode &&
+    // We're playing the current Period
+    isTimeInRange({ start, end }, currentTime) &&
+    // There is data for the current position or the codecs are differents
+    (playbackInfo.readyState > 1 ||
+      !adaptation
+        .getPlayableRepresentations()
+        .some((rep) =>
+          areCodecsCompatible(rep.getMimeTypeString(), segmentBuffer.codec ?? ""),
+        )) &&
+    // We're not playing the current wanted video Adaptation
+    !isTimeInRanges(adaptationInBuffer, currentTime)
+  ) {
     return { type: "needs-reload", value: undefined };
   }
 
   // From here, clean-up data from the previous Adaptation, if one
 
-  const shouldFlush = adaptation.type === "audio" &&
-                      audioTrackSwitchingMode === "direct";
+  const shouldFlush = adaptation.type === "audio" && audioTrackSwitchingMode === "direct";
 
   const rangesToExclude = [];
 
@@ -148,14 +152,15 @@ export default function getAdaptationSwitchStrategy(
 
   /** Last segment before one for the current period. */
   const lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
-  if (lastSegmentBefore !== null &&
+  if (
+    lastSegmentBefore !== null &&
     (lastSegmentBefore.bufferedEnd === undefined ||
-      period.start - lastSegmentBefore.bufferedEnd < 1)) // Close to Period's start
-  {
+      period.start - lastSegmentBefore.bufferedEnd < 1)
+  ) {
+    // Close to Period's start
     // Exclude data close to the period's start to avoid cleaning
     // to much
-    rangesToExclude.push({ start: 0,
-                           end: period.start + 1 });
+    rangesToExclude.push({ start: 0, end: period.start + 1 });
   }
 
   // Next, exclude data around current position to avoid decoding issues
@@ -173,8 +178,10 @@ export default function getAdaptationSwitchStrategy(
   }
 
   if (!shouldFlush) {
-    rangesToExclude.push({ start: currentTime - paddingBefore,
-                           end: currentTime + paddingAfter });
+    rangesToExclude.push({
+      start: currentTime - paddingBefore,
+      end: currentTime + paddingAfter,
+    });
   }
 
   // Now remove possible small range from the end if there is a segment from the
@@ -182,12 +189,13 @@ export default function getAdaptationSwitchStrategy(
   if (period.end !== undefined) {
     /** first segment after for the current period. */
     const firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
-    if (firstSegmentAfter !== null &&
-        (firstSegmentAfter.bufferedStart === undefined ||
-         (firstSegmentAfter.bufferedStart - period.end) < 1)) // Close to Period's end
-    {
-      rangesToExclude.push({ start: period.end - 1,
-                             end: Number.MAX_VALUE });
+    if (
+      firstSegmentAfter !== null &&
+      (firstSegmentAfter.bufferedStart === undefined ||
+        firstSegmentAfter.bufferedStart - period.end < 1)
+    ) {
+      // Close to Period's end
+      rangesToExclude.push({ start: period.end - 1, end: Number.MAX_VALUE });
     }
   }
 
@@ -197,8 +205,9 @@ export default function getAdaptationSwitchStrategy(
     return { type: "continue", value: undefined };
   }
 
-  return shouldFlush ? { type: "flush-buffer", value: toRemove } :
-                       { type: "clean-buffer", value: toRemove };
+  return shouldFlush
+    ? { type: "flush-buffer", value: toRemove }
+    : { type: "clean-buffer", value: toRemove };
 }
 
 /**
@@ -208,12 +217,10 @@ export default function getAdaptationSwitchStrategy(
  * @param {string} segmentBufferCodec
  * @returns {boolean}
  */
-function hasCompatibleCodec(
-  adaptation : Adaptation,
-  segmentBufferCodec : string
-) : boolean {
-  return adaptation.getPlayableRepresentations().some(rep =>
-    areCodecsCompatible(rep.getMimeTypeString(), segmentBufferCodec));
+function hasCompatibleCodec(adaptation: Adaptation, segmentBufferCodec: string): boolean {
+  return adaptation
+    .getPlayableRepresentations()
+    .some((rep) => areCodecsCompatible(rep.getMimeTypeString(), segmentBufferCodec));
 }
 
 /**
@@ -225,14 +232,15 @@ function hasCompatibleCodec(
  * @returns {Array.<Object>}
  */
 function getBufferedRangesFromAdaptation(
-  inventory : IBufferedChunk[],
-  period : Period,
-  adaptation : Adaptation
-) : IRange[] {
-  return inventory.reduce<IRange[]>((acc : IRange[], chunk) : IRange[] => {
-    if (chunk.infos.period.id !== period.id ||
-        chunk.infos.adaptation.id !== adaptation.id)
-    {
+  inventory: IBufferedChunk[],
+  period: Period,
+  adaptation: Adaptation,
+): IRange[] {
+  return inventory.reduce<IRange[]>((acc: IRange[], chunk): IRange[] => {
+    if (
+      chunk.infos.period.id !== period.id ||
+      chunk.infos.adaptation.id !== adaptation.id
+    ) {
       return acc;
     }
     const { bufferedStart, bufferedEnd } = chunk;
@@ -252,9 +260,9 @@ function getBufferedRangesFromAdaptation(
  * @returns {Object|null}
  */
 function getLastSegmentBeforePeriod(
-  inventory : IBufferedChunk[],
-  period : Period
-) : IBufferedChunk | null {
+  inventory: IBufferedChunk[],
+  period: Period,
+): IBufferedChunk | null {
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].infos.period.start >= period.start) {
       if (i > 0) {
@@ -263,8 +271,7 @@ function getLastSegmentBeforePeriod(
       return null;
     }
   }
-  return inventory.length > 0 ? inventory[inventory.length - 1] :
-                                null;
+  return inventory.length > 0 ? inventory[inventory.length - 1] : null;
 }
 
 /**
@@ -275,9 +282,9 @@ function getLastSegmentBeforePeriod(
  * @returns {Object|null}
  */
 function getFirstSegmentAfterPeriod(
-  inventory : IBufferedChunk[],
-  period : Period
-) : IBufferedChunk | null {
+  inventory: IBufferedChunk[],
+  period: Period,
+): IBufferedChunk | null {
   for (let i = 0; i < inventory.length; i++) {
     if (inventory[i].infos.period.start > period.start) {
       return inventory[i];

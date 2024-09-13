@@ -22,10 +22,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 interface IFakeNavigator {
-  onLine? : boolean | null;
+  onLine?: boolean | null;
 }
 interface IFakeWindow {
-  navigator : IFakeNavigator;
+  navigator: IFakeNavigator;
 }
 const win = window as IFakeWindow;
 

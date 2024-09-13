@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 import { MediaError } from "../errors";
-import {
-  IManifestStreamEvent,
-  IParsedPeriod,
-} from "../parsers/manifest";
-import {
-  IPlayerError,
-  IRepresentationFilter,
-} from "../public_types";
+import type { IManifestStreamEvent, IParsedPeriod } from "../parsers/manifest";
+import type { IPlayerError, IRepresentationFilter } from "../public_types";
 import arrayFind from "../utils/array_find";
 import objectValues from "../utils/object_values";
 import Adaptation from "./adaptation";
-import { IAdaptationType } from "./types";
+import type { IAdaptationType } from "./types";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>>;
@@ -37,86 +31,91 @@ export type IManifestAdaptations = Partial<Record<IAdaptationType, Adaptation[]>
  */
 export default class Period {
   /** ID uniquely identifying the Period in the Manifest. */
-  public readonly id : string;
+  public readonly id: string;
 
   /** Every 'Adaptation' in that Period, per type of Adaptation. */
-  public adaptations : IManifestAdaptations;
+  public adaptations: IManifestAdaptations;
 
   /** Absolute start time of the Period, in seconds. */
-  public start : number;
+  public start: number;
 
   /**
    * Duration of this Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  public duration : number | undefined;
+  public duration: number | undefined;
 
   /**
    * Absolute end time of the Period, in seconds.
    * `undefined` for still-running Periods.
    */
-  public end : number | undefined;
+  public end: number | undefined;
 
   /**
    * Array containing every errors that happened when the Period has been
    * created, in the order they have happened.
    */
-  public readonly contentWarnings : IPlayerError[];
+  public readonly contentWarnings: IPlayerError[];
 
   /** Array containing every stream event happening on the period */
-  public streamEvents : IManifestStreamEvent[];
+  public streamEvents: IManifestStreamEvent[];
 
   /**
    * @constructor
    * @param {Object} args
    * @param {function|undefined} [representationFilter]
    */
-  constructor(
-    args : IParsedPeriod,
-    representationFilter? : IRepresentationFilter | undefined
-  ) {
+  constructor(args: IParsedPeriod, representationFilter?: IRepresentationFilter) {
     this.contentWarnings = [];
     this.id = args.id;
-    this.adaptations = (Object.keys(args.adaptations) as IAdaptationType[])
-      .reduce<IManifestAdaptations>((acc, type) => {
-        const adaptationsForType = args.adaptations[type];
-        if (adaptationsForType == null) {
-          return acc;
-        }
-        const filteredAdaptations = adaptationsForType
-          .map((adaptation) : Adaptation => {
-            const newAdaptation = new Adaptation(adaptation, { representationFilter });
-            if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
-              const error =
-                new MediaError("MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-                               "An Adaptation contains only incompatible codecs.",
-                               { adaptation: newAdaptation });
-              this.contentWarnings.push(error);
-            }
-            return newAdaptation;
-          })
-          .filter((adaptation) : adaptation is Adaptation =>
-            adaptation.representations.length > 0
-          );
-        if (filteredAdaptations.every(adaptation => !adaptation.isSupported) &&
-            adaptationsForType.length > 0 &&
-            (type === "video" || type === "audio")
-        ) {
-          throw new MediaError("MANIFEST_PARSE_ERROR",
-                               "No supported " + type + " adaptations");
-        }
-
-        if (filteredAdaptations.length > 0) {
-          acc[type] = filteredAdaptations;
-        }
+    this.adaptations = (
+      Object.keys(args.adaptations) as IAdaptationType[]
+    ).reduce<IManifestAdaptations>((acc, type) => {
+      const adaptationsForType = args.adaptations[type];
+      if (adaptationsForType == null) {
         return acc;
-      }, {});
+      }
+      const filteredAdaptations = adaptationsForType
+        .map((adaptation): Adaptation => {
+          const newAdaptation = new Adaptation(adaptation, { representationFilter });
+          if (newAdaptation.representations.length > 0 && !newAdaptation.isSupported) {
+            const error = new MediaError(
+              "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
+              "An Adaptation contains only incompatible codecs.",
+              { adaptation: newAdaptation },
+            );
+            this.contentWarnings.push(error);
+          }
+          return newAdaptation;
+        })
+        .filter(
+          (adaptation): adaptation is Adaptation => adaptation.representations.length > 0,
+        );
+      if (
+        filteredAdaptations.every((adaptation) => !adaptation.isSupported) &&
+        adaptationsForType.length > 0 &&
+        (type === "video" || type === "audio")
+      ) {
+        throw new MediaError(
+          "MANIFEST_PARSE_ERROR",
+          "No supported " + type + " adaptations",
+        );
+      }
 
-    if (!Array.isArray(this.adaptations.video) &&
-        !Array.isArray(this.adaptations.audio))
-    {
-      throw new MediaError("MANIFEST_PARSE_ERROR",
-                           "No supported audio and video tracks.");
+      if (filteredAdaptations.length > 0) {
+        acc[type] = filteredAdaptations;
+      }
+      return acc;
+    }, {});
+
+    if (
+      !Array.isArray(this.adaptations.video) &&
+      !Array.isArray(this.adaptations.audio)
+    ) {
+      throw new MediaError(
+        "MANIFEST_PARSE_ERROR",
+        "No supported audio and video tracks.",
+      );
     }
 
     this.duration = args.duration;
@@ -125,9 +124,7 @@ export default class Period {
     if (this.duration != null && this.start != null) {
       this.end = this.start + this.duration;
     }
-    this.streamEvents = args.streamEvents === undefined ?
-      [] :
-      args.streamEvents;
+    this.streamEvents = args.streamEvents === undefined ? [] : args.streamEvents;
   }
 
   /**
@@ -135,13 +132,13 @@ export default class Period {
    * Array.
    * @returns {Array.<Object>}
    */
-  getAdaptations() : Adaptation[] {
+  getAdaptations(): Adaptation[] {
     const adaptationsByType = this.adaptations;
     return objectValues(adaptationsByType).reduce<Adaptation[]>(
       // Note: the second case cannot happen. TS is just being dumb here
-      (acc, adaptations) => adaptations != null ? acc.concat(adaptations) :
-                                                  acc,
-      []);
+      (acc, adaptations) => (adaptations != null ? acc.concat(adaptations) : acc),
+      [],
+    );
   }
 
   /**
@@ -150,10 +147,9 @@ export default class Period {
    * @param {string} adaptationType
    * @returns {Array.<Object>}
    */
-  getAdaptationsForType(adaptationType : IAdaptationType) : Adaptation[] {
+  getAdaptationsForType(adaptationType: IAdaptationType): Adaptation[] {
     const adaptationsForType = this.adaptations[adaptationType];
-    return adaptationsForType == null ? [] :
-                                        adaptationsForType;
+    return adaptationsForType == null ? [] : adaptationsForType;
   }
 
   /**
@@ -161,7 +157,7 @@ export default class Period {
    * @param {number|string} wantedId
    * @returns {Object|undefined}
    */
-  getAdaptation(wantedId : string) : Adaptation|undefined {
+  getAdaptation(wantedId: string): Adaptation | undefined {
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
   }
 
@@ -171,9 +167,9 @@ export default class Period {
    * type. Will return for all types if `undefined`.
    * @returns {Array.<Adaptation>}
    */
-  getSupportedAdaptations(type? : IAdaptationType) : Adaptation[] {
+  getSupportedAdaptations(type?: IAdaptationType): Adaptation[] {
     if (type === undefined) {
-      return this.getAdaptations().filter(ada => {
+      return this.getAdaptations().filter((ada) => {
         return ada.isSupported;
       });
     }
@@ -181,7 +177,7 @@ export default class Period {
     if (adaptationsForType === undefined) {
       return [];
     }
-    return adaptationsForType.filter(ada => {
+    return adaptationsForType.filter((ada) => {
       return ada.isSupported;
     });
   }
@@ -193,12 +189,13 @@ export default class Period {
    * after in the same Manifest. `null` if this instance is the last `Period`.
    * @returns {boolean}
    */
-  containsTime(time : number, nextPeriod : Period | null) : boolean {
+  containsTime(time: number, nextPeriod: Period | null): boolean {
     if (time >= this.start && (this.end === undefined || time < this.end)) {
       return true;
-    } else if (time === this.end && (nextPeriod === null ||
-                                     nextPeriod.start > this.end))
-    {
+    } else if (
+      time === this.end &&
+      (nextPeriod === null || nextPeriod.start > this.end)
+    ) {
       // The last possible timed position of a Period is ambiguous as it is
       // frequently in common with the start of the next one: is it part of
       // the current or of the next Period?

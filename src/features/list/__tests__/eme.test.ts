@@ -15,7 +15,7 @@
  */
 
 import ContentDecryptor from "../../../core/decrypt";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addEMEFeature from "../eme";
 
 describe("Features list - EME", () => {

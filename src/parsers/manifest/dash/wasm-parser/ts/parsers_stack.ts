@@ -15,15 +15,13 @@
  */
 
 import noop from "../../../../../utils/noop";
-import { AttributeName } from "./types";
+import type { AttributeName } from "./types";
 
 /** Type of the function called when a Node opening is encountered. */
-export type IChildrenParser =
-  (node : number) => void;
+export type IChildrenParser = (node: number) => void;
 
 /** Type of the function called when an attribute is encountered. */
-export type IAttributeParser =
-  (attr : AttributeName, ptr : number, len : number) => void;
+export type IAttributeParser = (attr: AttributeName, ptr: number, len: number) => void;
 
 /**
  * Maintains a stack of children and attributes parsers, to easily parse
@@ -35,13 +33,15 @@ export type IAttributeParser =
  * @class ParsersStack
  */
 export default class ParsersStack {
-  private _currentNodeId : number | null;
-  public childrenParser : IChildrenParser;
-  public attributeParser : IAttributeParser;
+  private _currentNodeId: number | null;
+  public childrenParser: IChildrenParser;
+  public attributeParser: IAttributeParser;
 
-  private _stack : Array<{ nodeId : number | null;
-                           attribute : IAttributeParser;
-                           children : IChildrenParser; }>;
+  private _stack: Array<{
+    nodeId: number | null;
+    attribute: IAttributeParser;
+    children: IChildrenParser;
+  }>;
   constructor() {
     this._currentNodeId = null;
     this.childrenParser = noop;
@@ -50,21 +50,19 @@ export default class ParsersStack {
   }
 
   public pushParsers(
-    nodeId : number | null,
-    childrenParser : IChildrenParser,
-    attrParser : IAttributeParser
-  ) : void {
+    nodeId: number | null,
+    childrenParser: IChildrenParser,
+    attrParser: IAttributeParser,
+  ): void {
     this._currentNodeId = nodeId;
     this.childrenParser = childrenParser;
     this.attributeParser = attrParser;
-    this._stack.push({ nodeId,
-                       attribute: attrParser,
-                       children: childrenParser });
+    this._stack.push({ nodeId, attribute: attrParser, children: childrenParser });
   }
 
-  public popIfCurrent(idToPop : number) : void {
+  public popIfCurrent(idToPop: number): void {
     if (this._currentNodeId !== idToPop) {
-      return ;
+      return;
     }
     this._stack.pop();
     const { nodeId, children, attribute } = this._stack[this._stack.length - 1];
@@ -73,7 +71,7 @@ export default class ParsersStack {
     this.childrenParser = children;
   }
 
-  public reset() : void {
+  public reset(): void {
     this.childrenParser = noop;
     this.attributeParser = noop;
     this._stack = [{ nodeId: null, children: noop, attribute: noop }];

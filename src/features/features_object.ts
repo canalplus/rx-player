@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-import { IFeaturesObject } from "./types";
+import type { IFeaturesObject } from "./types";
 
 /**
  * Initial features object, with no feature activated by default.
  * @type {Object}
  */
-const features : IFeaturesObject = { dashParsers: { wasm: null,
-                                                    js: null },
-                                     createDebugElement: null,
-                                     directfile: null,
-                                     decrypt: null,
-                                     htmlTextTracksBuffer: null,
-                                     htmlTextTracksParsers: {},
-                                     imageBuffer: null,
-                                     imageParser: null,
-                                     mediaSourceInit: null,
-                                     nativeTextTracksBuffer: null,
-                                     nativeTextTracksParsers: {},
-                                     transports: {} };
+const features: IFeaturesObject = {
+  dashParsers: { wasm: null, js: null },
+  createDebugElement: null,
+  directfile: null,
+  decrypt: null,
+  htmlTextTracksBuffer: null,
+  htmlTextTracksParsers: {},
+  imageBuffer: null,
+  imageParser: null,
+  mediaSourceInit: null,
+  nativeTextTracksBuffer: null,
+  nativeTextTracksParsers: {},
+  transports: {},
+};
 
 export default features;

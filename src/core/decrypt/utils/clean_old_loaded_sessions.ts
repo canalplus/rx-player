@@ -15,7 +15,7 @@
  */
 
 import log from "../../../log";
-import LoadedSessionsStore from "./loaded_sessions_store";
+import type LoadedSessionsStore from "./loaded_sessions_store";
 
 /**
  * Close sessions from the loadedSessionsStore to allow at maximum `limit`
@@ -27,14 +27,14 @@ import LoadedSessionsStore from "./loaded_sessions_store";
  * @returns {Promise}
  */
 export default async function cleanOldLoadedSessions(
-  loadedSessionsStore : LoadedSessionsStore,
-  limit : number
-) : Promise<void> {
+  loadedSessionsStore: LoadedSessionsStore,
+  limit: number,
+): Promise<void> {
   if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
-    return ;
+    return;
   }
   log.info("DRM: LSS cache limit exceeded", limit, loadedSessionsStore.getLength());
-  const proms : Array<Promise<unknown>> = [];
+  const proms: Array<Promise<unknown>> = [];
   const entries = loadedSessionsStore.getAll().slice(); // clone
   const toDelete = entries.length - limit;
   for (let i = 0; i < toDelete; i++) {

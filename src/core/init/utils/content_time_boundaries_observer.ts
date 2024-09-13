@@ -15,19 +15,16 @@
  */
 
 import { MediaError } from "../../../errors";
-import Manifest, {
-  Adaptation,
-  IRepresentationIndex,
-  Period,
-} from "../../../manifest";
-import { IPlayerError } from "../../../public_types";
+import type { Adaptation, IRepresentationIndex, Period } from "../../../manifest";
+import type Manifest from "../../../manifest";
+import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import SortedList from "../../../utils/sorted_list";
 import TaskCanceller from "../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../api";
-import { IBufferType } from "../../segment_buffers";
-import { IStreamOrchestratorPlaybackObservation } from "../../stream";
+import type { IReadOnlyPlaybackObserver } from "../../api";
+import type { IBufferType } from "../../segment_buffers";
+import type { IStreamOrchestratorPlaybackObservation } from "../../stream";
 
 /**
  * Observes what's being played and take care of media events relating to time
@@ -42,23 +39,21 @@ import { IStreamOrchestratorPlaybackObservation } from "../../stream";
  *     Manifest range.
  * @class ContentTimeBoundariesObserver
  */
-export default class ContentTimeBoundariesObserver
-  extends EventEmitter<IContentTimeBoundariesObserverEvent> {
-
+export default class ContentTimeBoundariesObserver extends EventEmitter<IContentTimeBoundariesObserverEvent> {
   /** Allows to interrupt everything the `ContentTimeBoundariesObserver` is doing. */
-  private _canceller : TaskCanceller;
+  private _canceller: TaskCanceller;
 
   /** Store information on every created "Streams". */
-  private _activeStreams : Map<IBufferType, IActiveStreamsInfo>;
+  private _activeStreams: Map<IBufferType, IActiveStreamsInfo>;
 
   /** The `Manifest` object linked to the current content. */
-  private _manifest : Manifest;
+  private _manifest: Manifest;
 
   /** Allows to calculate at any time maximum positions of the content */
-  private _maximumPositionCalculator : MaximumPositionCalculator;
+  private _maximumPositionCalculator: MaximumPositionCalculator;
 
   /** Enumerate all possible buffer types in the current content. */
-  private _allBufferTypes : IBufferType[];
+  private _allBufferTypes: IBufferType[];
 
   /**
    * Stores the `id` property of the last Period for which a `periodChange`
@@ -66,16 +61,16 @@ export default class ContentTimeBoundariesObserver
    * Allows to avoid multiple times in a row `periodChange` for the same
    * Period.
    */
-  private _lastCurrentPeriodId : string | null;
+  private _lastCurrentPeriodId: string | null;
 
   /**
    * @param {Object} manifest
    * @param {Object} playbackObserver
    */
   constructor(
-    manifest : Manifest,
-    playbackObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
-    bufferTypes : IBufferType[]
+    manifest: Manifest,
+    playbackObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+    bufferTypes: IBufferType[],
   ) {
     super();
 
@@ -93,30 +88,41 @@ export default class ContentTimeBoundariesObserver
     this._maximumPositionCalculator = maximumPositionCalculator;
 
     const cancelSignal = this._canceller.signal;
-    playbackObserver.listen(({ position }) => {
-      const wantedPosition = position.pending ?? position.last;
-      if (wantedPosition < manifest.getMinimumSafePosition()) {
-        const warning = new MediaError("MEDIA_TIME_BEFORE_MANIFEST",
-                                       "The current position is behind the " +
-                                       "earliest time announced in the Manifest.");
-        this.trigger("warning", warning);
-      } else if (
-        wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
-      ) {
-        const warning = new MediaError("MEDIA_TIME_AFTER_MANIFEST",
-                                       "The current position is after the latest " +
-                                       "time announced in the Manifest.");
-        this.trigger("warning", warning);
-      }
-    }, { includeLastObservation: true, clearSignal: cancelSignal });
+    playbackObserver.listen(
+      ({ position }) => {
+        const wantedPosition = position.pending ?? position.last;
+        if (wantedPosition < manifest.getMinimumSafePosition()) {
+          const warning = new MediaError(
+            "MEDIA_TIME_BEFORE_MANIFEST",
+            "The current position is behind the " +
+              "earliest time announced in the Manifest.",
+          );
+          this.trigger("warning", warning);
+        } else if (
+          wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
+        ) {
+          const warning = new MediaError(
+            "MEDIA_TIME_AFTER_MANIFEST",
+            "The current position is after the latest " +
+              "time announced in the Manifest.",
+          );
+          this.trigger("warning", warning);
+        }
+      },
+      { includeLastObservation: true, clearSignal: cancelSignal },
+    );
 
-    manifest.addEventListener("manifestUpdate", () => {
-      this.trigger("endingPositionChange", this._getManifestEndTime());
-      if (cancelSignal.isCancelled()) {
-        return;
-      }
-      this._checkEndOfStream();
-    }, cancelSignal);
+    manifest.addEventListener(
+      "manifestUpdate",
+      () => {
+        this.trigger("endingPositionChange", this._getManifestEndTime());
+        if (cancelSignal.isCancelled()) {
+          return;
+        }
+        this._checkEndOfStream();
+      },
+      cancelSignal,
+    );
   }
 
   /**
@@ -124,7 +130,7 @@ export default class ContentTimeBoundariesObserver
    * the content at the moment.
    * @returns {Object}
    */
-  public getCurrentEndingTime() : IEndingPositionInformation  {
+  public getCurrentEndingTime(): IEndingPositionInformation {
     return this._getManifestEndTime();
   }
 
@@ -142,28 +148,28 @@ export default class ContentTimeBoundariesObserver
    * buffer type (e.g. no video).
    */
   public onAdaptationChange(
-    bufferType : IBufferType,
-    period : Period,
-    adaptation : Adaptation | null
-  ) : void {
+    bufferType: IBufferType,
+    period: Period,
+    adaptation: Adaptation | null,
+  ): void {
     if (this._manifest.isLastPeriodKnown) {
       const lastPeriod = this._manifest.periods[this._manifest.periods.length - 1];
       if (period.id === lastPeriod?.id) {
         if (bufferType === "audio" || bufferType === "video") {
           if (bufferType === "audio") {
-            this._maximumPositionCalculator
-              .updateLastAudioAdaptation(adaptation);
+            this._maximumPositionCalculator.updateLastAudioAdaptation(adaptation);
           } else {
-            this._maximumPositionCalculator
-              .updateLastVideoAdaptation(adaptation);
+            this._maximumPositionCalculator.updateLastVideoAdaptation(adaptation);
           }
           const endingPosition = this._maximumPositionCalculator.getEndingPosition();
-          const newEndingPosition = endingPosition !== undefined ?
-            { isEnd: true,
-              endingPosition } :
-            { isEnd: false,
-              endingPosition: this._maximumPositionCalculator
-                .getMaximumAvailablePosition() };
+          const newEndingPosition =
+            endingPosition !== undefined
+              ? { isEnd: true, endingPosition }
+              : {
+                  isEnd: false,
+                  endingPosition:
+                    this._maximumPositionCalculator.getMaximumAvailablePosition(),
+                };
           this.trigger("endingPositionChange", newEndingPosition);
         }
       }
@@ -186,10 +192,7 @@ export default class ContentTimeBoundariesObserver
    * Representation switch
    * @param {Object} period - The Period concerned by the Representation switch
    */
-  public onRepresentationChange(
-    bufferType : IBufferType,
-    period : Period
-  ) : void {
+  public onRepresentationChange(bufferType: IBufferType, period: Period): void {
     this._addActivelyLoadedPeriod(period, bufferType);
   }
 
@@ -203,10 +206,7 @@ export default class ContentTimeBoundariesObserver
    * @param {string} bufferType - The type of buffer concerned
    * @param {Object} period - The Period concerned
    */
-  public onPeriodCleared(
-    bufferType : IBufferType,
-    period : Period
-  ) : void {
+  public onPeriodCleared(bufferType: IBufferType, period: Period): void {
     this._removeActivelyLoadedPeriod(period, bufferType);
   }
 
@@ -219,9 +219,7 @@ export default class ContentTimeBoundariesObserver
    * aforementioned condition is true, if it simplify your code's management.
    * @param {string} bufferType
    */
-  public onLastSegmentFinishedLoading(
-    bufferType : IBufferType
-  ) : void {
+  public onLastSegmentFinishedLoading(bufferType: IBufferType): void {
     const streamInfo = this._lazilyCreateActiveStreamInfo(bufferType);
     if (!streamInfo.hasFinishedLoadingLastPeriod) {
       streamInfo.hasFinishedLoadingLastPeriod = true;
@@ -240,7 +238,7 @@ export default class ContentTimeBoundariesObserver
    * aforementioned condition is true, if it simplify your code's management.
    * @param {string} bufferType
    */
-  public onLastSegmentLoadingResume(bufferType : IBufferType) : void {
+  public onLastSegmentLoadingResume(bufferType: IBufferType): void {
     const streamInfo = this._lazilyCreateActiveStreamInfo(bufferType);
     if (streamInfo.hasFinishedLoadingLastPeriod) {
       streamInfo.hasFinishedLoadingLastPeriod = false;
@@ -257,7 +255,7 @@ export default class ContentTimeBoundariesObserver
     this._canceller.cancel();
   }
 
-  private _addActivelyLoadedPeriod(period : Period, bufferType : IBufferType) : void {
+  private _addActivelyLoadedPeriod(period: Period, bufferType: IBufferType): void {
     const streamInfo = this._lazilyCreateActiveStreamInfo(bufferType);
     if (!streamInfo.activePeriods.has(period)) {
       streamInfo.activePeriods.add(period);
@@ -265,10 +263,7 @@ export default class ContentTimeBoundariesObserver
     }
   }
 
-  private _removeActivelyLoadedPeriod(
-    period : Period,
-    bufferType : IBufferType
-  ) : void {
+  private _removeActivelyLoadedPeriod(period: Period, bufferType: IBufferType): void {
     const streamInfo = this._activeStreams.get(bufferType);
     if (streamInfo === undefined) {
       return;
@@ -279,7 +274,7 @@ export default class ContentTimeBoundariesObserver
     }
   }
 
-  private _checkCurrentPeriod() : void {
+  private _checkCurrentPeriod(): void {
     if (this._allBufferTypes.length === 0) {
       return;
     }
@@ -313,16 +308,17 @@ export default class ContentTimeBoundariesObserver
     }
   }
 
-  private _getManifestEndTime() : IEndingPositionInformation {
+  private _getManifestEndTime(): IEndingPositionInformation {
     const endingPosition = this._maximumPositionCalculator.getEndingPosition();
-    return endingPosition !== undefined ?
-      { isEnd: true,
-        endingPosition } :
-      { isEnd: false,
-        endingPosition: this._maximumPositionCalculator.getMaximumAvailablePosition() };
+    return endingPosition !== undefined
+      ? { isEnd: true, endingPosition }
+      : {
+          isEnd: false,
+          endingPosition: this._maximumPositionCalculator.getMaximumAvailablePosition(),
+        };
   }
 
-  private _lazilyCreateActiveStreamInfo(bufferType : IBufferType) : IActiveStreamsInfo {
+  private _lazilyCreateActiveStreamInfo(bufferType: IBufferType): IActiveStreamsInfo {
     let streamInfo = this._activeStreams.get(bufferType);
     if (streamInfo === undefined) {
       streamInfo = {
@@ -334,7 +330,7 @@ export default class ContentTimeBoundariesObserver
     return streamInfo;
   }
 
-  private _checkEndOfStream() : void {
+  private _checkEndOfStream(): void {
     if (!this._manifest.isLastPeriodKnown) {
       return;
     }
@@ -357,7 +353,7 @@ export interface IEndingPositionInformation {
    * position at which segments are available and it might also evolve over
    * time), in seconds.
    */
-  endingPosition : number;
+  endingPosition: number;
   /**
    * If `true`, the communicated `endingPosition` is the actual end of the content.
    * It may still be updated due to a track change or to add precision, but it
@@ -369,7 +365,7 @@ export interface IEndingPositionInformation {
    * segments are still being generated) and as such it can still have a
    * longer `endingPosition` in the future.
    */
-  isEnd : boolean;
+  isEnd: boolean;
 }
 
 /**
@@ -378,14 +374,14 @@ export interface IEndingPositionInformation {
  */
 export interface IContentTimeBoundariesObserverEvent {
   /** Triggered when a minor error is encountered. */
-  warning : IPlayerError;
+  warning: IPlayerError;
   /** Triggered when a new `Period` is currently playing. */
-  periodChange : Period;
+  periodChange: Period;
   /**
    * Triggered when the ending position of the currently-playing content became
    * known or changed.
    */
-  endingPositionChange : IEndingPositionInformation;
+  endingPositionChange: IEndingPositionInformation;
   /**
    * Triggered when the last possible chronological segment for all types of
    * buffers has either been pushed or is being pushed to the corresponding
@@ -396,7 +392,7 @@ export interface IContentTimeBoundariesObserverEvent {
    * already been called and even if an "endOfStream" event has already been
    * triggered.
    */
-  endOfStream : null;
+  endOfStream: null;
   /**
    * Triggered when the last possible chronological segment for all types of
    * buffers have NOT been pushed, or if it is not known whether is has been
@@ -407,7 +403,7 @@ export interface IContentTimeBoundariesObserverEvent {
    * not been called and even if an "resumeStream" event has already been
    * triggered.
    */
-  resumeStream : null;
+  resumeStream: null;
 }
 
 /**
@@ -416,16 +412,16 @@ export interface IContentTimeBoundariesObserverEvent {
  * @class MaximumPositionCalculator
  */
 class MaximumPositionCalculator {
-  private _manifest : Manifest;
+  private _manifest: Manifest;
 
   // TODO replicate for the minimum position ?
-  private _lastAudioAdaptation : Adaptation | undefined | null;
-  private _lastVideoAdaptation : Adaptation | undefined | null;
+  private _lastAudioAdaptation: Adaptation | undefined | null;
+  private _lastVideoAdaptation: Adaptation | undefined | null;
 
   /**
    * @param {Object} manifest
    */
-  constructor(manifest : Manifest) {
+  constructor(manifest: Manifest) {
     this._manifest = manifest;
     this._lastAudioAdaptation = undefined;
     this._lastVideoAdaptation = undefined;
@@ -439,7 +435,7 @@ class MaximumPositionCalculator {
    * `getMaximumAvailablePosition` and `getEndingPosition`.
    * @param {Object|null} adaptation
    */
-  public updateLastAudioAdaptation(adaptation : Adaptation | null) : void {
+  public updateLastAudioAdaptation(adaptation: Adaptation | null): void {
     this._lastAudioAdaptation = adaptation;
   }
 
@@ -451,51 +447,55 @@ class MaximumPositionCalculator {
    * `getMaximumAvailablePosition` and `getEndingPosition`.
    * @param {Object|null} adaptation
    */
-  public updateLastVideoAdaptation(adaptation : Adaptation | null) : void {
+  public updateLastVideoAdaptation(adaptation: Adaptation | null): void {
     this._lastVideoAdaptation = adaptation;
   }
 
-/**
- * Returns an estimate of the maximum position currently reachable (i.e.
- * segments are available) under the current circumstances.
- * @returns {number}
- */
-  public getMaximumAvailablePosition() : number {
+  /**
+   * Returns an estimate of the maximum position currently reachable (i.e.
+   * segments are available) under the current circumstances.
+   * @returns {number}
+   */
+  public getMaximumAvailablePosition(): number {
     if (this._manifest.isDynamic) {
       return this._manifest.getMaximumSafePosition();
     }
-    if (this._lastVideoAdaptation === undefined ||
-        this._lastAudioAdaptation === undefined)
-    {
+    if (
+      this._lastVideoAdaptation === undefined ||
+      this._lastAudioAdaptation === undefined
+    ) {
       return this._manifest.getMaximumSafePosition();
     } else if (this._lastAudioAdaptation === null) {
       if (this._lastVideoAdaptation === null) {
         return this._manifest.getMaximumSafePosition();
       } else {
-        const lastVideoPosition =
-          getLastAvailablePositionFromAdaptation(this._lastVideoAdaptation);
+        const lastVideoPosition = getLastAvailablePositionFromAdaptation(
+          this._lastVideoAdaptation,
+        );
         if (typeof lastVideoPosition !== "number") {
           return this._manifest.getMaximumSafePosition();
         }
         return lastVideoPosition;
       }
     } else if (this._lastVideoAdaptation === null) {
-      const lastAudioPosition =
-        getLastAvailablePositionFromAdaptation(this._lastAudioAdaptation);
+      const lastAudioPosition = getLastAvailablePositionFromAdaptation(
+        this._lastAudioAdaptation,
+      );
       if (typeof lastAudioPosition !== "number") {
         return this._manifest.getMaximumSafePosition();
       }
       return lastAudioPosition;
     } else {
       const lastAudioPosition = getLastAvailablePositionFromAdaptation(
-        this._lastAudioAdaptation
+        this._lastAudioAdaptation,
       );
       const lastVideoPosition = getLastAvailablePositionFromAdaptation(
-        this._lastVideoAdaptation
+        this._lastVideoAdaptation,
       );
-      if (typeof lastAudioPosition !== "number" ||
-          typeof lastVideoPosition !== "number")
-      {
+      if (
+        typeof lastAudioPosition !== "number" ||
+        typeof lastVideoPosition !== "number"
+      ) {
         return this._manifest.getMaximumSafePosition();
       } else {
         return Math.min(lastAudioPosition, lastVideoPosition);
@@ -503,38 +503,40 @@ class MaximumPositionCalculator {
     }
   }
 
-/**
- * Returns an estimate of the actual ending position once
- * the full content is available.
- * Returns `undefined` if that could not be determined, for various reasons.
- * @returns {number|undefined}
- */
-  public getEndingPosition() : number | undefined {
+  /**
+   * Returns an estimate of the actual ending position once
+   * the full content is available.
+   * Returns `undefined` if that could not be determined, for various reasons.
+   * @returns {number|undefined}
+   */
+  public getEndingPosition(): number | undefined {
     if (!this._manifest.isDynamic) {
       return this.getMaximumAvailablePosition();
     }
-    if (this._lastVideoAdaptation === undefined ||
-        this._lastAudioAdaptation === undefined)
-    {
+    if (
+      this._lastVideoAdaptation === undefined ||
+      this._lastAudioAdaptation === undefined
+    ) {
       return undefined;
     } else if (this._lastAudioAdaptation === null) {
       if (this._lastVideoAdaptation === null) {
         return undefined;
       } else {
-        return getEndingPositionFromAdaptation(this._lastVideoAdaptation) ??
-               undefined;
+        return getEndingPositionFromAdaptation(this._lastVideoAdaptation) ?? undefined;
       }
     } else if (this._lastVideoAdaptation === null) {
-      return getEndingPositionFromAdaptation(this._lastAudioAdaptation) ??
-             undefined;
+      return getEndingPositionFromAdaptation(this._lastAudioAdaptation) ?? undefined;
     } else {
-      const lastAudioPosition =
-        getEndingPositionFromAdaptation(this._lastAudioAdaptation);
-      const lastVideoPosition =
-        getEndingPositionFromAdaptation(this._lastVideoAdaptation);
-      if (typeof lastAudioPosition !== "number" ||
-          typeof lastVideoPosition !== "number")
-      {
+      const lastAudioPosition = getEndingPositionFromAdaptation(
+        this._lastAudioAdaptation,
+      );
+      const lastVideoPosition = getEndingPositionFromAdaptation(
+        this._lastVideoAdaptation,
+      );
+      if (
+        typeof lastAudioPosition !== "number" ||
+        typeof lastVideoPosition !== "number"
+      ) {
         return undefined;
       } else {
         return Math.min(lastAudioPosition, lastVideoPosition);
@@ -555,10 +557,10 @@ class MaximumPositionCalculator {
  * @returns {Number|undefined|null}
  */
 function getLastAvailablePositionFromAdaptation(
-  adaptation: Adaptation
-) : number | undefined | null {
+  adaptation: Adaptation,
+): number | undefined | null {
   const { representations } = adaptation;
-  let min : null | number = null;
+  let min: null | number = null;
 
   /**
    * Some Manifest parsers use the exact same `IRepresentationIndex` reference
@@ -566,17 +568,17 @@ function getLastAvailablePositionFromAdaptation(
    * Manifest file, indexing data is often defined at Adaptation-level.
    * This variable allows to optimize the logic here when this is the case.
    */
-  let lastIndex : IRepresentationIndex | undefined;
+  let lastIndex: IRepresentationIndex | undefined;
   for (let i = 0; i < representations.length; i++) {
     if (representations[i].index !== lastIndex) {
       lastIndex = representations[i].index;
       const lastPosition = representations[i].index.getLastAvailablePosition();
-      if (lastPosition === undefined) { // we cannot tell
+      if (lastPosition === undefined) {
+        // we cannot tell
         return undefined;
       }
       if (lastPosition !== null) {
-        min = isNullOrUndefined(min) ? lastPosition :
-                                       Math.min(min, lastPosition);
+        min = isNullOrUndefined(min) ? lastPosition : Math.min(min, lastPosition);
       }
     }
   }
@@ -596,10 +598,10 @@ function getLastAvailablePositionFromAdaptation(
  * @returns {Number|undefined|null}
  */
 function getEndingPositionFromAdaptation(
-  adaptation: Adaptation
-) : number | undefined | null {
+  adaptation: Adaptation,
+): number | undefined | null {
   const { representations } = adaptation;
-  let min : null | number = null;
+  let min: null | number = null;
 
   /**
    * Some Manifest parsers use the exact same `IRepresentationIndex` reference
@@ -607,17 +609,17 @@ function getEndingPositionFromAdaptation(
    * Manifest file, indexing data is often defined at Adaptation-level.
    * This variable allows to optimize the logic here when this is the case.
    */
-  let lastIndex : IRepresentationIndex | undefined;
+  let lastIndex: IRepresentationIndex | undefined;
   for (let i = 0; i < representations.length; i++) {
     if (representations[i].index !== lastIndex) {
       lastIndex = representations[i].index;
       const lastPosition = representations[i].index.getEnd();
-      if (lastPosition === undefined) { // we cannot tell
+      if (lastPosition === undefined) {
+        // we cannot tell
         return undefined;
       }
       if (lastPosition !== null) {
-        min = isNullOrUndefined(min) ? lastPosition :
-                                       Math.min(min, lastPosition);
+        min = isNullOrUndefined(min) ? lastPosition : Math.min(min, lastPosition);
       }
     }
   }
@@ -634,13 +636,15 @@ interface IActiveStreamsInfo {
    * The first chronological Period in that list is the active one for
    * the current type.
    */
-  activePeriods : SortedList<Period>;
+  activePeriods: SortedList<Period>;
   /**
    * If `true` the last segment for the last currently known Period has been
    * pushed for the current Adaptation and Representation choice.
    */
-  hasFinishedLoadingLastPeriod : boolean;
+  hasFinishedLoadingLastPeriod: boolean;
 }
 
-export type IContentTimeObserverPlaybackObservation =
-  Pick<IStreamOrchestratorPlaybackObservation, "position">;
+export type IContentTimeObserverPlaybackObservation = Pick<
+  IStreamOrchestratorPlaybackObservation,
+  "position"
+>;

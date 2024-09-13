@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import ttmlParser from "../../../parsers/texttracks/ttml/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativettmlFeature from "../native_ttml_parser";
 
 describe("Features list - native ttml Parser", () => {
