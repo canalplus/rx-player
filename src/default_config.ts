@@ -475,7 +475,7 @@ const DEFAULT_CONFIG = {
    * @type {Number}
    */
   RESUME_GAP_AFTER_NOT_ENOUGH_DATA: {
-    DEFAULT: 0.5,
+    DEFAULT: 1.5,
     LOW_LATENCY: 0.5,
   },
 
