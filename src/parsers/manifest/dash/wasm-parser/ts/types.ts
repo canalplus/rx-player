@@ -111,7 +111,6 @@ export const enum TagName {
 
   /// Indicate a <Label> node
   Label = 21,
-
 }
 
 /**
