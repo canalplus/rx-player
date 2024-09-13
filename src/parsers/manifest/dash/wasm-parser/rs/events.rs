@@ -86,6 +86,9 @@ pub enum TagName {
     // -- Inside a <SegmentList> --
     /// Indicate a <SegmentURL> node
     SegmentUrl = 20,
+
+    /// Indicate a <Label> node
+    Label = 21,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -275,8 +278,6 @@ pub enum AttributeName {
     /// format: the browser's `DOMParser` API needs to know all potential
     /// namespaces that will appear in it.
     Namespace = 70,
-
-    Label = 71, // String
 
     ServiceLocation = 72, // String
 
