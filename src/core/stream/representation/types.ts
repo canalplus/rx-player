@@ -138,7 +138,21 @@ export interface IStreamEventAddedSegmentPayload {
   };
   /** The concerned Segment. */
   segment: ISegment;
-  /** Ranges of the concerned SegmentSink after the segment was pushed. */
+  /**
+   * The expected time range the segment should have taken in the
+   * `SegmentSink`.
+   *
+   * `null` if that segment shouldn't take any place at all (such as
+   * initialization segments).
+   */
+  expectedBufferRange: IRange | null;
+  /**
+   * Actual buffered ranges of the concerned SegmentSink after the segment was
+   * pushed.
+   *
+   * Note that this may be cross-referenced with `expectedBufferRange` by some
+   * player heuristics (e.g. to detect browser garbage collection).
+   */
   buffered: IRange[];
 }
 

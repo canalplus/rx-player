@@ -84,5 +84,5 @@ export default async function pushInitSegment<T>(
     bufferGoal,
     cancelSignal,
   );
-  return { content, segment, buffered };
+  return { content, segment, expectedBufferRange: null, buffered };
 }

@@ -1,17 +1,20 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import type { IRepresentation } from "../../../manifest";
+import type { IRepresentation, ISegment } from "../../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import arrayIncludes from "../../../utils/array_includes";
 import { assertUnreachable } from "../../../utils/assert";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
 import queueMicrotask from "../../../utils/queue_microtask";
+import type { IRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference, { createMappedReference } from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
+import type { SegmentSink } from "../../segment_sinks";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
@@ -19,7 +22,11 @@ import type {
 } from "../representation";
 import RepresentationStream from "../representation";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
-import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types";
+import type {
+  IAdaptationStreamArguments,
+  IAdaptationStreamCallbacks,
+  IAdaptationStreamPlaybackObservation,
+} from "./types";
 
 /**
  * Create new `AdaptationStream` whose task will be to download the media data
@@ -326,6 +333,12 @@ export default function AdaptationStream(
     if (adapStreamCanceller.isUsed()) {
       return; // previous callback has stopped everything by side-effect
     }
+    const gcObserver = new BrowserGarbageCollectionObserver({
+      wantedBufferAhead,
+      maxVideoBufferSize,
+      playbackObserver,
+      segmentSink,
+    });
 
     const representationStreamCallbacks: IRepresentationStreamCallbacks = {
       streamStatusUpdate: callbacks.streamStatusUpdate,
@@ -340,6 +353,11 @@ export default function AdaptationStream(
       },
       addedSegment(segmentInfo) {
         abrCallbacks.addedSegment(segmentInfo);
+        gcObserver.onAddedSegment(
+          segmentInfo.segment,
+          segmentInfo.expectedBufferRange,
+          segmentInfo.buffered,
+        );
       },
       terminating() {
         if (repStreamTerminatingCanceller.isUsed()) {
@@ -492,4 +510,61 @@ export default function AdaptationStream(
     }
     return bufferGoalRatio;
   }
+}
+
+class BrowserGarbageCollectionObserver {
+  private _segmentSink: SegmentSink;
+  private _playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
+  private _wantedBufferAhead: IReadOnlySharedReference<number>;
+  private _maxVideoBufferSize: IReadOnlySharedReference<number>;
+
+  constructor(args: {
+    segmentSink: SegmentSink;
+    /** Regularly emit playback conditions. */
+    playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
+    wantedBufferAhead: IReadOnlySharedReference<number>;
+    maxVideoBufferSize: IReadOnlySharedReference<number>;
+  }) {
+    this._segmentSink = args.segmentSink;
+    this._playbackObserver = args.playbackObserver;
+    this._wantedBufferAhead = args.wantedBufferAhead;
+    this._maxVideoBufferSize = args.maxVideoBufferSize;
+  }
+
+  public onAddedSegment(
+    segment: ISegment,
+    expectedBufferRange: IRange | null,
+    buffered: IRange[],
+  ): void {
+    if (expectedBufferRange === null) {
+      return;
+    }
+    for (const buf of buffered) {
+      if (
+        expectedBufferRange.start - buf.start >= -0.1 &&
+        buf.end - expectedBufferRange.start > 0.2
+      ) {
+        if (expectedBufferRange.end + 0.2 >= expectedBufferRange.end) {
+          return;
+        }
+        let currentPosition = this._playbackObserver.getCurrentTime();
+        if (currentPosition === undefined) {
+          const lastObservation = this._playbackObserver.getReference().getValue();
+          currentPosition = lastObservation.position.getPolled();
+        }
+        console.warn(
+          "!!!!!!!!! GARBAGE COLLECTED SEGMENT:",
+          segment,
+          buf.end - currentPosition,
+          expectedBufferRange.end - expectedBufferRange.start,
+          this._wantedBufferAhead.getValue(),
+        );
+
+        return;
+      }
+    }
+  }
+
+  // XXX TODO:
+  // public onPushError() {}
 }

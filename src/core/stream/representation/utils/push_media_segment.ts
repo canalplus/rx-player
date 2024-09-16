@@ -115,5 +115,13 @@ export default async function pushMediaSegment<T>(
     bufferGoal,
     cancelSignal,
   );
-  return { content, segment, buffered };
+  return {
+    content,
+    segment,
+    expectedBufferRange: {
+      start: estimatedStart,
+      end: estimatedEnd,
+    },
+    buffered,
+  };
 }

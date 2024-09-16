@@ -1,0 +1,13 @@
+GC -> history?
+
+check wantedBufferAhead + maxVideoBufferSize
+  -> lower wantedBufferAhead if >= 20
+  -> lower maxVideoBufferSize if >= xxx ?
+
+wantedBufferAhead--
+for 30 seconds
+
+if after unlock repeats:
+  - same `wantedBufferAhead`? previous lock * 2, until 5 minutes
+  - same `maxVideoBufferSize`? lock `maxVideoBufferSize` * 2 until 5 minutes
+  - different `wantedBufferAhead` and `maxVideoBufferSize`? restart `wantedBufferAhead` lock
