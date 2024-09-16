@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024091000
+## Current dev build: v4.2.0-dev.2024091600
 
 ### Features
 
@@ -26,6 +26,8 @@
   set-top boxes [#1515]
 - DRM/Compat: fix content not starting on Safari because key are never considered usable
   for a track [#1479, #1512]
+- DASH_WASM: fix `Label` element never being parsed [#1541, #1540]
+- Fix RxPlayer not being exposed in release bundles [#1542]
 - MULTI_THREAD: Fix rare `CancellationError` error happening when reloading while a reload
   is pending. [#1528]
 - MULTI_THREAD: fix wrong Period considered as current in multi-Period DASH contents with
