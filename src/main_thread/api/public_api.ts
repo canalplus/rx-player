@@ -32,6 +32,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
+import config from "../../config";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
@@ -39,6 +40,7 @@ import type {
   IABRThrottlers,
   IBufferType,
 } from "../../core/types";
+import type { IDefaultConfig } from "../../default_config";
 import type { IErrorCode, IErrorType } from "../../errors";
 import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
 import WorkerInitializationError from "../../errors/worker_initialization_error";
@@ -573,6 +575,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         },
         this._destroyCanceller.signal,
       );
+
+      const sendConfigUpdates = (updates: Partial<IDefaultConfig>) => {
+        if (this._priv_worker === null) {
+          return;
+        }
+        log.debug("---> Sending To Worker:", MainThreadMessageType.ConfigUpdate);
+        this._priv_worker.postMessage({
+          type: MainThreadMessageType.ConfigUpdate,
+          value: updates,
+        });
+      };
+      if (config.updated) {
+        sendConfigUpdates(config.getCurrent());
+      }
+      config.addEventListener("update", sendConfigUpdates, this._destroyCanceller.signal);
     });
   }
 
