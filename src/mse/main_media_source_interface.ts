@@ -7,9 +7,10 @@ import log from "../log";
 import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
+import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import objectAssign from "../utils/object_assign";
 import type { IRange } from "../utils/ranges";
-import { convertToRanges } from "../utils/ranges";
+import { convertToRanges, excludeFromRanges } from "../utils/ranges";
 import TaskCanceller, { CancellationError } from "../utils/task_canceller";
 import type {
   IMediaSourceHandle,
@@ -197,6 +198,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
 
+  private _lastKnownBuffer: {
+    timestamp: number;
+    buffered: IRange[];
+  };
+
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
    * instance.
@@ -211,6 +217,10 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
+    this._lastKnownBuffer = {
+      timestamp: getMonotonicTimeStamp(),
+      buffered: [],
+    };
 
     const onError = (evt: Event) => {
       let error: Error;
@@ -292,16 +302,24 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   /** @see ISourceBufferInterface */
-  public getBuffered(): IRange[] {
+  public getBufferedInfo(): {
+    buffered: IRange[];
+    gcedSincePrevious: IRange[];
+  } {
     try {
-      return convertToRanges(this._sourceBuffer.buffered);
+      const ranges = convertToRanges(this._sourceBuffer.buffered);
+      const gcedSincePrevious = excludeFromRanges(this._lastKnownBuffer.buffered, ranges);
+      return { buffered: ranges, gcedSincePrevious };
     } catch (err) {
       log.error(
         "Failed to get buffered time range of SourceBuffer",
         this.type,
         err instanceof Error ? err : null,
       );
-      return [];
+      return {
+        buffered: [],
+        gcedSincePrevious: [],
+      };
     }
   }
 
@@ -472,6 +490,28 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       log.debug("SBI: removing data from SourceBuffer", this.type, start, end);
       try {
         this._sourceBuffer.remove(start, end);
+        for (let i = 0; i < this._lastKnownBuffer.buffered.length; i++) {
+          const range = this._lastKnownBuffer.buffered[i];
+          if (range.end > start && range.end <= end) {
+            range.end = start;
+          }
+          if (range.start >= start && range.start < end) {
+            range.start = end;
+          }
+          if (range.start < start && range.end > end) {
+            const prevEnd = range.end;
+            range.end = start;
+            this._lastKnownBuffer.buffered.push({
+              start: end,
+              end: prevEnd,
+            });
+            i++;
+          }
+          if (range.start <= range.end) {
+            this._lastKnownBuffer.buffered.splice(i);
+            i--;
+          }
+        }
       } catch (err) {
         const error =
           err instanceof Error

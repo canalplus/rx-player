@@ -37,13 +37,19 @@ export default function getBufferedDataPerMediaBuffer(
     mediaSourceInterface.sourceBuffers,
     (s) => s.type === SourceBufferType.Video,
   );
-  const audioBuffered = audioBuffer?.getBuffered();
+  const audioBuffered = audioBuffer?.getBufferedInfo();
   if (audioBuffered !== undefined) {
-    buffered.audio = audioBuffered;
+    buffered.audio = audioBuffered.buffered;
+    if (audioBuffered.gcedSincePrevious.length > 0) {
+      console.warn("!!!! GCED", JSON.stringify(audioBuffered.gcedSincePrevious));
+    }
   }
-  const videoBuffered = videoBuffer?.getBuffered();
+  const videoBuffered = videoBuffer?.getBufferedInfo();
   if (videoBuffered !== undefined) {
-    buffered.video = videoBuffered;
+    buffered.video = videoBuffered.buffered;
+    if (videoBuffered.gcedSincePrevious.length > 0) {
+      console.warn("!!!! GCED", JSON.stringify(videoBuffered.gcedSincePrevious));
+    }
   }
   return buffered;
 }

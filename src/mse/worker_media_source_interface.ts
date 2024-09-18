@@ -364,7 +364,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     this._canceller.cancel();
   }
 
-  public getBuffered(): undefined {
+  public getBufferedInfo(): undefined {
     return;
   }
 

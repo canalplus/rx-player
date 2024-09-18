@@ -100,11 +100,22 @@ export interface ISourceBufferInterface {
    */
   dispose(): void;
   /**
-   * Returns the current range of buffered data, or `undefined` if this is not
-   * obtainable synchronously.
+   * Returns information on the current range of buffered data, or `undefined`
+   * if this is not obtainable synchronously.
    * @returns {Array.<Object> | undefined}
    */
-  getBuffered(): IRange[] | undefined;
+  getBufferedInfo():
+    | {
+        /** What is currently buffered in the SourceBuffer. */
+        buffered: IRange[];
+        /**
+         * The Ranges that seem to have been garbage collected automatically by
+         * the browser - probably to save memory - since `getBufferedInfo` was
+         * last called.
+         */
+        gcedSincePrevious: IRange[];
+      }
+    | undefined;
   /**
    * Only set for `ISourceBufferInterface` objects which cannot rely on
    * MediaSource API directly.
