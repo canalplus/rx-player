@@ -71,7 +71,7 @@ export default function performInitialSeekAndPlay(
   }: {
     mediaElement: IMediaElement;
     playbackObserver: IMediaElementPlaybackObserver;
-    startTime: number | (() => number);
+    startTime: number | (() => number | undefined);
     mustAutoPlay: boolean;
     isDirectfile: boolean;
     onWarning: (err: IPlayerError) => void;
@@ -107,18 +107,37 @@ export default function performInitialSeekAndPlay(
       if (!isDirectfile || typeof startTime === "number") {
         const initiallySeekedTime =
           typeof startTime === "number" ? startTime : startTime();
-        if (initiallySeekedTime !== 0) {
+        if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
           performInitialSeek(initiallySeekedTime);
         }
         waitForSeekable();
       } else {
         playbackObserver.listen(
           (obs, stopListening) => {
+            const initiallySeekedTime =
+              typeof startTime === "number" ? startTime : startTime();
+            if (
+              initiallySeekedTime === undefined &&
+              obs.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+            ) {
+              /**
+               * On browser, such as Safari, the HTMLMediaElement.duration
+               * and HTMLMediaElement.buffered may not be initialized at readyState 1, leading
+               * to cases where it can be equal to `Infinity`.
+               * If so, the range in which it is possible to seek is not yet known.
+               * To solve this, the seek should be done after readyState HAVE_CURRENT_DATA (2),
+               * at that time the previously mentioned attributes are correctly initialized and
+               * the range in which it is possible to seek is correctly known.
+               * If the initiallySeekedTime is still `undefined` when the readyState is >= 2,
+               * let assume that the initiallySeekedTime will never be known and continue
+               * the logic without seeking.
+               */
+              return;
+            }
             if (obs.readyState >= 1) {
               stopListening();
-              const initiallySeekedTime =
-                typeof startTime === "number" ? startTime : startTime();
-              if (initiallySeekedTime !== 0) {
+
+              if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
                 if (canSeekDirectlyAfterLoadedMetadata) {
                   performInitialSeek(initiallySeekedTime);
                 } else {
