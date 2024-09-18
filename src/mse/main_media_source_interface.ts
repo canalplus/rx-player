@@ -311,6 +311,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       const gcedSincePrevious = excludeFromRanges(this._lastKnownBuffer.buffered, ranges);
       console.warn(
         "!!!!!!! Current",
+        this.codec,
         JSON.stringify(ranges),
         "GCED",
         JSON.stringify(gcedSincePrevious),
