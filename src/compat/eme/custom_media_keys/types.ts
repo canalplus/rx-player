@@ -58,10 +58,16 @@ export interface ICustomMediaKeyStatusMap {
     ) : boolean;
 }
 
-export interface IMediaKeySessionEvents { [key : string] : MediaKeyMessageEvent|Event;
-                                          // "keymessage"
-                                          // "message"
-                                          // "keyadded"
-                                          // "ready"
-                                          // "keyerror"
-                                          /* "error" */ }
+export interface IMediaKeySessionEvents {
+  [key: string]: MediaKeyMessageEvent | Event;
+  // "keymessage"
+  // "message"
+  // "keyadded"
+  // "ready"
+  // "keyerror"
+  /* "error" */
+}
+
+export interface ICustomMediaEncryptedEvent extends MediaEncryptedEvent {
+  forceSessionRecreation?: boolean | undefined;
+}

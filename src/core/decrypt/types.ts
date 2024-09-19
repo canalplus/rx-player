@@ -118,6 +118,11 @@ export interface IProtectionData {
 /** Protection initialization data actually processed by the `ContentDecryptor`. */
 export interface IProcessedProtectionData extends Omit<IProtectionData, "values"> {
   values: InitDataValuesContainer;
+  /**
+   * Enforce to recreate the media key session if there is already a session created
+   * with this init data
+   */
+  forceSessionRecreation?: boolean | undefined;
 }
 
 /**

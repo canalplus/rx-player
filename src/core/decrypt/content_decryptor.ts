@@ -174,7 +174,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     eme.onEncrypted(mediaElement, evt => {
       log.debug("DRM: Encrypted event received from media element.");
-      const initData = getInitData(evt as MediaEncryptedEvent);
+      const initData = getInitData(evt);
       if (initData !== null) {
         this.onInitializationData(initData);
       }
@@ -636,6 +636,22 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       return false;
     }
 
+    /**
+     * On Safari using Directfile, the old EME implementation triggers
+     * the "webkitneedkey" event instead of "encrypted". There's an issue in
+     * Safari where "webkitneedkey" fires too early before all tracks are added
+     * from an HLS playlist.
+     * Safari incorrectly assumes some keys are missing for these tracks,
+     * leading to repeated "webkitneedkey" events. Because RxPlayer recognizes
+     * it already has a session for these keys and ignores the events,
+     * the content remains frozen. To resolve this, the session is re-created.
+     */
+    const forceSessionRecreation = initializationData.forceSessionRecreation;
+    if (forceSessionRecreation === true) {
+      this.removeSessionForInitData(initializationData, mediaKeysData);
+      return false;
+    }
+
     // Check if the compatible session is blacklisted
     const blacklistedSessionError = compatibleSessionInfo.blacklistedSessionError;
     if (!isNullOrUndefined(blacklistedSessionError)) {
@@ -724,6 +740,49 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       this._currentSessions.splice(indexOf, 1);
     }
     return false;
+  }
+
+  /**
+   * Remove the session corresponding to the initData provided, and close it.
+   * It does nothing if no session was found for this initData.
+   * @param {Object} initData : The initialization data corresponding to the session
+   * that need to be removed
+   * @param {Object} mediaKeysData : The media keys data
+   */
+  private removeSessionForInitData(
+    initData: IProcessedProtectionData,
+    mediaKeysData: IAttachedMediaKeysData
+  ) {
+    const { stores } = mediaKeysData;
+    /** Remove the session and close it from the loadedSessionStore */
+    const entry = stores.loadedSessionsStore.reuse(initData);
+    if (entry !== null) {
+      stores.loadedSessionsStore
+        .closeSession(entry.mediaKeySession)
+        .catch(() =>
+          log.error("DRM: Cannot close the session from the loaded session store")
+        );
+    }
+
+    /**
+     * If set, a currently-used key session is already compatible to this
+     * initialization data.
+     */
+    const compatibleSessionInfo = arrayFind(this._currentSessions, (x) =>
+      x.record.isCompatibleWith(initData)
+    );
+    if (compatibleSessionInfo === undefined) {
+      return;
+    }
+    /** Remove the session from the currentSessions */
+    const indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
+    if (indexOf !== -1) {
+      log.debug(
+        "DRM: A session from a processed init is removed " +
+          "due to forceSessionRecreation policy."
+      );
+      this._currentSessions.splice(indexOf, 1);
+    }
   }
 
   /**
