@@ -208,6 +208,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         this.systemId = systemId;
         if (this._stateData.state === ContentDecryptorState.Initializing) {
+          log.debug("DRM: Waiting for attachment.");
           this._stateData = {
             state: ContentDecryptorState.WaitingForAttachment,
             isInitDataQueueLocked: true,
@@ -260,6 +261,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
 
     if (shouldDisableLock) {
+      log.debug("DRM: disabling MediaKeys attachment lock. Ready for content");
       this._stateData = {
         state: ContentDecryptorState.ReadyForContent,
         isInitDataQueueLocked: true,

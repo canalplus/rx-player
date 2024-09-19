@@ -102,6 +102,7 @@ export default async function getMediaKeysInfos(
     currentState !== null &&
     evt.type === "reuse-media-key-system-access"
   ) {
+    log.debug("DRM: Reusing already created MediaKeys");
     const { mediaKeys, loadedSessionsStore } = currentState;
 
     // We might just rely on the currently attached MediaKeys instance.

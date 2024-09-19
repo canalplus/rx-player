@@ -2007,24 +2007,6 @@ type IDecryptionInitializationState =
    */
   | { type: "uninitialized"; value: null }
   /**
-   * The `MediaSource` or media url has to be linked to the `HTMLMediaElement`
-   * before continuing.
-   * Once it has been linked with success (e.g. the `MediaSource` has "opened"),
-   * the `isMediaLinked` `SharedReference` should be set to `true`.
-   *
-   * In the `MediaSource` case, you should wait until the `"initialized"`
-   * state before pushing segment.
-   *
-   * Note that the `"awaiting-media-link"` is an optional state. It can be
-   * skipped to directly `"initialized"` instead.
-   */
-  | {
-      type: "awaiting-media-link";
-      value: {
-        isMediaLinked: SharedReference<boolean>;
-      };
-    }
-  /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
    */
