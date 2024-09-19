@@ -20,22 +20,19 @@ import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
 import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
-import getMonotonicTimeStamp, {
-  scaleTimestamp,
-} from "../../../utils/monotonic_timestamp";
+import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
-import type { IRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
-import type SegmentSinksStore from "../../segment_sinks";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamStatusPayload,
 } from "../../stream";
 import StreamOrchestrator from "../../stream";
+import BufferSizeEstimator from "../common/buffer_size_estimator";
 import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
 import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
 import ContentPreparer from "./content_preparer";
@@ -48,156 +45,6 @@ import {
   wantedBufferAhead,
 } from "./globals";
 import sendMessage, { formatErrorForSender } from "./send_message";
-
-class BufferSizeEstimator {
-  private _segmentSinkStore: SegmentSinksStore;
-  private _wantedBufferAhead: SharedReference<number>;
-  private _maxVideoBufferSize: SharedReference<number>;
-  private _currentLock: {
-    untilTime: number;
-    previousWantedBufferAhead: number;
-    previousMaxVideoBufferSize: number;
-  } | null;
-  private _removing: boolean;
-  constructor(
-    segmentSinksStore: SegmentSinksStore,
-    localWantedBufferAhead: SharedReference<number>,
-    localMaxVideoBufferSize: SharedReference<number>,
-  ) {
-    this._segmentSinkStore = segmentSinksStore;
-    this._wantedBufferAhead = localWantedBufferAhead;
-    this._maxVideoBufferSize = localMaxVideoBufferSize;
-    this._currentLock = null;
-    this._removing = false;
-  }
-
-  async tick(
-    trackType: ITrackType,
-    position: number,
-    buffered: IRange[],
-    gced: IRange[],
-  ) {
-    if (trackType === "text") {
-      return;
-    }
-    const sinkStatus = this._segmentSinkStore.getStatus(trackType);
-    if (sinkStatus.type !== "initialized") {
-      log.warn("BSE: Asking for an unknown sink");
-      return;
-    }
-
-    const now = getMonotonicTimeStamp();
-    const sink = sinkStatus.value;
-    const currentWantedBufferAhead = this._wantedBufferAhead.getValue();
-    const currentMaxVideoBufferSize = this._maxVideoBufferSize.getValue();
-
-    const inventory = sink.getLastKnownInventory();
-    let bufferSize: number | undefined;
-    if (trackType === "video") {
-      bufferSize = 0;
-      for (const item of inventory) {
-        if (item.chunkSize === undefined || bufferSize === undefined) {
-          log.warn("BSE: A chunk has an undefined size. Aborting.");
-          bufferSize = undefined;
-          break;
-        }
-        bufferSize += item.chunkSize;
-      }
-    }
-    if (bufferSize === undefined) {
-      return;
-    }
-
-    if (
-      !this._removing &&
-      gced.length === 0 &&
-      buffered.length > 0 &&
-      buffered[buffered.length - 1].end - position > currentWantedBufferAhead - 1 &&
-      position > 10 &&
-      position - buffered[0].start > currentWantedBufferAhead
-    ) {
-      if (this._currentLock !== null) {
-        if (this._currentLock.untilTime <= now) {
-          log.warn(
-            "BSE: Lock time ended, resetting previous values",
-            this._currentLock.previousWantedBufferAhead,
-            this._currentLock.previousMaxVideoBufferSize,
-          );
-          this._wantedBufferAhead.setValue(this._currentLock.previousWantedBufferAhead);
-          // // XXX TODO?
-          // this._maxVideoBufferSize.setValue(Infinity);
-          this._currentLock = null;
-        }
-        return;
-      }
-
-      const sinks = [sink];
-      const otherTrackType = trackType === "video" ? "audio" : "video";
-      const otherSinkStatus = this._segmentSinkStore.getStatus(otherTrackType);
-      if (otherSinkStatus.type === "initialized") {
-        sinks.push(otherSinkStatus.value);
-      }
-      log.warn("BSE: Removing buffer behind", position - 10);
-      this._removing = true;
-      await Promise.all(sinks.map((s) => s.removeBuffer(0, position - 10)));
-      this._removing = false;
-      const newWantedBufferAhead = currentWantedBufferAhead + 6;
-      log.warn(
-        "BSE: We have a big buffer behind raising `wantedBufferAhead`.",
-        currentWantedBufferAhead,
-        newWantedBufferAhead,
-      );
-      this._wantedBufferAhead.setValue(newWantedBufferAhead);
-      // XXX TODO should we raise the `maxVideoBufferSize` at some point?
-      // if (
-      //   currentMaxVideoBufferSize === Infinity ||
-      //   currentMaxVideoBufferSize < bufferSize
-      // ) {
-      //   log.warn(
-      //     "BSE: Raising `maxVideoBufferSize` a little.",
-      //     bufferSize,
-      //   );
-      //   this._maxVideoBufferSize(bufferSize * 1.5);
-      // }
-    }
-
-    if (gced.length > 0) {
-      log.warn("BSE: GC detected", bufferSize, JSON.stringify(gced));
-      this._currentLock = {
-        untilTime: now + 10000,
-        previousWantedBufferAhead: currentWantedBufferAhead,
-        previousMaxVideoBufferSize: currentMaxVideoBufferSize,
-      };
-
-      if (position - 10 > 0 && buffered.length > 0 && position - buffered[0].start > 10) {
-        const sinks = [sink];
-        const otherTrackType = trackType === "video" ? "audio" : "video";
-        const otherSinkStatus = this._segmentSinkStore.getStatus(otherTrackType);
-        if (otherSinkStatus.type === "initialized") {
-          sinks.push(otherSinkStatus.value);
-        }
-        log.warn("BSE: Removing buffer behind", position - 10);
-        this._removing = true;
-        await Promise.all(sinks.map((s) => s.removeBuffer(0, position - 10)));
-        this._removing = false;
-      }
-
-      if (bufferSize !== undefined && currentMaxVideoBufferSize > bufferSize) {
-        log.warn("BSE: Lowering maxVideoBufferSize: ", bufferSize);
-        // this._maxVideoBufferSize.setValue(bufferSize);
-      }
-      const newWantedBufferAhead = Math.max(5, currentWantedBufferAhead - 7);
-      if (newWantedBufferAhead < currentWantedBufferAhead) {
-        log.warn(
-          "BSE: Lowering wantedBufferAhead: ",
-          currentWantedBufferAhead,
-          newWantedBufferAhead,
-        );
-        this._wantedBufferAhead.setValue(newWantedBufferAhead);
-      }
-    }
-  }
-}
 
 export default function initializeWorkerMain() {
   /**
@@ -674,18 +521,6 @@ function loadOrReloadPreparedContent(
     maxVideoBufferSize,
   );
   playbackObservationRef.onUpdate((observation) => {
-    if (observation.buffered.video !== null) {
-      bufferSizeEstimator
-        .tick(
-          "video",
-          observation.position.getPolled(),
-          observation.buffered.video.buffered,
-          observation.buffered.video.gcedSincePrevious,
-        )
-        .catch((_e) => {
-          log.error("XXX TODO");
-        });
-    }
     if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
       handleMediaSourceReload({
         timeOffset: 0,
@@ -703,6 +538,18 @@ function loadOrReloadPreparedContent(
         );
       }
     });
+    if (observation.buffered.video !== null) {
+      bufferSizeEstimator
+        .onMediaObservation(
+          "video",
+          observation.position.getPolled(),
+          observation.buffered.video.buffered,
+          observation.buffered.video.gcedSincePrevious,
+        )
+        .catch((_e) => {
+          log.error("XXX TODO");
+        });
+    }
   });
 
   const initialPeriod =

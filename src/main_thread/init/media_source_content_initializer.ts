@@ -26,6 +26,7 @@ import type {
 import AdaptiveRepresentationSelector from "../../core/adaptive";
 import CmcdDataBuilder from "../../core/cmcd";
 import { ManifestFetcher, SegmentQueueCreator } from "../../core/fetchers";
+import BufferSizeEstimator from "../../core/main/common/buffer_size_estimator";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
 import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
 import SegmentSinksStore from "../../core/segment_sinks";
@@ -57,6 +58,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
+import type SharedReference from "../../utils/reference";
 import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -703,6 +705,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal },
     );
 
+    const bufferSizeEstimator = new BufferSizeEstimator(
+      segmentSinksStore,
+      this._settings.bufferOptions.wantedBufferAhead,
+      this._settings.bufferOptions.maxVideoBufferSize,
+    );
+
     // Synchronize SegmentSinks with what has been buffered.
     coreObserver.listen(
       (observation) => {
@@ -714,6 +722,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             );
           }
         });
+        if (observation.buffered.video !== null) {
+          bufferSizeEstimator
+            .onMediaObservation(
+              "video",
+              observation.position.getPolled(),
+              observation.buffered.video.buffered,
+              observation.buffered.video.gcedSincePrevious,
+            )
+            .catch((_e) => {
+              log.error("XXX TODO");
+            });
+        }
       },
       { clearSignal: cancelSignal },
     );
@@ -1132,9 +1152,9 @@ export interface IInitializeArguments {
   /** Options concerning the media buffers. */
   bufferOptions: {
     /** Buffer "goal" at which we stop downloading new segments. */
-    wantedBufferAhead: IReadOnlySharedReference<number>;
+    wantedBufferAhead: SharedReference<number>;
     /** Buffer maximum size in kiloBytes at which we stop downloading */
-    maxVideoBufferSize: IReadOnlySharedReference<number>;
+    maxVideoBufferSize: SharedReference<number>;
     /** Max buffer size after the current position, in seconds (we GC further up). */
     maxBufferAhead: IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
