@@ -72,8 +72,12 @@ export default async function appendSegmentToBuffer<T>(
       log.warn("Stream: Running garbage collector");
       const start = Math.max(currentPos - 5, 0);
       const end = currentPos + bufferGoal.getValue() + 12;
-      await segmentSink.removeBuffer(0, start);
-      await segmentSink.removeBuffer(end, Number.MAX_VALUE);
+      if (start > 0) {
+        await segmentSink.removeBuffer(0, start);
+      }
+      if (end < Number.MAX_VALUE) {
+        await segmentSink.removeBuffer(end, Number.MAX_VALUE);
+      }
       await sleep(200);
       if (cancellationSignal.cancellationError !== null) {
         throw cancellationSignal.cancellationError;

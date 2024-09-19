@@ -381,7 +381,7 @@ export default function AdaptationStream(
     const bufferGoal = createMappedReference(
       wantedBufferAhead,
       (prev) => {
-        return prev * getBufferGoalRatio(representation);
+        return getBufferGoal(representation, prev);
       },
       bufferGoalCanceller.signal,
     );
@@ -406,10 +406,11 @@ export default function AdaptationStream(
           const lastBufferGoalRatio = bufferGoalRatioMap.get(representation.id) ?? 1;
           // 70%, 49%, 34.3%, 24%, 16.81%, 11.76%, 8.24% and 5.76%
           const newBufferGoalRatio = lastBufferGoalRatio * 0.7;
-          if (newBufferGoalRatio <= 0.05 || wba * newBufferGoalRatio <= 2) {
-            throw formattedError;
-          }
           bufferGoalRatioMap.set(representation.id, newBufferGoalRatio);
+          if (newBufferGoalRatio <= 0.05 || getBufferGoal(representation, wba) <= 2) {
+            representationStreamCallbacks.error(formattedError);
+            return;
+          }
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
@@ -481,15 +482,25 @@ export default function AdaptationStream(
   }
 
   /**
-   * @param {Object} representation
+   * Returns how much media data should be pre-buffered for this
+   * `Representation`, according to the `wantedBufferAhead` setting and previous
+   * issues encountered with that `Representation`.
+   * @param {Object} representation - The `Representation` you want to buffer.
+   * @param {number} wba - The value of `wantedBufferAhead` set by the user.
    * @returns {number}
    */
-  function getBufferGoalRatio(representation: IRepresentation): number {
+  function getBufferGoal(representation: IRepresentation, wba: number): number {
     const oldBufferGoalRatio = bufferGoalRatioMap.get(representation.id);
     const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio : 1;
     if (oldBufferGoalRatio === undefined) {
       bufferGoalRatioMap.set(representation.id, bufferGoalRatio);
     }
-    return bufferGoalRatio;
+    if (bufferGoalRatio < 1 && wba === Infinity) {
+      // When `wba` is equal to `Infinity`, dividing it will still make it equal
+      // to `Infinity`. To make the `bufferGoalRatio` still have an effect, we
+      // just starts from a `wba` set to the high value of 5 minutes.
+      return 5 * 60 * 1000 * bufferGoalRatio;
+    }
+    return wba * bufferGoalRatio;
   }
 }
