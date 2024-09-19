@@ -95,7 +95,13 @@ export interface IPeriodStreamPlaybackObservation {
    * Ranges of buffered data per type of media.
    * `null` if no buffer exists for that type of media.
    */
-  buffered: Record<ITrackType, IRange[] | null>;
+  buffered: Record<
+    ITrackType,
+    {
+      buffered: IRange[];
+      gcedSincePrevious: IRange[];
+    } | null
+  >;
 }
 
 /** Arguments required by the `PeriodStream`. */

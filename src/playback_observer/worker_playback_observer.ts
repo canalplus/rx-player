@@ -35,7 +35,13 @@ export interface IWorkerPlaybackObservation {
    * Ranges of buffered data per type of media.
    * `null` if no buffer exists for that type of media.
    */
-  buffered: Record<ITrackType, IRange[] | null>;
+  buffered: Record<
+    ITrackType,
+    {
+      buffered: IRange[];
+      gcedSincePrevious: IRange[];
+    } | null
+  >;
   rebuffering: IRebufferingStatus | null;
   freezing: IFreezingStatus | null;
   bufferGap: number | undefined;

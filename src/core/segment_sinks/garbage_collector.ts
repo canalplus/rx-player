@@ -63,7 +63,7 @@ export default function BufferGarbageCollector(
   playbackObserver.listen(
     (o) => {
       lastPosition = o.position.getWanted();
-      lastBuffered = o.buffered[segmentSink.bufferType];
+      lastBuffered = o.buffered[segmentSink.bufferType]?.buffered ?? null;
       clean();
     },
     { includeLastObservation: true, clearSignal: cancellationSignal },

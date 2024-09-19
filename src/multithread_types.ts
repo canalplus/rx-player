@@ -388,7 +388,13 @@ export interface ISerializedPlaybackObservation {
    * `null` as a `buffered` value if this could not have been obtained on the
    * current environment (e.g. in the main thread).
    */
-  buffered: Record<ITrackType, IRange[] | null>;
+  buffered: Record<
+    ITrackType,
+    {
+      buffered: IRange[];
+      gcedSincePrevious: IRange[];
+    } | null
+  >;
   duration: number;
   /**
    * Set if the player is short on audio and/or video media data and is a such,

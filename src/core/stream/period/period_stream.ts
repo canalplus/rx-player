@@ -516,7 +516,7 @@ function createAdaptationStreamPlaybackObserver(
       const buffered = baseObservation.buffered[trackType];
       const bufferGap =
         buffered !== null
-          ? getLeftSizeOfRange(buffered, baseObservation.position.getWanted())
+          ? getLeftSizeOfRange(buffered.buffered, baseObservation.position.getWanted())
           : 0;
       return objectAssign({}, baseObservation, { bufferGap, buffered });
     }

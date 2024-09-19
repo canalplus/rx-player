@@ -710,7 +710,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const segmentSinkStatus = segmentSinksStore.getStatus(tType);
           if (segmentSinkStatus.type === "initialized") {
             segmentSinkStatus.value.synchronizeInventory(
-              observation.buffered[tType] ?? [],
+              observation.buffered[tType]?.buffered ?? [],
             );
           }
         });

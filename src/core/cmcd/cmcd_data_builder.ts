@@ -68,7 +68,13 @@ export interface ICmcdDataBuilderPlaybackObservation {
    * Ranges of buffered data per type of media.
    * `null` if no buffer exists for that type of media.
    */
-  buffered: Record<ITrackType, IRange[] | null>;
+  buffered: Record<
+    ITrackType,
+    {
+      buffered: IRange[];
+      gcedSincePrevious: IRange[];
+    } | null
+  >;
   /**
    * Information on the current media position in seconds at the time of the
    * Observation.
@@ -289,7 +295,7 @@ export default class CmcdDataBuilder {
           this._playbackObserver?.getCurrentTime() ??
           lastObservation.position.getWanted() ??
           lastObservation.position.getPolled();
-        for (const range of bufferedForType) {
+        for (const range of bufferedForType.buffered) {
           if (position >= range.start && position < range.end) {
             precizeBufferLengthMs = (range.end - position) * 1000;
             props.bl = Math.floor(Math.round(precizeBufferLengthMs / 100) * 100);

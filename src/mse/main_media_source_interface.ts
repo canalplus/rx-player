@@ -309,15 +309,6 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     try {
       const ranges = convertToRanges(this._sourceBuffer.buffered);
       const gcedSincePrevious = excludeFromRanges(this._lastKnownBuffer.buffered, ranges);
-      console.warn(
-        "!!!!!!! Current",
-        this.codec,
-        JSON.stringify(ranges),
-        "GCED",
-        JSON.stringify(gcedSincePrevious),
-        "last known",
-        JSON.stringify(this._lastKnownBuffer.buffered),
-      );
       this._lastKnownBuffer.buffered = ranges;
       return { buffered: ranges, gcedSincePrevious };
     } catch (err) {
