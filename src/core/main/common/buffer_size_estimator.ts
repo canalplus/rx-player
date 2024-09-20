@@ -56,6 +56,7 @@ export default class BufferSizeEstimator {
         bufferSize += item.chunkSize;
       }
     }
+    log.debug("BSE: Current buffer size estimate:", bufferSize);
     if (bufferSize === undefined) {
       return;
     }
