@@ -11,6 +11,7 @@ export default class BufferSizeEstimator {
   private _maxVideoBufferSize: SharedReference<number>;
   private _lockUntil: number | null;
   private _removing: boolean;
+  private _lastMaxVideoBufferSizeLimits: number[];
 
   constructor(
     segmentSinksStore: SegmentSinksStore,
@@ -22,6 +23,7 @@ export default class BufferSizeEstimator {
     this._maxVideoBufferSize = localMaxVideoBufferSize;
     this._lockUntil = null;
     this._removing = false;
+    this._lastMaxVideoBufferSizeLimits = [];
   }
 
   async onMediaObservation(
@@ -106,7 +108,14 @@ export default class BufferSizeEstimator {
 
     if (gced.length > 0) {
       log.warn("BSE: GC detected", bufferSize, JSON.stringify(gced));
-      this._lockUntil = now + 10000;
+      const newLock = now + 10000;
+      if (
+        this._lockUntil === null ||
+        this._lockUntil === Infinity ||
+        this._lockUntil < newLock
+      ) {
+        this._lockUntil = newLock;
+      }
 
       if (position - 10 > 0 && buffered.length > 0 && position - buffered[0].start > 10) {
         const sinks = [segmentSink];
@@ -131,9 +140,48 @@ export default class BufferSizeEstimator {
         trackType === "video" &&
         this._maxVideoBufferSize.getValue() > bufferSize
       ) {
-        log.warn("BSE: Locking maxVideoBufferSize: ", bufferSize);
+        if (this._lastMaxVideoBufferSizeLimits.length > 0) {
+          const prevBufferSize =
+            this._lastMaxVideoBufferSizeLimits[
+              this._lastMaxVideoBufferSizeLimits.length - 1
+            ];
+          const ratio = bufferSize / prevBufferSize;
+
+          if (ratio < 1.2 && ratio > 0.83) {
+            log.debug(
+              "BSE: Sensibly same `maxVideoBufferSize` limit",
+              bufferSize,
+              prevBufferSize,
+              ratio,
+            );
+            this._lastMaxVideoBufferSizeLimits.push(bufferSize);
+          } else {
+            log.debug(
+              "BSE: Different `maxVideoBufferSize` limit",
+              bufferSize,
+              prevBufferSize,
+              ratio,
+            );
+            this._lastMaxVideoBufferSizeLimits = [bufferSize];
+          }
+        } else {
+          this._lastMaxVideoBufferSizeLimits = [bufferSize];
+        }
+
+        if (this._lastMaxVideoBufferSizeLimits.length >= 3) {
+          bufferSize = Math.min(...this._lastMaxVideoBufferSizeLimits);
+          log.warn("BSE: Locking minimum maxVideoBufferSize long term", bufferSize);
+          this._lockUntil = Infinity;
+          const toRemove = this._lastMaxVideoBufferSizeLimits.length - 10;
+          if (toRemove > 0) {
+            this._lastMaxVideoBufferSizeLimits.splice(0, toRemove);
+          }
+        } else {
+          log.warn("BSE: Locking maxVideoBufferSize: ", bufferSize);
+        }
         this._maxVideoBufferSize.setValue(bufferSize);
       }
+
       const newWantedBufferAhead = Math.max(5, baseWantedBufferAhead - 7);
       if (newWantedBufferAhead < baseWantedBufferAhead) {
         log.warn(
