@@ -1,4 +1,6 @@
 node_modules
+/localhost.crt
+/localhost.key
 *.log
 *.keys
 
@@ -10,5 +12,8 @@ dist/*
 !dist/rx-player.js
 !dist/rx-player.min.js
 test-output.xml
+/src/parsers/manifest/dash/wasm-parser/target
 
 demo/bundle.js
+
+.vscode
