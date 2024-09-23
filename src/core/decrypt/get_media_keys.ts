@@ -58,6 +58,11 @@ export interface IMediaKeysInfos {
   /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
   mediaKeySystemAccess: MediaKeySystemAccess |
                         ICustomMediaKeySystemAccess;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
   /** The MediaKeys instance. */
   mediaKeys : MediaKeys |
               ICustomMediaKeys;
@@ -92,7 +97,7 @@ export default async function getMediaKeysInfos(
     throw cancelSignal.cancellationError;
   }
 
-  const { options, mediaKeySystemAccess } = evt.value;
+  const { options, mediaKeySystemAccess, askedConfiguration } = evt.value;
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   const persistentSessionsStore = createPersistentSessionsStorage(options);
 
@@ -109,10 +114,13 @@ export default async function getMediaKeysInfos(
         (!isNullOrUndefined(options.serverCertificate) &&
          ServerCertificateStore.has(mediaKeys, options.serverCertificate)))
     {
-      return { mediaKeys,
-               mediaKeySystemAccess,
-               stores: { loadedSessionsStore, persistentSessionsStore },
-               options };
+      return {
+        mediaKeys,
+        mediaKeySystemAccess,
+        askedConfiguration,
+        stores: { loadedSessionsStore, persistentSessionsStore },
+        options,
+      };
 
     }
   }
@@ -120,10 +128,13 @@ export default async function getMediaKeysInfos(
   const mediaKeys = await createMediaKeys(mediaKeySystemAccess);
   log.info("DRM: MediaKeys created with success");
   const loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
-  return { mediaKeys,
-           mediaKeySystemAccess,
-           stores: { loadedSessionsStore, persistentSessionsStore },
-           options };
+  return {
+    mediaKeys,
+    mediaKeySystemAccess,
+    askedConfiguration,
+    stores: { loadedSessionsStore, persistentSessionsStore },
+    options,
+  };
 }
 
 /**

@@ -42,8 +42,17 @@ type MediaKeysRequirement = "optional" |
                             "not-allowed";
 
 export interface IMediaKeySystemAccessInfos {
-  mediaKeySystemAccess: MediaKeySystemAccess |
-                        ICustomMediaKeySystemAccess;
+    /** `MediaKeySystemAccess` to use to create `MediaKeys` instances. */
+  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
+  /**
+   * Corresponding `keySystems` element that has led to the creation of the
+   * `MediaKeySystemAccess`.
+   */
   options: IKeySystemOption;
 }
 
@@ -70,16 +79,19 @@ interface IKeySystemType { keyName : string | undefined;
 
 /**
  * @param {Array.<Object>} keySystems
+ * @param {Object} askedConfiguration
  * @param {MediaKeySystemAccess} currentKeySystemAccess
  * @param {Object} currentKeySystemOptions
  * @returns {null|Object}
  */
 function checkCachedMediaKeySystemAccess(
   keySystems: IKeySystemOption[],
+  askedConfiguration: MediaKeySystemConfiguration,
   currentKeySystemAccess: MediaKeySystemAccess|ICustomMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption
 ) : null | {
   keySystemOptions: IKeySystemOption;
+  askedConfiguration: MediaKeySystemConfiguration;
   keySystemAccess: MediaKeySystemAccess|ICustomMediaKeySystemAccess;
 } {
   const mksConfiguration = currentKeySystemAccess.getConfiguration();
@@ -109,8 +121,11 @@ function checkCachedMediaKeySystemAccess(
   })[0];
 
   if (firstCompatibleOption != null) {
-    return { keySystemOptions: firstCompatibleOption,
-             keySystemAccess: currentKeySystemAccess };
+    return {
+      keySystemOptions: firstCompatibleOption,
+      keySystemAccess: currentKeySystemAccess,
+      askedConfiguration,
+    };
   }
   return null;
 }
@@ -240,6 +255,14 @@ function buildKeySystemConfigurations(
     sessionTypes,
   };
 
+  if (
+    !isNullOrUndefined(keySystem.audioRobustnesses) ||
+      !isNullOrUndefined(keySystem.videoRobustnesses)
+  ) {
+    // If the user specifically asked for robustnesses, we don't want to try without them
+    return [wantedMediaKeySystemConfiguration];
+  }
+
   return [
     wantedMediaKeySystemConfiguration,
 
@@ -282,14 +305,18 @@ export default function getMediaKeySystemAccess(
       // one as exactly the same compatibility options.
       const cachedKeySystemAccess =
         checkCachedMediaKeySystemAccess(keySystemsConfigs,
+                                        currentState.askedConfiguration,
                                         currentState.mediaKeySystemAccess,
                                         currentState.keySystemOptions);
       if (cachedKeySystemAccess !== null) {
         log.info("DRM: Found cached compatible keySystem");
         return Promise.resolve({
           type: "reuse-media-key-system-access" as const,
-          value: { mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
-                   options: cachedKeySystemAccess.keySystemOptions },
+          value: {
+            mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+            askedConfiguration: cachedKeySystemAccess.askedConfiguration,
+            options: cachedKeySystemAccess.keySystemOptions,
+          },
         });
       }
     }
@@ -360,22 +387,33 @@ export default function getMediaKeySystemAccess(
                                                                  keyType,
                                                                  keySystemOptions);
 
-    log.debug(`DRM: Request keysystem access ${keyType},` +
-              `${index + 1} of ${keySystemsType.length}`);
+    log.debug(
+      `DRM: Request keysystem access ${keyType},` +
+      `${index + 1} of ${keySystemsType.length}`
+    );
 
-    try {
-      const keySystemAccess = await testKeySystem(keyType, keySystemConfigurations);
-      log.info("DRM: Found compatible keysystem", keyType, index + 1);
-      return { type: "create-media-key-system-access" as const,
-               value: { options: keySystemOptions,
-                        mediaKeySystemAccess: keySystemAccess } };
-    } catch (_) {
-      log.debug("DRM: Rejected access to keysystem", keyType, index + 1);
-      if (cancelSignal.cancellationError !== null) {
-        throw cancelSignal.cancellationError;
+    let keySystemAccess;
+    for (let configIdx = 0; configIdx < keySystemConfigurations.length; configIdx++) {
+      const keySystemConfiguration = keySystemConfigurations[configIdx];
+      try {
+        keySystemAccess = await testKeySystem(keyType, [keySystemConfiguration]);
+        log.info("DRM: Found compatible keysystem", keyType, index + 1);
+        return {
+          type: "create-media-key-system-access" as const,
+          value: {
+            options: keySystemOptions,
+            askedConfiguration: keySystemConfiguration,
+            mediaKeySystemAccess: keySystemAccess,
+          },
+        };
+      } catch (_) {
+        log.debug("DRM: Rejected access to keysystem", keyType, index + 1, configIdx);
+        if (cancelSignal.cancellationError !== null) {
+          throw cancelSignal.cancellationError;
+        }
       }
-      return recursivelyTestKeySystems(index + 1);
     }
+    return recursivelyTestKeySystems(index + 1);
   }
 }
 
