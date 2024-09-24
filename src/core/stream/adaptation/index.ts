@@ -15,6 +15,6 @@
  */
 
 import AdaptationStream from "./adaptation_stream";
-export * from "./types";
+export type * from "./types";
 
 export default AdaptationStream;

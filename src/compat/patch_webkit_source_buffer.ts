@@ -85,10 +85,8 @@ export default function patchWebkitSourceBuffer(): void {
       val: unknown,
     ) {
       queueMicrotask(() => {
-        // @ts-expect-error: trigger is normally protected
         this.trigger(eventName, val as Event);
         this.updating = false;
-        // @ts-expect-error: trigger is normally protected
         this.trigger("updateend", new Event("updateend"));
       });
     };
@@ -97,7 +95,6 @@ export default function patchWebkitSourceBuffer(): void {
       if (this.updating) {
         throw new Error("updating");
       }
-      // @ts-expect-error: trigger is normally protected
       this.trigger("updatestart", new Event("updatestart"));
       this.updating = true;
       try {

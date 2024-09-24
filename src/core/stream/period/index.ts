@@ -15,6 +15,6 @@
  */
 
 import PeriodStream from "./period_stream";
-export * from "./types";
+export type * from "./types";
 
 export default PeriodStream;

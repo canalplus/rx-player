@@ -145,6 +145,15 @@ module.exports = {
         leadingUnderscore: "allow",
       },
     ],
+    "@typescript-eslint/no-duplicate-type-constituents": [
+      "error",
+      {
+        ignoreIntersections: false,
+        // We sadly have to disable this one because there's many cases where
+        // this is done on purpose
+        ignoreUnions: true,
+      },
+    ],
     "@typescript-eslint/no-empty-function": "error",
     "@typescript-eslint/no-empty-interface": "error",
     "@typescript-eslint/no-explicit-any": "error",
