@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,
+    "noUncheckedSideEffectImports": true,
     "strict": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
