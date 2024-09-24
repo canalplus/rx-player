@@ -33,20 +33,20 @@ module.exports = (env) => {
   const isBarebone = process.env.RXP_BAREBONE === "true";
   const plugins = [
     new webpack.DefinePlugin({
-      "__FEATURES__": {
-        IS_DISABLED: +(false), // === 0 (wrote this way to be explicit)
-        IS_ENABLED: +(true), // === 1 (wrote this way to be explicit)
+      __FEATURES__: {
+        IS_DISABLED: +false, // === 0 (wrote this way to be explicit)
+        IS_ENABLED: +true, // === 1 (wrote this way to be explicit)
 
         // Each following feature is compared to IS_ENABLED or IS_DISABLED in
         // code to check whether the feature is enabled or not.
 
-        SMOOTH: +(isBarebone ?
-          process.env.RXP_SMOOTH === "true" :
-          process.env.RXP_SMOOTH !== "false"),
+        SMOOTH: +(isBarebone
+          ? process.env.RXP_SMOOTH === "true"
+          : process.env.RXP_SMOOTH !== "false"),
 
-        DASH: +(isBarebone ?
-          process.env.RXP_DASH === "true" :
-          process.env.RXP_DASH !== "false"),
+        DASH: +(isBarebone
+          ? process.env.RXP_DASH === "true"
+          : process.env.RXP_DASH !== "false"),
 
         LOCAL_MANIFEST: +(process.env.RXP_LOCAL_MANIFEST === "true"),
 
@@ -54,49 +54,49 @@ module.exports = (env) => {
 
         DEBUG_ELEMENT: +(process.env.RXP_DEBUG_ELEMENT === "true"),
 
-        DIRECTFILE: +(isBarebone ?
-          process.env.RXP_DIRECTFILE === "true" :
-          process.env.RXP_DIRECTFILE !== "false"),
+        DIRECTFILE: +(isBarebone
+          ? process.env.RXP_DIRECTFILE === "true"
+          : process.env.RXP_DIRECTFILE !== "false"),
 
-        NATIVE_TTML: +(isBarebone ?
-          process.env.RXP_NATIVE_TTML === "true" :
-          process.env.RXP_NATIVE_TTML !== "false"),
+        NATIVE_TTML: +(isBarebone
+          ? process.env.RXP_NATIVE_TTML === "true"
+          : process.env.RXP_NATIVE_TTML !== "false"),
 
-        NATIVE_SAMI: +(isBarebone ?
-          process.env.RXP_NATIVE_SAMI === "true" :
-          process.env.RXP_NATIVE_SAMI !== "false"),
+        NATIVE_SAMI: +(isBarebone
+          ? process.env.RXP_NATIVE_SAMI === "true"
+          : process.env.RXP_NATIVE_SAMI !== "false"),
 
-        NATIVE_VTT: +(isBarebone ?
-          process.env.RXP_NATIVE_VTT === "true" :
-          process.env.RXP_NATIVE_VTT !== "false"),
+        NATIVE_VTT: +(isBarebone
+          ? process.env.RXP_NATIVE_VTT === "true"
+          : process.env.RXP_NATIVE_VTT !== "false"),
 
-        NATIVE_SRT: +(isBarebone ?
-          process.env.RXP_NATIVE_SRT === "true" :
-          process.env.RXP_NATIVE_SRT !== "false"),
+        NATIVE_SRT: +(isBarebone
+          ? process.env.RXP_NATIVE_SRT === "true"
+          : process.env.RXP_NATIVE_SRT !== "false"),
 
-        HTML_TTML: +(isBarebone ?
-          process.env.RXP_HTML_TTML === "true" :
-          process.env.RXP_HTML_TTML !== "false"),
+        HTML_TTML: +(isBarebone
+          ? process.env.RXP_HTML_TTML === "true"
+          : process.env.RXP_HTML_TTML !== "false"),
 
-        HTML_SAMI: +(isBarebone ?
-          process.env.RXP_HTML_SAMI === "true" :
-          process.env.RXP_HTML_SAMI !== "false"),
+        HTML_SAMI: +(isBarebone
+          ? process.env.RXP_HTML_SAMI === "true"
+          : process.env.RXP_HTML_SAMI !== "false"),
 
-        HTML_VTT: +(isBarebone ?
-          process.env.RXP_HTML_VTT === "true" :
-          process.env.RXP_HTML_VTT !== "false"),
+        HTML_VTT: +(isBarebone
+          ? process.env.RXP_HTML_VTT === "true"
+          : process.env.RXP_HTML_VTT !== "false"),
 
-        HTML_SRT: +(isBarebone ?
-          process.env.RXP_HTML_SRT === "true" :
-          process.env.RXP_HTML_SRT !== "false"),
+        HTML_SRT: +(isBarebone
+          ? process.env.RXP_HTML_SRT === "true"
+          : process.env.RXP_HTML_SRT !== "false"),
 
-        EME: +(isBarebone ?
-          process.env.RXP_EME === "true" :
-          process.env.RXP_EME !== "false"),
+        EME: +(isBarebone
+          ? process.env.RXP_EME === "true"
+          : process.env.RXP_EME !== "false"),
 
-        BIF_PARSER: +(isBarebone ?
-          process.env.RXP_BIF_PARSER === "true" :
-          process.env.RXP_BIF_PARSER !== "false"),
+        BIF_PARSER: +(isBarebone
+          ? process.env.RXP_BIF_PARSER === "true"
+          : process.env.RXP_BIF_PARSER !== "false"),
       },
       __ENVIRONMENT__: {
         PRODUCTION: 0,
@@ -104,7 +104,7 @@ module.exports = (env) => {
         CURRENT_ENV: isDevMode ? 1 : 0,
       },
       __LOGGER_LEVEL__: {
-        CURRENT_LEVEL: isDevMode ? "\"INFO\"" : "\"ERROR\"",
+        CURRENT_LEVEL: isDevMode ? '"INFO"' : '"ERROR"',
       },
     }),
   ];
@@ -151,10 +151,8 @@ module.exports = (env) => {
               loader: "babel-loader",
               options: {
                 cacheDirectory: true,
-                presets: [
-                  [ "@babel/env", { loose: true, modules: false } ],
-                ],
-                plugins: [[ "@babel/plugin-transform-runtime" ]],
+                presets: [["@babel/env", { loose: true, modules: false }]],
+                plugins: [["@babel/plugin-transform-runtime"]],
               },
             },
             { loader: "ts-loader" },

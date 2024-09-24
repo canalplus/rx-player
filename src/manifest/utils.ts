@@ -15,16 +15,18 @@
  */
 
 import isNullOrUndefined from "../utils/is_null_or_undefined";
-import Adaptation from "./adaptation";
-import Period from "./period";
-import Representation from "./representation";
-import { ISegment } from "./representation_index";
+import type Adaptation from "./adaptation";
+import type Period from "./period";
+import type Representation from "./representation";
+import type { ISegment } from "./representation_index";
 
 /** All information needed to identify a given segment. */
-export interface IBufferedChunkInfos { adaptation : Adaptation;
-                                       period : Period;
-                                       representation : Representation;
-                                       segment : ISegment; }
+export interface IBufferedChunkInfos {
+  adaptation: Adaptation;
+  period: Period;
+  representation: Representation;
+  segment: ISegment;
+}
 
 /**
  * Check if two contents are the same
@@ -34,10 +36,12 @@ export interface IBufferedChunkInfos { adaptation : Adaptation;
  */
 export function areSameContent(
   content1: IBufferedChunkInfos,
-  content2: IBufferedChunkInfos
+  content2: IBufferedChunkInfos,
 ): boolean {
-  return (content1.segment.id === content2.segment.id &&
-          content1.representation.uniqueId === content2.representation.uniqueId);
+  return (
+    content1.segment.id === content2.segment.id &&
+    content1.representation.uniqueId === content2.representation.uniqueId
+  );
 }
 
 /**
@@ -46,15 +50,19 @@ export function areSameContent(
  * @returns {string|null|undefined}
  */
 export function getLoggableSegmentId(
-  content : IBufferedChunkInfos | null | undefined
-) : string {
+  content: IBufferedChunkInfos | null | undefined,
+): string {
   if (isNullOrUndefined(content)) {
     return "";
   }
   const { period, adaptation, representation, segment } = content;
-  return `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
-         `R: ${representation.id} S: ` +
-         (segment.isInit   ? "init" :
-          segment.complete ? `${segment.time}-${segment.duration}` :
-                             `${segment.time}`);
+  return (
+    `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
+    `R: ${representation.id} S: ` +
+    (segment.isInit
+      ? "init"
+      : segment.complete
+        ? `${segment.time}-${segment.duration}`
+        : `${segment.time}`)
+  );
 }

@@ -17,30 +17,30 @@
 import log from "../../../../../../../log";
 import parseS from "../parse_s_element";
 
-function testNumberAttribute(attributeName : string, variableName? : string) : void {
+function testNumberAttribute(attributeName: string, variableName?: string): void {
   const _variableName = variableName == null ? attributeName : variableName;
 
   /* eslint-disable max-len */
   it(`should correctly parse an S element with a correct ${attributeName} attribute`, () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser()
-      .parseFromString(`<S ${attributeName}="012" />`, "text/xml")
-      .childNodes[0] as Element;
-    expect(parseS(element1))
-      .toEqual({ [_variableName]: 12 });
+    const element1 = new DOMParser().parseFromString(
+      `<S ${attributeName}="012" />`,
+      "text/xml",
+    ).childNodes[0] as Element;
+    expect(parseS(element1)).toEqual({ [_variableName]: 12 });
 
-    const element2 = new DOMParser()
-      .parseFromString(`<S ${attributeName}="0" />`, "text/xml")
-      .childNodes[0] as Element;
-    expect(parseS(element2))
-      .toEqual({ [_variableName]: 0 });
+    const element2 = new DOMParser().parseFromString(
+      `<S ${attributeName}="0" />`,
+      "text/xml",
+    ).childNodes[0] as Element;
+    expect(parseS(element2)).toEqual({ [_variableName]: 0 });
 
-    const element3 = new DOMParser()
-      .parseFromString(`<S ${attributeName}="-50" />`, "text/xml")
-      .childNodes[0] as Element;
-    expect(parseS(element3))
-      .toEqual({ [_variableName]: -50 });
+    const element3 = new DOMParser().parseFromString(
+      `<S ${attributeName}="-50" />`,
+      "text/xml",
+    ).childNodes[0] as Element;
+    expect(parseS(element3)).toEqual({ [_variableName]: -50 });
 
     expect(spyLog).not.toHaveBeenCalled();
     spyLog.mockRestore();
@@ -48,30 +48,30 @@ function testNumberAttribute(attributeName : string, variableName? : string) : v
 
   /* eslint-disable max-len */
   it(`should correctly parse an S element with an incorrect ${attributeName} attribute`, () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const spyLog = jest.spyOn(log, "warn").mockImplementation(jest.fn());
-    const element1 = new DOMParser()
-      .parseFromString(`<S ${attributeName}="toto" />`, "text/xml")
-      .childNodes[0] as Element;
-    expect(parseS(element1))
-      .toEqual({});
+    const element1 = new DOMParser().parseFromString(
+      `<S ${attributeName}="toto" />`,
+      "text/xml",
+    ).childNodes[0] as Element;
+    expect(parseS(element1)).toEqual({});
     expect(spyLog).toHaveBeenCalledTimes(1);
     expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("toto")`);
 
-    const element2 = new DOMParser()
-      .parseFromString(`<S ${attributeName}="PT5M" />`, "text/xml")
-      .childNodes[0] as Element;
-    expect(parseS(element2))
-      .toEqual({});
+    const element2 = new DOMParser().parseFromString(
+      `<S ${attributeName}="PT5M" />`,
+      "text/xml",
+    ).childNodes[0] as Element;
+    expect(parseS(element2)).toEqual({});
     expect(spyLog).toHaveBeenCalledTimes(2);
     expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("PT5M")`);
 
-    const element3 = new DOMParser()
-      .parseFromString(`<S ${attributeName}="" />`, "text/xml")
-      .childNodes[0] as Element;
+    const element3 = new DOMParser().parseFromString(
+      `<S ${attributeName}="" />`,
+      "text/xml",
+    ).childNodes[0] as Element;
 
-    expect(parseS(element3))
-      .toEqual({});
+    expect(parseS(element3)).toEqual({});
     expect(spyLog).toHaveBeenCalledTimes(3);
     expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("")`);
     spyLog.mockRestore();
@@ -90,25 +90,27 @@ describe("DASH Node Parsers - S", () => {
   testNumberAttribute("d", "duration");
 
   it("should correctly parse an S element with every attributes", () => {
-    const element1 = new DOMParser()
-      .parseFromString("<S t=\"0\" d=\"4\" r=\"12\" />", "text/xml")
-      .childNodes[0] as Element;
+    const element1 = new DOMParser().parseFromString(
+      '<S t="0" d="4" r="12" />',
+      "text/xml",
+    ).childNodes[0] as Element;
     expect(parseS(element1)).toEqual({ start: 0, repeatCount: 12, duration: 4 });
 
-    const element2 = new DOMParser()
-      .parseFromString("<S t=\"99\" d=\"4\" r=\"0\" />", "text/xml")
-      .childNodes[0] as Element;
+    const element2 = new DOMParser().parseFromString(
+      '<S t="99" d="4" r="0" />',
+      "text/xml",
+    ).childNodes[0] as Element;
     expect(parseS(element2)).toEqual({ start: 99, repeatCount: 0, duration: 4 });
   });
 
   it("should correctly parse an S element with unknown attributes", () => {
-    const element1 = new DOMParser()
-      .parseFromString("<S t=\"0\" d=\"4\" r=\"12\" f=\"9\" />", "text/xml")
-      .childNodes[0] as Element;
+    const element1 = new DOMParser().parseFromString(
+      '<S t="0" d="4" r="12" f="9" />',
+      "text/xml",
+    ).childNodes[0] as Element;
     expect(parseS(element1)).toEqual({ start: 0, repeatCount: 12, duration: 4 });
 
-    const element2 = new DOMParser()
-      .parseFromString("<S b=\"7000\" />", "text/xml")
+    const element2 = new DOMParser().parseFromString('<S b="7000" />', "text/xml")
       .childNodes[0] as Element;
     expect(parseS(element2)).toEqual({});
   });

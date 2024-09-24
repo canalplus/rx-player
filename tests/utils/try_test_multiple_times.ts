@@ -21,17 +21,19 @@
  * performed by this function.
  */
 export default async function tryTestMultipleTimes<T>(
-  runTest : (cancelTest: () => void) => Promise<T>,
-  maxAttempts : number,
-  cleanUp? : (() => unknown) | undefined
-) : Promise<T> {
+  runTest: (cancelTest: () => void) => Promise<T>,
+  maxAttempts: number,
+  cleanUp?: (() => unknown) | undefined,
+): Promise<T> {
   let attemptNb = 0;
   return await reCheck();
 
-  async function reCheck() : Promise<T> {
+  async function reCheck(): Promise<T> {
     let stopCondition = false;
     try {
-      const res = await runTest(() => { stopCondition = true; });
+      const res = await runTest(() => {
+        stopCondition = true;
+      });
       if (cleanUp !== undefined) {
         cleanUp();
       }
@@ -47,4 +49,3 @@ export default async function tryTestMultipleTimes<T>(
     }
   }
 }
-

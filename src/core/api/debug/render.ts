@@ -1,15 +1,15 @@
-import { CancellationSignal } from "../../../utils/task_canceller";
-import RxPlayer from "../public_api";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import type RxPlayer from "../public_api";
 import constructDebugGeneralInfo from "./modules/general_info";
 import createSegmentBufferGraph from "./modules/segment_buffer_content";
 import createSegmentBufferSizeGraph from "./modules/segment_buffer_size";
 import { createCompositeElement, createElement } from "./utils";
 
 export default function renderDebugElement(
-  parentElt : HTMLElement,
-  instance : RxPlayer,
-  cancelSignal : CancellationSignal
-) : void {
+  parentElt: HTMLElement,
+  instance: RxPlayer,
+  cancelSignal: CancellationSignal,
+): void {
   const debugElementTitleElt = createElement("div", {
     textContent: "RxPlayer Debug Information",
   });

@@ -15,13 +15,13 @@
  */
 
 import imageBuffer from "../../core/segment_buffers/implementations/image";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to display image tracks.
  * @param {Object} features
  */
-function addImageBufferFeature(features : IFeaturesObject) : void {
+function addImageBufferFeature(features: IFeaturesObject): void {
   features.imageBuffer = imageBuffer;
 }
 

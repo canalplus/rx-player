@@ -17,26 +17,26 @@
 import config from "../../../../../../config";
 import { NetworkError } from "../../../../../../errors";
 import log from "../../../../../../log";
-import {
+import type {
   IRepresentationIndex,
   ISegment,
   Representation,
 } from "../../../../../../manifest";
-import { IPlayerError } from "../../../../../../public_types";
+import type { IPlayerError } from "../../../../../../public_types";
 import assert from "../../../../../../utils/assert";
 import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import { IEMSG } from "../../../../../containers/isobmff";
+import type { IEMSG } from "../../../../../containers/isobmff";
 import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
+import type { IIndexSegment } from "../../../../utils/index_helpers";
 import {
   checkDiscontinuity,
   fromIndexTime,
   getIndexSegmentEnd,
-  IIndexSegment,
   toIndexTime,
 } from "../../../../utils/index_helpers";
 import updateSegmentTimeline from "../../../../utils/update_segment_timeline";
-import { ISegmentTimelineElement } from "../../../node_parser_types";
-import ManifestBoundsCalculator from "../../manifest_bounds_calculator";
+import type { ISegmentTimelineElement } from "../../../node_parser_types";
+import type ManifestBoundsCalculator from "../../manifest_bounds_calculator";
 import getInitSegment from "../get_init_segment";
 import getSegmentsFromTimeline from "../get_segments_from_timeline";
 import { constructRepresentationUrl } from "../tokens";
@@ -52,9 +52,9 @@ import constructTimelineFromPreviousTimeline from "./construct_timeline_from_pre
  */
 export interface ITimelineIndex {
   /** If `false`, the last segment anounced might be still incomplete. */
-  availabilityTimeComplete : boolean;
+  availabilityTimeComplete: boolean;
   /** Minimum availabilityTimeOffset concerning the segments of this Representation. */
-  availabilityTimeOffset : number;
+  availabilityTimeOffset: number;
   /** Byte range for a possible index of segments in the server. */
   indexRange?: [number, number] | undefined;
   /**
@@ -69,17 +69,19 @@ export interface ITimelineIndex {
    * T * timescale + indexTimeOffset
    * ```
    */
-  indexTimeOffset : number;
+  indexTimeOffset: number;
   /** Information on the initialization segment. */
-  initialization? : {
-    /**
-     * URL path, to add to the wanted CDN, to access the initialization segment.
-     * `null` if no URL exists.
-     */
-    url: string | null;
-    /** possible byte range to request it. */
-    range?: [number, number] | undefined;
-  } | undefined;
+  initialization?:
+    | {
+        /**
+         * URL path, to add to the wanted CDN, to access the initialization segment.
+         * `null` if no URL exists.
+         */
+        url: string | null;
+        /** possible byte range to request it. */
+        range?: [number, number] | undefined;
+      }
+    | undefined;
   /**
    * Template for the URL suffix (to concatenate to the wanted CDN), to access any
    * media segment.
@@ -87,11 +89,11 @@ export interface ITimelineIndex {
    *
    * `null` if no URL exists.
    */
-  segmentUrlTemplate : string | null ;
+  segmentUrlTemplate: string | null;
   /** Number from which the first segments in this index starts with. */
-  startNumber? : number | undefined;
+  startNumber?: number | undefined;
   /** Number associated to the last segment in this index. */
-  endNumber? : number | undefined;
+  endNumber?: number | undefined;
   /**
    * Every segments defined in this index.
    * `null` at the beginning as this property is parsed lazily (only when first
@@ -109,13 +111,13 @@ export interface ITimelineIndex {
    * MPD. Not doing so could lead to the RxPlayer not being able to play the
    * stream anymore.
    */
-  timeline : IIndexSegment[] | null;
+  timeline: IIndexSegment[] | null;
   /**
    * Timescale to convert a time given here into seconds.
    * This is done by this simple operation:
    * ``timeInSeconds = timeInIndex * timescale``
    */
-  timescale : number;
+  timescale: number;
 }
 
 /**
@@ -124,13 +126,13 @@ export interface ITimelineIndex {
  */
 export interface ITimelineIndexIndexArgument {
   indexRange?: [number, number] | undefined;
-  initialization? : { media? : string | undefined;
-                      range?: [number, number] | undefined; } |
-                    undefined;
-  media? : string | undefined;
-  startNumber? : number | undefined;
-  endNumber? : number | undefined;
-  timescale? : number | undefined;
+  initialization?:
+    | { media?: string | undefined; range?: [number, number] | undefined }
+    | undefined;
+  media?: string | undefined;
+  startNumber?: number | undefined;
+  endNumber?: number | undefined;
+  timescale?: number | undefined;
   /**
    * Offset present in the index to convert from the mediaTime (time declared in
    * the media segments and in this index) to the presentationTime (time wanted
@@ -145,10 +147,10 @@ export interface ITimelineIndexIndexArgument {
    * The time given here is in the current
    * timescale (see timescale)
    */
-  presentationTimeOffset? : number | undefined;
+  presentationTimeOffset?: number | undefined;
 
-  timelineParser? : (() => HTMLCollection) | undefined;
-  timeline? : ISegmentTimelineElement[] | undefined;
+  timelineParser?: (() => HTMLCollection) | undefined;
+  timeline?: ISegmentTimelineElement[] | undefined;
 }
 
 /** Aditional context needed by a SegmentTimeline RepresentationIndex. */
@@ -162,7 +164,7 @@ export interface ITimelineIndexContextArgument {
    * It might however be semantically different than `true` in the RxPlayer as it
    * means that the packager didn't include that information in the MPD.
    */
-  availabilityTimeComplete : boolean | undefined;
+  availabilityTimeComplete: boolean | undefined;
   /**
    * availability time offset of the concerned Adaptation.
    *
@@ -171,24 +173,24 @@ export interface ITimelineIndexContextArgument {
    * It might however be semantically different than `0` in the RxPlayer as it
    * means that the packager didn't include that information in the MPD.
    */
-  availabilityTimeOffset : number | undefined;
+  availabilityTimeOffset: number | undefined;
   /** Allows to obtain the minimum and maximum positions of a content. */
-  manifestBoundsCalculator : ManifestBoundsCalculator;
+  manifestBoundsCalculator: ManifestBoundsCalculator;
   /** Start of the period linked to this RepresentationIndex, in seconds. */
-  periodStart : number;
+  periodStart: number;
   /** End of the period linked to this RepresentationIndex, in seconds. */
-  periodEnd : number|undefined;
+  periodEnd: number | undefined;
   /** Whether the corresponding Manifest can be updated and changed. */
-  isDynamic : boolean;
+  isDynamic: boolean;
   /**
    * Time (in terms of `performance.now`) at which the XML file containing this
    * index was received
    */
-  receivedTime? : number | undefined;
+  receivedTime?: number | undefined;
   /** ID of the Representation concerned. */
-  representationId? : string | undefined;
+  representationId?: string | undefined;
   /** Bitrate of the Representation concerned. */
-  representationBitrate? : number | undefined;
+  representationBitrate?: number | undefined;
   /**
    * The parser should take this previous version of the
    * `TimelineRepresentationIndex` - which was from the same Representation
@@ -197,22 +199,22 @@ export interface ITimelineIndexContextArgument {
    * de-synchronization with what is actually on the server,
    * Use with moderation.
    */
-  unsafelyBaseOnPreviousRepresentation : Representation | null;
+  unsafelyBaseOnPreviousRepresentation: Representation | null;
   /** Function that tells if an EMSG is whitelisted by the manifest */
   isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
   /**
    * Set to `true` if the linked Period is the chronologically last one in the
    * Manifest.
    */
-  isLastPeriod : boolean;
+  isLastPeriod: boolean;
 }
 
 export interface ILastSegmentInformation {
   /** End of the timeline on `time`, timescaled. */
-  lastPosition? : number | undefined;
+  lastPosition?: number | undefined;
 
   /** Defines the time at which `lastPosition` was last calculated. */
-  time : number;
+  time: number;
 }
 
 /**
@@ -222,28 +224,28 @@ export interface ILastSegmentInformation {
  */
 export default class TimelineRepresentationIndex implements IRepresentationIndex {
   /** Underlying structure to retrieve segment information. */
-  protected _index : ITimelineIndex;
+  protected _index: ITimelineIndex;
 
   /** Time, in terms of `performance.now`, of the last Manifest update. */
-  private _lastUpdate : number;
+  private _lastUpdate: number;
 
   /** Absolute start of the period, timescaled and converted to index time. */
-  private _scaledPeriodStart : number;
+  private _scaledPeriodStart: number;
 
   /** Absolute end of the period, timescaled and converted to index time. */
-  private _scaledPeriodEnd : number | undefined;
+  private _scaledPeriodEnd: number | undefined;
 
   /** Whether this RepresentationIndex can change over time. */
-  private _isDynamic : boolean;
+  private _isDynamic: boolean;
 
   /** Retrieve the maximum and minimum position of the whole content. */
-  private _manifestBoundsCalculator : ManifestBoundsCalculator;
+  private _manifestBoundsCalculator: ManifestBoundsCalculator;
 
   /**
    * Lazily get the S elements from this timeline.
    * `null` once this call has been done once, to free memory.
    */
-  private _parseTimeline : (() => HTMLCollection) | null;
+  private _parseTimeline: (() => HTMLCollection) | null;
 
   /**
    * This variable represents the same `TimelineRepresentationIndex` at the
@@ -253,7 +255,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * index structure as it can be really heavy for long Manifests.
    * To avoid taking too much memory, this variable is reset to `null` once used.
    */
-  private _unsafelyBaseOnPreviousIndex : TimelineRepresentationIndex | null;
+  private _unsafelyBaseOnPreviousIndex: TimelineRepresentationIndex | null;
 
   /* Function that tells if an EMSG is whitelisted by the manifest */
   private _isEMSGWhitelisted: (inbandEvent: IEMSG) => boolean;
@@ -266,28 +268,30 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Object} context
    */
   constructor(
-    index : ITimelineIndexIndexArgument,
-    context : ITimelineIndexContextArgument
+    index: ITimelineIndexIndexArgument,
+    context: ITimelineIndexContextArgument,
   ) {
     if (!TimelineRepresentationIndex.isTimelineIndexArgument(index)) {
-      throw new Error("The given index is not compatible with a " +
-                      "TimelineRepresentationIndex.");
+      throw new Error(
+        "The given index is not compatible with a " + "TimelineRepresentationIndex.",
+      );
     }
-    const { availabilityTimeComplete,
-            availabilityTimeOffset,
-            manifestBoundsCalculator,
-            isDynamic,
-            isLastPeriod,
-            representationId,
-            representationBitrate,
-            periodStart,
-            periodEnd,
-            isEMSGWhitelisted } = context;
+    const {
+      availabilityTimeComplete,
+      availabilityTimeOffset,
+      manifestBoundsCalculator,
+      isDynamic,
+      isLastPeriod,
+      representationId,
+      representationBitrate,
+      periodStart,
+      periodEnd,
+      isEMSGWhitelisted,
+    } = context;
     const timescale = index.timescale ?? 1;
 
-    const presentationTimeOffset = index.presentationTimeOffset != null ?
-      index.presentationTimeOffset :
-      0;
+    const presentationTimeOffset =
+      index.presentationTimeOffset != null ? index.presentationTimeOffset : 0;
 
     const scaledStart = periodStart * timescale;
     const indexTimeOffset = presentationTimeOffset - scaledStart;
@@ -296,33 +300,41 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
 
     this._isEMSGWhitelisted = isEMSGWhitelisted;
     this._isLastPeriod = isLastPeriod;
-    this._lastUpdate = context.receivedTime == null ?
-                                 performance.now() :
-                                 context.receivedTime;
+    this._lastUpdate =
+      context.receivedTime == null ? performance.now() : context.receivedTime;
 
     this._unsafelyBaseOnPreviousIndex = null;
-    if (context.unsafelyBaseOnPreviousRepresentation !== null &&
-        context.unsafelyBaseOnPreviousRepresentation.index
-          instanceof TimelineRepresentationIndex)
-    {
+    if (
+      context.unsafelyBaseOnPreviousRepresentation !== null &&
+      context.unsafelyBaseOnPreviousRepresentation.index instanceof
+        TimelineRepresentationIndex
+    ) {
       // avoid too much nested references, to keep memory down
-      context.unsafelyBaseOnPreviousRepresentation
-        .index._unsafelyBaseOnPreviousIndex = null;
-      this._unsafelyBaseOnPreviousIndex = context
-        .unsafelyBaseOnPreviousRepresentation.index;
+      context.unsafelyBaseOnPreviousRepresentation.index._unsafelyBaseOnPreviousIndex =
+        null;
+      this._unsafelyBaseOnPreviousIndex =
+        context.unsafelyBaseOnPreviousRepresentation.index;
     }
 
     this._isDynamic = isDynamic;
     this._parseTimeline = index.timelineParser ?? null;
-    const initializationUrl = index.initialization?.media === undefined ?
-      null :
-      constructRepresentationUrl(index.initialization.media,
-                                 representationId,
-                                 representationBitrate);
+    const initializationUrl =
+      index.initialization?.media === undefined
+        ? null
+        : constructRepresentationUrl(
+            index.initialization.media,
+            representationId,
+            representationBitrate,
+          );
 
-    const segmentUrlTemplate = index.media === undefined ?
-      null :
-      constructRepresentationUrl(index.media, representationId, representationBitrate);
+    const segmentUrlTemplate =
+      index.media === undefined
+        ? null
+        : constructRepresentationUrl(
+            index.media,
+            representationId,
+            representationBitrate,
+          );
 
     let actualAvailabilityTimeOffset;
     // Technically, it seems (although it is not clear) that an MPD may contain
@@ -334,46 +346,49 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     // So as a compromise, if nothing in the MPD indicates that future segments
     // may be announced (see code below), we will act as if ALL segments in this
     // TimelineRepresentationIndex are requestable
-    if (
-      availabilityTimeOffset === undefined &&
-      availabilityTimeComplete === undefined
-    ) {
+    if (availabilityTimeOffset === undefined && availabilityTimeComplete === undefined) {
       actualAvailabilityTimeOffset = Infinity; // Meaning: we can request
-                                               // everything in the index
+      // everything in the index
     } else {
       actualAvailabilityTimeOffset = availabilityTimeOffset ?? 0;
     }
 
-    this._index = { availabilityTimeComplete: availabilityTimeComplete ?? true,
-                    availabilityTimeOffset: actualAvailabilityTimeOffset,
-                    indexRange: index.indexRange,
-                    indexTimeOffset,
-                    initialization: index.initialization == null ?
-                      undefined :
-                      {
-                        url: initializationUrl,
-                        range: index.initialization.range,
-                      },
-                    segmentUrlTemplate,
-                    startNumber: index.startNumber,
-                    endNumber: index.endNumber,
-                    timeline: index.timeline === undefined ?
-                      null :
-                      updateTimelineFromEndNumber(index.timeline,
-                                                  index.startNumber,
-                                                  index.endNumber),
-                    timescale };
+    this._index = {
+      availabilityTimeComplete: availabilityTimeComplete ?? true,
+      availabilityTimeOffset: actualAvailabilityTimeOffset,
+      indexRange: index.indexRange,
+      indexTimeOffset,
+      initialization:
+        index.initialization == null
+          ? undefined
+          : {
+              url: initializationUrl,
+              range: index.initialization.range,
+            },
+      segmentUrlTemplate,
+      startNumber: index.startNumber,
+      endNumber: index.endNumber,
+      timeline:
+        index.timeline === undefined
+          ? null
+          : updateTimelineFromEndNumber(
+              index.timeline,
+              index.startNumber,
+              index.endNumber,
+            ),
+      timescale,
+    };
 
     this._scaledPeriodStart = toIndexTime(periodStart, this._index);
-    this._scaledPeriodEnd = periodEnd === undefined ? undefined :
-                                                      toIndexTime(periodEnd, this._index);
+    this._scaledPeriodEnd =
+      periodEnd === undefined ? undefined : toIndexTime(periodEnd, this._index);
   }
 
   /**
    * Construct init Segment.
    * @returns {Object}
    */
-  getInitSegment() : ISegment {
+  getInitSegment(): ISegment {
     return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
@@ -383,7 +398,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Number} duration - duration wanted, in seconds
    * @returns {Array.<Object>}
    */
-  getSegments(from : number, duration : number) : ISegment[] {
+  getSegments(from: number, duration: number): ISegment[] {
     this._refreshTimeline(); // clear timeline if needed
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
@@ -394,7 +409,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       duration,
       this._manifestBoundsCalculator,
       this._scaledPeriodEnd,
-      this._isEMSGWhitelisted
+      this._isEMSGWhitelisted,
     );
   }
 
@@ -402,7 +417,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Returns true if the index should be refreshed.
    * @returns {Boolean}
    */
-  shouldRefresh() : false {
+  shouldRefresh(): false {
     // DASH Manifest based on a SegmentTimeline should have minimumUpdatePeriod
     // attribute which should be sufficient to know when to refresh it.
     return false;
@@ -420,10 +435,9 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       this._index.timeline = this._getTimeline();
     }
     const timeline = this._index.timeline;
-    return timeline.length === 0 ? null :
-                                   fromIndexTime(Math.max(this._scaledPeriodStart,
-                                                          timeline[0].start),
-                                                 this._index);
+    return timeline.length === 0
+      ? null
+      : fromIndexTime(Math.max(this._scaledPeriodStart, timeline[0].start), this._index);
   }
 
   /**
@@ -442,13 +456,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       // Needed typecast for TypeScript
       this._index as typeof this._index & { timeline: IIndexSegment[] },
       this._manifestBoundsCalculator,
-      this._scaledPeriodEnd
+      this._scaledPeriodEnd,
     );
     if (lastReqSegInfo === null) {
       return null;
     }
-    const lastScaledPosition = Math.min(lastReqSegInfo.end,
-                                        this._scaledPeriodEnd ?? Infinity);
+    const lastScaledPosition = Math.min(
+      lastReqSegInfo.end,
+      this._scaledPeriodEnd ?? Infinity,
+    );
     return fromIndexTime(lastScaledPosition, this._index);
   }
 
@@ -470,10 +486,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return null;
     }
     const lastSegment = this._index.timeline[this._index.timeline.length - 1];
-    const lastTime = Math.min(getIndexSegmentEnd(lastSegment,
-                                                 null,
-                                                 this._scaledPeriodEnd),
-                              this._scaledPeriodEnd ?? Infinity);
+    const lastTime = Math.min(
+      getIndexSegmentEnd(lastSegment, null, this._scaledPeriodEnd),
+      this._scaledPeriodEnd ?? Infinity,
+    );
     return fromIndexTime(lastTime, this._index);
   }
 
@@ -505,34 +521,36 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       // Needed typecast for TypeScript
       this._index as typeof this._index & { timeline: IIndexSegment[] },
       this._manifestBoundsCalculator,
-      this._scaledPeriodEnd
+      this._scaledPeriodEnd,
     );
     if (lastReqSegInfo !== null) {
-      const lastReqSegmentEnd = Math.min(lastReqSegInfo.end,
-                                         this._scaledPeriodEnd ?? Infinity);
+      const lastReqSegmentEnd = Math.min(
+        lastReqSegInfo.end,
+        this._scaledPeriodEnd ?? Infinity,
+      );
       const roundedReqSegmentEnd = lastReqSegmentEnd + segmentTimeRounding;
-      if (roundedReqSegmentEnd >= Math.min(scaledWantedEnd,
-                                           this._scaledPeriodEnd ?? Infinity))
-      {
+      if (
+        roundedReqSegmentEnd >=
+        Math.min(scaledWantedEnd, this._scaledPeriodEnd ?? Infinity)
+      ) {
         return false; // everything up to that point is already requestable
       }
     }
 
     const scaledWantedStart = toIndexTime(start, this._index);
-    if (timeline.length > 0 &&
-        lastReqSegInfo !== null &&
-        !lastReqSegInfo.isLastOfTimeline)
-    {
+    if (
+      timeline.length > 0 &&
+      lastReqSegInfo !== null &&
+      !lastReqSegInfo.isLastOfTimeline
+    ) {
       // There are some future segments already anounced in the MPD
 
       const lastSegment = timeline[timeline.length - 1];
-      const lastSegmentEnd = getIndexSegmentEnd(lastSegment,
-                                                null,
-                                                this._scaledPeriodEnd);
+      const lastSegmentEnd = getIndexSegmentEnd(lastSegment, null, this._scaledPeriodEnd);
       const roundedLastSegEnd = lastSegmentEnd + segmentTimeRounding;
       if (scaledWantedStart < roundedLastSegEnd + segmentTimeRounding) {
         return true; // The MPD's timeline already contains one such element,
-                     // It is just not requestable yet
+        // It is just not requestable yet
       }
     }
 
@@ -543,14 +561,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     }
 
     if (this._scaledPeriodEnd === undefined) {
-      return (scaledWantedEnd + segmentTimeRounding) > this._scaledPeriodStart ?
-        undefined : // There may be future segments at this point
-        false; // Before the current Period
+      return scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart
+        ? undefined // There may be future segments at this point
+        : false; // Before the current Period
     }
 
     // `true` if within the boundaries of this Period. `false` otherwise.
-    return (scaledWantedStart - segmentTimeRounding) < this._scaledPeriodEnd &&
-           (scaledWantedEnd + segmentTimeRounding) > this._scaledPeriodStart;
+    return (
+      scaledWantedStart - segmentTimeRounding < this._scaledPeriodEnd &&
+      scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart
+    );
   }
 
   /**
@@ -561,7 +581,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Object} segment
    * @returns {Boolean|undefined}
    */
-  isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
+  isSegmentStillAvailable(segment: ISegment): boolean | undefined {
     if (segment.isInit) {
       return true;
     }
@@ -569,13 +589,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
-    return isSegmentStillAvailable(segment,
-                                   // Needed typecast for TypeScript
-                                   this._index as typeof this._index & {
-                                     timeline: IIndexSegment[];
-                                   },
-                                   this._manifestBoundsCalculator,
-                                   this._scaledPeriodEnd);
+    return isSegmentStillAvailable(
+      segment,
+      // Needed typecast for TypeScript
+      this._index as typeof this._index & {
+        timeline: IIndexSegment[];
+      },
+      this._manifestBoundsCalculator,
+      this._scaledPeriodEnd,
+    );
   }
 
   /**
@@ -586,30 +608,33 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Number} time
    * @returns {Number|null}
    */
-  checkDiscontinuity(time : number) : number | null {
+  checkDiscontinuity(time: number): number | null {
     this._refreshTimeline();
     let timeline = this._index.timeline;
     if (timeline === null) {
       timeline = this._getTimeline();
       this._index.timeline = timeline;
     }
-    return checkDiscontinuity({ timeline,
-                                timescale: this._index.timescale,
-                                indexTimeOffset: this._index.indexTimeOffset },
-                              time,
-                              this._scaledPeriodEnd);
+    return checkDiscontinuity(
+      {
+        timeline,
+        timescale: this._index.timescale,
+        indexTimeOffset: this._index.indexTimeOffset,
+      },
+      time,
+      this._scaledPeriodEnd,
+    );
   }
 
   /**
    * @param {Error} error
    * @returns {Boolean}
    */
-  canBeOutOfSyncError(error : IPlayerError) : boolean {
+  canBeOutOfSyncError(error: IPlayerError): boolean {
     if (!this._isDynamic) {
       return false;
     }
-    return error instanceof NetworkError &&
-           error.isHttpError(404);
+    return error instanceof NetworkError && error.isHttpError(404);
   }
 
   /**
@@ -617,7 +642,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Manifest.
    * @param {Object} newIndex
    */
-  _replace(newIndex : TimelineRepresentationIndex) : void {
+  _replace(newIndex: TimelineRepresentationIndex): void {
     this._parseTimeline = newIndex._parseTimeline;
     this._index = newIndex._index;
     this._isDynamic = newIndex._isDynamic;
@@ -633,15 +658,17 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * new version of the MPD.
    * @param {Object} newIndex
    */
-  _update(newIndex : TimelineRepresentationIndex) : void {
+  _update(newIndex: TimelineRepresentationIndex): void {
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     if (newIndex._index.timeline === null) {
       newIndex._index.timeline = newIndex._getTimeline();
     }
-    const hasReplaced = updateSegmentTimeline(this._index.timeline,
-                                              newIndex._index.timeline);
+    const hasReplaced = updateSegmentTimeline(
+      this._index.timeline,
+      newIndex._index.timeline,
+    );
     if (hasReplaced) {
       this._index.startNumber = newIndex._index.startNumber;
     }
@@ -661,7 +688,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * Returns `true` if it's still pending.
    * @returns {Boolean}
    */
-  isStillAwaitingFutureSegments() : boolean {
+  isStillAwaitingFutureSegments(): boolean {
     if (!this._isDynamic) {
       return false;
     }
@@ -676,9 +703,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       // No segment announced in this Period
       if (this._scaledPeriodEnd !== undefined) {
         const liveEdge = this._manifestBoundsCalculator.getEstimatedLiveEdge();
-        if (liveEdge !== undefined &&
-            toIndexTime(liveEdge, this._index) > this._scaledPeriodEnd)
-        {
+        if (
+          liveEdge !== undefined &&
+          toIndexTime(liveEdge, this._index) > this._scaledPeriodEnd
+        ) {
           // This Period is over, we're not awaiting anything
           return false;
         }
@@ -692,16 +720,19 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       // Needed typecast for TypeScript
       this._index as typeof this._index & { timeline: IIndexSegment[] },
       this._manifestBoundsCalculator,
-      this._scaledPeriodEnd
+      this._scaledPeriodEnd,
     );
 
     if (lastReqSegInfo !== null && !lastReqSegInfo.isLastOfTimeline) {
       // There might be non-yet requestable segments in the manifest
-      const lastReqSegmentEnd = Math.min(lastReqSegInfo.end,
-                                         this._scaledPeriodEnd ?? Infinity);
-      if (this._scaledPeriodEnd !== undefined &&
-          lastReqSegmentEnd + segmentTimeRounding >= this._scaledPeriodEnd)
-      {
+      const lastReqSegmentEnd = Math.min(
+        lastReqSegInfo.end,
+        this._scaledPeriodEnd ?? Infinity,
+      );
+      if (
+        this._scaledPeriodEnd !== undefined &&
+        lastReqSegmentEnd + segmentTimeRounding >= this._scaledPeriodEnd
+      ) {
         // The last requestable segment ends after the end of the Period anyway
         return false;
       }
@@ -724,18 +755,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return true;
     }
     const lastSegment = timeline[timeline.length - 1];
-    const lastSegmentEnd = getIndexSegmentEnd(lastSegment,
-                                              null,
-                                              this._scaledPeriodEnd);
+    const lastSegmentEnd = getIndexSegmentEnd(lastSegment, null, this._scaledPeriodEnd);
     // We're awaiting future segments only if the current end is before the end
     // of the Period
-    return (lastSegmentEnd + segmentTimeRounding) < this._scaledPeriodEnd;
+    return lastSegmentEnd + segmentTimeRounding < this._scaledPeriodEnd;
   }
 
   /**
    * @returns {Boolean}
    */
-  isInitialized() : true {
+  isInitialized(): true {
     return true;
   }
 
@@ -745,16 +774,15 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * @param {Object} index
    * @returns {boolean}
    */
-  static isTimelineIndexArgument(index : ITimelineIndexIndexArgument) : boolean {
-    return typeof index.timelineParser === "function" ||
-           Array.isArray(index.timeline);
+  static isTimelineIndexArgument(index: ITimelineIndexIndexArgument): boolean {
+    return typeof index.timelineParser === "function" || Array.isArray(index.timeline);
   }
 
   /**
    * Clean-up timeline to remove segment information which should not be
    * available due to timeshifting.
    */
-  private _refreshTimeline() : void {
+  private _refreshTimeline(): void {
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
@@ -762,14 +790,16 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       return;
     }
     const firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(
-      (this._index.timeline[0]?.duration ?? 0) / this._index.timescale
+      (this._index.timeline[0]?.duration ?? 0) / this._index.timescale,
     );
     if (isNullOrUndefined(firstPosition)) {
       return; // we don't know yet
     }
     const scaledFirstPosition = toIndexTime(firstPosition, this._index);
-    const nbEltsRemoved = clearTimelineFromPosition(this._index.timeline,
-                                                    scaledFirstPosition);
+    const nbEltsRemoved = clearTimelineFromPosition(
+      this._index.timeline,
+      scaledFirstPosition,
+    );
     if (this._index.startNumber !== undefined) {
       this._index.startNumber += nbEltsRemoved;
     } else if (this._index.endNumber !== undefined) {
@@ -799,7 +829,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
    * stream anymore.
    * @returns {Array.<Object>}
    */
-  private _getTimeline() : IIndexSegment[] {
+  private _getTimeline(): IIndexSegment[] {
     if (this._parseTimeline === null) {
       if (this._index.timeline !== null) {
         return this._index.timeline;
@@ -812,17 +842,20 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     this._parseTimeline = null; // Free memory
 
     const { MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY } = config.getCurrent();
-    if (this._unsafelyBaseOnPreviousIndex === null ||
-        newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY)
-    {
+    if (
+      this._unsafelyBaseOnPreviousIndex === null ||
+      newElements.length < MIN_DASH_S_ELEMENTS_TO_PARSE_UNSAFELY
+    ) {
       // Just completely parse the current timeline
-      return updateTimelineFromEndNumber(constructTimelineFromElements(newElements),
-                                         this._index.startNumber,
-                                         this._index.endNumber);
+      return updateTimelineFromEndNumber(
+        constructTimelineFromElements(newElements),
+        this._index.startNumber,
+        this._index.endNumber,
+      );
     }
 
     // Construct previously parsed timeline if not already done
-    let prevTimeline : IIndexSegment[];
+    let prevTimeline: IIndexSegment[];
     if (this._unsafelyBaseOnPreviousIndex._index.timeline === null) {
       prevTimeline = this._unsafelyBaseOnPreviousIndex._getTimeline();
       this._unsafelyBaseOnPreviousIndex._index.timeline = prevTimeline;
@@ -834,8 +867,8 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
     return updateTimelineFromEndNumber(
       constructTimelineFromPreviousTimeline(newElements, prevTimeline),
       this._index.startNumber,
-      this._index.endNumber);
-
+      this._index.endNumber,
+    );
   }
 }
 
@@ -852,10 +885,10 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
  * @returns {number|undefined}
  */
 function updateTimelineFromEndNumber(
-  timeline : IIndexSegment[],
-  startNumber : number | undefined,
-  endNumber : number | undefined
-) : IIndexSegment[] {
+  timeline: IIndexSegment[],
+  startNumber: number | undefined,
+  endNumber: number | undefined,
+): IIndexSegment[] {
   if (endNumber === undefined) {
     return timeline;
   }
@@ -892,17 +925,21 @@ function updateTimelineFromEndNumber(
  * @returns {Boolean|undefined}
  */
 export function isSegmentStillAvailable(
-  segment : ISegment,
-  index: { availabilityTimeOffset : number;
-           timeline : IIndexSegment[];
-           indexTimeOffset: number;
-           timescale : number; },
-  manifestBoundsCalculator : ManifestBoundsCalculator,
-  scaledPeriodEnd : number | undefined
-) : boolean | undefined {
-  const lastReqSegInfo = getLastRequestableSegmentInfo(index,
-                                                       manifestBoundsCalculator,
-                                                       scaledPeriodEnd);
+  segment: ISegment,
+  index: {
+    availabilityTimeOffset: number;
+    timeline: IIndexSegment[];
+    indexTimeOffset: number;
+    timescale: number;
+  },
+  manifestBoundsCalculator: ManifestBoundsCalculator,
+  scaledPeriodEnd: number | undefined,
+): boolean | undefined {
+  const lastReqSegInfo = getLastRequestableSegmentInfo(
+    index,
+    manifestBoundsCalculator,
+    scaledPeriodEnd,
+  );
   if (lastReqSegInfo === null) {
     return false;
   }
@@ -919,13 +956,16 @@ export function isSegmentStillAvailable(
       if (tSegment.range === undefined) {
         return segment.range === undefined;
       }
-      return segment.range != null &&
-             tSegment.range[0] === segment.range[0] &&
-             tSegment.range[1] === segment.range[1];
-    } else { // tSegment.start < segment.time
+      return (
+        segment.range != null &&
+        tSegment.range[0] === segment.range[0] &&
+        tSegment.range[1] === segment.range[1]
+      );
+    } else {
+      // tSegment.start < segment.time
       if (tSegment.repeatCount >= 0 && tSegment.duration !== undefined) {
         const timeDiff = tSegmentTime - tSegment.start;
-        const repeat = (timeDiff / tSegment.duration) - 1;
+        const repeat = timeDiff / tSegment.duration - 1;
         return repeat % 1 === 0 && repeat <= lastReqSegInfo.newRepeatCount;
       }
     }
@@ -944,12 +984,10 @@ export function isSegmentStillAvailable(
  * @returns {number|null}
  */
 export function getLastRequestableSegmentInfo(
-  index: { availabilityTimeOffset : number;
-           timeline : IIndexSegment[];
-           timescale : number; },
-  manifestBoundsCalculator : ManifestBoundsCalculator,
-  scaledPeriodEnd : number | undefined
-) : ILastRequestableSegmentInfo | null {
+  index: { availabilityTimeOffset: number; timeline: IIndexSegment[]; timescale: number },
+  manifestBoundsCalculator: ManifestBoundsCalculator,
+  scaledPeriodEnd: number | undefined,
+): ILastRequestableSegmentInfo | null {
   if (index.timeline.length <= 0) {
     return null;
   }
@@ -958,22 +996,26 @@ export function getLastRequestableSegmentInfo(
     // availabilityTimeOffset to Infinity == Everything is requestable in the timeline.
     const lastIndex = index.timeline.length - 1;
     const lastElem = index.timeline[lastIndex];
-    return { isLastOfTimeline: true,
-             timelineIdx: lastIndex,
-             newRepeatCount: lastElem.repeatCount,
-             end: getIndexSegmentEnd(lastElem, null, scaledPeriodEnd) };
+    return {
+      isLastOfTimeline: true,
+      timelineIdx: lastIndex,
+      newRepeatCount: lastElem.repeatCount,
+      end: getIndexSegmentEnd(lastElem, null, scaledPeriodEnd),
+    };
   }
 
   const adjustedMaxSeconds = manifestBoundsCalculator.getEstimatedMaximumPosition(
-    index.availabilityTimeOffset
+    index.availabilityTimeOffset,
   );
   if (adjustedMaxSeconds === undefined) {
     const lastIndex = index.timeline.length - 1;
     const lastElem = index.timeline[lastIndex];
-    return { isLastOfTimeline: true,
-             timelineIdx: lastIndex,
-             newRepeatCount: lastElem.repeatCount,
-             end: getIndexSegmentEnd(lastElem, null, scaledPeriodEnd) };
+    return {
+      isLastOfTimeline: true,
+      timelineIdx: lastIndex,
+      newRepeatCount: lastElem.repeatCount,
+      end: getIndexSegmentEnd(lastElem, null, scaledPeriodEnd),
+    };
   }
   for (let i = index.timeline.length - 1; i >= index.timeline.length; i--) {
     const element = index.timeline[i];
@@ -981,20 +1023,24 @@ export function getLastRequestableSegmentInfo(
     if (fromIndexTime(endOfFirstOccurence, index) <= adjustedMaxSeconds) {
       const endTime = getIndexSegmentEnd(element, index.timeline[i + 1], scaledPeriodEnd);
       if (fromIndexTime(endTime, index) <= adjustedMaxSeconds) {
-        return { isLastOfTimeline: i === index.timeline.length - 1,
-                 timelineIdx: i,
-                 newRepeatCount: element.repeatCount,
-                 end: endOfFirstOccurence };
+        return {
+          isLastOfTimeline: i === index.timeline.length - 1,
+          timelineIdx: i,
+          newRepeatCount: element.repeatCount,
+          end: endOfFirstOccurence,
+        };
       } else {
         // We have to find the right repeatCount
         const maxIndexTime = toIndexTime(adjustedMaxSeconds, index);
         const diffToSegStart = maxIndexTime - element.start;
         const nbOfSegs = Math.floor(diffToSegStart / element.duration);
         assert(nbOfSegs >= 1);
-        return { isLastOfTimeline: false,
-                 timelineIdx: i,
-                 newRepeatCount: nbOfSegs - 1,
-                 end: element.start + nbOfSegs * element.duration };
+        return {
+          isLastOfTimeline: false,
+          timelineIdx: i,
+          newRepeatCount: nbOfSegs - 1,
+          end: element.start + nbOfSegs * element.duration,
+        };
       }
     }
   }

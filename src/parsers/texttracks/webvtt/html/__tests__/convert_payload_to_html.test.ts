@@ -27,7 +27,7 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
   });
 
   const win = window as {
-    DOMParser : unknown;
+    DOMParser: unknown;
   };
   it("should return empty payload when input text is empty", () => {
     const spyParseFromString = jest.fn(() => {

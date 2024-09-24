@@ -19,7 +19,8 @@ import {
   applyDefaultTTMLStyle,
   shouldApplyDefaultTTMLStyle,
 } from "./apply_default_ttml_paragraph_style";
-import parseCue, { ITTMLHTMLCue } from "./parse_cue";
+import type { ITTMLHTMLCue } from "./parse_cue";
+import parseCue from "./parse_cue";
 
 /**
  * Create array of objects which should represent the given TTML text track.
@@ -38,10 +39,7 @@ import parseCue, { ITTMLHTMLCue } from "./parse_cue";
  * @param {string} str
  * @param {number} timeOffset
  */
-export default function parseTTMLToDiv(
-  str : string,
-  timeOffset : number
-): ITTMLHTMLCue[] {
+export default function parseTTMLToDiv(str: string, timeOffset: number): ITTMLHTMLCue[] {
   const parsedCues = parseTtml(str, timeOffset);
   const cues: ITTMLHTMLCue[] = [];
   for (let i = 0; i < parsedCues.length; i++) {

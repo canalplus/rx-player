@@ -24,8 +24,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-restricted-properties */
 
-import { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
-import { IKeySystemOption } from "../../../../public_types";
+import type { ICustomMediaKeySystemAccess } from "../../../../compat/eme";
+import type { IKeySystemOption } from "../../../../public_types";
 import {
   defaultKSConfig,
   defaultPRRecommendationKSConfig,
@@ -36,7 +36,7 @@ import {
 
 export function requestMediaKeySystemAccessNoMediaKeys(
   keySystem: string,
-  config: MediaKeySystemConfiguration[]
+  config: MediaKeySystemConfiguration[],
 ): Promise<ICustomMediaKeySystemAccess> {
   if (config.length === 0) {
     throw new Error("requestMediaKeySystemAccessNoMediaKeys: no config given");
@@ -59,7 +59,7 @@ const incompatibleMKSAErrorMessage =
   "with your wanted configuration has been found in the current browser.";
 
 function removeCapabilitiesConfig(
-  baseConfig: MediaKeySystemConfiguration[]
+  baseConfig: MediaKeySystemConfiguration[],
 ): MediaKeySystemConfiguration[] {
   return baseConfig.map(
     (config) =>
@@ -70,7 +70,7 @@ function removeCapabilitiesConfig(
         // Note: TypeScript is wrong here (2024-08-07), it thinks that
         // `audioCapabilities` and `videoCapabilities` cannot be set to
         // `undefined`, though they definitely can.
-      }) as unknown as MediaKeySystemConfiguration
+      }) as unknown as MediaKeySystemConfiguration,
   );
 }
 
@@ -81,7 +81,7 @@ function removeCapabilitiesConfig(
  * @returns {Promise}
  */
 async function checkIncompatibleKeySystemsErrorMessage(
-  keySystemsConfigs: IKeySystemOption[]
+  keySystemsConfigs: IKeySystemOption[],
 ): Promise<void> {
   const mediaElement = document.createElement("video");
   const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
@@ -89,7 +89,7 @@ async function checkIncompatibleKeySystemsErrorMessage(
   const error: any = await testContentDecryptorError(
     ContentDecryptor,
     mediaElement,
-    keySystemsConfigs
+    keySystemsConfigs,
   );
   expect(error).not.toBe(null);
   expect(error.message).toEqual(incompatibleMKSAErrorMessage);
@@ -132,12 +132,12 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
@@ -156,32 +156,32 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "bar",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "bar",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "baz",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "baz",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
@@ -200,18 +200,18 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should change persistentState value if persistentStateRequired is set to true", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -219,8 +219,8 @@ describe("decrypt - global tests - media key system access", () => {
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense:
-        neverCalledFn, persistentStateRequired: true,
+        getLicense: neverCalledFn,
+        persistentStateRequired: true,
       },
     ]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
@@ -231,18 +231,18 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      expectedConfig
+      expectedConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(expectedConfig)
+      removeCapabilitiesConfig(expectedConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should not change persistentState value if persistentStateRequired is set to false", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -262,18 +262,18 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      expectedConfig
+      expectedConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(expectedConfig)
+      removeCapabilitiesConfig(expectedConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should change distinctiveIdentifier value if distinctiveIdentifierRequired is set to true", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -293,28 +293,29 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      expectedConfig
+      expectedConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(expectedConfig)
+      removeCapabilitiesConfig(expectedConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should not change distinctiveIdentifier value if distinctiveIdentifierRequired is set to false", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    await checkIncompatibleKeySystemsErrorMessage(
-      [{
+    await checkIncompatibleKeySystemsErrorMessage([
+      {
         type: "foo",
         getLicense: neverCalledFn,
         distinctiveIdentifierRequired: false,
-      }]);
+      },
+    ]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
@@ -323,18 +324,18 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      expectedConfig
+      expectedConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(expectedConfig)
+      removeCapabilitiesConfig(expectedConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should want persistent sessions if both persistentLicense and licenseStorage are set", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -347,10 +348,9 @@ describe("decrypt - global tests - media key system access", () => {
         throw new Error("Should not load.");
       },
     };
-    await checkIncompatibleKeySystemsErrorMessage([{ type: "foo",
-                                                     getLicense: neverCalledFn,
-                                                     licenseStorage,
-                                                     persistentLicense: true }]);
+    await checkIncompatibleKeySystemsErrorMessage([
+      { type: "foo", getLicense: neverCalledFn, licenseStorage, persistentLicense: true },
+    ]);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
@@ -363,24 +363,24 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      expectedConfig
+      expectedConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(expectedConfig)
+      removeCapabilitiesConfig(expectedConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should want persistent sessions if just persistentLicense is set to true", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    await checkIncompatibleKeySystemsErrorMessage(
-      [{
+    await checkIncompatibleKeySystemsErrorMessage([
+      {
         type: "foo",
         getLicense: neverCalledFn,
         persistentLicense: true,
@@ -392,26 +392,27 @@ describe("decrypt - global tests - media key system access", () => {
             /* noop */
           },
         },
-      }]
-    );
-    const persistentConfig: MediaKeySystemConfiguration[] =
-      defaultKSConfig.map((conf) => {
+      },
+    ]);
+    const persistentConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map(
+      (conf) => {
         return {
           ...conf,
           persistentState: "required",
           sessionTypes: ["temporary", "persistent-license"],
         };
-      });
+      },
+    );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      persistentConfig
+      persistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(persistentConfig)
+      removeCapabilitiesConfig(persistentConfig),
     );
   });
 
@@ -431,12 +432,12 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
@@ -452,22 +453,22 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "webkit-org.w3.clearkey",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "webkit-org.w3.clearkey",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "org.w3.clearkey",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "org.w3.clearkey",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
@@ -483,12 +484,12 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.widevine.alpha",
-      defaultWidevineConfig
+      defaultWidevineConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.widevine.alpha",
-      removeCapabilitiesConfig(defaultWidevineConfig)
+      removeCapabilitiesConfig(defaultWidevineConfig),
     );
   });
 
@@ -504,42 +505,42 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
-      defaultPRRecommendationKSConfig
+      defaultPRRecommendationKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
-      removeCapabilitiesConfig(defaultPRRecommendationKSConfig)
+      removeCapabilitiesConfig(defaultPRRecommendationKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       7,
       "com.youtube.playready",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       8,
       "com.youtube.playready",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
@@ -554,11 +555,11 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
       "com.apple.fps.1_0",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
       "com.apple.fps.1_0",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
@@ -575,58 +576,58 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
-      defaultPRRecommendationKSConfig
+      defaultPRRecommendationKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
-      removeCapabilitiesConfig(defaultPRRecommendationKSConfig)
+      removeCapabilitiesConfig(defaultPRRecommendationKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       9,
       "webkit-org.w3.clearkey",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       10,
       "webkit-org.w3.clearkey",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       11,
       "org.w3.clearkey",
-      defaultKSConfig
+      defaultKSConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       12,
       "org.w3.clearkey",
-      removeCapabilitiesConfig(defaultKSConfig)
+      removeCapabilitiesConfig(defaultKSConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should translate a multiple keySystems at the same time with different configs", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -666,79 +667,79 @@ describe("decrypt - global tests - media key system access", () => {
           persistentState: "required",
           sessionTypes: ["temporary", "persistent-license"],
         };
-      }
+      },
     );
     const expectedIdentifierConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map(
       (conf) => {
         return { ...conf, distinctiveIdentifier: "required" };
-      }
+      },
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
-      expectedPRRecommendationPersistentConfig
+      expectedPRRecommendationPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
-      removeCapabilitiesConfig(expectedPRRecommendationPersistentConfig)
+      removeCapabilitiesConfig(expectedPRRecommendationPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       7,
       "com.youtube.playready",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       8,
       "com.youtube.playready",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       9,
       "webkit-org.w3.clearkey",
-      expectedIdentifierConfig
+      expectedIdentifierConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       10,
       "webkit-org.w3.clearkey",
-      removeCapabilitiesConfig(expectedIdentifierConfig)
+      removeCapabilitiesConfig(expectedIdentifierConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       11,
       "org.w3.clearkey",
-      expectedIdentifierConfig
+      expectedIdentifierConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       12,
       "org.w3.clearkey",
-      removeCapabilitiesConfig(expectedIdentifierConfig)
+      removeCapabilitiesConfig(expectedIdentifierConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should set widevine robustnesses for a `com.widevine.alpha` keySystem", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -770,12 +771,12 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.widevine.alpha",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.widevine.alpha",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
   });
 
@@ -811,7 +812,7 @@ describe("decrypt - global tests - media key system access", () => {
           persistentState: "required",
           sessionTypes: ["temporary", "persistent-license"],
         };
-      }
+      },
     );
     const expectedRecoPersistentConfig: MediaKeySystemConfiguration[] =
       defaultPRRecommendationKSConfig.map((conf) => {
@@ -824,74 +825,74 @@ describe("decrypt - global tests - media key system access", () => {
     const expectedIdentifierConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map(
       (conf) => {
         return { ...conf, distinctiveIdentifier: "required" };
-      }
+      },
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
-      expectedRecoPersistentConfig
+      expectedRecoPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
-      removeCapabilitiesConfig(expectedRecoPersistentConfig)
+      removeCapabilitiesConfig(expectedRecoPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       7,
       "com.youtube.playready",
-      expectedPersistentConfig
+      expectedPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       8,
       "com.youtube.playready",
-      removeCapabilitiesConfig(expectedPersistentConfig)
+      removeCapabilitiesConfig(expectedPersistentConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       9,
       "webkit-org.w3.clearkey",
-      expectedIdentifierConfig
+      expectedIdentifierConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       10,
       "webkit-org.w3.clearkey",
-      removeCapabilitiesConfig(expectedIdentifierConfig)
+      removeCapabilitiesConfig(expectedIdentifierConfig),
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       11,
       "org.w3.clearkey",
-      expectedIdentifierConfig
+      expectedIdentifierConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       12,
       "org.w3.clearkey",
-      removeCapabilitiesConfig(expectedIdentifierConfig)
+      removeCapabilitiesConfig(expectedIdentifierConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should set playready robustnesses for a `com.microsoft.playready.recommendation` keySystem", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn(() => Promise.reject("nope"));
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
@@ -923,26 +924,25 @@ describe("decrypt - global tests - media key system access", () => {
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
-      expectedRecoPersistentConfig
+      expectedRecoPersistentConfig,
     );
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
-      removeCapabilitiesConfig(expectedRecoPersistentConfig)
+      removeCapabilitiesConfig(expectedRecoPersistentConfig),
     );
   });
 
   /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn((keyType, conf) => {
       return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
     });
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((jest.requireActual("../../content_decryptor")))
-      .default;
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     return new Promise<void>((res, rej) => {
       const config = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
 
@@ -955,7 +955,7 @@ describe("decrypt - global tests - media key system access", () => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
         expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
           "com.widevine.alpha",
-          defaultWidevineConfig
+          defaultWidevineConfig,
         );
         res();
       }, 10);
@@ -964,7 +964,7 @@ describe("decrypt - global tests - media key system access", () => {
 
   /* eslint-disable max-len */
   it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const mockRequestMediaKeySystemAccess = jest.fn((keyType, conf) => {
       if (keyType === "some-other-working-key-system") {
         return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
@@ -974,8 +974,7 @@ describe("decrypt - global tests - media key system access", () => {
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((jest.requireActual("../../content_decryptor")))
-      .default;
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     return new Promise<void>((res, rej) => {
       const config = [
         { type: "com.widevine.alpha", getLicense: neverCalledFn },
@@ -992,17 +991,17 @@ describe("decrypt - global tests - media key system access", () => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           1,
           "com.widevine.alpha",
-          defaultWidevineConfig
+          defaultWidevineConfig,
         );
         expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           2,
           "com.widevine.alpha",
-          removeCapabilitiesConfig(defaultWidevineConfig)
+          removeCapabilitiesConfig(defaultWidevineConfig),
         );
         expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           3,
           "some-other-working-key-system",
-          defaultKSConfig
+          defaultKSConfig,
         );
         res();
       }, 10);
@@ -1011,7 +1010,7 @@ describe("decrypt - global tests - media key system access", () => {
 
   /* eslint-disable max-len */
   it("should not continue to check if the ContentDecryptor is disposed from", async () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     let contentDecryptor: any = null;
     let rmksHasBeenCalled = false;
     const mockRequestMediaKeySystemAccess = jest.fn(() => {
@@ -1024,8 +1023,7 @@ describe("decrypt - global tests - media key system access", () => {
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((jest.requireActual("../../content_decryptor")))
-      .default;
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
@@ -1044,7 +1042,7 @@ describe("decrypt - global tests - media key system access", () => {
         expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           1,
           "foo",
-          defaultKSConfig
+          defaultKSConfig,
         );
         res();
       }, 10);
@@ -1060,8 +1058,7 @@ describe("decrypt - global tests - media key system access", () => {
     mockCompat({
       requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
     });
-    const ContentDecryptor = ((jest.requireActual("../../content_decryptor")))
-      .default;
+    const ContentDecryptor = jest.requireActual("../../content_decryptor").default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 

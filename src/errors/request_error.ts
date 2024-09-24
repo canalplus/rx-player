@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { INetworkErrorType } from "./error_codes";
+import type { INetworkErrorType } from "./error_codes";
 
 /**
  * Internal Error used when doing requests through fetch / XHRs.
@@ -38,10 +38,10 @@ export default class RequestError extends Error {
    * @param {string} type
    */
   constructor(
-    url : string,
-    status : number,
-    type : INetworkErrorType,
-    xhr? : XMLHttpRequest
+    url: string,
+    status: number,
+    type: INetworkErrorType,
+    xhr?: XMLHttpRequest,
   ) {
     let message: string;
     switch (type) {

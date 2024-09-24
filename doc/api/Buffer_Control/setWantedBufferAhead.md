@@ -4,8 +4,7 @@
 
 Set the buffering goal, as a duration ahead of the current position, in seconds.
 
-Once this size of buffer reached, the player won't try to download new segments
-anymore.
+Once this size of buffer reached, the player won't try to download new segments anymore.
 
 By default, this value is set to `30`.
 
@@ -23,5 +22,4 @@ player.setWantedBufferAhead(bufferGoal);
 
 - **arguments**:
 
-  1. _bufferGoal_ `number`: Ideal amount of buffer that should be pre-loaded,
-     in seconds.
+  1. _bufferGoal_ `number`: Ideal amount of buffer that should be pre-loaded, in seconds.

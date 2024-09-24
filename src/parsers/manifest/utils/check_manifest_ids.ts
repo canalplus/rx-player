@@ -16,10 +16,7 @@
 
 import log from "../../../log";
 import arrayIncludes from "../../../utils/array_includes";
-import {
-  IParsedAdaptationType,
-  IParsedManifest,
-} from "../types";
+import type { IParsedAdaptationType, IParsedManifest } from "../types";
 
 /**
  * Ensure that no two periods, adaptations from the same period and
@@ -29,10 +26,8 @@ import {
  *
  * @param {Object} manifest
  */
-export default function checkManifestIDs(
-  manifest : IParsedManifest
-) : void {
-  const periodIDS : string[] = [];
+export default function checkManifestIDs(manifest: IParsedManifest): void {
+  const periodIDS: string[] = [];
   manifest.periods.forEach((period) => {
     const periodID = period.id;
     if (arrayIncludes(periodIDS, periodID)) {
@@ -45,30 +40,31 @@ export default function checkManifestIDs(
       periodIDS.push(periodID);
     }
     const { adaptations } = period;
-    const adaptationIDs : string[] = [];
+    const adaptationIDs: string[] = [];
     (Object.keys(adaptations) as IParsedAdaptationType[]).forEach((type) => {
       const adaptationsForType = adaptations[type];
       if (adaptationsForType === undefined) {
         return;
       }
-      adaptationsForType.forEach(adaptation => {
+      adaptationsForType.forEach((adaptation) => {
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {
-          log.warn("Two adaptations with the same ID found. Updating.",
-                   adaptationID);
-          const newID =  adaptationID + "-dup";
+          log.warn("Two adaptations with the same ID found. Updating.", adaptationID);
+          const newID = adaptationID + "-dup";
           adaptation.id = newID;
           checkManifestIDs(manifest);
           adaptationIDs.push(newID);
         } else {
           adaptationIDs.push(adaptationID);
         }
-        const representationIDs : Array<number|string> = [];
-        adaptation.representations.forEach(representation => {
+        const representationIDs: Array<number | string> = [];
+        adaptation.representations.forEach((representation) => {
           const representationID = representation.id;
           if (arrayIncludes(representationIDs, representationID)) {
-            log.warn("Two representations with the same ID found. Updating.",
-                     representationID);
+            log.warn(
+              "Two representations with the same ID found. Updating.",
+              representationID,
+            );
             const newID = `${representationID}-dup`;
             representation.id = newID;
             checkManifestIDs(manifest);

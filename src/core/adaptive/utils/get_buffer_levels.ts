@@ -22,10 +22,10 @@
  * ascending order.
  * @returns {Array.<number>}
  */
-export default function getBufferLevels(bitrates : number[]) : number[] {
+export default function getBufferLevels(bitrates: number[]): number[] {
   const logs = bitrates.map((b) => Math.log(b / bitrates[0]));
-  const utilities = logs.map(l => l - logs[0] + 1); // normalize
-  const gp = (utilities[utilities.length - 1] - 1) / ((bitrates.length * 2) + 10);
+  const utilities = logs.map((l) => l - logs[0] + 1); // normalize
+  const gp = (utilities[utilities.length - 1] - 1) / (bitrates.length * 2 + 10);
   const Vp = 1 / gp;
 
   return bitrates.map((_, i) => minBufferLevelForBitrate(i));
@@ -43,8 +43,13 @@ export default function getBufferLevels(bitrates : number[]) : number[] {
     if (bitrates[boundedIndex] === bitrates[boundedIndex - 1]) {
       return minBufferLevelForBitrate(index - 1);
     }
-    return Vp * (gp + (bitrates[boundedIndex] * utilities[boundedIndex - 1] -
-      bitrates[boundedIndex - 1] * utilities[boundedIndex]) / (bitrates[boundedIndex] -
-      bitrates[boundedIndex - 1])) + 4;
+    return (
+      Vp *
+        (gp +
+          (bitrates[boundedIndex] * utilities[boundedIndex - 1] -
+            bitrates[boundedIndex - 1] * utilities[boundedIndex]) /
+            (bitrates[boundedIndex] - bitrates[boundedIndex - 1])) +
+      4
+    );
   }
 }

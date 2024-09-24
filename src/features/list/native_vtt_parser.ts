@@ -17,13 +17,13 @@
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import vttParser from "../../parsers/texttracks/webvtt/native";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse WebVTT text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeVTTFeature(features : IFeaturesObject) : void {
+function addNativeVTTFeature(features: IFeaturesObject): void {
   features.nativeTextTracksParsers.vtt = vttParser;
   features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
 }

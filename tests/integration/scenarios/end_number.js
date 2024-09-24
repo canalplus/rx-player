@@ -1,17 +1,13 @@
 import { expect } from "chai";
 import XHRMock from "../../utils/request_mock";
-import {
-  manifestInfosEndNumber as numberBasedManifestInfos,
-} from "../../contents/DASH_static_number_based_SegmentTimeline";
-import {
-  endNumberManifestInfos as templateManifestinfos,
-} from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
-import {
-  segmentTimelineEndNumber as timeBasedManifestInfos,
-} from "../../contents/DASH_static_SegmentTimeline";
+import { manifestInfosEndNumber as numberBasedManifestInfos } from "../../contents/DASH_static_number_based_SegmentTimeline";
+import { endNumberManifestInfos as templateManifestinfos } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
+import { segmentTimelineEndNumber as timeBasedManifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../src";
 import sleep from "../../utils/sleep.js";
-import waitForState, { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
+import waitForState, {
+  waitForLoadedStateAfterLoadVideo,
+} from "../../utils/waitForPlayerState";
 
 let player;
 
@@ -65,7 +61,7 @@ describe("end number", function () {
     await sleep(50);
     expect(player.getMaximumPosition()).to.be.closeTo(20, 1);
     expect(xhrMock.getLockedXHR().length).to.equal(4); // Init + media of audio
-                                                       // + video
+    // + video
     await xhrMock.flush();
     await waitForLoadedStateAfterLoadVideo(player);
 

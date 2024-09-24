@@ -19,23 +19,16 @@ import features from "../../features";
 import log from "../../log";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
-  AudioVideoSegmentBuffer,
-  IBufferType,
-  SegmentBuffer,
-} from "./implementations";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type { IBufferType, SegmentBuffer } from "./implementations";
+import { AudioVideoSegmentBuffer } from "./implementations";
 
-const POSSIBLE_BUFFER_TYPES : IBufferType[] = [ "audio",
-                                                "video",
-                                                "text",
-                                                "image" ];
+const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text", "image"];
 
 /** Options available for a "text" SegmentBuffer */
-export type ITextTrackSegmentBufferOptions = { textTrackMode? : "native";
-                                               hideNativeSubtitle? : boolean; } |
-                                             { textTrackMode : "html";
-                                               textTrackElement : HTMLElement; };
+export type ITextTrackSegmentBufferOptions =
+  | { textTrackMode?: "native"; hideNativeSubtitle?: boolean }
+  | { textTrackMode: "html"; textTrackElement: HTMLElement };
 
 /** General Options available for any SegmentBuffer */
 export type ISegmentBufferOptions = ITextTrackSegmentBufferOptions;
@@ -74,15 +67,15 @@ export default class SegmentBuffersStore {
    * @param {string} bufferType
    * @returns {Boolean}
    */
-  static isNative(bufferType : string) : bufferType is INativeMediaBufferType {
+  static isNative(bufferType: string): bufferType is INativeMediaBufferType {
     return shouldHaveNativeBuffer(bufferType);
   }
 
   /** HTMLMediaElement on which the MediaSource is attached.  */
-  private readonly _mediaElement : HTMLMediaElement;
+  private readonly _mediaElement: HTMLMediaElement;
 
   /** MediaSource on which SourceBuffer objects will be attached. */
-  private readonly _mediaSource : MediaSource;
+  private readonly _mediaSource: MediaSource;
 
   /**
    * List of initialized and explicitely disabled SegmentBuffers.
@@ -90,21 +83,21 @@ export default class SegmentBuffersStore {
    * disabled. This means that the corresponding type (e.g. audio, video etc.)
    * won't be needed when playing the current content.
    */
-  private _initializedSegmentBuffers : Partial<Record<IBufferType, SegmentBuffer | null>>;
+  private _initializedSegmentBuffers: Partial<Record<IBufferType, SegmentBuffer | null>>;
 
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
    * Used for example to trigger the `this.waitForUsableBuffers`
    * Promise.
    */
-  private _onNativeBufferAddedOrDisabled : Array<() => void>;
+  private _onNativeBufferAddedOrDisabled: Array<() => void>;
 
   /**
    * @param {HTMLMediaElement} mediaElement
    * @param {MediaSource} mediaSource
    * @constructor
    */
-  constructor(mediaElement : HTMLMediaElement, mediaSource : MediaSource) {
+  constructor(mediaElement: HTMLMediaElement, mediaSource: MediaSource) {
     this._mediaElement = mediaElement;
     this._mediaSource = mediaSource;
     this._initializedSegmentBuffers = {};
@@ -116,10 +109,11 @@ export default class SegmentBuffersStore {
    * /!\ This list can evolve at runtime depending on feature switching.
    * @returns {Array.<string>}
    */
-  public getBufferTypes() : IBufferType[] {
-    const bufferTypes : IBufferType[] = this.getNativeBufferTypes();
-    if (features.nativeTextTracksBuffer != null ||
-        features.htmlTextTracksBuffer != null
+  public getBufferTypes(): IBufferType[] {
+    const bufferTypes: IBufferType[] = this.getNativeBufferTypes();
+    if (
+      features.nativeTextTracksBuffer != null ||
+      features.htmlTextTracksBuffer != null
     ) {
       bufferTypes.push("text");
     }
@@ -134,9 +128,8 @@ export default class SegmentBuffersStore {
    * push contents.
    * @returns {Array.<string>}
    */
-  public getNativeBufferTypes() : IBufferType[] {
-    return this._mediaElement.nodeName === "AUDIO" ? ["audio"] :
-                                                     ["video", "audio"];
+  public getNativeBufferTypes(): IBufferType[] {
+    return this._mediaElement.nodeName === "AUDIO" ? ["audio"] : ["video", "audio"];
   }
 
   /**
@@ -161,16 +154,18 @@ export default class SegmentBuffersStore {
    * @param {string} bufferType
    * @returns {Object|null}
    */
-  public getStatus(bufferType : IBufferType) : { type : "initialized";
-                                                 value : SegmentBuffer; } |
-                                               { type : "uninitialized" } |
-                                               { type : "disabled" }
-  {
+  public getStatus(
+    bufferType: IBufferType,
+  ):
+    | { type: "initialized"; value: SegmentBuffer }
+    | { type: "uninitialized" }
+    | { type: "disabled" } {
     const initializedBuffer = this._initializedSegmentBuffers[bufferType];
-    return initializedBuffer === undefined ? { type: "uninitialized" } :
-           initializedBuffer === null      ? { type: "disabled" } :
-                                             { type: "initialized",
-                                               value: initializedBuffer };
+    return initializedBuffer === undefined
+      ? { type: "uninitialized" }
+      : initializedBuffer === null
+        ? { type: "disabled" }
+        : { type: "initialized", value: initializedBuffer };
   }
 
   /**
@@ -189,13 +184,13 @@ export default class SegmentBuffersStore {
    * @param {Object} cancelWaitSignal
    * @return {Promise}
    */
-  public waitForUsableBuffers(cancelWaitSignal : CancellationSignal) : Promise<void> {
+  public waitForUsableBuffers(cancelWaitSignal: CancellationSignal): Promise<void> {
     if (this._areNativeBuffersUsable()) {
       return Promise.resolve();
     }
     return createCancellablePromise(cancelWaitSignal, (res) => {
       /* eslint-disable-next-line prefer-const */
-      let onAddedOrDisabled : () => void;
+      let onAddedOrDisabled: () => void;
 
       const removeCallback = () => {
         const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
@@ -223,7 +218,7 @@ export default class SegmentBuffersStore {
    * `waitForUsableBuffers` when conditions are met.
    * @param {string}
    */
-  public disableSegmentBuffer(bufferType : IBufferType) : void {
+  public disableSegmentBuffer(bufferType: IBufferType): void {
     const currentValue = this._initializedSegmentBuffers[bufferType];
     if (currentValue === null) {
       log.warn(`SBS: The ${bufferType} SegmentBuffer was already disabled.`);
@@ -234,7 +229,7 @@ export default class SegmentBuffersStore {
     }
     this._initializedSegmentBuffers[bufferType] = null;
     if (SegmentBuffersStore.isNative(bufferType)) {
-      this._onNativeBufferAddedOrDisabled.slice().forEach(cb => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
       assert(this._onNativeBufferAddedOrDisabled.length === 0);
     }
   }
@@ -253,29 +248,36 @@ export default class SegmentBuffersStore {
    * @returns {Object}
    */
   public createSegmentBuffer(
-    bufferType : IBufferType,
-    codec : string,
-    options : ISegmentBufferOptions = {}
-  ) : SegmentBuffer {
+    bufferType: IBufferType,
+    codec: string,
+    options: ISegmentBufferOptions = {},
+  ): SegmentBuffer {
     const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
     if (shouldHaveNativeBuffer(bufferType)) {
       if (memorizedSegmentBuffer != null) {
-        if (memorizedSegmentBuffer instanceof AudioVideoSegmentBuffer &&
-            memorizedSegmentBuffer.codec !== codec)
-        {
-          log.warn("SB: Reusing native SegmentBuffer with codec",
-                   memorizedSegmentBuffer.codec, "for codec", codec);
+        if (
+          memorizedSegmentBuffer instanceof AudioVideoSegmentBuffer &&
+          memorizedSegmentBuffer.codec !== codec
+        ) {
+          log.warn(
+            "SB: Reusing native SegmentBuffer with codec",
+            memorizedSegmentBuffer.codec,
+            "for codec",
+            codec,
+          );
         } else {
           log.info("SB: Reusing native SegmentBuffer with codec", codec);
         }
         return memorizedSegmentBuffer;
       }
       log.info("SB: Adding native SegmentBuffer with codec", codec);
-      const nativeSegmentBuffer = new AudioVideoSegmentBuffer(bufferType,
-                                                              codec,
-                                                              this._mediaSource);
+      const nativeSegmentBuffer = new AudioVideoSegmentBuffer(
+        bufferType,
+        codec,
+        this._mediaSource,
+      );
       this._initializedSegmentBuffers[bufferType] = nativeSegmentBuffer;
-      this._onNativeBufferAddedOrDisabled.slice().forEach(cb => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
       assert(this._onNativeBufferAddedOrDisabled.length === 0);
       return nativeSegmentBuffer;
     }
@@ -285,7 +287,7 @@ export default class SegmentBuffersStore {
       return memorizedSegmentBuffer;
     }
 
-    let segmentBuffer : SegmentBuffer;
+    let segmentBuffer: SegmentBuffer;
     if (bufferType === "text") {
       log.info("SB: Creating a new text SegmentBuffer");
 
@@ -293,15 +295,18 @@ export default class SegmentBuffersStore {
         if (features.htmlTextTracksBuffer == null) {
           throw new Error("HTML Text track feature not activated");
         }
-        segmentBuffer = new features.htmlTextTracksBuffer(this._mediaElement,
-                                                          options.textTrackElement);
+        segmentBuffer = new features.htmlTextTracksBuffer(
+          this._mediaElement,
+          options.textTrackElement,
+        );
       } else {
         if (features.nativeTextTracksBuffer == null) {
           throw new Error("Native Text track feature not activated");
         }
-        segmentBuffer = new features
-          .nativeTextTracksBuffer(this._mediaElement,
-                                  options.hideNativeSubtitle === true);
+        segmentBuffer = new features.nativeTextTracksBuffer(
+          this._mediaElement,
+          options.hideNativeSubtitle === true,
+        );
       }
       this._initializedSegmentBuffers.text = segmentBuffer;
       return segmentBuffer;
@@ -316,16 +321,17 @@ export default class SegmentBuffersStore {
     }
 
     log.error("SB: Unknown buffer type:", bufferType);
-    throw new MediaError("BUFFER_TYPE_UNKNOWN",
-                         "The player wants to create a SegmentBuffer " +
-                         "of an unknown type.");
+    throw new MediaError(
+      "BUFFER_TYPE_UNKNOWN",
+      "The player wants to create a SegmentBuffer " + "of an unknown type.",
+    );
   }
 
   /**
    * Dispose of the active SegmentBuffer for the given type.
    * @param {string} bufferType
    */
-  public disposeSegmentBuffer(bufferType : IBufferType) : void {
+  public disposeSegmentBuffer(bufferType: IBufferType): void {
     const memorizedSegmentBuffer = this._initializedSegmentBuffers[bufferType];
     if (memorizedSegmentBuffer == null) {
       log.warn("SB: Trying to dispose a SegmentBuffer that does not exist");
@@ -340,8 +346,8 @@ export default class SegmentBuffersStore {
   /**
    * Dispose of all SegmentBuffer created on this SegmentBuffersStore.
    */
-  public disposeAll() : void {
-    POSSIBLE_BUFFER_TYPES.forEach((bufferType : IBufferType) => {
+  public disposeAll(): void {
+    POSSIBLE_BUFFER_TYPES.forEach((bufferType: IBufferType) => {
       if (this.getStatus(bufferType).type === "initialized") {
         this.disposeSegmentBuffer(bufferType);
       }
@@ -355,15 +361,17 @@ export default class SegmentBuffersStore {
   private _areNativeBuffersUsable() {
     const nativeBufferTypes = this.getNativeBufferTypes();
 
-    const hasUnitializedBuffers = nativeBufferTypes.some(sbType =>
-      this._initializedSegmentBuffers[sbType] === undefined);
+    const hasUnitializedBuffers = nativeBufferTypes.some(
+      (sbType) => this._initializedSegmentBuffers[sbType] === undefined,
+    );
     if (hasUnitializedBuffers) {
       // one is not yet initialized/disabled
       return false;
     }
 
-    const areAllDisabled = nativeBufferTypes.every(sbType =>
-      this._initializedSegmentBuffers[sbType] === null);
+    const areAllDisabled = nativeBufferTypes.every(
+      (sbType) => this._initializedSegmentBuffers[sbType] === null,
+    );
     if (areAllDisabled) {
       // they all are disabled: we can't play the content
       return false;
@@ -380,7 +388,7 @@ export default class SegmentBuffersStore {
  * @returns {Boolean}
  */
 function shouldHaveNativeBuffer(
-  bufferType : string
-) : bufferType is INativeMediaBufferType {
+  bufferType: string,
+): bufferType is INativeMediaBufferType {
   return bufferType === "audio" || bufferType === "video";
 }

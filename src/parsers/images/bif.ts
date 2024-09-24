@@ -19,47 +19,52 @@
  * It always should be imported through the `features` object.
  */
 
-import {
-  le2toi,
-  le4toi,
-} from "../../utils/byte_parsing";
+import { le2toi, le4toi } from "../../utils/byte_parsing";
 import { utf8ToStr } from "../../utils/string_parsing";
 
-export interface IBifThumbnail { index : number;
-                                 duration : number;
-                                 ts : number;
-                                 data : Uint8Array; }
+export interface IBifThumbnail {
+  index: number;
+  duration: number;
+  ts: number;
+  data: Uint8Array;
+}
 
-export interface IBifObject { fileFormat : string;
-                              version : string;
-                              imageCount : number;
-                              timescale : number;
-                              format : string;
-                              width : number;
-                              height : number;
-                              aspectRatio : string;
-                              isVod : boolean;
-                              thumbs : IBifThumbnail[];
+export interface IBifObject {
+  fileFormat: string;
+  version: string;
+  imageCount: number;
+  timescale: number;
+  format: string;
+  width: number;
+  height: number;
+  aspectRatio: string;
+  isVod: boolean;
+  thumbs: IBifThumbnail[];
 }
 
 /**
  * @param {UInt8Array} buf
  * @returns {Object}
  */
-function parseBif(buf : Uint8Array) : IBifObject {
+function parseBif(buf: Uint8Array): IBifObject {
   let pos = 0;
 
   const length = buf.length;
 
-  const fileFormat = utf8ToStr(buf.subarray(pos + 1, pos + 8)); pos += 8;
+  const fileFormat = utf8ToStr(buf.subarray(pos + 1, pos + 8));
+  pos += 8;
   if (buf[0] !== 0x89 || fileFormat !== "BIF\r\n\u001a\n") {
     throw new Error("Invalid BIF file");
   }
 
-  const minorVersion = buf[pos]; pos += 1;
-  const majorVersion = buf[pos]; pos += 1;
-  const patchVersion = buf[pos]; pos += 1;
-  const increVersion = buf[pos]; pos += 1;
+  const minorVersion = buf[pos];
+  pos += 1;
+  const majorVersion = buf[pos];
+  pos += 1;
+  const patchVersion = buf[pos];
+  pos += 1;
+  const increVersion = buf[pos];
+  pos += 1;
 
   const version = [minorVersion, majorVersion, patchVersion, increVersion].join(".");
 
@@ -67,22 +72,28 @@ function parseBif(buf : Uint8Array) : IBifObject {
     throw new Error(`Unhandled version: ${majorVersion}`);
   }
 
-  const imageCount = le4toi(buf, pos); pos += 4;
-  const framewiseSeparation = le4toi(buf, pos); pos += 4;
+  const imageCount = le4toi(buf, pos);
+  pos += 4;
+  const framewiseSeparation = le4toi(buf, pos);
+  pos += 4;
 
-  const format = utf8ToStr(buf.subarray(pos, pos + 4)); pos += 4;
+  const format = utf8ToStr(buf.subarray(pos, pos + 4));
+  pos += 4;
 
-  const width = le2toi(buf, pos); pos += 2;
-  const height = le2toi(buf, pos); pos += 2;
+  const width = le2toi(buf, pos);
+  pos += 2;
+  const height = le2toi(buf, pos);
+  pos += 2;
 
-  const aspectRatio = [buf[pos], buf[pos + 1]].join(":"); pos += 2;
+  const aspectRatio = [buf[pos], buf[pos + 1]].join(":");
+  pos += 2;
 
   const isVod = buf[pos] === 1;
 
   // bytes 0x1F to 0x40 is unused data for now
   pos = 0x40;
 
-  const thumbs : IBifThumbnail[] = [];
+  const thumbs: IBifThumbnail[] = [];
 
   if (imageCount === 0) {
     throw new Error("bif: no images to parse");
@@ -91,8 +102,10 @@ function parseBif(buf : Uint8Array) : IBifObject {
   let index = 0;
   let previousImageInfo = null;
   while (pos < length) {
-    const currentImageTimestamp = le4toi(buf, pos); pos += 4;
-    const currentImageOffset = le4toi(buf, pos); pos += 4;
+    const currentImageTimestamp = le4toi(buf, pos);
+    pos += 4;
+    const currentImageOffset = le4toi(buf, pos);
+    pos += 4;
 
     if (previousImageInfo !== null) {
       // calculate for index-1
@@ -105,24 +118,25 @@ function parseBif(buf : Uint8Array) : IBifObject {
       index++;
     }
 
-    if (currentImageTimestamp === 0xFFFFFFFF) {
+    if (currentImageTimestamp === 0xffffffff) {
       break;
     }
 
-    previousImageInfo = { timestamp: currentImageTimestamp,
-                          offset: currentImageOffset };
+    previousImageInfo = { timestamp: currentImageTimestamp, offset: currentImageOffset };
   }
 
-  return { fileFormat: "BIF",
-           version,
-           imageCount,
-           timescale: 1000,
-           format,
-           width,
-           height,
-           aspectRatio,
-           isVod,
-           thumbs };
+  return {
+    fileFormat: "BIF",
+    version,
+    imageCount,
+    timescale: 1000,
+    format,
+    width,
+    height,
+    aspectRatio,
+    isVod,
+    thumbs,
+  };
 }
 
 export default parseBif;

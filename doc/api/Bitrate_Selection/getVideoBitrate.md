@@ -9,8 +9,8 @@ Returns `undefined` if no content is loaded.
 <div class="note">
 Note for multi-Period contents:
 
-This method will only return the chosen video bitrate for the
-Period that is currently playing.
+This method will only return the chosen video bitrate for the Period that is currently
+playing.
 
 </div>
 
@@ -26,5 +26,5 @@ this method returns "undefined".
 const bitrate = player.getVideoBitrate();
 ```
 
-- **return value** `number|undefined`: Bitrate of the current video quality
-  chosen. `undefined` if none is chosen yet.
+- **return value** `number|undefined`: Bitrate of the current video quality chosen.
+  `undefined` if none is chosen yet.

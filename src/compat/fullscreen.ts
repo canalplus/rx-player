@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {
+import type {
   ICompatDocument,
   ICompatHTMLMediaElement,
 } from "./browser_compatibility_types";
@@ -23,12 +23,12 @@ import {
  * Request fullScreen action on a given element.
  * @param {HTMLElement} elt
  */
-function requestFullscreen(element : HTMLMediaElement) : void {
+function requestFullscreen(element: HTMLMediaElement): void {
   if (!isFullscreen()) {
     const elt = element as ICompatHTMLMediaElement;
     /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.requestFullscreen === "function") {
-    /* eslint-enable @typescript-eslint/unbound-method */
+      /* eslint-enable @typescript-eslint/unbound-method */
       /* eslint-disable @typescript-eslint/no-floating-promises */
       elt.requestFullscreen();
       /* eslint-enable @typescript-eslint/no-floating-promises */
@@ -37,9 +37,9 @@ function requestFullscreen(element : HTMLMediaElement) : void {
     } else if (typeof elt.mozRequestFullScreen === "function") {
       elt.mozRequestFullScreen();
     } else if (typeof elt.webkitRequestFullscreen === "function") {
-      (
-        elt.webkitRequestFullscreen as (allowKeybordInput? : boolean) => void
-      )((Element as { ALLOW_KEYBOARD_INPUT? : boolean }).ALLOW_KEYBOARD_INPUT);
+      (elt.webkitRequestFullscreen as (allowKeybordInput?: boolean) => void)(
+        (Element as { ALLOW_KEYBOARD_INPUT?: boolean }).ALLOW_KEYBOARD_INPUT,
+      );
     }
   }
 }
@@ -47,12 +47,12 @@ function requestFullscreen(element : HTMLMediaElement) : void {
 /**
  * Exit fullscreen if an element is currently in fullscreen.
  */
-function exitFullscreen() : void {
+function exitFullscreen(): void {
   if (isFullscreen()) {
     const doc = document as ICompatDocument;
     /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof doc.exitFullscreen === "function") {
-    /* eslint-enable @typescript-eslint/unbound-method */
+      /* eslint-enable @typescript-eslint/unbound-method */
       /* eslint-disable @typescript-eslint/no-floating-promises */
       doc.exitFullscreen();
       /* eslint-enable @typescript-eslint/no-floating-promises */
@@ -72,16 +72,14 @@ function exitFullscreen() : void {
  * otherwise it's false.
  * @returns {boolean}
  */
-function isFullscreen() : boolean {
+function isFullscreen(): boolean {
   const doc = document as ICompatDocument;
-  return (doc.fullscreenElement != null ||
-          doc.mozFullScreenElement != null ||
-          doc.webkitFullscreenElement != null ||
-          doc.msFullscreenElement != null);
+  return (
+    doc.fullscreenElement != null ||
+    doc.mozFullScreenElement != null ||
+    doc.webkitFullscreenElement != null ||
+    doc.msFullscreenElement != null
+  );
 }
 
-export {
-  requestFullscreen,
-  exitFullscreen,
-  isFullscreen,
-};
+export { requestFullscreen, exitFullscreen, isFullscreen };

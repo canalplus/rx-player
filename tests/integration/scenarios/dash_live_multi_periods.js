@@ -13,7 +13,7 @@ import sinon from "sinon";
  *  @param {Number} [ms=0]
  *  @returns {Promise}
  */
-const sleepWithoutSinonStub = (function() {
+const sleepWithoutSinonStub = (function () {
   const timeoutFn = window.setTimeout;
   return function _nextTick(ms = 0) {
     return new Promise((res) => {
@@ -22,7 +22,7 @@ const sleepWithoutSinonStub = (function() {
   };
 })();
 
-describe("DASH live content multi-periods (SegmentTemplate)", function() {
+describe("DASH live content multi-periods (SegmentTemplate)", function () {
   let player;
   let xhrMock;
   let clock;

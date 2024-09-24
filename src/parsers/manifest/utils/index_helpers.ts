@@ -40,10 +40,10 @@ export interface IIndexSegment {
  * @returns {Number}
  */
 export function calculateRepeat(
-  element : IIndexSegment,
-  nextElement? : IIndexSegment | null | undefined,
-  maxPosition? : number | undefined
-) : number {
+  element: IIndexSegment,
+  nextElement?: IIndexSegment | null,
+  maxPosition?: number,
+): number {
   const { repeatCount } = element;
 
   if (repeatCount >= 0) {
@@ -54,7 +54,7 @@ export function calculateRepeat(
   // that the duration indicated in @d attribute repeats until the
   // start of the next S element, the end of the Period or until the
   // next MPD update.
-  let segmentEnd : number;
+  let segmentEnd: number;
   if (!isNullOrUndefined(nextElement)) {
     segmentEnd = nextElement.start;
   } else if (maxPosition !== undefined) {
@@ -73,10 +73,10 @@ export function calculateRepeat(
  * @returns {Number}
  */
 export function getIndexSegmentEnd(
-  segment : IIndexSegment,
-  nextSegment : IIndexSegment|null,
-  maxPosition? : number
-) : number {
+  segment: IIndexSegment,
+  nextSegment: IIndexSegment | null,
+  maxPosition?: number,
+): number {
   const { start, duration } = segment;
   if (duration <= 0) {
     return start;
@@ -94,9 +94,9 @@ export function getIndexSegmentEnd(
  * @returns {number}
  */
 export function toIndexTime(
-  time : number,
-  indexOptions : { timescale : number; indexTimeOffset? : number }
-) : number {
+  time: number,
+  indexOptions: { timescale: number; indexTimeOffset?: number },
+): number {
   return time * indexOptions.timescale + (indexOptions.indexTimeOffset ?? 0);
 }
 
@@ -108,9 +108,9 @@ export function toIndexTime(
  * @returns {number}
  */
 export function fromIndexTime(
-  time : number,
-  indexOptions : { timescale : number; indexTimeOffset? : number }
-) : number {
+  time: number,
+  indexOptions: { timescale: number; indexTimeOffset?: number },
+): number {
   return (time - (indexOptions.indexTimeOffset ?? 0)) / indexOptions.timescale;
 }
 
@@ -125,10 +125,9 @@ export function fromIndexTime(
 export function getTimescaledRange(
   start: number,
   duration: number,
-  timescale : number
-) : [number, number] {
-  return [ start * timescale,
-           (start + duration) * timescale ];
+  timescale: number,
+): [number, number] {
+  return [start * timescale, (start + duration) * timescale];
 }
 
 /**
@@ -141,9 +140,9 @@ export function getTimescaledRange(
  * @returns {Number}
  */
 function getIndexOfLastObjectBefore(
-  timeline : IIndexSegment[],
-  timeTScaled : number
-) : number {
+  timeline: IIndexSegment[],
+  timeTScaled: number,
+): number {
   let low = 0;
   let high = timeline.length;
 
@@ -166,12 +165,10 @@ function getIndexOfLastObjectBefore(
  * @returns {number|null}
  */
 export function checkDiscontinuity(
-  index : { timeline : IIndexSegment[];
-            timescale : number;
-            indexTimeOffset? : number; },
-  timeSec : number,
-  maxPosition? : number
-) : number | null {
+  index: { timeline: IIndexSegment[]; timescale: number; indexTimeOffset?: number },
+  timeSec: number,
+  maxPosition?: number,
+): number | null {
   const { timeline } = index;
   const scaledTime = toIndexTime(timeSec, index);
 
@@ -195,10 +192,8 @@ export function checkDiscontinuity(
   }
 
   const nextStart = nextTimelineItem.start;
-  const segmentEnd = getIndexSegmentEnd(timelineItem,
-                                        nextTimelineItem,
-                                        maxPosition);
-  return scaledTime >= segmentEnd &&
-         scaledTime < nextStart ? fromIndexTime(nextStart, index) :
-                                  null;
+  const segmentEnd = getIndexSegmentEnd(timelineItem, nextTimelineItem, maxPosition);
+  return scaledTime >= segmentEnd && scaledTime < nextStart
+    ? fromIndexTime(nextStart, index)
+    : null;
 }

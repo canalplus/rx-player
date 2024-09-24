@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import ttmlParser from "../../../parsers/texttracks/ttml/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLttmlFeature from "../html_ttml_parser";
 
 describe("Features list - HTML ttml Parser", () => {

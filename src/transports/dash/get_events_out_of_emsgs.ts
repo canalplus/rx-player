@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { IInbandEvent } from "../../core/stream";
-import { IEMSG } from "../../parsers/containers/isobmff";
+import type { IInbandEvent } from "../../core/stream";
+import type { IEMSG } from "../../parsers/containers/isobmff";
 import { utf8ToStr } from "../../utils/string_parsing";
 
 /**
@@ -26,8 +26,9 @@ import { utf8ToStr } from "../../utils/string_parsing";
  * @param {number} manifestPublishTime
  * @returns {boolean}
  */
-function manifestNeedsToBeRefreshed(emsgs: IEMSG[],
-                                    manifestPublishTime: number
+function manifestNeedsToBeRefreshed(
+  emsgs: IEMSG[],
+  manifestPublishTime: number,
 ): boolean {
   if (emsgs.length <= 0) {
     return false;
@@ -39,19 +40,21 @@ function manifestNeedsToBeRefreshed(emsgs: IEMSG[],
     const { messageData } = manifestRefreshEventFromEMSGs;
     const strPublishTime = utf8ToStr(messageData);
     const eventManifestPublishTime = Date.parse(strPublishTime);
-    if (currentManifestPublishTime === undefined ||
-        eventManifestPublishTime === undefined ||
-        isNaN(eventManifestPublishTime) ||
-        // DASH-if 4.3 tells (4.5.2.1) :
-        // "The media presentation time beyond the event time (indicated
-        // time by presentation_time_delta) is correctly described only
-        // by MPDs with publish time greater than indicated value in the
-        // message_data field."
-        //
-        // Here, if the current manifest has its publish time inferior or
-        // identical to the event manifest publish time, then the manifest needs
-        // to be updated
-        eventManifestPublishTime >= currentManifestPublishTime) {
+    if (
+      currentManifestPublishTime === undefined ||
+      eventManifestPublishTime === undefined ||
+      isNaN(eventManifestPublishTime) ||
+      // DASH-if 4.3 tells (4.5.2.1) :
+      // "The media presentation time beyond the event time (indicated
+      // time by presentation_time_delta) is correctly described only
+      // by MPDs with publish time greater than indicated value in the
+      // message_data field."
+      //
+      // Here, if the current manifest has its publish time inferior or
+      // identical to the event manifest publish time, then the manifest needs
+      // to be updated
+      eventManifestPublishTime >= currentManifestPublishTime
+    ) {
       return true;
     }
   }
@@ -67,19 +70,21 @@ function manifestNeedsToBeRefreshed(emsgs: IEMSG[],
  */
 export default function getEventsOutOfEMSGs(
   parsedEMSGs: IEMSG[],
-  manifestPublishTime?: number
-): { needsManifestRefresh: boolean;
-     inbandEvents: IInbandEvent[] | undefined; } | undefined {
+  manifestPublishTime?: number,
+):
+  | { needsManifestRefresh: boolean; inbandEvents: IInbandEvent[] | undefined }
+  | undefined {
   if (parsedEMSGs.length === 0) {
     return undefined;
   }
-  const { manifestRefreshEventsFromEMSGs,
-          EMSGs } = parsedEMSGs
-    .reduce((acc, val: IEMSG) => {
+  const { manifestRefreshEventsFromEMSGs, EMSGs } = parsedEMSGs.reduce(
+    (acc, val: IEMSG) => {
       // Scheme that signals manifest update
-      if (val.schemeIdUri === "urn:mpeg:dash:event:2012" &&
-          // TODO support value 2 and 3
-          val.value === "1") {
+      if (
+        val.schemeIdUri === "urn:mpeg:dash:event:2012" &&
+        // TODO support value 2 and 3
+        val.value === "1"
+      ) {
         if (acc.manifestRefreshEventsFromEMSGs === undefined) {
           acc.manifestRefreshEventsFromEMSGs = [];
         }
@@ -91,15 +96,16 @@ export default function getEventsOutOfEMSGs(
         acc.EMSGs.push(val);
       }
       return acc;
-    }, { manifestRefreshEventsFromEMSGs: undefined as IEMSG[]|undefined,
-         EMSGs: undefined as IEMSG[]|undefined });
-  const inbandEvents = EMSGs?.map((evt) => ({ type: "emsg" as const,
-                                              value: evt }));
+    },
+    {
+      manifestRefreshEventsFromEMSGs: undefined as IEMSG[] | undefined,
+      EMSGs: undefined as IEMSG[] | undefined,
+    },
+  );
+  const inbandEvents = EMSGs?.map((evt) => ({ type: "emsg" as const, value: evt }));
   const needsManifestRefresh =
-    (manifestPublishTime === undefined ||
-     manifestRefreshEventsFromEMSGs === undefined) ?
-      false :
-      manifestNeedsToBeRefreshed(manifestRefreshEventsFromEMSGs,
-                                 manifestPublishTime);
+    manifestPublishTime === undefined || manifestRefreshEventsFromEMSGs === undefined
+      ? false
+      : manifestNeedsToBeRefreshed(manifestRefreshEventsFromEMSGs, manifestPublishTime);
   return { inbandEvents, needsManifestRefresh };
 }

@@ -18,13 +18,13 @@
 import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import dashJsParser from "../../parsers/manifest/dash/js-parser";
 import dash from "../../transports/dash";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play DASH contents.
  * @param {Object} features
  */
-function addDASHFeature(features : IFeaturesObject) : void {
+function addDASHFeature(features: IFeaturesObject): void {
   if (features.transports.dash === undefined) {
     features.transports.dash = dash;
   }

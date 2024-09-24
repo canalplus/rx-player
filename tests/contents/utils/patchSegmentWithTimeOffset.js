@@ -9,11 +9,7 @@
  * default.
  * @returns {Uint8Array} - The updated ISOBMFF
  */
-module.exports = function patchSegmentWithTimeOffset(
-  segmentData,
-  timeOffset,
-  _lmsg
-) {
+module.exports = function patchSegmentWithTimeOffset(segmentData, timeOffset, _lmsg) {
   let sizeChange = 0;
   const topLevelBoxesToParse = ["moov", "styp", "sidx", "moof", "mdat"];
   const compositeBoxesToParse = ["trak", "moov", "moof", "traf"];
@@ -41,10 +37,10 @@ module.exports = function patchSegmentWithTimeOffset(
     while (pos < segmentData.length) {
       const { size, boxtype } = getBoxInfos(segmentData.subarray(pos, pos + 8));
       const boxdata = segmentData.subarray(pos, pos + size);
-      const concatData = (topLevelBoxesToParse
-        .indexOf(boxtype) >= 0) ?
-        patchBox(boxtype, boxdata, output.length) :
-        boxdata;
+      const concatData =
+        topLevelBoxesToParse.indexOf(boxtype) >= 0
+          ? patchBox(boxtype, boxdata, output.length)
+          : boxdata;
       output = concat(output, concatData);
       pos += size;
     }
@@ -60,28 +56,25 @@ module.exports = function patchSegmentWithTimeOffset(
    */
   function patchBox(boxtype, boxSpecificData, filePos, _path) {
     let output;
-    const path = _path ? (_path + "." + boxtype) : boxtype;
+    const path = _path ? _path + "." + boxtype : boxtype;
     if (compositeBoxesToParse.indexOf(boxtype) >= 0) {
       output = boxSpecificData.subarray(0, 8);
       let pos = 8;
       while (pos < boxSpecificData.length) {
-        const {
-          size: childSize,
-          boxtype: childBoxType,
-        } = getBoxInfos(boxSpecificData.subarray(pos, pos + 8));
-        const outputChildBox =
-          patchBox(
-            childBoxType,
-            boxSpecificData.subarray(pos, pos + childSize),
-            filePos + pos,
-            path
-          );
+        const { size: childSize, boxtype: childBoxType } = getBoxInfos(
+          boxSpecificData.subarray(pos, pos + 8),
+        );
+        const outputChildBox = patchBox(
+          childBoxType,
+          boxSpecificData.subarray(pos, pos + childSize),
+          filePos + pos,
+          path,
+        );
         output = concat(output, outputChildBox);
         pos += childSize;
       }
       if (output.length !== boxSpecificData.length) {
-        output =
-          concat(itobe4(output.length), output.subarray(4, output.length));
+        output = concat(itobe4(output.length), output.subarray(4, output.length));
       }
     } else {
       switch (boxtype) {
@@ -130,7 +123,7 @@ module.exports = function patchSegmentWithTimeOffset(
   }
 
   function patchTrun(input) {
-    const flags = be4toi(input, 8) & 0xFFFFFF;
+    const flags = be4toi(input, 8) & 0xffffff;
     let dataOffsetPresent = false;
     // Data offset present
     if (flags & 0x1) {
@@ -142,8 +135,7 @@ module.exports = function patchSegmentWithTimeOffset(
       let trunOffset = be4toi(input, 16);
       trunOffset += sizeChange;
       output = concat(output, itobe4(trunOffset)); // func
-    }
-    else {
+    } else {
       output = concat(output, input.subarray(16, 20));
     }
     output = concat(output, input.subarray(20, input.length));
@@ -174,10 +166,11 @@ module.exports = function patchSegmentWithTimeOffset(
           input.subarray(4, 8),
           new Uint8Array([1]),
           input.subarray(9, 12),
-          itobe8(newBaseMediaDecodeTime)
+          itobe8(newBaseMediaDecodeTime),
         );
       }
-    } else { // 64-bit
+    } else {
+      // 64-bit
       const baseMediaDecodeTime = be8toi(input, 12);
       newBaseMediaDecodeTime = baseMediaDecodeTime + tfdtOffset;
       output = concat(input.subarray(0, 12), itobe8(newBaseMediaDecodeTime));
@@ -196,10 +189,11 @@ module.exports = function patchSegmentWithTimeOffset(
  */
 function be4toi(bytes, offset) {
   return (
-    (bytes[offset + 0] * 0x1000000) +
-    (bytes[offset + 1] * 0x0010000) +
-    (bytes[offset + 2] * 0x0000100) +
-    (bytes[offset + 3]));
+    bytes[offset + 0] * 0x1000000 +
+    bytes[offset + 1] * 0x0010000 +
+    bytes[offset + 2] * 0x0000100 +
+    bytes[offset + 3]
+  );
 }
 
 /**
@@ -210,16 +204,16 @@ function be4toi(bytes, offset) {
  */
 function be8toi(bytes, offset) {
   return (
-    (
-      (bytes[offset + 0] * 0x1000000) +
-      (bytes[offset + 1] * 0x0010000) +
-      (bytes[offset + 2] * 0x0000100) +
-      (bytes[offset + 3])
-    ) * 0x100000000 +
-    (bytes[offset + 4] * 0x1000000) +
-    (bytes[offset + 5] * 0x0010000) +
-    (bytes[offset + 6] * 0x0000100) +
-    (bytes[offset + 7]));
+    (bytes[offset + 0] * 0x1000000 +
+      bytes[offset + 1] * 0x0010000 +
+      bytes[offset + 2] * 0x0000100 +
+      bytes[offset + 3]) *
+      0x100000000 +
+    bytes[offset + 4] * 0x1000000 +
+    bytes[offset + 5] * 0x0010000 +
+    bytes[offset + 6] * 0x0000100 +
+    bytes[offset + 7]
+  );
 }
 
 /**
@@ -246,7 +240,7 @@ function concat(...args) {
   let arg;
   while (++i < l) {
     arg = args[i];
-    len += (typeof arg === "number") ? arg : arg.length;
+    len += typeof arg === "number" ? arg : arg.length;
   }
   const arr = new Uint8Array(len);
   let offset = 0;
@@ -255,8 +249,7 @@ function concat(...args) {
     arg = args[i];
     if (typeof arg === "number") {
       offset += arg;
-    }
-    else if (arg.length > 0) {
+    } else if (arg.length > 0) {
       arr.set(arg, offset);
       offset += arg.length;
     }
@@ -272,10 +265,10 @@ function concat(...args) {
  */
 function itobe4(num) {
   return new Uint8Array([
-    (num >>> 24) & 0xFF,
-    (num >>> 16) & 0xFF,
-    (num >>>  8) & 0xFF,
-    (num)        & 0xFF,
+    (num >>> 24) & 0xff,
+    (num >>> 16) & 0xff,
+    (num >>> 8) & 0xff,
+    num & 0xff,
   ]);
 }
 
@@ -288,17 +281,17 @@ function itobe4(num) {
  * @returns {Uint8Array}
  */
 function itobe8(num) {
-  const l = (num % 0x100000000);
+  const l = num % 0x100000000;
   const h = (num - l) / 0x100000000;
   return new Uint8Array([
-    (h >>> 24) & 0xFF,
-    (h >>> 16) & 0xFF,
-    (h >>>  8) & 0xFF,
-    (h)        & 0xFF,
-    (l >>> 24) & 0xFF,
-    (l >>> 16) & 0xFF,
-    (l >>>  8) & 0xFF,
-    (l)        & 0xFF,
+    (h >>> 24) & 0xff,
+    (h >>> 16) & 0xff,
+    (h >>> 8) & 0xff,
+    h & 0xff,
+    (l >>> 24) & 0xff,
+    (l >>> 16) & 0xff,
+    (l >>> 8) & 0xff,
+    l & 0xff,
   ]);
 }
 
@@ -312,7 +305,7 @@ function strToBytes(str) {
   const len = str.length;
   const arr = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
-    arr[i] = str.charCodeAt(i) & 0xFF;
+    arr[i] = str.charCodeAt(i) & 0xff;
   }
   return arr;
 }

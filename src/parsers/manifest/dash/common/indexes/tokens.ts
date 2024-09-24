@@ -22,7 +22,7 @@ import isNonEmptyString from "../../../../../utils/is_non_empty_string";
  * @param {Number} l
  * @returns {string}
  */
-function padLeftWithZeros(n : number|string, l : number) : string {
+function padLeftWithZeros(n: number | string, l: number): string {
   const nToString = n.toString();
   if (nToString.length >= l) {
     return nToString;
@@ -36,11 +36,10 @@ function padLeftWithZeros(n : number|string, l : number) : string {
  * @returns {Function}
  */
 function processFormatedToken(
-  replacer : string | number
-) : (x: unknown, y: unknown, widthStr: string) => string {
-  return (_match, _format, widthStr : string) => {
-    const width = isNonEmptyString(widthStr) ? parseInt(widthStr, 10) :
-                                               1;
+  replacer: string | number,
+): (x: unknown, y: unknown, widthStr: string) => string {
+  return (_match, _format, widthStr: string) => {
+    const width = isNonEmptyString(widthStr) ? parseInt(widthStr, 10) : 1;
     return padLeftWithZeros(String(replacer), width);
   };
 }
@@ -52,9 +51,9 @@ function processFormatedToken(
  * @returns {string}
  */
 export function constructRepresentationUrl(
-  urlTemplate : string,
+  urlTemplate: string,
   representationId?: string,
-  bitrate?: number
+  bitrate?: number,
 ): string {
   return replaceRepresentationDASHTokens(urlTemplate, representationId, bitrate);
 }
@@ -70,7 +69,7 @@ export function constructRepresentationUrl(
 export function replaceRepresentationDASHTokens(
   path: string,
   id?: string,
-  bitrate?: number
+  bitrate?: number,
 ): string {
   if (path.indexOf("$") === -1) {
     return path;
@@ -78,9 +77,10 @@ export function replaceRepresentationDASHTokens(
     return path
       .replace(/\$\$/g, "$")
       .replace(/\$RepresentationID\$/g, String(id))
-      .replace(/\$Bandwidth(\%0(\d+)d)?\$/g,
-               processFormatedToken(bitrate === undefined ? 0 :
-                                                            bitrate));
+      .replace(
+        /\$Bandwidth(\%0(\d+)d)?\$/g,
+        processFormatedToken(bitrate === undefined ? 0 : bitrate),
+      );
   }
 }
 
@@ -93,9 +93,9 @@ export function replaceRepresentationDASHTokens(
  * @returns {Function}
  */
 export function createDashUrlDetokenizer(
-  time : number | undefined,
-  nb : number | undefined
-) : (url : string) => string {
+  time: number | undefined,
+  nb: number | undefined,
+): (url: string) => string {
   /**
    * Replace the tokens in the given `url` by the segment information defined
    * by the outer function.
@@ -104,19 +104,19 @@ export function createDashUrlDetokenizer(
    *
    * @throws Error - Throws if we do not have enough data to construct the URL
    */
-  return function replaceTokensInUrl(url : string) : string {
+  return function replaceTokensInUrl(url: string): string {
     if (url.indexOf("$") === -1) {
       return url;
     } else {
       return url
         .replace(/\$\$/g, "$")
-        .replace(/\$Number(\%0(\d+)d)?\$/g, (_x, _y, widthStr : string) => {
+        .replace(/\$Number(\%0(\d+)d)?\$/g, (_x, _y, widthStr: string) => {
           if (nb === undefined) {
             throw new Error("Segment number not defined in a $Number$ scheme");
           }
           return processFormatedToken(nb)(_x, _y, widthStr);
         })
-        .replace(/\$Time(\%0(\d+)d)?\$/g, (_x, _y, widthStr : string) => {
+        .replace(/\$Time(\%0(\d+)d)?\$/g, (_x, _y, widthStr: string) => {
           if (time === undefined) {
             throw new Error("Segment time not defined in a $Time$ scheme");
           }

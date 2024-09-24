@@ -17,7 +17,7 @@
 /* eslint-disable-next-line max-len */
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
 import SmoothFeature from "../../../transports/smooth";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addSmoothFeature from "../smooth";
 
 describe("Features list - Smooth", () => {
@@ -30,7 +30,6 @@ describe("Features list - Smooth", () => {
       mediaSourceInit: MediaSourceContentInitializer,
     });
     expect(featureObject.transports.smooth).toBe(SmoothFeature);
-    expect(featureObject.mediaSourceInit)
-      .toBe(MediaSourceContentInitializer);
+    expect(featureObject.mediaSourceInit).toBe(MediaSourceContentInitializer);
   });
 });

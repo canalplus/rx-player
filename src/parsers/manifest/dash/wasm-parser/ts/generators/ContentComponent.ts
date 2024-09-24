@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { IContentComponentAttributes } from "../../../node_parser_types";
-import { IAttributeParser } from "../parsers_stack";
+import type { IContentComponentAttributes } from "../../../node_parser_types";
+import type { IAttributeParser } from "../parsers_stack";
 import { AttributeName } from "../types";
 import { parseString } from "../utils";
 
@@ -26,11 +26,11 @@ import { parseString } from "../utils";
  * @returns {Function}
  */
 export function generateContentComponentAttrParser(
-  ccAttrs : IContentComponentAttributes,
-  linearMemory : WebAssembly.Memory
-)  : IAttributeParser {
+  ccAttrs: IContentComponentAttributes,
+  linearMemory: WebAssembly.Memory,
+): IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr : AttributeName, ptr : number, len : number) {
+  return function onMPDAttribute(attr: AttributeName, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.Id:
         ccAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
@@ -50,4 +50,3 @@ export function generateContentComponentAttrParser(
     }
   };
 }
-

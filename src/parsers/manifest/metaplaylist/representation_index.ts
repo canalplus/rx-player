@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IBaseContentInfos,
   IRepresentationIndex,
   ISegment,
 } from "../../../manifest";
-import { IPlayerError } from "../../../public_types";
+import type { IPlayerError } from "../../../public_types";
 import objectAssign from "../../../utils/object_assign";
 
 /**
@@ -36,15 +36,15 @@ import objectAssign from "../../../utils/object_assign";
  */
 export default class MetaRepresentationIndex implements IRepresentationIndex {
   /** Real underlying RepresentationIndex implementation. */
-  protected _wrappedIndex : IRepresentationIndex;
+  protected _wrappedIndex: IRepresentationIndex;
   /** Offset time to add to the start of the Representation, in seconds. */
-  private _timeOffset : number;
+  private _timeOffset: number;
   /** Absolute end of the Representation, in the seconds. */
-  private _contentEnd : number | undefined;
+  private _contentEnd: number | undefined;
   /** Underlying transport for the Representation (e.g. "dash" or "smooth"). */
-  private _transport : string;
+  private _transport: string;
   /** Various information about the real underlying Representation. */
-  private _baseContentInfos : IBaseContentInfos;
+  private _baseContentInfos: IBaseContentInfos;
 
   /**
    * Create a new `MetaRepresentationIndex`.
@@ -59,9 +59,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    */
   constructor(
     wrappedIndex: IRepresentationIndex,
-    contentBounds: [number, number|undefined],
+    contentBounds: [number, number | undefined],
     transport: string,
-    baseContentInfos: IBaseContentInfos
+    baseContentInfos: IBaseContentInfos,
   ) {
     this._wrappedIndex = wrappedIndex;
     this._timeOffset = contentBounds[0];
@@ -73,7 +73,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * Returns information about the initialization segment.
    */
-  public getInitSegment() : ISegment | null {
+  public getInitSegment(): ISegment | null {
     const segment = this._wrappedIndex.getInitSegment();
     if (segment === null) {
       return null;
@@ -87,8 +87,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @param {Number} duration - Amount of time wanted, in seconds
    * @returns {Array.<Object>}
    */
-  public getSegments(up : number, duration : number) : ISegment[] {
-    return this._wrappedIndex.getSegments(up - this._timeOffset, duration)
+  public getSegments(up: number, duration: number): ISegment[] {
+    return this._wrappedIndex
+      .getSegments(up - this._timeOffset, duration)
       .map((segment) => {
         const clonedSegment = this._cloneWithPrivateInfos(segment);
         clonedSegment.time += this._timeOffset;
@@ -103,7 +104,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * contents yet.
    * @returns {Boolean}
    */
-  public shouldRefresh() : false {
+  public shouldRefresh(): false {
     return false;
   }
 
@@ -112,10 +113,11 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getFirstAvailablePosition(): number|undefined {
+  public getFirstAvailablePosition(): number | undefined {
     const wrappedFirstPosition = this._wrappedIndex.getFirstAvailablePosition();
-    return wrappedFirstPosition != null ? wrappedFirstPosition + this._timeOffset :
-                                          undefined;
+    return wrappedFirstPosition != null
+      ? wrappedFirstPosition + this._timeOffset
+      : undefined;
   }
 
   /**
@@ -123,10 +125,11 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * `undefined` if we do not know this value.
    * @return {Number|undefined}
    */
-  public getLastAvailablePosition(): number|undefined {
+  public getLastAvailablePosition(): number | undefined {
     const wrappedLastPosition = this._wrappedIndex.getLastAvailablePosition();
-    return wrappedLastPosition != null ? wrappedLastPosition + this._timeOffset :
-                                         undefined;
+    return wrappedLastPosition != null
+      ? wrappedLastPosition + this._timeOffset
+      : undefined;
   }
 
   /**
@@ -134,10 +137,9 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * all segments are available.
    * @returns {number|null|undefined}
    */
-  public getEnd(): number|undefined|null {
+  public getEnd(): number | undefined | null {
     const wrappedEnd = this._wrappedIndex.getEnd();
-    return wrappedEnd != null ? wrappedEnd + this._timeOffset :
-                                undefined;
+    return wrappedEnd != null ? wrappedEnd + this._timeOffset : undefined;
   }
 
   /**
@@ -152,8 +154,10 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @returns {boolean|undefined}
    */
   public awaitSegmentBetween(start: number, end: number): boolean | undefined {
-    return this._wrappedIndex.awaitSegmentBetween(start - this._timeOffset,
-                                                  end - this._timeOffset);
+    return this._wrappedIndex.awaitSegmentBetween(
+      start - this._timeOffset,
+      end - this._timeOffset,
+    );
   }
 
   /**
@@ -163,7 +167,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @param {Object} segment
    * @returns {boolean|undefined}
    */
-  public isSegmentStillAvailable(segment : ISegment) : boolean | undefined {
+  public isSegmentStillAvailable(segment: ISegment): boolean | undefined {
     if (segment.privateInfos?.metaplaylistInfos === undefined) {
       return false;
     }
@@ -176,7 +180,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @param {Object} segment
    * @returns {Boolean}
    */
-  public canBeOutOfSyncError(error : IPlayerError, segment : ISegment) : boolean {
+  public canBeOutOfSyncError(error: IPlayerError, segment: ISegment): boolean {
     if (segment.privateInfos?.metaplaylistInfos === undefined) {
       return false;
     }
@@ -196,21 +200,21 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * @returns {Boolean}
    */
-  public isStillAwaitingFutureSegments() : boolean {
+  public isStillAwaitingFutureSegments(): boolean {
     return this._wrappedIndex.isStillAwaitingFutureSegments();
   }
 
   /**
    * @returns {Boolean}
    */
-  public isInitialized() : boolean {
+  public isInitialized(): boolean {
     return this._wrappedIndex.isInitialized();
   }
 
   /**
    * @param {Object} newIndex
    */
-  public _replace(newIndex : IRepresentationIndex): void {
+  public _replace(newIndex: IRepresentationIndex): void {
     if (!(newIndex instanceof MetaRepresentationIndex)) {
       throw new Error("A MetaPlaylist can only be replaced with another MetaPlaylist");
     }
@@ -220,7 +224,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   /**
    * @param {Object} newIndex
    */
-  public _update(newIndex : IRepresentationIndex): void {
+  public _update(newIndex: IRepresentationIndex): void {
     if (!(newIndex instanceof MetaRepresentationIndex)) {
       throw new Error("A MetaPlaylist can only be updated with another MetaPlaylist");
     }
@@ -234,7 +238,7 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
    * @param {Object} segment
    * @returns {Object}
    */
-  private _cloneWithPrivateInfos(segment : ISegment) : ISegment {
+  private _cloneWithPrivateInfos(segment: ISegment): ISegment {
     const clonedSegment = objectAssign({}, segment);
     if (clonedSegment.privateInfos === undefined) {
       clonedSegment.privateInfos = {};

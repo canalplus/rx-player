@@ -35,7 +35,7 @@ describe("compat - addTextTrack", () => {
     } as unknown as TextTrack;
     const mockAddTextTrack = jest.fn(() => null);
     const fakeMediaElement = {
-      textTracks: [ fakeTextTrack ],
+      textTracks: [fakeTextTrack],
       addTextTrack: mockAddTextTrack,
     };
 
@@ -45,7 +45,7 @@ describe("compat - addTextTrack", () => {
     }));
 
     const addTextTrack = jest.requireActual("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, true);
+    const { track, trackElement } = addTextTrack(fakeMediaElement, true);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("hidden");
@@ -75,7 +75,7 @@ describe("compat - addTextTrack", () => {
     }));
 
     const addTextTrack = jest.requireActual("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, false);
+    const { track, trackElement } = addTextTrack(fakeMediaElement, false);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
     expect(fakeMediaElement.textTracks.length).toBe(1);
@@ -114,11 +114,12 @@ describe("compat - addTextTrack", () => {
       childNodes: fakeChildNodes,
     };
 
-    const spyOnCreateElement = jest.spyOn(document, "createElement")
+    const spyOnCreateElement = jest
+      .spyOn(document, "createElement")
       .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = jest.requireActual("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, true);
+    const { track, trackElement } = addTextTrack(fakeMediaElement, true);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("hidden");
     expect(trackElement).toBe(fakeTextTrackElement);
@@ -159,11 +160,12 @@ describe("compat - addTextTrack", () => {
       childNodes: fakeChildNodes,
     };
 
-    const spyOnCreateElement = jest.spyOn(document, "createElement")
+    const spyOnCreateElement = jest
+      .spyOn(document, "createElement")
       .mockImplementation(() => fakeTextTrackElement as unknown as HTMLElement);
 
     const addTextTrack = jest.requireActual("../add_text_track").default;
-    const { track, trackElement } = addTextTrack(fakeMediaElement, false);
+    const { track, trackElement } = addTextTrack(fakeMediaElement, false);
     expect(track).toBe(fakeTextTrack);
     expect(track.mode).toBe("showing");
     expect(trackElement).toBe(fakeTextTrackElement);

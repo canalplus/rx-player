@@ -8,8 +8,7 @@ APIs</a>).
 
 ## Description
 
-Returns `true` if the video element is in fullscreen mode, `false`
-otherwise.
+Returns `true` if the video element is in fullscreen mode, `false` otherwise.
 
 #### Example
 
@@ -25,4 +24,4 @@ if (player.isFullscreen()) {
 const isFullscreen = player.isFullscreen();
 ```
 
-  - **return value** `Boolean`
+- **return value** `Boolean`

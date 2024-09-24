@@ -19,7 +19,7 @@ function VolumeButton({
   className = "",
   player,
 }: {
-  className?: string | undefined
+  className?: string | undefined;
   player: IPlayerModule;
 }) {
   const volume = useModuleState(player, "volume");

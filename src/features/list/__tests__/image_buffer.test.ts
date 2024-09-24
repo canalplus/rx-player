@@ -15,7 +15,7 @@
  */
 
 import imageBuffer from "../../../core/segment_buffers/implementations/image";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addImageBufferFeature from "../image_buffer";
 
 describe("Features list - HTML Text Buffer", () => {

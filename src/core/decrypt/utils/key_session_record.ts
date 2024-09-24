@@ -15,7 +15,7 @@
  */
 
 import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
-import { IProcessedProtectionData } from "../types";
+import type { IProcessedProtectionData } from "../types";
 import { areAllKeyIdsContainedIn } from "./key_id_comparison";
 
 /**
@@ -59,15 +59,15 @@ import { areAllKeyIdsContainedIn } from "./key_id_comparison";
  * @class KeySessionRecord
  */
 export default class KeySessionRecord {
-  private readonly _initializationData : IProcessedProtectionData;
-  private _keyIds : Uint8Array[] | null;
+  private readonly _initializationData: IProcessedProtectionData;
+  private _keyIds: Uint8Array[] | null;
 
   /**
    * Create a new `KeySessionRecord`, linked to its corresponding initialization
    * data,
    * @param {Object} initializationData
    */
-  constructor(initializationData : IProcessedProtectionData) {
+  constructor(initializationData: IProcessedProtectionData) {
     this._initializationData = initializationData;
     this._keyIds = null;
   }
@@ -82,9 +82,7 @@ export default class KeySessionRecord {
    * `true`).
    * @param {Array.<Uint8Array>} keyIds
    */
-  public associateKeyIds(
-    keyIds : Uint8Array[] | IterableIterator<Uint8Array>
-  ) : void {
+  public associateKeyIds(keyIds: Uint8Array[] | IterableIterator<Uint8Array>): void {
     if (this._keyIds === null) {
       this._keyIds = [];
     }
@@ -100,7 +98,7 @@ export default class KeySessionRecord {
    * @param {Uint8Array} keyId
    * @returns {boolean}
    */
-  public isAssociatedWithKeyId(keyId : Uint8Array) : boolean {
+  public isAssociatedWithKeyId(keyId: Uint8Array): boolean {
     if (this._keyIds === null) {
       return false;
     }
@@ -115,7 +113,7 @@ export default class KeySessionRecord {
   /**
    * @returns {Array.<Uint8Array>}
    */
-  public getAssociatedKeyIds() : Uint8Array[] {
+  public getAssociatedKeyIds(): Uint8Array[] {
     if (this._keyIds === null) {
       return [];
     }
@@ -138,9 +136,7 @@ export default class KeySessionRecord {
    * @param {Object} initializationData
    * @returns {boolean}
    */
-  public isCompatibleWith(
-    initializationData : IProcessedProtectionData
-  ) : boolean {
+  public isCompatibleWith(initializationData: IProcessedProtectionData): boolean {
     const { keyIds } = initializationData;
     if (keyIds !== undefined && keyIds.length > 0) {
       if (this._keyIds !== null && areAllKeyIdsContainedIn(keyIds, this._keyIds)) {
@@ -154,21 +150,23 @@ export default class KeySessionRecord {
   }
 
   private _checkInitializationDataCompatibility(
-    initializationData : IProcessedProtectionData
-  ) : boolean {
-    if (initializationData.keyIds !== undefined &&
-        initializationData.keyIds.length > 0 &&
-        this._initializationData.keyIds !== undefined)
-    {
-      return areAllKeyIdsContainedIn(initializationData.keyIds,
-                                     this._initializationData.keyIds);
+    initializationData: IProcessedProtectionData,
+  ): boolean {
+    if (
+      initializationData.keyIds !== undefined &&
+      initializationData.keyIds.length > 0 &&
+      this._initializationData.keyIds !== undefined
+    ) {
+      return areAllKeyIdsContainedIn(
+        initializationData.keyIds,
+        this._initializationData.keyIds,
+      );
     }
 
     if (this._initializationData.type !== initializationData.type) {
       return false;
     }
 
-    return this._initializationData.values
-      .isCompatibleWith(initializationData.values);
+    return this._initializationData.values.isCompatibleWith(initializationData.values);
   }
 }

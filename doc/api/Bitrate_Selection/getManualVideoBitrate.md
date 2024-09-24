@@ -2,8 +2,8 @@
 
 ## Description
 
-Get the last video bitrate manually set. Either via `setVideoBitrate` or via
-the `initialVideoBitrate` constructor option.
+Get the last video bitrate manually set. Either via `setVideoBitrate` or via the
+`initialVideoBitrate` constructor option.
 
 This value can be different than the one returned by `getVideoBitrate`:
 
@@ -18,5 +18,5 @@ This value can be different than the one returned by `getVideoBitrate`:
 const currentManualVideoBitrate = player.getManualVideoBitrate();
 ```
 
-  - **return value**: `Number`: Last video bitrate manually set.
-    `-1` if nothing is manually set.
+- **return value**: `Number`: Last video bitrate manually set. `-1` if nothing is manually
+  set.

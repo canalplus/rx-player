@@ -1,17 +1,16 @@
-# RxPlayer Architecture documentation ##########################################
+# RxPlayer Architecture documentation
 
-## Preliminary notes ###########################################################
+## Preliminary notes
 
-You will find the architecture documentation alongside the code it documents,
-as `README.md` files (like this one).
+You will find the architecture documentation alongside the code it documents, as
+`README.md` files (like this one).
 
+## Global architecture
 
-## Global architecture #########################################################
+To better understand the player's architecture, you can find below a (simplified!) schema
+of it:
 
-To better understand the player's architecture, you can find below a
-(simplified!) schema of it:
-
-```
+````````
                                                                   +---------------------+
                                                                   | ---> Call / request |
                                                                   +---------------------+
@@ -106,31 +105,29 @@ Stream (./core/stream)           |                                              
  decoded at the |  SegmentBuffer implementations                 |
  right time     |  (./core/segment_buffers/implementations)      |
                 +------------------------------------------------+
-```
+````````
 
 For the directories not represented in that schema:
 
-  - `Compat` (_./compat_): Regroups every functions related to improving
-    compatibility with browsers / environments.
+- `Compat` (_./compat_): Regroups every functions related to improving compatibility with
+  browsers / environments.
 
-  - `errors` (_./errors_): Defines error subclasses, most of all for the API.
+- `errors` (_./errors_): Defines error subclasses, most of all for the API.
 
-  - `experimental` (_./experimental_): Special directory for "experimental" tools
-     and features.
+- `experimental` (_./experimental_): Special directory for "experimental" tools and
+  features.
 
-  - `features` (_./features_): Special directory allowing feature switching
-    (enabling/disallowing features to not include unused code when importing the
-    RxPlayer).
+- `features` (_./features_): Special directory allowing feature switching
+  (enabling/disallowing features to not include unused code when importing the RxPlayer).
 
-  - `manifest` (_./manifest_): Defines a `Manifest` structure and its
-    properties, a central structure of the player describing a content.
+- `manifest` (_./manifest_): Defines a `Manifest` structure and its properties, a central
+  structure of the player describing a content.
 
-  - `parsers` (_./parsers_): Various parsers for several formats
+- `parsers` (_./parsers_): Various parsers for several formats
 
-  - `tools` (_./tools_): Defines "tools", APIs which are not part of the
-    RxPlayer class.
+- `tools` (_./tools_): Defines "tools", APIs which are not part of the RxPlayer class.
 
-  - `typings` (_./typings_): Define TypeScript typings.
+- `typings` (_./typings_): Define TypeScript typings.
 
-  - `utils` (_./utils_): Define utils function, small functions which can be
-    used in several part of the RxPlayer's code.
+- `utils` (_./utils_): Define utils function, small functions which can be used in several
+  part of the RxPlayer's code.

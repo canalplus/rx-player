@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import samiParser from "../../../parsers/texttracks/sami/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLsamiFeature from "../html_sami_parser";
 
 describe("Features list - HTML sami Parser", () => {

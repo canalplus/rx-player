@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-import StreamOrchestrator, {
+import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorCallbacks,
 } from "./orchestrator";
-export { IAudioTrackSwitchingMode } from "./period";
-export {
-  IInbandEvent,
-  IStreamStatusPayload,
-} from "./representation";
-export {
-  IWaitingMediaSourceReloadPayload,
-} from "./adaptation";
+import StreamOrchestrator from "./orchestrator";
+export type { IAudioTrackSwitchingMode } from "./period";
+export type { IInbandEvent, IStreamStatusPayload } from "./representation";
+export type { IWaitingMediaSourceReloadPayload } from "./adaptation";
 
 export default StreamOrchestrator;
-export {
+export type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorOptions,

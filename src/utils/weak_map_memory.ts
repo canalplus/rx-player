@@ -52,15 +52,14 @@
  * ```
  * @class WeakMapMemory
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
 export default class WeakMapMemory<T extends object, U> {
-  private readonly _fn : (obj : T) => U;
-  private _weakMap : WeakMap<T, U>;
+  private readonly _fn: (obj: T) => U;
+  private _weakMap: WeakMap<T, U>;
 
   /**
    * @param {Function}
    */
-  constructor(fn : (obj : T) => U) {
+  constructor(fn: (obj: T) => U) {
     this._weakMap = new WeakMap();
     this._fn = fn;
   }
@@ -69,7 +68,7 @@ export default class WeakMapMemory<T extends object, U> {
    * @param {Object} obj
    * @returns {*}
    */
-  public get(obj : T) : U {
+  public get(obj: T): U {
     const fromMemory = this._weakMap.get(obj);
     if (fromMemory === undefined) {
       const newElement = this._fn(obj);
@@ -83,7 +82,7 @@ export default class WeakMapMemory<T extends object, U> {
   /**
    * @param {Object} obj
    */
-  public destroy(obj : T) : void {
+  public destroy(obj: T): void {
     this._weakMap.delete(obj);
   }
 }

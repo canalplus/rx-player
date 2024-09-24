@@ -58,44 +58,47 @@ function fastDemoBuild(options) {
     name: "onEnd",
     setup(build) {
       build.onStart(() => {
-        console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-          "New demo build started");
-      })
-      build.onEnd(result => {
+        console.log(
+          `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` + "New demo build started",
+        );
+      });
+      build.onEnd((result) => {
         if (result.errors.length > 0 || result.warnings.length > 0) {
           const { errors, warnings } = result;
-          console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-            `Demo re-built with ${errors.length} error(s) and ` +
-            ` ${warnings.length} warning(s) `);
+          console.log(
+            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
+              `Demo re-built with ${errors.length} error(s) and ` +
+              ` ${warnings.length} warning(s) `,
+          );
           return;
         }
-        console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` +
-          "Demo built!");
+        console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + "Demo built!");
       });
     },
   };
 
   // Create a context for incremental builds
-  esbuild.context({
-    entryPoints: [path.join(__dirname, "../demo/full/scripts/index.tsx")],
-    bundle: true,
-    target: "es2017",
-    minify,
-    outfile: path.join(__dirname, "../demo/full/bundle.js"),
-    plugins: [consolePlugin],
-    define: {
-      "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-      __INCLUDE_WASM_PARSER__: JSON.stringify(includeWasmParser),
-      __ENVIRONMENT__: JSON.stringify({
-        PRODUCTION: 0,
-        DEV: 1,
-        CURRENT_ENV: isDevMode ? 1 : 0,
-      }),
-      __LOGGER_LEVEL__: JSON.stringify({
-        CURRENT_LEVEL: "INFO",
-      }),
-    }
-  })
+  esbuild
+    .context({
+      entryPoints: [path.join(__dirname, "../demo/full/scripts/index.tsx")],
+      bundle: true,
+      target: "es2017",
+      minify,
+      outfile: path.join(__dirname, "../demo/full/bundle.js"),
+      plugins: [consolePlugin],
+      define: {
+        "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
+        __INCLUDE_WASM_PARSER__: JSON.stringify(includeWasmParser),
+        __ENVIRONMENT__: JSON.stringify({
+          PRODUCTION: 0,
+          DEV: 1,
+          CURRENT_ENV: isDevMode ? 1 : 0,
+        }),
+        __LOGGER_LEVEL__: JSON.stringify({
+          CURRENT_LEVEL: "INFO",
+        }),
+      },
+    })
     .then((context) => {
       if (watch) {
         return context.watch();
@@ -104,7 +107,8 @@ function fastDemoBuild(options) {
     .catch((err) => {
       console.error(
         `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
-        err);
+        err,
+      );
       process.exit(1);
     });
 }
@@ -116,14 +120,14 @@ function fastDemoBuild(options) {
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node generate_full_demo.js [options]
+    /* eslint-disable indent */
+    `Usage: node generate_full_demo.js [options]
 Options:
   -h, --help             Display this help
   -m, --minify           Minify the built demo
   -p, --production-mode  Build all files in production mode (less runtime checks, mostly).
   -w, --watch            Re-build each time either the demo or library files change`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

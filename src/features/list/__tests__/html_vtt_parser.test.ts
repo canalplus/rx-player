@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import HTMLTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
 import vttParser from "../../../parsers/texttracks/webvtt/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHTMLVTTFeature from "../html_vtt_parser";
 
 describe("Features list - HTML VTT Parser", () => {

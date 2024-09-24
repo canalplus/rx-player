@@ -2,8 +2,8 @@
 
 ## Overview
 
-The TextTrackRenderer is a tool allowing to render subtitles synchronized with
-a video element (or any HTMLMediaElement).
+The TextTrackRenderer is a tool allowing to render subtitles synchronized with a video
+element (or any HTMLMediaElement).
 
 For now it supports the following formats:
 
@@ -12,14 +12,14 @@ For now it supports the following formats:
 - srt
 - sami
 
-The video does not need to be played through the RxPlayer for the
-TextTrackRenderer to work. It is a completely independent tool which just
-rely on the video element for synchronization information.
+The video does not need to be played through the RxPlayer for the TextTrackRenderer to
+work. It is a completely independent tool which just rely on the video element for
+synchronization information.
 
 ## Brief summary
 
-If you don't want to read all this documentation, here is a complete example of
-how it can be used:
+If you don't want to read all this documentation, here is a complete example of how it can
+be used:
 
 ```js
 // import TextTrackRenderer and the parsers we want
@@ -31,12 +31,7 @@ import TextTrackRenderer, {
 } from "rx-player/tools/TextTrackRenderer";
 
 // Add the needed parsers to the TextTrackRenderer
-TextTrackRenderer.addParsers([
-  TTML_PARSER,
-  VTT_PARSER,
-  SRT_PARSER,
-  SAMI_PARSER,
-]);
+TextTrackRenderer.addParsers([TTML_PARSER, VTT_PARSER, SRT_PARSER, SAMI_PARSER]);
 
 // get video element the subtitles has to be synchronized to
 const videoElement = document.querySelector("video");
@@ -84,12 +79,11 @@ The TextTrackRenderer alone can be imported as such:
 import TextTrackRenderer from "rx-player/tools/TextTrackRenderer";
 ```
 
-But just importing the TextTrackRenderer alone is pointless, you also have to
-import the text track parsers you want to use manually (this is a choice we
-made to avoid wasting space for subtitles formats you might not want).
+But just importing the TextTrackRenderer alone is pointless, you also have to import the
+text track parsers you want to use manually (this is a choice we made to avoid wasting
+space for subtitles formats you might not want).
 
-To import the parsers you want, you just have to do something along the line
-of:
+To import the parsers you want, you just have to do something along the line of:
 
 ```js
 // Add two parsers to the TextTrackRenderer: one for TTML subtitles and one for
@@ -120,17 +114,16 @@ We will need three items:
 
 1. The video element our subtitles has to be synchronized to.
 
-2. Another HTML element, in which the various subtitles will be rendered by
-   the TextTrackRenderer. In general, you want that element to be on top of
-   the video element, with the same dimensions. You might however set it in
-   the shape and size you want.
+2. Another HTML element, in which the various subtitles will be rendered by the
+   TextTrackRenderer. In general, you want that element to be on top of the video element,
+   with the same dimensions. You might however set it in the shape and size you want.
 
-   It can even be reduced dynamically at any time (for example, to reduce this
-   element's height when a UI element appear at the bottom of the screen,
-   thus avoiding the subtitles from overlapping that new element).
+   It can even be reduced dynamically at any time (for example, to reduce this element's
+   height when a UI element appear at the bottom of the screen, thus avoiding the
+   subtitles from overlapping that new element).
 
-3. The whole text track data, as a string (you will have to download the
-   subtitles yourself).
+3. The whole text track data, as a string (you will have to download the subtitles
+   yourself).
 
 To simplify, let's give a name to all those 3 elements:
 
@@ -151,8 +144,8 @@ const textTrackRenderer = new TextTrackRenderer({
 
 ### Setting a text track on it
 
-With `textTrackRenderer`, the TextTrackRenderer instance, we can now add at
-any time a text track through its `setTextTrack` method:
+With `textTrackRenderer`, the TextTrackRenderer instance, we can now add at any time a
+text track through its `setTextTrack` method:
 
 ```js
 try {
@@ -165,8 +158,8 @@ try {
 }
 ```
 
-Here, `SUBTITLES_FORMAT` is a string indicating in which format the subtitles
-are. It can be any of those strings:
+Here, `SUBTITLES_FORMAT` is a string indicating in which format the subtitles are. It can
+be any of those strings:
 
 | type     | Corresponding subtitles format |
 | -------- | ------------------------------ |
@@ -175,14 +168,13 @@ are. It can be any of those strings:
 | `"srt"`  | SubRip (.srt)                  |
 | `"sami"` | SAMI                           |
 
-(Each format needs the corresponding parser to be imported. See the previous
-chapter for more information.)
+(Each format needs the corresponding parser to be imported. See the previous chapter for
+more information.)
 
-Note that the `setTextTrack` method can throw if the subtitles are found to be
-invalid.
+Note that the `setTextTrack` method can throw if the subtitles are found to be invalid.
 
-Any subsequent call to `setTextTrack` will remove the current text track and
-replace them with the new text track instead:
+Any subsequent call to `setTextTrack` will remove the current text track and replace them
+with the new text track instead:
 
 ```js
 // Add TTML subtitles
@@ -199,11 +191,11 @@ textTrackRenderer.setTextTrack({
 });
 ```
 
-If your subtitles have a delay or are in advance relatively to the video, you
-can also set an offset in seconds through the `timeOffset` property.
+If your subtitles have a delay or are in advance relatively to the video, you can also set
+an offset in seconds through the `timeOffset` property.
 
-For example, this will display each subtitles 1.3 seconds later (for when
-subtitles appear and disappear too much in advance):
+For example, this will display each subtitles 1.3 seconds later (for when subtitles appear
+and disappear too much in advance):
 
 ```js
 textTrackRenderer.setTextTrack({
@@ -213,8 +205,8 @@ textTrackRenderer.setTextTrack({
 });
 ```
 
-And this will display each subtitles 1.3 seconds before they normally appear
-and disappear (for when subtitles are too late):
+And this will display each subtitles 1.3 seconds before they normally appear and disappear
+(for when subtitles are too late):
 
 ```js
 textTrackRenderer.setTextTrack({
@@ -235,21 +227,19 @@ textTrackRenderer.removeTextTrack();
 
 ### Disposing of the TextTrackRenderer
 
-If you're sure that you won't need the TextTrackRenderer anymore, you can
-dispose of most ressources (which is not much) it took on your page by calling
-the `dispose` method:
+If you're sure that you won't need the TextTrackRenderer anymore, you can dispose of most
+ressources (which is not much) it took on your page by calling the `dispose` method:
 
 ```js
 textTrackRenderer.dispose();
 ```
 
-That TextTrackRenderer instance won't be usable once you've call this method,
-so be sure you don't need it anymore before calling it.
+That TextTrackRenderer instance won't be usable once you've call this method, so be sure
+you don't need it anymore before calling it.
 
 ### Notes on the SAMI format
 
-The SAMI subtitles format might necessitate you to specify the language you want
-to parse.
+The SAMI subtitles format might necessitate you to specify the language you want to parse.
 
 This can be done on the `setTextTrack` call like this:
 
@@ -263,8 +253,8 @@ textTrackRenderer.setTextTrack({
 
 ## About logs
 
-The TextTrackRenderer can display logs to the console. It relies on the exact
-same logger instance than the RxPlayer.
+The TextTrackRenderer can display logs to the console. It relies on the exact same logger
+instance than the RxPlayer.
 
 This logger can be independently imported from `"rx-player/logger"`:
 
@@ -284,8 +274,7 @@ logger.setLevel(LOGGER_LEVEL);
 
 - `"ERROR"`: unexpected errors (via `console.error`)
 
-- `"WARNING"`: The previous level + minor problems encountered (via
-  `console.warn`)
+- `"WARNING"`: The previous level + minor problems encountered (via `console.warn`)
 
 - `"INFO"`: The previous levels + noteworthy events (via `console.info`)
 

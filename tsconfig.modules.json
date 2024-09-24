@@ -23,11 +23,8 @@
       "./node_modules/@types"
     ]
   },
-  "include": [
-    "./src/**/*.ts",
-    "./scripts/build/constants.d.ts"
-  ],
-  "exclude":[
+  "include": ["./src/**/*.ts", "./scripts/build/constants.d.ts"],
+  "exclude": [
     "./src/**/*.test.ts",
     "./src/typings/globals.d.ts",
     "./src/features/initialize_features.ts",

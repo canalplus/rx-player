@@ -2,8 +2,8 @@
 
 ## Description
 
-Returns the current playback rate. `1` for normal playback, `2` when
-playing at double the speed, etc.
+Returns the current playback rate. `1` for normal playback, `2` when playing at double the
+speed, etc.
 
 #### Example
 
@@ -18,4 +18,4 @@ console.log(`Playing at a x${currentPlaybackRate}} speed`);
 const rate = player.getPlaybackRate();
 ```
 
- - **return value** `number`
+- **return value** `number`

@@ -27,7 +27,7 @@ import {
 import RxPlayer from "../../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
-  DASH_LOADER
+  DASH_LOADER,
 } from "../../../../../src/experimental/tools/VideoThumbnailLoader";
 import CatchUpModeController from "./catchUp";
 import { declareModule } from "../../lib/declareModule";
@@ -41,7 +41,7 @@ import type {
   ILoadVideoOptions,
   IRepresentation,
   ITextTrack,
-  IVideoTrack
+  IVideoTrack,
 } from "../../../../../src/public_types";
 
 RxPlayer.addFeatures([
@@ -68,30 +68,29 @@ declare const __INCLUDE_WASM_PARSER__: boolean;
 
 /* eslint-disable no-undef */
 if (__INCLUDE_WASM_PARSER__) {
-/* eslint-enable no-undef */
+  /* eslint-enable no-undef */
 
   RxPlayer.addFeatures([DASH_WASM]);
-  DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" })
-    .catch((err) => {
-      /* eslint-disable-next-line no-console */
-      console.error("Error when initializing WASM DASH MPD parser:", err);
-    });
+  DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" }).catch((err) => {
+    /* eslint-disable-next-line no-console */
+    console.error("Error when initializing WASM DASH MPD parser:", err);
+  });
 }
 
 VideoThumbnailLoader.addLoader(DASH_LOADER);
 
 export interface IBifThumbnail {
-  index : number;
-  duration : number;
-  ts : number;
-  data : Uint8Array;
+  index: number;
+  duration: number;
+  ts: number;
+  data: Uint8Array;
 }
 
 export interface IBufferedData {
   start: number;
   end: number;
-  bufferedStart: number|undefined;
-  bufferedEnd: number|undefined;
+  bufferedStart: number | undefined;
+  bufferedEnd: number | undefined;
   infos: {
     adaptation: IAdaptation;
     representation: IRepresentation;
@@ -201,9 +200,9 @@ const PlayerModule = declareModule(
     videoThumbnailLoader: null,
   }),
   (
-    initOpts: IConstructorOptions & { textTrackElement? : HTMLElement },
+    initOpts: IConstructorOptions & { textTrackElement?: HTMLElement },
     state,
-    abortSignal
+    abortSignal,
   ) => {
     const { textTrackElement, ...constructorOpts } = initOpts;
     const player = new RxPlayer(constructorOpts);
@@ -232,7 +231,7 @@ const PlayerModule = declareModule(
         const thumbnailVideoElement = document.createElement("video");
         const videoThumbnailLoader = new VideoThumbnailLoader(
           thumbnailVideoElement,
-          player
+          player,
         );
         state.updateBulk({
           videoThumbnailLoader,
@@ -250,10 +249,15 @@ const PlayerModule = declareModule(
 
       load(arg: ILoadVideoOptions) {
         dettachVideoThumbnailLoader();
-        player.loadVideo(Object.assign({
-          textTrackElement,
-          transportOptions: { checkMediaSegmentIntegrity: true },
-        }, arg) as ILoadVideoOptions);
+        player.loadVideo(
+          Object.assign(
+            {
+              textTrackElement,
+              transportOptions: { checkMediaSegmentIntegrity: true },
+            },
+            arg,
+          ) as ILoadVideoOptions,
+        );
         state.updateBulk({
           loadedVideo: arg,
           lowLatencyMode: arg.lowLatencyMode === true,
@@ -355,7 +359,7 @@ const PlayerModule = declareModule(
         });
       }
     }
-  }
+  },
 );
 
 export type IPlayerModule = InstanceType<typeof PlayerModule>;

@@ -15,7 +15,7 @@
  */
 
 import BufferGarbageCollector from "./garbage_collector";
-import {
+import type {
   IBufferType,
   IEndOfSegmentInfos,
   IEndOfSegmentOperation,
@@ -24,44 +24,30 @@ import {
   IPushOperation,
   IRemoveOperation,
   ISBOperation,
-  SegmentBuffer,
-  SegmentBufferOperation,
 } from "./implementations";
-import {
-  ChunkStatus,
-  IBufferedChunk,
-  IChunkContext,
-  IInsertedChunkInfos,
-} from "./inventory";
-import SegmentBuffersStore, {
+import { SegmentBuffer, SegmentBufferOperation } from "./implementations";
+import type { IBufferedChunk, IChunkContext, IInsertedChunkInfos } from "./inventory";
+import { ChunkStatus } from "./inventory";
+import type {
   ISegmentBufferOptions,
   ITextTrackSegmentBufferOptions,
 } from "./segment_buffers_store";
+import SegmentBuffersStore from "./segment_buffers_store";
 
 export default SegmentBuffersStore;
-export {
-  BufferGarbageCollector,
-  ChunkStatus,
-
+export type {
   ISegmentBufferOptions,
   ITextTrackSegmentBufferOptions,
-
-  SegmentBuffer,
-
   IBufferType,
-
   IBufferedChunk,
   IChunkContext,
   IInsertedChunkInfos,
-
   IPushChunkInfos,
   IPushedChunkData,
-
   IEndOfSegmentInfos,
-
-  SegmentBufferOperation,
   ISBOperation,
   IEndOfSegmentOperation,
   IPushOperation,
   IRemoveOperation,
 };
+export { BufferGarbageCollector, ChunkStatus, SegmentBuffer, SegmentBufferOperation };

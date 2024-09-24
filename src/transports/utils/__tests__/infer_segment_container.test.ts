@@ -18,210 +18,265 @@ import type { Representation } from "../../../manifest";
 import inferSegmentContainer from "../infer_segment_container";
 
 describe("Transport utils - inferSegmentContainer", () => {
-  it("should return \"mp4\" for audio and video tracks with a specific mime-type", () => {
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/mp4" } as Representation))
-      .toEqual("mp4");
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/mp4" } as Representation))
-      .toEqual("mp4");
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/mp4" } as Representation))
-      .toEqual("mp4");
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/mp4" } as Representation))
-      .toEqual("mp4");
+  it('should return "mp4" for audio and video tracks with a specific mime-type', () => {
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/mp4",
+      } as Representation),
+    ).toEqual("mp4");
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/mp4",
+      } as Representation),
+    ).toEqual("mp4");
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/mp4",
+      } as Representation),
+    ).toEqual("mp4");
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/mp4",
+      } as Representation),
+    ).toEqual("mp4");
   });
 
   /* eslint-disable max-len */
   it("should return undefined for non-audio nor video tracks with a mime-type indicating mp4 audio or video", () => {
-  /* eslint-enable max-len */
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/mp4" } as Representation))
-      .toEqual(undefined);
+    /* eslint-enable max-len */
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/mp4",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/mp4",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("image", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/mp4",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("image", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/mp4",
+      } as Representation),
+    ).toEqual(undefined);
   });
 
   /* eslint-disable max-len */
-  it("should return \"webm\" for audio and video tracks with a specific mime-type", () => {
-  /* eslint-enable max-len */
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/webm" } as Representation))
-      .toEqual("webm");
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/webm" } as Representation))
-      .toEqual("webm");
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/webm" } as Representation))
-      .toEqual("webm");
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/webm" } as Representation))
-      .toEqual("webm");
+  it('should return "webm" for audio and video tracks with a specific mime-type', () => {
+    /* eslint-enable max-len */
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/webm",
+      } as Representation),
+    ).toEqual("webm");
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/webm",
+      } as Representation),
+    ).toEqual("webm");
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/webm",
+      } as Representation),
+    ).toEqual("webm");
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/webm",
+      } as Representation),
+    ).toEqual("webm");
   });
 
   /* eslint-disable max-len */
   it("should return undefined for non-audio nor video tracks with a mime-type indicating webm audio or video", () => {
-  /* eslint-enable max-len */
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/webm" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/webm" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "video/webm" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("image",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "audio/webm" } as Representation))
-      .toEqual(undefined);
+    /* eslint-enable max-len */
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/webm",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/webm",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("image", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "video/webm",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("image", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "audio/webm",
+      } as Representation),
+    ).toEqual(undefined);
   });
 
   /* eslint-disable max-len */
   it("should return undefined for audio and video tracks with any other mime-type", () => {
-  /* eslint-enable max-len */
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "application/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "application/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "foo" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "bar" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("audio",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {} } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("video",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {} } as Representation))
-      .toEqual(undefined);
+    /* eslint-enable max-len */
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "application/mp4",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "application/mp4",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "foo",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "bar",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("audio", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("video", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+      } as Representation),
+    ).toEqual(undefined);
   });
 
-  it("should return \"mp4\" for a text track with a specific mime-type", () => {
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "application/mp4" } as Representation))
-      .toEqual("mp4");
+  it('should return "mp4" for a text track with a specific mime-type', () => {
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "application/mp4",
+      } as Representation),
+    ).toEqual("mp4");
   });
-
 
   it("should return undefined for text tracks with any other mime-type", () => {
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "text/mp4" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "text/plain" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {},
-                                   mimeType: "foo" } as Representation))
-      .toEqual(undefined);
-    expect(inferSegmentContainer("text",
-                                 { bitrate: 0,
-                                   id: "1",
-                                   index: {} } as Representation))
-      .toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "text/mp4",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "text/plain",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", {
+        bitrate: 0,
+        id: "1",
+        index: {},
+        mimeType: "foo",
+      } as Representation),
+    ).toEqual(undefined);
+    expect(
+      inferSegmentContainer("text", { bitrate: 0, id: "1", index: {} } as Representation),
+    ).toEqual(undefined);
   });
 });

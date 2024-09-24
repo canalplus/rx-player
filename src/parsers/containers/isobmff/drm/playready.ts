@@ -16,20 +16,14 @@
 
 import { base64ToBytes } from "../../../../utils/base64";
 import { le2toi } from "../../../../utils/byte_parsing";
-import {
-  bytesToHex,
-  guidToUuid,
-  utf16LEToStr,
-} from "../../../../utils/string_parsing";
+import { bytesToHex, guidToUuid, utf16LEToStr } from "../../../../utils/string_parsing";
 
 /**
  * Parse PlayReady privateData to get its Hexa-coded KeyID.
  * @param {Uint8Array} privateData
  * @returns {string}
  */
-export function getPlayReadyKIDFromPrivateData(
-  data: Uint8Array
-) : string {
+export function getPlayReadyKIDFromPrivateData(data: Uint8Array): string {
   const xmlLength = le2toi(data, 8);
   const xml = utf16LEToStr(data.subarray(10, xmlLength + 10));
   const doc = new DOMParser().parseFromString(xml, "application/xml");
@@ -37,8 +31,7 @@ export function getPlayReadyKIDFromPrivateData(
   if (kidElement === null) {
     throw new Error("Cannot parse PlayReady private data: invalid XML");
   }
-  const b64guidKid = kidElement.textContent === null ? "" :
-                                                       kidElement.textContent;
+  const b64guidKid = kidElement.textContent === null ? "" : kidElement.textContent;
 
   const uuidKid = guidToUuid(base64ToBytes(b64guidKid));
   return bytesToHex(uuidKid).toLowerCase();

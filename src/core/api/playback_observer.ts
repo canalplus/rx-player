@@ -19,26 +19,26 @@ import log from "../../log";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import { getRange } from "../../utils/ranges";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../utils/reference";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../utils/task_canceller";
+import type { IReadOnlySharedReference } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 
 /**
  * HTMLMediaElement Events for which playback observations are calculated and
  * emitted.
  * @type {Array.<string>}
  */
-const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay",
-                                                                       "ended",
-                                                                       "play",
-                                                                       "pause",
-                                                                       "seeking",
-                                                                       "seeked",
-                                                                       "loadedmetadata",
-                                                                       "ratechange" ];
+const SCANNED_MEDIA_ELEMENTS_EVENTS: IPlaybackObserverEventType[] = [
+  "canplay",
+  "ended",
+  "play",
+  "pause",
+  "seeking",
+  "seeked",
+  "loadedmetadata",
+  "ratechange",
+];
 
 /**
  * Class allowing to "observe" current playback conditions so the RxPlayer is
@@ -54,18 +54,17 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS : IPlaybackObserverEventType[] = [ "canplay"
  * @class {PlaybackObserver}
  */
 export default class PlaybackObserver {
-
   /** HTMLMediaElement which we want to observe. */
-  private _mediaElement : HTMLMediaElement;
+  private _mediaElement: HTMLMediaElement;
 
   /** If `true`, a `MediaSource` object is linked to `_mediaElement`. */
-  private _withMediaSource : boolean;
+  private _withMediaSource: boolean;
 
   /**
    * If `true`, we're playing in a low-latency mode, which might have an
    * influence on some chosen interval values here.
    */
-  private _lowLatencyMode : boolean;
+  private _lowLatencyMode: boolean;
 
   /**
    * The RxPlayer usually wants to differientate when a seek was sourced from
@@ -82,18 +81,18 @@ export default class PlaybackObserver {
    * This allows us to correctly characterize seeking events: if the counter is
    * superior to `0`, it is probably due to an internal "seek".
    */
-  private _internalSeeksIncoming : number[];
+  private _internalSeeksIncoming: number[];
 
   /**
    * Stores the last playback observation produced by the `PlaybackObserver`.:
    */
-  private _observationRef : IReadOnlySharedReference<IPlaybackObservation>;
+  private _observationRef: IReadOnlySharedReference<IPlaybackObservation>;
 
   /**
    * `TaskCanceller` allowing to free all resources and stop producing playback
    * observations.
    */
-  private _canceller : TaskCanceller;
+  private _canceller: TaskCanceller;
 
   /**
    * Create a new `PlaybackObserver`, which allows to produce new "playback
@@ -105,7 +104,7 @@ export default class PlaybackObserver {
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
-  constructor(mediaElement : HTMLMediaElement, options : IPlaybackObserverOptions) {
+  constructor(mediaElement: HTMLMediaElement, options: IPlaybackObserverOptions) {
     this._internalSeeksIncoming = [];
     this._mediaElement = mediaElement;
     this._withMediaSource = options.withMediaSource;
@@ -132,7 +131,7 @@ export default class PlaybackObserver {
    * seconds.
    * @returns {number}
    */
-  public getCurrentTime() : number {
+  public getCurrentTime(): number {
     return this._mediaElement.currentTime;
   }
 
@@ -140,7 +139,7 @@ export default class PlaybackObserver {
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
    * @returns {number}
    */
-  public getPlaybackRate() : number {
+  public getPlaybackRate(): number {
     return this._mediaElement.playbackRate;
   }
 
@@ -151,7 +150,7 @@ export default class PlaybackObserver {
    * to be sure you're using the current value.
    * @returns {boolean}
    */
-  public getIsPaused() : boolean {
+  public getIsPaused(): boolean {
     return this._mediaElement.paused;
   }
 
@@ -165,7 +164,7 @@ export default class PlaybackObserver {
    * e.g. the user).
    * @param {number} time
    */
-  public setCurrentTime(time: number) : void {
+  public setCurrentTime(time: number): void {
     this._internalSeeksIncoming.push(time);
     log.info("API: Seeking internally", time);
     this._mediaElement.currentTime = time;
@@ -175,7 +174,7 @@ export default class PlaybackObserver {
    * Update the playback rate of the `HTMLMediaElement`.
    * @param {number} playbackRate
    */
-  public setPlaybackRate(playbackRate: number) : void {
+  public setPlaybackRate(playbackRate: number): void {
     this._mediaElement.playbackRate = playbackRate;
   }
 
@@ -183,7 +182,7 @@ export default class PlaybackObserver {
    * Returns the current `readyState` advertised by the `HTMLMediaElement`.
    * @returns {number}
    */
-  public getReadyState() : number {
+  public getReadyState(): number {
     return this._mediaElement.readyState;
   }
 
@@ -197,7 +196,7 @@ export default class PlaybackObserver {
    *
    * @returns {Object}
    */
-  public getReference() : IReadOnlySharedReference<IPlaybackObservation> {
+  public getReference(): IReadOnlySharedReference<IPlaybackObservation> {
     return this._observationRef;
   }
 
@@ -211,12 +210,11 @@ export default class PlaybackObserver {
    *     CancellationSignal emits.
    */
   public listen(
-    cb : (
-      observation : IPlaybackObservation,
-      stopListening : () => void
-    ) => void,
-    options? : { includeLastObservation? : boolean | undefined;
-                 clearSignal? : CancellationSignal | undefined; }
+    cb: (observation: IPlaybackObservation, stopListening: () => void) => void,
+    options?: {
+      includeLastObservation?: boolean | undefined;
+      clearSignal?: CancellationSignal | undefined;
+    },
   ) {
     if (this._canceller.isUsed() || options?.clearSignal?.isCancelled() === true) {
       return noop;
@@ -242,11 +240,11 @@ export default class PlaybackObserver {
    * @returns {Object}
    */
   public deriveReadOnlyObserver<TDest>(
-    transform : (
-      observationRef : IReadOnlySharedReference<IPlaybackObservation>,
-      cancellationSignal : CancellationSignal
-    ) => IReadOnlySharedReference<TDest>
-  ) : IReadOnlyPlaybackObserver<TDest> {
+    transform: (
+      observationRef: IReadOnlySharedReference<IPlaybackObservation>,
+      cancellationSignal: CancellationSignal,
+    ) => IReadOnlySharedReference<TDest>,
+  ): IReadOnlyPlaybackObserver<TDest> {
     return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
@@ -255,30 +253,34 @@ export default class PlaybackObserver {
    * observations.
    * @returns {Object}
    */
-  private _createSharedReference() : IReadOnlySharedReference<IPlaybackObservation> {
+  private _createSharedReference(): IReadOnlySharedReference<IPlaybackObservation> {
     if (this._observationRef !== undefined) {
       return this._observationRef;
     }
 
-    let lastObservation : IPlaybackObservation | null;
-    const { SAMPLING_INTERVAL_MEDIASOURCE,
-            SAMPLING_INTERVAL_LOW_LATENCY,
-            SAMPLING_INTERVAL_NO_MEDIASOURCE } = config.getCurrent();
+    let lastObservation: IPlaybackObservation | null;
+    const {
+      SAMPLING_INTERVAL_MEDIASOURCE,
+      SAMPLING_INTERVAL_LOW_LATENCY,
+      SAMPLING_INTERVAL_NO_MEDIASOURCE,
+    } = config.getCurrent();
 
     const getCurrentObservation = (
-      event : IPlaybackObserverEventType
-    ) : IPlaybackObservation => {
+      event: IPlaybackObserverEventType,
+    ): IPlaybackObservation => {
       let tmpEvt: IPlaybackObserverEventType = event;
-      let startedInternalSeekTime : number | undefined;
+      let startedInternalSeekTime: number | undefined;
       if (tmpEvt === "seeking" && this._internalSeeksIncoming.length > 0) {
         tmpEvt = "internal-seeking";
         startedInternalSeekTime = this._internalSeeksIncoming.shift();
       }
       const _lastObservation = lastObservation ?? this._generateInitialObservation();
-      const mediaTimings = getMediaInfos(this._mediaElement,
-                                         tmpEvt,
-                                         this._withMediaSource);
-      let pendingInternalSeek : number | null = null;
+      const mediaTimings = getMediaInfos(
+        this._mediaElement,
+        tmpEvt,
+        this._withMediaSource,
+      );
+      let pendingInternalSeek: number | null = null;
       if (mediaTimings.seeking) {
         if (typeof startedInternalSeekTime === "number") {
           pendingInternalSeek = startedInternalSeekTime;
@@ -286,53 +288,68 @@ export default class PlaybackObserver {
           pendingInternalSeek = _lastObservation.pendingInternalSeek;
         }
       }
-      const rebufferingStatus = getRebufferingStatus(
-        _lastObservation,
-        mediaTimings,
-        { lowLatencyMode: this._lowLatencyMode,
-          withMediaSource: this._withMediaSource });
+      const rebufferingStatus = getRebufferingStatus(_lastObservation, mediaTimings, {
+        lowLatencyMode: this._lowLatencyMode,
+        withMediaSource: this._withMediaSource,
+      });
 
       const freezingStatus = getFreezingStatus(_lastObservation, mediaTimings);
       const timings = objectAssign(
         {},
-        { rebuffering: rebufferingStatus,
-          freezing: freezingStatus,
-          pendingInternalSeek },
-        mediaTimings);
+        { rebuffering: rebufferingStatus, freezing: freezingStatus, pendingInternalSeek },
+        mediaTimings,
+      );
       if (log.hasLevel("DEBUG")) {
-        log.debug("API: current media element state tick",
-                  "event", timings.event,
-                  "position", timings.position,
-                  "seeking", timings.seeking,
-                  "internalSeek", timings.pendingInternalSeek,
-                  "rebuffering", timings.rebuffering !== null,
-                  "freezing", timings.freezing !== null,
-                  "ended", timings.ended,
-                  "paused", timings.paused,
-                  "playbackRate", timings.playbackRate,
-                  "readyState", timings.readyState);
+        log.debug(
+          "API: current media element state tick",
+          "event",
+          timings.event,
+          "position",
+          timings.position,
+          "seeking",
+          timings.seeking,
+          "internalSeek",
+          timings.pendingInternalSeek,
+          "rebuffering",
+          timings.rebuffering !== null,
+          "freezing",
+          timings.freezing !== null,
+          "ended",
+          timings.ended,
+          "paused",
+          timings.paused,
+          "playbackRate",
+          timings.playbackRate,
+          "readyState",
+          timings.readyState,
+        );
       }
       return timings;
     };
 
-    const returnedSharedReference = new SharedReference(getCurrentObservation("init"),
-                                                        this._canceller.signal);
+    const returnedSharedReference = new SharedReference(
+      getCurrentObservation("init"),
+      this._canceller.signal,
+    );
 
-    const generateObservationForEvent = (event : IPlaybackObserverEventType) => {
+    const generateObservationForEvent = (event: IPlaybackObserverEventType) => {
       const newObservation = getCurrentObservation(event);
       if (log.hasLevel("DEBUG")) {
-        log.debug("API: current playback timeline:\n" +
-                  prettyPrintBuffered(newObservation.buffered,
-                                      newObservation.position),
-                  `\n${event}`);
+        log.debug(
+          "API: current playback timeline:\n" +
+            prettyPrintBuffered(newObservation.buffered, newObservation.position),
+          `\n${event}`,
+        );
       }
       lastObservation = newObservation;
       returnedSharedReference.setValue(newObservation);
     };
 
-    const interval = this._lowLatencyMode  ? SAMPLING_INTERVAL_LOW_LATENCY :
-                     this._withMediaSource ? SAMPLING_INTERVAL_MEDIASOURCE :
-                                             SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    const interval = this._lowLatencyMode
+      ? SAMPLING_INTERVAL_LOW_LATENCY
+      : this._withMediaSource
+        ? SAMPLING_INTERVAL_MEDIASOURCE
+        : SAMPLING_INTERVAL_NO_MEDIASOURCE;
     let intervalId = setInterval(onInterval, interval);
     const removeEventListeners = SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
       this._mediaElement.addEventListener(eventName, onMediaEvent);
@@ -347,7 +364,7 @@ export default class PlaybackObserver {
 
     this._canceller.signal.register(() => {
       clearInterval(intervalId);
-      removeEventListeners.forEach(cb => cb());
+      removeEventListeners.forEach((cb) => cb());
       returnedSharedReference.finish();
     });
 
@@ -363,44 +380,42 @@ export default class PlaybackObserver {
     }
   }
 
-  private _generateInitialObservation() : IPlaybackObservation {
-    return objectAssign(getMediaInfos(this._mediaElement,
-                                      "init",
-                                      this._withMediaSource),
-                        { rebuffering: null,
-                          freezing: null,
-                          pendingInternalSeek: null });
+  private _generateInitialObservation(): IPlaybackObservation {
+    return objectAssign(
+      getMediaInfos(this._mediaElement, "init", this._withMediaSource),
+      { rebuffering: null, freezing: null, pendingInternalSeek: null },
+    );
   }
 }
 
 /** "Event" that triggered the playback observation. */
 export type IPlaybackObserverEventType =
   /** First playback observation automatically emitted. */
-  "init" | // set once on first emit
+  | "init" // set once on first emit
   /** Regularly emitted playback observation when no event happened in a long time. */
-  "timeupdate" |
+  | "timeupdate"
   /** On the HTML5 event with the same name */
-  "canplay" |
+  | "canplay"
   /** On the HTML5 event with the same name */
-  "ended" |
+  | "ended"
   /** On the HTML5 event with the same name */
-  "canplaythrough" | // HTML5 Event
+  | "canplaythrough" // HTML5 Event
   /** On the HTML5 event with the same name */
-  "play" |
+  | "play"
   /** On the HTML5 event with the same name */
-  "pause" |
+  | "pause"
   /** On the HTML5 event with the same name */
-  "seeking" |
+  | "seeking"
   /** On the HTML5 event with the same name */
-  "seeked" |
+  | "seeked"
   /** On the HTML5 event with the same name */
-  "stalled" |
+  | "stalled"
   /** On the HTML5 event with the same name */
-  "loadedmetadata" |
+  | "loadedmetadata"
   /** On the HTML5 event with the same name */
-  "ratechange" |
+  | "ratechange"
   /** An internal seek happens */
-  "internal-seeking";
+  | "internal-seeking";
 
 /** Information recuperated on the media element on each playback observation. */
 interface IMediaInfos {
@@ -409,37 +424,34 @@ interface IMediaInfos {
    * `Infinity` if we don't have buffered data right now.
    * `undefined` if we cannot determine the buffer gap.
    */
-  bufferGap : number | undefined;
+  bufferGap: number | undefined;
   /** Value of `buffered` (buffered ranges) for the media element. */
-  buffered : TimeRanges;
+  buffered: TimeRanges;
   /**
    * The buffered range we are currently playing.
    * `null` if no range is currently available.
    * `undefined` if we cannot tell which range is currently available.
    */
-  currentRange : { start : number;
-                   end : number; } |
-                 null |
-                 undefined;
+  currentRange: { start: number; end: number } | null | undefined;
   /**
    * `currentTime` (position) set on the media element at the time of the
    * PlaybackObserver's measure.
    */
-  position : number;
+  position: number;
   /** Current `duration` set on the media element. */
-  duration : number;
+  duration: number;
   /** Current `ended` set on the media element. */
   ended: boolean;
   /** Current `paused` set on the media element. */
-  paused : boolean;
+  paused: boolean;
   /** Current `playbackRate` set on the media element. */
-  playbackRate : number;
+  playbackRate: number;
   /** Current `readyState` value on the media element. */
-  readyState : number;
+  readyState: number;
   /** Current `seeking` value on the mediaElement. */
-  seeking : boolean;
-   /** Event that triggered this playback observation. */
-  event : IPlaybackObserverEventType;
+  seeking: boolean;
+  /** Event that triggered this playback observation. */
+  event: IPlaybackObserverEventType;
 }
 
 /**
@@ -452,17 +464,18 @@ interface IMediaInfos {
  */
 export interface IRebufferingStatus {
   /** What started the player to rebuffer. */
-  reason : "seeking" | // Building buffer after seeking
-           "not-ready" | // Building buffer after low readyState
-           "buffering"; // Other cases
+  reason:
+    | "seeking" // Building buffer after seeking
+    | "not-ready" // Building buffer after low readyState
+    | "buffering"; // Other cases
   /** `performance.now` at the time the rebuffering happened. */
-  timestamp : number;
+  timestamp: number;
   /**
    * Position, in seconds, at which data is awaited.
    * If `null` the player is rebuffering but not because it is awaiting future data.
    * If `undefined`, that position is unknown.
    */
-  position : number | null | undefined;
+  position: number | null | undefined;
 }
 
 /**
@@ -472,7 +485,7 @@ export interface IRebufferingStatus {
  */
 export interface IFreezingStatus {
   /** `performance.now` at the time the freezing started to be detected. */
-  timestamp : number;
+  timestamp: number;
 }
 
 /** Information emitted on each playback observation. */
@@ -482,7 +495,7 @@ export interface IPlaybackObservation extends IMediaInfos {
    * rebuffering.
    * `null` if not.
    */
-  rebuffering : IRebufferingStatus | null;
+  rebuffering: IRebufferingStatus | null;
   /**
    * Set if the player is frozen, that is, stuck in place for unknown reason.
    * Note that this reason can be a valid one, such as a necessary license not
@@ -490,12 +503,12 @@ export interface IPlaybackObservation extends IMediaInfos {
    *
    * `null` if the player is not frozen.
    */
-  freezing : IFreezingStatus | null;
+  freezing: IFreezingStatus | null;
   /**
    * If `true`, an "internal seek" (a seeking operation triggered by the
    * RxPlayer code) is currently pending.
    */
-  pendingInternalSeek : number | null;
+  pendingInternalSeek: number | null;
 }
 
 /**
@@ -512,14 +525,14 @@ export interface IPlaybackObservation extends IMediaInfos {
  */
 export interface IReadOnlyPlaybackObserver<TObservationType> {
   /** Get the current playing position, in seconds. */
-  getCurrentTime() : number;
+  getCurrentTime(): number;
   /**
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
    * @returns {number}
    */
-  getPlaybackRate() : number;
+  getPlaybackRate(): number;
   /** Get the HTMLMediaElement's current `readyState`. */
-  getReadyState() : number;
+  getReadyState(): number;
   /**
    * Returns the current `paused` status advertised by the `HTMLMediaElement`.
    *
@@ -527,7 +540,7 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * to be sure you're using the current value.
    * @returns {boolean}
    */
-  getIsPaused() : boolean;
+  getIsPaused(): boolean;
   /**
    * Returns an `IReadOnlySharedReference` storing the last playback observation
    * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
@@ -538,7 +551,7 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    *
    * @returns {Object}
    */
-  getReference() : IReadOnlySharedReference<TObservationType>;
+  getReference(): IReadOnlySharedReference<TObservationType>;
   /**
    * Register a callback so it regularly receives playback observations.
    * @param {Function} cb
@@ -550,13 +563,12 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Function} - Allows to easily unregister the callback
    */
   listen(
-    cb : (
-      observation : TObservationType,
-      stopListening : () => void
-    ) => void,
-    options? : { includeLastObservation? : boolean | undefined;
-                 clearSignal? : CancellationSignal | undefined; }
-  ) : void;
+    cb: (observation: TObservationType, stopListening: () => void) => void,
+    options?: {
+      includeLastObservation?: boolean | undefined;
+      clearSignal?: CancellationSignal | undefined;
+    },
+  ): void;
   /**
    * Generate a new `IReadOnlyPlaybackObserver` from this one.
    *
@@ -566,11 +578,11 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    * @returns {Object}
    */
   deriveReadOnlyObserver<TDest>(
-    transform : (
-      observationRef : IReadOnlySharedReference<TObservationType>,
-      cancellationSignal : CancellationSignal
-    ) => IReadOnlySharedReference<TDest>
-  ) : IReadOnlyPlaybackObserver<TDest>;
+    transform: (
+      observationRef: IReadOnlySharedReference<TObservationType>,
+      cancellationSignal: CancellationSignal,
+    ) => IReadOnlySharedReference<TDest>,
+  ): IReadOnlyPlaybackObserver<TDest>;
 }
 
 /**
@@ -585,17 +597,18 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
  * @returns {Number}
  */
 function getRebufferingEndGap(
-  rebufferingStatus : IRebufferingStatus,
-  lowLatencyMode : boolean
-) : number {
+  rebufferingStatus: IRebufferingStatus,
+  lowLatencyMode: boolean,
+): number {
   if (rebufferingStatus === null) {
     return 0;
   }
-  const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
-                                                              "DEFAULT";
-  const { RESUME_GAP_AFTER_SEEKING,
-          RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
-          RESUME_GAP_AFTER_BUFFERING } = config.getCurrent();
+  const suffix: "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" : "DEFAULT";
+  const {
+    RESUME_GAP_AFTER_SEEKING,
+    RESUME_GAP_AFTER_NOT_ENOUGH_DATA,
+    RESUME_GAP_AFTER_BUFFERING,
+  } = config.getCurrent();
 
   switch (rebufferingStatus.reason) {
     case "seeking":
@@ -614,20 +627,18 @@ function getRebufferingEndGap(
  * @returns {Boolean}
  */
 function hasLoadedUntilTheEnd(
-  currentTime : number,
-  currentRange : { start : number; end : number } | null | undefined,
-  ended : boolean,
-  duration : number,
-  lowLatencyMode : boolean
-) : boolean {
+  currentTime: number,
+  currentRange: { start: number; end: number } | null | undefined,
+  ended: boolean,
+  duration: number,
+  lowLatencyMode: boolean,
+): boolean {
   const { REBUFFERING_GAP } = config.getCurrent();
-  const suffix : "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" :
-                                                              "DEFAULT";
+  const suffix: "LOW_LATENCY" | "DEFAULT" = lowLatencyMode ? "LOW_LATENCY" : "DEFAULT";
   if (currentRange === undefined) {
     return ended && Math.abs(duration - currentTime) <= REBUFFERING_GAP[suffix];
   }
-  return currentRange !== null &&
-         (duration - currentRange.end) <= REBUFFERING_GAP[suffix];
+  return currentRange !== null && duration - currentRange.end <= REBUFFERING_GAP[suffix];
 }
 
 /**
@@ -637,18 +648,20 @@ function hasLoadedUntilTheEnd(
  * @returns {Object}
  */
 function getMediaInfos(
-  mediaElement : HTMLMediaElement,
-  event : IPlaybackObserverEventType,
-  withMediaSource : boolean
-) : IMediaInfos {
-  const { buffered,
-          currentTime,
-          duration,
-          ended,
-          paused,
-          playbackRate,
-          readyState,
-          seeking } = mediaElement;
+  mediaElement: HTMLMediaElement,
+  event: IPlaybackObserverEventType,
+  withMediaSource: boolean,
+): IMediaInfos {
+  const {
+    buffered,
+    currentTime,
+    duration,
+    ended,
+    paused,
+    playbackRate,
+    readyState,
+    seeking,
+  } = mediaElement;
 
   let currentRange;
   let bufferGap;
@@ -661,22 +674,26 @@ function getMediaInfos(
     bufferGap = undefined;
   } else {
     currentRange = getRange(buffered, currentTime);
-    bufferGap = currentRange !== null ? currentRange.end - currentTime :
-                                        // TODO null/0 would probably be
-                                        // more appropriate
-                                        Infinity;
+    bufferGap =
+      currentRange !== null
+        ? currentRange.end - currentTime
+        : // TODO null/0 would probably be
+          // more appropriate
+          Infinity;
   }
-  return { bufferGap,
-           buffered,
-           currentRange,
-           position: currentTime,
-           duration,
-           ended,
-           paused,
-           playbackRate,
-           readyState,
-           seeking,
-           event };
+  return {
+    bufferGap,
+    buffered,
+    currentRange,
+    position: currentTime,
+    duration,
+    ended,
+    paused,
+    playbackRate,
+    readyState,
+    seeking,
+    event,
+  };
 }
 
 /**
@@ -692,42 +709,49 @@ function getMediaInfos(
  * @returns {Object|null}
  */
 function getRebufferingStatus(
-  prevObservation : IPlaybackObservation,
-  currentInfo : IMediaInfos,
-  { withMediaSource, lowLatencyMode } : IPlaybackObserverOptions
-) : IRebufferingStatus | null {
-
+  prevObservation: IPlaybackObservation,
+  currentInfo: IMediaInfos,
+  { withMediaSource, lowLatencyMode }: IPlaybackObserverOptions,
+): IRebufferingStatus | null {
   const { REBUFFERING_GAP } = config.getCurrent();
-  const { event: currentEvt,
-          position: currentTime,
-          bufferGap,
-          currentRange,
-          duration,
-          paused,
-          readyState,
-          ended } = currentInfo;
+  const {
+    event: currentEvt,
+    position: currentTime,
+    bufferGap,
+    currentRange,
+    duration,
+    paused,
+    readyState,
+    ended,
+  } = currentInfo;
 
-  const { rebuffering: prevRebuffering,
-          event: prevEvt,
-          position: prevTime } = prevObservation;
+  const {
+    rebuffering: prevRebuffering,
+    event: prevEvt,
+    position: prevTime,
+  } = prevObservation;
 
-  const fullyLoaded = hasLoadedUntilTheEnd(currentTime,
-                                           currentRange,
-                                           ended,
-                                           duration,
-                                           lowLatencyMode);
+  const fullyLoaded = hasLoadedUntilTheEnd(
+    currentTime,
+    currentRange,
+    ended,
+    duration,
+    lowLatencyMode,
+  );
 
-  const canSwitchToRebuffering = (readyState >= 1 &&
-                                  currentEvt !== "loadedmetadata" &&
-                                  prevRebuffering === null &&
-                                  !(fullyLoaded || ended));
+  const canSwitchToRebuffering =
+    readyState >= 1 &&
+    currentEvt !== "loadedmetadata" &&
+    prevRebuffering === null &&
+    !(fullyLoaded || ended);
 
-  let rebufferEndPosition : number | null | undefined = null;
-  let shouldRebuffer : boolean | undefined;
-  let shouldStopRebuffer : boolean | undefined;
+  let rebufferEndPosition: number | null | undefined = null;
+  let shouldRebuffer: boolean | undefined;
+  let shouldStopRebuffer: boolean | undefined;
 
-  const rebufferGap = lowLatencyMode ? REBUFFERING_GAP.LOW_LATENCY :
-                                       REBUFFERING_GAP.DEFAULT;
+  const rebufferGap = lowLatencyMode
+    ? REBUFFERING_GAP.LOW_LATENCY
+    : REBUFFERING_GAP.DEFAULT;
 
   if (withMediaSource) {
     if (canSwitchToRebuffering) {
@@ -745,11 +769,15 @@ function getRebufferingStatus(
       }
     } else if (prevRebuffering !== null) {
       const resumeGap = getRebufferingEndGap(prevRebuffering, lowLatencyMode);
-      if (shouldRebuffer !== true && prevRebuffering !== null && readyState > 1 &&
-          (fullyLoaded || ended ||
-            (bufferGap !== undefined && isFinite(bufferGap) && bufferGap > resumeGap)) ||
-            (bufferGap === undefined && readyState >= 3))
-      {
+      if (
+        (shouldRebuffer !== true &&
+          prevRebuffering !== null &&
+          readyState > 1 &&
+          (fullyLoaded ||
+            ended ||
+            (bufferGap !== undefined && isFinite(bufferGap) && bufferGap > resumeGap))) ||
+        (bufferGap === undefined && readyState >= 3)
+      ) {
         shouldStopRebuffer = true;
       } else if (bufferGap === undefined) {
         rebufferEndPosition = undefined;
@@ -765,35 +793,26 @@ function getRebufferingStatus(
   // own, so we only try to detect when the media timestamp has not changed
   // between two consecutive timeupdates
   else {
-    if (canSwitchToRebuffering &&
-        (
-          (
-            !paused &&
-            currentEvt === "timeupdate" && prevEvt === "timeupdate" &&
-            currentTime === prevTime
-          ) ||
-          (
-            currentEvt === "seeking" && (
-              bufferGap === Infinity || (bufferGap === undefined && readyState < 3)
-            )
-          )
-        )
+    if (
+      canSwitchToRebuffering &&
+      ((!paused &&
+        currentEvt === "timeupdate" &&
+        prevEvt === "timeupdate" &&
+        currentTime === prevTime) ||
+        (currentEvt === "seeking" &&
+          (bufferGap === Infinity || (bufferGap === undefined && readyState < 3))))
     ) {
       shouldRebuffer = true;
     } else if (
       prevRebuffering !== null &&
-      (
-        (currentEvt !== "seeking" && currentTime !== prevTime) ||
+      ((currentEvt !== "seeking" && currentTime !== prevTime) ||
         currentEvt === "canplay" ||
         (bufferGap === undefined && readyState >= 3) ||
-        (
-          bufferGap !== undefined && bufferGap < Infinity &&
-          (
-            bufferGap > getRebufferingEndGap(prevRebuffering, lowLatencyMode) ||
-            fullyLoaded || ended
-          )
-        )
-      )
+        (bufferGap !== undefined &&
+          bufferGap < Infinity &&
+          (bufferGap > getRebufferingEndGap(prevRebuffering, lowLatencyMode) ||
+            fullyLoaded ||
+            ended)))
     ) {
       shouldStopRebuffer = true;
     }
@@ -802,9 +821,11 @@ function getRebufferingStatus(
   if (shouldStopRebuffer === true) {
     return null;
   } else if (shouldRebuffer === true || prevRebuffering !== null) {
-    let reason : "seeking" | "not-ready" | "buffering" | "internal-seek";
-    if (currentEvt === "seeking" ||
-        prevRebuffering !== null && prevRebuffering.reason === "seeking") {
+    let reason: "seeking" | "not-ready" | "buffering" | "internal-seek";
+    if (
+      currentEvt === "seeking" ||
+      (prevRebuffering !== null && prevRebuffering.reason === "seeking")
+    ) {
       reason = "seeking";
     } else if (currentInfo.seeking) {
       reason = "seeking";
@@ -814,13 +835,13 @@ function getRebufferingStatus(
       reason = "buffering";
     }
     if (prevRebuffering !== null && prevRebuffering.reason === reason) {
-      return { reason: prevRebuffering.reason,
-               timestamp: prevRebuffering.timestamp,
-               position: rebufferEndPosition };
+      return {
+        reason: prevRebuffering.reason,
+        timestamp: prevRebuffering.timestamp,
+        position: rebufferEndPosition,
+      };
     }
-    return { reason,
-             timestamp: performance.now(),
-             position: rebufferEndPosition };
+    return { reason, timestamp: performance.now(), position: rebufferEndPosition };
   }
   return null;
 }
@@ -836,37 +857,38 @@ function getRebufferingStatus(
  * @returns {Object|null}
  */
 function getFreezingStatus(
-  prevObservation : IPlaybackObservation,
-  currentInfo : IMediaInfos
-) : IFreezingStatus | null {
+  prevObservation: IPlaybackObservation,
+  currentInfo: IMediaInfos,
+): IFreezingStatus | null {
   const { MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config.getCurrent();
   if (prevObservation.freezing) {
-    if (currentInfo.ended ||
-        currentInfo.paused ||
-        currentInfo.readyState === 0 ||
-        currentInfo.playbackRate === 0 ||
-        prevObservation.position !== currentInfo.position)
-    {
+    if (
+      currentInfo.ended ||
+      currentInfo.paused ||
+      currentInfo.readyState === 0 ||
+      currentInfo.playbackRate === 0 ||
+      prevObservation.position !== currentInfo.position
+    ) {
       return null; // Quit freezing status
     }
     return prevObservation.freezing; // Stay in it
   }
 
   return currentInfo.event === "timeupdate" &&
-         currentInfo.bufferGap !== undefined &&
-         currentInfo.bufferGap > MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING &&
-         !currentInfo.ended &&
-         !currentInfo.paused &&
-         currentInfo.readyState >= 1 &&
-         currentInfo.playbackRate !== 0 &&
-         currentInfo.position === prevObservation.position ?
-           { timestamp: performance.now() } :
-           null;
+    currentInfo.bufferGap !== undefined &&
+    currentInfo.bufferGap > MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING &&
+    !currentInfo.ended &&
+    !currentInfo.paused &&
+    currentInfo.readyState >= 1 &&
+    currentInfo.playbackRate !== 0 &&
+    currentInfo.position === prevObservation.position
+    ? { timestamp: performance.now() }
+    : null;
 }
 
 export interface IPlaybackObserverOptions {
-  withMediaSource : boolean;
-  lowLatencyMode : boolean;
+  withMediaSource: boolean;
+  lowLatencyMode: boolean;
 }
 
 /**
@@ -896,10 +918,7 @@ export interface IPlaybackObserverOptions {
  * @param {number} currentTime
  * @returns {string}
  */
-function prettyPrintBuffered(
-  buffered : TimeRanges,
-  currentTime : number
-) : string {
+function prettyPrintBuffered(buffered: TimeRanges, currentTime: number): string {
   let str = "";
   let currentTimeStr = "";
 
@@ -940,13 +959,13 @@ function prettyPrintBuffered(
  * @returns {Object}
  */
 function generateReadOnlyObserver<TSource, TDest>(
-  src : IReadOnlyPlaybackObserver<TSource>,
-  transform : (
-    observationRef : IReadOnlySharedReference<TSource>,
-    cancellationSignal : CancellationSignal
+  src: IReadOnlyPlaybackObserver<TSource>,
+  transform: (
+    observationRef: IReadOnlySharedReference<TSource>,
+    cancellationSignal: CancellationSignal,
   ) => IReadOnlySharedReference<TDest>,
-  cancellationSignal : CancellationSignal
-) : IReadOnlyPlaybackObserver<TDest> {
+  cancellationSignal: CancellationSignal,
+): IReadOnlyPlaybackObserver<TDest> {
   const mappedRef = transform(src.getReference(), cancellationSignal);
   return {
     getCurrentTime() {
@@ -955,27 +974,27 @@ function generateReadOnlyObserver<TSource, TDest>(
     getReadyState() {
       return src.getReadyState();
     },
-    getPlaybackRate() : number {
+    getPlaybackRate(): number {
       return src.getPlaybackRate();
     },
     getIsPaused() {
       return src.getIsPaused();
     },
-    getReference() : IReadOnlySharedReference<TDest> {
+    getReference(): IReadOnlySharedReference<TDest> {
       return mappedRef;
     },
     listen(
-      cb : (
-        observation : TDest,
-        stopListening : () => void
-      ) => void,
-      options? : { includeLastObservation? : boolean | undefined;
-                   clearSignal? : CancellationSignal | undefined; }
-    ) : void {
-      if (cancellationSignal.isCancelled() ||
-          options?.clearSignal?.isCancelled() === true)
-      {
-        return ;
+      cb: (observation: TDest, stopListening: () => void) => void,
+      options?: {
+        includeLastObservation?: boolean | undefined;
+        clearSignal?: CancellationSignal | undefined;
+      },
+    ): void {
+      if (
+        cancellationSignal.isCancelled() ||
+        options?.clearSignal?.isCancelled() === true
+      ) {
+        return;
       }
       mappedRef.onUpdate(cb, {
         clearSignal: options?.clearSignal,
@@ -983,11 +1002,11 @@ function generateReadOnlyObserver<TSource, TDest>(
       });
     },
     deriveReadOnlyObserver<TNext>(
-      newTransformFn : (
-        observationRef : IReadOnlySharedReference<TDest>,
-        signal : CancellationSignal
-      ) => IReadOnlySharedReference<TNext>
-    ) : IReadOnlyPlaybackObserver<TNext> {
+      newTransformFn: (
+        observationRef: IReadOnlySharedReference<TDest>,
+        signal: CancellationSignal,
+      ) => IReadOnlySharedReference<TNext>,
+    ): IReadOnlyPlaybackObserver<TNext> {
       return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
     },
   };

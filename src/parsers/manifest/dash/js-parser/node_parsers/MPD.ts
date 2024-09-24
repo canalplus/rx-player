@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IBaseUrlIntermediateRepresentation,
   IMPDAttributes,
   IMPDChildren,
@@ -23,38 +23,27 @@ import {
   IScheme,
 } from "../../node_parser_types";
 import parseBaseURL from "./BaseURL";
-import {
-  createPeriodIntermediateRepresentation,
-} from "./Period";
-import {
-  parseDateTime,
-  parseDuration,
-  parseScheme,
-  ValueParser,
-} from "./utils";
+import { createPeriodIntermediateRepresentation } from "./Period";
+import { parseDateTime, parseDuration, parseScheme, ValueParser } from "./utils";
 
 /**
  * Parse children of the MPD's root into a simple object.
  * @param {NodeList} mpdChildren
  * @returns {Array.<Object>}
  */
-function parseMPDChildren(
-  mpdChildren : NodeList
-) : [IMPDChildren, Error[]] {
-  const baseURLs : IBaseUrlIntermediateRepresentation[] = [];
-  const locations : string[] = [];
-  const periods : IPeriodIntermediateRepresentation[] = [];
-  const utcTimings : IScheme[] = [];
+function parseMPDChildren(mpdChildren: NodeList): [IMPDChildren, Error[]] {
+  const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
+  const locations: string[] = [];
+  const periods: IPeriodIntermediateRepresentation[] = [];
+  const utcTimings: IScheme[] = [];
 
-  let warnings : Error[] = [];
+  let warnings: Error[] = [];
   for (let i = 0; i < mpdChildren.length; i++) {
     if (mpdChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentNode = mpdChildren[i] as Element;
       switch (currentNode.nodeName) {
-
         case "BaseURL":
-          const [ baseURLObj,
-                  baseURLWarnings ] = parseBaseURL(currentNode);
+          const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
           if (baseURLObj !== undefined) {
             baseURLs.push(baseURLObj);
           }
@@ -62,9 +51,7 @@ function parseMPDChildren(
           break;
 
         case "Location":
-          locations.push(currentNode.textContent === null ?
-                           "" :
-                           currentNode.textContent);
+          locations.push(currentNode.textContent === null ? "" : currentNode.textContent);
           break;
 
         case "Period":
@@ -82,19 +69,16 @@ function parseMPDChildren(
     }
   }
 
-  return [ { baseURLs, locations, periods, utcTimings },
-           warnings ];
+  return [{ baseURLs, locations, periods, utcTimings }, warnings];
 }
 
 /**
  * @param {Element} root
  * @returns {Array.<Object>}
  */
-function parseMPDAttributes(
-  root : Element
-) : [IMPDAttributes, Error[]] {
-  const res : IMPDAttributes = {};
-  const warnings : Error[] = [];
+function parseMPDAttributes(root: Element): [IMPDAttributes, Error[]] {
+  const res: IMPDAttributes = {};
+  const warnings: Error[] = [];
   const parseValue = ValueParser(res, warnings);
 
   for (let i = 0; i < root.attributes.length; i++) {
@@ -112,54 +96,74 @@ function parseMPDAttributes(
         break;
 
       case "availabilityStartTime":
-        parseValue(attribute.value, { asKey: "availabilityStartTime",
-                                      parser: parseDateTime,
-                                      dashName: "availabilityStartTime" });
+        parseValue(attribute.value, {
+          asKey: "availabilityStartTime",
+          parser: parseDateTime,
+          dashName: "availabilityStartTime",
+        });
         break;
       case "availabilityEndTime":
-        parseValue(attribute.value, { asKey: "availabilityEndTime",
-                                      parser: parseDateTime,
-                                      dashName: "availabilityEndTime" });
+        parseValue(attribute.value, {
+          asKey: "availabilityEndTime",
+          parser: parseDateTime,
+          dashName: "availabilityEndTime",
+        });
         break;
       case "publishTime":
-        parseValue(attribute.value, { asKey: "publishTime",
-                                      parser: parseDateTime,
-                                      dashName: "publishTime" });
+        parseValue(attribute.value, {
+          asKey: "publishTime",
+          parser: parseDateTime,
+          dashName: "publishTime",
+        });
         break;
       case "mediaPresentationDuration":
-        parseValue(attribute.value, { asKey: "duration",
-                                      parser: parseDuration,
-                                      dashName: "mediaPresentationDuration" });
+        parseValue(attribute.value, {
+          asKey: "duration",
+          parser: parseDuration,
+          dashName: "mediaPresentationDuration",
+        });
         break;
       case "minimumUpdatePeriod":
-        parseValue(attribute.value, { asKey: "minimumUpdatePeriod",
-                                      parser: parseDuration,
-                                      dashName: "minimumUpdatePeriod" });
+        parseValue(attribute.value, {
+          asKey: "minimumUpdatePeriod",
+          parser: parseDuration,
+          dashName: "minimumUpdatePeriod",
+        });
         break;
       case "minBufferTime":
-        parseValue(attribute.value, { asKey: "minBufferTime",
-                                      parser: parseDuration,
-                                      dashName: "minBufferTime" });
+        parseValue(attribute.value, {
+          asKey: "minBufferTime",
+          parser: parseDuration,
+          dashName: "minBufferTime",
+        });
         break;
       case "timeShiftBufferDepth":
-        parseValue(attribute.value, { asKey: "timeShiftBufferDepth",
-                                      parser: parseDuration,
-                                      dashName: "timeShiftBufferDepth" });
+        parseValue(attribute.value, {
+          asKey: "timeShiftBufferDepth",
+          parser: parseDuration,
+          dashName: "timeShiftBufferDepth",
+        });
         break;
       case "suggestedPresentationDelay":
-        parseValue(attribute.value, { asKey: "suggestedPresentationDelay",
-                                      parser: parseDuration,
-                                      dashName: "suggestedPresentationDelay" });
+        parseValue(attribute.value, {
+          asKey: "suggestedPresentationDelay",
+          parser: parseDuration,
+          dashName: "suggestedPresentationDelay",
+        });
         break;
       case "maxSegmentDuration":
-        parseValue(attribute.value, { asKey: "maxSegmentDuration",
-                                      parser: parseDuration,
-                                      dashName: "maxSegmentDuration" });
+        parseValue(attribute.value, {
+          asKey: "maxSegmentDuration",
+          parser: parseDuration,
+          dashName: "maxSegmentDuration",
+        });
         break;
       case "maxSubsegmentDuration":
-        parseValue(attribute.value, { asKey: "maxSubsegmentDuration",
-                                      parser: parseDuration,
-                                      dashName: "maxSubsegmentDuration" });
+        parseValue(attribute.value, {
+          asKey: "maxSubsegmentDuration",
+          parser: parseDuration,
+          dashName: "maxSubsegmentDuration",
+        });
         break;
     }
   }
@@ -171,10 +175,10 @@ function parseMPDAttributes(
  * @returns {Array.<Object>}
  */
 export function createMPDIntermediateRepresentation(
-  root : Element
-) : [IMPDIntermediateRepresentation, Error[]] {
-  const [ children, childrenWarnings ] = parseMPDChildren(root.childNodes);
-  const [ attributes, attrsWarnings ] = parseMPDAttributes(root);
+  root: Element,
+): [IMPDIntermediateRepresentation, Error[]] {
+  const [children, childrenWarnings] = parseMPDChildren(root.childNodes);
+  const [attributes, attrsWarnings] = parseMPDAttributes(root);
   const warnings = childrenWarnings.concat(attrsWarnings);
   return [{ children, attributes }, warnings];
 }

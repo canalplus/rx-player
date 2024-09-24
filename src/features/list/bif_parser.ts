@@ -16,13 +16,13 @@
 
 import imageBuffer from "../../core/segment_buffers/implementations/image";
 import bifParser from "../../parsers/images/bif";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse BIF thumbnails.
  * @param {Object} features
  */
-function addBIFParserFeature(features : IFeaturesObject) : void {
+function addBIFParserFeature(features: IFeaturesObject): void {
   features.imageParser = bifParser;
   features.imageBuffer = imageBuffer;
 }

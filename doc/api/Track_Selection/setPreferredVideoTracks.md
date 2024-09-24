@@ -2,18 +2,18 @@
 
 ## Description
 
-Allows the RxPlayer to choose an initial video track, based on codec
-preferences, accessibility preferences or both.
+Allows the RxPlayer to choose an initial video track, based on codec preferences,
+accessibility preferences or both.
 
-This method can be called at any time - even when no content is loaded, and will
-apply to every future loaded content in the current RxPlayer instance.
+This method can be called at any time - even when no content is loaded, and will apply to
+every future loaded content in the current RxPlayer instance.
 
 The first argument should be set as an array of objects, each object describing
 constraints a video track should respect.
 
-Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):
+Here is all the possible constraints you can set in any one of those objects (note that
+all properties are optional here, only those set will have an effect on which tracks will
+be filtered):
 
 ```js
 {
@@ -40,53 +40,50 @@ on which tracks will be filtered):
 }
 ```
 
-If the first defined object in that array - defining the first set of
-constraints - cannot be respected under the currently available video tracks,
-the RxPlayer will check with the second object instead and so on.
+If the first defined object in that array - defining the first set of constraints - cannot
+be respected under the currently available video tracks, the RxPlayer will check with the
+second object instead and so on.
 
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
+As such, this array should be sorted by order of preference: from the most wanted
+constraints to the least.
 
-When the next encountered constraint is set to `null`, the player will simply
-disable the video track. If you want to disable the video track by default,
-you can just set `null` as the first element of this array (e.g. like `[null]`).
+When the next encountered constraint is set to `null`, the player will simply disable the
+video track. If you want to disable the video track by default, you can just set `null` as
+the first element of this array (e.g. like `[null]`).
 
-The second argument to that function is an optional boolean which - when set
-to `true` - will apply that preference to the content and Period that have
-already been playing.
+The second argument to that function is an optional boolean which - when set to `true` -
+will apply that preference to the content and Period that have already been playing.
 
-By setting it to `true`, you might thus change the currently-active track and
-the active track of Periods (in DASH) or sub-contents (in MetaPlaylist) that
-have already been played in the current content.
+By setting it to `true`, you might thus change the currently-active track and the active
+track of Periods (in DASH) or sub-contents (in MetaPlaylist) that have already been played
+in the current content.
 
-By setting it to `false`, `undefined` or not setting it, those preferences will
-only be applied each time a **new** Period (or sub-content) is loaded by the
-RxPlayer.
+By setting it to `false`, `undefined` or not setting it, those preferences will only be
+applied each time a **new** Period (or sub-content) is loaded by the RxPlayer.
 
-Simply put, if you don't set the second argument to `true` those preferences
-won't be applied to:
+Simply put, if you don't set the second argument to `true` those preferences won't be
+applied to:
 
-- the content being currently played.
-  Here, the current video preference will stay in place.
+- the content being currently played. Here, the current video preference will stay in
+  place.
 
-- the Periods or sub-contents which have already been loaded for the current
-  content.
+- the Periods or sub-contents which have already been loaded for the current content.
   Those will keep the video track chosen at the last time they were loaded.
 
-If you want the preferences to also be applied to those, you can set the second
-argument to `true`.
+If you want the preferences to also be applied to those, you can set the second argument
+to `true`.
 
 #### Examples
 
-Let's imagine that you prefer to have a track which contains only H265
-profiles. You can do:
+Let's imagine that you prefer to have a track which contains only H265 profiles. You can
+do:
 
 ```js
 player.setPreferredVideoTracks([{ codec: { all: false, test: /^hvc/ } }]);
 ```
 
-With that same constraint, let's no consider that the current user prefer in any
-case to have a sign language interpretation on screen:
+With that same constraint, let's no consider that the current user prefer in any case to
+have a sign language interpretation on screen:
 
 ````js
 player.setPreferredVideoTracks([
@@ -137,10 +134,10 @@ player.setPreferredVideoTracks(preferences);
 player.setPreferredVideoTracks(preferences, shouldApply);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _preferences_ (`Array.<Object>`): wanted video track configurations by
-      order of preference.
+  1.  _preferences_ (`Array.<Object>`): wanted video track configurations by order of
+      preference.
 
-   2. _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the
-      content being played.
+  2.  _shouldApply_ (`Boolean | undefined`): Whether this should be applied to the content
+      being played.

@@ -18,25 +18,20 @@ import nextTick from "next-tick";
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import { Representation } from "../../../manifest";
+import type { Representation } from "../../../manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import noop from "../../../utils/noop";
 import objectAssign from "../../../utils/object_assign";
-import SharedReference, {
-  createMappedReference,
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import RepresentationStream, {
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference, { createMappedReference } from "../../../utils/reference";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
+import type {
   IRepresentationStreamCallbacks,
   ITerminationOrder,
 } from "../representation";
-import {
-  IAdaptationStreamArguments,
-  IAdaptationStreamCallbacks,
-} from "./types";
+import RepresentationStream from "../representation";
+import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types";
 import createRepresentationEstimator from "./utils/create_representation_estimator";
 
 /**
@@ -70,17 +65,19 @@ import createRepresentationEstimator from "./utils/create_representation_estimat
  * doing.
  */
 export default function AdaptationStream<T>(
-  { playbackObserver,
+  {
+    playbackObserver,
     content,
     options,
     representationEstimator,
     segmentBuffer,
     segmentFetcherCreator,
     wantedBufferAhead,
-    maxVideoBufferSize } : IAdaptationStreamArguments,
-  callbacks : IAdaptationStreamCallbacks<T>,
-  parentCancelSignal : CancellationSignal
-) : void {
+    maxVideoBufferSize,
+  }: IAdaptationStreamArguments,
+  callbacks: IAdaptationStreamCallbacks<T>,
+  parentCancelSignal: CancellationSignal,
+): void {
   const directManualBitrateSwitching = options.manualBitrateSwitchingMode === "direct";
   const { manifest, period, adaptation } = content;
 
@@ -104,7 +101,7 @@ export default function AdaptationStream<T>(
    */
   const currentRepresentation = new SharedReference<Representation | null>(
     null,
-    adapStreamCanceller.signal
+    adapStreamCanceller.signal,
   );
 
   const { estimateRef, abrCallbacks } = createRepresentationEstimator(
@@ -116,35 +113,41 @@ export default function AdaptationStream<T>(
       adapStreamCanceller.cancel();
       callbacks.error(err);
     },
-    adapStreamCanceller.signal
+    adapStreamCanceller.signal,
   );
 
   /** Allows the `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator
-    .createSegmentFetcher(adaptation.type,
-                          /* eslint-disable @typescript-eslint/unbound-method */
-                          { onRequestBegin: abrCallbacks.requestBegin,
-                            onRequestEnd: abrCallbacks.requestEnd,
-                            onProgress: abrCallbacks.requestProgress,
-                            onMetrics: abrCallbacks.metrics });
-                          /* eslint-enable @typescript-eslint/unbound-method */
+  const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
+    adaptation.type,
+    /* eslint-disable @typescript-eslint/unbound-method */
+    {
+      onRequestBegin: abrCallbacks.requestBegin,
+      onRequestEnd: abrCallbacks.requestEnd,
+      onProgress: abrCallbacks.requestProgress,
+      onMetrics: abrCallbacks.metrics,
+    },
+  );
+  /* eslint-enable @typescript-eslint/unbound-method */
 
   /** Stores the last emitted bitrate. */
-  let previousBitrate : number | undefined;
+  let previousBitrate: number | undefined;
 
   /** Emit at each bitrate estimate done by the IRepresentationEstimator. */
-  estimateRef.onUpdate(({ bitrate }) => {
-    if (bitrate === undefined) {
-      return ;
-    }
+  estimateRef.onUpdate(
+    ({ bitrate }) => {
+      if (bitrate === undefined) {
+        return;
+      }
 
-    if (bitrate === previousBitrate) {
-      return ;
-    }
-    previousBitrate = bitrate;
-    log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
-    callbacks.bitrateEstimationChange({ type: adaptation.type, bitrate });
-  }, { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal });
+      if (bitrate === previousBitrate) {
+        return;
+      }
+      previousBitrate = bitrate;
+      log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
+      callbacks.bitrateEstimationChange({ type: adaptation.type, bitrate });
+    },
+    { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal },
+  );
 
   recursivelyCreateRepresentationStreams(true);
 
@@ -158,7 +161,7 @@ export default function AdaptationStream<T>(
    * This is important because manual quality switches might need a full reload
    * of the MediaSource _except_ if we are talking about the first quality chosen.
    */
-  function recursivelyCreateRepresentationStreams(isFirstEstimate : boolean) : void {
+  function recursivelyCreateRepresentationStreams(isFirstEstimate: boolean): void {
     /**
      * `TaskCanceller` triggered when the current `RepresentationStream` is
      * terminating and as such the next one might be immediately created
@@ -189,10 +192,12 @@ export default function AdaptationStream<T>(
           return;
         }
         const timeOffset = DELTA_POSITION_AFTER_RELOAD.bitrateSwitch;
-        return callbacks.waitingMediaSourceReload({ bufferType: adaptation.type,
-                                                    period,
-                                                    timeOffset,
-                                                    stayInPeriod: true });
+        return callbacks.waitingMediaSourceReload({
+          bufferType: adaptation.type,
+          period,
+          timeOffset,
+          stayInPeriod: true,
+        });
       });
     }
 
@@ -202,24 +207,28 @@ export default function AdaptationStream<T>(
      */
     const terminateCurrentStream = new SharedReference<ITerminationOrder | null>(
       null,
-      repStreamTerminatingCanceller.signal
+      repStreamTerminatingCanceller.signal,
     );
 
     /** Allows to stop listening to estimateRef on the following line. */
-    estimateRef.onUpdate((estimate) => {
-      if (estimate.representation === null ||
-          estimate.representation.id === representation.id)
-      {
-        return;
-      }
-      if (estimate.urgent) {
-        log.info("Stream: urgent Representation switch", adaptation.type);
-        return terminateCurrentStream.setValue({ urgent: true });
-      } else {
-        log.info("Stream: slow Representation switch", adaptation.type);
-        return terminateCurrentStream.setValue({ urgent: false });
-      }
-    }, { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true });
+    estimateRef.onUpdate(
+      (estimate) => {
+        if (
+          estimate.representation === null ||
+          estimate.representation.id === representation.id
+        ) {
+          return;
+        }
+        if (estimate.urgent) {
+          log.info("Stream: urgent Representation switch", adaptation.type);
+          return terminateCurrentStream.setValue({ urgent: true });
+        } else {
+          log.info("Stream: slow Representation switch", adaptation.type);
+          return terminateCurrentStream.setValue({ urgent: false });
+        }
+      },
+      { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true },
+    );
 
     /**
      * "Fast-switching" is a behavior allowing to replace low-quality segments
@@ -234,29 +243,32 @@ export default function AdaptationStream<T>(
      */
     const fastSwitchThreshold = new SharedReference<number | undefined>(0);
     if (options.enableFastSwitching) {
-      estimateRef.onUpdate((estimate) => {
-        fastSwitchThreshold.setValueIfChanged(estimate?.knownStableBitrate);
-      }, { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true });
+      estimateRef.onUpdate(
+        (estimate) => {
+          fastSwitchThreshold.setValueIfChanged(estimate?.knownStableBitrate);
+        },
+        { clearSignal: repStreamTerminatingCanceller.signal, emitCurrentValue: true },
+      );
     }
 
     const repInfo = { type: adaptation.type, period, representation };
     currentRepresentation.setValue(representation);
     if (adapStreamCanceller.isUsed()) {
-      return ; // previous callback has stopped everything by side-effect
+      return; // previous callback has stopped everything by side-effect
     }
     callbacks.representationChange(repInfo);
     if (adapStreamCanceller.isUsed()) {
-      return ; // previous callback has stopped everything by side-effect
+      return; // previous callback has stopped everything by side-effect
     }
 
-    const representationStreamCallbacks : IRepresentationStreamCallbacks<T> = {
+    const representationStreamCallbacks: IRepresentationStreamCallbacks<T> = {
       streamStatusUpdate: callbacks.streamStatusUpdate,
       encryptionDataEncountered: callbacks.encryptionDataEncountered,
       manifestMightBeOufOfSync: callbacks.manifestMightBeOufOfSync,
       needsManifestRefresh: callbacks.needsManifestRefresh,
       inbandEvent: callbacks.inbandEvent,
       warning: callbacks.warning,
-      error(err : unknown) {
+      error(err: unknown) {
         if (TaskCanceller.isCancellationError(err) && adapStreamCanceller.isUsed()) {
           return;
         }
@@ -279,10 +291,12 @@ export default function AdaptationStream<T>(
       },
     };
 
-    createRepresentationStream(representation,
-                               terminateCurrentStream,
-                               fastSwitchThreshold,
-                               representationStreamCallbacks);
+    createRepresentationStream(
+      representation,
+      terminateCurrentStream,
+      fastSwitchThreshold,
+      representationStreamCallbacks,
+    );
   }
 
   /**
@@ -294,30 +308,35 @@ export default function AdaptationStream<T>(
    * @param {Object} representationStreamCallbacks
    */
   function createRepresentationStream(
-    representation : Representation,
-    terminateCurrentStream : IReadOnlySharedReference<ITerminationOrder | null>,
-    fastSwitchThreshold : IReadOnlySharedReference<number | undefined>,
-    representationStreamCallbacks : IRepresentationStreamCallbacks<T>
-  ) : void {
+    representation: Representation,
+    terminateCurrentStream: IReadOnlySharedReference<ITerminationOrder | null>,
+    fastSwitchThreshold: IReadOnlySharedReference<number | undefined>,
+    representationStreamCallbacks: IRepresentationStreamCallbacks<T>,
+  ): void {
     /**
      * `TaskCanceller` triggered when the `RepresentationStream` calls its
      * `terminating` callback.
      */
     const terminatingRepStreamCanceller = new TaskCanceller();
     terminatingRepStreamCanceller.linkToSignal(adapStreamCanceller.signal);
-    const bufferGoal = createMappedReference(wantedBufferAhead, prev => {
-      return prev * getBufferGoalRatio(representation);
-    }, terminatingRepStreamCanceller.signal);
-    const maxBufferSize = adaptation.type === "video" ?
-      maxVideoBufferSize :
-      new SharedReference(Infinity);
+    const bufferGoal = createMappedReference(
+      wantedBufferAhead,
+      (prev) => {
+        return prev * getBufferGoalRatio(representation);
+      },
+      terminatingRepStreamCanceller.signal,
+    );
+    const maxBufferSize =
+      adaptation.type === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
 
-    log.info("Stream: changing representation",
-             adaptation.type,
-             representation.id,
-             representation.bitrate);
+    log.info(
+      "Stream: changing representation",
+      adaptation.type,
+      representation.id,
+      representation.bitrate,
+    );
     const updatedCallbacks = objectAssign({}, representationStreamCallbacks, {
-      error(err : unknown) {
+      error(err: unknown) {
         const formattedError = formatError(err, {
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",
@@ -336,12 +355,16 @@ export default function AdaptationStream<T>(
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
-          cancellableSleep(4000, adapStreamCanceller.signal).then(() => {
-            return createRepresentationStream(representation,
-                                              terminateCurrentStream,
-                                              fastSwitchThreshold,
-                                              representationStreamCallbacks);
-          }).catch(noop);
+          cancellableSleep(4000, adapStreamCanceller.signal)
+            .then(() => {
+              return createRepresentationStream(
+                representation,
+                terminateCurrentStream,
+                fastSwitchThreshold,
+                representationStreamCallbacks,
+              );
+            })
+            .catch(noop);
         }
       },
       terminating() {
@@ -349,30 +372,32 @@ export default function AdaptationStream<T>(
         representationStreamCallbacks.terminating();
       },
     });
-    RepresentationStream({ playbackObserver,
-                           content: { representation,
-                                      adaptation,
-                                      period,
-                                      manifest },
-                           segmentBuffer,
-                           segmentFetcher,
-                           terminate: terminateCurrentStream,
-                           options: { bufferGoal,
-                                      maxBufferSize,
-                                      drmSystemId: options.drmSystemId,
-                                      fastSwitchThreshold } },
-                         updatedCallbacks,
-                         adapStreamCanceller.signal);
+    RepresentationStream(
+      {
+        playbackObserver,
+        content: { representation, adaptation, period, manifest },
+        segmentBuffer,
+        segmentFetcher,
+        terminate: terminateCurrentStream,
+        options: {
+          bufferGoal,
+          maxBufferSize,
+          drmSystemId: options.drmSystemId,
+          fastSwitchThreshold,
+        },
+      },
+      updatedCallbacks,
+      adapStreamCanceller.signal,
+    );
   }
 
   /**
    * @param {Object} representation
    * @returns {number}
    */
-  function getBufferGoalRatio(representation : Representation) : number {
+  function getBufferGoalRatio(representation: Representation): number {
     const oldBufferGoalRatio = bufferGoalRatioMap.get(representation.id);
-    const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio :
-                                                               1;
+    const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio : 1;
     if (oldBufferGoalRatio === undefined) {
       bufferGoalRatioMap.set(representation.id, bufferGoalRatio);
     }

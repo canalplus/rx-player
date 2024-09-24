@@ -19,26 +19,21 @@ const fastBuild = require("./fast_demo_build");
 const slowBuild = require("./generate_full_demo");
 const launchStaticServer = require("./launch_static_server");
 
-const shouldRunFastVersion = process.argv.includes("--fast") ||
-                             process.argv.includes("-f");
+const shouldRunFastVersion =
+  process.argv.includes("--fast") || process.argv.includes("-f");
 
 const includeWasmParser = process.argv.includes("--include-wasm");
 
 if (shouldRunFastVersion) {
-  fastBuild({ watch: true,
-              minify: false,
-              production: false,
-             includeWasmParser });
+  fastBuild({ watch: true, minify: false, production: false, includeWasmParser });
 } else {
-  slowBuild({ watch: true,
-              minify: false,
-              production: false,
-              includeWasmParser });
+  slowBuild({ watch: true, minify: false, production: false, includeWasmParser });
 }
 
-launchStaticServer(path.join(__dirname, "../demo/full/"),
-                   { certificatePath: path.join(__dirname, "../localhost.crt"),
-                     keyPath: path.join(__dirname, "../localhost.key"),
-                     verbose: true,
-                     httpPort: 8000,
-                     httpsPort: 8443 });
+launchStaticServer(path.join(__dirname, "../demo/full/"), {
+  certificatePath: path.join(__dirname, "../localhost.crt"),
+  keyPath: path.join(__dirname, "../localhost.key"),
+  verbose: true,
+  httpPort: 8000,
+  httpsPort: 8443,
+});

@@ -26,4 +26,4 @@ if (url) {
 const url = player.getUrl();
 ```
 
- - **return value** `string`
+- **return value** `string`

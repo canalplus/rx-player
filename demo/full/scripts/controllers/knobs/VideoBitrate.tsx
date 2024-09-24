@@ -12,25 +12,24 @@ function VideoBitrateKnob({
   player,
   className,
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
   className?: string;
 }): JSX.Element {
   const videoBitrateAuto = useModuleState(player, "videoBitrateAuto");
   const videoBitrate = useModuleState(player, "videoBitrate");
-  const availableVideoBitrates =
-    useModuleState(player, "availableVideoBitrates");
+  const availableVideoBitrates = useModuleState(player, "availableVideoBitrates");
 
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {
     if (!availableVideoBitrates.length) {
       return [["Not available"], 0];
     }
     if (availableVideoBitrates.length > 1) {
-      const autoValue = videoBitrateAuto ?
-        `auto (${videoBitrate ?? "unknown"})` : "auto";
+      const autoValue = videoBitrateAuto ? `auto (${videoBitrate ?? "unknown"})` : "auto";
       return [
         [autoValue, ...availableVideoBitrates.map(String)],
-        videoBitrateAuto || videoBitrate === undefined ?
-          0 : (availableVideoBitrates.indexOf(videoBitrate) + 1 || 0)
+        videoBitrateAuto || videoBitrate === undefined
+          ? 0
+          : availableVideoBitrates.indexOf(videoBitrate) + 1 || 0,
       ];
     }
     return [availableVideoBitrates.map(String), 0];
@@ -48,7 +47,7 @@ function VideoBitrateKnob({
         console.error("Error: video bitrate not found");
       }
     },
-    [availableVideoBitrates, player]
+    [availableVideoBitrates, player],
   );
 
   return (

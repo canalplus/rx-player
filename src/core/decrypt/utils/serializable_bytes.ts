@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  base64ToBytes,
-  bytesToBase64,
-} from "../../../utils/base64";
+import { base64ToBytes, bytesToBase64 } from "../../../utils/base64";
 
 /** Wrap byte-based data and allow serialization of it into base64. */
 export default class SerializableBytes {
@@ -25,14 +22,14 @@ export default class SerializableBytes {
    * The data itself. Named `initData` for legacy reasons (cannot be changed
    * because it has an impact on saved persistent session information.
    */
-  public initData : Uint8Array;
+  public initData: Uint8Array;
 
   /**
    * Create a new `SerializableBytes`, wrapping the initialization data
    * given and allowing serialization into base64.
    * @param {Uint8Array}
    */
-  constructor(initData : Uint8Array) {
+  constructor(initData: Uint8Array) {
     this.initData = initData;
   }
 
@@ -43,7 +40,7 @@ export default class SerializableBytes {
    * https://tc39.es/ecma262/#sec-serializejsonproperty
    * @returns {string}
    */
-  toJSON() : string {
+  toJSON(): string {
     return bytesToBase64(this.initData);
   }
 
@@ -53,7 +50,7 @@ export default class SerializableBytes {
    * @param {string}
    * @returns {Uint8Array}
    */
-  static decode(base64 : string) : Uint8Array {
+  static decode(base64: string): Uint8Array {
     return base64ToBytes(base64);
   }
 }

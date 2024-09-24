@@ -17,13 +17,13 @@
 // eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
 import smooth from "../../transports/smooth";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to play Microsoft Smooth Streaming contents.
  * @param {Object} features
  */
-function addSmoothFeature(features : IFeaturesObject) : void {
+function addSmoothFeature(features: IFeaturesObject): void {
   features.transports.smooth = smooth;
   features.mediaSourceInit = MediaSourceContentInitializer;
 }

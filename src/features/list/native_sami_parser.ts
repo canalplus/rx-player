@@ -17,13 +17,13 @@
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../core/segment_buffers/implementations/text/native";
 import samiParser from "../../parsers/texttracks/sami/native";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse SAMI text tracks in a native textrack mode.
  * @param {Object} features
  */
-function addNativeSAMIFeature(features : IFeaturesObject) : void {
+function addNativeSAMIFeature(features: IFeaturesObject): void {
   features.nativeTextTracksParsers.sami = samiParser;
   features.nativeTextTracksBuffer = NativeTextSegmentBuffer;
 }

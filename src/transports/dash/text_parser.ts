@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  getMDHDTimescale,
-  getSegmentsFromSidx,
-} from "../../parsers/containers/isobmff";
+import { getMDHDTimescale, getSegmentsFromSidx } from "../../parsers/containers/isobmff";
 import { BaseRepresentationIndex } from "../../parsers/manifest/dash";
-import {
-  strToUtf8,
-  utf8ToStr,
-} from "../../utils/string_parsing";
-import {
+import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
+import type {
   ISegmentContext,
   ISegmentParser,
   ISegmentParserParsedInitChunk,
@@ -57,23 +51,28 @@ import {
  * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  data : ArrayBuffer | Uint8Array | string,
-  isChunked : boolean,
-  content : ISegmentContext,
-  initTimescale : number | undefined,
-  __priv_patchLastSegmentInSidx? : boolean
-) : ISegmentParserParsedMediaChunk< ITextTrackSegmentData | null > |
-    ISegmentParserParsedInitChunk< null > {
+  data: ArrayBuffer | Uint8Array | string,
+  isChunked: boolean,
+  content: ISegmentContext,
+  initTimescale: number | undefined,
+  __priv_patchLastSegmentInSidx?: boolean,
+):
+  | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
+  | ISegmentParserParsedInitChunk<null> {
   const { period, representation, segment } = content;
   const { isInit, indexRange } = segment;
 
-  const chunkBytes = typeof data === "string"   ? strToUtf8(data) :
-                     data instanceof Uint8Array ? data :
-                                                  new Uint8Array(data);
+  const chunkBytes =
+    typeof data === "string"
+      ? strToUtf8(data)
+      : data instanceof Uint8Array
+        ? data
+        : new Uint8Array(data);
   if (isInit) {
-    const sidxSegments =
-      getSegmentsFromSidx(chunkBytes, Array.isArray(indexRange) ? indexRange[0] :
-                                                                  0);
+    const sidxSegments = getSegmentsFromSidx(
+      chunkBytes,
+      Array.isArray(indexRange) ? indexRange[0] : 0,
+    );
 
     // This is a very specific handling for streams we know have a very
     // specific problem at Canal+: The last reference gives a truncated
@@ -82,45 +81,50 @@ function parseISOBMFFEmbeddedTextTrack(
     // This is an easy-but-ugly fix for those.
     // TODO Cleaner way? I tried to always check the obtained segment after
     // a byte-range request but it leads to a lot of code.
-    if (__priv_patchLastSegmentInSidx === true &&
-        sidxSegments !== null &&
-        sidxSegments.length > 0)
-    {
-      const lastSegment = sidxSegments[ sidxSegments.length - 1 ];
+    if (
+      __priv_patchLastSegmentInSidx === true &&
+      sidxSegments !== null &&
+      sidxSegments.length > 0
+    ) {
+      const lastSegment = sidxSegments[sidxSegments.length - 1];
       if (Array.isArray(lastSegment.range)) {
         lastSegment.range[1] = Infinity;
       }
     }
 
     const mdhdTimescale = getMDHDTimescale(chunkBytes);
-    if (representation.index instanceof BaseRepresentationIndex &&
-        sidxSegments !== null &&
-        sidxSegments.length > 0)
-    {
+    if (
+      representation.index instanceof BaseRepresentationIndex &&
+      sidxSegments !== null &&
+      sidxSegments.length > 0
+    ) {
       representation.index.initializeIndex(sidxSegments);
     }
-    return { segmentType: "init",
-             initializationData: null,
-             initializationDataSize: 0,
-             protectionDataUpdate: false,
-             initTimescale: mdhdTimescale };
+    return {
+      segmentType: "init",
+      initializationData: null,
+      initializationDataSize: 0,
+      protectionDataUpdate: false,
+      initTimescale: mdhdTimescale,
+    };
   }
-  const chunkInfos = getISOBMFFTimingInfos(chunkBytes,
-                                           isChunked,
-                                           segment,
-                                           initTimescale);
-  const chunkData = getISOBMFFEmbeddedTextTrackData(content,
-                                                    chunkBytes,
-                                                    chunkInfos,
-                                                    isChunked);
+  const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
+  const chunkData = getISOBMFFEmbeddedTextTrackData(
+    content,
+    chunkBytes,
+    chunkInfos,
+    isChunked,
+  );
   const chunkOffset = segment.timestampOffset ?? 0;
-  return { segmentType: "media",
-           chunkData,
-           chunkSize: chunkBytes.length,
-           chunkInfos,
-           chunkOffset,
-           protectionDataUpdate: false,
-           appendWindow: [period.start, period.end] };
+  return {
+    segmentType: "media",
+    chunkData,
+    chunkSize: chunkBytes.length,
+    chunkInfos,
+    chunkOffset,
+    protectionDataUpdate: false,
+    appendWindow: [period.start, period.end],
+  };
 }
 
 /**
@@ -135,39 +139,43 @@ function parseISOBMFFEmbeddedTextTrack(
  * @returns {Object}
  */
 function parsePlainTextTrack(
-  data : ArrayBuffer | Uint8Array | string,
-  isChunked : boolean,
-  content : ISegmentContext
-) : ISegmentParserParsedMediaChunk< ITextTrackSegmentData | null > |
-    ISegmentParserParsedInitChunk< null > {
+  data: ArrayBuffer | Uint8Array | string,
+  isChunked: boolean,
+  content: ISegmentContext,
+):
+  | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
+  | ISegmentParserParsedInitChunk<null> {
   const { period, segment } = content;
   const { timestampOffset = 0 } = segment;
   if (segment.isInit) {
-    return { segmentType: "init",
-             initializationData: null,
-             initializationDataSize: 0,
-             protectionDataUpdate: false,
-             initTimescale: undefined };
+    return {
+      segmentType: "init",
+      initializationData: null,
+      initializationDataSize: 0,
+      protectionDataUpdate: false,
+      initTimescale: undefined,
+    };
   }
 
-  let textTrackData : string;
-  let chunkSize : number | undefined;
+  let textTrackData: string;
+  let chunkSize: number | undefined;
   if (typeof data !== "string") {
-    const bytesData = data instanceof Uint8Array ? data :
-                                                   new Uint8Array(data);
+    const bytesData = data instanceof Uint8Array ? data : new Uint8Array(data);
     textTrackData = utf8ToStr(bytesData);
     chunkSize = bytesData.length;
   } else {
     textTrackData = data;
   }
   const chunkData = getPlainTextTrackData(content, textTrackData, isChunked);
-  return { segmentType: "media",
-           chunkData,
-           chunkSize,
-           chunkInfos: null,
-           chunkOffset: timestampOffset,
-           protectionDataUpdate: false,
-           appendWindow: [period.start, period.end] };
+  return {
+    segmentType: "media",
+    chunkData,
+    chunkSize,
+    chunkInfos: null,
+    chunkOffset: timestampOffset,
+    protectionDataUpdate: false,
+    appendWindow: [period.start, period.end],
+  };
 }
 
 /**
@@ -176,12 +184,14 @@ function parsePlainTextTrack(
  * @param {Object} config
  * @returns {Function}
  */
-export default function generateTextTrackParser(
-  { __priv_patchLastSegmentInSidx } : {
-    __priv_patchLastSegmentInSidx? : boolean | undefined;
-  }
-) : ISegmentParser< ArrayBuffer | Uint8Array | string | null,
-                    ITextTrackSegmentData | null > {
+export default function generateTextTrackParser({
+  __priv_patchLastSegmentInSidx,
+}: {
+  __priv_patchLastSegmentInSidx?: boolean | undefined;
+}): ISegmentParser<
+  ArrayBuffer | Uint8Array | string | null,
+  ITextTrackSegmentData | null
+> {
   /**
    * Parse TextTrack data.
    * @param {Object} loadedSegment
@@ -190,30 +200,34 @@ export default function generateTextTrackParser(
    * @returns {Object}
    */
   return function textTrackParser(
-    loadedSegment : { data : ArrayBuffer | Uint8Array | string | null;
-                      isChunked : boolean; },
-    content : ISegmentContext,
-    initTimescale : number | undefined
-  ) : ISegmentParserParsedMediaChunk< ITextTrackSegmentData | null > |
-      ISegmentParserParsedInitChunk< null > {
+    loadedSegment: { data: ArrayBuffer | Uint8Array | string | null; isChunked: boolean },
+    content: ISegmentContext,
+    initTimescale: number | undefined,
+  ):
+    | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null>
+    | ISegmentParserParsedInitChunk<null> {
     const { period, adaptation, representation, segment } = content;
     const { data, isChunked } = loadedSegment;
 
     if (data === null) {
       // No data, just return an empty placeholder object
-      return segment.isInit ? { segmentType: "init",
-                                initializationData: null,
-                                initializationDataSize: 0,
-                                protectionDataUpdate: false,
-                                initTimescale: undefined } :
-
-                              { segmentType: "media",
-                                chunkData: null,
-                                chunkSize: 0,
-                                chunkInfos: null,
-                                chunkOffset: segment.timestampOffset ?? 0,
-                                protectionDataUpdate: false,
-                                appendWindow: [period.start, period.end] };
+      return segment.isInit
+        ? {
+            segmentType: "init",
+            initializationData: null,
+            initializationDataSize: 0,
+            protectionDataUpdate: false,
+            initTimescale: undefined,
+          }
+        : {
+            segmentType: "media",
+            chunkData: null,
+            chunkSize: 0,
+            chunkInfos: null,
+            chunkOffset: segment.timestampOffset ?? 0,
+            protectionDataUpdate: false,
+            appendWindow: [period.start, period.end],
+          };
     }
 
     const containerType = inferSegmentContainer(adaptation.type, representation);
@@ -223,10 +237,13 @@ export default function generateTextTrackParser(
       // TODO Handle webm containers
       throw new Error("Text tracks with a WEBM container are not yet handled.");
     } else if (containerType === "mp4") {
-      return parseISOBMFFEmbeddedTextTrack(data,
-                                           isChunked,
-                                           content,
-                                           initTimescale, __priv_patchLastSegmentInSidx);
+      return parseISOBMFFEmbeddedTextTrack(
+        data,
+        isChunked,
+        content,
+        initTimescale,
+        __priv_patchLastSegmentInSidx,
+      );
     } else {
       return parsePlainTextTrack(data, isChunked, content);
     }

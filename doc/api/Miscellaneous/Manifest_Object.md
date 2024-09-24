@@ -2,12 +2,12 @@
 
 ## Overview
 
-A Manifest Object and its sub-parts are data structures returned by multiple
-APIs of the player.
+A Manifest Object and its sub-parts are data structures returned by multiple APIs of the
+player.
 
 Its data represents the corresponding streaming protocol's
-[Manifest](../../Getting_Started/Glossary.md#manifest) equivalent (MPD for DASH, Manifest for
-Microsoft Smooth Streaming etc.).
+[Manifest](../../Getting_Started/Glossary.md#manifest) equivalent (MPD for DASH, Manifest
+for Microsoft Smooth Streaming etc.).
 
 Basically, the structure of a Manifest file has the following hierarchy:
 
@@ -26,21 +26,20 @@ Manifest Object
             ...SegmentObject data
 ```
 
-Due to this highly hierachical structure, each level will be described in its
-own chapter here.
+Due to this highly hierachical structure, each level will be described in its own chapter
+here.
 
 <div class="warning">
 Like in the rest of this documentation, any variable or method not
 defined here can change without notice.
 </div>
 
-Only use the documented variables and open an issue if you think it's not
-enough.
+Only use the documented variables and open an issue if you think it's not enough.
 
 ## Structure of a Manifest Object
 
-The manifest Object represents the [Manifest file](../../Getting_Started/Glossary.md#manifest) of the
-content loaded.
+The manifest Object represents the
+[Manifest file](../../Getting_Started/Glossary.md#manifest) of the content loaded.
 
 ### properties
 
@@ -50,18 +49,18 @@ The manifest Object has the following properties.
 
 _type_: `Array.<Period>`
 
-A single Manifest instance can contain multiple [Periods](../../Getting_Started/Glossary.md#period),
-which are periods of time for which the list of available type of contents
-(audio tracks, subtitles, video tracks...) can be different.
+A single Manifest instance can contain multiple
+[Periods](../../Getting_Started/Glossary.md#period), which are periods of time for which
+the list of available type of contents (audio tracks, subtitles, video tracks...) can be
+different.
 
-Such example of Periods could be multiple Programs of a live contents, which can
-be each in different languages, for example.
+Such example of Periods could be multiple Programs of a live contents, which can be each
+in different languages, for example.
 
 The player will switch smoothly across subsequent Periods within playback.
 
-Most Streaming technologies (e.g. HLS and Smooth) do not have a "Period"
-concept. For those, the Manifest will only have one Period for the whole
-content.
+Most Streaming technologies (e.g. HLS and Smooth) do not have a "Period" concept. For
+those, the Manifest will only have one Period for the whole content.
 
 #### adaptations
 
@@ -86,15 +85,13 @@ console.log(manifest.adaptations);
 console.log(manifest.periods[0].adaptations);
 ```
 
-See [the Period chapter](#structure-of-a-period-object) for more information on
-Periods.
+See [the Period chapter](#structure-of-a-period-object) for more information on Periods.
 
 #### isLive
 
 _type_: `Boolean`
 
-`true` if the content is a "live" content (e.g. a live TV Channel).
-`false` otherwise.
+`true` if the content is a "live" content (e.g. a live TV Channel). `false` otherwise.
 
 #### uris
 
@@ -106,20 +103,18 @@ The list of uris that can be used to refer to the Manifest file.
 
 _type_: `string`
 
-The type of transport used. For now, this can only be equal to either `dash`
-or `smooth`.
+The type of transport used. For now, this can only be equal to either `dash` or `smooth`.
 
 ## Structure of a Period Object
 
 A Period is an object describing what to play during a certain time periods.
 
-A Manifest can have a single Period, which means that the played content do not
-change its characteristics (same languages, same bitrates etc.) or multiple
-ones.
+A Manifest can have a single Period, which means that the played content do not change its
+characteristics (same languages, same bitrates etc.) or multiple ones.
 
-A good example of a content with multiple Periods would be a live channel
-broadcasting multiple foreign films. Each film, being in a different language,
-will need to be part of a new Period.
+A good example of a content with multiple Periods would be a live channel broadcasting
+multiple foreign films. Each film, being in a different language, will need to be part of
+a new Period.
 
 ### properties
 
@@ -127,8 +122,8 @@ will need to be part of a new Period.
 
 _type_: `string`
 
-This id should be a string unique to that Period. It serves identifications
-purpose, when updating the Manifest for example.
+This id should be a string unique to that Period. It serves identifications purpose, when
+updating the Manifest for example.
 
 #### start
 
@@ -142,18 +137,18 @@ _type_: `Number|undefined`
 
 End time at which the Period ends in the whole content, in seconds.
 
-If not set or set to undefined, it means that the end is unknown, in which case
-it is the current last content of the current Manifest.
+If not set or set to undefined, it means that the end is unknown, in which case it is the
+current last content of the current Manifest.
 
 #### adaptations
 
 _type_: `Object`
 
-The [Adaptations](../../Getting_Started/Glossary.md#adaptation) (tracks if you
-want) for the current content, per-type (audio/video/text/image).
+The [Adaptations](../../Getting_Started/Glossary.md#adaptation) (tracks if you want) for
+the current content, per-type (audio/video/text/image).
 
-See [the Adaptation chapter](#structure-of-an-adaptation-object) for more info
-about an Adaptation's structure.
+See [the Adaptation chapter](#structure-of-an-adaptation-object) for more info about an
+Adaptation's structure.
 
 The Adaptation object _can_ contain any of the following keys:
 
@@ -164,11 +159,10 @@ The Adaptation object _can_ contain any of the following keys:
 
 ## Structure of an Adaptation Object
 
-An [Adaptation](../../Getting_Started/Glossary.md#adaptation) is a set of
-streams representing the exact same contents in multiple forms (different
-sizes, different bitrates...).
-Concretely, a frequent usecase is to have a single video Adaptation and multiple
-audio ones, one for each language available.
+An [Adaptation](../../Getting_Started/Glossary.md#adaptation) is a set of streams
+representing the exact same contents in multiple forms (different sizes, different
+bitrates...). Concretely, a frequent usecase is to have a single video Adaptation and
+multiple audio ones, one for each language available.
 
 As such, it is also often called in the API a `track`.
 
@@ -178,8 +172,8 @@ As such, it is also often called in the API a `track`.
 
 _type_: `string`
 
-This id should be a string unique to that Adaptation. It serves
-identifications purpose, when updating the Manifest for example.
+This id should be a string unique to that Adaptation. It serves identifications purpose,
+when updating the Manifest for example.
 
 #### type
 
@@ -205,9 +199,9 @@ Note that this property is not always present in an Adaptation.
 
 _type_: `string|undefined`
 
-An attempt to translate the language of the Adaptation into an ISO 639-3 code.
-If the translation attempt fails (no corresponding ISO 639-3 language code is
-found), it will equal the value of `language`
+An attempt to translate the language of the Adaptation into an ISO 639-3 code. If the
+translation attempt fails (no corresponding ISO 639-3 language code is found), it will
+equal the value of `language`
 
 Note that this property is not always present in an Adaptation.
 
@@ -215,33 +209,33 @@ Note that this property is not always present in an Adaptation.
 
 _type_: `Boolean|undefined`
 
-This property only makes sense for audio Adaptations. In this case, if `true`
-it means that the audio track has added commentaries for the visually impaired.
+This property only makes sense for audio Adaptations. In this case, if `true` it means
+that the audio track has added commentaries for the visually impaired.
 
 #### isClosedCaption
 
 _type_: `Boolean|undefined`
 
-This property only makes sense for text Adaptations. In this case, if `true`
-it means that the text track has added hints for the hard of hearing.
+This property only makes sense for text Adaptations. In this case, if `true` it means that
+the text track has added hints for the hard of hearing.
 
 #### isTrickMode
 
 _type_ : `Boolean|undefined`
 
-This property only makes sense for video Adaptations. In this case, if `true`
-it means that the video track is a trick mode track that will be played only
-if the user start the trick mode on the respective main adaptation.
+This property only makes sense for video Adaptations. In this case, if `true` it means
+that the video track is a trick mode track that will be played only if the user start the
+trick mode on the respective main adaptation.
 
 #### representations
 
 _type_: `Array.<Representation>`
 
-The [Represesentations](../../Getting_Started/Glossary.md#representation) for
-this Adaptation.
+The [Represesentations](../../Getting_Started/Glossary.md#representation) for this
+Adaptation.
 
-See [the Representation chapter](#structure-of-a-representation-object) for
-more info about a Representation's structure.
+See [the Representation chapter](#structure-of-a-representation-object) for more info
+about a Representation's structure.
 
 ### methods
 
@@ -254,10 +248,9 @@ Returns every bitrates available for this Adaptation.
 ## Structure of a Representation Object
 
 A [Representation](../../Getting_Started/Glossary.md#representation) is an
-[Adaptation](../../Getting_Started/Glossary.md#adaptation) encoded in a
-certain way. It is defined by multiple values (a codec, a bitrate).
-Only some of them are documented here (as stated before, open an issue if
-you would like to access other properties).
+[Adaptation](../../Getting_Started/Glossary.md#adaptation) encoded in a certain way. It is
+defined by multiple values (a codec, a bitrate). Only some of them are documented here (as
+stated before, open an issue if you would like to access other properties).
 
 ### properties
 
@@ -283,28 +276,27 @@ The codec of the Representation.
 
 _type_: `boolean|undefined`
 
-Whether we are able to decrypt this Representation / unable to decrypt it or
-if we don't know yet:
+Whether we are able to decrypt this Representation / unable to decrypt it or if we don't
+know yet:
 
-- if `true`, it means that we know we were able to decrypt this
-  Representation in the current content.
-- if `false`, it means that we know we were unable to decrypt this
-  Representation
+- if `true`, it means that we know we were able to decrypt this Representation in the
+  current content.
+- if `false`, it means that we know we were unable to decrypt this Representation
 - if `undefined` there is no certainty on this matter
 
 #### height
 
 _type_: `Number|undefined`
 
-This property makes the most sense for video Representations.
-It defines the height of the video, in pixels.
+This property makes the most sense for video Representations. It defines the height of the
+video, in pixels.
 
 #### width
 
 _type_: `Number|undefined`
 
-This property makes the most sense for video Representations.
-It defines the width of the video, in pixels.
+This property makes the most sense for video Representations. It defines the width of the
+video, in pixels.
 
 #### index
 
@@ -312,31 +304,31 @@ _type_: `RepresentationIndex`
 
 The represesentation index for this Representation.
 
-See [the RepresentationIndex chapter](#structure-of-a-representationindex-object) for more info about
-a RepresentationIndex's structure.
+See [the RepresentationIndex chapter](#structure-of-a-representationindex-object) for more
+info about a RepresentationIndex's structure.
 
 #### frameRate
 
 _type_: `string|undefined`
 
-The represesentation frame rate for this Representation. It defines either the
-number of frames per second as an integer (24), or as a ratio (24000 / 1000).
+The represesentation frame rate for this Representation. It defines either the number of
+frames per second as an integer (24), or as a ratio (24000 / 1000).
 
 #### hdrInfo
 
 _type_: `Object|undefined`
 
-Information about the hdr characteristics of the track.
-(see [HDR support documentation](./hdr.md#hdrinfo))
+Information about the hdr characteristics of the track. (see
+[HDR support documentation](./hdr.md#hdrinfo))
 
 ## Structure of a RepresentationIndex Object
 
 A RepresentationIndex is an uniform way of declaring the segment index in any
 [Manifest](../../Getting_Started/Glossary.md#manifest).
 
-That's the part that calculates which segments will be needed. Because the index
-can be different depending on the type of contents/transport most interactions
-here are done through few methods which hide the complexity underneath.
+That's the part that calculates which segments will be needed. Because the index can be
+different depending on the type of contents/transport most interactions here are done
+through few methods which hide the complexity underneath.
 
 ### methods
 
@@ -344,24 +336,23 @@ here are done through few methods which hide the complexity underneath.
 
 _arguments_:
 
-- _up_ (`Number`): The position, in seconds from which you want to get the
-  segment.
+- _up_ (`Number`): The position, in seconds from which you want to get the segment.
 
 - _duration_ (`Number`): The duration in seconds from the asked position
 
 _return value_: `Array.<Segment>`
 
-Returns the needed segments as defined by the current Manifest during an asked
-timeframe.
+Returns the needed segments as defined by the current Manifest during an asked timeframe.
 
-See [the Segment chapter](#structure-of-a-segment-object) for more info about a Segment's structure.
+See [the Segment chapter](#structure-of-a-segment-object) for more info about a Segment's
+structure.
 
 ## Structure of a Segment Object
 
 A Segment object defines a segment, as generated by the RepresentationIndex.
 
-Those segments can have multiple useful properties which for the most part are
-described here.
+Those segments can have multiple useful properties which for the most part are described
+here.
 
 ### properties
 
@@ -401,17 +392,15 @@ If true, the segment concerned is an init segment.
 
 _type_: `Array.<Number>|null|undefined`
 
-If defined, it means that the segment is defined in a certain byte range
-remotely. In this case, the array contains two elements, the start byte and the
-end byte.
+If defined, it means that the segment is defined in a certain byte range remotely. In this
+case, the array contains two elements, the start byte and the end byte.
 
 #### indexRange
 
 _type_: `Array.<Number>|null|undefined`
 
-If defined, it means that a segment index is defined in a certain byte range
-remotely. In this case, the array contains two elements, the start byte and the
-end byte.
+If defined, it means that a segment index is defined in a certain byte range remotely. In
+this case, the array contains two elements, the start byte and the end byte.
 
 #### number
 

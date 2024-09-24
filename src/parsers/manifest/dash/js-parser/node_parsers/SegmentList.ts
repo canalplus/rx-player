@@ -15,7 +15,7 @@
  */
 
 import objectAssign from "../../../../../utils/object_assign";
-import {
+import type {
   ISegmentListIntermediateRepresentation,
   ISegmentUrlIntermediateRepresentation,
 } from "../../node_parser_types";
@@ -27,12 +27,12 @@ import parseSegmentURL from "./SegmentURL";
  * @returns {Array}
  */
 export default function parseSegmentList(
-  root: Element
-) : [ISegmentListIntermediateRepresentation, Error[]] {
+  root: Element,
+): [ISegmentListIntermediateRepresentation, Error[]] {
   const [base, baseWarnings] = parseSegmentBase(root);
-  let warnings : Error[] = baseWarnings;
+  let warnings: Error[] = baseWarnings;
 
-  const list : ISegmentUrlIntermediateRepresentation[] = [];
+  const list: ISegmentUrlIntermediateRepresentation[] = [];
 
   const segmentListChildren = root.childNodes;
   for (let i = 0; i < segmentListChildren.length; i++) {

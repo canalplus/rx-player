@@ -17,7 +17,7 @@
 // eslint-disable-next-line max-len
 import NativeTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/native";
 import vttParser from "../../../parsers/texttracks/webvtt/native";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addNativevttFeature from "../native_vtt_parser";
 
 describe("Features list - native vtt Parser", () => {

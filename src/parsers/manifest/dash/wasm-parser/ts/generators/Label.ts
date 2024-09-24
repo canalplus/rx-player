@@ -5,7 +5,7 @@ import { parseString } from "../utils";
 
 export function generateLabelElementParser(
   adaptationSet: IAdaptationSetChildren,
-  linearMemory: WebAssembly.Memory
+  linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   const textDecoder = new TextDecoder();
   return function onMPDAttribute(attr: AttributeName, ptr: number, len: number) {

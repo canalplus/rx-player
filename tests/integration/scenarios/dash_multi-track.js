@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import RxPlayer from "../../../src";
-import {
-  multiAdaptationSetsInfos,
-} from "../../contents/DASH_static_SegmentTimeline";
+import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import XHRMock from "../../utils/request_mock";
 import waitForPlayerState, {
@@ -14,8 +12,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   let xhrMock;
 
   async function loadContent() {
-    player.loadVideo({ url: multiAdaptationSetsInfos.url,
-                       transport: multiAdaptationSetsInfos.transport });
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+    });
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
@@ -41,9 +41,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     const audioTracks = player.getAvailableAudioTracks();
     for (let i = 0; i < audioTracks.length; i++) {
       const audioTrack = audioTracks[i];
-      if (audioTrack.language === language &&
-          audioTrack.audioDescription === isAudioDescription)
-      {
+      if (
+        audioTrack.language === language &&
+        audioTrack.audioDescription === isAudioDescription
+      ) {
         player.setAudioTrack(audioTrack.id);
         return;
       }
@@ -55,9 +56,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     const textTracks = player.getAvailableTextTracks();
     for (let i = 0; i < textTracks.length; i++) {
       const textTrack = textTracks[i];
-      if (textTrack.language === language &&
-          textTrack.closedCaption === isClosedCaption)
-      {
+      if (
+        textTrack.language === language &&
+        textTrack.closedCaption === isClosedCaption
+      ) {
         player.setTextTrack(textTrack.id);
         return;
       }
@@ -75,11 +77,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
           player.setVideoTrack(videoTrack.id);
           return;
         } else if (codecRules.all) {
-          if (representations.every(r => codecRules.test.test(r.codec))) {
+          if (representations.every((r) => codecRules.test.test(r.codec))) {
             player.setVideoTrack(videoTrack.id);
             return;
           }
-        } else if (representations.some(r => codecRules.test.test(r.codec))) {
+        } else if (representations.some((r) => codecRules.test.test(r.codec))) {
           player.setVideoTrack(videoTrack.id);
           return;
         }
@@ -118,9 +120,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     const currentVideoTrack = player.getVideoTrack();
 
     if (isSignInterpreted === undefined) {
-      expect(Object.prototype.hasOwnProperty.call(currentVideoTrack,
-                                                  "signInterpreted"))
-        .to.equal(false);
+      expect(
+        Object.prototype.hasOwnProperty.call(currentVideoTrack, "signInterpreted"),
+      ).to.equal(false);
     } else {
       expect(currentVideoTrack.signInterpreted).to.equal(isSignInterpreted);
     }
@@ -130,9 +132,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       expect(representations.length).to.not.equal(0);
       const { all, test } = codecRules;
       if (all) {
-        expect(representations.every(r => test.test(r.codec))).to.equal(true);
+        expect(representations.every((r) => test.test(r.codec))).to.equal(true);
       } else {
-        expect(representations.some(r => test.test(r.codec))).to.equal(true);
+        expect(representations.some((r) => test.test(r.codec))).to.equal(true);
       }
     }
   }
@@ -151,8 +153,10 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   it("should properly load the content with the right default tracks", async function () {
     this.timeout(3000);
     xhrMock.lock();
-    player.loadVideo({ url: multiAdaptationSetsInfos.url,
-                       transport: multiAdaptationSetsInfos.transport });
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+    });
 
     await sleep(10);
 
@@ -180,13 +184,13 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should load the tracks corresponding to the most preferred content as set in the constructor", async function () {
     player.dispose();
-    player = new RxPlayer({ preferredAudioTracks: [{ language: "fr",
-                                                     audioDescription: false }],
-                            preferredVideoTracks: [{ codec: { all: true,
-                                                              test: /avc1\.42C014/},
-                                                     signInterpreted: true }],
-                            preferredTextTracks: [{ language: "fr",
-                                                    closedCaption: false } ] });
+    player = new RxPlayer({
+      preferredAudioTracks: [{ language: "fr", audioDescription: false }],
+      preferredVideoTracks: [
+        { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: true },
+      ],
+      preferredTextTracks: [{ language: "fr", closedCaption: false }],
+    });
     await loadContent();
 
     // TODO AUDIO codec
@@ -201,13 +205,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should load the tracks corresponding to the most preferred content as set in the corresponding RxPlayer methods", async function () {
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: true } ]);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: true }]);
     await loadContent();
 
     // TODO AUDIO codec
@@ -223,20 +225,18 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should initially consider the last set preference between constructor and methods", async () => {
     player.dispose();
-    player = new RxPlayer({ preferredAudioTracks: [{ language: "fr",
-                                                     audioDescription: false }],
-                            preferredVideoTracks: [{ codec: { all: true,
-                                                              test: /avc1\.42C014/},
-                                                     signInterpreted: false }],
-                            preferredTextTracks: [{ language: "fr",
-                                                    closedCaption: false } ] });
-    player.setPreferredAudioTracks([ { language: "de",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: true,
-                                                test: /avc1\.42C014/},
-                                       signInterpreted: undefined }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: true } ]);
+    player = new RxPlayer({
+      preferredAudioTracks: [{ language: "fr", audioDescription: false }],
+      preferredVideoTracks: [
+        { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: false },
+      ],
+      preferredTextTracks: [{ language: "fr", closedCaption: false }],
+    });
+    player.setPreferredAudioTracks([{ language: "de", audioDescription: true }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: undefined },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: true }]);
 
     await loadContent();
 
@@ -253,34 +253,28 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should initially consider the last set preference between constructor and multiple methods", async () => {
     player.dispose();
-    player = new RxPlayer({ preferredAudioTracks: [{ language: "fr",
-                                                     audioDescription: false }],
-                            preferredVideoTracks: [{ codec: { all: true,
-                                                              test: /avc1\.42C014/},
-                                                     signInterpreted: false }],
-                            preferredTextTracks: [{ language: "fr",
-                                                    closedCaption: false } ] });
-    player.setPreferredAudioTracks([ { language: "de",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: true } ]);
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: false }]);
-    player.setPreferredTextTracks([ { language: "fr",
-                                      closedCaption: true } ]);
-    player.setPreferredAudioTracks([ { language: "deu",
-                                       audioDescription: false } ]);
-    player.setPreferredVideoTracks([ { codec: { all: true,
-                                                test: /avc1\.42C014/},
-                                       signInterpreted: true }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ]);
+    player = new RxPlayer({
+      preferredAudioTracks: [{ language: "fr", audioDescription: false }],
+      preferredVideoTracks: [
+        { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: false },
+      ],
+      preferredTextTracks: [{ language: "fr", closedCaption: false }],
+    });
+    player.setPreferredAudioTracks([{ language: "de", audioDescription: true }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: true }]);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: false },
+    ]);
+    player.setPreferredTextTracks([{ language: "fr", closedCaption: true }]);
+    player.setPreferredAudioTracks([{ language: "deu", audioDescription: false }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: true },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: false }]);
     await loadContent();
 
     // TODO AUDIO codec
@@ -295,33 +289,24 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should set the nth supported preference if the first one is not found", async () => {
-    player.setPreferredAudioTracks([ { language: "ita",
-                                       audioDescription: false },
-                                     { language: "en",
-                                       audioDescription: false },
-                                     { language: "deu",
-                                       audioDescription: false },
-                                     { language: "fr",
-                                       audioDescription: false } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /foo/} },
-                                     { codec: { all: false,
-                                                test: /bar/ },
-                                       signInterpreted: false },
-                                     { codec: { all: true,
-                                                test: /avc1\.42C014/ },
-                                       signInterpreted: false },
-                                     { codec: { all: false,
-                                                test: /avc1\.640028/ },
-                                       signInterpreted: undefined } ]);
-    player.setPreferredTextTracks([ { language: "ita",
-                                      closedCaption: false },
-                                    { language: "en",
-                                      closedCaption: false },
-                                    { language: "deu",
-                                      closedCaption: false },
-                                    { language: "fr",
-                                      closedCaption: false } ]);
+    player.setPreferredAudioTracks([
+      { language: "ita", audioDescription: false },
+      { language: "en", audioDescription: false },
+      { language: "deu", audioDescription: false },
+      { language: "fr", audioDescription: false },
+    ]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /foo/ } },
+      { codec: { all: false, test: /bar/ }, signInterpreted: false },
+      { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: false },
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: undefined },
+    ]);
+    player.setPreferredTextTracks([
+      { language: "ita", closedCaption: false },
+      { language: "en", closedCaption: false },
+      { language: "deu", closedCaption: false },
+      { language: "fr", closedCaption: false },
+    ]);
     await loadContent();
 
     // TODO AUDIO codec
@@ -336,22 +321,19 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should fallback to the default track if none is found", async () => {
-    player.setPreferredAudioTracks([ { language: "ita",
-                                       audioDescription: false },
-                                     { language: "en",
-                                       audioDescription: false } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /foo/} },
-                                     { codec: { all: false,
-                                                test: /bar/ },
-                                       signInterpreted: false },
-                                     { codec: { all: true,
-                                                test: /avc1\.42C014/ },
-                                       signInterpreted: false } ]);
-    player.setPreferredTextTracks([ { language: "ita",
-                                      closedCaption: false },
-                                    { language: "en",
-                                      closedCaption: false } ]);
+    player.setPreferredAudioTracks([
+      { language: "ita", audioDescription: false },
+      { language: "en", audioDescription: false },
+    ]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /foo/ } },
+      { codec: { all: false, test: /bar/ }, signInterpreted: false },
+      { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: false },
+    ]);
+    player.setPreferredTextTracks([
+      { language: "ita", closedCaption: false },
+      { language: "en", closedCaption: false },
+    ]);
     await loadContent();
 
     // TODO AUDIO codec
@@ -368,13 +350,12 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should not update the current tracks for non-applied preferences", async () => {
     await loadContent();
-    player.setPreferredAudioTracks([ { language: "be",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }], false);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ], undefined);
+    player.setPreferredAudioTracks([{ language: "be", audioDescription: true }]);
+    player.setPreferredVideoTracks(
+      [{ codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true }],
+      false,
+    );
+    player.setPreferredTextTracks([{ language: "de", closedCaption: false }], undefined);
     await sleep(100);
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
@@ -394,13 +375,12 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }], false);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ], undefined);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }]);
+    player.setPreferredVideoTracks(
+      [{ codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true }],
+      false,
+    );
+    player.setPreferredTextTracks([{ language: "de", closedCaption: false }], undefined);
     await sleep(100);
     await goToFirstPeriod();
     checkAudioTrack("de", "deu", false);
@@ -410,13 +390,12 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
 
   it("should update the current tracks for applied preferences", async () => {
     await loadContent();
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ], true);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }], true);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ], true);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }], true);
+    player.setPreferredVideoTracks(
+      [{ codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true }],
+      true,
+    );
+    player.setPreferredTextTracks([{ language: "de", closedCaption: false }], true);
     await sleep(100);
     checkAudioTrack("fr", "fra", true);
     checkTextTrack("de", "deu", false);
@@ -436,13 +415,12 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ], true);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }], true);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ], true);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }], true);
+    player.setPreferredVideoTracks(
+      [{ codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true }],
+      true,
+    );
+    player.setPreferredTextTracks([{ language: "de", closedCaption: false }], true);
     await sleep(100);
     await goToFirstPeriod();
     await sleep(100);
@@ -474,15 +452,12 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
   });
 
   it("should disable the video track when the corresponding setting is reached in the preferences", async () => {
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /foo/} },
-                                     { codec: { all: false,
-                                                test: /bar/ },
-                                       signInterpreted: false },
-                                     null,
-                                     { codec: { all: false,
-                                                test: /avc1\.640028/ },
-                                       signInterpreted: undefined } ]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /foo/ } },
+      { codec: { all: false, test: /bar/ }, signInterpreted: false },
+      null,
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: undefined },
+    ]);
     await loadContent();
     checkAudioTrack("de", "deu", false);
     checkNoTextTrack();
@@ -543,16 +518,14 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
   });
 
-  it("preferences should be persisted if already set for a given Period", async function() {
+  it("preferences should be persisted if already set for a given Period", async function () {
     this.timeout(5000);
 
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: true } ]);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: true }]);
     await loadContent();
 
     // TODO AUDIO codec
@@ -560,13 +533,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkTextTrack("de", "deu", true);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
 
-    player.setPreferredAudioTracks([ { language: "de",
-                                       audioDescription: false } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.42C014/},
-                                       signInterpreted: true }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: false } ]);
+    player.setPreferredAudioTracks([{ language: "de", audioDescription: false }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /avc1\.42C014/ }, signInterpreted: true },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: false }]);
 
     await goToSecondPeriod();
     checkAudioTrack("de", "deu", false);
@@ -579,13 +550,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkTextTrack("de", "deu", true);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, true);
 
-    player.setPreferredAudioTracks([ { language: "fr",
-                                       audioDescription: true } ]);
-    player.setPreferredVideoTracks([ { codec: { all: false,
-                                                test: /avc1\.640028/},
-                                       signInterpreted: true }]);
-    player.setPreferredTextTracks([ { language: "de",
-                                      closedCaption: true } ]);
+    player.setPreferredAudioTracks([{ language: "fr", audioDescription: true }]);
+    player.setPreferredVideoTracks([
+      { codec: { all: false, test: /avc1\.640028/ }, signInterpreted: true },
+    ]);
+    player.setPreferredTextTracks([{ language: "de", closedCaption: true }]);
 
     await sleep(500);
     await goToSecondPeriod();

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IPlayerError } from "../public_types";
+import type { IPlayerError } from "../public_types";
 import isKnownError from "./is_known_error";
 import OtherError from "./other_error";
 
@@ -24,16 +24,18 @@ import OtherError from "./other_error";
  * @returns {Error}
  */
 export default function formatError(
-  error : unknown,
-  { defaultCode, defaultReason } : { defaultCode : "PIPELINE_LOAD_ERROR" |
-                                                   "PIPELINE_PARSE_ERROR" |
-                                                   "NONE";
-                                     defaultReason : string; }
-) : IPlayerError {
+  error: unknown,
+  {
+    defaultCode,
+    defaultReason,
+  }: {
+    defaultCode: "PIPELINE_LOAD_ERROR" | "PIPELINE_PARSE_ERROR" | "NONE";
+    defaultReason: string;
+  },
+): IPlayerError {
   if (isKnownError(error)) {
     return error;
   }
-  const reason = error instanceof Error ? error.toString() :
-                                          defaultReason;
+  const reason = error instanceof Error ? error.toString() : defaultReason;
   return new OtherError(defaultCode, reason);
 }

@@ -5,15 +5,17 @@ import objectAssign from "./object_assign";
  * @param item
  * @returns {boolean}
  */
-function isObject(item: unknown) : boolean {
-  return (item !== null
-          && item !== undefined
-          && !Array.isArray(item)
-          && typeof item === "object");
+function isObject(item: unknown): boolean {
+  return (
+    item !== null &&
+    item !== undefined &&
+    !Array.isArray(item) &&
+    typeof item === "object"
+  );
 }
 
 type IDeepPartial<T> = {
-  [P in keyof T]?: IDeepPartial<T[P]> ;
+  [P in keyof T]?: IDeepPartial<T[P]>;
 };
 
 type ISourcesArgument = unknown[];
@@ -24,9 +26,10 @@ type ISourcesArgument = unknown[];
  * @param sources
  * @returns output : merged object
  */
-export default function deepMerge<
-  T extends Record<string | number | symbol, unknown>
->(target: T, ...sources: ISourcesArgument): T {
+export default function deepMerge<T extends Record<string | number | symbol, unknown>>(
+  target: T,
+  ...sources: ISourcesArgument
+): T {
   if (sources.length === 0) {
     return target;
   }

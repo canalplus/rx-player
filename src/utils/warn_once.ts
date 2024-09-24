@@ -16,7 +16,7 @@
 
 import arrayIncludes from "./array_includes";
 
-const WARNED_MESSAGES : string[] = [];
+const WARNED_MESSAGES: string[] = [];
 
 /**
  * Perform a console.warn only once in the application lifetime.
@@ -25,7 +25,7 @@ const WARNED_MESSAGES : string[] = [];
  *
  * @param {string} message
  */
-export default function warnOnce(message : string) : void {
+export default function warnOnce(message: string): void {
   if (!arrayIncludes(WARNED_MESSAGES, message)) {
     // eslint-disable-next-line no-console
     console.warn(message);

@@ -19,40 +19,44 @@ import isNode from "./is_node";
 
 /** Regular MediaKeys type + optional functions present in IE11. */
 interface ICompatMediaKeysConstructor {
-  isTypeSupported? : (type : string) => boolean; // IE11 only
-  new(keyType? : string) : MediaKeys; // argument for IE11 only
+  isTypeSupported?: (type: string) => boolean; // IE11 only
+  new (keyType?: string): MediaKeys; // argument for IE11 only
 }
 
 /**
  * Browser implementation of a VTTCue constructor.
  * TODO open TypeScript issue about it?
  */
-type ICompatVTTCueConstructor = new(start : number,
-                                    end : number,
-                                    cueText : string) => ICompatVTTCue;
+type ICompatVTTCueConstructor = new (
+  start: number,
+  end: number,
+  cueText: string,
+) => ICompatVTTCue;
 
 /** Browser implementation for a single VTTCue. */
-interface ICompatVTTCue { align : string;
-                          endTime : number;
-                          id : string;
-                          line : number | "auto";
-                          lineAlign : string;
-                          position : number | "auto";
-                          positionAlign : string;
-                          size : number | string;
-                          snapToLines : boolean;
-                          startTime : number;
-                          vertical : string; }
+interface ICompatVTTCue {
+  align: string;
+  endTime: number;
+  id: string;
+  line: number | "auto";
+  lineAlign: string;
+  position: number | "auto";
+  positionAlign: string;
+  size: number | string;
+  snapToLines: boolean;
+  startTime: number;
+  vertical: string;
+}
 
 /**
  * Overriden TextTrack browser implementation, to also include our own
  * definition of a VTTCue.
  */
 interface ICompatTextTrack extends TextTrack {
-  addCue(cue: TextTrackCue | ICompatVTTCue) : void;
-  removeCue(cue: TextTrackCue | ICompatVTTCue) : void;
-  HIDDEN? : "hidden";
-  SHOWING? :  "showing";
+  addCue(cue: TextTrackCue | ICompatVTTCue): void;
+  removeCue(cue: TextTrackCue | ICompatVTTCue): void;
+  HIDDEN?: "hidden";
+  SHOWING?: "showing";
 }
 
 /**
@@ -60,16 +64,16 @@ interface ICompatTextTrack extends TextTrack {
  * functions for some "old" browsers.
  */
 interface ICompatDocument extends Document {
-  fullscreenElement : Element | null;
-  mozCancelFullScreen? : () => void;
-  mozFullScreenElement? : HTMLElement;
-  mozHidden? : boolean;
-  msExitFullscreen? : () => void;
-  msFullscreenElement? : Element | null;
-  msHidden? : boolean;
-  webkitExitFullscreen : () => void;
-  webkitFullscreenElement : Element | null;
-  webkitHidden? : boolean;
+  fullscreenElement: Element | null;
+  mozCancelFullScreen?: () => void;
+  mozFullScreenElement?: HTMLElement;
+  mozHidden?: boolean;
+  msExitFullscreen?: () => void;
+  msFullscreenElement?: Element | null;
+  msHidden?: boolean;
+  webkitExitFullscreen: () => void;
+  webkitFullscreenElement: Element | null;
+  webkitHidden?: boolean;
 }
 
 /**
@@ -84,23 +88,20 @@ interface ICompatDocument extends Document {
  * are not actually valid TypeScript types.
  */
 interface ICompatHTMLMediaElement extends HTMLMediaElement {
-  mozRequestFullScreen? : () => void;
-  msRequestFullscreen? : () => void;
-  webkitRequestFullscreen? : () => void;
-  webkitSupportsPresentationMode? : boolean;
-  webkitSetPresentationMode? : () => void;
-  webkitPresentationMode? : string;
-  mozSetMediaKeys? : (mediaKeys: unknown) => void;
-  msSetMediaKeys? : (mediaKeys: unknown) => void;
-  webkitSetMediaKeys? : (mediaKeys: unknown) => void;
-  webkitKeys? : {
-    createSession? : (
-      mimeType : string,
-      initData : BufferSource
-    ) => MediaKeySession;
+  mozRequestFullScreen?: () => void;
+  msRequestFullscreen?: () => void;
+  webkitRequestFullscreen?: () => void;
+  webkitSupportsPresentationMode?: boolean;
+  webkitSetPresentationMode?: () => void;
+  webkitPresentationMode?: string;
+  mozSetMediaKeys?: (mediaKeys: unknown) => void;
+  msSetMediaKeys?: (mediaKeys: unknown) => void;
+  webkitSetMediaKeys?: (mediaKeys: unknown) => void;
+  webkitKeys?: {
+    createSession?: (mimeType: string, initData: BufferSource) => MediaKeySession;
   };
-  readonly audioTracks? : ICompatAudioTrackList;
-  readonly videoTracks? : ICompatVideoTrackList;
+  readonly audioTracks?: ICompatAudioTrackList;
+  readonly videoTracks?: ICompatVideoTrackList;
 }
 
 /**
@@ -109,14 +110,14 @@ interface ICompatHTMLMediaElement extends HTMLMediaElement {
  * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
  */
 interface ICompatAudioTrackList extends EventTarget {
-  readonly length : number;
-  getTrackById(id : string) : ICompatAudioTrack;
-  onchange? : ((n : Event) => void) | null;
-  onaddtrack? : ((n : Event) => void) | null;
-  onremovetrack? : ((n : Event) => void) | null;
+  readonly length: number;
+  getTrackById(id: string): ICompatAudioTrack;
+  onchange?: ((n: Event) => void) | null;
+  onaddtrack?: ((n: Event) => void) | null;
+  onremovetrack?: ((n: Event) => void) | null;
 
   // It can be indexed
-  [x : number] : ICompatAudioTrack;
+  [x: number]: ICompatAudioTrack;
 }
 
 /**
@@ -125,11 +126,11 @@ interface ICompatAudioTrackList extends EventTarget {
  * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
  */
 interface ICompatAudioTrack {
-  id : string;
-  kind : string;
-  label : string;
-  language : string;
-  enabled : boolean;
+  id: string;
+  kind: string;
+  label: string;
+  language: string;
+  enabled: boolean;
 }
 
 /**
@@ -138,15 +139,15 @@ interface ICompatAudioTrack {
  * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
  */
 interface ICompatVideoTrackList extends EventTarget {
-  readonly length : number;
-  selectedIndex : number;
-  getTrackById(id : string) : ICompatVideoTrack;
-  onchange? : ((n : Event) => void) | null;
-  onaddtrack? : ((n : Event) => void) | null;
-  onremovetrack? : ((n : Event) => void) | null;
+  readonly length: number;
+  selectedIndex: number;
+  getTrackById(id: string): ICompatVideoTrack;
+  onchange?: ((n: Event) => void) | null;
+  onaddtrack?: ((n: Event) => void) | null;
+  onremovetrack?: ((n: Event) => void) | null;
 
   // It can be indexed
-  [x : number] : ICompatVideoTrack;
+  [x: number]: ICompatVideoTrack;
 }
 
 /**
@@ -155,11 +156,11 @@ interface ICompatVideoTrackList extends EventTarget {
  * https://html.spec.whatwg.org/multipage/media.html#audiotracklist
  */
 interface ICompatVideoTrack {
-  id : string;
-  kind : string;
-  label : string;
-  language : string;
-  selected : boolean;
+  id: string;
+  kind: string;
+  label: string;
+  language: string;
+  selected: boolean;
 }
 
 /**
@@ -167,34 +168,40 @@ interface ICompatVideoTrack {
  * draft from the W3C:
  * https://wicg.github.io/picture-in-picture/#pictureinpicturewindow
  */
-export interface ICompatPictureInPictureWindow
-  extends EventTarget { width: number;
-                        height: number; }
-
-interface WindowsWithMediaSourceImplems extends Window {
-  MediaSource? : typeof MediaSource;
-  MozMediaSource? : typeof MediaSource;
-  WebKitMediaSource? : typeof MediaSource;
-  MSMediaSource? : typeof MediaSource;
+export interface ICompatPictureInPictureWindow extends EventTarget {
+  width: number;
+  height: number;
 }
 
-const win : WindowsWithMediaSourceImplems | undefined = isNode ? undefined :
-                                                                 window;
+interface WindowsWithMediaSourceImplems extends Window {
+  MediaSource?: typeof MediaSource;
+  MozMediaSource?: typeof MediaSource;
+  WebKitMediaSource?: typeof MediaSource;
+  MSMediaSource?: typeof MediaSource;
+}
+
+const win: WindowsWithMediaSourceImplems | undefined = isNode ? undefined : window;
 
 /** MediaSource implementation, including vendored implementations. */
-const MediaSource_ : typeof MediaSource | undefined =
-  win === undefined                            ? undefined :
-  !isNullOrUndefined(win.MediaSource)          ? win.MediaSource :
-  !isNullOrUndefined(win.MozMediaSource)       ? win.MozMediaSource :
-  !isNullOrUndefined(win.WebKitMediaSource)    ? win.WebKitMediaSource :
-                                                 win.MSMediaSource;
+const MediaSource_: typeof MediaSource | undefined =
+  win === undefined
+    ? undefined
+    : !isNullOrUndefined(win.MediaSource)
+      ? win.MediaSource
+      : !isNullOrUndefined(win.MozMediaSource)
+        ? win.MozMediaSource
+        : !isNullOrUndefined(win.WebKitMediaSource)
+          ? win.WebKitMediaSource
+          : win.MSMediaSource;
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
-const READY_STATES = { HAVE_NOTHING: 0,
-                       HAVE_METADATA: 1,
-                       HAVE_CURRENT_DATA: 2,
-                       HAVE_FUTURE_DATA: 3,
-                       HAVE_ENOUGH_DATA: 4 };
+const READY_STATES = {
+  HAVE_NOTHING: 0,
+  HAVE_METADATA: 1,
+  HAVE_CURRENT_DATA: 2,
+  HAVE_FUTURE_DATA: 3,
+  HAVE_ENOUGH_DATA: 4,
+};
 
 /**
  * TextTrackList browser implementation.
@@ -206,7 +213,7 @@ export interface ICompatTextTrackList extends TextTrackList {
   onchange: (() => void) | null;
 }
 
-export {
+export type {
   ICompatDocument,
   ICompatHTMLMediaElement,
   ICompatAudioTrackList,
@@ -217,6 +224,5 @@ export {
   ICompatTextTrack,
   ICompatVTTCue,
   ICompatVTTCueConstructor,
-  MediaSource_,
-  READY_STATES,
 };
+export { MediaSource_, READY_STATES };

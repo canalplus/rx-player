@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
+import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
 
 /**
  * Parse an BaseURL element into an BaseURL intermediate
@@ -23,13 +23,12 @@ import { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
  * @returns {Array.<Object|undefined>}
  */
 export default function parseBaseURL(
-  root: Element
-) : [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
+  root: Element,
+): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
   const value = root.textContent;
-  const warnings : Error[] = [];
+  const warnings: Error[] = [];
   if (value === null || value.length === 0) {
     return [undefined, warnings];
   }
-  return [ { value },
-           warnings ];
+  return [{ value }, warnings];
 }

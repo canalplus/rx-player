@@ -78,7 +78,7 @@ describe("initial idle state", () => {
     });
 
     describe("getPlayerState", () => {
-      it("should return \"STOPPED\" in getPlayerState by default", () => {
+      it('should return "STOPPED" in getPlayerState by default', () => {
         expect(player.getPlayerState()).to.equal("STOPPED");
       });
     });
@@ -97,11 +97,8 @@ describe("initial idle state", () => {
 
     describe("getVideoDuration", () => {
       it("should return the video element initial duration in getVideoDuration by default", () => {
-
         // ! HAHA ! NaN is not === to NaN
-        expect(player.getVideoDuration()).to.eql(
-          player.getVideoElement().duration
-        );
+        expect(player.getVideoDuration()).to.eql(player.getVideoElement().duration);
       });
     });
 
@@ -382,8 +379,9 @@ describe("initial idle state", () => {
 
         expect(player.getMinAudioBitrate()).to.equal(defaultMin);
         expect(err).to.be.an.instanceOf(Error);
-        expect(err.message).to
-          .equal("Invalid minimum audio bitrate given. Its value, \"1000\" is superior the current maximum audio birate, \"9\".");
+        expect(err.message).to.equal(
+          'Invalid minimum audio bitrate given. Its value, "1000" is superior the current maximum audio birate, "9".',
+        );
       });
 
       it("should allow setting different or equal max and min audio bitrate in that order", () => {
@@ -440,8 +438,9 @@ describe("initial idle state", () => {
 
         expect(player.getMinVideoBitrate()).to.equal(defaultMin);
         expect(err).to.be.an.instanceOf(Error);
-        expect(err.message).to
-          .equal("Invalid minimum video bitrate given. Its value, \"1000\" is superior the current maximum video birate, \"9\".");
+        expect(err.message).to.equal(
+          'Invalid minimum video bitrate given. Its value, "1000" is superior the current maximum video birate, "9".',
+        );
       });
 
       it("should allow setting different or equal max and min video bitrate in that order", () => {
@@ -504,11 +503,13 @@ describe("initial idle state", () => {
 
         expect(player.getMaxAudioBitrate()).to.equal(defaultMax);
         expect(err1).to.be.an.instanceOf(Error);
-        expect(err1.message).to
-          .equal("Invalid maximum audio bitrate given. Its value, \"-1\" is inferior the current minimum audio birate, \"0\".");
+        expect(err1.message).to.equal(
+          'Invalid maximum audio bitrate given. Its value, "-1" is inferior the current minimum audio birate, "0".',
+        );
         expect(err2).to.be.an.instanceOf(Error);
-        expect(err2.message).to
-          .equal("Invalid maximum audio bitrate given. Its value, \"9\" is inferior the current minimum audio birate, \"1000\".");
+        expect(err2.message).to.equal(
+          'Invalid maximum audio bitrate given. Its value, "9" is inferior the current minimum audio birate, "1000".',
+        );
       });
 
       it("should allow setting different or equal min and max audio bitrate in that order", () => {
@@ -540,7 +541,6 @@ describe("initial idle state", () => {
       });
 
       it("should update maximum video bitrate when calling setMaxVideoBitrate", () => {
-
         player.setMaxVideoBitrate(84);
         expect(player.getMaxVideoBitrate()).to.equal(84);
 
@@ -572,11 +572,13 @@ describe("initial idle state", () => {
 
         expect(player.getMaxVideoBitrate()).to.equal(defaultMax);
         expect(err1).to.be.an.instanceOf(Error);
-        expect(err1.message).to
-          .equal("Invalid maximum video bitrate given. Its value, \"-1\" is inferior the current minimum video birate, \"0\".");
+        expect(err1.message).to.equal(
+          'Invalid maximum video bitrate given. Its value, "-1" is inferior the current minimum video birate, "0".',
+        );
         expect(err2).to.be.an.instanceOf(Error);
-        expect(err2.message).to
-          .equal("Invalid maximum video bitrate given. Its value, \"9\" is inferior the current minimum video birate, \"1000\".");
+        expect(err2.message).to.equal(
+          'Invalid maximum video bitrate given. Its value, "9" is inferior the current minimum video birate, "1000".',
+        );
       });
 
       it("should allow setting different or equal min and max video bitrate in that order", () => {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IParsedAdaptation } from "../types";
+import type { IParsedAdaptation } from "../types";
 
 /**
  * Returns "first time of reference" from the adaptation given, considering a
@@ -27,21 +27,22 @@ import { IParsedAdaptation } from "../types";
  * @returns {Number|undefined}
  */
 export default function getFirstPositionFromAdaptation(
-  adaptation: IParsedAdaptation
-) : number | undefined | null {
+  adaptation: IParsedAdaptation,
+): number | undefined | null {
   const { representations } = adaptation;
-  let max : null | number = null;
+  let max: null | number = null;
   for (let i = 0; i < representations.length; i++) {
     const firstPosition = representations[i].index.getFirstAvailablePosition();
-    if (firstPosition === undefined) { // we cannot tell
+    if (firstPosition === undefined) {
+      // we cannot tell
       return undefined;
     }
     if (firstPosition !== null) {
-      max = max == null ? firstPosition :
-                          Math.max(max, firstPosition);
+      max = max == null ? firstPosition : Math.max(max, firstPosition);
     }
   }
-  if (max === null) { // It means that all positions were null === no segments (yet?)
+  if (max === null) {
+    // It means that all positions were null === no segments (yet?)
     return null;
   }
   return max;

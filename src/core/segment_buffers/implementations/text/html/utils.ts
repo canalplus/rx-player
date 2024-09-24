@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  ICuesGroup,
-  IHTMLCue,
-} from "./types";
+import type { ICuesGroup, IHTMLCue } from "./types";
 
 /**
  * Maximum time difference, in seconds, between two text segment's start times
@@ -77,7 +74,10 @@ const MAX_DELTA_BUFFER_TIME = 0.2;
  * @returns {Boolean}
  */
 export function areNearlyEqual(
-  a : number, b : number, delta: number = MAX_DELTA_BUFFER_TIME) : boolean {
+  a: number,
+  b: number,
+  delta: number = MAX_DELTA_BUFFER_TIME,
+): boolean {
   return Math.abs(a - b) <= Math.min(delta, MAX_DELTA_BUFFER_TIME);
 }
 
@@ -98,7 +98,7 @@ const EPSILON = 5e-2; // 5%
  */
 export function areCuesStartNearlyEqual(
   firstCue: ICuesGroup,
-  secondCue: ICuesGroup
+  secondCue: ICuesGroup,
 ): boolean {
   const firstCueDuration = firstCue.end - firstCue.start;
   const secondCueDuration = secondCue.end - secondCue.start;
@@ -106,7 +106,7 @@ export function areCuesStartNearlyEqual(
   const minDuration = Math.min(
     firstCueDuration,
     secondCueDuration,
-    MAX_DELTA_BUFFER_TIME
+    MAX_DELTA_BUFFER_TIME,
   );
   // ratio diff/ minduration is bellow 5%
   return diffBetweenStart / minDuration <= EPSILON;
@@ -118,7 +118,7 @@ export function areCuesStartNearlyEqual(
  * @param {Number} time
  * @returns {Array.<Object>}
  */
-export function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
+export function getCuesBefore(cues: IHTMLCue[], time: number): IHTMLCue[] {
   for (let i = cues.length - 1; i >= 0; i--) {
     const cue = cues[i];
     if (cue.start < time) {
@@ -134,7 +134,7 @@ export function getCuesBefore(cues : IHTMLCue[], time : number) : IHTMLCue[] {
  * @param {Number} time
  * @returns {Array.<Object>}
  */
-export function getCuesAfter(cues : IHTMLCue[], time : number) : IHTMLCue[] {
+export function getCuesAfter(cues: IHTMLCue[], time: number): IHTMLCue[] {
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
     if (cue.end > time) {
@@ -151,20 +151,16 @@ export function getCuesAfter(cues : IHTMLCue[], time : number) : IHTMLCue[] {
  * @returns {Array.<Object>}
  */
 export function removeCuesInfosBetween(
-  cuesInfos : ICuesGroup,
-  start : number,
-  end : number
-) : [ICuesGroup, ICuesGroup] {
+  cuesInfos: ICuesGroup,
+  start: number,
+  end: number,
+): [ICuesGroup, ICuesGroup] {
   const endCuesInfos1 = Math.max(cuesInfos.start, start);
   const cues1 = getCuesBefore(cuesInfos.cues, start);
-  const cuesInfos1 = { start: cuesInfos.start,
-                       end: endCuesInfos1,
-                       cues: cues1 };
+  const cuesInfos1 = { start: cuesInfos.start, end: endCuesInfos1, cues: cues1 };
 
   const startCuesInfos2 = Math.min(end, cuesInfos.end);
   const cues2 = getCuesAfter(cuesInfos.cues, end);
-  const cuesInfos2 = { start: startCuesInfos2,
-                       end: cuesInfos.end,
-                       cues: cues2 };
+  const cuesInfos2 = { start: startCuesInfos2, end: cuesInfos.end, cues: cues2 };
   return [cuesInfos1, cuesInfos2];
 }

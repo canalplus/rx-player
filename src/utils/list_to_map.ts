@@ -20,13 +20,10 @@
  * @param {Array.<string>} list
  * @returns {Object}
  */
-export default function listToMap(
-  list : string[]
-) : Partial<Record<string, string>> {
-  const map = list.reduce<Partial<Record<string, string>>>(
-    (obj, name : string) => {
-      obj[name] = name;
-      return obj;
-    }, {});
+export default function listToMap(list: string[]): Partial<Record<string, string>> {
+  const map = list.reduce<Partial<Record<string, string>>>((obj, name: string) => {
+    obj[name] = name;
+    return obj;
+  }, {});
   return map;
 }

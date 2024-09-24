@@ -16,10 +16,10 @@
 
 // eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
-import { IFeaturesObject } from "../../features/types";
+import type { IFeaturesObject } from "../../features/types";
 import local from "../../transports/local";
 
-function addLocalManifestFeature(features: IFeaturesObject) : void {
+function addLocalManifestFeature(features: IFeaturesObject): void {
   features.transports.local = local;
   features.mediaSourceInit = MediaSourceContentInitializer;
 }

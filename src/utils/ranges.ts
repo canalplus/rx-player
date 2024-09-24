@@ -32,8 +32,10 @@
 // Factor for rounding errors
 const EPSILON = 1 / 60;
 
-interface IRange { start : number;
-                   end : number; }
+interface IRange {
+  start: number;
+  end: number;
+}
 
 /**
  * Check equality with a tolerance of EPSILON.
@@ -43,7 +45,7 @@ interface IRange { start : number;
  * @param {Number} b
  * @returns {Boolean}
  */
-function nearlyEqual(a : number, b : number) : boolean {
+function nearlyEqual(a: number, b: number): boolean {
   return Math.abs(a - b) < EPSILON;
 }
 
@@ -54,10 +56,10 @@ function nearlyEqual(a : number, b : number) : boolean {
  * @param {Object} range2
  * @returns {Object}
  */
-function createRangeUnion(range1 : IRange, range2 : IRange) : IRange {
+function createRangeUnion(range1: IRange, range2: IRange): IRange {
   const start = Math.min(range1.start, range2.start);
   const end = Math.max(range1.end, range2.end);
-  return  { start, end };
+  return { start, end };
 }
 
 /**
@@ -67,7 +69,7 @@ function createRangeUnion(range1 : IRange, range2 : IRange) : IRange {
  * @param {Array<Object>} ranges
  * @returns {Array<Object>}
  */
-function removeEmptyRanges(ranges : IRange[]) : IRange[] {
+function removeEmptyRanges(ranges: IRange[]): IRange[] {
   for (let index = 0; index < ranges.length; index++) {
     const range = ranges[index];
     if (range.start === range.end) {
@@ -82,7 +84,7 @@ function removeEmptyRanges(ranges : IRange[]) : IRange[] {
  * @param {Array<Object>} ranges
  * @returns {Array<Object>}
  */
-function mergeContiguousRanges(ranges : IRange[]) : IRange[] {
+function mergeContiguousRanges(ranges: IRange[]): IRange[] {
   for (let index = 1; index < ranges.length; index++) {
     const prevRange = ranges[index - 1];
     const currRange = ranges[index];
@@ -100,7 +102,7 @@ function mergeContiguousRanges(ranges : IRange[]) : IRange[] {
  * @param {Object} range2
  * @returns {Boolean}
  */
-function isAfter(range1 : IRange, range2 : IRange) : boolean {
+function isAfter(range1: IRange, range2: IRange): boolean {
   return range1.start >= range2.end;
 }
 
@@ -110,7 +112,7 @@ function isAfter(range1 : IRange, range2 : IRange) : boolean {
  * @param {Object} range2
  * @returns {Boolean}
  */
-function isBefore(range1 : IRange, range2 : IRange) : boolean {
+function isBefore(range1: IRange, range2: IRange): boolean {
   return range1.end <= range2.start;
 }
 
@@ -121,7 +123,7 @@ function isBefore(range1 : IRange, range2 : IRange) : boolean {
  * @param {number} time
  * @returns {boolean}
  */
-function isTimeInRanges(ranges : IRange[], time : number) : boolean {
+function isTimeInRanges(ranges: IRange[], time: number): boolean {
   for (let i = 0; i < ranges.length; i++) {
     if (isTimeInRange(ranges[i], time)) {
       return true;
@@ -136,7 +138,7 @@ function isTimeInRanges(ranges : IRange[], time : number) : boolean {
  * @param {Number} Time
  * @returns {Boolean}
  */
-function isTimeInRange({ start, end } : IRange, time : number) : boolean {
+function isTimeInRange({ start, end }: IRange, time: number): boolean {
   return start <= time && time < end;
 }
 
@@ -146,10 +148,12 @@ function isTimeInRange({ start, end } : IRange, time : number) : boolean {
  * @param {Object} range2
  * @returns {Boolean}
  */
-function areRangesOverlapping(range1 : IRange, range2 : IRange) : boolean {
-  return isTimeInRange(range1, range2.start) ||
-         range1.start < range2.end && range2.end < range1.end ||
-         isTimeInRange(range2, range1.start);
+function areRangesOverlapping(range1: IRange, range2: IRange): boolean {
+  return (
+    isTimeInRange(range1, range2.start) ||
+    (range1.start < range2.end && range2.end < range1.end) ||
+    isTimeInRange(range2, range1.start)
+  );
 }
 
 /**
@@ -158,9 +162,8 @@ function areRangesOverlapping(range1 : IRange, range2 : IRange) : boolean {
  * @param {Object} range2
  * @returns {Boolean}
  */
-function areRangesNearlyContiguous(range1 : IRange, range2 : IRange) : boolean {
-  return nearlyEqual(range2.start, range1.end) ||
-         nearlyEqual(range2.end, range1.start);
+function areRangesNearlyContiguous(range1: IRange, range2: IRange): boolean {
+  return nearlyEqual(range2.start, range1.end) || nearlyEqual(range2.end, range1.start);
 }
 
 /**
@@ -168,11 +171,10 @@ function areRangesNearlyContiguous(range1 : IRange, range2 : IRange) : boolean {
  * @param {TimeRanges} timeRanges
  * @returns {Array.<Object>}
  */
-function convertToRanges(timeRanges : TimeRanges) : IRange[] {
-  const ranges : IRange[] = [];
+function convertToRanges(timeRanges: TimeRanges): IRange[] {
+  const ranges: IRange[] = [];
   for (let i = 0; i < timeRanges.length; i++) {
-    ranges.push({ start: timeRanges.start(i),
-                  end: timeRanges.end(i) });
+    ranges.push({ start: timeRanges.start(i), end: timeRanges.end(i) });
   }
   return ranges;
 }
@@ -182,14 +184,13 @@ function convertToRanges(timeRanges : TimeRanges) : IRange[] {
  * @param {TimeRanges} timeRanges
  * @returns {Object}
  */
-function getRange(timeRanges : TimeRanges, time : number) : IRange|null {
+function getRange(timeRanges: TimeRanges, time: number): IRange | null {
   for (let i = timeRanges.length - 1; i >= 0; i--) {
     const start = timeRanges.start(i);
     if (time >= start) {
       const end = timeRanges.end(i);
       if (time < end) {
-        return { start,
-                 end };
+        return { start, end };
       }
     }
   }
@@ -202,7 +203,7 @@ function getRange(timeRanges : TimeRanges, time : number) : IRange|null {
  * @param {Number} time
  * @returns {Number}
  */
-function getNextRangeGap(timeRanges : TimeRanges, time : number) : number {
+function getNextRangeGap(timeRanges: TimeRanges, time: number): number {
   const len = timeRanges.length;
   for (let i = 0; i < len; i++) {
     const start = timeRanges.start(i);
@@ -222,11 +223,11 @@ function getNextRangeGap(timeRanges : TimeRanges, time : number) : number {
  *   - innerRange {Object|null}: the range which contain the given time.
  */
 function getInnerAndOuterTimeRanges(
-  timeRanges : TimeRanges,
-  time : number
-) : { innerRange : IRange|null; outerRanges : IRange[] } {
-  let innerRange : IRange|null = null;
-  const outerRanges : IRange[] = [];
+  timeRanges: TimeRanges,
+  time: number,
+): { innerRange: IRange | null; outerRanges: IRange[] } {
+  let innerRange: IRange | null = null;
+  const outerRanges: IRange[] = [];
   for (let i = 0; i < timeRanges.length; i++) {
     const start = timeRanges.start(i);
     const end = timeRanges.end(i);
@@ -246,13 +247,9 @@ function getInnerAndOuterTimeRanges(
  * @param {Number} currentTime
  * @returns {Number}
  */
-function getSizeOfRange(
-  timeRanges : TimeRanges,
-  currentTime : number
-) : number {
+function getSizeOfRange(timeRanges: TimeRanges, currentTime: number): number {
   const range = getRange(timeRanges, currentTime);
-  return range !== null ? range.end - range.start :
-                          0;
+  return range !== null ? range.end - range.start : 0;
 }
 
 /**
@@ -262,13 +259,9 @@ function getSizeOfRange(
  * @param {Number} currentTime
  * @returns {Number}
  */
-function getPlayedSizeOfRange(
-  timeRanges : TimeRanges,
-  currentTime : number
-) : number {
+function getPlayedSizeOfRange(timeRanges: TimeRanges, currentTime: number): number {
   const range = getRange(timeRanges, currentTime);
-  return range !== null ? currentTime - range.start :
-                          0;
+  return range !== null ? currentTime - range.start : 0;
 }
 
 /**
@@ -278,13 +271,9 @@ function getPlayedSizeOfRange(
  * @param {Number} currentTime
  * @returns {Number}
  */
-function getLeftSizeOfRange(
-  timeRanges : TimeRanges,
-  currentTime : number
-) : number {
+function getLeftSizeOfRange(timeRanges: TimeRanges, currentTime: number): number {
   const range = getRange(timeRanges, currentTime);
-  return range !== null ? range.end - currentTime :
-                          Infinity;
+  return range !== null ? range.end - currentTime : Infinity;
 }
 
 /**
@@ -294,12 +283,12 @@ function getLeftSizeOfRange(
  * @param {Object} rangeToAddArg
  * @returns {Array.<Object>}
  */
-function insertInto(ranges : IRange[], rangeToAddArg : IRange) : IRange[] {
+function insertInto(ranges: IRange[], rangeToAddArg: IRange): IRange[] {
   if (rangeToAddArg.start === rangeToAddArg.end) {
     return ranges;
   }
 
-  let rangeToAdd : IRange = rangeToAddArg;
+  let rangeToAdd: IRange = rangeToAddArg;
 
   // For each present range check if we need to:
   // - In case we are overlapping or contiguous:
@@ -331,8 +320,7 @@ function insertInto(ranges : IRange[], rangeToAddArg : IRange) : IRange[] {
           break;
         }
       } else {
-        if (isBefore(ranges[index - 1], rangeToAdd)
-         && isBefore(rangeToAdd, range)) {
+        if (isBefore(ranges[index - 1], rangeToAdd) && isBefore(rangeToAdd, range)) {
           // We are exactly after the current previous range, and
           // before the current range, while not overlapping with none
           // of them. Insert here.
@@ -355,8 +343,8 @@ function insertInto(ranges : IRange[], rangeToAddArg : IRange) : IRange[] {
  * @param {Array.<Object>} ranges
  * @returns {Array.<Object>}
  */
-function findOverlappingRanges(range : IRange, ranges : IRange[]) : IRange[] {
-  const resultingRanges : IRange[] = [];
+function findOverlappingRanges(range: IRange, ranges: IRange[]): IRange[] {
+  const resultingRanges: IRange[] = [];
   for (let i = 0; i < ranges.length; i++) {
     if (areRangesOverlapping(range, ranges[i])) {
       resultingRanges.push(ranges[i]);
@@ -372,11 +360,8 @@ function findOverlappingRanges(range : IRange, ranges : IRange[]) : IRange[] {
  * @param {Array.<Range>} ranges2
  * @returns {Array.<Range>}
  */
-function keepRangeIntersection(
-  ranges1 : IRange[],
-  ranges2 : IRange[]
-) : IRange[] {
-  const result : IRange[] = [];
+function keepRangeIntersection(ranges1: IRange[], ranges2: IRange[]): IRange[] {
+  const result: IRange[] = [];
 
   for (let i = 0; i < ranges1.length; i++) {
     const range = ranges1[i];
@@ -384,8 +369,10 @@ function keepRangeIntersection(
     if (overlappingRanges.length > 0) {
       for (let j = 0; j < overlappingRanges.length; j++) {
         const overlappingRange = overlappingRanges[j];
-        result.push({ start: Math.max(range.start, overlappingRange.start),
-                      end: Math.min(range.end, overlappingRange.end) });
+        result.push({
+          start: Math.max(range.start, overlappingRange.start),
+          end: Math.min(range.end, overlappingRange.end),
+        });
       }
     }
   }
@@ -418,39 +405,36 @@ function keepRangeIntersection(
  * @param {Array.<Object} rangesToExclude
  * @return {Array.<Object>}
  */
-function excludeFromRanges(
-  baseRanges : IRange[],
-  rangesToExclude : IRange[]
-) : IRange[] {
-  const result : IRange[] = [];
+function excludeFromRanges(baseRanges: IRange[], rangesToExclude: IRange[]): IRange[] {
+  const result: IRange[] = [];
 
   // For every range in `baseRanges`, find overlapping ranges with
   // `rangesToExclude` and remove them.
   for (let i = 0; i < baseRanges.length; i++) {
     const range = baseRanges[i];
-    const intersections : IRange[] = [];
+    const intersections: IRange[] = [];
     const overlappingRanges = findOverlappingRanges(range, rangesToExclude);
     if (overlappingRanges.length > 0) {
       for (let j = 0; j < overlappingRanges.length; j++) {
         const overlappingRange = overlappingRanges[j];
-        intersections.push({ start: Math.max(range.start, overlappingRange.start),
-                             end: Math.min(range.end, overlappingRange.end) });
+        intersections.push({
+          start: Math.max(range.start, overlappingRange.start),
+          end: Math.min(range.end, overlappingRange.end),
+        });
       }
     }
     if (intersections.length === 0) {
       result.push(range);
     } else {
-      let lastStart : number = range.start;
+      let lastStart: number = range.start;
       for (let j = 0; j < intersections.length; j++) {
         if (intersections[j].start > lastStart) {
-          result.push({ start: lastStart,
-                        end: intersections[j].start });
+          result.push({ start: lastStart, end: intersections[j].start });
         }
         lastStart = intersections[j].end;
       }
       if (lastStart < range.end) {
-        result.push({ start: lastStart,
-                      end: range.end });
+        result.push({ start: lastStart, end: range.end });
       }
     }
   }
@@ -465,10 +449,7 @@ function excludeFromRanges(
  * @param {Number} time
  * @returns {boolean}
  */
-function isTimeInTimeRanges(
-  ranges : TimeRanges,
-  time : number
-) : boolean {
+function isTimeInTimeRanges(ranges: TimeRanges, time: number): boolean {
   for (let i = 0; i < ranges.length; i++) {
     if (ranges.start(i) <= time && time < ranges.end(i)) {
       return true;
@@ -477,6 +458,7 @@ function isTimeInTimeRanges(
   return false;
 }
 
+export type { IRange };
 export {
   convertToRanges,
   excludeFromRanges,
@@ -487,7 +469,6 @@ export {
   getRange,
   getSizeOfRange,
   insertInto,
-  IRange,
   isAfter,
   isBefore,
   isTimeInTimeRanges,

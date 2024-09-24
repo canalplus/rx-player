@@ -44,8 +44,8 @@ const INITIAL_PATH = "./versions";
 
 function sortVersions(versions) {
   return versions
-    .filter(v => semver.valid(v) != null)
-    .sort((a, b) => semver.gt(a, b) ? -1 : 1);
+    .filter((v) => semver.valid(v) != null)
+    .sort((a, b) => (semver.gt(a, b) ? -1 : 1));
 }
 
 function isDirectory(source) {
@@ -107,9 +107,6 @@ if (versions.length <= 0) {
 
 body += "<body/>";
 
-const html = "<html>" +
-  head +
-  body +
-  "<html>";
+const html = "<html>" + head + body + "<html>";
 
 writeFileSync("./documentation_pages_by_version.html", html);

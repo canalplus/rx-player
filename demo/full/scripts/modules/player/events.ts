@@ -17,9 +17,8 @@ const BUFFERED_DATA_UPDATES_INTERVAL = 100;
 function linkPlayerEventsToState(
   player: RxPlayer,
   state: IStateUpdater<IPlayerModuleState>,
-  abortSignal: AbortSignal
+  abortSignal: AbortSignal,
 ): void {
-
   linkPlayerEventToState("textTrackChange", "subtitle");
   linkPlayerEventToState("audioTrackChange", "language");
   linkPlayerEventToState("videoTrackChange", "videoTrack");
@@ -49,7 +48,8 @@ function linkPlayerEventsToState(
     // use an interval for current position
     positionUpdatesInterval = window.setInterval(
       updatePositionInfo,
-      POSITION_UPDATES_INTERVAL);
+      POSITION_UPDATES_INTERVAL,
+    );
 
     updatePositionInfo();
 
@@ -60,9 +60,7 @@ function linkPlayerEventsToState(
       const livePosition = player.getLivePosition();
       const maximumPosition = player.getMaximumPosition();
       let bufferGap = player.getVideoBufferGap();
-      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ?
-        0 :
-        bufferGap;
+      bufferGap = !isFinite(bufferGap) || isNaN(bufferGap) ? 0 : bufferGap;
 
       const livePos = livePosition ?? maximumPosition;
       state.updateBulk({
@@ -73,11 +71,10 @@ function linkPlayerEventsToState(
         livePosition,
         minimumPosition: player.getMinimumPosition(),
         maximumPosition,
-        liveGap: typeof livePos === "number" ?
-          livePos - player.getPosition() :
-          undefined,
+        liveGap: typeof livePos === "number" ? livePos - player.getPosition() : undefined,
         playbackRate: player.getPlaybackRate(),
-        videoTrackHasTrickMode: videoTrack !== null &&
+        videoTrackHasTrickMode:
+          videoTrack !== null &&
           videoTrack !== undefined &&
           videoTrack.trickModeTracks !== undefined &&
           videoTrack.trickModeTracks.length > 0,
@@ -122,10 +119,7 @@ function linkPlayerEventsToState(
     });
   }
 
-  const bufferedDataItv = setInterval(
-    updateBufferedData,
-    BUFFERED_DATA_UPDATES_INTERVAL
-  );
+  const bufferedDataItv = setInterval(updateBufferedData, BUFFERED_DATA_UPDATES_INTERVAL);
   updateBufferedData();
   abortSignal.addEventListener("abort", () => {
     clearInterval(bufferedDataItv);
@@ -151,7 +145,7 @@ function linkPlayerEventsToState(
 
   function linkPlayerEventToState<K extends keyof IPlayerModuleState>(
     event: Parameters<typeof player.addEventListener>[0],
-    stateItem: K
+    stateItem: K,
   ): void {
     player.addEventListener(event, onEvent);
     function onEvent(payload: unknown): void {
@@ -227,6 +221,4 @@ function linkPlayerEventsToState(
   }
 }
 
-export {
-  linkPlayerEventsToState,
-};
+export { linkPlayerEventsToState };

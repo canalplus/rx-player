@@ -4,9 +4,7 @@
  * @param {Function} val
  * @returns {Promise}
  */
-export default function wrapInPromise<T>(
-  val: () => (T | Promise<T>)
-) : Promise<T> {
+export default function wrapInPromise<T>(val: () => T | Promise<T>): Promise<T> {
   try {
     const ret = val();
     if (

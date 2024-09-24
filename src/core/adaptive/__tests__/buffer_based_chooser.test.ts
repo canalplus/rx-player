@@ -30,14 +30,12 @@ describe("BufferBasedChooser", () => {
 
   it("should return the first bitrate if the current bitrate is undefined", () => {
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([]);
     bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
-    expect(bbc.getLastEstimate())
-      .toEqual(undefined);
+    expect(bbc.getLastEstimate()).toEqual(undefined);
 
     bbc = new BufferBasedChooser([1, 2, 3]);
     bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
@@ -91,10 +89,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should log an error and return the first bitrate if the given bitrate does not exist", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn(), error: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     const bbc = new BufferBasedChooser([10, 20]);
@@ -106,16 +103,16 @@ describe("BufferBasedChooser", () => {
     });
     expect(bbc.getLastEstimate()).toEqual(10);
     expect(logger.error).toHaveBeenCalledTimes(1);
-    expect(logger.error)
-      .toHaveBeenCalledWith("ABR: Current Bitrate not found in the calculated levels");
+    expect(logger.error).toHaveBeenCalledWith(
+      "ABR: Current Bitrate not found in the calculated levels",
+    );
   });
 
   /* eslint-disable max-len */
   it("should not go to the next bitrate if we don't have a high enough maintainability score", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
@@ -150,7 +147,7 @@ describe("BufferBasedChooser", () => {
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
+      currentScore: { score: 2.3, confidenceLevel: ScoreConfidenceLevel.LOW },
     });
     expect(bbc.getLastEstimate()).toEqual(20);
 
@@ -159,7 +156,7 @@ describe("BufferBasedChooser", () => {
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.LOW },
+      currentScore: { score: 2.3, confidenceLevel: ScoreConfidenceLevel.LOW },
     });
     expect(bbc.getLastEstimate()).toEqual(20);
 
@@ -175,10 +172,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
@@ -213,7 +209,7 @@ describe("BufferBasedChooser", () => {
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
+      currentScore: { score: 2.3, confidenceLevel: ScoreConfidenceLevel.HIGH },
     });
     expect(bbc.getLastEstimate()).toEqual(40);
 
@@ -222,7 +218,7 @@ describe("BufferBasedChooser", () => {
       bufferGap: 30,
       speed: 2,
       currentBitrate: 20,
-      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
+      currentScore: { score: 2.3, confidenceLevel: ScoreConfidenceLevel.HIGH },
     });
     expect(bbc.getLastEstimate()).toEqual(40);
 
@@ -238,10 +234,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
@@ -285,19 +280,17 @@ describe("BufferBasedChooser", () => {
       bufferGap: 13,
       speed: 2,
       currentBitrate: 20,
-      currentScore: { score: 2.30, confidenceLevel: ScoreConfidenceLevel.HIGH },
+      currentScore: { score: 2.3, confidenceLevel: ScoreConfidenceLevel.HIGH },
     });
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
   /* eslint-disable max-len */
   it("should stay at the current bitrate if we are currently at the maximum one", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
-    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser")
-      .default;
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
+    const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
@@ -320,10 +313,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should stay at the current bitrate if the current one is not maintainable due to the speed", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
@@ -374,10 +366,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should lower bitrate if the current one is not maintainable due to the speed", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
@@ -428,10 +419,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should not lower bitrate if the current one is not maintainable due to the speed but confidence on the score is low", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);
@@ -491,10 +481,9 @@ describe("BufferBasedChooser", () => {
 
   /* eslint-disable max-len */
   it("should not go to the next bitrate if we do not know if it is maintainable", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const logger = { debug: jest.fn() };
-    jest.mock("../../../log", () => ({ __esModule: true as const,
-                                       default: logger }));
+    jest.mock("../../../log", () => ({ __esModule: true as const, default: logger }));
     const BufferBasedChooser = jest.requireActual("../buffer_based_chooser").default;
 
     let bbc = new BufferBasedChooser([10, 20, 40]);

@@ -1,20 +1,15 @@
 import { expect } from "chai";
 import RxPlayer from "../../../src";
-import {
-  forcedSubtitles,
-} from "../../contents/DASH_static_SegmentTimeline";
+import { forcedSubtitles } from "../../contents/DASH_static_SegmentTimeline";
 import XHRMock from "../../utils/request_mock";
-import {
-  waitForLoadedStateAfterLoadVideo,
-} from "../../utils/waitForPlayerState";
+import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   let player;
   let xhrMock;
 
   async function loadContent() {
-    player.loadVideo({ url: forcedSubtitles.url,
-                       transport: forcedSubtitles.transport });
+    player.loadVideo({ url: forcedSubtitles.url, transport: forcedSubtitles.transport });
     await waitForLoadedStateAfterLoadVideo(player);
   }
 
@@ -39,11 +34,12 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
     expect(currentTextTrack.closedCaption).to.equal(
       props.closedCaption,
       `"closedCaption" not set to "${props.closedCaption}" but ` +
-      `to "${currentTextTrack.closedCaption}"`);
+        `to "${currentTextTrack.closedCaption}"`,
+    );
     expect(currentTextTrack.forced).to.equal(
       props.forced,
-      `"forced" not set to "${props.forced}" but ` +
-      `to "${currentTextTrack.forced}"`);
+      `"forced" not set to "${props.forced}" but ` + `to "${currentTextTrack.forced}"`,
+    );
   }
 
   beforeEach(() => {
@@ -60,10 +56,12 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   it("should set the forced text track associated to the current audio track", async function () {
     player.dispose();
     player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "fr",
-        audioDescription: false,
-      }],
+      preferredAudioTracks: [
+        {
+          language: "fr",
+          audioDescription: false,
+        },
+      ],
     });
 
     await loadContent();
@@ -79,10 +77,12 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   it("should set the forced text track associated to no language if none is linked to the audio track", async function () {
     player.dispose();
     player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "en",
-        audioDescription: false,
-      }],
+      preferredAudioTracks: [
+        {
+          language: "en",
+          audioDescription: false,
+        },
+      ],
     });
 
     await loadContent();
@@ -96,14 +96,18 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   it("should still prefer preferences over forced subtitles", async function () {
     player.dispose();
     player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "fr",
-        audioDescription: false,
-      }],
-      preferredTextTracks: [{
-        language: "fr",
-        closedCaption: false,
-      }],
+      preferredAudioTracks: [
+        {
+          language: "fr",
+          audioDescription: false,
+        },
+      ],
+      preferredTextTracks: [
+        {
+          language: "fr",
+          closedCaption: false,
+        },
+      ],
     });
 
     await loadContent();
@@ -128,17 +132,22 @@ describe("DASH forced-subtitles content (SegmentTimeline)", function () {
   it("should fallback to forced subtitles if no preference match", async function () {
     player.dispose();
     player = new RxPlayer({
-      preferredAudioTracks: [{
-        language: "fr",
-        audioDescription: false,
-      }],
-      preferredTextTracks: [{
-        language: "swa",
-        closedCaption: false,
-      }, {
-        language: "de",
-        closedCaption: true,
-      }],
+      preferredAudioTracks: [
+        {
+          language: "fr",
+          audioDescription: false,
+        },
+      ],
+      preferredTextTracks: [
+        {
+          language: "swa",
+          closedCaption: false,
+        },
+        {
+          language: "de",
+          closedCaption: true,
+        },
+      ],
     });
 
     await loadContent();

@@ -16,23 +16,23 @@
 
 import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
-import { IReadOnlySharedReference } from "../../utils/reference";
-import { CancellationSignal } from "../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../api";
-import { IStreamOrchestratorPlaybackObservation } from "../stream";
-import { SegmentBuffer } from "./implementations";
+import type { IReadOnlySharedReference } from "../../utils/reference";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type { IReadOnlyPlaybackObserver } from "../api";
+import type { IStreamOrchestratorPlaybackObservation } from "../stream";
+import type { SegmentBuffer } from "./implementations";
 
 export interface IGarbageCollectorArgument {
   /** SegmentBuffer implementation */
-  segmentBuffer : SegmentBuffer;
+  segmentBuffer: SegmentBuffer;
   /** Emit current position in seconds regularly */
-  playbackObserver : IReadOnlyPlaybackObserver<
+  playbackObserver: IReadOnlyPlaybackObserver<
     Pick<IStreamOrchestratorPlaybackObservation, "position">
   >;
   /** Maximum time to keep behind current time position, in seconds */
-  maxBufferBehind : IReadOnlySharedReference<number>;
+  maxBufferBehind: IReadOnlySharedReference<number>;
   /** Minimum time to keep behind current time position, in seconds */
-  maxBufferAhead : IReadOnlySharedReference<number>;
+  maxBufferAhead: IReadOnlySharedReference<number>;
 }
 
 /**
@@ -46,29 +46,33 @@ export interface IGarbageCollectorArgument {
  * @param {Object} cancellationSignal
  */
 export default function BufferGarbageCollector(
-  { segmentBuffer,
+  {
+    segmentBuffer,
     playbackObserver,
     maxBufferBehind,
-    maxBufferAhead } : IGarbageCollectorArgument,
-  cancellationSignal : CancellationSignal
-) : void {
-  let lastPosition : number;
-  playbackObserver.listen((o) => {
-    lastPosition = o.position.pending ?? o.position.last;
-    clean();
-  }, { includeLastObservation: true, clearSignal: cancellationSignal });
+    maxBufferAhead,
+  }: IGarbageCollectorArgument,
+  cancellationSignal: CancellationSignal,
+): void {
+  let lastPosition: number;
+  playbackObserver.listen(
+    (o) => {
+      lastPosition = o.position.pending ?? o.position.last;
+      clean();
+    },
+    { includeLastObservation: true, clearSignal: cancellationSignal },
+  );
   function clean() {
-    clearBuffer(segmentBuffer,
-                lastPosition,
-                maxBufferBehind.getValue(),
-                maxBufferAhead.getValue(),
-                cancellationSignal)
-      .catch(e => {
-        const errMsg = e instanceof Error ?
-          e.message :
-          "Unknown error";
-        log.error("Could not run BufferGarbageCollector:", errMsg);
-      });
+    clearBuffer(
+      segmentBuffer,
+      lastPosition,
+      maxBufferBehind.getValue(),
+      maxBufferAhead.getValue(),
+      cancellationSignal,
+    ).catch((e) => {
+      const errMsg = e instanceof Error ? e.message : "Unknown error";
+      log.error("Could not run BufferGarbageCollector:", errMsg);
+    });
   }
   maxBufferBehind.onUpdate(clean, { clearSignal: cancellationSignal });
   maxBufferAhead.onUpdate(clean, { clearSignal: cancellationSignal });
@@ -92,25 +96,25 @@ export default function BufferGarbageCollector(
  * @returns {Promise}
  */
 async function clearBuffer(
-  segmentBuffer : SegmentBuffer,
-  position : number,
-  maxBufferBehind : number,
-  maxBufferAhead : number,
-  cancellationSignal : CancellationSignal
-) : Promise<void> {
+  segmentBuffer: SegmentBuffer,
+  position: number,
+  maxBufferBehind: number,
+  maxBufferAhead: number,
+  cancellationSignal: CancellationSignal,
+): Promise<void> {
   if (!isFinite(maxBufferBehind) && !isFinite(maxBufferAhead)) {
     return Promise.resolve();
   }
 
-  const cleanedupRanges : Array<{ start : number;
-                                  end: number; }> = [];
-  const { innerRange, outerRanges } =
-    getInnerAndOuterTimeRanges(segmentBuffer.getBufferedRanges(),
-                               position);
+  const cleanedupRanges: Array<{ start: number; end: number }> = [];
+  const { innerRange, outerRanges } = getInnerAndOuterTimeRanges(
+    segmentBuffer.getBufferedRanges(),
+    position,
+  );
 
   const collectBufferBehind = () => {
     if (!isFinite(maxBufferBehind)) {
-      return ;
+      return;
     }
 
     // begin from the oldest
@@ -118,26 +122,30 @@ async function clearBuffer(
       const outerRange = outerRanges[i];
       if (position - maxBufferBehind >= outerRange.end) {
         cleanedupRanges.push(outerRange);
-      }
-      else if (position >= outerRange.end &&
-               position - maxBufferBehind > outerRange.start &&
-               position - maxBufferBehind < outerRange.end
+      } else if (
+        position >= outerRange.end &&
+        position - maxBufferBehind > outerRange.start &&
+        position - maxBufferBehind < outerRange.end
       ) {
-        cleanedupRanges.push({ start: outerRange.start,
-                               end: position - maxBufferBehind });
+        cleanedupRanges.push({
+          start: outerRange.start,
+          end: position - maxBufferBehind,
+        });
       }
     }
     if (innerRange != null) {
       if (position - maxBufferBehind > innerRange.start) {
-        cleanedupRanges.push({ start: innerRange.start,
-                               end: position - maxBufferBehind });
+        cleanedupRanges.push({
+          start: innerRange.start,
+          end: position - maxBufferBehind,
+        });
       }
     }
   };
 
   const collectBufferAhead = () => {
     if (!isFinite(maxBufferAhead)) {
-      return ;
+      return;
     }
 
     // begin from the oldest
@@ -145,19 +153,17 @@ async function clearBuffer(
       const outerRange = outerRanges[i];
       if (position + maxBufferAhead <= outerRange.start) {
         cleanedupRanges.push(outerRange);
-      }
-      else if (position <= outerRange.start &&
-               position + maxBufferAhead < outerRange.end &&
-               position + maxBufferAhead > outerRange.start
+      } else if (
+        position <= outerRange.start &&
+        position + maxBufferAhead < outerRange.end &&
+        position + maxBufferAhead > outerRange.start
       ) {
-        cleanedupRanges.push({ start: position + maxBufferAhead,
-                               end: outerRange.end });
+        cleanedupRanges.push({ start: position + maxBufferAhead, end: outerRange.end });
       }
     }
     if (innerRange != null) {
       if (position + maxBufferAhead < innerRange.end) {
-        cleanedupRanges.push({ start: position + maxBufferAhead,
-                               end: innerRange.end });
+        cleanedupRanges.push({ start: position + maxBufferAhead, end: innerRange.end });
       }
     }
   };

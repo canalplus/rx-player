@@ -1,9 +1,4 @@
-import {
-  isA1KStb40xx,
-  isPanasonic,
-  isPhilipsNetTv,
-  isWebOs,
-} from "./browser_detection";
+import { isA1KStb40xx, isPanasonic, isPhilipsNetTv, isWebOs } from "./browser_detection";
 
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`

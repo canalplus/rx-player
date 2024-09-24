@@ -1,9 +1,5 @@
 import type { IKeySystemOption } from "../../../../src/public_types";
-import {
-  utf8ToStr,
-  strToUtf8,
-  leUtf16ToStr,
-} from "./bytes";
+import { utf8ToStr, strToUtf8, leUtf16ToStr } from "./bytes";
 
 export default async function parseDRMConfigurations(
   drmConfigurations: Array<{
@@ -12,41 +8,42 @@ export default async function parseDRMConfigurations(
     fallbackLicenseRequest: boolean;
     licenseServerUrl: string;
     serverCertificateUrl: string | undefined;
-  }>
+  }>,
 ): Promise<IKeySystemOption[]> {
-  const keySystems = await Promise.all(drmConfigurations.map(drmConfig => {
-    const { drm,
-            fallbackKeyError,
-            fallbackLicenseRequest,
-            licenseServerUrl,
-            serverCertificateUrl } = drmConfig;
+  const keySystems = await Promise.all(
+    drmConfigurations.map((drmConfig) => {
+      const {
+        drm,
+        fallbackKeyError,
+        fallbackLicenseRequest,
+        licenseServerUrl,
+        serverCertificateUrl,
+      } = drmConfig;
 
-    if (!licenseServerUrl) {
-      return ;
-    }
+      if (!licenseServerUrl) {
+        return;
+      }
 
-    const type = drm.toLowerCase();
-    const keySystem: IKeySystemOption = {
-      type,
-      getLicense: generateGetLicense(licenseServerUrl,
-                                     type,
-                                     !!fallbackLicenseRequest),
-      fallbackOn: {
-        keyInternalError: !!fallbackKeyError,
-        keyOutputRestricted: !!fallbackKeyError,
-      },
-    };
+      const type = drm.toLowerCase();
+      const keySystem: IKeySystemOption = {
+        type,
+        getLicense: generateGetLicense(licenseServerUrl, type, !!fallbackLicenseRequest),
+        fallbackOn: {
+          keyInternalError: !!fallbackKeyError,
+          keyOutputRestricted: !!fallbackKeyError,
+        },
+      };
 
-    if (!serverCertificateUrl) {
-      return keySystem;
-    }
+      if (!serverCertificateUrl) {
+        return keySystem;
+      }
 
-    return getServerCertificate(serverCertificateUrl)
-      .then((serverCertificate) => {
+      return getServerCertificate(serverCertificateUrl).then((serverCertificate) => {
         keySystem.serverCertificate = serverCertificate;
         return keySystem;
       });
-  }));
+    }),
+  );
   return keySystems.filter((ks): ks is IKeySystemOption => ks !== undefined);
 }
 
@@ -72,7 +69,7 @@ function getServerCertificate(url: string): Promise<ArrayBuffer> {
 
 function formatPlayreadyChallenge(challenge: BufferSource): string {
   let u8Challenge;
-  if (!(challenge instanceof Uint8Array)){
+  if (!(challenge instanceof Uint8Array)) {
     if (challenge instanceof ArrayBuffer) {
       u8Challenge = new Uint8Array(challenge);
     } else {
@@ -83,22 +80,18 @@ function formatPlayreadyChallenge(challenge: BufferSource): string {
   }
   const str = leUtf16ToStr(u8Challenge);
   const match = /<Challenge encoding="base64encoded">(.*)<\/Challenge>/.exec(str);
-  const xml = match ?
-    atob(match[1]) : /* IE11 / EDGE */
-    utf8ToStr(u8Challenge); // Chromecast
+  const xml = match ? atob(match[1]) /* IE11 / EDGE */ : utf8ToStr(u8Challenge); // Chromecast
   return xml;
 }
 
 function generateGetLicense(
   licenseServerUrl: string,
   drmType: string,
-  fallbackOnLastTry: boolean | undefined
-): (rawChallenge: BufferSource) => Promise<BufferSource|null> {
+  fallbackOnLastTry: boolean | undefined,
+): (rawChallenge: BufferSource) => Promise<BufferSource | null> {
   const isPlayready = drmType.indexOf("playready") !== -1;
-  return (rawChallenge: BufferSource): Promise<BufferSource|null> => {
-    const challenge =  isPlayready ?
-      formatPlayreadyChallenge(rawChallenge) :
-      rawChallenge;
+  return (rawChallenge: BufferSource): Promise<BufferSource | null> => {
+    const challenge = isPlayready ? formatPlayreadyChallenge(rawChallenge) : rawChallenge;
     const xhr = new XMLHttpRequest();
     xhr.open("POST", licenseServerUrl, true);
     return new Promise<BufferSource | null>((resolve, reject) => {
@@ -117,10 +110,10 @@ function generateGetLicense(
           const license = xhr.response as ArrayBuffer;
           resolve(license);
         } else {
-          const error = new Error("getLicense's request finished with a " +
-                                  `${xhr.status} HTTP error`);
-          (error as unknown as Record<string, unknown>).noRetry =
-            fallbackOnLastTry;
+          const error = new Error(
+            "getLicense's request finished with a " + `${xhr.status} HTTP error`,
+          );
+          (error as unknown as Record<string, unknown>).noRetry = fallbackOnLastTry;
           (error as unknown as Record<string, unknown>).fallbackOnLastTry =
             fallbackOnLastTry;
           reject(error);
@@ -132,9 +125,8 @@ function generateGetLicense(
         xhr.responseType = "arraybuffer";
       }
       xhr.send(challenge);
-    }).then(license =>
-      isPlayready && typeof license === "string" ?
-        strToUtf8(license) :
-        license);
+    }).then((license) =>
+      isPlayready && typeof license === "string" ? strToUtf8(license) : license,
+    );
   };
 }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { ISegment, Representation } from "../../manifest";
-import { ICdnMetadata } from "../../parsers/manifest";
+import type { ISegment, Representation } from "../../manifest";
+import type { ICdnMetadata } from "../../parsers/manifest";
 import isNonEmptyString from "../../utils/is_non_empty_string";
 import resolveURL from "../../utils/resolve_url";
 import warnOnce from "../../utils/warn_once";
@@ -28,7 +28,7 @@ const TOKEN_REG = /\?token=(\S+)/;
  * @param {Document} doc
  * @returns {string|null}
  */
-function extractISML(doc : Document) : string|null {
+function extractISML(doc: Document): string | null {
   return doc.getElementsByTagName("media")[0].getAttribute("src");
 }
 
@@ -38,7 +38,7 @@ function extractISML(doc : Document) : string|null {
  * @param {string} url
  * @returns {string}
  */
-function extractToken(url : string) : string {
+function extractToken(url: string): string {
   const tokenMatch = TOKEN_REG.exec(url);
   if (tokenMatch !== null) {
     const match = tokenMatch[1];
@@ -55,7 +55,7 @@ function extractToken(url : string) : string {
  * @param {string} [token]
  * @returns {string}
  */
-function replaceToken(url : string, token? : string) : string {
+function replaceToken(url: string, token?: string): string {
   if (isNonEmptyString(token)) {
     return url.replace(TOKEN_REG, "?token=" + token);
   } else {
@@ -67,10 +67,12 @@ function replaceToken(url : string, token? : string) : string {
  * @param {string} url
  * @returns {string}
  */
-function resolveManifest(url : string) : string {
+function resolveManifest(url: string): string {
   if (ISM_REG.test(url)) {
-    warnOnce("Giving a isml URL to loadVideo is deprecated." +
-      " Please give the Manifest URL directly");
+    warnOnce(
+      "Giving a isml URL to loadVideo is deprecated." +
+        " Please give the Manifest URL directly",
+    );
     return url.replace(ISM_REG, "$1/manifest$2");
   }
   return url;
@@ -82,18 +84,22 @@ function resolveManifest(url : string) : string {
  * @param {Representation} representation
  * @returns {Boolean}
  */
-function isMP4EmbeddedTrack(representation : Representation) : boolean {
-  return typeof representation.mimeType === "string" &&
-         representation.mimeType.indexOf("mp4") >= 0;
+function isMP4EmbeddedTrack(representation: Representation): boolean {
+  return (
+    typeof representation.mimeType === "string" &&
+    representation.mimeType.indexOf("mp4") >= 0
+  );
 }
 
 function constructSegmentUrl(
-  wantedCdn : ICdnMetadata | null,
-  segment : ISegment
-) : string | null {
-  return wantedCdn === null   ? null :
-         segment.url === null ? wantedCdn.baseUrl :
-                                resolveURL(wantedCdn.baseUrl, segment.url);
+  wantedCdn: ICdnMetadata | null,
+  segment: ISegment,
+): string | null {
+  return wantedCdn === null
+    ? null
+    : segment.url === null
+      ? wantedCdn.baseUrl
+      : resolveURL(wantedCdn.baseUrl, segment.url);
 }
 
 export {

@@ -18,7 +18,7 @@
 import MediaSourceContentInitializer from "../../../core/init/media_source_content_initializer";
 import dashJsParser from "../../../parsers/manifest/dash/js-parser";
 import DASHFeature from "../../../transports/dash";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addDASHFeature from "../dash";
 
 describe("Features list - DASH", () => {
@@ -35,7 +35,6 @@ describe("Features list - DASH", () => {
       mediaSourceInit: MediaSourceContentInitializer,
     });
     expect(featureObject.transports.dash).toBe(DASHFeature);
-    expect(featureObject.mediaSourceInit)
-      .toBe(MediaSourceContentInitializer);
+    expect(featureObject.mediaSourceInit).toBe(MediaSourceContentInitializer);
   });
 });

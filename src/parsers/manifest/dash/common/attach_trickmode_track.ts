@@ -15,10 +15,7 @@
  */
 
 import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
-import {
-  IParsedAdaptation,
-  IParsedAdaptations,
-} from "../../types";
+import type { IParsedAdaptation, IParsedAdaptations } from "../../types";
 
 /**
  * Attach trick mode tracks to adaptations by assigning to the trickModeTracks
@@ -29,8 +26,10 @@ import {
  */
 function attachTrickModeTrack(
   adaptations: IParsedAdaptations,
-  trickModeTracks: Array<{ adaptation: IParsedAdaptation;
-                           trickModeAttachedAdaptationIds: string[]; }>
+  trickModeTracks: Array<{
+    adaptation: IParsedAdaptation;
+    trickModeAttachedAdaptationIds: string[];
+  }>,
 ): void {
   for (const track of trickModeTracks) {
     const { adaptation, trickModeAttachedAdaptationIds } = track;

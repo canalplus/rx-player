@@ -1,4 +1,3 @@
-
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -20,14 +19,11 @@ import {
   shouldWaitForDataBeforeLoaded,
   shouldWaitForHaveEnoughData,
 } from "../../../compat";
-import SharedReference, {
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
-import TaskCanceller, { CancellationSignal } from "../../../utils/task_canceller";
-import {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-} from "../../api";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import SharedReference from "../../../utils/reference";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
+import type { IPlaybackObservation, IReadOnlyPlaybackObserver } from "../../api";
 
 /**
  * Returns an `IReadOnlySharedReference` that switches to `true` once the
@@ -39,47 +35,50 @@ import {
  * @returns {Object}
  */
 export default function getLoadedReference(
-  playbackObserver : IReadOnlyPlaybackObserver<IPlaybackObservation>,
-  mediaElement : HTMLMediaElement,
-  isDirectfile : boolean,
-  cancelSignal : CancellationSignal
-) : IReadOnlySharedReference<boolean> {
+  playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  mediaElement: HTMLMediaElement,
+  isDirectfile: boolean,
+  cancelSignal: CancellationSignal,
+): IReadOnlySharedReference<boolean> {
   const listenCanceller = new TaskCanceller();
   listenCanceller.linkToSignal(cancelSignal);
   const isLoaded = new SharedReference(false, listenCanceller.signal);
-  playbackObserver.listen((observation) => {
-    if (observation.rebuffering !== null ||
+  playbackObserver.listen(
+    (observation) => {
+      if (
+        observation.rebuffering !== null ||
         observation.freezing !== null ||
-        observation.readyState === 0)
-    {
-      return ;
-    }
-
-    if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
-      // The duration is NaN if no media data is available,
-      // which means media is not loaded yet.
-      if (isNaN(mediaElement.duration)) {
+        observation.readyState === 0
+      ) {
         return;
       }
-      if (mediaElement.duration > 0) {
-        isLoaded.setValue(true);
-        listenCanceller.cancel();
-        return;
-      }
-    }
 
-    const minReadyState = shouldWaitForHaveEnoughData() ? 4 :
-                                                          3;
-    if (observation.readyState >= minReadyState) {
-      if (observation.currentRange !== null || observation.ended) {
-        if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+      if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
+        // The duration is NaN if no media data is available,
+        // which means media is not loaded yet.
+        if (isNaN(mediaElement.duration)) {
+          return;
+        }
+        if (mediaElement.duration > 0) {
           isLoaded.setValue(true);
           listenCanceller.cancel();
           return;
         }
       }
-    }
-  }, { includeLastObservation: true, clearSignal: listenCanceller.signal });
+
+      const minReadyState = shouldWaitForHaveEnoughData() ? 4 : 3;
+      if (observation.readyState >= minReadyState) {
+        if (observation.currentRange !== null || observation.ended) {
+          if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+            isLoaded.setValue(true);
+            listenCanceller.cancel();
+            return;
+          }
+        }
+      }
+    },
+    { includeLastObservation: true, clearSignal: listenCanceller.signal },
+  );
 
   return isLoaded;
 }

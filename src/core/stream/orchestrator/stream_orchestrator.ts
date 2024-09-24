@@ -18,35 +18,29 @@ import nextTick from "next-tick";
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
-import Manifest, {
-  IDecipherabilityUpdateElement,
-  Period,
-} from "../../../manifest";
-import {
-  createMappedReference,
-  IReadOnlySharedReference,
-} from "../../../utils/reference";
+import type { IDecipherabilityUpdateElement, Period } from "../../../manifest";
+import type Manifest from "../../../manifest";
+import type { IReadOnlySharedReference } from "../../../utils/reference";
+import { createMappedReference } from "../../../utils/reference";
 import SortedList from "../../../utils/sorted_list";
-import TaskCanceller, {
-  CancellationSignal,
-} from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
-import { IRepresentationEstimator } from "../../adaptive";
+import type { IRepresentationEstimator } from "../../adaptive";
 import type { IReadOnlyPlaybackObserver } from "../../api";
-import { SegmentFetcherCreator } from "../../fetchers";
-import SegmentBuffersStore, {
-  BufferGarbageCollector,
-  IBufferType,
-  SegmentBuffer,
-} from "../../segment_buffers";
-import { IWaitingMediaSourceReloadPayload } from "../adaptation";
-import PeriodStream, {
+import type { SegmentFetcherCreator } from "../../fetchers";
+import type { IBufferType, SegmentBuffer } from "../../segment_buffers";
+import type SegmentBuffersStore from "../../segment_buffers";
+import { BufferGarbageCollector } from "../../segment_buffers";
+import type { IWaitingMediaSourceReloadPayload } from "../adaptation";
+import type {
   IPeriodStreamCallbacks,
   IPeriodStreamOptions,
   IPeriodStreamPlaybackObservation,
   IPeriodStreamReadyPayload,
 } from "../period";
-import { IStreamStatusPayload } from "../representation";
+import PeriodStream from "../period";
+import type { IStreamStatusPayload } from "../representation";
 import getTimeRangesForContent from "./get_time_ranges_for_content";
 
 /**
@@ -92,50 +86,54 @@ import getTimeRangesForContent from "./get_time_ranges_for_content";
  * doing.
  */
 export default function StreamOrchestrator(
-  content : { manifest : Manifest;
-              initialPeriod : Period; },
-  playbackObserver : IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
-  representationEstimator : IRepresentationEstimator,
-  segmentBuffersStore : SegmentBuffersStore,
-  segmentFetcherCreator : SegmentFetcherCreator,
-  options : IStreamOrchestratorOptions,
-  callbacks : IStreamOrchestratorCallbacks,
-  orchestratorCancelSignal : CancellationSignal
-) : void {
+  content: { manifest: Manifest; initialPeriod: Period },
+  playbackObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+  representationEstimator: IRepresentationEstimator,
+  segmentBuffersStore: SegmentBuffersStore,
+  segmentFetcherCreator: SegmentFetcherCreator,
+  options: IStreamOrchestratorOptions,
+  callbacks: IStreamOrchestratorCallbacks,
+  orchestratorCancelSignal: CancellationSignal,
+): void {
   const { manifest, initialPeriod } = content;
-  const { maxBufferAhead,
-          maxBufferBehind,
-          wantedBufferAhead,
-          maxVideoBufferSize } = options;
+  const { maxBufferAhead, maxBufferBehind, wantedBufferAhead, maxVideoBufferSize } =
+    options;
 
-  const { MINIMUM_MAX_BUFFER_AHEAD,
-          MAXIMUM_MAX_BUFFER_AHEAD,
-          MAXIMUM_MAX_BUFFER_BEHIND } = config.getCurrent();
+  const {
+    MINIMUM_MAX_BUFFER_AHEAD,
+    MAXIMUM_MAX_BUFFER_AHEAD,
+    MAXIMUM_MAX_BUFFER_BEHIND,
+  } = config.getCurrent();
 
   // Keep track of a unique BufferGarbageCollector created per
   // SegmentBuffer.
-  const garbageCollectors =
-    new WeakMapMemory((segmentBuffer : SegmentBuffer) => {
-      const { bufferType } = segmentBuffer;
-      const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ?? Infinity;
-      const maxAheadHigherBound = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ?? Infinity;
-      return (gcCancelSignal : CancellationSignal) => {
-        BufferGarbageCollector(
-          { segmentBuffer,
-            playbackObserver,
-            maxBufferBehind: createMappedReference(maxBufferBehind,
-                                                   (val) =>
-                                                     Math.min(val, defaultMaxBehind),
-                                                   gcCancelSignal),
-            maxBufferAhead: createMappedReference(maxBufferAhead, (val) => {
-              const lowerBound = Math.max(val,
-                                          MINIMUM_MAX_BUFFER_AHEAD[bufferType] ?? 0);
+  const garbageCollectors = new WeakMapMemory((segmentBuffer: SegmentBuffer) => {
+    const { bufferType } = segmentBuffer;
+    const defaultMaxBehind = MAXIMUM_MAX_BUFFER_BEHIND[bufferType] ?? Infinity;
+    const maxAheadHigherBound = MAXIMUM_MAX_BUFFER_AHEAD[bufferType] ?? Infinity;
+    return (gcCancelSignal: CancellationSignal) => {
+      BufferGarbageCollector(
+        {
+          segmentBuffer,
+          playbackObserver,
+          maxBufferBehind: createMappedReference(
+            maxBufferBehind,
+            (val) => Math.min(val, defaultMaxBehind),
+            gcCancelSignal,
+          ),
+          maxBufferAhead: createMappedReference(
+            maxBufferAhead,
+            (val) => {
+              const lowerBound = Math.max(val, MINIMUM_MAX_BUFFER_AHEAD[bufferType] ?? 0);
               return Math.min(lowerBound, maxAheadHigherBound);
-            }, gcCancelSignal) },
-          gcCancelSignal
-        );
-      };
-    });
+            },
+            gcCancelSignal,
+          ),
+        },
+        gcCancelSignal,
+      );
+    };
+  });
 
   // Create automatically the right `PeriodStream` for every possible types
   for (const bufferType of segmentBuffersStore.getBufferTypes()) {
@@ -151,7 +149,7 @@ export default function StreamOrchestrator(
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
    */
-  function manageEveryStreams(bufferType : IBufferType, basePeriod : Period) : void {
+  function manageEveryStreams(bufferType: IBufferType, basePeriod: Period): void {
     /** Each Period for which there is currently a Stream, chronologically */
     const periodList = new SortedList<Period>((a, b) => a.start - b.start);
 
@@ -170,58 +168,68 @@ export default function StreamOrchestrator(
 
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
-    playbackObserver.listen(({ position }) => {
-      const time = position.pending ?? position.last;
-      if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
-        return ;
-      }
+    playbackObserver.listen(
+      ({ position }) => {
+        const time = position.pending ?? position.last;
+        if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
+          return;
+        }
 
-      log.info("Stream: Destroying all PeriodStreams due to out of bounds situation",
-               bufferType, time);
-      enableOutOfBoundsCheck = false;
-      while (periodList.length() > 0) {
-        const period = periodList.get(periodList.length() - 1);
-        periodList.removeElement(period);
-        callbacks.periodStreamCleared({ type: bufferType, period });
-      }
-      currentCanceller.cancel();
-      currentCanceller = new TaskCanceller();
-      currentCanceller.linkToSignal(orchestratorCancelSignal);
-
-      const nextPeriod = manifest.getPeriodForTime(time) ??
-                         manifest.getNextPeriod(time);
-      if (nextPeriod === undefined) {
-        log.warn("Stream: The wanted position is not found in the Manifest.");
-        enableOutOfBoundsCheck = true;
-        return;
-      }
-      launchConsecutiveStreamsForPeriod(nextPeriod);
-    }, { clearSignal: orchestratorCancelSignal, includeLastObservation: true });
-
-    manifest.addEventListener("decipherabilityUpdate", (evt) => {
-      onDecipherabilityUpdates(evt).catch(err => {
+        log.info(
+          "Stream: Destroying all PeriodStreams due to out of bounds situation",
+          bufferType,
+          time,
+        );
+        enableOutOfBoundsCheck = false;
+        while (periodList.length() > 0) {
+          const period = periodList.get(periodList.length() - 1);
+          periodList.removeElement(period);
+          callbacks.periodStreamCleared({ type: bufferType, period });
+        }
         currentCanceller.cancel();
-        callbacks.error(err);
-      });
-    }, orchestratorCancelSignal);
+        currentCanceller = new TaskCanceller();
+        currentCanceller.linkToSignal(orchestratorCancelSignal);
+
+        const nextPeriod =
+          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
+        if (nextPeriod === undefined) {
+          log.warn("Stream: The wanted position is not found in the Manifest.");
+          enableOutOfBoundsCheck = true;
+          return;
+        }
+        launchConsecutiveStreamsForPeriod(nextPeriod);
+      },
+      { clearSignal: orchestratorCancelSignal, includeLastObservation: true },
+    );
+
+    manifest.addEventListener(
+      "decipherabilityUpdate",
+      (evt) => {
+        onDecipherabilityUpdates(evt).catch((err) => {
+          currentCanceller.cancel();
+          callbacks.error(err);
+        });
+      },
+      orchestratorCancelSignal,
+    );
 
     return launchConsecutiveStreamsForPeriod(basePeriod);
 
     /**
      * @param {Object} period
      */
-    function launchConsecutiveStreamsForPeriod(period : Period) : void {
+    function launchConsecutiveStreamsForPeriod(period: Period): void {
       const consecutivePeriodStreamCb = {
         ...callbacks,
-        waitingMediaSourceReload(payload : IWaitingMediaSourceReloadPayload) : void {
+        waitingMediaSourceReload(payload: IWaitingMediaSourceReloadPayload): void {
           // Only reload the MediaSource when the more immediately required
           // Period is the one asking for it
           const firstPeriod = periodList.head();
-          if (firstPeriod === undefined ||
-              firstPeriod.id !== payload.period.id)
-          {
-            callbacks.lockedStream({ bufferType: payload.bufferType,
-                                     period: payload.period });
+          if (firstPeriod === undefined || firstPeriod.id !== payload.period.id) {
+            callbacks.lockedStream({
+              bufferType: payload.bufferType,
+              period: payload.period,
+            });
           } else {
             callbacks.needsMediaSourceReload({
               timeOffset: payload.timeOffset,
@@ -230,24 +238,26 @@ export default function StreamOrchestrator(
             });
           }
         },
-        periodStreamReady(payload : IPeriodStreamReadyPayload) : void {
+        periodStreamReady(payload: IPeriodStreamReadyPayload): void {
           enableOutOfBoundsCheck = true;
           periodList.add(payload.period);
           callbacks.periodStreamReady(payload);
         },
-        periodStreamCleared(payload : IPeriodStreamClearedPayload) : void {
+        periodStreamCleared(payload: IPeriodStreamClearedPayload): void {
           periodList.removeElement(payload.period);
           callbacks.periodStreamCleared(payload);
         },
-        error(err : unknown) : void {
+        error(err: unknown): void {
           currentCanceller.cancel();
           callbacks.error(err);
         },
       };
-      manageConsecutivePeriodStreams(bufferType,
-                                     period,
-                                     consecutivePeriodStreamCb,
-                                     currentCanceller.signal);
+      manageConsecutivePeriodStreams(
+        bufferType,
+        period,
+        consecutivePeriodStreamCb,
+        currentCanceller.signal,
+      );
     }
 
     /**
@@ -257,15 +267,14 @@ export default function StreamOrchestrator(
      * @param {number} time
      * @returns {boolean}
      */
-    function isOutOfPeriodList(time : number) : boolean {
+    function isOutOfPeriodList(time: number): boolean {
       const head = periodList.head();
       const last = periodList.last();
-      if (head == null || last == null) { // if no period
+      if (head == null || last == null) {
+        // if no period
         return true;
       }
-      return head.start > time ||
-            (last.end == null ? Infinity :
-                                last.end) < time;
+      return head.start > time || (last.end == null ? Infinity : last.end) < time;
     }
 
     /**
@@ -274,28 +283,31 @@ export default function StreamOrchestrator(
      * @returns {Promise}
      */
     async function onDecipherabilityUpdates(
-      updates : IDecipherabilityUpdateElement[]
-    ) : Promise<void> {
+      updates: IDecipherabilityUpdateElement[],
+    ): Promise<void> {
       const segmentBufferStatus = segmentBuffersStore.getStatus(bufferType);
-      const ofCurrentType = updates
-        .filter(update => update.adaptation.type === bufferType);
+      const ofCurrentType = updates.filter(
+        (update) => update.adaptation.type === bufferType,
+      );
       if (
         // No update concerns the current type of data
         ofCurrentType.length === 0 ||
         segmentBufferStatus.type !== "initialized" ||
         // The update only notifies of now-decipherable streams
-        ofCurrentType.every(x => x.representation.decipherable === true)
+        ofCurrentType.every((x) => x.representation.decipherable === true)
       ) {
         // Data won't have to be removed from the buffers, no need to stop the
         // current Streams.
-        return ;
+        return;
       }
 
       const segmentBuffer = segmentBufferStatus.value;
-      const resettedContent = ofCurrentType.filter(update =>
-        update.representation.decipherable === undefined);
-      const undecipherableContent = ofCurrentType.filter(update =>
-        update.representation.decipherable === false);
+      const resettedContent = ofCurrentType.filter(
+        (update) => update.representation.decipherable === undefined,
+      );
+      const undecipherableContent = ofCurrentType.filter(
+        (update) => update.representation.decipherable === false,
+      );
 
       /**
        * Time ranges now containing undecipherable content.
@@ -303,8 +315,10 @@ export default function StreamOrchestrator(
        * need Supplementary actions as playback issues may remain even after
        * removal.
        */
-      const undecipherableRanges = getTimeRangesForContent(segmentBuffer,
-                                                           undecipherableContent);
+      const undecipherableRanges = getTimeRangesForContent(
+        segmentBuffer,
+        undecipherableContent,
+      );
 
       /**
        * Time ranges now containing content whose decipherability status came
@@ -312,15 +326,16 @@ export default function StreamOrchestrator(
        * To simplify its handling, those are just removed from the buffer.
        * Less considerations have to be taken than for the `undecipherableRanges`.
        */
-      const rangesToRemove = getTimeRangesForContent(segmentBuffer,
-                                                     resettedContent);
+      const rangesToRemove = getTimeRangesForContent(segmentBuffer, resettedContent);
 
       // First close all Stream currently active so they don't continue to
       // load and push segments.
       enableOutOfBoundsCheck = false;
 
-      log.info("Stream: Destroying all PeriodStreams for decipherability matters",
-               bufferType);
+      log.info(
+        "Stream: Destroying all PeriodStreams for decipherability matters",
+        bufferType,
+      );
       while (periodList.length() > 0) {
         const period = periodList.get(periodList.length() - 1);
         periodList.removeElement(period);
@@ -346,30 +361,30 @@ export default function StreamOrchestrator(
       // was going to be emitted synchronously.
       nextTick(() => {
         if (orchestratorCancelSignal.isCancelled()) {
-          return ;
+          return;
         }
         const observation = playbackObserver.getReference().getValue();
         if (needsFlushingAfterClean(observation, undecipherableRanges)) {
-
           // Bind to Period start and end
           callbacks.needsDecipherabilityFlush();
           if (orchestratorCancelSignal.isCancelled()) {
-            return ;
+            return;
           }
         } else if (needsFlushingAfterClean(observation, rangesToRemove)) {
           callbacks.needsBufferFlush();
           if (orchestratorCancelSignal.isCancelled()) {
-            return ;
+            return;
           }
         }
 
-        const lastPosition = observation.position.pending ??
-                             observation.position.last;
+        const lastPosition = observation.position.pending ?? observation.position.last;
         const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
         if (newInitialPeriod == null) {
           callbacks.error(
-            new MediaError("MEDIA_TIME_NOT_FOUND",
-                           "The wanted position is not found in the Manifest.")
+            new MediaError(
+              "MEDIA_TIME_NOT_FOUND",
+              "The wanted position is not found in the Manifest.",
+            ),
           );
           return;
         }
@@ -410,24 +425,24 @@ export default function StreamOrchestrator(
    * signal emitting.
    */
   function manageConsecutivePeriodStreams(
-    bufferType : IBufferType,
-    basePeriod : Period,
-    consecutivePeriodStreamCb : IPeriodStreamCallbacks & {
-      periodStreamCleared(payload : IPeriodStreamClearedPayload) : void;
+    bufferType: IBufferType,
+    basePeriod: Period,
+    consecutivePeriodStreamCb: IPeriodStreamCallbacks & {
+      periodStreamCleared(payload: IPeriodStreamClearedPayload): void;
     },
-    cancelSignal : CancellationSignal
-  ) : void {
+    cancelSignal: CancellationSignal,
+  ): void {
     log.info("Stream: Creating new Stream for", bufferType, basePeriod.start);
 
     /**
      * Contains properties linnked to the next chronological `PeriodStream` that
      * may be created here.
      */
-    let nextStreamInfo : {
+    let nextStreamInfo: {
       /** Emits when the `PeriodStreamfor should be destroyed, if created. */
-      canceller : TaskCanceller;
+      canceller: TaskCanceller;
       /** The `Period` concerned. */
-      period : Period;
+      period: Period;
     } | null = null;
 
     /** Emits when the `PeriodStream` linked to `basePeriod` should be destroyed. */
@@ -436,40 +451,49 @@ export default function StreamOrchestrator(
 
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
-    playbackObserver.listen(({ position }, stopListeningObservations) => {
-      const wantedPosition = position.pending ?? position.last;
-      if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
-        const nextPeriod = manifest.getPeriodAfter(basePeriod);
+    playbackObserver.listen(
+      ({ position }, stopListeningObservations) => {
+        const wantedPosition = position.pending ?? position.last;
+        if (basePeriod.end !== undefined && wantedPosition >= basePeriod.end) {
+          const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
-        // Handle special wantedPosition === basePeriod.end cases
-        if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
-          return;
+          // Handle special wantedPosition === basePeriod.end cases
+          if (basePeriod.containsTime(wantedPosition, nextPeriod)) {
+            return;
+          }
+          log.info(
+            "Stream: Destroying PeriodStream as the current playhead moved above it",
+            bufferType,
+            basePeriod.start,
+            position.pending ?? position.last,
+            basePeriod.end,
+          );
+          stopListeningObservations();
+          consecutivePeriodStreamCb.periodStreamCleared({
+            type: bufferType,
+            period: basePeriod,
+          });
+          currentStreamCanceller.cancel();
         }
-        log.info("Stream: Destroying PeriodStream as the current playhead moved above it",
-                 bufferType,
-                 basePeriod.start,
-                 position.pending ?? position.last,
-                 basePeriod.end);
-        stopListeningObservations();
-        consecutivePeriodStreamCb.periodStreamCleared({ type: bufferType,
-                                                        period: basePeriod });
-        currentStreamCanceller.cancel();
-      }
-    }, { clearSignal: cancelSignal, includeLastObservation: true });
+      },
+      { clearSignal: cancelSignal, includeLastObservation: true },
+    );
 
-    const periodStreamArgs = { bufferType,
-                               content: { manifest, period: basePeriod },
-                               garbageCollectors,
-                               maxVideoBufferSize,
-                               segmentFetcherCreator,
-                               segmentBuffersStore,
-                               options,
-                               playbackObserver,
-                               representationEstimator,
-                               wantedBufferAhead };
-    const periodStreamCallbacks : IPeriodStreamCallbacks = {
+    const periodStreamArgs = {
+      bufferType,
+      content: { manifest, period: basePeriod },
+      garbageCollectors,
+      maxVideoBufferSize,
+      segmentFetcherCreator,
+      segmentBuffersStore,
+      options,
+      playbackObserver,
+      representationEstimator,
+      wantedBufferAhead,
+    };
+    const periodStreamCallbacks: IPeriodStreamCallbacks = {
       ...consecutivePeriodStreamCb,
-      streamStatusUpdate(value : IStreamStatusPayload) : void {
+      streamStatusUpdate(value: IStreamStatusPayload): void {
         if (value.hasFinishedLoading) {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod !== null) {
@@ -478,16 +502,21 @@ export default function StreamOrchestrator(
           }
         } else if (nextStreamInfo !== null) {
           // current Stream is active, destroy next Stream if created
-          log.info("Stream: Destroying next PeriodStream due to current one being active",
-                   bufferType, nextStreamInfo.period.start);
-          consecutivePeriodStreamCb
-            .periodStreamCleared({ type: bufferType, period: nextStreamInfo.period });
+          log.info(
+            "Stream: Destroying next PeriodStream due to current one being active",
+            bufferType,
+            nextStreamInfo.period.start,
+          );
+          consecutivePeriodStreamCb.periodStreamCleared({
+            type: bufferType,
+            period: nextStreamInfo.period,
+          });
           nextStreamInfo.canceller.cancel();
           nextStreamInfo = null;
         }
         consecutivePeriodStreamCb.streamStatusUpdate(value);
       },
-      error(err : unknown) : void {
+      error(err: unknown): void {
         if (nextStreamInfo !== null) {
           nextStreamInfo.canceller.cancel();
           nextStreamInfo = null;
@@ -503,25 +532,32 @@ export default function StreamOrchestrator(
      * Create `PeriodStream` for the next Period, specified under `nextPeriod`.
      * @param {Object} nextPeriod
      */
-    function checkOrCreateNextPeriodStream(nextPeriod : Period) : void {
+    function checkOrCreateNextPeriodStream(nextPeriod: Period): void {
       if (nextStreamInfo !== null) {
         if (nextStreamInfo.period.id === nextPeriod.id) {
           return;
         }
-        log.warn("Stream: Creating next `PeriodStream` while one was already created.",
-                 bufferType, nextPeriod.id, nextStreamInfo.period.id);
-        consecutivePeriodStreamCb.periodStreamCleared({ type: bufferType,
-                                                        period: nextStreamInfo.period });
+        log.warn(
+          "Stream: Creating next `PeriodStream` while one was already created.",
+          bufferType,
+          nextPeriod.id,
+          nextStreamInfo.period.id,
+        );
+        consecutivePeriodStreamCb.periodStreamCleared({
+          type: bufferType,
+          period: nextStreamInfo.period,
+        });
         nextStreamInfo.canceller.cancel();
       }
       const nextStreamCanceller = new TaskCanceller();
       nextStreamCanceller.linkToSignal(cancelSignal);
-      nextStreamInfo = { canceller: nextStreamCanceller,
-                         period: nextPeriod };
-      manageConsecutivePeriodStreams(bufferType,
-                                     nextPeriod,
-                                     consecutivePeriodStreamCb,
-                                     nextStreamInfo.canceller.signal);
+      nextStreamInfo = { canceller: nextStreamCanceller, period: nextPeriod };
+      manageConsecutivePeriodStreams(
+        bufferType,
+        nextPeriod,
+        consecutivePeriodStreamCb,
+        nextStreamInfo.canceller.signal,
+      );
     }
   }
 }
@@ -529,17 +565,16 @@ export default function StreamOrchestrator(
 export type IStreamOrchestratorPlaybackObservation = IPeriodStreamPlaybackObservation;
 
 /** Options tweaking the behavior of the StreamOrchestrator. */
-export type IStreamOrchestratorOptions =
-  IPeriodStreamOptions &
-  { wantedBufferAhead : IReadOnlySharedReference<number>;
-    maxVideoBufferSize : IReadOnlySharedReference<number>;
-    maxBufferAhead : IReadOnlySharedReference<number>;
-    maxBufferBehind : IReadOnlySharedReference<number>; };
+export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
+  wantedBufferAhead: IReadOnlySharedReference<number>;
+  maxVideoBufferSize: IReadOnlySharedReference<number>;
+  maxBufferAhead: IReadOnlySharedReference<number>;
+  maxBufferBehind: IReadOnlySharedReference<number>;
+};
 
 /** Callbacks called by the `StreamOrchestrator` on various events. */
 export interface IStreamOrchestratorCallbacks
-  extends Omit<IPeriodStreamCallbacks, "waitingMediaSourceReload">
-{
+  extends Omit<IPeriodStreamCallbacks, "waitingMediaSourceReload"> {
   /**
    * Called when a `PeriodStream` has been removed.
    * This event can be used for clean-up purposes. For example, you are free to
@@ -550,14 +585,14 @@ export interface IStreamOrchestratorCallbacks
    * an `error` callback or to the `StreamOrchestrator` being cancellated as
    * both already indicate implicitly that all `PeriodStream` have been cleared.
    */
-  periodStreamCleared(payload : IPeriodStreamClearedPayload) : void;
+  periodStreamCleared(payload: IPeriodStreamClearedPayload): void;
   /**
    * Called when a situation needs the MediaSource to be reloaded.
    *
    * Once the MediaSource is reloaded, the `StreamOrchestrator` need to be
    * restarted from scratch.
    */
-  needsMediaSourceReload(payload : INeedsMediaSourceReloadPayload) : void;
+  needsMediaSourceReload(payload: INeedsMediaSourceReloadPayload): void;
   /**
    * Called when the stream is unable to load segments for a particular Period
    * and buffer type until that Period becomes the currently-played Period.
@@ -575,7 +610,7 @@ export interface IStreamOrchestratorCallbacks
    * because of a locked stream. In that case, playing until or seeking at the
    * start of the corresponding Period should be enough to "unlock" the stream.
    */
-  lockedStream(payload : ILockedStreamPayload) : void;
+  lockedStream(payload: ILockedStreamPayload): void;
   /**
    * Called after the SegmentBuffer have been "cleaned" to remove from it
    * every non-decipherable segments - usually following an update of the
@@ -586,7 +621,7 @@ export interface IStreamOrchestratorCallbacks
    * worst cases completely removed and re-created through the "reload" mechanism,
    * depending on the platform.
    */
-  needsDecipherabilityFlush() : void;
+  needsDecipherabilityFlush(): void;
 }
 
 /** Payload for the `periodStreamCleared` callback. */
@@ -597,14 +632,14 @@ export interface IPeriodStreamClearedPayload {
    * The combination of this and `Period` should give you enough information
    * about which `PeriodStream` has been removed.
    */
-  type : IBufferType;
+  type: IBufferType;
   /**
    * The `Period` linked to the `PeriodStream` we just removed.
    *
    * The combination of this and `Period` should give you enough information
    * about which `PeriodStream` has been removed.
    */
-  period : Period;
+  period: Period;
 }
 
 /** Payload for the `needsMediaSourceReload` callback. */
@@ -614,27 +649,27 @@ export interface INeedsMediaSourceReloadPayload {
    * restart playback after reloading. For example `-2` will reload 2 seconds
    * before the current position.
    */
-  timeOffset : number;
+  timeOffset: number;
   /**
    * If defined and if the new position obtained after relying on
    * `timeOffset` is before `minimumPosition`, then we will reload at
    * `minimumPosition`  instead.
    */
-  minimumPosition : number | undefined;
+  minimumPosition: number | undefined;
   /**
    * If defined and if the new position obtained after relying on
    * `timeOffset` is after `maximumPosition`, then we will reload at
    * `maximumPosition`  instead.
    */
-  maximumPosition : number | undefined;
+  maximumPosition: number | undefined;
 }
 
 /** Payload for the `lockedStream` callback. */
 export interface ILockedStreamPayload {
   /** Period concerned. */
-  period : Period;
+  period: Period;
   /** Buffer type concerned. */
-  bufferType : IBufferType;
+  bufferType: IBufferType;
 }
 
 /**
@@ -646,9 +681,9 @@ export interface ILockedStreamPayload {
  * @returns {boolean}
  */
 function needsFlushingAfterClean(
-  observation : IStreamOrchestratorPlaybackObservation,
-  cleanedRanges : Array<{ start: number; end: number }>
-) : boolean {
+  observation: IStreamOrchestratorPlaybackObservation,
+  cleanedRanges: Array<{ start: number; end: number }>,
+): boolean {
   if (cleanedRanges.length === 0) {
     return false;
   }
@@ -658,7 +693,7 @@ function needsFlushingAfterClean(
   // the corresponding ranges, without seeking or re-switching playback
   // direction which is expected to lead to a low-level flush anyway.
   // There's a 5 seconds security, just to be sure.
-  return observation.speed >= 0 ?
-    cleanedRanges[cleanedRanges.length - 1] .end >= curPos - 5 :
-    cleanedRanges[0].start <= curPos + 5;
+  return observation.speed >= 0
+    ? cleanedRanges[cleanedRanges.length - 1].end >= curPos - 5
+    : cleanedRanges[0].start <= curPos + 5;
 }

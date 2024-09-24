@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IStreamEventData } from "../../../../public_types";
+import type { IStreamEventData } from "../../../../public_types";
 
 export interface IStreamEventPayload {
   id?: string | undefined;

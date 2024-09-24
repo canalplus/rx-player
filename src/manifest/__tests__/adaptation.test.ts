@@ -21,29 +21,52 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
-import { IRepresentationInfos } from "../../public_types";
-import Representation from "../representation";
+import type { IRepresentationInfos } from "../../public_types";
+import type Representation from "../representation";
 
 const minimalRepresentationIndex = {
-  getInitSegment() { return null; },
-  getSegments() { return []; },
-  shouldRefresh() { return false; },
-  getFirstAvailablePosition() : undefined { return ; },
-  getLastAvailablePosition() : undefined { return ; },
-  getEnd() : undefined { return ; },
-  checkDiscontinuity() { return null; },
-  isSegmentStillAvailable() : undefined { return ; },
-  canBeOutOfSyncError() : true { return true; },
-  isFinished() : true { return true; },
-  awaitSegmentBetween() : undefined { return ; },
-  _replace() { /* noop */ },
-  _update() { /* noop */ },
+  getInitSegment() {
+    return null;
+  },
+  getSegments() {
+    return [];
+  },
+  shouldRefresh() {
+    return false;
+  },
+  getFirstAvailablePosition(): undefined {
+    return;
+  },
+  getLastAvailablePosition(): undefined {
+    return;
+  },
+  getEnd(): undefined {
+    return;
+  },
+  checkDiscontinuity() {
+    return null;
+  },
+  isSegmentStillAvailable(): undefined {
+    return;
+  },
+  canBeOutOfSyncError(): true {
+    return true;
+  },
+  isFinished(): true {
+    return true;
+  },
+  awaitSegmentBetween(): undefined {
+    return;
+  },
+  _replace() {
+    /* noop */
+  },
+  _update() {
+    /* noop */
+  },
 };
-const mockDefaultRepresentationImpl = jest.fn(arg => {
-  return { bitrate: arg.bitrate,
-           id: arg.id,
-           isSupported: true,
-           index: arg.index };
+const mockDefaultRepresentationImpl = jest.fn((arg) => {
+  return { bitrate: arg.bitrate, id: arg.id, isSupported: true, index: arg.index };
 });
 
 describe("Manifest - Adaptation", () => {
@@ -55,8 +78,10 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should be able to create a minimal Adaptation", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
     const args = { id: "12", representations: [], type: "video" };
@@ -76,17 +101,23 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should normalize a given language", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockNormalize = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
-                                                default: mockNormalize }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
+    const mockNormalize = jest.fn((lang: string) => lang + "foo");
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true as const,
+      default: mockNormalize,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const args1 = { id: "12",
-                    representations: [],
-                    language: "fr",
-                    type: "video"as const };
+    const args1 = {
+      id: "12",
+      representations: [],
+      language: "fr",
+      type: "video" as const,
+    };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe("fr");
     expect(adaptation1.normalizedLanguage).toBe("frfoo");
@@ -94,10 +125,7 @@ describe("Manifest - Adaptation", () => {
     expect(mockNormalize).toHaveBeenCalledWith("fr");
     mockNormalize.mockClear();
 
-    const args2 = { id: "12",
-                    representations: [],
-                    language: "toto",
-                    type: "video" };
+    const args2 = { id: "12", representations: [], language: "toto", type: "video" };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe("toto");
     expect(adaptation2.normalizedLanguage).toBe("totofoo");
@@ -106,16 +134,18 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should not call normalize if no language is given", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockNormalize = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
-                                                default: mockNormalize }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
+    const mockNormalize = jest.fn((lang: string) => lang + "foo");
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true as const,
+      default: mockNormalize,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const args1 = { id: "12",
-                    representations: [],
-                    type: "video" };
+    const args1 = { id: "12", representations: [], type: "video" };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
@@ -123,33 +153,30 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should create and sort the corresponding Representations", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 30,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 20,
-                   id: "rep3",
-                   index: minimalRepresentationIndex };
+    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
+    const rep2 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
+    const rep3 = { bitrate: 20, id: "rep3", index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12",
-                   representations,
-                   type: "text" as const };
+    const args = { id: "12", representations, type: "text" as const };
 
     const adaptation = new Adaptation(args);
     const parsedRepresentations = adaptation.representations;
     expect(mockDefaultRepresentationImpl).toHaveBeenCalledTimes(3);
-    expect(mockDefaultRepresentationImpl)
-      .toHaveBeenNthCalledWith(1, rep1, { type: "text" });
-    expect(mockDefaultRepresentationImpl)
-      .toHaveBeenNthCalledWith(2, rep2, { type: "text" });
-    expect(mockDefaultRepresentationImpl)
-      .toHaveBeenNthCalledWith(3, rep3, { type: "text" });
+    expect(mockDefaultRepresentationImpl).toHaveBeenNthCalledWith(1, rep1, {
+      type: "text",
+    });
+    expect(mockDefaultRepresentationImpl).toHaveBeenNthCalledWith(2, rep2, {
+      type: "text",
+    });
+    expect(mockDefaultRepresentationImpl).toHaveBeenNthCalledWith(3, rep3, {
+      type: "text",
+    });
 
     expect(parsedRepresentations.length).toBe(3);
     expect(parsedRepresentations[0].id).toEqual("rep1");
@@ -161,50 +188,38 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should execute the representationFilter if given", () => {
-    const mockRepresentation = jest.fn(arg => {
-      return { bitrate: arg.bitrate,
-               id: arg.id,
-               isSupported: arg.id !== "rep4",
-               index: arg.index };
+    const mockRepresentation = jest.fn((arg) => {
+      return {
+        bitrate: arg.bitrate,
+        id: arg.id,
+        isSupported: arg.id !== "rep4",
+        index: arg.index,
+      };
     });
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockRepresentation }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockRepresentation,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30,
-                   id: "rep3",
-                   index: minimalRepresentationIndex };
-    const rep4 = { bitrate: 40,
-                   id: "rep4",
-                   index: minimalRepresentationIndex };
-    const rep5 = { bitrate: 50,
-                   id: "rep5",
-                   index: minimalRepresentationIndex };
-    const rep6 = { bitrate: 60,
-                   id: "rep6",
-                   index: minimalRepresentationIndex };
+    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
+    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
+    const rep3 = { bitrate: 30, id: "rep3", index: minimalRepresentationIndex };
+    const rep4 = { bitrate: 40, id: "rep4", index: minimalRepresentationIndex };
+    const rep5 = { bitrate: 50, id: "rep5", index: minimalRepresentationIndex };
+    const rep6 = { bitrate: 60, id: "rep6", index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3, rep4, rep5, rep6];
 
-    const representationFilter = jest.fn((
-      representation : Representation,
-      adaptationInfos : IRepresentationInfos
-    ) => {
-      if (adaptationInfos.language === "fr" && representation.bitrate < 40) {
-        return false;
-      }
-      return true;
-    });
-    const args = { id: "12",
-                   language: "fr",
-                   representations,
-                   type: "text" as const };
+    const representationFilter = jest.fn(
+      (representation: Representation, adaptationInfos: IRepresentationInfos) => {
+        if (adaptationInfos.language === "fr" && representation.bitrate < 40) {
+          return false;
+        }
+        return true;
+      },
+    );
+    const args = { id: "12", language: "fr", representations, type: "text" as const };
     const adaptation = new Adaptation(args, { representationFilter });
 
     const parsedRepresentations = adaptation.representations;
@@ -221,28 +236,26 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isDub value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockNormalize = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
-                                                default: mockNormalize }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
+    const mockNormalize = jest.fn((lang: string) => lang + "foo");
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true as const,
+      default: mockNormalize,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
 
-    const args1 = { id: "12",
-                    representations: [],
-                    isDub: false,
-                    type: "video" };
+    const args1 = { id: "12", representations: [], isDub: false, type: "video" };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isDub).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = { id: "12",
-                    representations: [],
-                    isDub: true,
-                    type: "video" };
+    const args2 = { id: "12", representations: [], isDub: true, type: "video" };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
@@ -251,28 +264,26 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isClosedCaption value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockNormalize = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
-                                                default: mockNormalize }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
+    const mockNormalize = jest.fn((lang: string) => lang + "foo");
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true as const,
+      default: mockNormalize,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
 
-    const args1 = { id: "12",
-                    representations: [],
-                    closedCaption: false,
-                    type: "video" };
+    const args1 = { id: "12", representations: [], closedCaption: false, type: "video" };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isClosedCaption).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = { id: "12",
-                    representations: [],
-                    closedCaption: true,
-                    type: "video" };
+    const args2 = { id: "12", representations: [], closedCaption: true, type: "video" };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
@@ -281,29 +292,37 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set an isAudioDescription value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockNormalize = jest.fn((lang : string) => lang + "foo");
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
+    const mockNormalize = jest.fn((lang: string) => lang + "foo");
 
-    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
-                                                default: mockNormalize }));
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true as const,
+      default: mockNormalize,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
 
-    const args1 = { id: "12",
-                    representations: [],
-                    audioDescription: false,
-                    type: "video" };
+    const args1 = {
+      id: "12",
+      representations: [],
+      audioDescription: false,
+      type: "video",
+    };
     const adaptation1 = new Adaptation(args1);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isAudioDescription).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = { id: "12",
-                    representations: [],
-                    audioDescription: true,
-                    type: "video" };
+    const args2 = {
+      id: "12",
+      representations: [],
+      audioDescription: true,
+      type: "video",
+    };
     const adaptation2 = new Adaptation(args2);
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
@@ -312,26 +331,26 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should set a manuallyAdded value if one", () => {
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
-    const mockNormalize = jest.fn((lang : string) => lang + "foo");
-    jest.mock("../../utils/languages", () => ({ __esModule: true as const,
-                                                default: mockNormalize }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
+    const mockNormalize = jest.fn((lang: string) => lang + "foo");
+    jest.mock("../../utils/languages", () => ({
+      __esModule: true as const,
+      default: mockNormalize,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
 
-    const args1 = { id: "12",
-                    representations: [],
-                    type: "video" };
+    const args1 = { id: "12", representations: [], type: "video" };
     const adaptation1 = new Adaptation(args1, { isManuallyAdded: false });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.manuallyAdded).toEqual(false);
     expect(mockNormalize).not.toHaveBeenCalled();
 
-    const args2 = { id: "12",
-                    representations: [],
-                    type: "video" };
+    const args2 = { id: "12", representations: [], type: "video" };
     const adaptation2 = new Adaptation(args2, { isManuallyAdded: true });
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
@@ -341,28 +360,24 @@ describe("Manifest - Adaptation", () => {
 
   /* eslint-disable max-len */
   it("should filter Representation with duplicate bitrates in getAvailableBitrates", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
     const mockUniq = jest.fn(() => [45, 92]);
-    jest.mock("../../utils/uniq", () => ({ __esModule: true as const,
-                                           default: mockUniq }));
+    jest.mock("../../utils/uniq", () => ({
+      __esModule: true as const,
+      default: mockUniq,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 20,
-                   id: "rep3",
-                   index: minimalRepresentationIndex };
+    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
+    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
+    const rep3 = { bitrate: 20, id: "rep3", index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
-    const args = { id: "12",
-                   representations,
-                   type: "text" as const };
+    const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
 
     const parsedRepresentations = adaptation.representations;
@@ -370,26 +385,22 @@ describe("Manifest - Adaptation", () => {
 
     expect(adaptation.getAvailableBitrates()).toEqual([45, 92]);
     expect(mockUniq).toHaveBeenCalledTimes(1);
-    expect(mockUniq).toHaveBeenCalledWith(representations.map(r => r.bitrate));
+    expect(mockUniq).toHaveBeenCalledWith(representations.map((r) => r.bitrate));
   });
 
   /* eslint-disable max-len */
   it("should return the first Representation with the given Id with `getRepresentation`", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
+    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
+    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
+    const rep3 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
     const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
@@ -400,21 +411,17 @@ describe("Manifest - Adaptation", () => {
 
   /* eslint-disable max-len */
   it("should return undefined in `getRepresentation` if no representation is found with this Id", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
 
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockDefaultRepresentationImpl }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockDefaultRepresentationImpl,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
+    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
+    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
+    const rep3 = { bitrate: 30, id: "rep2", index: minimalRepresentationIndex };
     const representations = [rep1, rep2, rep3];
     const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
@@ -424,53 +431,38 @@ describe("Manifest - Adaptation", () => {
 
   /* eslint-disable max-len */
   it("should return only supported and decipherable representation when calling `getPlayableRepresentations`", () => {
-  /* eslint-enable max-len */
-    const mockRepresentation = jest.fn(arg => {
-      return { bitrate: arg.bitrate,
-               id: arg.id,
-               isSupported: arg.id !== "rep3" && arg.id !== "rep8",
-               decipherable: arg.id === "rep6" ? false :
-                             arg.id === "rep8" ? false :
-                             arg.id === "rep4" ? true :
-                                                 undefined,
-               index: arg.index };
+    /* eslint-enable max-len */
+    const mockRepresentation = jest.fn((arg) => {
+      return {
+        bitrate: arg.bitrate,
+        id: arg.id,
+        isSupported: arg.id !== "rep3" && arg.id !== "rep8",
+        decipherable:
+          arg.id === "rep6"
+            ? false
+            : arg.id === "rep8"
+              ? false
+              : arg.id === "rep4"
+                ? true
+                : undefined,
+        index: arg.index,
+      };
     });
-    jest.mock("../representation", () => ({ __esModule: true as const,
-                                            default: mockRepresentation }));
+    jest.mock("../representation", () => ({
+      __esModule: true as const,
+      default: mockRepresentation,
+    }));
 
     const Adaptation = jest.requireActual("../adaptation").default;
-    const rep1 = { bitrate: 10,
-                   id: "rep1",
-                   index: minimalRepresentationIndex };
-    const rep2 = { bitrate: 20,
-                   id: "rep2",
-                   index: minimalRepresentationIndex };
-    const rep3 = { bitrate: 30,
-                   id: "rep3",
-                   index: minimalRepresentationIndex };
-    const rep4 = { bitrate: 40,
-                   id: "rep4",
-                   index: minimalRepresentationIndex };
-    const rep5 = { bitrate: 50,
-                   id: "rep5",
-                   index: minimalRepresentationIndex };
-    const rep6 = { bitrate: 60,
-                   id: "rep6",
-                   index: minimalRepresentationIndex };
-    const rep7 = { bitrate: 70,
-                   id: "rep7",
-                   index: minimalRepresentationIndex };
-    const rep8 = { bitrate: 80,
-                   id: "rep8",
-                   index: minimalRepresentationIndex };
-    const representations = [rep1,
-                             rep2,
-                             rep3,
-                             rep4,
-                             rep5,
-                             rep6,
-                             rep7,
-                             rep8];
+    const rep1 = { bitrate: 10, id: "rep1", index: minimalRepresentationIndex };
+    const rep2 = { bitrate: 20, id: "rep2", index: minimalRepresentationIndex };
+    const rep3 = { bitrate: 30, id: "rep3", index: minimalRepresentationIndex };
+    const rep4 = { bitrate: 40, id: "rep4", index: minimalRepresentationIndex };
+    const rep5 = { bitrate: 50, id: "rep5", index: minimalRepresentationIndex };
+    const rep6 = { bitrate: 60, id: "rep6", index: minimalRepresentationIndex };
+    const rep7 = { bitrate: 70, id: "rep7", index: minimalRepresentationIndex };
+    const rep8 = { bitrate: 80, id: "rep8", index: minimalRepresentationIndex };
+    const representations = [rep1, rep2, rep3, rep4, rep5, rep6, rep7, rep8];
     const args = { id: "12", representations, type: "text" as const };
     const adaptation = new Adaptation(args);
 

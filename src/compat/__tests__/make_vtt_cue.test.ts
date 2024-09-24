@@ -23,10 +23,10 @@
 
 describe("Compat - makeVTTCue", () => {
   class MockVTTCue {
-    public startTime : number;
-    public endTime : number;
-    public text : string;
-    constructor(start : number, end : number, text : string) {
+    public startTime: number;
+    public endTime: number;
+    public text: string;
+    constructor(start: number, end: number, text: string) {
       this.startTime = start;
       this.endTime = end;
       this.text = text;
@@ -34,8 +34,8 @@ describe("Compat - makeVTTCue", () => {
   }
 
   const win = window as {
-    VTTCue? : unknown;
-    TextTrackCue? : unknown;
+    VTTCue?: unknown;
+    TextTrackCue?: unknown;
   };
 
   const ogVTTuCue = win.VTTCue;
@@ -59,7 +59,7 @@ describe("Compat - makeVTTCue", () => {
     let error;
     try {
       result = makeCue(5, 10, "toto");
-    } catch (e : unknown) {
+    } catch (e: unknown) {
       error = e;
     }
     expect(error).toBeInstanceOf(Error);

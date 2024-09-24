@@ -34,7 +34,8 @@ describe("DASH Parser - getClockOffset", () => {
     }));
 
     const getClockOffset = jest.requireActual("../get_clock_offset").default;
-    const mockDate = jest.spyOn(performance, "now")
+    const mockDate = jest
+      .spyOn(performance, "now")
       .mockReturnValue(Date.parse("2019-03-24T13:00:00Z"));
 
     expect(getClockOffset("2019-03-25T12:00:00Z")).toEqual(82800000);
@@ -52,14 +53,15 @@ describe("DASH Parser - getClockOffset", () => {
 
     expect(getClockOffset("2018/412/13")).toEqual(undefined);
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn)
-      .toHaveBeenCalledWith("DASH Parser: Invalid clock received: ", "2018/412/13");
+    expect(mockWarn).toHaveBeenCalledWith(
+      "DASH Parser: Invalid clock received: ",
+      "2018/412/13",
+    );
     mockWarn.mockReset();
 
     expect(getClockOffset("foo")).toEqual(undefined);
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn)
-      .toHaveBeenCalledWith("DASH Parser: Invalid clock received: ", "foo");
+    expect(mockWarn).toHaveBeenCalledWith("DASH Parser: Invalid clock received: ", "foo");
     mockWarn.mockReset();
   });
 });

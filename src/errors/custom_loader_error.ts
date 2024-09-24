@@ -39,7 +39,7 @@ export default class CustomLoaderError extends Error {
     message: string,
     canRetry: boolean,
     isOfflineError: boolean,
-    xhr: XMLHttpRequest | undefined
+    xhr: XMLHttpRequest | undefined,
   ) {
     super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -51,4 +51,3 @@ export default class CustomLoaderError extends Error {
     this.xhr = xhr;
   }
 }
-

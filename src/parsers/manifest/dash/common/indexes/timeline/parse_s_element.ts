@@ -19,15 +19,15 @@ import log from "../../../../../../log";
 /** SegmentTimeline `S` element once parsed. */
 export interface IParsedS {
   /** Start time in a previously-given timescaled unit. */
-  start? : number;
+  start?: number;
   /**
    * Amount of repetition(s).
    * 0 = no repeat.
    * negative number = max possible repeat.
    */
-  repeatCount? : number;
+  repeatCount?: number;
   /** Duration of the content in a previously-given timescaled unit. */
-  duration? : number;
+  duration?: number;
 }
 
 /**
@@ -35,8 +35,8 @@ export interface IParsedS {
  * @param {Element} root
  * @returns {Object}
  */
-export default function parseSElement(root : Element) : IParsedS {
-  const parsedS : IParsedS = {};
+export default function parseSElement(root: Element): IParsedS {
+  const parsedS: IParsedS = {};
 
   for (let j = 0; j < root.attributes.length; j++) {
     const attribute = root.attributes[j];

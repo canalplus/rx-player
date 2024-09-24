@@ -24,14 +24,16 @@
  * @returns {boolean}
  */
 export function shouldApplyDefaultTTMLStyle(
-  paragraphStyle: Partial<Record<string, string>>
+  paragraphStyle: Partial<Record<string, string>>,
 ): boolean {
-  return paragraphStyle.extent === undefined &&
-         paragraphStyle.origin === undefined &&
-         paragraphStyle.displayAlign === undefined &&
-         paragraphStyle.display === undefined &&
-         paragraphStyle.textAlign === undefined &&
-         paragraphStyle.fontSize === undefined;
+  return (
+    paragraphStyle.extent === undefined &&
+    paragraphStyle.origin === undefined &&
+    paragraphStyle.displayAlign === undefined &&
+    paragraphStyle.display === undefined &&
+    paragraphStyle.textAlign === undefined &&
+    paragraphStyle.fontSize === undefined
+  );
 }
 
 /**
@@ -57,7 +59,7 @@ export function shouldApplyDefaultTTMLStyle(
  * A better solution should be found in the future
  */
 export function applyDefaultTTMLStyle(
-  paragraphStyle: Partial<Record<string, string>>
+  paragraphStyle: Partial<Record<string, string>>,
 ): void {
   paragraphStyle.extent = "70% 20%";
   paragraphStyle.fontSize = "1c";

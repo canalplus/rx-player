@@ -4,30 +4,29 @@
 
 Change the current video track.
 
-The argument to this method is the wanted track's `id` property. This `id` can
-for example be obtained on the corresponding track object returned by the
-`getAvailableVideoTracks` method.
+The argument to this method is the wanted track's `id` property. This `id` can for example
+be obtained on the corresponding track object returned by the `getAvailableVideoTracks`
+method.
 
-If trickmode tracks are enabled (usually through the corresponding
-`setPlaybackRate` method option) and if that new video track is linked to
-trickmode tracks, one of the trickmode tracks will be loaded instead.
+If trickmode tracks are enabled (usually through the corresponding `setPlaybackRate`
+method option) and if that new video track is linked to trickmode tracks, one of the
+trickmode tracks will be loaded instead.
 
-Note that trickmode tracks cannot be forced through the `setVideoTrack` method
-by giving directly the trickmode tracks' id.
+Note that trickmode tracks cannot be forced through the `setVideoTrack` method by giving
+directly the trickmode tracks' id.
 
-If you want to enable or disable trickmode tracks, you should use
-`setPlaybackRate` instead.
+If you want to enable or disable trickmode tracks, you should use `setPlaybackRate`
+instead.
 
 ---
 
-etting a new video track when a previous one was already playing can lead the
-rx-player to "reload" this content.
+etting a new video track when a previous one was already playing can lead the rx-player to
+"reload" this content.
 
 During this period of time:
 
 - the player will have the state `RELOADING`
-- Multiple APIs linked to the current content might not work.
-  Most notably:
+- Multiple APIs linked to the current content might not work. Most notably:
   - `play` will not work
   - `pause` will not work
   - `seekTo` will not work
@@ -71,6 +70,6 @@ this method has no effect.
 player.setVideoTrack(videoTrackId);
 ```
 
- - **arguments**:
+- **arguments**:
 
-   1. _videoTrackId_ `string|Number`: The `id` of the track you want to set
+  1.  _videoTrackId_ `string|Number`: The `id` of the track you want to set

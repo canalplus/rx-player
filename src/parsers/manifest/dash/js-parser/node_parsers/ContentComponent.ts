@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { IContentComponentAttributes } from "../../node_parser_types";
+import type { IContentComponentAttributes } from "../../node_parser_types";
 
 /**
  * Parse a "ContentComponent" Element in a DASH MPD.
@@ -22,9 +22,9 @@ import { IContentComponentAttributes } from "../../node_parser_types";
  * @returns {Object}
  */
 export default function parseContentComponent(
-  root: Element
-) : IContentComponentAttributes {
-  const ret : IContentComponentAttributes = {};
+  root: Element,
+): IContentComponentAttributes {
+  const ret: IContentComponentAttributes = {};
 
   for (let i = 0; i < root.attributes.length; i++) {
     const attribute = root.attributes[i];

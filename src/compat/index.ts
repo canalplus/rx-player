@@ -16,24 +16,16 @@
 
 import addClassName from "./add_class_name";
 import addTextTrack from "./add_text_track";
-import {
-  ICompatTextTrack,
-  ICompatVTTCue,
-  MediaSource_,
-} from "./browser_compatibility_types";
+import type { ICompatTextTrack, ICompatVTTCue } from "./browser_compatibility_types";
+import { MediaSource_ } from "./browser_compatibility_types";
 import canPatchISOBMFFSegment from "./can_patch_isobmff";
 import canReuseMediaKeys from "./can_reuse_media_keys";
-import tryToChangeSourceBufferType, {
-  ICompatSourceBuffer,
-} from "./change_source_buffer_type";
+import type { ICompatSourceBuffer } from "./change_source_buffer_type";
+import tryToChangeSourceBufferType from "./change_source_buffer_type";
 import clearElementSrc from "./clear_element_src";
 import enableAudioTrack from "./enable_audio_track";
 import * as events from "./event_listeners";
-import {
-  exitFullscreen,
-  isFullscreen,
-  requestFullscreen,
-} from "./fullscreen";
+import { exitFullscreen, isFullscreen, requestFullscreen } from "./fullscreen";
 import getStartDate from "./get_start_date";
 import isCodecSupported from "./is_codec_supported";
 import isNode from "./is_node";
@@ -55,6 +47,7 @@ import shouldWaitForHaveEnoughData from "./should_wait_for_have_enough_data";
 // to better exploit tree shaking.
 patchWebkitSourceBuffer();
 
+export type { ICompatTextTrack, ICompatVTTCue, ICompatSourceBuffer };
 export {
   addClassName,
   addTextTrack,
@@ -65,9 +58,6 @@ export {
   events,
   exitFullscreen,
   getStartDate,
-  ICompatTextTrack,
-  ICompatVTTCue,
-  ICompatSourceBuffer,
   isCodecSupported,
   isFullscreen,
   isNode,

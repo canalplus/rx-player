@@ -14,7 +14,7 @@ import type { IPlayerModule } from "../modules/player/index";
 function VolumeBar({
   player, // current volume percentage
 }: {
-  player: IPlayerModule
+  player: IPlayerModule;
 }): JSX.Element {
   const volume = useModuleState(player, "volume");
   const elementRef = React.useRef<HTMLDivElement>(null);
@@ -33,12 +33,15 @@ function VolumeBar({
     return Math.min(clickPosPx / endPointPx, 1);
   }, []);
 
-  const onVolumeClick = React.useCallback((evt: React.MouseEvent) => {
-    const newVol = getMouseVolume(evt);
-    if (newVol !== undefined) {
-      player.actions.setVolume(newVol);
-    }
-  }, [player]);
+  const onVolumeClick = React.useCallback(
+    (evt: React.MouseEvent) => {
+      const newVol = getMouseVolume(evt);
+      if (newVol !== undefined) {
+        player.actions.setVolume(newVol);
+      }
+    },
+    [player],
+  );
 
   return (
     <div
@@ -54,10 +57,7 @@ function VolumeBar({
       }}
       onClick={onVolumeClick}
     >
-      <div
-        className="volume-bar-current"
-        style={{ "width": `${volume * 100}%` }}
-      />
+      <div className="volume-bar-current" style={{ width: `${volume * 100}%` }} />
     </div>
   );
 }

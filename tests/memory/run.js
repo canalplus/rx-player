@@ -44,7 +44,7 @@ const karmaConf = {
       flags: [
         "--autoplay-policy=no-user-gesture-required",
         "--enable-precise-memory-info",
-        "--js-flags=\"--expose-gc\"",
+        '--js-flags="--expose-gc"',
       ],
     },
     ChromeHeadlessMemory: {
@@ -52,7 +52,7 @@ const karmaConf = {
       flags: [
         "--autoplay-policy=no-user-gesture-required",
         "--enable-precise-memory-info",
-        "--js-flags=\"--expose-gc\"",
+        '--js-flags="--expose-gc"',
       ],
     },
   },
@@ -63,34 +63,33 @@ const karmaConf = {
     "karma-chrome-launcher",
     "karma-firefox-launcher",
     "karma-mocha",
-    "karma-webpack"
+    "karma-webpack",
   ],
   webpack: webpackConfig,
   webpackMiddleware: { stats: { colors: true, chunks: false } },
   preprocessors: {
     [path.resolve(__dirname, "./index.js")]: ["webpack"],
   },
-  files: [ path.resolve(__dirname, "./index.js") ],
+  files: [path.resolve(__dirname, "./index.js")],
   client: {
     mocha: { reporter: "html" },
   },
 };
 
 const testContentServer = TestContentServer(CONTENT_SERVER_PORT);
-parseConfig(
-  null,
-  karmaConf,
-  { promiseConfig: true, throwErrors: true }
-).then((parsedConfig) => {
-  const server = new Server(parsedConfig, function(exitCode) {
-    testContentServer.close();
-    process.exit(exitCode);
-  });
-  server.start();
-}, (rejectReason) => {
-  /* eslint-disable-next-line no-console */
-  console.error("Karma config rejected:", rejectReason);
-});
+parseConfig(null, karmaConf, { promiseConfig: true, throwErrors: true }).then(
+  (parsedConfig) => {
+    const server = new Server(parsedConfig, function (exitCode) {
+      testContentServer.close();
+      process.exit(exitCode);
+    });
+    server.start();
+  },
+  (rejectReason) => {
+    /* eslint-disable-next-line no-console */
+    console.error("Karma config rejected:", rejectReason);
+  },
+);
 
 /**
  * Display through `console.log` an helping message relative to how to run this
@@ -99,13 +98,13 @@ parseConfig(
 function displayHelp() {
   /* eslint-disable no-console */
   console.log(
-  /* eslint-disable indent */
-`Usage: node run.js [options]
+    /* eslint-disable indent */
+    `Usage: node run.js [options]
 Options:
   -h, --help    Display this help
   --bchrome     Launch tests on Chrome
   --bchromehl   Launch tests on headless Chrome`,
-  /* eslint-enable indent */
+    /* eslint-enable indent */
   );
   /* eslint-enable no-console */
 }

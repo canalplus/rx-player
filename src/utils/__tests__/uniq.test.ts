@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import uniq, {
-  uniqFromFilter,
-  uniqFromSet,
-} from "../uniq";
+import uniq, { uniqFromFilter, uniqFromSet } from "../uniq";
 
 describe("utils - uniq", () => {
   it("should remove the duplicates from an array", () => {
@@ -25,35 +22,26 @@ describe("utils - uniq", () => {
     const obj2 = {};
     const regexpA1 = /a/;
     const regexpA2 = /a/;
-    expect(uniq([
-      obj1,
-      1,
-      2,
-      1,
-      undefined,
-      null,
-      obj1,
-      obj2,
-      obj2,
-      regexpA1,
-      regexpA2,
-      "a",
-      "b",
-      "a",
-      null,
-      undefined,
-    ])).toEqual([
-      obj1,
-      1,
-      2,
-      undefined,
-      null,
-      obj2,
-      regexpA1,
-      regexpA2,
-      "a",
-      "b",
-    ]);
+    expect(
+      uniq([
+        obj1,
+        1,
+        2,
+        1,
+        undefined,
+        null,
+        obj1,
+        obj2,
+        obj2,
+        regexpA1,
+        regexpA2,
+        "a",
+        "b",
+        "a",
+        null,
+        undefined,
+      ]),
+    ).toEqual([obj1, 1, 2, undefined, null, obj2, regexpA1, regexpA2, "a", "b"]);
   });
 });
 
@@ -63,35 +51,26 @@ describe("utils - uniqFromSet", () => {
     const obj2 = {};
     const regexpA1 = /a/;
     const regexpA2 = /a/;
-    expect(uniqFromSet([
-      obj1,
-      1,
-      2,
-      1,
-      undefined,
-      null,
-      obj1,
-      obj2,
-      obj2,
-      regexpA1,
-      regexpA2,
-      "a",
-      "b",
-      "a",
-      null,
-      undefined,
-    ])).toEqual([
-      obj1,
-      1,
-      2,
-      undefined,
-      null,
-      obj2,
-      regexpA1,
-      regexpA2,
-      "a",
-      "b",
-    ]);
+    expect(
+      uniqFromSet([
+        obj1,
+        1,
+        2,
+        1,
+        undefined,
+        null,
+        obj1,
+        obj2,
+        obj2,
+        regexpA1,
+        regexpA2,
+        "a",
+        "b",
+        "a",
+        null,
+        undefined,
+      ]),
+    ).toEqual([obj1, 1, 2, undefined, null, obj2, regexpA1, regexpA2, "a", "b"]);
   });
 });
 
@@ -101,34 +80,25 @@ describe("utils - uniqFromFilter", () => {
     const obj2 = {};
     const regexpA1 = /a/;
     const regexpA2 = /a/;
-    expect(uniqFromFilter([
-      obj1,
-      1,
-      2,
-      1,
-      undefined,
-      null,
-      obj1,
-      obj2,
-      obj2,
-      regexpA1,
-      regexpA2,
-      "a",
-      "b",
-      "a",
-      null,
-      undefined,
-    ])).toEqual([
-      obj1,
-      1,
-      2,
-      undefined,
-      null,
-      obj2,
-      regexpA1,
-      regexpA2,
-      "a",
-      "b",
-    ]);
+    expect(
+      uniqFromFilter([
+        obj1,
+        1,
+        2,
+        1,
+        undefined,
+        null,
+        obj1,
+        obj2,
+        obj2,
+        regexpA1,
+        regexpA2,
+        "a",
+        "b",
+        "a",
+        null,
+        undefined,
+      ]),
+    ).toEqual([obj1, 1, 2, undefined, null, obj2, regexpA1, regexpA2, "a", "b"]);
   });
 });

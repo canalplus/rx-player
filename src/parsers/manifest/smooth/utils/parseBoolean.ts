@@ -18,14 +18,12 @@
  * @param {*} parseBoolean
  * @returns {Boolean}
  */
-export default function parseBoolean(val : string|null) : boolean {
+export default function parseBoolean(val: string | null): boolean {
   if (typeof val === "boolean") {
     return val;
-  }
-  else if (typeof val === "string") {
+  } else if (typeof val === "string") {
     return val.toUpperCase() === "TRUE";
-  }
-  else {
+  } else {
     return false;
   }
 }

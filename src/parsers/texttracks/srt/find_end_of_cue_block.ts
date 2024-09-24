@@ -31,7 +31,7 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
  */
 export default function findEndOfCueBlock(
   linified: string[],
-  startIndex: number
+  startIndex: number,
 ): number {
   let firstEmptyLineIndex = startIndex + 1;
 

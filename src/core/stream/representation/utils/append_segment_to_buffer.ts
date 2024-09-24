@@ -20,14 +20,15 @@
 
 import { MediaError } from "../../../../errors";
 import sleep from "../../../../utils/sleep";
-import { CancellationError, CancellationSignal } from "../../../../utils/task_canceller";
-import { IReadOnlyPlaybackObserver } from "../../../api";
-import {
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import { CancellationError } from "../../../../utils/task_canceller";
+import type { IReadOnlyPlaybackObserver } from "../../../api";
+import type {
   IInsertedChunkInfos,
   IPushChunkInfos,
   SegmentBuffer,
 } from "../../../segment_buffers";
-import { IRepresentationStreamPlaybackObservation } from "../types";
+import type { IRepresentationStreamPlaybackObservation } from "../types";
 import forceGarbageCollection from "./force_garbage_collection";
 
 /**
@@ -41,25 +42,27 @@ import forceGarbageCollection from "./force_garbage_collection";
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver : IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
-  segmentBuffer : SegmentBuffer,
-  dataInfos : IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
-  cancellationSignal : CancellationSignal
-) : Promise<void> {
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  segmentBuffer: SegmentBuffer,
+  dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
+  cancellationSignal: CancellationSignal,
+): Promise<void> {
   try {
     await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
-  } catch (appendError : unknown) {
+  } catch (appendError: unknown) {
     if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
-    } else if (!(appendError instanceof Error) ||
-               appendError.name !== "QuotaExceededError")
-    {
-      const reason = appendError instanceof Error ?
-        appendError.toString() :
-        "An unknown error happened when pushing content";
-      throw new MediaError("BUFFER_APPEND_ERROR",
-                           reason,
-                           { adaptation: dataInfos.inventoryInfos.adaptation });
+    } else if (
+      !(appendError instanceof Error) ||
+      appendError.name !== "QuotaExceededError"
+    ) {
+      const reason =
+        appendError instanceof Error
+          ? appendError.toString()
+          : "An unknown error happened when pushing content";
+      throw new MediaError("BUFFER_APPEND_ERROR", reason, {
+        adaptation: dataInfos.inventoryInfos.adaptation,
+      });
     }
     const { position } = playbackObserver.getReference().getValue();
     const currentPos = position.pending ?? position.last;
@@ -72,12 +75,12 @@ export default async function appendSegmentToBuffer<T>(
 
       await segmentBuffer.pushChunk(dataInfos, cancellationSignal);
     } catch (err2) {
-      const reason = err2 instanceof Error ? err2.toString() :
-                                             "Could not clean the buffer";
+      const reason =
+        err2 instanceof Error ? err2.toString() : "Could not clean the buffer";
 
-      throw new MediaError("BUFFER_FULL_ERROR",
-                           reason,
-                           { adaptation: dataInfos.inventoryInfos.adaptation });
+      throw new MediaError("BUFFER_FULL_ERROR", reason, {
+        adaptation: dataInfos.inventoryInfos.adaptation,
+      });
     }
   }
 }

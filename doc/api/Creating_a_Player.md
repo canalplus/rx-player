@@ -2,8 +2,9 @@
 
 ## Instantiation
 
-Instantiating a new RxPlayer is necessary before being able to load a content.
-Doing so is straightforward:
+Instantiating a new RxPlayer is necessary before being able to load a content. Doing so is
+straightforward:
+
 ```js
 import RxPlayer from "rx-player";
 const player = new RxPlayer(options);
@@ -13,9 +14,9 @@ const player = new RxPlayer(options);
 
 Player options are options given to the player on instantiation.
 
-It's an object with multiple properties. None of them are mandatory.
-For most usecase though, you might want to set at least the associated video
-element via the `videoElement` property.
+It's an object with multiple properties. None of them are mandatory. For most usecase
+though, you might want to set at least the associated video element via the `videoElement`
+property.
 
 ### videoElement
 
@@ -30,9 +31,9 @@ const player = new Player({
 });
 ```
 
-If not defined, a `<video>` element will be created without being inserted in
-the document. You will have to do it yourself through the `getVideoElement`
-method to add it yourself:
+If not defined, a `<video>` element will be created without being inserted in the
+document. You will have to do it yourself through the `getVideoElement` method to add it
+yourself:
 
 ```js
 const player = new Player();
@@ -49,17 +50,16 @@ _defaults_: `0`
 
 This is a ceil value for the initial video bitrate chosen.
 
-That is, the first video
-[Representation](../Getting_Started/Glossary.md#representation) chosen will be
-both:
+That is, the first video [Representation](../Getting_Started/Glossary.md#representation)
+chosen will be both:
 
 - inferior or equal to this value.
-- the closest possible to this value (after filtering out the ones with a
-  superior bitrate).
+- the closest possible to this value (after filtering out the ones with a superior
+  bitrate).
 
-If no Representation is found to respect those rules, the Representation with
-the lowest bitrate will be chosen instead. Thus, the default value - `0` -
-will lead to the lowest bitrate being chosen at first.
+If no Representation is found to respect those rules, the Representation with the lowest
+bitrate will be chosen instead. Thus, the default value - `0` - will lead to the lowest
+bitrate being chosen at first.
 
 ```js
 // Begin either by the video bitrate just below or equal to 700000 bps if found
@@ -82,16 +82,16 @@ _defaults_: `0`
 
 This is a ceil value for the initial audio bitrate chosen.
 
-That is, the first audio
-[Representation](../Getting_Started/Glossary.md#representation) chosen will be:
+That is, the first audio [Representation](../Getting_Started/Glossary.md#representation)
+chosen will be:
 
 - inferior or equal to this value.
-- the closest possible to this value (after filtering out the ones with a
-  superior bitrate).
+- the closest possible to this value (after filtering out the ones with a superior
+  bitrate).
 
-If no Representation is found to respect those rules, the Representation with
-the lowest bitrate will be chosen instead. Thus, the default value - `0` -
-will lead to the lowest bitrate being chosen at first.
+If no Representation is found to respect those rules, the Representation with the lowest
+bitrate will be chosen instead. Thus, the default value - `0` - will lead to the lowest
+bitrate being chosen at first.
 
 ```js
 // Begin either by the audio bitrate just below or equal to 5000 bps if found
@@ -114,15 +114,15 @@ _defaults_: `0`
 
 Minimum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to a video quality with a bitrate lower than that value.
+When the bitrate is chosen through adaptive streaming (i.e., not enforced manually through
+APIs such as `setVideoBitrate`), the player will never switch to a video quality with a
+bitrate lower than that value.
 
-The exception being when no quality has a higher bitrate, in which case the
-maximum quality will always be chosen instead.
+The exception being when no quality has a higher bitrate, in which case the maximum
+quality will always be chosen instead.
 
-For example, if you want that video qualities chosen automatically never have
-a bitrate lower than 100 kilobits per second you can call:
+For example, if you want that video qualities chosen automatically never have a bitrate
+lower than 100 kilobits per second you can call:
 
 ```js
 const player = new Player({
@@ -137,11 +137,10 @@ Any limit can be removed just by setting that value to `0`:
 player.setMinVideoBitrate(0);
 ```
 
-You can update this limit at any moment with the `setMinVideoBitrate` API
-call.
+You can update this limit at any moment with the `setMinVideoBitrate` API call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the bitrate manually (for example
+by calling `setVideoBitrate`) bypass this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -156,15 +155,15 @@ _defaults_: `0`
 
 Minimum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the bitrate is chosen through adaptive streaming (i.e., not enforced manually through
+APIs such as `setAudioBitrate`), the player will never switch to an audio quality with a
+bitrate higher than that value.
 
-The exception being when no quality has a higher bitrate, in which case the
-minimum quality will always be chosen instead.
+The exception being when no quality has a higher bitrate, in which case the minimum
+quality will always be chosen instead.
 
-For example, if you want that audio qualities chosen automatically never have
-a bitrate higher than 100 kilobits per second you can call:
+For example, if you want that audio qualities chosen automatically never have a bitrate
+higher than 100 kilobits per second you can call:
 
 ```js
 const player = new Player({
@@ -179,11 +178,10 @@ Any limit can be removed just by setting that value to `0`:
 player.setMinAudioBitrate(0);
 ```
 
-You can update this limit at any moment with the `setMinAudioBitrate` API
-call.
+You can update this limit at any moment with the `setMinAudioBitrate` API call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the bitrate manually (for example
+by calling `setAudioBitrate`) bypass this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -198,15 +196,15 @@ _defaults_: `Infinity`
 
 Maximum video bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setVideoBitrate`), the player will never switch
-to an video quality with a bitrate higher than that value.
+When the bitrate is chosen through adaptive streaming (i.e., not enforced manually through
+APIs such as `setVideoBitrate`), the player will never switch to an video quality with a
+bitrate higher than that value.
 
-The exception being when no quality has a lower bitrate, in which case the
-minimum quality will always be chosen instead.
+The exception being when no quality has a lower bitrate, in which case the minimum quality
+will always be chosen instead.
 
-For example, if you want that video qualities chosen automatically never have
-a bitrate higher than 1 Megabits per second you can call:
+For example, if you want that video qualities chosen automatically never have a bitrate
+higher than 1 Megabits per second you can call:
 
 ```js
 const player = new Player({
@@ -221,11 +219,10 @@ Any limit can be removed just by setting that value to `Infinity`:
 player.setMaxVideoBitrate(Infinity);
 ```
 
-You can update this limit at any moment with the `setMaxVideoBitrate` API
-call.
+You can update this limit at any moment with the `setMaxVideoBitrate` API call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setVideoBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the bitrate manually (for example
+by calling `setVideoBitrate`) bypass this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -240,15 +237,15 @@ _defaults_: `Infinity`
 
 Maximum audio bitrate reachable through adaptive streaming.
 
-When the bitrate is chosen through adaptive streaming (i.e., not enforced
-manually through APIs such as `setAudioBitrate`), the player will never switch
-to an audio quality with a bitrate higher than that value.
+When the bitrate is chosen through adaptive streaming (i.e., not enforced manually through
+APIs such as `setAudioBitrate`), the player will never switch to an audio quality with a
+bitrate higher than that value.
 
-The exception being when no quality has a lower bitrate, in which case the
-minimum quality will always be chosen instead.
+The exception being when no quality has a lower bitrate, in which case the minimum quality
+will always be chosen instead.
 
-For example, if you want that audio qualities chosen automatically never have
-a bitrate higher than 1 Megabits per second you can call:
+For example, if you want that audio qualities chosen automatically never have a bitrate
+higher than 1 Megabits per second you can call:
 
 ```js
 const player = new Player({
@@ -263,11 +260,10 @@ Any limit can be removed just by setting that value to `Infinity`:
 player.setMaxAudioBitrate(Infinity);
 ```
 
-You can update this limit at any moment with the `setMaxAudioBitrate` API
-call.
+You can update this limit at any moment with the `setMaxAudioBitrate` API call.
 
-Note that this only affects adaptive strategies. Forcing the bitrate manually
-(for example by calling `setAudioBitrate`) bypass this limit completely.
+Note that this only affects adaptive strategies. Forcing the bitrate manually (for example
+by calling `setAudioBitrate`) bypass this limit completely.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -280,11 +276,10 @@ _type_: `Number|undefined`
 
 _defaults_: `30`
 
-Set the default buffering goal, as a duration ahead of the current position, in
-seconds.
+Set the default buffering goal, as a duration ahead of the current position, in seconds.
 
-Once this size of buffer is reached, the player won't try to download new
-segments anymore.
+Once this size of buffer is reached, the player won't try to download new segments
+anymore.
 
 <div class="warning">
 This option will have no effect for contents loaded in <i>Directfile</i>
@@ -297,9 +292,9 @@ _type_: `Number|undefined`
 
 _defaults_: `Infinity`
 
-Set the maximum size the video buffer can take in the memory, in kilobytes (kb).
-Once this value is reached, the player won't try to download new video
-segments anymore. The limit is approximative as it's based on internal estimation.
+Set the maximum size the video buffer can take in the memory, in kilobytes (kb). Once this
+value is reached, the player won't try to download new video segments anymore. The limit
+is approximative as it's based on internal estimation.
 
 <div class="warning">
 The internal checks of the RxPlayer is based on an estimation of what the RxPlayer think
@@ -328,21 +323,20 @@ _type_: `Array.<Object|null>`
 
 _defaults_: `[]`
 
-This option allows to help the RxPlayer choose an initial audio track based on
-either language preferences, codec preferences or both.
+This option allows to help the RxPlayer choose an initial audio track based on either
+language preferences, codec preferences or both.
 
-It is defined as an array of objects, each object describing constraints a
-track should respect.
+It is defined as an array of objects, each object describing constraints a track should
+respect.
 
-If the first object - defining the first set of constraints - cannot be
-respected under the currently available audio tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
+If the first object - defining the first set of constraints - cannot be respected under
+the currently available audio tracks, the RxPlayer will skip it and check with the second
+object and so on. As such, this array should be sorted by order of preference: from the
+most wanted constraints to the least.
 
-Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):
+Here is all the possible constraints you can set in any one of those objects (note that
+all properties are optional here, only those set will have an effect on which tracks will
+be filtered):
 
 ```js
 {
@@ -375,12 +369,13 @@ on which tracks will be filtered):
 ```
 
 This array of preferrences can be updated at any time through the
-`setPreferredAudioTracks` method, documented [here](./Track_Selection/getPreferredAudioTracks.md).
+`setPreferredAudioTracks` method, documented
+[here](./Track_Selection/getPreferredAudioTracks.md).
 
 #### Examples
 
-Let's imagine that you prefer to have french or italian over all other audio
-languages. If not found, you want to fallback to english:
+Let's imagine that you prefer to have french or italian over all other audio languages. If
+not found, you want to fallback to english:
 
 ```js
 const player = new RxPlayer({
@@ -392,9 +387,8 @@ const player = new RxPlayer({
 });
 ```
 
-Now let's imagine that you want to have in priority a track that contain at
-least one profile in Dolby Digital Plus (ec-3 codec) without caring about the
-language:
+Now let's imagine that you want to have in priority a track that contain at least one
+profile in Dolby Digital Plus (ec-3 codec) without caring about the language:
 
 ```js
 const player = new RxPlayer({
@@ -402,8 +396,8 @@ const player = new RxPlayer({
 });
 ```
 
-At last, let's combine both examples by preferring french over itialian, italian
-over english while preferring it to be in Dolby Digital Plus:
+At last, let's combine both examples by preferring french over itialian, italian over
+english while preferring it to be in Dolby Digital Plus:
 
 ```js
 const player = new RxPlayer({
@@ -450,8 +444,7 @@ _defaults_: `[]`
 
 Set the initial text track languages preferences.
 
-This option takes an array of objects describing the languages wanted for
-subtitles:
+This option takes an array of objects describing the languages wanted for subtitles:
 
 ```js
 {
@@ -462,22 +455,20 @@ subtitles:
 }
 ```
 
-All elements in that Array should be set in preference order: from the most
-preferred to the least preferred. You can set `null` in that array for no
-subtitles.
+All elements in that Array should be set in preference order: from the most preferred to
+the least preferred. You can set `null` in that array for no subtitles.
 
-When loading a content, the RxPlayer will then try to choose its text track by
-comparing what is available with your current preferences (i.e. if the most
-preferred is not available, it will look if the second one etc.).
+When loading a content, the RxPlayer will then try to choose its text track by comparing
+what is available with your current preferences (i.e. if the most preferred is not
+available, it will look if the second one etc.).
 
-This array of preferrences can be updated at any time through the
-`setPreferredTextTracks` method, documented
-[here](./Track_Selection/getPreferredTextTracks.md).
+This array of preferrences can be updated at any time through the `setPreferredTextTracks`
+method, documented [here](./Track_Selection/getPreferredTextTracks.md).
 
 #### Example
 
-Let's imagine that you prefer to have french or italian subtitles.If not found,
-you want no subtitles at all.
+Let's imagine that you prefer to have french or italian subtitles.If not found, you want
+no subtitles at all.
 
 ```js
 const player = new RxPlayer({
@@ -506,22 +497,21 @@ _defaults_: `[]`
 
 This option allows to help the RxPlayer choose an initial video track.
 
-It is defined as an array of objects, each object describing constraints a
-track should respect.
+It is defined as an array of objects, each object describing constraints a track should
+respect.
 
-If the first object - defining the first set of constraints - cannot be
-respected under the currently available video tracks, the RxPlayer will skip
-it and check with the second object and so on.
-As such, this array should be sorted by order of preference: from the most
-wanted constraints to the least.
+If the first object - defining the first set of constraints - cannot be respected under
+the currently available video tracks, the RxPlayer will skip it and check with the second
+object and so on. As such, this array should be sorted by order of preference: from the
+most wanted constraints to the least.
 
-When the next encountered constraint is set to `null`, the player will simply
-disable the video track. If you want to disable the video track by default,
-you can just set `null` as the first element of this array (e.g. `[null]`).
+When the next encountered constraint is set to `null`, the player will simply disable the
+video track. If you want to disable the video track by default, you can just set `null` as
+the first element of this array (e.g. `[null]`).
 
-Here is all the possible constraints you can set in any one of those objects
-(note that all properties are optional here, only those set will have an effect
-on which tracks will be filtered):
+Here is all the possible constraints you can set in any one of those objects (note that
+all properties are optional here, only those set will have an effect on which tracks will
+be filtered):
 
 ```js
 {
@@ -554,8 +544,8 @@ This array of preferrences can be updated at any time through the
 
 #### Examples
 
-Let's imagine that you prefer to have a track which contains at least one H265
-profile. You can do:
+Let's imagine that you prefer to have a track which contains at least one H265 profile.
+You can do:
 
 ```js
 const player = new RxPlayer({
@@ -563,9 +553,9 @@ const player = new RxPlayer({
 });
 ```
 
-With that same constraint, let's no consider that the current user is deaf and
-would thus prefer the video to contain a sign language interpretation.
-We could set both the previous and that new constraint that way:
+With that same constraint, let's no consider that the current user is deaf and would thus
+prefer the video to contain a sign language interpretation. We could set both the previous
+and that new constraint that way:
 
 ```js
 const player = new RxPlayer({
@@ -588,9 +578,8 @@ const player = new RxPlayer({
 });
 ```
 
-For a totally different example, let's imagine you want to start without any
-video track enabled (e.g. to start in an audio-only mode). To do that, you can
-simply do:
+For a totally different example, let's imagine you want to start without any video track
+enabled (e.g. to start in an audio-only mode). To do that, you can simply do:
 
 ```js
 const player = new RxPlayer({
@@ -615,20 +604,20 @@ _defaults_: `Infinity`
 
 Set the maximum kept buffer ahead of the current position, in seconds.
 
-Everything superior to that limit (`currentPosition + maxBufferAhead`) will
-be automatically garbage collected.
+Everything superior to that limit (`currentPosition + maxBufferAhead`) will be
+automatically garbage collected.
 
-This feature is not necessary as the browser should by default correctly
-remove old segments from memory if/when the memory is scarce.
+This feature is not necessary as the browser should by default correctly remove old
+segments from memory if/when the memory is scarce.
 
-However on some custom targets, or just to better control the memory footprint
-of the player, you might want to set this limit.
+However on some custom targets, or just to better control the memory footprint of the
+player, you might want to set this limit.
 
-Its default value, `Infinity`, will remove this limit and just let the browser
-do this job instead.
+Its default value, `Infinity`, will remove this limit and just let the browser do this job
+instead.
 
-The minimum value between this one and the one returned by
-`getWantedBufferAhead` will be considered when downloading new segments.
+The minimum value between this one and the one returned by `getWantedBufferAhead` will be
+considered when downloading new segments.
 
 <div class="warning">
 Bear in mind that a too-low configuration there (e.g. inferior to
@@ -651,17 +640,17 @@ _defaults_: `Infinity`
 
 Set the maximum kept buffer before the current position, in seconds.
 
-Everything before that limit (`currentPosition - maxBufferBehind`) will be
-automatically garbage collected.
+Everything before that limit (`currentPosition - maxBufferBehind`) will be automatically
+garbage collected.
 
-This feature is not necessary as the browser should by default correctly
-remove old segments from memory if/when the memory is scarce.
+This feature is not necessary as the browser should by default correctly remove old
+segments from memory if/when the memory is scarce.
 
-However on some custom targets, or just to better control the memory footprint
-of the player, you might want to set this limit.
+However on some custom targets, or just to better control the memory footprint of the
+player, you might want to set this limit.
 
-Its default value, `Infinity`, will remove this limit and just let the browser
-do this job instead.
+Its default value, `Infinity`, will remove this limit and just let the browser do this job
+instead.
 
 You can update that limit at any time through the
 [setMaxBufferBehind](./Buffer_Control/setMaxBufferBehind.md) method.
@@ -678,15 +667,15 @@ _type_: `Boolean`
 _defaults_: `false`
 
 With this feature, the possible video
-[Representations](../Getting_Started/Glossary.md#representation) considered are
-filtered by width:
+[Representations](../Getting_Started/Glossary.md#representation) considered are filtered
+by width:
 
-The maximum width considered is the closest superior or equal to the video
-element's width.
+The maximum width considered is the closest superior or equal to the video element's
+width.
 
-This is done because the other, "superior" Representations will not have any
-difference in glossary of pixels (as in most case, the display limits the maximum
-resolution displayable). It thus save bandwidth with no visible difference.
+This is done because the other, "superior" Representations will not have any difference in
+glossary of pixels (as in most case, the display limits the maximum resolution
+displayable). It thus save bandwidth with no visible difference.
 
 To activate this feature, set it to `true`.
 
@@ -696,17 +685,17 @@ const player = Player({
 });
 ```
 
-For some reasons (displaying directly a good quality when switching to
-fullscreen, specific environments), you might not want to activate this limit.
+For some reasons (displaying directly a good quality when switching to fullscreen,
+specific environments), you might not want to activate this limit.
 
 <div class="warning">
 This option will have no effect for contents loaded :
 
-- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
-  feature or window is enabled and we can't know PIP window size. Thus we can't
-  rely on video element size attributes, that may not reflect the real video size
-  when PIP is enabled.
+- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo
+  options</a>).
+- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture feature or
+  window is enabled and we can't know PIP window size. Thus we can't rely on video element
+  size attributes, that may not reflect the real video size when PIP is enabled.
 
 </div>
 
@@ -716,10 +705,9 @@ _type_: `Boolean`
 
 _defaults_: `false`
 
-The player has a specific feature which throttle the video to the minimum
-bitrate when the current video element is considered hidden (e.g. the containing
-page is hidden and the Picture-In-Picture mode is disabled) for more than a
-minute.
+The player has a specific feature which throttle the video to the minimum bitrate when the
+current video element is considered hidden (e.g. the containing page is hidden and the
+Picture-In-Picture mode is disabled) for more than a minute.
 
 To activate this feature, set it to `true`.
 
@@ -732,10 +720,11 @@ const player = Player({
 <div class="warning">
 This option will have no effect for contents loaded :
 
-- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
-  feature or window is enabled. Thus we can't rely on document hiddenness
-  attributes, as the video may be visible, through the PIP window.
+- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo
+  options</a>).
+- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture feature or
+  window is enabled. Thus we can't rely on document hiddenness attributes, as the video
+  may be visible, through the PIP window.
 
 </div>
 
@@ -745,22 +734,21 @@ _type_: `Boolean`
 
 _defaults_: `true`
 
-By default, the player automatically _unload_ the content once it reaches its
-end (the player goes to the `"ENDED"` state).
+By default, the player automatically _unload_ the content once it reaches its end (the
+player goes to the `"ENDED"` state).
 
-In that case, the only way to play the content again is to (re-)call the
-`loadVideo` API, which will trigger another download of the
+In that case, the only way to play the content again is to (re-)call the `loadVideo` API,
+which will trigger another download of the
 [Manifest](../Getting_Started/Glossary.md#manifest) and segments.
 
-If you want to be able to seek back in the content after it ended, you may want
-to deactivate this behavior. To do so, set `stopAtEnd` to `false`.
+If you want to be able to seek back in the content after it ended, you may want to
+deactivate this behavior. To do so, set `stopAtEnd` to `false`.
 
 ```js
 const player = Player({
   stopAtEnd: false,
 });
 ```
-
 
 ### throttleWhenHidden
 
@@ -771,10 +759,11 @@ APIs</a>).
 
 This option will have no effect for contents loaded :
 
-- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo options</a>).
-- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture
-  feature or window is enabled. Thus we can't rely on document hiddenness
-  attributes, as the video may be visible, through the PIP window.
+- In <i>DirectFile</i> mode (see <a href="./Loading_a_Content.md#transport">loadVideo
+  options</a>).
+- On Firefox browsers (version >= 67) : We can't know if the Picture-In-Picture feature or
+  window is enabled. Thus we can't rely on document hiddenness attributes, as the video
+  may be visible, through the PIP window.
 
 </div>
 
@@ -785,8 +774,8 @@ _type_: `Boolean`
 
 _defaults_: `false`
 
-The player has a specific feature which throttle the video to the minimum
-bitrate when the current page is hidden for more than a minute.
+The player has a specific feature which throttle the video to the minimum bitrate when the
+current page is hidden for more than a minute.
 
 To activate this feature, set it to `true`.
 

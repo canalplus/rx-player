@@ -1,11 +1,6 @@
 import { DASH_WASM as FEATURE_DASH_WASM } from "../dash_wasm";
 import { DEBUG_ELEMENT as FEATURE_DEBUG_ELEMENT } from "../debug_element";
-import {
-  DASH_WASM,
-  DEBUG_ELEMENT,
-  METAPLAYLIST,
-  LOCAL_MANIFEST,
-} from "../index";
+import { DASH_WASM, DEBUG_ELEMENT, METAPLAYLIST, LOCAL_MANIFEST } from "../index";
 import { LOCAL_MANIFEST as FEATURE_LOCAL_MANIFEST } from "../local";
 import { METAPLAYLIST as FEATURE_METAPLAYLIST } from "../metaplaylist";
 

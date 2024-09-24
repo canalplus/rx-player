@@ -16,22 +16,20 @@
 
 import { isCodecSupported } from "../compat";
 import log from "../log";
-import {
+import type {
   ICdnMetadata,
   IContentProtections,
   IParsedRepresentation,
 } from "../parsers/manifest";
-import {
+import type {
   IAudioRepresentation,
   IHDRInformation,
   IVideoRepresentation,
 } from "../public_types";
 import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../utils/id_generator";
-import { IRepresentationIndex } from "./representation_index";
-import {
-  IAdaptationType,
-} from "./types";
+import type { IRepresentationIndex } from "./representation_index";
+import type { IAdaptationType } from "./types";
 
 const generateRepresentationUniqueId = idGenerator();
 
@@ -52,7 +50,7 @@ class Representation {
    * For a globally unique identifier regardless of the `Adaptation`, `Period`
    * or even `Manifest`, you can rely on `uniqueId` instead.
    */
-  public readonly id : string;
+  public readonly id: string;
 
   /**
    * Globally unique identifier for this `Representation` object.
@@ -63,13 +61,13 @@ class Representation {
    * `id` is the identifier for the original Manifest's Representation in the
    * scope of its parent `Adaptation`.
    */
-  public readonly uniqueId : string;
+  public readonly uniqueId: string;
 
   /**
    * Interface allowing to get information about segments available for this
    * Representation.
    */
-  public index : IRepresentationIndex;
+  public index: IRepresentationIndex;
 
   /**
    * Information on the CDN(s) on which requests should be done to request this
@@ -81,16 +79,16 @@ class Representation {
    * An empty array means that no CDN are left to request the resource. As such,
    * no resource can be loaded in that situation.
    */
-  public cdnMetadata : ICdnMetadata[] | null;
+  public cdnMetadata: ICdnMetadata[] | null;
 
   /** Bitrate this Representation is in, in bits per seconds. */
-  public bitrate : number;
+  public bitrate: number;
 
   /**
    * Frame-rate, when it can be applied, of this Representation, in any textual
    * indication possible (often under a ratio form).
    */
-  public frameRate? : string;
+  public frameRate?: string;
 
   /**
    * `true` if this `Representation` is linked to a spatial audio technology.
@@ -103,35 +101,35 @@ class Representation {
    * `undefined` if we do not know whether this `Representation` contains
    * spatial audio or not.
    */
-  public isSpatialAudio? : boolean | undefined;
+  public isSpatialAudio?: boolean | undefined;
 
   /**
    * A string describing the codec used for this Representation.
    * undefined if we do not know.
    */
-  public codec : string | undefined;
+  public codec: string | undefined;
 
   /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain
    * undefined if we do not know.
    */
-  public mimeType? : string;
+  public mimeType?: string;
 
   /**
    * If this Representation is linked to video content, this value is the width
    * in pixel of the corresponding video data.
    */
-  public width? : number;
+  public width?: number;
 
   /**
    * If this Representation is linked to video content, this value is the height
    * in pixel of the corresponding video data.
    */
-  public height? : number;
+  public height?: number;
 
   /** Encryption information for this Representation. */
-  public contentProtections? : IContentProtections;
+  public contentProtections?: IContentProtections;
 
   /**
    * If the track is HDR, give the characteristics of the content
@@ -147,15 +145,15 @@ class Representation {
    *     Representation
    *   - if `undefined` there is no certainty on this matter
    */
-  public decipherable? : boolean  | undefined;
+  public decipherable?: boolean | undefined;
 
   /** `true` if the Representation is in a supported codec, false otherwise. */
-  public isSupported : boolean;
+  public isSupported: boolean;
 
   /**
    * @param {Object} args
    */
-  constructor(args : IParsedRepresentation, opts : { type : IAdaptationType }) {
+  constructor(args: IParsedRepresentation, opts: { type: IAdaptationType }) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
     this.bitrate = args.bitrate;
@@ -194,11 +192,10 @@ class Representation {
 
     if (opts.type === "audio" || opts.type === "video") {
       this.isSupported = false;
-        // Supplemental codecs are defined as backwards-compatible codecs enhancing
-        // the experience of a base layer codec
+      // Supplemental codecs are defined as backwards-compatible codecs enhancing
+      // the experience of a base layer codec
       if (args.supplementalCodecs !== undefined) {
-        const supplementalCodecMimeTypeStr =
-            `${this.mimeType ?? ""};codecs="${args.supplementalCodecs}"`;
+        const supplementalCodecMimeTypeStr = `${this.mimeType ?? ""};codecs="${args.supplementalCodecs}"`;
         if (isCodecSupported(supplementalCodecMimeTypeStr)) {
           this.codec = args.supplementalCodecs;
           this.isSupported = true;
@@ -222,7 +219,7 @@ class Representation {
    * which is often needed when interacting with the browser's APIs.
    * @returns {string}
    */
-  public getMimeTypeString() : string {
+  public getMimeTypeString(): string {
     return `${this.mimeType ?? ""};codecs="${this.codec ?? ""}"`;
   }
 
@@ -246,7 +243,7 @@ class Representation {
    * @param {string} drmSystemId - The hexa-encoded DRM system ID
    * @returns {Array.<Object>}
    */
-  public getEncryptionData(drmSystemId : string) : IRepresentationProtectionData[] {
+  public getEncryptionData(drmSystemId: string): IRepresentationProtectionData[] {
     const allInitData = this.getAllEncryptionData();
     const filtered = [];
     for (let i = 0; i < allInitData.length; i++) {
@@ -255,10 +252,8 @@ class Representation {
       for (let j = 0; j < initData.values.length; j++) {
         if (initData.values[j].systemId.toLowerCase() === drmSystemId.toLowerCase()) {
           if (!createdObjForType) {
-            const keyIds = this.contentProtections?.keyIds?.map(val => val.keyId);
-            filtered.push({ type: initData.type,
-                            keyIds,
-                            values: [initData.values[j]] });
+            const keyIds = this.contentProtections?.keyIds?.map((val) => val.keyId);
+            filtered.push({ type: initData.type, keyIds, values: [initData.values[j]] });
             createdObjForType = true;
           } else {
             filtered[filtered.length - 1].values.push(initData.values[j]);
@@ -268,7 +263,6 @@ class Representation {
     }
     return filtered;
   }
-
 
   /**
    * Returns all currently-known encryption initialization data linked to this
@@ -296,17 +290,16 @@ class Representation {
    * after parsing this Representation's initialization segment, if one exists.
    * @returns {Array.<Object>}
    */
-  public getAllEncryptionData() : IRepresentationProtectionData[] {
-    if (this.contentProtections === undefined ||
-        this.contentProtections.initData.length === 0)
-    {
+  public getAllEncryptionData(): IRepresentationProtectionData[] {
+    if (
+      this.contentProtections === undefined ||
+      this.contentProtections.initData.length === 0
+    ) {
       return [];
     }
-    const keyIds = this.contentProtections?.keyIds?.map(val => val.keyId);
+    const keyIds = this.contentProtections?.keyIds?.map((val) => val.keyId);
     return this.contentProtections.initData.map((x) => {
-      return { type: x.type,
-               keyIds,
-               values: x.values };
+      return { type: x.type, keyIds, values: x.values };
     });
   }
 
@@ -327,18 +320,19 @@ class Representation {
    * @returns {boolean}
    */
   public _addProtectionData(
-    initDataType : string,
+    initDataType: string,
     keyId: Uint8Array | undefined,
-    data : Array<{
-      systemId : string;
-      data : Uint8Array;
-    }>
-  ) : boolean {
+    data: Array<{
+      systemId: string;
+      data: Uint8Array;
+    }>,
+  ): boolean {
     let hasUpdatedProtectionData = false;
     if (this.contentProtections === undefined) {
-      this.contentProtections = { keyIds: keyId !== undefined ? [{ keyId }] : [],
-                                  initData: [ { type: initDataType,
-                                                values: data } ] };
+      this.contentProtections = {
+        keyIds: keyId !== undefined ? [{ keyId }] : [],
+        initData: [{ type: initDataType, values: data }],
+      };
       return true;
     }
 
@@ -390,8 +384,7 @@ class Representation {
     }
     // If we are here, this means that we didn't find the corresponding
     // init data type in this.contentProtections.initData.
-    this.contentProtections.initData.push({ type: initDataType,
-                                            values: data });
+    this.contentProtections.initData.push({ type: initDataType, values: data });
     return true;
   }
 
@@ -431,7 +424,7 @@ export interface IRepresentationProtectionData {
    * `undefined` when not known (different from an empty array - which would
    * just mean that there's no key id involved).
    */
-  keyIds : Uint8Array[] | undefined;
+  keyIds: Uint8Array[] | undefined;
   /** Every initialization data for that type. */
   values: Array<{
     /**
@@ -444,7 +437,7 @@ export interface IRepresentationProtectionData {
      * For example, with "cenc" initialization data found in an ISOBMFF file,
      * this will be the whole PSSH box.
      */
-     data: Uint8Array;
+    data: Uint8Array;
   }>;
 }
 

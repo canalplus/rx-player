@@ -19,7 +19,7 @@
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-function uniqFromFilter<T>(arr: T[]) : T[] {
+function uniqFromFilter<T>(arr: T[]): T[] {
   return arr.filter((val, i, self) => self.indexOf(val) === i);
 }
 
@@ -28,7 +28,7 @@ function uniqFromFilter<T>(arr: T[]) : T[] {
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-function uniqFromSet<T>(arr: T[]) : T[] {
+function uniqFromSet<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
@@ -38,12 +38,10 @@ function uniqFromSet<T>(arr: T[]) : T[] {
  * @param {Array.<*>} arr
  * @returns {Array.<*>}
  */
-export default  typeof window !== "undefined" &&
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                typeof window.Set === "function" &&
-                typeof Array.from === "function" ? uniqFromSet :
-                                                   uniqFromFilter;
-export {
-  uniqFromFilter,
-  uniqFromSet,
-};
+export default typeof window !== "undefined" &&
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+typeof window.Set === "function" &&
+typeof Array.from === "function"
+  ? uniqFromSet
+  : uniqFromFilter;
+export { uniqFromFilter, uniqFromSet };

@@ -16,13 +16,13 @@
 
 import HTMLTextSegmentBuffer from "../../core/segment_buffers/implementations/text/html";
 import srtParser from "../../parsers/texttracks/srt/html";
-import { IFeaturesObject } from "../types";
+import type { IFeaturesObject } from "../types";
 
 /**
  * Add ability to parse SRT text tracks in an HTML textrack mode.
  * @param {Object} features
  */
-function addHTMLSRTFeature(features : IFeaturesObject) : void {
+function addHTMLSRTFeature(features: IFeaturesObject): void {
   features.htmlTextTracksParsers.srt = srtParser;
   features.htmlTextTracksBuffer = HTMLTextSegmentBuffer;
 }

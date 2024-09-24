@@ -1,168 +1,132 @@
 module.exports = {
-  "env": {
-    "browser": true,
-    "es6": true,
-    "node": true
+  env: {
+    browser: true,
+    es6: true,
+    node: true,
   },
-  "extends": [
+  extends: [
     "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "prettier",
   ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": "tsconfig.json",
-    "sourceType": "module"
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: "tsconfig.eslint.json",
+    sourceType: "module",
   },
-  "plugins": [
-    "eslint-plugin-import",
-    "eslint-plugin-jsdoc",
-    "ban",
-    "@typescript-eslint",
-    "@typescript-eslint/tslint"
-  ],
-  "rules": {
+  plugins: ["eslint-plugin-import", "eslint-plugin-jsdoc", "ban", "@typescript-eslint"],
+  rules: {
     "ban/ban": [
       2,
       {
-        "name": ["*", "finally"],
-        "message": "Promise.prototype.finally is forbidden due to poor support from older devices.\nNote that this linting rule just bans naively all \"finally\" method calls, if in this case it wasn't called on a Promise, you can safely ignore this error",
-      }
+        name: ["*", "finally"],
+        message:
+          'Promise.prototype.finally is forbidden due to poor support from older devices.\nNote that this linting rule just bans naively all "finally" method calls, if in this case it wasn\'t called on a Promise, you can safely ignore this error',
+      },
     ],
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/array-type": [
       "error",
       {
-        "default": "array-simple"
-      }
+        default: "array-simple",
+      },
     ],
     "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/ban-types": [
+    "@typescript-eslint/no-restricted-types": [
       "error",
       {
-        "types": {
-          "Object": {
-            "message": "Avoid using the `Object` type. Did you mean `object`?"
+        types: {
+          Object: {
+            message: "Avoid using the `Object` type. Did you mean `object`?",
           },
-          "Function": {
-            "message": "Avoid using the `Function` type. Prefer a specific function type, like `() => void`."
+          Function: {
+            message:
+              "Avoid using the `Function` type. Prefer a specific function type, like `() => void`.",
           },
-          "Boolean": {
-            "message": "Avoid using the `Boolean` type. Did you mean `boolean`?"
+          Boolean: {
+            message: "Avoid using the `Boolean` type. Did you mean `boolean`?",
           },
-          "Number": {
-            "message": "Avoid using the `Number` type. Did you mean `number`?"
+          Number: {
+            message: "Avoid using the `Number` type. Did you mean `number`?",
           },
-          "String": {
-            "message": "Avoid using the `String` type. Did you mean `string`?"
+          String: {
+            message: "Avoid using the `String` type. Did you mean `string`?",
           },
-          "Symbol": {
-            "message": "Avoid using the `Symbol` type. Did you mean `symbol`?"
-          }
-        }
-      }
+          Symbol: {
+            message: "Avoid using the `Symbol` type. Did you mean `symbol`?",
+          },
+        },
+      },
     ],
     "@typescript-eslint/consistent-type-assertions": [
       "error",
       {
-        "assertionStyle": "as",
-        "objectLiteralTypeAssertions": "allow",
-      }
+        assertionStyle: "as",
+        objectLiteralTypeAssertions: "allow",
+      },
     ],
+    "@typescript-eslint/prefer-promise-reject-errors": "off",
+    "@typescript-eslint/only-throw-error": "off",
     "@typescript-eslint/consistent-type-definitions": "error",
     "@typescript-eslint/dot-notation": "error",
     "@typescript-eslint/explicit-member-accessibility": [
       "off",
       {
-        "accessibility": "explicit"
-      }
+        accessibility: "explicit",
+      },
     ],
-    "@typescript-eslint/member-delimiter-style": [
-      "error",
-      {
-        "multiline": {
-          "delimiter": "semi",
-          "requireLast": true
-        },
-        "singleline": {
-          "delimiter": "semi",
-          "requireLast": false
-        }
-      }
-    ],
-    "@typescript-eslint/indent": [
-      "warn",
-      2,
-      {
-        "ArrayExpression": "first",
-        "ObjectExpression": "first",
-        "CallExpression": { arguments: "first" },
-        "FunctionDeclaration": { "parameters": "first" },
-        "FunctionExpression": { "parameters": "first" },
-        "VariableDeclarator": "first",
-        "SwitchCase": 1,
-        "ignoreComments": true,
-        "flatTernaryExpressions": true,
-        "offsetTernaryExpressions": false,
-        "ignoredNodes": [
-          /* Does not seem to have ConditionalExpression: "first" */
-          "ConditionalExpression",
-          /* Again, no "first" for all of them */
-          "TSTypeParameterInstantiation",
-          "TSTypeAliasDeclaration *",
-          "TSInterfaceDeclaration *",
-          "TSUnionType *"
-        ]
-      }],
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/consistent-type-exports": "error",
     "@typescript-eslint/naming-convention": [
       "error",
       {
-        "selector": "property",
-        "format": ["camelCase", "UPPER_CASE", "PascalCase"],
-        "leadingUnderscore": "allow",
-        "trailingUnderscore": "allow",
-        "filter": {
-          "regex": "^(__esModule$)|(__priv_)",
-          "match": false
-        }
+        selector: "property",
+        format: ["camelCase", "UPPER_CASE", "PascalCase"],
+        leadingUnderscore: "allow",
+        trailingUnderscore: "allow",
+        filter: {
+          regex: "^(__esModule$)|(__priv_)",
+          match: false,
+        },
       },
       {
-        "selector": "method",
-        "format": ["camelCase"],
-        "leadingUnderscore": "allow",
-        "trailingUnderscore": "allow",
+        selector: "method",
+        format: ["camelCase"],
+        leadingUnderscore: "allow",
+        trailingUnderscore: "allow",
       },
       {
-        "selector": "variable",
-        "format": ["camelCase", "UPPER_CASE", "PascalCase"],
-        "leadingUnderscore": "allow",
-        "trailingUnderscore": "allow",
+        selector: "variable",
+        format: ["camelCase", "UPPER_CASE", "PascalCase"],
+        leadingUnderscore: "allow",
+        trailingUnderscore: "allow",
       },
       {
-        "selector": "parameter",
-        "format": ["camelCase"],
-        "leadingUnderscore": "allow",
-        "filter": {
+        selector: "parameter",
+        format: ["camelCase"],
+        leadingUnderscore: "allow",
+        filter: {
           // you can expand this regex to add more allowed names
-          "regex": "^__priv_",
-          "match": false
-        }
+          regex: "^__priv_",
+          match: false,
+        },
       },
 
       {
-        "selector": "memberLike",
-        "modifiers": ["private"],
-        "format": ["camelCase"],
-        "leadingUnderscore": "require"
+        selector: "memberLike",
+        modifiers: ["private"],
+        format: ["camelCase"],
+        leadingUnderscore: "require",
       },
       {
-        "selector": "enum",
-        "format": ["PascalCase", "UPPER_CASE"],
-        "leadingUnderscore": "allow"
+        selector: "enum",
+        format: ["PascalCase", "UPPER_CASE"],
+        leadingUnderscore: "allow",
       },
       {
-        "selector": "typeLike",
-        "format": ["PascalCase"],
-        "leadingUnderscore": "allow"
+        selector: "typeLike",
+        format: ["PascalCase"],
+        leadingUnderscore: "allow",
       },
     ],
     "@typescript-eslint/no-empty-function": "error",
@@ -176,6 +140,8 @@ module.exports = {
     "@typescript-eslint/no-namespace": "error",
     "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/no-this-alias": "error",
+    // Might be enabled in the future, for now this is too much work:
+    "@typescript-eslint/no-unsafe-enum-comparison": ["off"],
     "@typescript-eslint/no-unnecessary-boolean-literal-compare": "error",
     "@typescript-eslint/no-unnecessary-qualifier": "error",
     "@typescript-eslint/no-unnecessary-type-arguments": "error",
@@ -191,64 +157,37 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
-      }
+        args: "all",
+        argsIgnorePattern: "^_",
+        caughtErrors: "none",
+        destructuredArrayIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      },
     ],
     "@typescript-eslint/no-shadow": ["error"],
-    "@typescript-eslint/quotes": [
-      "error",
-      "double"
-    ],
     "@typescript-eslint/restrict-plus-operands": "error",
-    "@typescript-eslint/semi": [
-      "error",
-      "always"
-    ],
     "@typescript-eslint/strict-boolean-expressions": "error",
     "@typescript-eslint/triple-slash-reference": [
       "error",
       {
-        "path": "always",
-        "types": "prefer-import",
-        "lib": "always"
-      }
+        path: "always",
+        types: "prefer-import",
+        lib: "always",
+      },
     ],
     "@typescript-eslint/unbound-method": "error",
     "@typescript-eslint/unified-signatures": "error",
     "arrow-body-style": "off",
-    "arrow-parens": [
-      "off",
-      "always"
-    ],
-    // TODO?
-    // "class-methods-use-this": "error",
-    "comma-dangle": [
-      "error",
-      {
-        "objects": "always-multiline",
-        "arrays": "always-multiline",
-        "imports": "always-multiline",
-        "exports": "always-multiline",
-        "functions": "never"
-      }
-    ],
-    "complexity": [
+    "arrow-parens": ["off", "always"],
+    complexity: [
       "off",
       {
-        "max": 20
-      }
+        max: 20,
+      },
     ],
-    // TODO?
-    // "consistent-return": "error",
     "constructor-super": "error",
-    "curly": "error",
+    curly: "error",
     "default-case": "off",
-    "eol-last": "error",
-    "eqeqeq": [
-      "error",
-      "smart"
-    ],
     "guard-for-in": "warn",
     "id-blacklist": "off",
     "id-match": "off",
@@ -256,52 +195,37 @@ module.exports = {
     "import/no-deprecated": "error",
     "import/no-extraneous-dependencies": [
       "error",
-      {
-        "devDependencies": false
-      }
+      { devDependencies: ["**/*.test.ts", "**/__tests__/**"] },
     ],
     "import/no-internal-modules": "off",
-    "import/order": ["error", {
-      "alphabetize": {
-        "order": "asc",
-        "caseInsensitive": true
-      }
-    }],
+    "import/order": [
+      "error",
+      {
+        alphabetize: {
+          order: "asc",
+          caseInsensitive: true,
+        },
+      },
+    ],
+    "import/no-duplicates": "error",
     "jsdoc/check-alignment": "error",
     "jsdoc/no-types": "off",
-    "linebreak-style": [
-      "error",
-      "unix"
-    ],
-    "max-classes-per-file": [
-      "warn",
-      5
-    ],
-    "max-len": [
-      "warn",
-      {
-        "code": 90
-      }
-    ],
-    "max-lines": [
-      "off",
-      300
-    ],
-    "new-parens": "error",
+    "max-classes-per-file": ["warn", 5],
+    "max-lines": ["off", 300],
     "newline-per-chained-call": "off",
     "no-bitwise": "off",
     "no-caller": "error",
     "no-console": "error",
     "no-debugger": "error",
     "no-duplicate-case": "error",
-    "no-duplicate-imports": "error",
     "no-empty": "error",
     "no-eval": "error",
     "no-fallthrough": "error",
     "no-invalid-this": "error",
     "no-magic-numbers": "off",
-    "no-multiple-empty-lines": "error",
     "no-new-wrappers": "error",
+    // TODO?
+    "no-nested-ternary": "off",
     "no-param-reassign": "error",
     "no-return-await": "error",
     "no-sequences": "error",
@@ -310,18 +234,13 @@ module.exports = {
     "no-sparse-arrays": "error",
     "no-template-curly-in-string": "error",
     "no-throw-literal": "error",
-    "no-trailing-spaces": "error",
     "no-undef-init": "error",
     "no-unsafe-finally": "error",
     "no-unused-labels": "error",
     "no-var": "error",
     "no-void": "error",
-    "object-curly-spacing": ["error", "always"],
     "object-shorthand": "error",
-    "one-var": [
-      "error",
-      "never"
-    ],
+    "one-var": ["error", "never"],
     "prefer-const": "error",
     "prefer-spread": "error",
     "prefer-object-spread": "error",
@@ -329,78 +248,46 @@ module.exports = {
     "no-restricted-properties": [
       "error",
       {
-        "object": "Object",
-        "property": "assign",
-        "message": "Not available in IE11, use `objectAssign` utils instead.",
+        object: "Object",
+        property: "assign",
+        message: "Not available in IE11, use `objectAssign` utils instead.",
       },
       {
-        "object": "Object",
-        "property": "values",
-        "message": "Not available in IE11, use `objectValues` utils instead.",
+        object: "Object",
+        property: "values",
+        message: "Not available in IE11, use `objectValues` utils instead.",
       },
       {
-        "property": "includes",
-        "message": "Not available in IE11, use another method such as `indexOf` instead.",
+        property: "includes",
+        message: "Not available in IE11, use another method such as `indexOf` instead.",
       },
       {
-        "property": "find",
-        "message": "Not available in IE11, use `arrayFind` utils instead.",
+        property: "find",
+        message: "Not available in IE11, use `arrayFind` utils instead.",
       },
       {
-        "property": "findIndex",
-        "message": "Not available in IE11, use `arrayFindIndex` utils instead.",
+        property: "findIndex",
+        message: "Not available in IE11, use `arrayFindIndex` utils instead.",
       },
       {
-        "property": "startsWith",
-        "message": "Not available in IE11, use `startsWith` utils instead.",
+        property: "startsWith",
+        message: "Not available in IE11, use `startsWith` utils instead.",
       },
       {
-        "property": "substr",
-        "message": "Please use `substring` instead.",
+        property: "substr",
+        message: "Please use `substring` instead.",
       },
     ],
-    "quote-props": [
-      "error",
-      "as-needed"
-    ],
-    "radix": "error",
-    "space-in-parens": [
-      "error",
-      "never"
-    ],
+    radix: "error",
     "spaced-comment": [
       "error",
       "always",
       {
-        "markers": [
-          "/"
-        ]
-      }
+        markers: ["/"],
+      },
     ],
     "use-isnan": "error",
     "valid-typeof": "error",
-    "yoda": "error",
-    "@typescript-eslint/tslint/config": [
-      "error",
-      {
-        "rules": {
-          "encoding": true,
-          "import-spacing": true,
-          "prefer-while": true,
-          "return-undefined": true,
-          "whitespace": [
-            true,
-            "check-branch",
-            "check-decl",
-            "check-operator",
-            "check-module",
-            "check-separator",
-            "check-type",
-            "check-typecast",
-            "check-preblock"
-          ]
-        }
-      }
-    ]
-  }
+    yoda: "error",
+  },
 };

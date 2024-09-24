@@ -28,7 +28,7 @@ describe("errors - RequestError", () => {
     expect(requestError.status).toBe(355);
     expect(requestError.type).toBe("ERROR_EVENT");
     expect(requestError.message).toBe(
-      "An error prevented the request to be performed successfully"
+      "An error prevented the request to be performed successfully",
     );
     xhr.abort();
   });

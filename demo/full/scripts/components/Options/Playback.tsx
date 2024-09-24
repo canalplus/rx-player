@@ -32,15 +32,13 @@ function TrackSwitch({
         "Smooth transition when a Representation is manually changed";
       break;
     default:
-      manualBitrateSwitchingModeDesc =
-        "Unknown value";
+      manualBitrateSwitchingModeDesc = "Unknown value";
       break;
   }
 
   const onManualBitrateSwitchingModeSelection = React.useCallback(
-    ({ value }: { value: string }) =>
-      onManualBitrateSwitchingModeChange(value),
-    [onManualBitrateSwitchingModeChange]
+    ({ value }: { value: string }) => onManualBitrateSwitchingModeChange(value),
+    [onManualBitrateSwitchingModeChange],
   );
 
   return (
@@ -56,9 +54,9 @@ function TrackSwitch({
           Auto Play
         </Checkbox>
         <span className="option-desc">
-          {autoPlay ?
-            "Playing directly when the content is loaded." :
-            "Staying in pause when the content is loaded."}
+          {autoPlay
+            ? "Playing directly when the content is loaded."
+            : "Staying in pause when the content is loaded."}
         </span>
       </li>
       <li className="featureWrapperWithSelectMode">
@@ -73,9 +71,7 @@ function TrackSwitch({
         >
           {"Manual bitrate switching mode"}
         </Select>
-        <span className="option-desc">
-          {manualBitrateSwitchingModeDesc}
-        </span>
+        <span className="option-desc">{manualBitrateSwitchingModeDesc}</span>
       </li>
       <li>
         <Checkbox
@@ -88,9 +84,9 @@ function TrackSwitch({
           Stop At End
         </Checkbox>
         <span className="option-desc">
-          {stopAtEnd ?
-            "Automatically stop when reaching the end of the content." :
-            "Don't stop when reaching the end of the content."}
+          {stopAtEnd
+            ? "Automatically stop when reaching the end of the content."
+            : "Don't stop when reaching the end of the content."}
         </span>
       </li>
     </>

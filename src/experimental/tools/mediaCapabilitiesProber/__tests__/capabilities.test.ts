@@ -31,7 +31,8 @@ describe("MediaCapabilitiesProber - getProbedConfiguration", () => {
       filterConfigurationWithCapabilities: mockFilterConfigurationWithCapabilities,
     }));
     const getProbedConfiguration = jest.requireActual("../capabilities").default;
-    expect(getProbedConfiguration({}, ["Athos", "Portos", "Aramis"]))
-      .toEqual(expectedResult);
+    expect(getProbedConfiguration({}, ["Athos", "Portos", "Aramis"])).toEqual(
+      expectedResult,
+    );
   });
 });

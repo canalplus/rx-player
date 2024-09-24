@@ -14,25 +14,17 @@
  * limitations under the License.
  */
 
-import fetchRequest, {
-  fetchIsSupported,
-  IFetchedDataObject,
-  IFetchedStreamComplete,
-} from "./fetch";
-import xhr, {
-  IRequestOptions,
-  IProgressInfo,
-  IRequestResponse,
-} from "./xhr";
+import type { IFetchedDataObject, IFetchedStreamComplete } from "./fetch";
+import fetchRequest, { fetchIsSupported } from "./fetch";
+import type { IRequestOptions, IProgressInfo, IRequestResponse } from "./xhr";
+import xhr from "./xhr";
 
 export default xhr;
-export {
-  fetchIsSupported,
-  fetchRequest,
+export type {
   IFetchedDataObject,
   IFetchedStreamComplete,
   IProgressInfo,
   IRequestOptions,
   IRequestResponse,
-  xhr,
 };
+export { fetchIsSupported, fetchRequest, xhr };

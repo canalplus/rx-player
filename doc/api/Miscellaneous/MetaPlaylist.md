@@ -2,62 +2,57 @@
 
 ## Overview
 
-The `MetaPlaylist` is a file allowing to define a content composed of multiple
-DASH or Smooth contents played one after another.
+The `MetaPlaylist` is a file allowing to define a content composed of multiple DASH or
+Smooth contents played one after another.
 
-It allows advanced use cases for an extremely low cost for the server
-infrastructure, the main one being creating a linear (live) contents from
-multiple non-linear (VOD) ones, without touching the original contents.
+It allows advanced use cases for an extremely low cost for the server infrastructure, the
+main one being creating a linear (live) contents from multiple non-linear (VOD) ones,
+without touching the original contents.
 
-You can also construct a new non-linear contents as a concatenation of multiple
-non-linear contents put one after the other. This method allows for example for
-a completely smooth streaming between multiple programs (e.g. when
-binge-watching a serie).
+You can also construct a new non-linear contents as a concatenation of multiple non-linear
+contents put one after the other. This method allows for example for a completely smooth
+streaming between multiple programs (e.g. when binge-watching a serie).
 
 ## Differences with plain DASH contents
 
 The same result could be approximated with some advanced DASH features, but the
 MetaPlaylist has several advantages. Some of them are:
 
-- it supports DASH and HSS contents (technically HLS would also be possible)
-  without modifying the original MPD/Manifest nor segments.
+- it supports DASH and HSS contents (technically HLS would also be possible) without
+  modifying the original MPD/Manifest nor segments.
 
-- the Manifest/MPD/Playlist corresponding to the original contents can
-  be lazy-loaded (loaded only when the content will play).
+- the Manifest/MPD/Playlist corresponding to the original contents can be lazy-loaded
+  (loaded only when the content will play).
 
-  This is also possible in DASH with a feature called XLinks but it's not
-  always doable on the client-side, depending on the other elements present in
-  that MPD.
+  This is also possible in DASH with a feature called XLinks but it's not always doable on
+  the client-side, depending on the other elements present in that MPD.
 
   A MetaPlaylist file is much more strict in this regard.
 
   This is still a work-in-progress.
 
-- it's a format especially intended to be a concatenation of multiple
-  contents to be played on the web.
+- it's a format especially intended to be a concatenation of multiple contents to be
+  played on the web.
 
-  As such, advanced features such as declaring segments before they
-  should be played or avoiding many customers doing the same manifest
-  request at the exact same time are much easier to implement.
+  As such, advanced features such as declaring segments before they should be played or
+  avoiding many customers doing the same manifest request at the exact same time are much
+  easier to implement.
 
-- this file rarely needs to be updated, improving the caching of this
-  ressource.
+- this file rarely needs to be updated, improving the caching of this ressource.
 
-- its format is very simple and in JSON, which is easy to integrate with
-  JavaScript codebases. The file can even be very easily generated directly on
-  the client's page. This paves the way for contents personalized to a single
-  customer.
+- its format is very simple and in JSON, which is easy to integrate with JavaScript
+  codebases. The file can even be very easily generated directly on the client's page.
+  This paves the way for contents personalized to a single customer.
 
-- Digital right management is also much more flexible than with a DASH MPD.
-  For example, different license servers for different contents could be
-  integrated. This is still a work-in-progress.
+- Digital right management is also much more flexible than with a DASH MPD. For example,
+  different license servers for different contents could be integrated. This is still a
+  work-in-progress.
 
-- the specification is simple, try to allow no interpretation and is strict on
-  what is permitted.
+- the specification is simple, try to allow no interpretation and is strict on what is
+  permitted.
 
-- All its features have been tested on web applications, meaning that you have
-  the guarantee everything will work on most MSE-compatible browsers, even
-  IE11.
+- All its features have been tested on web applications, meaning that you have the
+  guarantee everything will work on most MSE-compatible browsers, even IE11.
 
 ## Structure of a MetaPlaylist
 
@@ -125,8 +120,8 @@ For a live content:
 }
 ```
 
-You may already have a basic understanding of it how works.
-Let's define nonetheless every property in that JSON file.
+You may already have a basic understanding of it how works. Let's define nonetheless every
+property in that JSON file.
 
 ### the header
 
@@ -136,88 +131,82 @@ Here is an exhaustive list of what you should put there:
 
 - type (`string`): should always be equal to `"MPL"`, for "MetaPlayList".
 
-  The purpose of this value is to facilitate the checks a player might want to
-  perform to verify that it is handling a MetaPlaylist file.
-  The end goal would be for example to improve error reporting for very
-  frequent mistakes like not providing the URL of the right content.
+  The purpose of this value is to facilitate the checks a player might want to perform to
+  verify that it is handling a MetaPlaylist file. The end goal would be for example to
+  improve error reporting for very frequent mistakes like not providing the URL of the
+  right content.
 
-- version (`string`): version of the MetaPlaylist file. Separated in two parts
-  by a point ('.').
+- version (`string`): version of the MetaPlaylist file. Separated in two parts by a point
+  ('.').
 
-  The first part indicates the major version. If its number is higher than
-  what the client presently manage, the client should not try to read that
-  file.
+  The first part indicates the major version. If its number is higher than what the client
+  presently manage, the client should not try to read that file.
 
-  The last part indicates the minor version:
-  A new feature or fix have been added but its support is not needed by a
-  client (a client written for the `1.0` version can be used even for the
-  `1.99` version).
+  The last part indicates the minor version: A new feature or fix have been added but its
+  support is not needed by a client (a client written for the `1.0` version can be used
+  even for the `1.99` version).
 
-  Please note that there is an exception for `0.x` versions, where each minor
-  versions could have a breaking change (as it is in that case considered an
-  experimental format).
+  Please note that there is an exception for `0.x` versions, where each minor versions
+  could have a breaking change (as it is in that case considered an experimental format).
 
-  At the moment, there is only one version the version `"0.1"`. Thus, this is
-  what you have to set in your JSON if you integrate this specification.
+  At the moment, there is only one version the version `"0.1"`. Thus, this is what you
+  have to set in your JSON if you integrate this specification.
 
-- dynamic (`boolean`|`undefined`): If `true`, the MetaPlaylist file is not
-  finished, and might need to be updated. If `false`, the MetaPlaylist could
-  still need to be updated but its current content indicates a finished
-  content: A player should end when the end of the last content has been
-  reached.
+- dynamic (`boolean`|`undefined`): If `true`, the MetaPlaylist file is not finished, and
+  might need to be updated. If `false`, the MetaPlaylist could still need to be updated
+  but its current content indicates a finished content: A player should end when the end
+  of the last content has been reached.
 
-  This property is not mandatory and as such can be omitted. By default, it is
-  considered as not dynamic (so `false`).
+  This property is not mandatory and as such can be omitted. By default, it is considered
+  as not dynamic (so `false`).
 
-- pollInterval (`number`|`undefined`): If not set or set to a negative number,
-  the MetaPlaylist file does not need to be reloaded.
+- pollInterval (`number`|`undefined`): If not set or set to a negative number, the
+  MetaPlaylist file does not need to be reloaded.
 
-  If set to a positive number, this is the maximum interval in seconds at
-  which the MetaPlaylist file should be fetched from the server (which means
-  that the MetaPlaylist could be refreshed more often depending on the current
-  conditions).
+  If set to a positive number, this is the maximum interval in seconds at which the
+  MetaPlaylist file should be fetched from the server (which means that the MetaPlaylist
+  could be refreshed more often depending on the current conditions).
 
   This should only be defined for dynamic contents.
 
-  This property is not mandatory and as such can be omitted. By default, it is
-  equivalent to `-1` (which means no reload).
+  This property is not mandatory and as such can be omitted. By default, it is equivalent
+  to `-1` (which means no reload).
 
 ### The contents
 
-The contents are all defined as a property called `contents` at the top level of
-our MetaPlaylist file.
+The contents are all defined as a property called `contents` at the top level of our
+MetaPlaylist file.
 
-It is an array of one or multiple objects (an empty `contents` array is not a
-valid MetaPlaylist file).
+It is an array of one or multiple objects (an empty `contents` array is not a valid
+MetaPlaylist file).
 
-Each of its objects are linked to a single content, here are the exhaustive
-list of its properties:
+Each of its objects are linked to a single content, here are the exhaustive list of its
+properties:
 
-- url (`string`): the URL to the original DASH's MPD or Smooth's Manifest.
-  For now, only a subset of such contents is supported, mainly:
+- url (`string`): the URL to the original DASH's MPD or Smooth's Manifest. For now, only a
+  subset of such contents is supported, mainly:
 
   - DASH contents that have their MPD@type set to `"static"`
-  - Smooth content that have their `isLive` attribute not set to `true`
-    (Simply put, only on-demand contents are supported for the moment).
+  - Smooth content that have their `isLive` attribute not set to `true` (Simply put, only
+    on-demand contents are supported for the moment).
 
-- startTime (`number`): time, in seconds, at which the beginning of this
-  content should be played.
-  This will correspond to the start time of the first Period in DASH or the
-  first Chunk defined for Smooth content.
+- startTime (`number`): time, in seconds, at which the beginning of this content should be
+  played. This will correspond to the start time of the first Period in DASH or the first
+  Chunk defined for Smooth content.
 
-- endTime (`number`): time, in seconds, at which the content should end. It
-  the original content is longer, it will be finished at that time instead.
-  The original content should not be shorter.
+- endTime (`number`): time, in seconds, at which the content should end. It the original
+  content is longer, it will be finished at that time instead. The original content should
+  not be shorter.
 
-- transport (`string`): indicates the original streaming protocol.
-  Can be either of those values for now:
+- transport (`string`): indicates the original streaming protocol. Can be either of those
+  values for now:
   - `"dash"`: the URL points to a DASH's MPD
   - `"smooth"`: the URL points to a Microsoft Smooth Streaming's Manifest.
-  - `"metaplaylist"`: Yes, it is possible to put MetaPlaylist files inside
-    other MetaPlaylist files!
+  - `"metaplaylist"`: Yes, it is possible to put MetaPlaylist files inside other
+    MetaPlaylist files!
 
-All those contents should be contiguous (meaning that the `endTime` of one
-should be the same value than the `startTime` of the following one).
+All those contents should be contiguous (meaning that the `endTime` of one should be the
+same value than the `startTime` of the following one).
 
 ## How to actually play a MetaPlaylist content
 
@@ -226,6 +215,7 @@ should be the same value than the `startTime` of the following one).
 The `"METAPLAYLIST"` feature is not included in the default RxPlayer build.
 
 You will need to import the `LOCAL_MANIFEST` experimental feature:
+
 ```js
 // Import the RxPlayer
 // (here through the "minimal" build, though it doesn't change for other builds)
@@ -237,13 +227,13 @@ import { METAPLAYLIST } from "rx-player/experimental/features";
 RxPlayer.addFeatures([METAPLAYLIST]);
 ```
 
-More information on features [in the corresponding documentation
-page](../RxPlayer_Features.md).
+More information on features
+[in the corresponding documentation page](../RxPlayer_Features.md).
 
 ### Loading a MetaPlaylist content
 
-A MetaPlaylist content can simply be played by setting a `"metaplaylist"`
-transport in `loadVideo`:
+A MetaPlaylist content can simply be played by setting a `"metaplaylist"` transport in
+`loadVideo`:
 
 ```js
 player.loadVideo({
@@ -252,8 +242,8 @@ player.loadVideo({
 });
 ```
 
-If you declare locally your MetaPlaylist file and do not want to set a URL for
-it, you can serve directly the file through the use of a Manifest Loader:
+If you declare locally your MetaPlaylist file and do not want to set a URL for it, you can
+serve directly the file through the use of a Manifest Loader:
 
 ```js
 player.loadVideo({
@@ -269,8 +259,7 @@ player.loadVideo({
 });
 ```
 
-More infos on the `manifestLoader` can be found
-[here](./plugins.md#manifestloader).
+More infos on the `manifestLoader` can be found [here](./plugins.md#manifestloader).
 
 ### Defining an initial position for a dynamic MetaPlaylist
 
@@ -279,18 +268,18 @@ As already explained, a MetaPlaylist can either be dynamic or static.
 For calculating the initial position of those contents, the RxPlayer will obey
 [the same rules than for other contents](./Initial_Position.md).
 
-As such, dynamic MetaPlaylist contents will by default start just before the end
-of the last defined content which might not be what you want.
+As such, dynamic MetaPlaylist contents will by default start just before the end of the
+last defined content which might not be what you want.
 
-In those cases, you can make usage of the `serverSyncInfos` transport options
-when calling `loadVideo` to indicate the current time and construct the
-MetaPlaylist by using unix time for each content's `startTime` and `endTime`.
+In those cases, you can make usage of the `serverSyncInfos` transport options when calling
+`loadVideo` to indicate the current time and construct the MetaPlaylist by using unix time
+for each content's `startTime` and `endTime`.
 
-The `serverSyncInfos` option is explained [in the `transportOptions`
-documentation](../Loading_a_Content.md#transportoptions).
+The `serverSyncInfos` option is explained
+[in the `transportOptions` documentation](../Loading_a_Content.md#transportoptions).
 
-For example, if you trust the user's system clock to indicate the current live
-time (in most cases this is risky however), you can use the `Date.now()` api:
+For example, if you trust the user's system clock to indicate the current live time (in
+most cases this is risky however), you can use the `Date.now()` api:
 
 ```js
 const serverSyncInfos = {

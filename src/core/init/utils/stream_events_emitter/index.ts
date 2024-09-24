@@ -15,8 +15,5 @@
  */
 
 import streamEventsEmitter from "./stream_events_emitter";
-export {
-  IPublicNonFiniteStreamEvent,
-  IPublicStreamEvent,
-} from "./types";
+export type { IPublicNonFiniteStreamEvent, IPublicStreamEvent } from "./types";
 export default streamEventsEmitter;

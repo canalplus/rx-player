@@ -46,9 +46,9 @@ describe("find_key_systems - ", () => {
 
   it("should reject if the keySystem is not supported", async () => {
     /*
-    * mock implementation of requestMediaKeySystemAccess that does not support
-    * the keySystem
-    */
+     * mock implementation of requestMediaKeySystemAccess that does not support
+     * the keySystem
+     */
     requestMediaKeySystemAccessMock.mockImplementation(() => {
       throw new Error();
     });
@@ -62,7 +62,7 @@ describe("find_key_systems - ", () => {
      * mock implementation of requestMediaKeySystemAccess that seems to support
      * the keySystem but that is failing when performing the usual EME workflow
      * of creating mediaKeys, creating a session and generating a request.
-    */
+     */
 
     canRelyOnEMEMock.mockImplementation(() => false);
     requestMediaKeySystemAccessMock.mockImplementation(() => ({

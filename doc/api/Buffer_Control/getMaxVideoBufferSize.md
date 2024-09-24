@@ -15,5 +15,4 @@ This setting can be updated either by:
 const bufferSize = player.getMaxBufferSize();
 ```
 
-  - **return value** `number`: Maximum buffer memory size limit,
-  in kilobytes. 
+- **return value** `number`: Maximum buffer memory size limit, in kilobytes.

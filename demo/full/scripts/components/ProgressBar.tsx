@@ -24,7 +24,7 @@ function ProgressBar({
   maximumPosition,
   onMouseOut, // callback called when the mouse stops hovering
   onMouseMove, // callback called when the mouse starts hovering, with the
-               // position and the event in arguments
+  // position and the event in arguments
 }: {
   seek: (newPosition: number) => void;
   position: number;
@@ -40,43 +40,51 @@ function ProgressBar({
 
   const duration = Math.max(usedMaximum - usedMinimum, 0);
 
-  const getMousePosition = React.useCallback((event: React.MouseEvent) => {
-    if (wrapperRef.current === null) {
-      return null;
-    }
-    const rect = wrapperRef.current.getBoundingClientRect();
-    const point0 = rect.left;
-    const clickPosPx = Math.max(event.clientX - point0, 0);
-    const endPointPx = Math.max(rect.right - point0, 0);
-    if (!endPointPx) {
-      return 0;
-    }
-    return ((clickPosPx / endPointPx) * duration) + usedMinimum;
-  }, [duration, usedMinimum]);
+  const getMousePosition = React.useCallback(
+    (event: React.MouseEvent) => {
+      if (wrapperRef.current === null) {
+        return null;
+      }
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const point0 = rect.left;
+      const clickPosPx = Math.max(event.clientX - point0, 0);
+      const endPointPx = Math.max(rect.right - point0, 0);
+      if (!endPointPx) {
+        return 0;
+      }
+      return (clickPosPx / endPointPx) * duration + usedMinimum;
+    },
+    [duration, usedMinimum],
+  );
 
   // weird rx-player design decision. Should be fixed (or done in the
   // module)
   const bufferGapHotFix = isFinite(bufferGap) ? bufferGap : 0;
   const relativePosition = Math.max(position - usedMinimum, 0);
-  const percentBuffered = Math.min(
-    (bufferGapHotFix + relativePosition) / duration
-    , 1) * 100;
+  const percentBuffered =
+    Math.min((bufferGapHotFix + relativePosition) / duration, 1) * 100;
 
   const percentPosition = Math.min(relativePosition / duration, 1) * 100;
 
-  const onProgressBarClick = React.useCallback((event: React.MouseEvent) => {
-    const mousePosition = getMousePosition(event);
-    if (mousePosition !== null) {
-      seek(mousePosition);
-    }
-  }, [getMousePosition, seek]);
+  const onProgressBarClick = React.useCallback(
+    (event: React.MouseEvent) => {
+      const mousePosition = getMousePosition(event);
+      if (mousePosition !== null) {
+        seek(mousePosition);
+      }
+    },
+    [getMousePosition, seek],
+  );
 
-  const onProgressMouseMove = React.useCallback((event: React.MouseEvent) => {
-    const mousePosition = getMousePosition(event);
-    if (mousePosition !== null) {
-      onMouseMove(mousePosition, event);
-    }
-  }, [getMousePosition, onMouseMove]);
+  const onProgressMouseMove = React.useCallback(
+    (event: React.MouseEvent) => {
+      const mousePosition = getMousePosition(event);
+      if (mousePosition !== null) {
+        onMouseMove(mousePosition, event);
+      }
+    },
+    [getMousePosition, onMouseMove],
+  );
 
   return (
     <div

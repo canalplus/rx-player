@@ -19,27 +19,29 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-declare const __FEATURES__ : {
-  IS_DISABLED : 0;
-  IS_ENABLED : 1;
+declare const __FEATURES__:
+  | {
+      IS_DISABLED: 0;
+      IS_ENABLED: 1;
 
-  BIF_PARSER : 0 | 1;
-  DASH : 0 | 1;
-  DIRECTFILE : 0 | 1;
-  EME : 0 | 1;
-  HTML_SAMI : 0 | 1;
-  HTML_SRT : 0 | 1;
-  HTML_TTML : 0 | 1;
-  HTML_VTT : 0 | 1;
-  LOCAL_MANIFEST : 0 | 1;
-  METAPLAYLIST : 0 | 1;
-  DEBUG_ELEMENT : 0 | 1;
-  NATIVE_SAMI : 0 | 1;
-  NATIVE_SRT : 0 | 1;
-  NATIVE_TTML : 0 | 1;
-  NATIVE_VTT : 0 | 1;
-  SMOOTH : 0 | 1;
-} | typeof FEATURES_ENUM;
+      BIF_PARSER: 0 | 1;
+      DASH: 0 | 1;
+      DIRECTFILE: 0 | 1;
+      EME: 0 | 1;
+      HTML_SAMI: 0 | 1;
+      HTML_SRT: 0 | 1;
+      HTML_TTML: 0 | 1;
+      HTML_VTT: 0 | 1;
+      LOCAL_MANIFEST: 0 | 1;
+      METAPLAYLIST: 0 | 1;
+      DEBUG_ELEMENT: 0 | 1;
+      NATIVE_SAMI: 0 | 1;
+      NATIVE_SRT: 0 | 1;
+      NATIVE_TTML: 0 | 1;
+      NATIVE_VTT: 0 | 1;
+      SMOOTH: 0 | 1;
+    }
+  | typeof FEATURES_ENUM;
 
 declare const enum FEATURES_ENUM {
   IS_DISABLED,
@@ -63,11 +65,13 @@ declare const enum FEATURES_ENUM {
   SMOOTH,
 }
 
-declare const __ENVIRONMENT__ : {
-  CURRENT_ENV : 0 | 1;
-  DEV : 0;
-  PRODUCTION : 1;
-} | typeof ENVIRONMENT_ENUM;
+declare const __ENVIRONMENT__:
+  | {
+      CURRENT_ENV: 0 | 1;
+      DEV: 0;
+      PRODUCTION: 1;
+    }
+  | typeof ENVIRONMENT_ENUM;
 
 declare const enum ENVIRONMENT_ENUM {
   CURRENT_ENV,
@@ -75,8 +79,8 @@ declare const enum ENVIRONMENT_ENUM {
   PRODUCTION,
 }
 
-declare const __LOGGER_LEVEL__ : {
-  CURRENT_LEVEL : string;
+declare const __LOGGER_LEVEL__: {
+  CURRENT_LEVEL: string;
 };
 
 // eslint-disable-next-line

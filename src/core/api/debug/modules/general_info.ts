@@ -1,5 +1,5 @@
-import { CancellationSignal } from "../../../../utils/task_canceller";
-import RxPlayer from "../../public_api";
+import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type RxPlayer from "../../public_api";
 import { DEFAULT_REFRESH_INTERVAL } from "../constants";
 import {
   createCompositeElement,
@@ -9,10 +9,10 @@ import {
 } from "../utils";
 
 export default function constructDebugGeneralInfo(
-  instance : RxPlayer,
-  parentElt : HTMLElement,
-  cancelSignal : CancellationSignal
-) : HTMLElement {
+  instance: RxPlayer,
+  parentElt: HTMLElement,
+  cancelSignal: CancellationSignal,
+): HTMLElement {
   const generalInfoElt = createElement("div");
   const adaptationsElt = createElement("div");
   const representationsElt = createElement("div");
@@ -42,7 +42,7 @@ export default function constructDebugGeneralInfo(
       const currentTime = instance.getPosition();
       const bufferGap = instance.getVideoBufferGap();
       const bufferGapStr = bufferGap === Infinity ? "0" : bufferGap.toFixed(2);
-      const valuesLine1 : Array<[string, string]> = [
+      const valuesLine1: Array<[string, string]> = [
         ["ct", currentTime.toFixed(2)],
         ["bg", bufferGapStr],
         ["rs", String(videoElement.readyState)],
@@ -55,7 +55,7 @@ export default function constructDebugGeneralInfo(
         ["st", `"${instance.getPlayerState()}"`],
       ];
 
-      const valuesLine2 : Array<[string, string]> = [];
+      const valuesLine2: Array<[string, string]> = [];
       const ks = instance.getKeySystemConfiguration();
       if (ks !== null) {
         valuesLine2.push(["ks", ks.keySystem]);
@@ -106,7 +106,7 @@ export default function constructDebugGeneralInfo(
         valuesLine1.push(["map", maxPos.toFixed(2)]);
         valuesLine2.push(["dma", (maxPos - currentTime).toFixed(2)]);
       }
-      const valuesLine3 : Array<[string, string]> = [];
+      const valuesLine3: Array<[string, string]> = [];
       const error = instance.getError();
       if (error !== null) {
         valuesLine3.push(["er", `"${String(error)}"`]);
@@ -117,9 +117,11 @@ export default function constructDebugGeneralInfo(
           const lineInfoElt = createElement("div");
           for (const value of valueSet) {
             lineInfoElt.appendChild(createMetricTitle(value[0]));
-            lineInfoElt.appendChild(createElement("span", {
-              textContent: value[1] + " ",
-            }));
+            lineInfoElt.appendChild(
+              createElement("span", {
+                textContent: value[1] + " ",
+              }),
+            );
           }
           generalInfoElt.appendChild(lineInfoElt);
         }
@@ -127,26 +129,29 @@ export default function constructDebugGeneralInfo(
       if (isExtendedMode(parentElt)) {
         const url = instance.getUrl();
         if (url !== undefined) {
-          const reducedUrl = url.length > 100 ?
-            url.substring(0, 99) + "…" :
-            url;
+          const reducedUrl = url.length > 100 ? url.substring(0, 99) + "…" : url;
 
-          generalInfoElt.appendChild(createCompositeElement("div", [
-            createMetricTitle("url"),
-            createElement("span", {
-              textContent: reducedUrl,
-            }),
-          ]));
+          generalInfoElt.appendChild(
+            createCompositeElement("div", [
+              createMetricTitle("url"),
+              createElement("span", {
+                textContent: reducedUrl,
+              }),
+            ]),
+          );
         }
       }
     }
     if (isExtendedMode(parentElt)) {
-      const videoId = instance.getAvailableVideoTracks().map(({ id, active }) =>
-        active ? `*${id}` : id);
-      const audioId = instance.getAvailableAudioTracks().map(({ id, active }) =>
-        active ? `*${id}` : id);
-      const textId = instance.getAvailableTextTracks().map(({ id, active }) =>
-        active ? `*${id}` : id);
+      const videoId = instance
+        .getAvailableVideoTracks()
+        .map(({ id, active }) => (active ? `*${id}` : id));
+      const audioId = instance
+        .getAvailableAudioTracks()
+        .map(({ id, active }) => (active ? `*${id}` : id));
+      const textId = instance
+        .getAvailableTextTracks()
+        .map(({ id, active }) => (active ? `*${id}` : id));
       adaptationsElt.innerHTML = "";
       if (videoId.length > 0) {
         let textContent = `${videoId.length}:${videoId.join(" ")} `;
@@ -182,28 +187,38 @@ export default function constructDebugGeneralInfo(
         adaptationsElt.appendChild(textAdaps);
       }
       const adaptations = instance.getCurrentAdaptations();
-      const videoBitratesStr = adaptations?.video?.representations.map((r) => {
-        return String(r.bitrate) +
-               (r.isSupported ? "" : " U!") +
-               (r.decipherable !== false ? "" : " E!");
-      }) ?? [];
-      const audioBitratesStr = adaptations?.video?.representations.map((r) => {
-        return String(r.bitrate) +
-               (r.isSupported ? "" : " U!") +
-               (r.decipherable !== false ? "" : " E!");
-      }) ?? [];
+      const videoBitratesStr =
+        adaptations?.video?.representations.map((r) => {
+          return (
+            String(r.bitrate) +
+            (r.isSupported ? "" : " U!") +
+            (r.decipherable !== false ? "" : " E!")
+          );
+        }) ?? [];
+      const audioBitratesStr =
+        adaptations?.video?.representations.map((r) => {
+          return (
+            String(r.bitrate) +
+            (r.isSupported ? "" : " U!") +
+            (r.decipherable !== false ? "" : " E!")
+          );
+        }) ?? [];
       representationsElt.innerHTML = "";
       if (videoBitratesStr.length > 0) {
         representationsElt.appendChild(createMetricTitle("vb"));
-        representationsElt.appendChild(createElement("span", {
-          textContent: videoBitratesStr.join(" ") + " ",
-        }));
+        representationsElt.appendChild(
+          createElement("span", {
+            textContent: videoBitratesStr.join(" ") + " ",
+          }),
+        );
       }
       if (audioBitratesStr.length > 0) {
         representationsElt.appendChild(createMetricTitle("ab"));
-        representationsElt.appendChild(createElement("span", {
-          textContent: audioBitratesStr.join(" ") + " ",
-        }));
+        representationsElt.appendChild(
+          createElement("span", {
+            textContent: audioBitratesStr.join(" ") + " ",
+          }),
+        );
       }
     } else {
       adaptationsElt.innerHTML = "";

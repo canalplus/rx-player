@@ -16,15 +16,14 @@
 
 // eslint-disable-next-line max-len
 import MediaSourceContentInitializer from "../../core/init/media_source_content_initializer";
-import { IFeaturesObject } from "../../features/types";
-import DashWasmParser, {
-  IDashWasmParserOptions,
-} from "../../parsers/manifest/dash/wasm-parser";
+import type { IFeaturesObject } from "../../features/types";
+import type { IDashWasmParserOptions } from "../../parsers/manifest/dash/wasm-parser";
+import DashWasmParser from "../../parsers/manifest/dash/wasm-parser";
 import dash from "../../transports/dash";
 
 const dashWasmParser = new DashWasmParser();
 const dashWasmFeature = {
-  _addFeature(features : IFeaturesObject) : void {
+  _addFeature(features: IFeaturesObject): void {
     if (features.transports.dash === undefined) {
       features.transports.dash = dash;
     }
@@ -32,7 +31,7 @@ const dashWasmFeature = {
     features.mediaSourceInit = MediaSourceContentInitializer;
   },
 
-  initialize(opts : IDashWasmParserOptions) : Promise<void> {
+  initialize(opts: IDashWasmParserOptions): Promise<void> {
     return dashWasmParser.initialize(opts);
   },
 };

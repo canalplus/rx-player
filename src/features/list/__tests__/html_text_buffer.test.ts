@@ -16,7 +16,7 @@
 
 // eslint-disable-next-line max-len
 import HtmlTextSegmentBuffer from "../../../core/segment_buffers/implementations/text/html";
-import { IFeaturesObject } from "../../types";
+import type { IFeaturesObject } from "../../types";
 import addHtmlTextBuffer from "../html_text_buffer";
 
 describe("Features list - html Text Buffer", () => {

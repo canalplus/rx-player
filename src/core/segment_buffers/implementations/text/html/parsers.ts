@@ -17,9 +17,11 @@
 import features from "../../../../../features";
 import log from "../../../../../log";
 
-export interface IHTMLCue { start : number;
-                            end: number;
-                            element : HTMLElement; }
+export interface IHTMLCue {
+  start: number;
+  end: number;
+  element: HTMLElement;
+}
 
 /**
  * Convert text track data into timed HTML Cues.
@@ -31,11 +33,11 @@ export interface IHTMLCue { start : number;
  * @throws Error - Throw if no parser is found for the given type
  */
 export default function parseTextTrackToElements(
-  type : string,
-  data : string,
-  timestampOffset : number,
-  language? : string
-) : IHTMLCue[] {
+  type: string,
+  data: string,
+  timestampOffset: number,
+  language?: string,
+): IHTMLCue[] {
   log.debug("HTSB: Finding parser for html text tracks:", type);
   const parser = features.htmlTextTracksParsers[type];
 

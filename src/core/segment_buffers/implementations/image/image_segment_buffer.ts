@@ -15,12 +15,9 @@
  */
 
 import log from "../../../../log";
-import { IBifThumbnail } from "../../../../parsers/images/bif";
-import {
-  IEndOfSegmentInfos,
-  IPushChunkInfos,
-  SegmentBuffer,
-} from "../types";
+import type { IBifThumbnail } from "../../../../parsers/images/bif";
+import type { IEndOfSegmentInfos, IPushChunkInfos } from "../types";
+import { SegmentBuffer } from "../types";
 import ManualTimeRanges from "../utils/manual_time_ranges";
 
 /**
@@ -28,8 +25,8 @@ import ManualTimeRanges from "../utils/manual_time_ranges";
  * @class ImageSegmentBuffer
  */
 export default class ImageSegmentBuffer extends SegmentBuffer {
-  public readonly bufferType : "image";
-  private _buffered : ManualTimeRanges;
+  public readonly bufferType: "image";
+  private _buffered: ManualTimeRanges;
 
   constructor() {
     log.debug("ISB: Creating ImageSegmentBuffer");
@@ -41,32 +38,27 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
   /**
    * @param {string} uniqueId
    */
-  public declareInitSegment(uniqueId : string): void {
-    log.warn("ISB: Declaring initialization segment for image SegmentBuffer",
-             uniqueId);
+  public declareInitSegment(uniqueId: string): void {
+    log.warn("ISB: Declaring initialization segment for image SegmentBuffer", uniqueId);
   }
 
   /**
    * @param {string} uniqueId
    */
-  public freeInitSegment(uniqueId : string): void {
-    log.warn("ISB: Freeing initialization segment for image SegmentBuffer",
-             uniqueId);
+  public freeInitSegment(uniqueId: string): void {
+    log.warn("ISB: Freeing initialization segment for image SegmentBuffer", uniqueId);
   }
 
   /**
    * @param {Object} data
    * @returns {Promise}
    */
-  public pushChunk(
-    infos : IPushChunkInfos<unknown>
-  ) : Promise<void> {
+  public pushChunk(infos: IPushChunkInfos<unknown>): Promise<void> {
     log.debug("ISB: appending new data.");
     if (infos.data.chunk === null) {
       return Promise.resolve();
     }
-    const { appendWindow,
-            chunk } = infos.data;
+    const { appendWindow, chunk } = infos.data;
 
     // The following check is ugly. I don't care, the image buffer is there
     // due to an ugly deprecated API that will soon disappear
@@ -96,7 +88,7 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
    * @param {Number} to
    * @returns {Promise}
    */
-  public removeBuffer(start : number, end : number) : Promise<void> {
+  public removeBuffer(start: number, end: number): Promise<void> {
     log.info("ISB: ignored image data remove order", start, end);
 
     // Logic removed as it caused more problems than it resolved:
@@ -118,7 +110,7 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
    * @param {Object} _infos
    * @returns {Promise}
    */
-  public endOfSegment(_infos : IEndOfSegmentInfos) : Promise<void> {
+  public endOfSegment(_infos: IEndOfSegmentInfos): Promise<void> {
     this._segmentInventory.completeSegment(_infos, this._buffered);
     return Promise.resolve();
   }
@@ -127,11 +119,11 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
    * Returns the currently buffered data, in a TimeRanges object.
    * @returns {TimeRanges}
    */
-  public getBufferedRanges() : ManualTimeRanges {
+  public getBufferedRanges(): ManualTimeRanges {
     return this._buffered;
   }
 
-  public dispose() : void {
+  public dispose(): void {
     log.debug("ISB: disposing image SegmentBuffer");
     this._buffered.remove(0, Infinity);
   }
@@ -140,13 +132,13 @@ export default class ImageSegmentBuffer extends SegmentBuffer {
 /** Format of the data pushed to the `ImageSegmentBuffer`. */
 export interface IImageTrackSegmentData {
   /** Image track data, in the given type */
-  data : IBifThumbnail[];
+  data: IBifThumbnail[];
   /** The type of the data (example: "bif") */
-  type : string;
+  type: string;
   /** End time until which the segment apply */
-  end : number;
+  end: number;
   /** Start time from which the segment apply */
-  start : number;
+  start: number;
   /** Timescale to convert the start and end into seconds */
-  timescale : number;
+  timescale: number;
 }

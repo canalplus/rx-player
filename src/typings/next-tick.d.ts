@@ -15,9 +15,7 @@
  */
 
 declare module "next-tick" {
-  function nextTick(
-    fn : () => void
-  ) : void;
+  function nextTick(fn: () => void): void;
 
   export default nextTick;
 }

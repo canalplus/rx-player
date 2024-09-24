@@ -17,16 +17,12 @@
 import config from "../../../config";
 import { formatError } from "../../../errors";
 import log from "../../../log";
-import Manifest, {
-  Adaptation,
-  getLoggableSegmentId,
-  ISegment,
-  Period,
-  Representation,
-} from "../../../manifest";
-import { ICdnMetadata } from "../../../parsers/manifest";
-import { IPlayerError } from "../../../public_types";
-import {
+import type { Adaptation, ISegment, Period, Representation } from "../../../manifest";
+import type Manifest from "../../../manifest";
+import { getLoggableSegmentId } from "../../../manifest";
+import type { ICdnMetadata } from "../../../parsers/manifest";
+import type { IPlayerError } from "../../../public_types";
+import type {
   IChunkCompleteInformation,
   ISegmentLoader,
   ISegmentLoadingProgressInformation,
@@ -39,21 +35,18 @@ import idGenerator from "../../../utils/id_generator";
 import InitializationSegmentCache from "../../../utils/initialization_segment_cache";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
-import {
-  CancellationError,
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../../utils/task_canceller";
+import { CancellationError } from "../../../utils/task_canceller";
+import type {
   IMetricsCallbackPayload,
   IRequestBeginCallbackPayload,
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
 } from "../../adaptive";
-import { IBufferType } from "../../segment_buffers";
-import CdnPrioritizer from "../cdn_prioritizer";
+import type { IBufferType } from "../../segment_buffers";
+import type CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
 import { scheduleRequestWithCdns } from "../utils/schedule_request";
-
 
 /** Allows to generate a unique identifies for each request. */
 const generateRequestID = idGenerator();
@@ -83,15 +76,14 @@ const generateRequestID = idGenerator();
  * @returns {Function}
  */
 export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
-  bufferType : IBufferType,
-  pipeline : ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
-  cdnPrioritizer : CdnPrioritizer | null,
-  lifecycleCallbacks : ISegmentFetcherLifecycleCallbacks,
-  options : ISegmentFetcherOptions
-) : ISegmentFetcher<TSegmentDataType> {
+  bufferType: IBufferType,
+  pipeline: ISegmentPipeline<TLoadedFormat, TSegmentDataType>,
+  cdnPrioritizer: CdnPrioritizer | null,
+  lifecycleCallbacks: ISegmentFetcherLifecycleCallbacks,
+  options: ISegmentFetcherOptions,
+): ISegmentFetcher<TSegmentDataType> {
   const requestOptions = {
-    timeout: options.requestTimeout < 0 ? undefined :
-                                          options.requestTimeout,
+    timeout: options.requestTimeout < 0 ? undefined : options.requestTimeout,
   };
 
   /**
@@ -99,9 +91,9 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
    * This allows to avoid doing too many requests for what are usually very
    * small files.
    */
-  const cache = arrayIncludes(["audio", "video"], bufferType) ?
-    new InitializationSegmentCache<TLoadedFormat>() :
-    undefined;
+  const cache = arrayIncludes(["audio", "video"], bufferType)
+    ? new InitializationSegmentCache<TLoadedFormat>()
+    : undefined;
 
   const { loadSegment, parseSegment } = pipeline;
 
@@ -113,10 +105,10 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
    * @returns {Promise}
    */
   return async function fetchSegment(
-    content : ISegmentLoaderContent,
-    fetcherCallbacks : ISegmentFetcherCallbacks<TSegmentDataType>,
-    cancellationSignal : CancellationSignal
-  ) : Promise<void> {
+    content: ISegmentLoaderContent,
+    fetcherCallbacks: ISegmentFetcherCallbacks<TSegmentDataType>,
+    cancellationSignal: CancellationSignal,
+  ): Promise<void> {
     // used by logs
     const segmentIdString = getLoggableSegmentId(content);
     const requestId = generateRequestID();
@@ -129,7 +121,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      *
      * Stays to `undefined` when the request is still pending.
      */
-    let requestInfo : IChunkCompleteInformation | null | undefined;
+    let requestInfo: IChunkCompleteInformation | null | undefined;
 
     /**
      * Array containing one entry per loaded chunk, in chronological order.
@@ -138,7 +130,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      * This is used to know when all loaded chunks have been parsed, which
      * can be useful to e.g. construct metrics about the loaded segment.
      */
-    const parsedChunks : boolean[] = [];
+    const parsedChunks: boolean[] = [];
 
     /**
      * Addition of the duration of each encountered and parsed chunks.
@@ -147,7 +139,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      *
      * `undefined` if at least one of the parsed chunks has unknown duration.
      */
-    let segmentDurationAcc : number | undefined = 0;
+    let segmentDurationAcc: number | undefined = 0;
 
     /** Set to `true` once network metrics have been sent. */
     let metricsSent = false;
@@ -158,16 +150,18 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
        * the request.
        * @param {Object} info
        */
-      onProgress(info : ISegmentLoadingProgressInformation) : void {
+      onProgress(info: ISegmentLoadingProgressInformation): void {
         if (requestInfo !== undefined) {
           return; // request already termminated
         }
         if (info.totalSize !== undefined && info.size < info.totalSize) {
-          lifecycleCallbacks.onProgress?.({ duration: info.duration,
-                                            size: info.size,
-                                            totalSize: info.totalSize,
-                                            timestamp: performance.now(),
-                                            id: requestId });
+          lifecycleCallbacks.onProgress?.({
+            duration: info.duration,
+            size: info.size,
+            totalSize: info.totalSize,
+            timestamp: performance.now(),
+            id: requestId,
+          });
         }
       },
 
@@ -177,14 +171,13 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
        * argument.
        * @param {*} chunkData
        */
-      onNewChunk(chunkData : TLoadedFormat) : void {
+      onNewChunk(chunkData: TLoadedFormat): void {
         fetcherCallbacks.onChunk(generateParserFunction(chunkData, true));
       },
     };
 
     // Retrieve from cache if it exists
-    const cached = cache !== undefined ? cache.get(content) :
-                                         null;
+    const cached = cache !== undefined ? cache.get(content) : null;
     if (cached !== null) {
       log.debug("SF: Found wanted segment in cache", segmentIdString);
       fetcherCallbacks.onChunk(generateParserFunction(cached, false));
@@ -192,18 +185,22 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
     }
 
     log.debug("SF: Beginning request", segmentIdString);
-    lifecycleCallbacks.onRequestBegin?.({ requestTimestamp: performance.now(),
-                                          id: requestId,
-                                          content });
+    lifecycleCallbacks.onRequestBegin?.({
+      requestTimestamp: performance.now(),
+      id: requestId,
+      content,
+    });
 
     cancellationSignal.register(onCancellation);
 
     try {
-      const res = await scheduleRequestWithCdns(content.representation.cdnMetadata,
-                                                cdnPrioritizer,
-                                                callLoaderWithUrl,
-                                                objectAssign({ onRetry }, options),
-                                                cancellationSignal);
+      const res = await scheduleRequestWithCdns(
+        content.representation.cdnMetadata,
+        cdnPrioritizer,
+        callLoaderWithUrl,
+        objectAssign({ onRetry }, options),
+        cancellationSignal,
+      );
 
       if (res.resultType === "segment-loaded") {
         const loadedData = res.resultData.responseData;
@@ -259,13 +256,15 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      * @returns {Promise}
      */
     function callLoaderWithUrl(
-      cdnMetadata : ICdnMetadata | null
-    ) : ReturnType<ISegmentLoader<TLoadedFormat>> {
-      return loadSegment(cdnMetadata,
-                         content,
-                         requestOptions,
-                         cancellationSignal,
-                         loaderCallbacks);
+      cdnMetadata: ICdnMetadata | null,
+    ): ReturnType<ISegmentLoader<TLoadedFormat>> {
+      return loadSegment(
+        cdnMetadata,
+        content,
+        requestOptions,
+        cancellationSignal,
+        loaderCallbacks,
+      );
     }
 
     /**
@@ -275,37 +274,43 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      * @returns {Function}
      */
     function generateParserFunction(
-      data : TLoadedFormat,
-      isChunked : boolean
-    ) : (initTimescale? : number) => ISegmentParserParsedInitChunk<TSegmentDataType> |
-                                     ISegmentParserParsedMediaChunk<TSegmentDataType>
-    {
+      data: TLoadedFormat,
+      isChunked: boolean,
+    ): (
+      initTimescale?: number,
+    ) =>
+      | ISegmentParserParsedInitChunk<TSegmentDataType>
+      | ISegmentParserParsedMediaChunk<TSegmentDataType> {
       parsedChunks.push(false);
       const parsedChunkId = parsedChunks.length - 1;
-      return function parse(initTimescale? : number) :
-        ISegmentParserParsedInitChunk<TSegmentDataType> |
-        ISegmentParserParsedMediaChunk<TSegmentDataType>
-      {
+      return function parse(
+        initTimescale?: number,
+      ):
+        | ISegmentParserParsedInitChunk<TSegmentDataType>
+        | ISegmentParserParsedMediaChunk<TSegmentDataType> {
         const loaded = { data, isChunked };
 
         try {
           const parsed = parseSegment(loaded, content, initTimescale);
 
           if (!parsedChunks[parsedChunkId]) {
-            segmentDurationAcc = segmentDurationAcc !== undefined &&
-                                 parsed.segmentType === "media" &&
-                                 parsed.chunkInfos !== null &&
-                                 parsed.chunkInfos.duration !== undefined ?
-              segmentDurationAcc + parsed.chunkInfos.duration :
-              undefined;
+            segmentDurationAcc =
+              segmentDurationAcc !== undefined &&
+              parsed.segmentType === "media" &&
+              parsed.chunkInfos !== null &&
+              parsed.chunkInfos.duration !== undefined
+                ? segmentDurationAcc + parsed.chunkInfos.duration
+                : undefined;
             parsedChunks[parsedChunkId] = true;
 
             sendNetworkMetricsIfAvailable();
           }
           return parsed;
         } catch (error) {
-          throw formatError(error, { defaultCode: "PIPELINE_PARSE_ERROR",
-                                     defaultReason: "Unknown parsing error" });
+          throw formatError(error, {
+            defaultCode: "PIPELINE_PARSE_ERROR",
+            defaultReason: "Unknown parsing error",
+          });
         }
       };
     }
@@ -314,7 +319,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      * Function called when the function request is retried.
      * @param {*} err
      */
-    function onRetry(err: unknown) : void {
+    function onRetry(err: unknown): void {
       fetcherCallbacks.onRetry(errorSelector(err));
     }
 
@@ -322,16 +327,17 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
      * Send netork metrics if they haven't yet been sent and if all data to
      * define them is available.
      */
-    function sendNetworkMetricsIfAvailable() : void {
+    function sendNetworkMetricsIfAvailable(): void {
       if (metricsSent) {
         return;
       }
-      if (!isNullOrUndefined(requestInfo) &&
-          requestInfo.size !== undefined &&
-          requestInfo.requestDuration !== undefined &&
-          parsedChunks.length > 0 &&
-          parsedChunks.every(isParsed => isParsed))
-      {
+      if (
+        !isNullOrUndefined(requestInfo) &&
+        requestInfo.size !== undefined &&
+        requestInfo.requestDuration !== undefined &&
+        parsedChunks.length > 0 &&
+        parsedChunks.every((isParsed) => isParsed)
+      ) {
         metricsSent = true;
         lifecycleCallbacks.onMetrics?.({
           size: requestInfo.size,
@@ -355,11 +361,11 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>(
  */
 export type ISegmentFetcher<TSegmentDataType> = (
   /** Information on the segment wanted. */
-  content : ISegmentLoaderContent,
+  content: ISegmentLoaderContent,
   /** Callbacks the `ISegmentFetcher` will call as it loads the data. */
-  callbacks : ISegmentFetcherCallbacks<TSegmentDataType>,
+  callbacks: ISegmentFetcherCallbacks<TSegmentDataType>,
   /** CancellationSignal allowing to cancel the request. */
-  cancellationSignal : CancellationSignal
+  cancellationSignal: CancellationSignal,
 ) => Promise<void>;
 
 /**
@@ -369,10 +375,12 @@ export type ISegmentFetcher<TSegmentDataType> = (
 export interface ISegmentFetcherCallbacks<TSegmentDataType> {
   /** Called when a decodable chunk of the whole segment is available. */
   onChunk(
-    parse : (initTimescale : number | undefined) =>
-      ISegmentParserParsedInitChunk<TSegmentDataType> |
-      ISegmentParserParsedMediaChunk<TSegmentDataType>
-  ) : void;
+    parse: (
+      initTimescale: number | undefined,
+    ) =>
+      | ISegmentParserParsedInitChunk<TSegmentDataType>
+      | ISegmentParserParsedMediaChunk<TSegmentDataType>,
+  ): void;
 
   /**
    * Callback called when all decodable chunks of the loaded segment have been
@@ -381,21 +389,23 @@ export interface ISegmentFetcherCallbacks<TSegmentDataType> {
    * This callback is called before the corresponding `ISegmentFetcher`'s
    * returned Promise is resolved.
    */
-  onAllChunksReceived() : void;
+  onAllChunksReceived(): void;
 
   /**
    * Callback called when the segment request has to restart from scratch, e.g.
    * due to a request error.
    */
-  onRetry(error : IPlayerError) : void;
+  onRetry(error: IPlayerError): void;
 }
 
 /** Content used by the segment loader as a context to load a new segment. */
-export interface ISegmentLoaderContent { manifest : Manifest;
-                                         period : Period;
-                                         adaptation : Adaptation;
-                                         representation : Representation;
-                                         segment : ISegment; }
+export interface ISegmentLoaderContent {
+  manifest: Manifest;
+  period: Period;
+  adaptation: Adaptation;
+  representation: Representation;
+  segment: ISegment;
+}
 
 /**
  * Callbacks given when creating an `ISegmentFetcher`, allowing to be notified
@@ -403,21 +413,21 @@ export interface ISegmentLoaderContent { manifest : Manifest;
  */
 export interface ISegmentFetcherLifecycleCallbacks {
   /** Called when a segment request begins. */
-  onRequestBegin? : (arg : IRequestBeginCallbackPayload) => void;
+  onRequestBegin?: (arg: IRequestBeginCallbackPayload) => void;
   /** Called when progress information is available on a pending segment request. */
-  onProgress? : (arg : IRequestProgressCallbackPayload) => void;
+  onProgress?: (arg: IRequestProgressCallbackPayload) => void;
   /**
    * Called when a segment request ends (either because it completed, it failed
    * or was canceled).
    */
-  onRequestEnd? : (arg : IRequestEndCallbackPayload) => void;
+  onRequestEnd?: (arg: IRequestEndCallbackPayload) => void;
   /**
    * Called when network metrics linked to a segment request are available,
    * once the request has terminated.
    * This callback may be called before or after the corresponding
    * `onRequestEnd` callback, you should not rely on the order between the two.
    */
-  onMetrics? : (arg : IMetricsCallbackPayload) => void;
+  onMetrics?: (arg: IMetricsCallbackPayload) => void;
 }
 
 /** Options allowing to configure an `ISegmentFetcher`'s behavior. */
@@ -426,28 +436,28 @@ export interface ISegmentFetcherOptions {
    * Initial delay to wait if a request fails before making a new request, in
    * milliseconds.
    */
-  baseDelay : number;
+  baseDelay: number;
   /**
    * Maximum delay to wait if a request fails before making a new request, in
    * milliseconds.
    */
-  maxDelay : number;
+  maxDelay: number;
   /**
    * Maximum number of retries to perform on "regular" errors (e.g. due to HTTP
    * status, integrity errors, timeouts...).
    */
-  maxRetryRegular : number;
+  maxRetryRegular: number;
   /**
    * Maximum number of retries to perform when it appears that the user is
    * currently offline.
    */
-  maxRetryOffline : number;
+  maxRetryOffline: number;
   /**
    * Timeout after which request are aborted and, depending on other options,
    * retried.
    * To set to `-1` for no timeout.
    */
-  requestTimeout : number;
+  requestTimeout: number;
 }
 
 /**
@@ -456,27 +466,40 @@ export interface ISegmentFetcherOptions {
  * @returns {Object}
  */
 export function getSegmentFetcherOptions(
-  bufferType : string,
-  { maxRetryRegular,
+  bufferType: string,
+  {
+    maxRetryRegular,
     maxRetryOffline,
     lowLatencyMode,
-    requestTimeout } : { maxRetryRegular? : number | undefined;
-                         maxRetryOffline? : number | undefined;
-                         requestTimeout? : number | undefined;
-                         lowLatencyMode : boolean; }
-) : ISegmentFetcherOptions {
-  const { DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-          DEFAULT_REQUEST_TIMEOUT,
-          DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-          INITIAL_BACKOFF_DELAY_BASE,
-          MAX_BACKOFF_DELAY_BASE } = config.getCurrent();
-  return { maxRetryRegular: bufferType === "image" ? 0 :
-                            maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
-           maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
-           baseDelay: lowLatencyMode ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                       INITIAL_BACKOFF_DELAY_BASE.REGULAR,
-           maxDelay: lowLatencyMode ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY :
-                                      MAX_BACKOFF_DELAY_BASE.REGULAR,
-           requestTimeout: isNullOrUndefined(requestTimeout) ? DEFAULT_REQUEST_TIMEOUT :
-                                                               requestTimeout };
+    requestTimeout,
+  }: {
+    maxRetryRegular?: number | undefined;
+    maxRetryOffline?: number | undefined;
+    requestTimeout?: number | undefined;
+    lowLatencyMode: boolean;
+  },
+): ISegmentFetcherOptions {
+  const {
+    DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR,
+    DEFAULT_REQUEST_TIMEOUT,
+    DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+    INITIAL_BACKOFF_DELAY_BASE,
+    MAX_BACKOFF_DELAY_BASE,
+  } = config.getCurrent();
+  return {
+    maxRetryRegular:
+      bufferType === "image"
+        ? 0
+        : (maxRetryRegular ?? DEFAULT_MAX_REQUESTS_RETRY_ON_ERROR),
+    maxRetryOffline: maxRetryOffline ?? DEFAULT_MAX_REQUESTS_RETRY_ON_OFFLINE,
+    baseDelay: lowLatencyMode
+      ? INITIAL_BACKOFF_DELAY_BASE.LOW_LATENCY
+      : INITIAL_BACKOFF_DELAY_BASE.REGULAR,
+    maxDelay: lowLatencyMode
+      ? MAX_BACKOFF_DELAY_BASE.LOW_LATENCY
+      : MAX_BACKOFF_DELAY_BASE.REGULAR,
+    requestTimeout: isNullOrUndefined(requestTimeout)
+      ? DEFAULT_REQUEST_TIMEOUT
+      : requestTimeout,
+  };
 }

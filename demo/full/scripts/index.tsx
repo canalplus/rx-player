@@ -8,7 +8,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import Main from "./controllers/Main";
 
-window.onload = function(): void {
+window.onload = function (): void {
   const rootElt = document.getElementById("player-container");
   if (rootElt === null) {
     /* eslint-disable-next-line no-console */
@@ -16,5 +16,9 @@ window.onload = function(): void {
     return;
   }
   const root = ReactDOM.createRoot(rootElt);
-  root.render(<React.StrictMode><Main /></React.StrictMode>);
+  root.render(
+    <React.StrictMode>
+      <Main />
+    </React.StrictMode>,
+  );
 };

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ICompatVTTCue } from "../../../../compat";
+import type { ICompatVTTCue } from "../../../../compat";
 import parseTtml from "../parse_ttml";
 import parseCue from "./parse_cue";
 
@@ -23,9 +23,9 @@ import parseCue from "./parse_cue";
  * @param timeOffset
  */
 export default function parseTtmlToNative(
-  str : string,
-  timeOffset : number
-): Array<TextTrackCue | ICompatVTTCue> {
+  str: string,
+  timeOffset: number,
+): Array<TextTrackCue | ICompatVTTCue> {
   const parsedCues = parseTtml(str, timeOffset);
   const cues: Array<TextTrackCue | ICompatVTTCue> = [];
   for (let i = 0; i < parsedCues.length; i++) {

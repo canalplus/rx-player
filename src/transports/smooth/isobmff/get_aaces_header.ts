@@ -21,20 +21,8 @@ import { bytesToHex } from "../../../utils/string_parsing";
  * Sampling frequencies defined in MPEG-4 Audio.
  * @type {Array.<Number>}
  */
-const SAMPLING_FREQUENCIES : number[] = [
-  96000,
-  88200,
-  64000,
-  48000,
-  44100,
-  32000,
-  24000,
-  22050,
-  16000,
-  12000,
-  11025,
-  8000,
-  7350,
+const SAMPLING_FREQUENCIES: number[] = [
+  96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350,
 ];
 
 /**
@@ -49,14 +37,14 @@ const SAMPLING_FREQUENCIES : number[] = [
  * @returns {string}
  */
 export default function getAacesHeader(
-  type : number,
-  frequency : number,
-  chans : number
-) : string {
+  type: number,
+  frequency: number,
+  chans: number,
+): string {
   const freq = SAMPLING_FREQUENCIES.indexOf(frequency); // TODO : handle Idx = 15...
   let val;
-  val = (type & 0x3F) << 0x4;
-  val = (val | (freq  & 0x1F)) << 0x4;
-  val = (val | (chans & 0x1F)) << 0x3;
+  val = (type & 0x3f) << 0x4;
+  val = (val | (freq & 0x1f)) << 0x4;
+  val = (val | (chans & 0x1f)) << 0x3;
   return bytesToHex(itobe2(val));
 }

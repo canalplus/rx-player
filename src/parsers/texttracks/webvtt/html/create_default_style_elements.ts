@@ -1,4 +1,4 @@
-import { IStyleElements } from "./parse_style_block";
+import type { IStyleElements } from "./parse_style_block";
 
 /**
  * Creates default classes defined in the W3 specification

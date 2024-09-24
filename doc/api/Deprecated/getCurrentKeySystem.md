@@ -16,4 +16,4 @@ Returns the type of keySystem used for DRM-protected contents.
 const keySystemName = player.getCurrentKeySystem();
 ```
 
- - **return value** `string|undefined`
+- **return value** `string|undefined`

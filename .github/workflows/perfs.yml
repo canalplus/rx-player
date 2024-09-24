@@ -1,22 +1,24 @@
 name: Performance tests
 on:
   pull_request:
-    types: [ labeled ]
+    types: [labeled]
 
 jobs:
- perf-tests:
-   if: ${{ github.event.label.name == 'Performance checks' }}
-   runs-on: [ubuntu-latest]
-   steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    # needed for integration & memory tests codecs support
-    - run: sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y ubuntu-restricted-extras
-    - run: npm install
-    - run: export DISPLAY=:99
-    - run: sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
-    - run: node tests/performance/run.js
+  perf-tests:
+    if: ${{ github.event.label.name == 'Performance checks' }}
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      # needed for integration & memory tests codecs support
+      - run:
+          sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
+          ubuntu-restricted-extras
+      - run: npm install
+      - run: export DISPLAY=:99
+      - run: sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
+      - run: node tests/performance/run.js

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {
+import type {
   IAdaptationSetIntermediateRepresentation,
   IBaseUrlIntermediateRepresentation,
   IPeriodAttributes,
@@ -22,37 +22,28 @@ import {
   IPeriodIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
 } from "../../node_parser_types";
-import {
-  createAdaptationSetIntermediateRepresentation,
-} from "./AdaptationSet";
+import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet";
 import parseBaseURL from "./BaseURL";
 import parseEventStream from "./EventStream";
 import parseSegmentTemplate from "./SegmentTemplate";
-import {
-  parseBoolean,
-  parseDuration,
-  ValueParser,
-} from "./utils";
+import { parseBoolean, parseDuration, ValueParser } from "./utils";
 
 /**
  * @param {NodeList} periodChildren
  * @returns {Array}
  */
-function parsePeriodChildren(
-  periodChildren : NodeList
-) : [IPeriodChildren, Error[]] {
-  const baseURLs : IBaseUrlIntermediateRepresentation[] = [];
-  const adaptations : IAdaptationSetIntermediateRepresentation[] = [];
-  let segmentTemplate : ISegmentTemplateIntermediateRepresentation | undefined;
+function parsePeriodChildren(periodChildren: NodeList): [IPeriodChildren, Error[]] {
+  const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
+  const adaptations: IAdaptationSetIntermediateRepresentation[] = [];
+  let segmentTemplate: ISegmentTemplateIntermediateRepresentation | undefined;
 
-  let warnings : Error[] = [];
+  let warnings: Error[] = [];
   const eventStreams = [];
   for (let i = 0; i < periodChildren.length; i++) {
     if (periodChildren[i].nodeType === Node.ELEMENT_NODE) {
       const currentElement = periodChildren[i] as Element;
 
       switch (currentElement.nodeName) {
-
         case "BaseURL":
           const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
           if (baseURLObj !== undefined) {
@@ -93,37 +84,40 @@ function parsePeriodChildren(
  * @param {Element} periodElement
  * @returns {Array}
  */
-function parsePeriodAttributes(
-  periodElement : Element
-) : [IPeriodAttributes, Error[]] {
-  const res : IPeriodAttributes = {};
-  const warnings : Error[] = [];
+function parsePeriodAttributes(periodElement: Element): [IPeriodAttributes, Error[]] {
+  const res: IPeriodAttributes = {};
+  const warnings: Error[] = [];
   const parseValue = ValueParser(res, warnings);
   for (let i = 0; i < periodElement.attributes.length; i++) {
     const attr = periodElement.attributes[i];
 
     switch (attr.name) {
-
       case "id":
         res.id = attr.value;
         break;
 
       case "start":
-        parseValue(attr.value, { asKey: "start",
-                                 parser: parseDuration,
-                                 dashName: "start" });
+        parseValue(attr.value, {
+          asKey: "start",
+          parser: parseDuration,
+          dashName: "start",
+        });
         break;
 
       case "duration":
-        parseValue(attr.value, { asKey: "duration",
-                                 parser: parseDuration,
-                                 dashName: "duration" });
+        parseValue(attr.value, {
+          asKey: "duration",
+          parser: parseDuration,
+          dashName: "duration",
+        });
         break;
 
       case "bitstreamSwitching":
-        parseValue(attr.value, { asKey: "bitstreamSwitching",
-                                 parser: parseBoolean,
-                                 dashName: "bitstreamSwitching" });
+        parseValue(attr.value, {
+          asKey: "bitstreamSwitching",
+          parser: parseBoolean,
+          dashName: "bitstreamSwitching",
+        });
         break;
 
       case "xlink:href":
@@ -143,8 +137,8 @@ function parsePeriodAttributes(
  * @returns {Array}
  */
 export function createPeriodIntermediateRepresentation(
-  periodElement : Element
-) : [IPeriodIntermediateRepresentation, Error[]] {
+  periodElement: Element,
+): [IPeriodIntermediateRepresentation, Error[]] {
   const [children, childrenWarnings] = parsePeriodChildren(periodElement.childNodes);
   const [attributes, attrsWarnings] = parsePeriodAttributes(periodElement);
   const warnings = childrenWarnings.concat(attrsWarnings);

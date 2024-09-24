@@ -20,7 +20,7 @@ describe("utils - WeakMapMemory", () => {
   it("should call the given function when `get` is first called", () => {
     const obj = {};
     let wasCalledCounter = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       expect(arg).toBe(obj);
       return ++wasCalledCounter;
     });
@@ -31,10 +31,10 @@ describe("utils - WeakMapMemory", () => {
 
   /* eslint-disable max-len */
   it("should not call the given function when `get` has already been called on this object", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const obj = {};
     let wasCalledCounter = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       expect(arg).toBe(obj);
       return ++wasCalledCounter;
     });
@@ -57,10 +57,10 @@ describe("utils - WeakMapMemory", () => {
 
   /* eslint-disable max-len */
   it("should remove from WeakMapMemory when destroy is called", () => {
-  /* eslint-enable max-len */
+    /* eslint-enable max-len */
     const obj = {};
     let wasCalledCounter = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       expect(arg).toBe(obj);
       return ++wasCalledCounter;
     });
@@ -88,7 +88,7 @@ describe("utils - WeakMapMemory", () => {
     let wasCalledCounter = 0;
     let obj1WasCalled = 0;
     let obj2WasCalled = 0;
-    const wwm = new WeakMapMemory((arg : unknown) => {
+    const wwm = new WeakMapMemory((arg: unknown) => {
       if (arg === obj1) {
         obj1WasCalled++;
       } else if (arg === obj2) {
@@ -144,7 +144,7 @@ describe("utils - WeakMapMemory", () => {
     let obj1WasCalled = 0;
     let obj2WasCalled = 0;
 
-    function func(arg : unknown) {
+    function func(arg: unknown) {
       if (arg === obj1) {
         obj1WasCalled++;
       } else if (arg === obj2) {

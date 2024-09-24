@@ -23,13 +23,13 @@
 
 describe("Compat - isVTTCue", () => {
   interface IFakeWindow {
-    VTTCue? : VTTCue | typeof MockVTTCue;
+    VTTCue?: VTTCue | typeof MockVTTCue;
   }
   class MockVTTCue {
-    public startTime : number;
-    public endTime : number;
-    public text : string;
-    constructor(start : number, end : number, text : string) {
+    public startTime: number;
+    public endTime: number;
+    public text: string;
+    constructor(start: number, end: number, text: string) {
       this.startTime = start;
       this.endTime = end;
       this.text = text;

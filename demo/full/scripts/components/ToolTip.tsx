@@ -1,9 +1,6 @@
 import * as React from "react";
 
-const {
-  useEffect,
-  useRef,
-} = React;
+const { useEffect, useRef } = React;
 
 function ToolTip({
   className,
@@ -19,7 +16,7 @@ function ToolTip({
   const wrapperEl = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isNaN(+xPosition) || !wrapperEl.current) {
-      return ;
+      return;
     }
 
     const rect = wrapperEl.current.getBoundingClientRect();
@@ -30,10 +27,8 @@ function ToolTip({
     wrapperEl.current.style.transform = `translate(${toSlideX}px, ${toSlideY}px)`;
   });
   return (
-    <div className="tooltip-wrapper" ref={wrapperEl} >
-      <pre className={"tooltip " + className} >
-        {text}
-      </pre>
+    <div className="tooltip-wrapper" ref={wrapperEl}>
+      <pre className={"tooltip " + className}>{text}</pre>
     </div>
   );
 }

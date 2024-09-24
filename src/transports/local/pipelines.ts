@@ -20,13 +20,12 @@
  */
 
 import Manifest from "../../manifest";
-import parseLocalManifest, {
-  ILocalManifest,
-} from "../../parsers/manifest/local";
-import { ILoadedManifestFormat } from "../../public_types";
+import type { ILocalManifest } from "../../parsers/manifest/local";
+import parseLocalManifest from "../../parsers/manifest/local";
+import type { ILoadedManifestFormat } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { CancellationSignal } from "../../utils/task_canceller";
-import {
+import type { CancellationSignal } from "../../utils/task_canceller";
+import type {
   IManifestLoaderOptions,
   IManifestParserResult,
   IRequestedData,
@@ -44,30 +43,30 @@ import textTrackParser from "./text_parser";
  * @returns {Object}
  */
 export default function getLocalManifestPipelines(
-  transportOptions : ITransportOptions
-) : ITransportPipelines {
-
+  transportOptions: ITransportOptions,
+): ITransportPipelines {
   const customManifestLoader = transportOptions.manifestLoader;
   const manifestPipeline = {
     loadManifest(
-      url : string | undefined,
-      loaderOptions : IManifestLoaderOptions,
-      cancelSignal : CancellationSignal
-    ) : Promise<IRequestedData<ILoadedManifestFormat>> {
+      url: string | undefined,
+      loaderOptions: IManifestLoaderOptions,
+      cancelSignal: CancellationSignal,
+    ): Promise<IRequestedData<ILoadedManifestFormat>> {
       if (isNullOrUndefined(customManifestLoader)) {
-        throw new Error("A local Manifest is not loadable through regular HTTP(S) " +
-                        " calls. You have to set a `manifestLoader` when calling " +
-                        "`loadVideo`");
+        throw new Error(
+          "A local Manifest is not loadable through regular HTTP(S) " +
+            " calls. You have to set a `manifestLoader` when calling " +
+            "`loadVideo`",
+        );
       }
-      return callCustomManifestLoader(
-        customManifestLoader,
-        () : never => {
-          throw new Error("Cannot fallback from the `manifestLoader` of a " +
-                          "`local` transport");
-        })(url, loaderOptions, cancelSignal);
+      return callCustomManifestLoader(customManifestLoader, (): never => {
+        throw new Error(
+          "Cannot fallback from the `manifestLoader` of a " + "`local` transport",
+        );
+      })(url, loaderOptions, cancelSignal);
     },
 
-    parseManifest(manifestData : IRequestedData<unknown>) : IManifestParserResult {
+    parseManifest(manifestData: IRequestedData<unknown>): IManifestParserResult {
       const loadedManifest = manifestData.responseData;
       if (typeof manifestData !== "object") {
         throw new Error("Wrong format for the manifest data");
@@ -78,23 +77,23 @@ export default function getLocalManifestPipelines(
     },
   };
 
-  const segmentPipeline = { loadSegment: segmentLoader,
-                            parseSegment: segmentParser };
-  const textTrackPipeline = { loadSegment: segmentLoader,
-                              parseSegment: textTrackParser };
+  const segmentPipeline = { loadSegment: segmentLoader, parseSegment: segmentParser };
+  const textTrackPipeline = { loadSegment: segmentLoader, parseSegment: textTrackParser };
 
   const imageTrackPipeline = {
-    loadSegment:  () : never => {
+    loadSegment: (): never => {
       throw new Error("Images track not supported in local transport.");
     },
-    parseSegment: () : never => {
+    parseSegment: (): never => {
       throw new Error("Images track not supported in local transport.");
     },
   };
 
-  return { manifest: manifestPipeline,
-           audio: segmentPipeline,
-           video: segmentPipeline,
-           text: textTrackPipeline,
-           image: imageTrackPipeline };
+  return {
+    manifest: manifestPipeline,
+    audio: segmentPipeline,
+    video: segmentPipeline,
+    text: textTrackPipeline,
+    image: imageTrackPipeline,
+  };
 }

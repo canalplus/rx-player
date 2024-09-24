@@ -87,14 +87,12 @@ describe("compat - parseWebkitSourceBuffer", () => {
     win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    win.WebKitSourceBuffer.prototype.appendBuffer.call(
-      {
-        updating: false,
-        trigger: mockTrigger,
-        _emitUpdate: _mockEmitUpdate,
-        append: mockAppend,
-      }
-    );
+    win.WebKitSourceBuffer.prototype.appendBuffer.call({
+      updating: false,
+      trigger: mockTrigger,
+      _emitUpdate: _mockEmitUpdate,
+      append: mockAppend,
+    });
 
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
@@ -113,13 +111,11 @@ describe("compat - parseWebkitSourceBuffer", () => {
     win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    win.WebKitSourceBuffer.prototype.appendBuffer.call(
-      {
-        updating: false,
-        trigger: mockTrigger,
-        _emitUpdate: _mockEmitUpdate,
-      }
-    );
+    win.WebKitSourceBuffer.prototype.appendBuffer.call({
+      updating: false,
+      trigger: mockTrigger,
+      _emitUpdate: _mockEmitUpdate,
+    });
 
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("updatestart");
@@ -136,9 +132,9 @@ describe("compat - parseWebkitSourceBuffer", () => {
     win.WebKitSourceBuffer = mockWebKitSourceBuffer;
     patchWebkitSourceBuffer();
 
-    expect(() => win.WebKitSourceBuffer.prototype.appendBuffer.call(
-      { updating: true }
-    )).toThrowError("updating");
+    expect(() =>
+      win.WebKitSourceBuffer.prototype.appendBuffer.call({ updating: true }),
+    ).toThrowError("updating");
     win.WebKitSourceBuffer = origWebKitSourceBuffer;
   });
 });

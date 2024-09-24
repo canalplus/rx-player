@@ -31,35 +31,33 @@ function PlayerOptionNumberInput({
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       onUpdateValue(evt.target.value);
     },
-    [onUpdateValue]
+    [onUpdateValue],
   );
-  return <div className="playerOptionInput">
-    <label htmlFor={label}>{title}</label>
-    <span className="wrapperInputWithResetBtn">
-      <input
-        type="text"
-        name={label}
-        aria-label={ariaLabel}
-        placeholder="Number"
-        onChange={onInputChange}
-        value={valueAsString}
-        disabled={isDisabled}
-        className="optionInput"
-      />
-      <Button
-        disabled={shouldBeDisabled}
-        className={
-          shouldBeDisabled
-            ? "resetBtn disabledResetBtn"
-            : "resetBtn"
-        }
-        ariaLabel="Reset option to default value"
-        title="Reset option to default value"
-        onClick={onResetClick}
-        value={String.fromCharCode(0xf021)}
-      />
-    </span>
-  </div>;
+  return (
+    <div className="playerOptionInput">
+      <label htmlFor={label}>{title}</label>
+      <span className="wrapperInputWithResetBtn">
+        <input
+          type="text"
+          name={label}
+          aria-label={ariaLabel}
+          placeholder="Number"
+          onChange={onInputChange}
+          value={valueAsString}
+          disabled={isDisabled}
+          className="optionInput"
+        />
+        <Button
+          disabled={shouldBeDisabled}
+          className={shouldBeDisabled ? "resetBtn disabledResetBtn" : "resetBtn"}
+          ariaLabel="Reset option to default value"
+          title="Reset option to default value"
+          onClick={onResetClick}
+          value={String.fromCharCode(0xf021)}
+        />
+      </span>
+    </div>
+  );
 }
 
 export default PlayerOptionNumberInput;

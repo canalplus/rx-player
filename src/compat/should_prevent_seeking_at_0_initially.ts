@@ -13,7 +13,6 @@ import { isIEOrEdge, isXbox } from "./browser_detection";
  * the non-standard behavior of those Edge platforms.
  * @returns {number}
  */
-export default function shouldPreventSeekingAt0Initially(
-): boolean {
+export default function shouldPreventSeekingAt0Initially(): boolean {
   return isXbox || isIEOrEdge;
 }

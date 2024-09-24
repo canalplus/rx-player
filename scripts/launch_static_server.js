@@ -48,10 +48,11 @@ const getHumanReadableHours = require("./utils/get_human_readable_hours");
  *     and to free their resources.
  */
 module.exports = function launchStaticServer(path, config) {
-  const shouldStartHttps = config.httpsPort !== undefined &&
-                           config.certificatePath !== undefined &&
-                           config.keyPath !== undefined;
-  let isHttpServerStarted = false
+  const shouldStartHttps =
+    config.httpsPort !== undefined &&
+    config.certificatePath !== undefined &&
+    config.keyPath !== undefined;
+  let isHttpServerStarted = false;
   let isHttpsServerStarted = false;
 
   const app = express();
@@ -63,17 +64,21 @@ module.exports = function launchStaticServer(path, config) {
       if (err) {
         if (config.verbose) {
           /* eslint-disable-next-line no-console */
-          console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
-                        "Could not start static HTTP server:",
-                        err);
+          console.error(
+            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
+              "Could not start static HTTP server:",
+            err,
+          );
         }
         server.close();
         return rej(err);
       }
       if (config.verbose) {
         /* eslint-disable-next-line no-console */
-        console.log(`[${getHumanReadableHours()}] ` +
-                    `Listening HTTP at http://localhost:${config.httpPort}`);
+        console.log(
+          `[${getHumanReadableHours()}] ` +
+            `Listening HTTP at http://localhost:${config.httpPort}`,
+        );
       }
       isHttpServerStarted = true;
       if (!shouldStartHttps || isHttpsServerStarted) {
@@ -88,76 +93,95 @@ module.exports = function launchStaticServer(path, config) {
     Promise.all([
       promisify(fs.readFile)(config.certificatePath),
       promisify(fs.readFile)(config.keyPath),
-    ]).then(([certFile, keyFile]) => {
-      if (certFile != null && keyFile != null) {
-        https.createServer({
-          key: keyFile,
-          cert: certFile,
-        }, app).listen(config.httpsPort, (err) => {
-          if (err) {
-            if (config.verbose) {
+    ]).then(
+      ([certFile, keyFile]) => {
+        if (certFile != null && keyFile != null) {
+          https
+            .createServer(
+              {
+                key: keyFile,
+                cert: certFile,
+              },
+              app,
+            )
+            .listen(config.httpsPort, (err) => {
+              if (err) {
+                if (config.verbose) {
+                  /* eslint-disable-next-line no-console */
+                  console.error(
+                    `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
+                      "Could not start static HTTPS server:",
+                    err,
+                  );
+                }
+                if (isHttpServerStarted) {
+                  res({ http: true, https: false });
+                }
+                return;
+              }
               /* eslint-disable-next-line no-console */
-              console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
-                            "Could not start static HTTPS server:",
-                            err);
-            }
-            if (isHttpServerStarted) {
-              res({ http: true, https: false });
-            }
-            return;
+              console.log(
+                `[${getHumanReadableHours()}] ` +
+                  `Listening HTTPS at https://localhost:${config.httpsPort}`,
+              );
+            });
+          if (isHttpServerStarted) {
+            res();
           }
-          /* eslint-disable-next-line no-console */
-          console.log(`[${getHumanReadableHours()}] ` +
-                      `Listening HTTPS at https://localhost:${config.httpsPort}`);
-        });
-        if (isHttpServerStarted) {
-          res();
+          isHttpsServerStarted = true;
+        } else {
+          const err = new Error("Impossible to load the certificate and/or key file");
+          if (config.verbose === true) {
+            /* eslint-disable-next-line no-console */
+            console.error(
+              `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
+                "Could not start static HTTPS server:",
+              err,
+            );
+          }
+          if (isHttpServerStarted) {
+            res({ http: true, https: false });
+          }
+          return;
         }
-        isHttpsServerStarted = true;
-      } else {
-        const err = new Error("Impossible to load the certificate and/or key file");
-        if (config.verbose === true) {
-          /* eslint-disable-next-line no-console */
-          console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
-                        "Could not start static HTTPS server:",
-                        err);
+      },
+      (err) => {
+        if (err.code === "ENOENT") {
+          if (config.verbose) {
+            /* eslint-disable-next-line no-console */
+            console.warn(
+              `[${getHumanReadableHours()}] ` + "Could not start static HTTPS server: ",
+              "Certificate not generated.\n" +
+                "(You can run `npm run certificate` to generate a certificate.)",
+            );
+          }
+          if (isHttpServerStarted) {
+            res({ http: true, https: false });
+          }
+          return;
+        } else {
+          const err = new Error("Could not read key and certificate file.");
+          if (config.verbose) {
+            /* eslint-disable-next-line no-console */
+            console.error(
+              `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
+                "Could not start static HTTPS server:",
+              err,
+            );
+          }
+          if (isHttpServerStarted) {
+            res({ http: true, https: false });
+          }
+          return;
         }
-        if (isHttpServerStarted) {
-          res({ http: true, https: false });
-        }
-        return;
-      }
-    }, (err) => {
-      if (err.code === "ENOENT") {
-        if (config.verbose) {
-          /* eslint-disable-next-line no-console */
-          console.warn(`[${getHumanReadableHours()}] ` +
-                       "Could not start static HTTPS server: ",
-                       "Certificate not generated.\n" +
-                       "(You can run `npm run certificate` to generate a certificate.)");
-        }
-        if (isHttpServerStarted) {
-          res({ http: true, https: false });
-        }
-        return;
-      } else {
-        const err = new Error("Could not read key and certificate file.");
-        if (config.verbose) {
-          /* eslint-disable-next-line no-console */
-          console.error(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
-                        "Could not start static HTTPS server:",
-                        err);
-        }
-        if (isHttpServerStarted) {
-          res({ http: true, https: false });
-        }
-        return;
-      }
-    });
+      },
+    );
   });
 
   return {
     listeningPromise,
-    close() { server.close() },
+    close() {
+      server.close();
+    },
   };
 };

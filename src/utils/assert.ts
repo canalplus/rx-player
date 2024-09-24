@@ -23,16 +23,12 @@ import isNullOrUndefined from "./is_null_or_undefined";
  * @param {string} [message] - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
  */
-export default function assert(
-  assertion : boolean,
-  message? : string
-) : asserts assertion {
+export default function assert(assertion: boolean, message?: string): asserts assertion {
   if (
-    __ENVIRONMENT__.DEV as number === __ENVIRONMENT__.CURRENT_ENV as number
-    && !assertion
+    (__ENVIRONMENT__.DEV as number) === (__ENVIRONMENT__.CURRENT_ENV as number) &&
+    !assertion
   ) {
-    throw new AssertionError(message === undefined ? "invalid assertion" :
-                                                     message);
+    throw new AssertionError(message === undefined ? "invalid assertion" : message);
   }
 }
 
@@ -50,14 +46,17 @@ type IObjectInterface<T> = Partial<Record<keyof T, string>>;
 export function assertInterface<T>(
   o: T,
   iface: IObjectInterface<T>,
-  name: string = "object"
-) : void {
+  name: string = "object",
+): void {
   assert(!isNullOrUndefined(o), `${name} should be an object`);
   for (const k in iface) {
     if (iface.hasOwnProperty(k)) {
       /* eslint-disable max-len  */
       /* eslint-disable @typescript-eslint/restrict-template-expressions */
-      assert(typeof o[k] === iface[k], `${name} should have property ${k} as a ${iface[k]}`);
+      assert(
+        typeof o[k] === iface[k],
+        `${name} should have property ${k} as a ${iface[k]}`,
+      );
       /* eslint-enable max-len */
       /* eslint-enable @typescript-eslint/restrict-template-expressions */
     }

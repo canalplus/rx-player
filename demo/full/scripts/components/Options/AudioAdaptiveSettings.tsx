@@ -29,29 +29,25 @@ function AudioAdaptiveSettings({
 }): JSX.Element {
   /* Value of the `initialAudioBitrate` input */
   const [initialAudioBitrateStr, setInitialAudioBitrateStr] = useState(
-    String(initialAudioBitrate)
+    String(initialAudioBitrate),
   );
   /* Value of the `minAudioBitrate` input */
-  const [minAudioBitrateStr, setMinAudioBitrateStr] = useState(
-    String(minAudioBitrate)
-  );
+  const [minAudioBitrateStr, setMinAudioBitrateStr] = useState(String(minAudioBitrate));
   /* Value of the `maxAudioBitrate` input */
-  const [maxAudioBitrateStr, setMaxAudioBitrateStr] = useState(
-    String(maxAudioBitrate)
-  );
+  const [maxAudioBitrateStr, setMaxAudioBitrateStr] = useState(String(maxAudioBitrate));
   /*
    * Keep track of the "limit minAudioBitrate" toggle:
    * `false` == checkbox enabled
    */
   const [isMinAudioBitrateLimited, setMinAudioBitrateLimit] = useState(
-    minAudioBitrate !== 0
+    minAudioBitrate !== 0,
   );
   /*
    * Keep track of the "limit maxAudioBitrate" toggle:
    * `false` == checkbox enabled
    */
   const [isMaxAudioBitrateLimited, setMaxAudioBitrateLimit] = useState(
-    maxAudioBitrate !== Infinity
+    maxAudioBitrate !== Infinity,
   );
 
   // Update initialAudioBitrate when its linked text change
@@ -60,51 +56,43 @@ function AudioAdaptiveSettings({
     // no quick and easy way to disable this in react.
     // This is not too problematic so I put up with it.
     let newBitrate = parseFloat(initialAudioBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_INITIAL_AUDIO_BITRATE :
-      newBitrate;
+    newBitrate = isNaN(newBitrate) ? DEFAULT_INITIAL_AUDIO_BITRATE : newBitrate;
     onInitialAudioBitrateChange(newBitrate);
   }, [initialAudioBitrateStr]);
 
   // Update minAudioBitrate when its linked text change
   useEffect(() => {
     let newBitrate = parseFloat(minAudioBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_MIN_AUDIO_BITRATE :
-      newBitrate;
+    newBitrate = isNaN(newBitrate) ? DEFAULT_MIN_AUDIO_BITRATE : newBitrate;
     onMinAudioBitrateChange(newBitrate);
   }, [minAudioBitrateStr]);
 
   // Update maxAudioBitrate when its linked text change
   useEffect(() => {
     let newBitrate = parseFloat(maxAudioBitrateStr);
-    newBitrate = isNaN(newBitrate) ?
-      DEFAULT_MAX_AUDIO_BITRATE :
-      newBitrate;
+    newBitrate = isNaN(newBitrate) ? DEFAULT_MAX_AUDIO_BITRATE : newBitrate;
     onMaxAudioBitrateChange(newBitrate);
   }, [maxAudioBitrateStr]);
 
-  const onChangeLimitMinAudioBitrate = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited) {
-        setMinAudioBitrateLimit(false);
-        setMinAudioBitrateStr(String(0));
-      } else {
-        setMinAudioBitrateLimit(true);
-        setMinAudioBitrateStr(String(DEFAULT_MIN_AUDIO_BITRATE));
-      }
-    }, []);
+  const onChangeLimitMinAudioBitrate = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMinAudioBitrateLimit(false);
+      setMinAudioBitrateStr(String(0));
+    } else {
+      setMinAudioBitrateLimit(true);
+      setMinAudioBitrateStr(String(DEFAULT_MIN_AUDIO_BITRATE));
+    }
+  }, []);
 
-  const onChangeLimitMaxAudioBitrate = useCallback(
-    (isNotLimited: boolean) => {
-      if (isNotLimited) {
-        setMaxAudioBitrateLimit(false);
-        setMaxAudioBitrateStr(String(Infinity));
-      } else {
-        setMaxAudioBitrateLimit(true);
-        setMaxAudioBitrateStr(String(DEFAULT_MAX_AUDIO_BITRATE));
-      }
-    }, []);
+  const onChangeLimitMaxAudioBitrate = useCallback((isNotLimited: boolean) => {
+    if (isNotLimited) {
+      setMaxAudioBitrateLimit(false);
+      setMaxAudioBitrateStr(String(Infinity));
+    } else {
+      setMaxAudioBitrateLimit(true);
+      setMaxAudioBitrateStr(String(DEFAULT_MAX_AUDIO_BITRATE));
+    }
+  }, []);
 
   const onInitialAudioBitrateResetClick = useCallback(() => {
     setInitialAudioBitrateStr(String(DEFAULT_INITIAL_AUDIO_BITRATE));
@@ -134,12 +122,10 @@ function AudioAdaptiveSettings({
           onResetClick={onInitialAudioBitrateResetClick}
         />
         <span className="option-desc">
-          {
-            initialAudioBitrate === 0 ?
-              "Starts loading the lowest audio bitrate" :
-              `Starts with an audio bandwidth estimate of ${initialAudioBitrate}` +
-              " bits per seconds."
-          }
+          {initialAudioBitrate === 0
+            ? "Starts loading the lowest audio bitrate"
+            : `Starts with an audio bandwidth estimate of ${initialAudioBitrate}` +
+              " bits per seconds."}
         </span>
       </li>
       <li>
@@ -163,12 +149,10 @@ function AudioAdaptiveSettings({
           {"Do not limit"}
         </Checkbox>
         <span className="option-desc">
-          {
-            !isMinAudioBitrateLimited || minAudioBitrate <= 0 ?
-              "Not limiting the lowest audio bitrate reachable through the adaptive logic" :
-              "Limiting the lowest audio bitrate reachable through the adaptive " +
-              `logic to ${minAudioBitrate} bits per seconds`
-          }
+          {!isMinAudioBitrateLimited || minAudioBitrate <= 0
+            ? "Not limiting the lowest audio bitrate reachable through the adaptive logic"
+            : "Limiting the lowest audio bitrate reachable through the adaptive " +
+              `logic to ${minAudioBitrate} bits per seconds`}
         </span>
       </li>
       <li>
@@ -194,13 +178,11 @@ function AudioAdaptiveSettings({
           </Checkbox>
         </div>
         <span className="option-desc">
-          {
-            !isMaxAudioBitrateLimited || maxAudioBitrate === Infinity ?
-              "Not limiting the highest audio bitrate reachable through " +
-                "the adaptive logic" :
-              "Limiting the highest audio bitrate reachable through the " +
-                `adaptive logic to ${maxAudioBitrate} bits per seconds`
-          }
+          {!isMaxAudioBitrateLimited || maxAudioBitrate === Infinity
+            ? "Not limiting the highest audio bitrate reachable through " +
+              "the adaptive logic"
+            : "Limiting the highest audio bitrate reachable through the " +
+              `adaptive logic to ${maxAudioBitrate} bits per seconds`}
         </span>
       </li>
     </Fragment>

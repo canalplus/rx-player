@@ -37,7 +37,7 @@
  * Use with these cases in mind.
  * @returns {Boolean}
  */
-export default function isOffline() : boolean {
+export default function isOffline(): boolean {
   /* eslint-disable @typescript-eslint/no-unnecessary-boolean-literal-compare */
   return navigator.onLine === false;
   /* eslint-enable @typescript-eslint/no-unnecessary-boolean-literal-compare */

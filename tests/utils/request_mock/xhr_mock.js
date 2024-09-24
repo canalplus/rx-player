@@ -40,7 +40,7 @@ export default class XHRMock {
           return false;
         }
 
-        const [ method, url ] = args;
+        const [method, url] = args;
         if (url === "" || url == null) {
           return false;
         }
@@ -60,10 +60,13 @@ export default class XHRMock {
       };
 
       xhr._onSend = (data) => {
-        if (!xhr.async) { // We sadly cannot manage those without breaking stuff
+        if (!xhr.async) {
+          // We sadly cannot manage those without breaking stuff
           /* eslint-disable-next-line no-console */
-          console.warn("XHRMock: A non-async XMLHttpRequest was sent.",
-                       "Sending immediately.");
+          console.warn(
+            "XHRMock: A non-async XMLHttpRequest was sent.",
+            "Sending immediately.",
+          );
 
           this.__xhrSend(xhr, data);
         } else if (!this.isLocked) {
@@ -126,11 +129,12 @@ export default class XHRMock {
    * @returns {Array.<Object>}
    */
   getLockedXHR() {
-    return this._sendingQueue.map(req => ({
+    return this._sendingQueue.map((req) => ({
       xhr: req.xhr,
       requestHeadersSet: req.requestHeadersSet,
       method: req.xhr.method,
-      url: req.xhr.url }));
+      url: req.xhr.url,
+    }));
   }
 
   /**
@@ -160,8 +164,8 @@ export default class XHRMock {
   flush(nbrOfRequests) {
     const len = this._sendingQueue.length;
     const proms = [];
-    const nbrOfRequestsToFlush = nbrOfRequests !== undefined ?
-      Math.min(len, nbrOfRequests) : len;
+    const nbrOfRequestsToFlush =
+      nbrOfRequests !== undefined ? Math.min(len, nbrOfRequests) : len;
     const nbrOfRequestThatStays = len - nbrOfRequestsToFlush;
     while (this._sendingQueue.length > nbrOfRequestThatStays) {
       const { xhr, data } = this._sendingQueue.shift();
