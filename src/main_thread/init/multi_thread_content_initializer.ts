@@ -1103,9 +1103,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     };
 
+    const onmessageerror = (_msg: MessageEvent) => {
+      log.error("MTCI: Error when receiving message from worker.");
+    };
+
     this._settings.worker.addEventListener("message", onmessage);
+    this._settings.worker.addEventListener("messageerror", onmessageerror);
     this._initCanceller.signal.register(() => {
       this._settings.worker.removeEventListener("message", onmessage);
+      this._settings.worker.removeEventListener("messageerror", onmessageerror);
     });
   }
 
