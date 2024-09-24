@@ -45,18 +45,23 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     process.exit(0);
   }
   const devMode = argv.includes("-d") || argv.includes("--dev-mode");
+  const noCheck = argv.includes("-n") || argv.includes("--no-check");
   generateBuild({
     devMode,
+    noCheck,
   });
 }
 
 /**
  * @param {Object|undefined} options
+ * @param {boolean|undefined} [options.devMode]
+ * @param {boolean|undefined} [options.noCheck]
  * @returns {Promise}
  */
 export default async function generateBuild(options = {}) {
   try {
     const devMode = options.devMode === true;
+    const noCheck = options.noCheck === true;
     console.log(" 🧹 Removing previous build artefacts...");
     await removePreviousBuildArtefacts();
 
@@ -94,7 +99,7 @@ export default async function generateBuild(options = {}) {
     await generateEmbeds();
 
     console.log(" ⚙️ Compiling project with TypeScript...");
-    await compile(devMode);
+    await compile({ devMode, noCheck });
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.message : err);
     process.exit(1);
@@ -118,10 +123,12 @@ async function removePreviousBuildArtefacts() {
 
 /**
  * Compile the project by spawning a separate procress running TypeScript.
- * @param {boolean} devMode
+ * @param {Object} opts
+ * @param {boolean} opts.devMode
+ * @param {boolean} opts.noCheck
  * @returns {Promise}
  */
-async function compile(devMode) {
+async function compile(opts) {
   // Sadly TypeScript compiler API seems to be sub-par.
   // I did not find for example how to exclude some files (our unit tests)
   // easily by running typescript directly from NodeJS.
@@ -129,7 +136,10 @@ async function compile(devMode) {
   await Promise.all([
     spawnProm(
       "npx tsc -p",
-      [path.join(ROOT_DIR, devMode ? "tsconfig.dev.json" : "tsconfig.json")],
+      [
+        path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json"),
+        opts.noCheck ? "--noCheck" : "",
+      ],
       (code) => new Error(`CommonJS compilation process exited with code ${code}`),
     ),
     spawnProm(
@@ -137,8 +147,9 @@ async function compile(devMode) {
       [
         path.join(
           ROOT_DIR,
-          devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
+          opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
         ),
+        opts.noCheck ? "--noCheck" : "",
       ],
       (code) => new Error(`es2018 compilation process exited with code ${code}`),
     ),
@@ -170,6 +181,7 @@ function displayHelp() {
     `Usage: node build_worker.mjs [options]
 Options:
   -h, --help             Display this help
-  -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)`,
+  -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)
+  -n, --no-check         Skip type checking for inputed files.`,
   );
 }

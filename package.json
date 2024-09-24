@@ -146,8 +146,10 @@
   "sideEffects": false,
   "scripts": {
     "build": "./scripts/generate_build.mjs",
+    "build:noCheck": "./scripts/generate_build.mjs --no-check",
     "build:all": "npm run clean:build && npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
     "build:dev": "./scripts/generate_build.mjs --dev-mode",
+    "build:dev:noCheck": "./scripts/generate_build.mjs --dev-mode --no-check",
     "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "./scripts/build_wasm_release.sh",
     "bundle": "./scripts/run_bundler.mjs src/index.ts --production-mode --globals -o dist/rx-player.js",
@@ -271,7 +273,9 @@
     "Build the player or one of its sub-parts": {
       "Regular builds (used by JS bundlers)": {
         "build": "Build the rx-player code in release mode",
-        "build:dev": "Build the rx-player code in development mode (more runtime checks, non-minified worker)"
+        "build:dev": "Build the rx-player code in development mode (more runtime checks, non-minified worker)",
+        "build:noCheck": "Build the rx-player code in release mode without performing compile-time type checks",
+        "build:dev:noCheck": "Build the rx-player code in development mode (more runtime checks, non-minified worker) without performing compile-time type checks"
       },
       "Legacy bundle builds (single-file bundles exporting to window.RxPlayer)": {
         "bundle": "Build the player in dist/rx-player.js",

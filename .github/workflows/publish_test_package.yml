@@ -51,7 +51,7 @@ jobs:
         run: npm ci
 
       - name: Build Library
-        run: npm run build
+        run: npm run build:noCheck
 
       - name: Create archive
         run: echo "npm-pack=$(npm pack)" >> $GITHUB_OUTPUT
