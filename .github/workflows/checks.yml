@@ -26,7 +26,7 @@ jobs:
         with:
           toolchain: stable
 
-      - run: npm install
+      - run: npm ci
       - run: rustup target add wasm32-unknown-unknown
       - run: npm run fmt:prettier:check
       - run: npm run fmt:rust:check
@@ -46,7 +46,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - run: npm install
+      - run: npm ci
       - run: npm run check
 
   unit_tests:
@@ -64,7 +64,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - run: npm install
+      - run: npm ci
       - run: npm run test:unit
 
   integration_linux:
@@ -86,7 +86,7 @@ jobs:
       - run:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
-      - run: npm install
+      - run: npm ci
       - run: npm run build
       - run: npm run test:integration
 
@@ -109,5 +109,5 @@ jobs:
       - run:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
-      - run: npm install
+      - run: npm ci
       - run: npm run test:memory
