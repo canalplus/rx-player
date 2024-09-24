@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024091600
+## Current dev build: v4.2.0-dev.2024092400
 
 ### Features
 
@@ -14,6 +14,7 @@
   information on ALL representations, even those that won't be played [#1501]
 - Add `LogFormat` static property to the `RxPlayer` to try improving on bug reports
   [#1469]
+- Experimentally re-export config in v4 (only intended for debugging matters) [#1510]
 
 ### Bug fixes
 
@@ -22,6 +23,10 @@
 - Work-around the "hulu issue" seen on firefox 129 and 130 (`1911283` and `1912238` on
   bugzilla) which also impacted the RxPlayer [#1495, #1498]
 - Fix rare cases where the active Period would not be advertised by the RxPlayer [#1502]
+- Actually trigger a `BUFFER_FULL_ERROR` when `QuotaExceededError` mitigations after
+  `appendBuffer` MSE calls don't work #1546
+- Fix issue if a `QuotaExceededError` after an `appendBuffer` MSE call is received while
+  the current position is `0` [#1546]
 - DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV, and `KSTB40XX`
   set-top boxes [#1515]
 - DRM/Compat: fix content not starting on Safari because key are never considered usable
@@ -38,6 +43,8 @@
 - DASH: provide a more precize calculation for the timeshift buffer depth [#1483]
 - Handle `hev1` codec and `hvc1` codecs as part of the same family of codecs when trying
   to check for compatibility between the two [#1499]
+- Better handle `QuotaExceededError` issue after `appendBuffer` MSE calls when
+  `wantedBufferAhead` is set to `Infinity` [#1546]
 - Code: Forbid the direct usage of MSE and HTML5 media TypeScript type in profit of our
   own compatible ones to facilitate testing and the addition of platform-specific
   differences [#1397].
