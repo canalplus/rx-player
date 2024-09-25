@@ -350,6 +350,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         if (
           mimeType === "application/ttml+xml+mp4" ||
           lcCodec === "stpp" ||
+          lcCodec === "stpp.ttml" ||
           lcCodec === "stpp.ttml.im1t"
         ) {
           _sdType = "ttml";
