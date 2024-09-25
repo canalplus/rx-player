@@ -169,7 +169,7 @@ export default class BufferSizeEstimator {
         }
 
         if (this._lastMaxVideoBufferSizeLimits.length >= 3) {
-          bufferSize = Math.min(...this._lastMaxVideoBufferSizeLimits);
+          bufferSize = Math.min(...this._lastMaxVideoBufferSizeLimits) * 0.75;
           log.warn("BSE: Locking minimum maxVideoBufferSize long term", bufferSize);
           this._lockUntil = Infinity;
           const toRemove = this._lastMaxVideoBufferSizeLimits.length - 10;
@@ -182,7 +182,7 @@ export default class BufferSizeEstimator {
         this._maxVideoBufferSize.setValue(bufferSize);
       }
 
-      const newWantedBufferAhead = Math.max(5, baseWantedBufferAhead - 7);
+      const newWantedBufferAhead = Math.max(5, baseWantedBufferAhead - 8);
       if (newWantedBufferAhead < baseWantedBufferAhead) {
         log.warn(
           "BSE: Lowering wantedBufferAhead: ",
