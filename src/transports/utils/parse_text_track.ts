@@ -45,6 +45,7 @@ export function getISOBMFFTextTrackFormat(
   }
   switch (codec.toLowerCase()) {
     case "stpp": // stpp === TTML in MP4
+    case "stpp.ttml":
     case "stpp.ttml.im1t":
       return "ttml";
     case "wvtt": // wvtt === WebVTT in MP4
