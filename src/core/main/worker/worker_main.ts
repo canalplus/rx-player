@@ -80,6 +80,9 @@ export default function initializeWorkerMain() {
    */
   let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
 
+  onmessageerror = (_msg: MessageEvent) => {
+    log.error("MTCI: Error when receiving message from main thread.");
+  };
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
     log.debug("Worker: received message", e.data.type);
 
