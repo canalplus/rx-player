@@ -67,25 +67,24 @@ canal_version="${version}-canal.${date}${incr}"
 dev_branch="release/v${dev_version}"
 canal_branch="release/v${canal_version}"
 
-if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Please commit your modifications to \"${current_branch}\" first"
-  exit 1
+if [ -n "$(git status --porcelain)" ]; then
+  err "There is unstaged changes in your worktree. Please commit your changes or stash them before creating the release."
 fi
 
 echo "This script will create the dev versions: $dev_version and $canal_version"
 
 echo "checking that the branches do not already exist locally or remotely..."
 if ! [ -z $(git branch --list "$dev_branch") ]; then
-  err "Branch name "$dev_branch" already exists locally. Please delete it first."
+  err "Branch name \"$dev_branch\" already exists locally. Please delete it first."
 fi
 if ! [ -z $(git branch --list "$canal_branch") ]; then
-  err "Branch name "canal_branch" already exists locally. Please delete it first."
+  err "Branch name \"$canal_branch\" already exists locally. Please delete it first."
 fi
 if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$dev_branch") ]; then
-  err "Branch name "$dev_branch" already exists remotely. Please delete it first."
+  err "Branch name \"$dev_branch\" already exists remotely. Please delete it first."
 fi
 if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$canal_branch") ]; then
-  err "Branch name "$canal_branch" already exists remotely. Please delete it first."
+  err "Branch name \"$canal_branch\" already exists remotely. Please delete it first."
 fi
 
 echo "checking that the versions are not already published on npm..."
@@ -144,9 +143,8 @@ if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
   done
 fi
 
-if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Unexpected diff in \"${current_branch}\""
-  exit 1
+if [ -n "$(git status --porcelain)" ]; then
+  err "Unexpected diff in \"${current_branch}\""
 fi
 
 git checkout -b ${dev_branch}
