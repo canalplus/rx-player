@@ -63,17 +63,19 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
 
   try {
-    await runBundler(normalizedPath, {
+    runBundler(normalizedPath, {
       watch: shouldWatch,
       minify: shouldMinify,
       production,
       globalScope,
       silent,
       outfile,
+    }).catch((err) => {
+      console.error(`ERROR: ${err}\n`);
+      process.exit(1);
     });
   } catch (err) {
     console.error(`ERROR: ${err}\n`);
-    displayHelp();
     process.exit(1);
   }
 }
