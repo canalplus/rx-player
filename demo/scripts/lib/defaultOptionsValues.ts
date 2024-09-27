@@ -11,10 +11,10 @@ const defaultOptionsValues = {
     maxBufferBehind: Infinity,
     maxVideoBufferSize: Infinity,
     throttleVideoBitrateWhenHidden: false,
-    wantedBufferAhead: 30,
+    wantedBufferAhead: 10,
   },
   loadVideo: {
-    autoPlay: true,
+    autoPlay: false,
     checkManifestIntegrity: false,
     checkMediaSegmentIntegrity: false,
     cmcd: undefined as ICmcdOptions | undefined,

@@ -63,51 +63,51 @@ export default class BufferSizeEstimator {
       return;
     }
 
-    if (
-      !this._removing &&
-      gced.length === 0 &&
-      buffered.length > 0 &&
-      buffered[buffered.length - 1].end - position > baseWantedBufferAhead - 1 &&
-      position > 10 &&
-      position - buffered[0].start > baseWantedBufferAhead
-    ) {
-      if (this._lockUntil !== null) {
-        if (this._lockUntil <= now) {
-          log.warn("BSE: Lock time ended");
-          if (trackType === "video") {
-            this._maxVideoBufferSize.setValue(Infinity);
-          }
-          this._lockUntil = null;
-        }
-        return;
-      }
-
-      const sinks = [segmentSink];
-      const otherTrackType = trackType === "video" ? "audio" : "video";
-      const otherSinkStatus = this._segmentSinkStore.getStatus(otherTrackType);
-      if (otherSinkStatus.type === "initialized") {
-        sinks.push(otherSinkStatus.value);
-      }
-      log.warn("BSE: Removing buffer behind", position - 10);
-      this._removing = true;
-      await Promise.all([
-        ...sinks.map((s) => s.removeBuffer(0, position - 10)),
-        ...sinks.map((s) =>
-          s.removeBuffer(position + baseWantedBufferAhead + 20, Number.MAX_VALUE),
-        ),
-      ]);
-      this._removing = false;
-      const newWantedBufferAhead = baseWantedBufferAhead + 6;
-      log.warn(
-        "BSE: We have a big buffer behind raising `wantedBufferAhead`.",
-        baseWantedBufferAhead,
-        newWantedBufferAhead,
-      );
-      this._wantedBufferAhead.setValue(newWantedBufferAhead);
-    }
+    // if (
+    //   !this._removing &&
+    //   gced.length === 0 &&
+    //   buffered.length > 0 &&
+    //   buffered[buffered.length - 1].end - position > baseWantedBufferAhead - 1 &&
+    //   position > 10 &&
+    //   position - buffered[0].start > baseWantedBufferAhead
+    // ) {
+    //   if (this._lockUntil !== null) {
+    //     if (this._lockUntil <= now) {
+    //       log.warn("BSE: Lock time ended");
+    //       if (trackType === "video") {
+    //         this._maxVideoBufferSize.setValue(Infinity);
+    //       }
+    //       this._lockUntil = null;
+    //     }
+    //     return;
+    //   }
+    //
+    //   const sinks = [segmentSink];
+    //   const otherTrackType = trackType === "video" ? "audio" : "video";
+    //   const otherSinkStatus = this._segmentSinkStore.getStatus(otherTrackType);
+    //   if (otherSinkStatus.type === "initialized") {
+    //     sinks.push(otherSinkStatus.value);
+    //   }
+    //   log.warn("BSE: Removing buffer behind", position - 10);
+    //   this._removing = true;
+    //   await Promise.all([
+    //     ...sinks.map((s) => s.removeBuffer(0, position - 10)),
+    //     ...sinks.map((s) =>
+    //       s.removeBuffer(position + baseWantedBufferAhead + 20, Number.MAX_VALUE),
+    //     ),
+    //   ]);
+    //   this._removing = false;
+    //   const newWantedBufferAhead = baseWantedBufferAhead + 6;
+    //   log.warn(
+    //     "BSE: We have a big buffer behind raising `wantedBufferAhead`.",
+    //     baseWantedBufferAhead,
+    //     newWantedBufferAhead,
+    //   );
+    //   this._wantedBufferAhead.setValue(newWantedBufferAhead);
+    // }
 
     if (gced.length > 0) {
-      log.warn("BSE: GC detected", bufferSize, JSON.stringify(gced));
+      console.warn("BSE: GC detected", bufferSize, JSON.stringify(gced));
       const newLock = now + 10000;
       if (
         this._lockUntil === null ||
@@ -117,6 +117,8 @@ export default class BufferSizeEstimator {
         this._lockUntil = newLock;
       }
 
+      const bufferedSize = buffered.length > 0 ? buffered[0].end - buffered[0].start : 0;
+
       if (position - 10 > 0 && buffered.length > 0 && position - buffered[0].start > 10) {
         const sinks = [segmentSink];
         const otherTrackType = trackType === "video" ? "audio" : "video";
@@ -124,7 +126,7 @@ export default class BufferSizeEstimator {
         if (otherSinkStatus.type === "initialized") {
           sinks.push(otherSinkStatus.value);
         }
-        log.warn("BSE: Removing buffer behind", position - 10);
+        console.warn("BSE: Removing buffer behind", position - 10);
         this._removing = true;
         await Promise.all([
           ...sinks.map((s) => s.removeBuffer(0, position - 10)),
@@ -148,7 +150,7 @@ export default class BufferSizeEstimator {
           const ratio = bufferSize / prevBufferSize;
 
           if (ratio < 1.2 && ratio > 0.83) {
-            log.debug(
+            console.debug(
               "BSE: Sensibly same `maxVideoBufferSize` limit",
               bufferSize,
               prevBufferSize,
@@ -156,7 +158,7 @@ export default class BufferSizeEstimator {
             );
             this._lastMaxVideoBufferSizeLimits.push(bufferSize);
           } else {
-            log.debug(
+            console.debug(
               "BSE: Different `maxVideoBufferSize` limit",
               bufferSize,
               prevBufferSize,
@@ -177,20 +179,18 @@ export default class BufferSizeEstimator {
             this._lastMaxVideoBufferSizeLimits.splice(0, toRemove);
           }
         } else {
-          log.warn("BSE: Locking maxVideoBufferSize: ", bufferSize);
+          console.warn("BSE: Locking maxVideoBufferSize: ", bufferSize);
         }
         this._maxVideoBufferSize.setValue(bufferSize);
       }
 
-      const newWantedBufferAhead = Math.max(5, baseWantedBufferAhead - 8);
-      if (newWantedBufferAhead < baseWantedBufferAhead) {
-        log.warn(
-          "BSE: Lowering wantedBufferAhead: ",
-          baseWantedBufferAhead,
-          newWantedBufferAhead,
-        );
-        this._wantedBufferAhead.setValue(newWantedBufferAhead);
-      }
+      // const newWantedBufferAhead = Math.max(5, baseWantedBufferAhead - 8);
+      console.warn(
+        "BSE: Locking wantedBufferAhead: ",
+        baseWantedBufferAhead,
+        bufferedSize,
+      );
+      this._wantedBufferAhead.setValue(bufferedSize);
     }
   }
 }

@@ -110,7 +110,7 @@ const DEFAULT_CONFIG = {
    * content.
    * @type {Number}
    */
-  DEFAULT_WANTED_BUFFER_AHEAD: 30,
+  DEFAULT_WANTED_BUFFER_AHEAD: 10,
 
   /**
    * Default max buffer size ahead of the current position in seconds.

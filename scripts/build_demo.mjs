@@ -127,7 +127,7 @@ export default function buildDemo(options) {
         CURRENT_ENV: isDevMode ? 1 : 0,
       }),
       __LOGGER_LEVEL__: JSON.stringify({
-        CURRENT_LEVEL: "INFO",
+        CURRENT_LEVEL: "NONE",
       }),
       __GLOBAL_SCOPE__: JSON.stringify(true),
     },
