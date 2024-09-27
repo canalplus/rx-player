@@ -55,8 +55,9 @@ export interface ISegmentSinkMetrics {
 
 interface ISegmentSinkMetricForType {
   bufferType: IBufferType;
-  codec: string | undefined;
-  segmentInventory: IBufferedChunkSnapshot[] | undefined;
+  codec?: string | undefined;
+  sizeEstimate?: number | undefined;
+  segmentInventory?: IBufferedChunkSnapshot[] | undefined;
 }
 
 /**
@@ -385,15 +386,26 @@ export default class SegmentSinksStore {
   private createSegmentSinkMetricsForType(
     bufferType: IBufferType,
   ): ISegmentSinkMetricForType {
+    const inventory = this._initializedSegmentSinks[bufferType]?.getLastKnownInventory();
+    let sizeEstimate: number | undefined;
+    if (inventory !== undefined) {
+      sizeEstimate = 0;
+      for (const item of inventory) {
+        if (item.chunkSize === undefined || sizeEstimate === undefined) {
+          sizeEstimate = undefined;
+          break;
+        }
+        sizeEstimate += item.chunkSize;
+      }
+    }
     return {
       bufferType,
+      sizeEstimate,
       codec: this._initializedSegmentSinks[bufferType]?.codec,
-      segmentInventory: this._initializedSegmentSinks[bufferType]
-        ?.getLastKnownInventory()
-        .map((chunk) => ({
-          ...chunk,
-          infos: getChunkContextSnapshot(chunk.infos),
-        })),
+      segmentInventory: inventory?.map((chunk) => ({
+        ...chunk,
+        infos: getChunkContextSnapshot(chunk.infos),
+      })),
     };
   }
 
