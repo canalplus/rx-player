@@ -180,7 +180,11 @@
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
     "list": "node scripts/list-npm-scripts.mjs",
     "prepublishOnly": "npm run build:all",
+    "releases:changelog": "./scripts/update_changelog.mjs",
+    "releases:demo": "./scripts/update_gh-pages_demo",
     "releases:dev": "./scripts/make-dev-releases",
+    "releases:doc": "./scripts/update_gh-pages_doc",
+    "releases:official": "./scripts/make-official-release.sh",
     "start": "node ./scripts/start_demo_web_server.mjs",
     "start:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
     "test:integration": "npm run test:integration:chrome && npm run test:integration:firefox",
@@ -239,7 +243,8 @@
       "check:demo": "Check the validity of the demo directory by running the type checker and linter on it",
       "check:demo:types": "Check TypeScript types in demo files",
       "lint:demo": "Run linter on demo files",
-      "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` will then listen to HTTPS requests through a communicated port)"
+      "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` will then listen to HTTPS requests through a communicated port)",
+      "releases:demo": "Publish current demo as the GitHub's pages new demo page (\"stable\" branch only)"
     },
     "Type-check, format, or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
@@ -293,11 +298,13 @@
       }
     },
     "Build the documentation pages": {
-      "doc": "Generate the HTML documentation in doc/generated/pages"
+      "doc": "Generate the HTML documentation in doc/generated/pages",
+      "releases:doc": "Publish current documentation as the GitHub's pages new documentation pages (\"stable\" branch only)"
     },
     "Make a release": {
-      "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) with the code in the current branch",
-      "update-version": "Update the version to the string given in argument (example: `npm run update-version 3.8.0`). Will update the codebase and perform every builds."
+      "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) from the current branch.",
+      "releases:official": "Produce a new official release of the RxPlayer from the current branch.",
+      "update-version": "Update the version of the RxPlayer. Will update the codebase and perform every builds."
     }
   }
 }

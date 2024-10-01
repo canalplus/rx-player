@@ -6,14 +6,14 @@
 # This script updates the version number in files where it is indicated and
 # builds the rx-player for this new version.
 #
-# /!\ It does not create a new git tag
+# /!\ It does not create a new git tag, nor commit anything. It only update
+# files and produce builds.
 #
 # To use it:
 #
-#   1. Be sure that you're on the branch corresponding to the next version.
+#   1. Be sure that you're on the branch corresponding to the wanted version.
 #
-#   2. Call this script followed with the version number in the
-#      `MAJOR.MINOR.PATCH` format (e.g. `./update-version 3.22.0`).
+#   2. Call this script.
 #
 #   3. Wait for all the script to finish and stay attentive to what it says
 #
@@ -22,11 +22,16 @@
 set -e
 
 if [ $# -eq 0 ]; then
- echo "no version in argument"
- exit 1
+  read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  echo ""
+  if [ -z "${version}" ]; then
+    # TODO SEMVER REGEX?
+    err "Please enter a valid version number next time."
+  fi
+else
+  version=$1
 fi
 
-version=$1
 date_iso=$(date "+%Y-%m-%d")
 
 sed -i.bak -E -e "s/^\#\# Unreleased/\#\# v${version} \(${date_iso}\)/gi" CHANGELOG.md && rm CHANGELOG.md.bak
