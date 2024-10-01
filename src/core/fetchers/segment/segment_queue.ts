@@ -124,6 +124,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     });
     const currentCanceller = new TaskCanceller();
     currentCanceller.signal.register(() => {
+      console.error("!!! CANCELLING");
       downloadQueue.finish();
     });
     const currentContentInfo: ISegmentQueueContentInfo = {

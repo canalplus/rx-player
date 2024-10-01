@@ -294,7 +294,7 @@ export default function RepresentationStream<TSegmentDataType>(
         segmentQueue: neededSegments,
       });
     } else if (terminateVal.urgent) {
-      log.debug("Stream: Urgent switch, terminate now.", bufferType);
+      console.debug("Stream: Urgent switch, terminate now.", bufferType);
       segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
       segmentsToLoadRef.finish();
       segmentsLoadingCanceller.cancel();
@@ -323,7 +323,7 @@ export default function RepresentationStream<TSegmentDataType>(
         segmentQueue: nextQueue,
       });
       if (nextQueue.length === 0 && nextInit === null) {
-        log.debug("Stream: No request left, terminate", bufferType);
+        console.debug("Stream: No request left, terminate", bufferType);
         segmentsToLoadRef.finish();
         segmentsLoadingCanceller.cancel();
         callbacks.terminating();
