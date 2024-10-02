@@ -90,6 +90,11 @@ export default function RepresentationStream<TSegmentDataType>(
   callbacks: IRepresentationStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
+  log.debug(
+    "Stream: Creating RepresentationStream",
+    content.adaptation.type,
+    content.representation.bitrate,
+  );
   const { period, adaptation, representation } = content;
   const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
   const bufferType = adaptation.type;
@@ -488,6 +493,12 @@ export default function RepresentationStream<TSegmentDataType>(
       // We can thus ignore it, it is very unlikely to lead to true buffer issues.
       return;
     }
+    log.warn(
+      "Stream: Received fatal buffer error",
+      adaptation.type,
+      representation.bitrate,
+      err instanceof Error ? err : null,
+    );
     globalCanceller.cancel();
     callbacks.error(err);
   }

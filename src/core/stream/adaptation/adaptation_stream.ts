@@ -376,8 +376,13 @@ export default function AdaptationStream(
     representationStreamCallbacks: IRepresentationStreamCallbacks,
     fnCancelSignal: CancellationSignal,
   ): void {
+    /** Set to `true` if we've encountered an error with this `RepresentationStream` */
+    let hasEncounteredError = false;
+
     const bufferGoalCanceller = new TaskCanceller();
     bufferGoalCanceller.linkToSignal(fnCancelSignal);
+
+    /** Actually built buffer size, in seconds. */
     const bufferGoal = createMappedReference(
       wantedBufferAhead,
       (prev) => {
@@ -385,6 +390,7 @@ export default function AdaptationStream(
       },
       bufferGoalCanceller.signal,
     );
+
     const maxBufferSize =
       adaptation.type === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
     log.info(
@@ -394,7 +400,18 @@ export default function AdaptationStream(
       representation.bitrate,
     );
     const updatedCallbacks = objectAssign({}, representationStreamCallbacks, {
-      error(err: unknown) {
+      error(err: Error) {
+        if (hasEncounteredError) {
+          // A RepresentationStream might trigger multiple Errors (for example
+          // multiple segments it tried to push at once led to errors).
+          // In that case, we'll only consider the first Error.
+          //
+          // That could mean that we're hiding legitimate issues but handling
+          // multiple of those errors at once is too hard a task for now.
+          log.warn("Stream: Ignoring RepresentationStream error", err);
+          return;
+        }
+        hasEncounteredError = true;
         const formattedError = formatError(err, {
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",
@@ -402,6 +419,11 @@ export default function AdaptationStream(
         if (formattedError.code !== "BUFFER_FULL_ERROR") {
           representationStreamCallbacks.error(err);
         } else {
+          log.warn(
+            "Stream: received BUFFER_FULL_ERROR",
+            adaptation.type,
+            representation.bitrate,
+          );
           const wba = wantedBufferAhead.getValue();
           const lastBufferGoalRatio = bufferGoalRatioMap.get(representation.id) ?? 1;
           // 70%, 49%, 34.3%, 24%, 16.81%, 11.76%, 8.24% and 5.76%
