@@ -464,6 +464,20 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
           op.reject(error);
         });
         this._currentOperations = [];
+
+        // A synchronous error probably will not lead to updateend event, so we need to
+        // go to next queue element manually
+        //
+        // FIXME: This here is needed to ensure that we're not left with a
+        // dangling queue of operations.
+        // However it can potentially be counter-productive if e.g. the `appendBuffer`
+        // error was due to a full buffer and if there are pushing operations awaiting in
+        // the queue.
+        //
+        // A better solution might just be to reject all push operations right away here?
+        // Only for a `QuotaExceededError` (to check MSE)?
+        // However this is too disruptive for what is now a hotfix
+        this._performNextOperation();
       }
     } else {
       // TODO merge contiguous removes?
@@ -486,6 +500,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
           op.reject(error);
         });
         this._currentOperations = [];
+        // A synchronous error probably will not lead to updateend event, so we need to
+        // go to next queue element manually
+        this._performNextOperation();
       }
     }
   }
