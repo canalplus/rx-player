@@ -482,6 +482,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
                 false,
               );
         nextElem.reject(error);
+        this._currentOperations.forEach((op) => {
+          op.reject(error);
+        });
         this._currentOperations = [];
       }
     }
