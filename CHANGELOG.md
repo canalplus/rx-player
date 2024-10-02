@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024092400
+## Current dev build: v4.2.0-dev.2024100200
 
 ### Features
 
@@ -25,18 +25,24 @@
 - Fix rare cases where the active Period would not be advertised by the RxPlayer [#1502]
 - Actually trigger a `BUFFER_FULL_ERROR` when `QuotaExceededError` mitigations after
   `appendBuffer` MSE calls don't work #1546
-- Fix issue if a `QuotaExceededError` after an `appendBuffer` MSE call is received while
-  the current position is `0` [#1546]
+- Fix issues when handling a `QuotaExceededError` after an `appendBuffer` MSE call [#1546, #1559]
+- Directfile/Compat: Fix `startAt.fromLastPosition` handling on Safari when playing
+  directfile contents [#1548]
 - DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV, and `KSTB40XX`
   set-top boxes [#1515]
 - DRM/Compat: fix content not starting on Safari because key are never considered usable
   for a track [#1479, #1512]
 - DASH_WASM: fix `Label` element never being parsed [#1541, #1540]
 - Fix RxPlayer not being exposed in release bundles [#1542]
+- Consider `stpp.ttml` codec for text format [#1557]
+- Prevent very rare cases of infinite rebuffering after getting errors from calling the
+  `SourceBuffer.prototype.appendBuffer` and `SourceBuffer.prototype.remove` MSE API
+  [#1560, #1561]
 - MULTI_THREAD: Fix rare `CancellationError` error happening when reloading while a reload
   is pending. [#1528]
 - MULTI_THREAD: fix wrong Period considered as current in multi-Period DASH contents with
   the multi-thread feature [#1527]
+- MULTI_THREAD: Fix rare occurrences of infinite loading on constrained devices [#1556]
 
 ### Other improvements
 
@@ -49,6 +55,7 @@
   own compatible ones to facilitate testing and the addition of platform-specific
   differences [#1397].
 - Demo: Remove standalone demo as we never relied on it [#1473]
+- Scripts: Automatize official releases and CHANGELOG.md updating through a script [#1524]
 
 ## v4.1.0 (2024-07-08)
 
