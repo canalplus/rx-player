@@ -113,12 +113,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _currentMediaSourceCanceller: TaskCanceller;
 
   /**
-   * Stores the resolvers and the current messageId that is sent to the web worker to receive segment sink metrics.
+   * Stores the resolvers and the current messageId that is sent to the web worker to
+   * receive segment sink metrics.
    * The purpose of collecting metrics is for monitoring and debugging.
    */
   private _segmentMetrics: {
     lastMessageId: number;
-    resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
+    resolvers: Map<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
 
   /**
@@ -135,7 +136,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentContentInfo = null;
     this._segmentMetrics = {
       lastMessageId: 0,
-      resolvers: {},
+      resolvers: new Map(),
     };
     this._queuedWorkerMessages = null;
   }
@@ -1121,10 +1122,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const resolveFn = this._segmentMetrics.resolvers[msgData.value.messageId];
+          const resolveFn = this._segmentMetrics.resolvers.get(msgData.value.messageId);
           if (resolveFn !== undefined) {
             resolveFn(msgData.value.segmentSinkMetrics);
-            delete this._segmentMetrics.resolvers[msgData.value.messageId];
           } else {
             log.error("MTCI: Failed to send segment sink store update");
           }
@@ -1589,11 +1589,19 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         value: { messageId },
       });
       return new Promise((resolve, reject) => {
-        this._segmentMetrics.resolvers[messageId] = resolve;
         const rejectFn = (err: CancellationError) => {
-          delete this._segmentMetrics.resolvers[messageId];
+          cancelSignal.deregister(rejectFn);
+          this._segmentMetrics.resolvers.delete(messageId);
           return reject(err);
         };
+        this._segmentMetrics.resolvers.set(
+          messageId,
+          (value: ISegmentSinkMetrics | undefined) => {
+            cancelSignal.deregister(rejectFn);
+            this._segmentMetrics.resolvers.delete(messageId);
+            resolve(value);
+          },
+        );
         cancelSignal.register(rejectFn);
       });
     };
