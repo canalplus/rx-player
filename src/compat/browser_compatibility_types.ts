@@ -409,7 +409,7 @@ const MediaSource_:
   | undefined =
   gs?.MediaSource ??
   gs?.MozMediaSource ??
-  gs?.WebkitMediaSource ??
+  gs?.WebKitMediaSource ??
   gs?.MSMediaSource ??
   gs?.ManagedMediaSource ??
   undefined;
