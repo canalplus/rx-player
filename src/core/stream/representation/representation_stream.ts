@@ -27,6 +27,7 @@ import config from "../../../config";
 import log from "../../../log";
 import type { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
+import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
 import type {
@@ -209,8 +210,24 @@ export default function RepresentationStream<TSegmentDataType>(
     segmentsLoadingCanceller.signal,
   );
 
+  const canStream = new SharedReference<boolean | undefined>(undefined);
+
+  playbackObserver.listen((observation) => {
+    if (canStream.getValue() !== observation.canStream) {
+      log.info(
+        "DEBUG ManagedMediaSource: observation.canStream update",
+        observation.canStream,
+      );
+      canStream.setValue(observation.canStream);
+    }
+  });
+
   /** Emit the last scheduled downloading queue for segments. */
-  const segmentsToLoadRef = segmentQueue.resetForContent(content, hasInitSegment);
+  const segmentsToLoadRef = segmentQueue.resetForContent(
+    content,
+    hasInitSegment,
+    canStream,
+  );
 
   segmentsLoadingCanceller.signal.register(() => {
     segmentQueue.stop();

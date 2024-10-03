@@ -1,4 +1,7 @@
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import {
+  isManagedMediaSource,
+  type IMediaElement,
+} from "../../compat/browser_compatibility_types";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
@@ -1787,6 +1790,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 resetMediaElement(mediaElement, url);
               });
               mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
+
+              if (isManagedMediaSource) {
+                /**
+                 * Using ManagedMediaSource needs to disableRemotePlayback or to provide
+                 * an Airplay source alternative, such as HLS.
+                 * https://github.com/w3c/media-source/issues/320
+                 */
+                mediaElement.disableRemotePlayback = true;
+              }
             }
           },
           {

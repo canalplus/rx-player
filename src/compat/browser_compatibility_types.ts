@@ -16,7 +16,6 @@
 
 import type { IListener } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
 
 /** Regular MediaKeys type + optional functions present in IE11. */
 interface ICompatMediaKeysConstructor {
@@ -116,6 +115,8 @@ export interface IMediaSourceEventMap {
   sourceopen: Event;
   sourceended: Event;
   sourceclose: Event;
+  startstreaming: Event;
+  endstreaming: Event;
 }
 
 /**
@@ -136,6 +137,7 @@ export interface IMediaSource extends IEventTarget<IMediaSourceEventMap> {
   handle?: MediaProvider | IMediaSource | undefined;
   readyState: "closed" | "open" | "ended";
   sourceBuffers: ISourceBufferList;
+  streaming?: boolean | undefined;
 
   addSourceBuffer(type: string): ISourceBuffer;
   clearLiveSeekableRange(): void;
@@ -252,6 +254,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   srcObject?: undefined | null | MediaProvider;
   textTracks: TextTrackList | never[];
   volume: number;
+  disableRemotePlayback: boolean;
 
   addTextTrack: (kind: TextTrackKind) => TextTrack;
   appendChild<T extends Node>(x: T): void;
@@ -407,15 +410,15 @@ const gs = globalScope as any;
 const MediaSource_:
   | { new (): IMediaSource; isTypeSupported(type: string): boolean }
   | undefined =
-  gs === undefined
-    ? undefined
-    : !isNullOrUndefined(gs.MediaSource)
-      ? gs.MediaSource
-      : !isNullOrUndefined(gs.MozMediaSource)
-        ? gs.MozMediaSource
-        : !isNullOrUndefined(gs.WebKitMediaSource)
-          ? gs.WebKitMediaSource
-          : gs.MSMediaSource;
+  gs?.MediaSource ??
+  gs?.MozMediaSource ??
+  gs?.WebKitMediaSource ??
+  gs?.MSMediaSource ??
+  gs?.ManagedMediaSource ??
+  undefined;
+
+const isManagedMediaSource =
+  MediaSource_ !== undefined && MediaSource_ === gs?.ManagedMediaSource;
 /* eslint-enable */
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
@@ -448,4 +451,4 @@ export type {
   ICompatVTTCue,
   ICompatVTTCueConstructor,
 };
-export { MediaSource_, READY_STATES };
+export { MediaSource_, isManagedMediaSource, READY_STATES };
