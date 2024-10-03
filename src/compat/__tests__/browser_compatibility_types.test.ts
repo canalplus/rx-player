@@ -7,6 +7,7 @@ describe("compat - browser compatibility types", () => {
     MozMediaSource?: unknown;
     WebKitMediaSource?: unknown;
     MSMediaSource?: unknown;
+    ManagedMediaSource?: unknown;
   }
   const gs = globalScope as IFakeWindow;
   beforeEach(() => {
@@ -22,11 +23,13 @@ describe("compat - browser compatibility types", () => {
     const origMozMediaSource = gs.MozMediaSource;
     const origWebKitMediaSource = gs.WebKitMediaSource;
     const origMSMediaSource = gs.MSMediaSource;
+    const origManagedMediaSource = gs.ManagedMediaSource;
 
     gs.MediaSource = { a: 1 };
     gs.MozMediaSource = { a: 2 };
     gs.WebKitMediaSource = { a: 3 };
     gs.MSMediaSource = { a: 4 };
+    gs.ManagedMediaSource = { a: 5 };
 
     const { MediaSource_ } = await vi.importActual("../browser_compatibility_types");
     expect(MediaSource_).toEqual({ a: 1 });
@@ -35,6 +38,7 @@ describe("compat - browser compatibility types", () => {
     gs.MozMediaSource = origMozMediaSource;
     gs.WebKitMediaSource = origWebKitMediaSource;
     gs.MSMediaSource = origMSMediaSource;
+    gs.ManagedMediaSource = origManagedMediaSource;
   });
 
   it("should use MozMediaSource if defined and MediaSource is not", async () => {
@@ -46,6 +50,7 @@ describe("compat - browser compatibility types", () => {
     const origMozMediaSource = gs.MozMediaSource;
     const origWebKitMediaSource = gs.WebKitMediaSource;
     const origMSMediaSource = gs.MSMediaSource;
+    const origManagedMediaSource = gs.ManagedMediaSource;
 
     gs.MediaSource = undefined;
     gs.MozMediaSource = { a: 2 };
@@ -59,6 +64,7 @@ describe("compat - browser compatibility types", () => {
     gs.MozMediaSource = origMozMediaSource;
     gs.WebKitMediaSource = origWebKitMediaSource;
     gs.MSMediaSource = origMSMediaSource;
+    gs.ManagedMediaSource = origManagedMediaSource;
   });
 
   it("should use WebKitMediaSource if defined and MediaSource is not", async () => {
@@ -70,6 +76,7 @@ describe("compat - browser compatibility types", () => {
     const origMozMediaSource = gs.MozMediaSource;
     const origWebKitMediaSource = gs.WebKitMediaSource;
     const origMSMediaSource = gs.MSMediaSource;
+    const origManagedMediaSource = gs.ManagedMediaSource;
 
     gs.MediaSource = undefined;
     gs.MozMediaSource = undefined;
@@ -83,6 +90,7 @@ describe("compat - browser compatibility types", () => {
     gs.MozMediaSource = origMozMediaSource;
     gs.WebKitMediaSource = origWebKitMediaSource;
     gs.MSMediaSource = origMSMediaSource;
+    gs.ManagedMediaSource = origManagedMediaSource;
   });
 
   it("should use MSMediaSource if defined and MediaSource is not", async () => {
@@ -94,6 +102,7 @@ describe("compat - browser compatibility types", () => {
     const origMozMediaSource = gs.MozMediaSource;
     const origWebKitMediaSource = gs.WebKitMediaSource;
     const origMSMediaSource = gs.MSMediaSource;
+    const origManagedMediaSource = gs.ManagedMediaSource;
 
     gs.MediaSource = undefined;
     gs.MozMediaSource = undefined;
@@ -107,5 +116,33 @@ describe("compat - browser compatibility types", () => {
     gs.MozMediaSource = origMozMediaSource;
     gs.WebKitMediaSource = origWebKitMediaSource;
     gs.MSMediaSource = origMSMediaSource;
+    gs.ManagedMediaSource = origManagedMediaSource;
+  });
+
+  it("should use ManagedMediaSource if defined and MediaSource is not", async () => {
+    vi.doMock("../../utils/is_node", () => ({
+      default: false,
+    }));
+
+    const origMediaSource = gs.MediaSource;
+    const origMozMediaSource = gs.MozMediaSource;
+    const origWebKitMediaSource = gs.WebKitMediaSource;
+    const origMSMediaSource = gs.MSMediaSource;
+    const origManagedMediaSource = gs.ManagedMediaSource;
+
+    gs.MediaSource = undefined;
+    gs.MozMediaSource = undefined;
+    gs.WebKitMediaSource = undefined;
+    gs.MSMediaSource = undefined;
+    gs.ManagedMediaSource = { a: 5 };
+
+    const { MediaSource_ } = await vi.importActual("../browser_compatibility_types");
+    expect(MediaSource_).toEqual({ a: 4 });
+
+    gs.MediaSource = origMediaSource;
+    gs.MozMediaSource = origMozMediaSource;
+    gs.WebKitMediaSource = origWebKitMediaSource;
+    gs.MSMediaSource = origMSMediaSource;
+    gs.ManagedMediaSource = origManagedMediaSource;
   });
 });
