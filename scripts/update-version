@@ -6,14 +6,14 @@
 # This script updates the version number in files where it is indicated and
 # builds the rx-player for this new version.
 #
-# /!\ It does not create a new git tag
+# /!\ It does not create a new git tag, nor commit anything. It only update
+# files and produce builds.
 #
 # To use it:
 #
-#   1. Be sure that you're on the branch corresponding to the next version.
+#   1. Be sure that you're on the branch corresponding to the wanted version.
 #
-#   2. Call this script followed with the version number in the
-#      `MAJOR.MINOR.PATCH` format (e.g. `./update-version 3.22.0`).
+#   2. Call this script.
 #
 #   3. Wait for all the script to finish and stay attentive to what it says
 #
@@ -22,18 +22,23 @@
 set -e
 
 if [ $# -eq 0 ]; then
- echo "no version in argument"
- exit 1
+  read -r -p "Please enter the wanted version number (example: 3.12.1): " version
+  echo ""
+  if [ -z "${version}" ]; then
+    # TODO SEMVER REGEX?
+    err "Please enter a valid version number next time."
+  fi
+else
+  version=$1
 fi
 
-version=$1
 date_iso=$(date "+%Y-%m-%d")
 
-sed -i.bak -e "s/^\#\# Unreleased/\#\# v${version} \(${date_iso}\)/gi" CHANGELOG.md && rm CHANGELOG.md.bak
-sed -i.bak -e "s/\/\\* PLAYER_VERSION \\*\/\"\(.*\)\";/\/* PLAYER_VERSION *\/\"${version}\";/g" src/core/api/public_api.ts && rm src/core/api/public_api.ts.bak
-sed -i.bak -e "s/\"version\":\s*\"[0-9]\+\.[0-9]\+\.[0-9]\+[^\"]*\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
-sed -i.bak -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
-echo $version > VERSION
+sed -i.bak -E -e "s/^\#\# Unreleased/\#\# v${version} \(${date_iso}\)/gi" CHANGELOG.md && rm CHANGELOG.md.bak
+sed -i.bak -E -e "s/\/\\* PLAYER_VERSION \\*\/[[:space:]]*\".*\";/\/* PLAYER_VERSION *\/ \"${version}\";/g" src/main_thread/api/public_api.ts && rm src/main_thread/api/public_api.ts.bak
+sed -i.bak -E -e "s/\"version\":[[:space:]]*\"[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+[^\"]*\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
+sed -i.bak -E -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
+echo $version >VERSION
 
 npm install
 npm run build
@@ -45,4 +50,4 @@ echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts
 echo "${copyright_text}
 import RxPlayer from \"./_esm5.processed/minimal\";
-export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts > /dev/null
+export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts >/dev/null

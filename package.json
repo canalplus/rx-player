@@ -56,7 +56,11 @@
     "lint:tests": "eslint tests/**/*.js --ignore-pattern '/tests/performance/bundle*'",
     "list": "node scripts/list-npm-scripts.mjs",
     "prepublishOnly": "npm run build:modular",
+    "releases:changelog": "./scripts/update_changelog.mjs",
+    "releases:demo": "./scripts/update_gh-pages_demo",
     "releases:dev": "./scripts/make-dev-releases",
+    "releases:doc": "./scripts/update_gh-pages_doc",
+    "releases:official": "./scripts/make-official-release.sh",
     "standalone": "node ./scripts/run_standalone_demo.js",
     "start": "node ./scripts/start_demo_web_server.js",
     "start:wasm": "node ./scripts/start_demo_web_server.js --include-wasm",
@@ -152,7 +156,8 @@
       "check:demo:types": "Check TypeScript types in full demo files",
       "lint:demo": "Run linter on the full demo files",
       "standalone": "Build and launch the \"standalone\" demo (without any UI) on a local server. Re-build on file updates.",
-      "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)"
+      "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` and `npm run standalone` will then listen to HTTPS requests through a communicated port)",
+      "releases:demo": "Publish current demo as the GitHub's pages new demo page (\"stable\" branch only)"
     },
     "Type-check, format or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
@@ -207,11 +212,12 @@
       }
     },
     "Build the documentation pages": {
-      "doc": "Generate the HTML documentation in doc/generated/pages"
+      "doc": "Generate the HTML documentation in doc/generated/pages",
+      "releases:doc": "Publish current documentation as the GitHub's pages new documentation pages (\"stable\" branch only)"
     },
-    "Update the RxPlayer's version": {},
     "Make a release": {
-      "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) with the code in the current branch",
+      "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) from the current branch.",
+      "releases:official": "Produce a new official release of the RxPlayer from the current branch.",
       "update-version": "Update the version to the string given in argument (example: `npm run update-version 3.8.0`). Will update the codebase and perform every builds."
     }
   }
