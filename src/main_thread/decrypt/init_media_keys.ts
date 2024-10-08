@@ -15,6 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import type { IEmeApiImplementation } from "../../compat/eme";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -24,17 +25,20 @@ import getMediaKeysInfos from "./get_media_keys";
 
 /**
  * Get media keys infos from key system configs then attach media keys to media element.
+ * @param {Object} eme - current EME implementation
  * @param {HTMLMediaElement} mediaElement
  * @param {Array.<Object>} keySystemsConfigs
  * @param {Object} cancelSignal
  * @returns {Promise.<Object>}
  */
 export default async function initMediaKeys(
+  eme: IEmeApiImplementation,
   mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {
   const mediaKeysInfo = await getMediaKeysInfos(
+    eme,
     mediaElement,
     keySystemsConfigs,
     cancelSignal,
@@ -48,7 +52,7 @@ export default async function initMediaKeys(
 
   if (shouldDisableOldMediaKeys) {
     log.debug("DRM: Disabling old MediaKeys");
-    await disableMediaKeys(mediaElement);
+    await disableMediaKeys(eme, mediaElement);
   }
   return mediaKeysInfo;
 }

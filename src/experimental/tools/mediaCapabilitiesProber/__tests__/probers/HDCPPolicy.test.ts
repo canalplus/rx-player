@@ -9,7 +9,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
 
   it("should throw if no requestMediaKeySystemAccess", async () => {
     vi.doMock("../../../../../compat/eme", () => ({
-      default: vi.fn(),
+      default: () => null,
     }));
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
@@ -26,9 +26,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
     });
     vi.doMock("../../../../../compat/eme", () => ({
-      default: {
+      default: () => ({
         requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-      },
+      }),
     }));
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
@@ -49,9 +49,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
     });
     vi.doMock("../../../../../compat/eme", () => ({
-      default: {
+      default: () => ({
         requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      },
+      }),
     }));
 
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
@@ -76,9 +76,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
     });
     vi.doMock("../../../../../compat/eme", () => ({
-      default: {
+      default: () => ({
         requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      },
+      }),
     }));
 
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
@@ -103,9 +103,9 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
       });
     });
     vi.doMock("../../../../../compat/eme", () => ({
-      default: {
+      default: () => ({
         requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      },
+      }),
     }));
 
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
