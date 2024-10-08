@@ -27,6 +27,7 @@ import type {
 } from "../../manifest";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type { IPlayerError } from "../../public_types";
+import type { IThumbnailResponse } from "../../transports";
 import EventEmitter from "../../utils/event_emitter";
 import type SharedReference from "../../utils/reference";
 import type {
@@ -146,6 +147,17 @@ export interface IContentInitializerEvents {
    */
   loaded: {
     getSegmentSinkMetrics: null | (() => Promise<ISegmentSinkMetrics | undefined>);
+    /**
+     * Fetch the thumbnail data of the given Period for the corresponding time.
+     * If there's no thumbnail for that Period or if the request fails, reject
+     * the Promise with a given reason.
+     * @param {number} time
+     */
+    getThumbnailData: (
+      periodId: string,
+      thumbnailTrackId: string,
+      time: number,
+    ) => Promise<IThumbnailResponse>;
   };
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent | IPublicNonFiniteStreamEvent;

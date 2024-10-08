@@ -8,6 +8,7 @@ import type {
   IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
   IReferenceUpdateMessage,
+  IThumbnailDataRequestMainMessage,
 } from "../../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
 import DashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
@@ -34,6 +35,7 @@ import type {
 import StreamOrchestrator from "../../stream";
 import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
 import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
+import getThumbnailData from "../common/get_thumbnail_data";
 import ContentPreparer from "./content_preparer";
 import {
   limitVideoResolution,
@@ -400,7 +402,12 @@ export default function initializeWorkerMain() {
       }
 
       case MainThreadMessageType.PullSegmentSinkStoreInfos: {
-        sendSegmentSinksStoreInfos(contentPreparer, msg.value.messageId);
+        sendSegmentSinksStoreInfos(contentPreparer, msg.value.requestId);
+        break;
+      }
+
+      case MainThreadMessageType.ThumbnailDataRequest: {
+        sendThumbnailData(contentPreparer, msg);
         break;
       }
 
@@ -943,7 +950,7 @@ function updateLoggerLevel(
  */
 function sendSegmentSinksStoreInfos(
   contentPreparer: ContentPreparer,
-  messageId: number,
+  requestId: number,
 ): void {
   const currentContent = contentPreparer.getCurrentContent();
   if (currentContent === null) {
@@ -953,6 +960,63 @@ function sendSegmentSinksStoreInfos(
   sendMessage({
     type: WorkerMessageType.SegmentSinkStoreUpdate,
     contentId: currentContent.contentId,
-    value: { segmentSinkMetrics: segmentSinksMetrics, messageId },
+    value: { segmentSinkMetrics: segmentSinksMetrics, requestId },
   });
+}
+
+/**
+ * Handles thumbnail requests and send back the result to the main thread.
+ * @param {ContentPreparer} contentPreparer
+ * @returns {void}
+ */
+function sendThumbnailData(
+  contentPreparer: ContentPreparer,
+  msg: IThumbnailDataRequestMainMessage,
+): void {
+  const preparedContent = contentPreparer.getCurrentContent();
+  const respondWithError = (err: unknown) => {
+    sendMessage({
+      type: WorkerMessageType.ThumbnailDataResponse,
+      contentId: msg.contentId,
+      value: {
+        status: "error",
+        requestId: msg.value.requestId,
+        error: formatErrorForSender(err),
+      },
+    });
+  };
+
+  if (
+    preparedContent === null ||
+    preparedContent.manifest === null ||
+    preparedContent.contentId !== msg.contentId
+  ) {
+    return respondWithError(new Error("Content changed"));
+  }
+
+  getThumbnailData(
+    preparedContent.fetchThumbnailData,
+    preparedContent.manifest,
+    msg.value.periodId,
+    msg.value.thumbnailTrackId,
+    msg.value.time,
+  ).then(
+    (result) => {
+      sendMessage(
+        {
+          type: WorkerMessageType.ThumbnailDataResponse,
+          contentId: msg.contentId,
+          value: {
+            status: "success",
+            requestId: msg.value.requestId,
+            data: result,
+          },
+        },
+        [result.data],
+      );
+    },
+    (err) => {
+      return respondWithError(err);
+    },
+  );
 }

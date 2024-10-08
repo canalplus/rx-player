@@ -101,6 +101,7 @@ function getHDRInformation({
 
 /**
  * Process intermediate representations to create final parsed representations.
+ * In the same order.
  * @param {Array.<Object>} representationsIR
  * @param {Object} context
  * @returns {Array.<Object>}

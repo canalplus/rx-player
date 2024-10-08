@@ -40,6 +40,7 @@ import type {
   ITextTrack,
   IVideoRepresentation,
   IVideoTrack,
+  IThumbnailMetadata,
 } from "../../../../src/public_types";
 
 RxPlayer.addFeatures([
@@ -127,6 +128,7 @@ export interface IPlayerModuleState {
   isContentLoaded: boolean;
   isLive: boolean;
   isLoading: boolean;
+  imageThumbnailContainerElement: HTMLElement;
   isPaused: boolean;
   isReloading: boolean;
   isSeeking: boolean;
@@ -185,6 +187,7 @@ const PlayerModule = declareModule(
     isContentLoaded: false,
     isLive: false,
     isLoading: false,
+    imageThumbnailContainerElement: document.createElement("div"),
     isPaused: false,
     isReloading: false,
     isSeeking: false,
@@ -337,6 +340,19 @@ const PlayerModule = declareModule(
 
       unmute() {
         player.unMute();
+      },
+
+      getThumbnailMetadata(time: number): IThumbnailMetadata[] {
+        const metadata = player.getThumbnailMetadata({ time });
+        return metadata ?? [];
+      },
+
+      renderThumbnail(time: number, thumbnailTrackId: string): Promise<void> {
+        return player.renderThumbnail({
+          container: state.get("imageThumbnailContainerElement"),
+          time,
+          thumbnailTrackId,
+        });
       },
 
       setDefaultVideoRepresentationSwitchingMode(

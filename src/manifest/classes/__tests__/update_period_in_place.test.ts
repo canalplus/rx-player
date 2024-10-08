@@ -166,6 +166,25 @@ function generateFakeAdaptation({
   };
 }
 
+function generateFakeThumbnailTrack({ id }: { id: string }) {
+  return {
+    id,
+    mimeType: "image/png",
+    height: 100,
+    width: 200,
+    horizontalTiles: 5,
+    verticalTiles: 3,
+    index: {
+      _update() {
+        /* noop */
+      },
+      _replace() {
+        /* noop */
+      },
+    },
+  };
+}
+
 describe("Manifest - updatePeriodInPlace", () => {
   let mockOldVideoRepresentation1Replace: MockInstance | undefined;
   let mockOldVideoRepresentation2Replace: MockInstance | undefined;
@@ -308,6 +327,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1, oldVideoAdaptation2],
         audio: [oldAudioAdaptation],
@@ -335,6 +355,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1, newVideoAdaptation2],
         audio: [newAudioAdaptation],
@@ -355,6 +376,9 @@ describe("Manifest - updatePeriodInPlace", () => {
     );
 
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -464,6 +488,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1, oldVideoAdaptation2],
         audio: [oldAudioAdaptation],
@@ -491,6 +516,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1, newVideoAdaptation2],
         audio: [newAudioAdaptation],
@@ -510,6 +536,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Partial,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -614,6 +643,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1],
         audio: [oldAudioAdaptation],
@@ -644,6 +674,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1, newVideoAdaptation2],
         audio: [newAudioAdaptation],
@@ -663,6 +694,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Full,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [newVideoAdaptation2.getMetadataSnapshot()],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -709,6 +743,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1],
         audio: [oldAudioAdaptation],
@@ -736,6 +771,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1, newVideoAdaptation2],
         audio: [newAudioAdaptation],
@@ -755,6 +791,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Partial,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [newVideoAdaptation2.getMetadataSnapshot()],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -806,6 +845,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1, oldVideoAdaptation2],
         audio: [oldAudioAdaptation],
@@ -828,6 +868,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1],
         audio: [newAudioAdaptation],
@@ -847,6 +888,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Full,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [
         {
@@ -903,6 +947,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1, oldVideoAdaptation2],
         audio: [oldAudioAdaptation],
@@ -925,6 +970,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1],
         audio: [newAudioAdaptation],
@@ -944,6 +990,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Partial,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [
         {
@@ -995,6 +1044,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1],
         audio: [oldAudioAdaptation],
@@ -1018,6 +1068,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1],
         audio: [newAudioAdaptation],
@@ -1037,6 +1088,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Full,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -1079,6 +1133,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1],
         audio: [oldAudioAdaptation],
@@ -1102,6 +1157,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1],
         audio: [newAudioAdaptation],
@@ -1121,6 +1177,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Partial,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -1163,6 +1222,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1],
         audio: [oldAudioAdaptation],
@@ -1185,6 +1245,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1],
         audio: [newAudioAdaptation],
@@ -1204,6 +1265,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Full,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -1246,6 +1310,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 500,
       end: 520,
       duration: 20,
+      thumbnailTracks: [],
       adaptations: {
         video: [oldVideoAdaptation1],
         audio: [oldAudioAdaptation],
@@ -1268,6 +1333,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       start: 5,
       end: 15,
       duration: 10,
+      thumbnailTracks: [],
       adaptations: {
         video: [newVideoAdaptation1],
         audio: [newAudioAdaptation],
@@ -1287,6 +1353,9 @@ describe("Manifest - updatePeriodInPlace", () => {
       MANIFEST_UPDATE_TYPE.Partial,
     );
     expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [],
+      removedThumbnailTracks: [],
       addedAdaptations: [],
       removedAdaptations: [],
       updatedAdaptations: [
@@ -1311,6 +1380,304 @@ describe("Manifest - updatePeriodInPlace", () => {
       'Manifest: Representation "rep-video-2" not found when merging.',
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
+    mockLog.mockRestore();
+  });
+
+  it("should add new Thumbnail Track in Full mode", () => {
+    const oldThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const oldPeriod = {
+      start: 5,
+      end: 15,
+      duration: 10,
+      thumbnailTracks: [oldThumbnailTrack1],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const newThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const newThumbnailTrack2 = generateFakeThumbnailTrack({
+      id: "thumb-2",
+    });
+    const newPeriod = {
+      start: 500,
+      end: 520,
+      duration: 20,
+      thumbnailTracks: [newThumbnailTrack1, newThumbnailTrack2],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const mockLog = vi.spyOn(log, "warn");
+    const res = updatePeriodInPlace(
+      oldPeriod as unknown as Period,
+      newPeriod as unknown as Period,
+      MANIFEST_UPDATE_TYPE.Full,
+    );
+    expect(res).toEqual({
+      addedThumbnailTracks: [
+        {
+          height: 100,
+          horizontalTiles: 5,
+          id: "thumb-2",
+          mimeType: "image/png",
+          verticalTiles: 3,
+          width: 200,
+        },
+      ],
+      updatedThumbnailTracks: [
+        {
+          height: 100,
+          horizontalTiles: 5,
+          id: "thumb-1",
+          mimeType: "image/png",
+          verticalTiles: 3,
+          width: 200,
+        },
+      ],
+      removedThumbnailTracks: [],
+      addedAdaptations: [],
+      removedAdaptations: [],
+      updatedAdaptations: [],
+    });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      "Manifest: 1 new Thumbnail tracks found when merging.",
+    );
+    expect(oldPeriod.thumbnailTracks).toHaveLength(2);
+    mockLog.mockRestore();
+  });
+
+  it("should add new Thumbnail Track in Partial mode", () => {
+    const oldThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const oldPeriod = {
+      start: 5,
+      end: 15,
+      duration: 10,
+      thumbnailTracks: [oldThumbnailTrack1],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const newThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const newThumbnailTrack2 = generateFakeThumbnailTrack({
+      id: "thumb-2",
+    });
+    const newPeriod = {
+      start: 500,
+      end: 520,
+      duration: 20,
+      thumbnailTracks: [newThumbnailTrack1, newThumbnailTrack2],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const mockLog = vi.spyOn(log, "warn");
+    const res = updatePeriodInPlace(
+      oldPeriod as unknown as Period,
+      newPeriod as unknown as Period,
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
+    expect(res).toEqual({
+      addedThumbnailTracks: [
+        {
+          height: 100,
+          horizontalTiles: 5,
+          id: "thumb-2",
+          mimeType: "image/png",
+          verticalTiles: 3,
+          width: 200,
+        },
+      ],
+      updatedThumbnailTracks: [
+        {
+          height: 100,
+          horizontalTiles: 5,
+          id: "thumb-1",
+          mimeType: "image/png",
+          verticalTiles: 3,
+          width: 200,
+        },
+      ],
+      removedThumbnailTracks: [],
+      addedAdaptations: [],
+      removedAdaptations: [],
+      updatedAdaptations: [],
+    });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      "Manifest: 1 new Thumbnail tracks found when merging.",
+    );
+    expect(oldPeriod.thumbnailTracks).toHaveLength(2);
+    mockLog.mockRestore();
+  });
+
+  it("should remove unfound Thumbnail Tracks in Full mode", () => {
+    const oldThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const oldThumbnailTrack2 = generateFakeThumbnailTrack({
+      id: "thumb-2",
+    });
+    const oldPeriod = {
+      start: 5,
+      end: 15,
+      duration: 10,
+      thumbnailTracks: [oldThumbnailTrack1, oldThumbnailTrack2],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const newThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const newPeriod = {
+      start: 500,
+      end: 520,
+      duration: 20,
+      thumbnailTracks: [newThumbnailTrack1],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const mockLog = vi.spyOn(log, "warn");
+    const res = updatePeriodInPlace(
+      oldPeriod as unknown as Period,
+      newPeriod as unknown as Period,
+      MANIFEST_UPDATE_TYPE.Full,
+    );
+    expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [
+        {
+          height: 100,
+          horizontalTiles: 5,
+          id: "thumb-1",
+          mimeType: "image/png",
+          verticalTiles: 3,
+          width: 200,
+        },
+      ],
+      removedThumbnailTracks: [
+        {
+          id: oldThumbnailTrack2.id,
+        },
+      ],
+      addedAdaptations: [],
+      removedAdaptations: [],
+      updatedAdaptations: [],
+    });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      'Manifest: ThumbnailTrack "thumb-2" not found when merging.',
+    );
+    expect(oldPeriod.thumbnailTracks).toHaveLength(1);
+    mockLog.mockRestore();
+  });
+
+  it("should remove unfound ThumbnailTracks in Partial mode", () => {
+    const oldThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const oldThumbnailTrack2 = generateFakeThumbnailTrack({
+      id: "thumb-2",
+    });
+    const oldPeriod = {
+      start: 5,
+      end: 15,
+      duration: 10,
+      thumbnailTracks: [oldThumbnailTrack1, oldThumbnailTrack2],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const newThumbnailTrack1 = generateFakeThumbnailTrack({
+      id: "thumb-1",
+    });
+    const newPeriod = {
+      start: 500,
+      end: 520,
+      duration: 20,
+      thumbnailTracks: [newThumbnailTrack1],
+      adaptations: {
+        video: [],
+        audio: [],
+      },
+      getAdaptations() {
+        return [];
+      },
+    };
+    const mockLog = vi.spyOn(log, "warn");
+    const res = updatePeriodInPlace(
+      oldPeriod as unknown as Period,
+      newPeriod as unknown as Period,
+      MANIFEST_UPDATE_TYPE.Partial,
+    );
+    expect(res).toEqual({
+      addedThumbnailTracks: [],
+      updatedThumbnailTracks: [
+        {
+          height: 100,
+          horizontalTiles: 5,
+          id: "thumb-1",
+          mimeType: "image/png",
+          verticalTiles: 3,
+          width: 200,
+        },
+      ],
+      removedThumbnailTracks: [
+        {
+          id: oldThumbnailTrack2.id,
+        },
+      ],
+      addedAdaptations: [],
+      removedAdaptations: [],
+      updatedAdaptations: [],
+    });
+    expect(mockLog).toHaveBeenCalled();
+    expect(mockLog).toHaveBeenNthCalledWith(
+      1,
+      'Manifest: ThumbnailTrack "thumb-2" not found when merging.',
+    );
+    expect(oldPeriod.thumbnailTracks).toHaveLength(1);
     mockLog.mockRestore();
   });
 });

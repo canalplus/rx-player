@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import CdnPrioritizer from "./cdn_prioritizer";
 import type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
@@ -22,6 +23,8 @@ import type {
 import ManifestFetcher from "./manifest";
 import type { SegmentQueue, ISegmentQueueCreatorBackoffOptions } from "./segment";
 import SegmentQueueCreator from "./segment";
+import createThumbnailFetcher, { getThumbnailFetcherRequestOptions } from "./thumbnails";
+import type { IThumbnailFetcher } from "./thumbnails";
 
 export type {
   IManifestFetcherSettings,
@@ -29,5 +32,12 @@ export type {
   IManifestRefreshSettings,
   ISegmentQueueCreatorBackoffOptions,
   SegmentQueue,
+  IThumbnailFetcher,
 };
-export { ManifestFetcher, SegmentQueueCreator };
+export {
+  CdnPrioritizer,
+  ManifestFetcher,
+  SegmentQueueCreator,
+  createThumbnailFetcher,
+  getThumbnailFetcherRequestOptions,
+};

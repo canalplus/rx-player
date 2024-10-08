@@ -308,6 +308,7 @@ function createManifest(
         adaptations,
         duration: currentPeriod.duration,
         start: contentOffset + currentPeriod.start,
+        thumbnailTracks: currentPeriod.thumbnailTracks,
       };
       manifestPeriods.push(newPeriod);
     }

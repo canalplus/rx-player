@@ -87,6 +87,17 @@ export function generateRepresentationChildrenParser(
         break;
       }
 
+      case TagName.EssentialProperty: {
+        const essentialProperty = {};
+        if (childrenObj.essentialProperties === undefined) {
+          childrenObj.essentialProperties = [];
+        }
+        childrenObj.essentialProperties.push(essentialProperty);
+        const attributeParser = generateSchemeAttrParser(essentialProperty, linearMemory);
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        break;
+      }
+
       case TagName.SupplementalProperty: {
         const supplementalProperty = {};
         if (childrenObj.supplementalProperties === undefined) {

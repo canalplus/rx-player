@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
+import log from "../../../../log";
 import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
 import arrayFind from "../../../../utils/array_find";
 import arrayIncludes from "../../../../utils/array_includes";
-import type { IRepresentationIntermediateRepresentation } from "../node_parser_types";
+import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import type {
+  IAdaptationSetIntermediateRepresentation,
+  IRepresentationIntermediateRepresentation,
+} from "../node_parser_types";
 
 /** Different "type" a parsed Adaptation can be. */
 type IAdaptationType = "audio" | "video" | "text";
@@ -32,6 +38,56 @@ interface IScheme {
 }
 
 /**
+ * From a thumbnail AdaptationSet, returns core information such as the number
+ * of tiles vertically and horizontally per image.
+ *
+ * Returns `null` if the information could not be parsed.
+ * @param {Object} adaptation
+ * @returns {Object|null}
+ */
+export function getThumbnailAdaptationSetInfo(
+  adaptation: IAdaptationSetIntermediateRepresentation,
+  representation?: IRepresentationIntermediateRepresentation | undefined,
+): {
+  horizontalTiles: number;
+  verticalTiles: number;
+} | null {
+  const thumbnailProp =
+    arrayFind(
+      adaptation.children.essentialProperties ?? [],
+      (p) =>
+        p.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" ||
+        p.schemeIdUri === "http://dashif.org/thumbnail_tile",
+    ) ??
+    arrayFind(
+      (representation ?? adaptation.children.representations[0])?.children
+        .essentialProperties ?? [],
+      (p) =>
+        p.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" ||
+        p.schemeIdUri === "http://dashif.org/thumbnail_tile",
+    );
+  if (thumbnailProp === undefined) {
+    return null;
+  }
+  const tilesRegex = /(\d+)x(\d+)/;
+  if (
+    thumbnailProp === undefined ||
+    thumbnailProp.value === undefined ||
+    !tilesRegex.test(thumbnailProp.value)
+  ) {
+    log.warn("DASH: Invalid thumbnails Representation, no tile-related information");
+    return null;
+  }
+  const match = thumbnailProp.value.match(tilesRegex) as RegExpMatchArray;
+  const horizontalTiles = parseInt(match[1], 10);
+  const verticalTiles = parseInt(match[2], 10);
+  return {
+    horizontalTiles,
+    verticalTiles,
+  };
+}
+
+/**
  * Infers the type of adaptation from codec and mimetypes found in it.
  *
  * This follows the guidelines defined by the DASH-IF IOP:
@@ -42,18 +98,29 @@ interface IScheme {
  *       3. codec
  *
  * Note: This is based on DASH-IF-IOP-v4.0 with some more freedom.
+ * @param {Object} adaptation
  * @param {Array.<Object>} representations
- * @param {string|null} adaptationMimeType
- * @param {string|null} adaptationCodecs
- * @param {Array.<Object>|null} adaptationRoles
  * @returns {string} - "audio"|"video"|"text"|"metadata"|"unknown"
  */
 export default function inferAdaptationType(
+  adaptation: IAdaptationSetIntermediateRepresentation,
   representations: IRepresentationIntermediateRepresentation[],
-  adaptationMimeType: string | null,
-  adaptationCodecs: string | null,
-  adaptationRoles: IScheme[] | null,
-): IAdaptationType | undefined {
+): IAdaptationType | "thumbnails" | undefined {
+  if (adaptation.attributes.contentType === "image") {
+    if (getThumbnailAdaptationSetInfo(adaptation) !== null) {
+      return "thumbnails";
+    }
+    return undefined;
+  }
+  const adaptationMimeType = isNonEmptyString(adaptation.attributes.mimeType)
+    ? adaptation.attributes.mimeType
+    : null;
+  const adaptationCodecs = isNonEmptyString(adaptation.attributes.codecs)
+    ? adaptation.attributes.codecs
+    : null;
+  const adaptationRoles = !isNullOrUndefined(adaptation.children.roles)
+    ? adaptation.children.roles
+    : null;
   function fromMimeType(
     mimeType: string,
     roles: IScheme[] | null,

@@ -429,5 +429,12 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
     audio: audioVideoPipeline,
     video: audioVideoPipeline,
     text: textTrackPipeline,
+    thumbnails: {
+      loadThumbnail: () =>
+        Promise.reject(new Error("Thumbnail tracks aren't implemented with smooth")),
+      parseThumbnail: () => {
+        throw new Error("Thumbnail tracks aren't implemented with smooth");
+      },
+    },
   };
 }

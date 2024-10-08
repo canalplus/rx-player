@@ -1183,6 +1183,31 @@ const DEFAULT_CONFIG = {
    * one.
    */
   DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as const,
+
+  /**
+   * The default number of times a thumbnail request will be re-performed when
+   * on error which justify a retry.
+   *
+   * Note that some errors do not use this counter:
+   *   - if the error is not due to the xhr, no retry will be peformed
+   *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
+   *     retry will be performed.
+   * @type Number
+   */
+  DEFAULT_MAX_THUMBNAIL_REQUESTS_RETRY_ON_ERROR: 1,
+
+  /**
+   * Default time interval after which a thumbnail request will timeout, in ms.
+   * @type {Number}
+   */
+  DEFAULT_THUMBNAIL_REQUEST_TIMEOUT: 10 * 1000,
+
+  /**
+   * Default connection time after which a thumbnail request conncection will
+   * timeout, in ms.
+   * @type {Number}
+   */
+  DEFAULT_THUMBNAIL_CONNECTION_TIMEOUT: 7 * 1000,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;

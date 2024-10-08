@@ -1,7 +1,7 @@
 import * as React from "react";
 import ProgressbarComponent from "../components/ProgressBar";
 import ToolTip from "../components/ToolTip";
-import VideoThumbnail from "../components/VideoThumbnail";
+import ThumbnailPreview from "../components/ThumbnailPreview";
 import useModuleState from "../lib/useModuleState";
 import type { IPlayerModule } from "../modules/player/index";
 
@@ -66,23 +66,14 @@ function ProgressBar({
     setTimeIndicatorText("");
   }, [isLive]);
 
-  const showVideoTumbnail = React.useCallback((ts: number, clientX: number): void => {
+  const showThumbnail = React.useCallback((ts: number, clientX: number): void => {
     const timestampToMs = ts;
     setThumbnailIsVisible(true);
     setTipPosition(clientX);
     setImageTime(timestampToMs);
   }, []);
 
-  const showThumbnail = React.useCallback(
-    (ts: number, clientX: number): void => {
-      if (enableVideoThumbnails) {
-        showVideoTumbnail(ts, clientX);
-      }
-    },
-    [showVideoTumbnail, enableVideoThumbnails],
-  );
-
-  const hideTumbnail = React.useCallback((): void => {
+  const hideThumbnail = React.useCallback((): void => {
     setThumbnailIsVisible(false);
     setTipPosition(0);
     setImageTime(null);
@@ -98,8 +89,8 @@ function ProgressBar({
 
   const hideToolTips = React.useCallback(() => {
     hideTimeIndicator();
-    hideTumbnail();
-  }, [hideTumbnail, hideTimeIndicator]);
+    hideThumbnail();
+  }, [hideThumbnail, hideTimeIndicator]);
 
   const onMouseMove = React.useCallback(
     (position: number, event: React.MouseEvent) => {
@@ -127,9 +118,14 @@ function ProgressBar({
   let thumbnailElement: JSX.Element | null = null;
   if (thumbnailIsVisible) {
     const xThumbnailPosition = tipPosition - toolTipOffset;
-    if (enableVideoThumbnails && imageTime !== null) {
+    if (imageTime !== null) {
       thumbnailElement = (
-        <VideoThumbnail xPosition={xThumbnailPosition} time={imageTime} player={player} />
+        <ThumbnailPreview
+          xPosition={xThumbnailPosition}
+          time={imageTime}
+          player={player}
+          showVideoThumbnail={enableVideoThumbnails}
+        />
       );
     }
   }

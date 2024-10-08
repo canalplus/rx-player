@@ -24,6 +24,7 @@ function generateParsedPeriod(
     adaptations,
     duration: end === undefined ? undefined : end - start,
     streamEvents: [],
+    thumbnailTracks: [],
   };
 }
 function generateParsedAudioAdaptation(id: string): IParsedAdaptation {
@@ -221,8 +222,8 @@ describe("Manifest - Manifest", () => {
   it("should expose the adaptations of the first period if set", async () => {
     const adapP1 = {};
     const adapP2 = {};
-    const period1 = { id: "0", start: 4, adaptations: adapP1 };
-    const period2 = { id: "1", start: 12, adaptations: adapP2 };
+    const period1 = { id: "0", start: 4, adaptations: adapP1, thumbnailTracks: [] };
+    const period2 = { id: "1", start: 12, adaptations: adapP2, thumbnailTracks: [] };
     const simpleFakeManifest = {
       id: "man",
       isDynamic: false,
@@ -267,8 +268,8 @@ describe("Manifest - Manifest", () => {
     );
 
     expect(manifest.periods).toEqual([
-      { id: "foo0", start: 4, adaptations: adapP1 },
-      { id: "foo1", start: 12, adaptations: adapP2 },
+      { id: "foo0", start: 4, adaptations: adapP1, thumbnailTracks: [] },
+      { id: "foo1", start: 12, adaptations: adapP2, thumbnailTracks: [] },
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
@@ -412,8 +413,20 @@ describe("Manifest - Manifest", () => {
     expect(manifest.getMaximumSafePosition()).toEqual(10);
     expect(manifest.getMinimumSafePosition()).toEqual(5);
     expect(manifest.periods).toEqual([
-      { id: "foo0", adaptations: oldPeriod1.adaptations, start: 4, streamEvents: [] },
-      { id: "foo1", adaptations: oldPeriod2.adaptations, start: 12, streamEvents: [] },
+      {
+        id: "foo0",
+        adaptations: oldPeriod1.adaptations,
+        start: 4,
+        streamEvents: [],
+        thumbnailTracks: [],
+      },
+      {
+        id: "foo1",
+        adaptations: oldPeriod2.adaptations,
+        start: 12,
+        streamEvents: [],
+        thumbnailTracks: [],
+      },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
     expect(manifest.uris).toEqual(["url1", "url2"]);
@@ -478,8 +491,8 @@ describe("Manifest - Manifest", () => {
       isLastPeriodKnown: true,
       lifetime: 13,
       periods: [
-        { id: "0", start: 4, adaptations: oldPeriod1.adaptations },
-        { id: "1", start: 12, adaptations: oldPeriod2.adaptations },
+        { id: "0", start: 4, adaptations: oldPeriod1.adaptations, thumbnailTracks: [] },
+        { id: "1", start: 12, adaptations: oldPeriod2.adaptations, thumbnailTracks: [] },
       ],
       suggestedPresentationDelay: 99,
       timeBounds: {
