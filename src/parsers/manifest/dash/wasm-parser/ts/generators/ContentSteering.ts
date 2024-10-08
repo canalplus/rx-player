@@ -14,30 +14,51 @@
  * limitations under the License.
  */
 
-import type { IBaseUrlIntermediateRepresentation } from "../../../node_parser_types";
+import type { IContentSteeringIntermediateRepresentation } from "../../../node_parser_types";
 import type { IAttributeParser } from "../parsers_stack";
 import { AttributeName } from "../types";
 import { parseString } from "../utils";
 
 /**
- * Generate an "attribute parser" once inside a `BaseURL` node.
- * @param {Object} baseUrlAttrs
+ * Generate an "attribute parser" once inside a `ContentSteering` node.
+ * @param {Object} contentSteeringAttrs
  * @param {WebAssembly.Memory} linearMemory
  * @returns {Function}
  */
-export function generateBaseUrlAttrParser(
-  baseUrlAttrs: IBaseUrlIntermediateRepresentation,
+export function generateContentSteeringAttrParser(
+  contentSteeringAttrs: IContentSteeringIntermediateRepresentation,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   const textDecoder = new TextDecoder();
-  return function onMPDAttribute(attr: AttributeName, ptr: number, len: number) {
+  return function onMPDAttribute(attr: number, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.Text:
-        baseUrlAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        contentSteeringAttrs.value = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
         break;
 
-      case AttributeName.ServiceLocation: {
-        baseUrlAttrs.attributes.serviceLocation = parseString(
+      case AttributeName.DefaultServiceLocation: {
+        contentSteeringAttrs.attributes.defaultServiceLocation = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
+        break;
+      }
+
+      case AttributeName.QueryBeforeStart: {
+        contentSteeringAttrs.attributes.queryBeforeStart =
+          new DataView(linearMemory.buffer).getUint8(0) === 0;
+        break;
+      }
+
+      case AttributeName.ProxyServerUrl: {
+        contentSteeringAttrs.attributes.proxyServerUrl = parseString(
           textDecoder,
           linearMemory.buffer,
           ptr,

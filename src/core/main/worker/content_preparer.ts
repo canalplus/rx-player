@@ -129,13 +129,6 @@ export default class ContentPreparer {
         },
       );
 
-      const segmentQueueCreator = new SegmentQueueCreator(
-        dashPipelines,
-        cmcdDataBuilder,
-        context.segmentRetryOptions,
-        contentCanceller.signal,
-      );
-
       const trackChoiceSetter = new TrackChoiceSetter();
 
       const [mediaSource, segmentSinksStore, workerTextSender] =
@@ -160,7 +153,7 @@ export default class ContentPreparer {
         manifestFetcher,
         representationEstimator,
         segmentSinksStore,
-        segmentQueueCreator,
+        segmentQueueCreator: null,
         workerTextSender,
         trackChoiceSetter,
       };
@@ -194,8 +187,19 @@ export default class ContentPreparer {
             return;
           }
           manifest = man;
+
+          const segmentQueueCreator = new SegmentQueueCreator(
+            {
+              transportPipelines: dashPipelines,
+              cmcdDataBuilder,
+              manifest,
+              backoffOptions: context.segmentRetryOptions,
+            },
+            contentCanceller.signal,
+          );
           if (this._currentContent !== null) {
             this._currentContent.manifest = manifest;
+            this._currentContent.segmentQueueCreator = segmentQueueCreator;
           }
           checkIfReadyAndValidate();
         },
@@ -361,8 +365,10 @@ export interface IPreparedContentData {
   /**
    * Allows to create `SegmentQueue` which simplifies complex media segment
    * fetching.
+   *
+   * Set to `null` until the Manifest has been fetched.
    */
-  segmentQueueCreator: SegmentQueueCreator;
+  segmentQueueCreator: SegmentQueueCreator | null;
   /**
    * Allows to store and update the wanted tracks and Representation inside that
    * track.

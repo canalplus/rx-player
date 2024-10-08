@@ -93,5 +93,6 @@ export default function getLocalManifestPipelines(
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
+    steeringManifest: null,
   };
 }

@@ -17,6 +17,7 @@
 import type { IInbandEvent } from "../core/types";
 import type { IManifest, ISegment } from "../manifest";
 import type { ICdnMetadata } from "../parsers/manifest";
+import type { ISteeringManifest } from "../parsers/SteeringManifest";
 import type {
   ITrackType,
   ILoadedManifestFormat,
@@ -62,6 +63,20 @@ export interface ITransportPipelines {
   >;
   /** Functions allowing to load an parse text (e.g. subtitles) segments. */
   text: ISegmentPipeline<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
+  /**
+   * Functions allowing to load and parse a Content Steering Manifest for this
+   * transport.
+   *
+   * A Content Steering Manifest is an external document allowing to obtain the
+   * current priority between multiple available CDN. A Content Steering
+   * Manifest also may or may not be available depending on the content. You
+   * might know its availability by parsing the content's Manifest or any other
+   * resource.
+   *
+   * `null` if the notion of a Content Steering Manifest does not exist for this
+   * transport or if it does but it isn't handled right now.
+   */
+  steeringManifest: ITransportSteeringManifestPipeline | null;
 }
 
 /** Name describing the transport pipeline. */
@@ -186,6 +201,71 @@ export interface IManifestLoaderOptions {
    * the request.
    */
   cmcdPayload: ICmcdPayload | undefined;
+}
+
+/**
+ * Functions allowing to load and parse a potential Content Steering Manifest,
+ * which gives an order of preferred CDN to serve the content.
+ */
+export interface ITransportSteeringManifestPipeline {
+  /**
+   * "Loader" of the Steering Manifest pipeline, allowing to request a Steering
+   * Manifest so it can later be parsed by the `parseSteeringManifest` function.
+   *
+   * @param {string} url - URL of the Steering Manifest we want to load.
+   * @param {CancellationSignal} cancellationSignal - Signal which will allow to
+   * cancel the loading operation if the Steering Manifest is not needed anymore
+   * (for example, if the content has just been stopped).
+   * When cancelled, the promise returned by this function will reject with a
+   * `CancellationError`.
+   * @returns {Promise.<Object>} - Promise emitting the loaded Steering
+   * Manifest, that then can be parsed through the `parseSteeringManifest`
+   * function.
+   *
+   * Rejects in two cases:
+   *   - The loading operation has been cancelled through the `cancelSignal`
+   *     given in argument.
+   *     In that case, this Promise will reject with a `CancellationError`.
+   *   - The loading operation failed, most likely due to a request error.
+   *     In that case, this Promise will reject with the corresponding Error.
+   */
+  loadSteeringManifest: (
+    url: string,
+    cancelSignal: CancellationSignal,
+  ) => Promise<IRequestedData<string | Partial<Record<string, unknown>>>>;
+
+  /**
+   * "Parser" of the Steering Manifest pipeline, allowing to parse a loaded
+   * Steering Manifest so it can be exploited by the rest of the RxPlayer's
+   * logic.
+   *
+   * @param {Object} data - Response obtained from the `loadSteeringManifest`
+   * function.
+   * @param {Function} onWarnings - Callbacks called when minor Steering
+   * Manifest parsing errors are found.
+   * @param {CancellationSignal} cancelSignal - Cancellation signal which will
+   * allow to abort the parsing operation if you do not want the Steering
+   * Manifest anymore.
+   *
+   * That cancellationSignal can be triggered at any time, such as:
+   *   - after a warning is received
+   *   - while a request scheduled through the `scheduleRequest` argument is
+   *     pending.
+   *
+   * `parseSteeringManifest` will interrupt all operations if the signal has
+   * been triggered in one of those scenarios, and will automatically reject
+   * with the corresponding `CancellationError` instance.
+   * @returns {Object | Promise.<Object>} - Returns the Steering Manifest data.
+   * Throws if a fatal error happens while doing so.
+   *
+   * If this error is due to a cancellation (indicated through the
+   * `cancelSignal` argument), then the rejected error should be the
+   * corresponding `CancellationError` instance.
+   */
+  parseSteeringManifest: (
+    data: IRequestedData<unknown>,
+    onWarnings: (warnings: Error[]) => void,
+  ) => ISteeringManifest;
 }
 
 /** Functions allowing to load and parse segments of any type. */
@@ -387,6 +467,13 @@ export interface IManifestParserResult {
    * retrieve the whole data.
    */
   url?: string | undefined;
+}
+
+export interface IDASHContentSteeringManifest {
+  VERSION: number; // REQUIRED, must be an integer
+  TTL?: number; // REQUIRED, number of seconds
+  ["RELOAD-URI"]?: string; // OPTIONAL, URI
+  ["SERVICE-LOCATION-PRIORITY"]: string[]; // REQUIRED, array of ServiceLocation
 }
 
 /**

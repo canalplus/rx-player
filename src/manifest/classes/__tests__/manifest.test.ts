@@ -78,6 +78,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [],
+      contentSteering: null,
     };
 
     const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
@@ -124,6 +125,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     const fakePeriod = vi.fn((period: IPeriod) => {
@@ -182,6 +184,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     const representationFilter = function () {
@@ -241,6 +244,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
@@ -299,6 +303,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      contentSteering: null,
     };
 
     const fakePeriod = vi.fn(
@@ -379,6 +384,7 @@ describe("Manifest - Manifest", () => {
       },
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
+      contentSteering: null,
     };
 
     const fakePeriod = vi.fn(
@@ -461,6 +467,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [oldPeriod1, oldPeriod2],
+      contentSteering: null,
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
     };
@@ -492,6 +499,7 @@ describe("Manifest - Manifest", () => {
           time: 10,
         },
       },
+      contentSteering: null,
       uris: [],
     };
     const manifest2 = new Manifest(oldManifestArgs2, {}, []);
@@ -546,6 +554,7 @@ describe("Manifest - Manifest", () => {
       },
       suggestedPresentationDelay: 99,
       uris: ["url1", "url2"],
+      contentSteering: null,
     };
 
     const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;

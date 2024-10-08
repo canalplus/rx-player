@@ -21,7 +21,7 @@ import arrayFind from "../../../../utils/array_find";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import { getFilenameIndexInUrl } from "../../../../utils/url-utils";
-import type { IParsedManifest } from "../../types";
+import type { IContentSteeringMetadata, IParsedManifest } from "../../types";
 import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
@@ -298,6 +298,17 @@ function parseCompleteIntermediateRepresentation(
     time: number;
   };
 
+  let contentSteering: IContentSteeringMetadata | null = null;
+  if (rootChildren.contentSteering !== undefined) {
+    const { attributes } = rootChildren.contentSteering;
+    contentSteering = {
+      url: rootChildren.contentSteering.value,
+      defaultId: attributes.defaultServiceLocation,
+      queryBeforeStart: attributes.queryBeforeStart === true,
+      proxyUrl: attributes.proxyServerUrl,
+    };
+  }
+
   if (
     rootAttributes.minimumUpdatePeriod !== undefined &&
     rootAttributes.minimumUpdatePeriod >= 0
@@ -420,6 +431,7 @@ function parseCompleteIntermediateRepresentation(
   const parsedMPD: IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
+    contentSteering,
     isDynamic,
     isLive: isDynamic,
     isLastPeriodKnown,

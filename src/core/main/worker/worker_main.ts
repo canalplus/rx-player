@@ -503,7 +503,11 @@ function loadOrReloadPreparedContent(
   > = new Map();
 
   const preparedContent = contentPreparer.getCurrentContent();
-  if (preparedContent === null || preparedContent.manifest === null) {
+  if (
+    preparedContent === null ||
+    preparedContent.manifest === null ||
+    preparedContent.segmentQueueCreator === null
+  ) {
     const error = new OtherError("NONE", "Loading content when none is prepared");
     sendMessage({
       type: WorkerMessageType.Error,
