@@ -333,10 +333,7 @@ export default class CmcdDataBuilder {
     props.st = content.manifest.isDynamic ? "l" : "v";
     props.tb = content.adaptation.representations.reduce(
       (acc: number | undefined, representation: IRepresentation) => {
-        if (
-          representation.isSupported !== true ||
-          representation.decipherable === false
-        ) {
+        if (representation.isPlayable() !== true) {
           return acc;
         }
         if (acc === undefined) {

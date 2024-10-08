@@ -95,10 +95,7 @@ export default function AdaptationStream(
 
   const initialRepIds = content.representations.getValue().representationIds;
   const initialRepresentations = content.adaptation.representations.filter(
-    (r) =>
-      arrayIncludes(initialRepIds, r.id) &&
-      r.decipherable !== false &&
-      r.isSupported !== false,
+    (r) => arrayIncludes(initialRepIds, r.id) && r.isPlayable() !== false,
   );
 
   /** Emit the list of Representation for the adaptive logic. */

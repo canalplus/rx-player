@@ -237,9 +237,7 @@ export function toAudioTrack(
     audioDescription: adaptation.isAudioDescription === true,
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r))
       : adaptation.representations
     ).map(toAudioRepresentation),
     label: adaptation.label,
@@ -283,7 +281,7 @@ export function toVideoTrack(
           const representations = (
             filterPlayable
               ? trickModeAdaptation.representations.filter(
-                  (r) => r.isSupported === true && r.decipherable !== false,
+                  (r) => isRepresentationPlayable(r) === true,
                 )
               : trickModeAdaptation.representations
           ).map(toVideoRepresentation);
@@ -302,9 +300,7 @@ export function toVideoTrack(
   const videoTrack: IVideoTrack = {
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
       : adaptation.representations
     ).map(toVideoRepresentation),
     label: adaptation.label,
@@ -387,6 +383,32 @@ export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
     case "text":
       return { type: "text", track: toTextTrack(adaptation) };
   }
+}
+
+/**
+ * Returns `true` if the `Representation` has a high chance of being playable on
+ * the current device (its codec seems supported and we don't consider it to be
+ * un-decipherable).
+ *
+ * Returns `false` if the `Representation` has a high chance of being unplayable
+ * on the current device (its codec seems unsupported and/or we consider it to
+ * be un-decipherable).
+ *
+ * Returns `undefined` if we don't know as the codec has not been checked yet.
+ *
+ * @param {Object} representation
+ * @returns {boolean|undefined}
+ */
+export function isRepresentationPlayable(
+  representation: IRepresentationMetadata,
+): boolean | undefined {
+  if (representation.isSupported === undefined) {
+    if (representation.decipherable === false) {
+      return false;
+    }
+    return undefined;
+  }
+  return representation.isSupported && representation.decipherable !== false;
 }
 
 /**
