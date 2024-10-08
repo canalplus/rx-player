@@ -38,6 +38,17 @@ method will return an object with the following properties:
 - `hdrInfo` (`Object|undefined`) Information about the hdr characteristics of the
   Representation. (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
 
+- `contentProtections` (`Object|undefined`): Encryption information linked to this
+  Representation.
+
+  If set to an Object, the Representation is known to be encrypted. If unset or set to
+  `undefined` the Representation is either unencrypted or we don't know if it is.
+
+  When set to an object, it may contain the following properties:
+
+  - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+    Representation.
+
 You can also get the information on the loaded video Representation for another Period by
 calling `getVideoRepresentation` with the corresponding Period's id in argument. Such id
 can be obtained through the `getAvailablePeriods` method, the `newAvailablePeriods` event
