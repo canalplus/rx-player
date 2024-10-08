@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../../compat/eme";
+import type { IMediaKeySession } from "../../../compat/browser_compatibility_types";
 import log from "../../../log";
 import type {
   IPersistentLicenseConfig,
@@ -99,7 +99,6 @@ export default class PersistentSessionsStore {
   /**
    * Retrieve an entry based on its initialization data.
    * @param {Object}  initData
-   * @param {string|undefined} initDataType
    * @returns {Object|null}
    */
   public get(initData: IProcessedProtectionData): IPersistentSessionInfo | null {
@@ -114,8 +113,7 @@ export default class PersistentSessionsStore {
    * re-used to then be able to implement a caching replacement algorithm based
    * on the least-recently-used values by just evicting the first values
    * returned by `getAll`.
-   * @param {Uint8Array} initData
-   * @param {string|undefined} initDataType
+   * @param {Object} initData
    * @returns {*}
    */
   public getAndReuse(initData: IProcessedProtectionData): IPersistentSessionInfo | null {
@@ -130,14 +128,14 @@ export default class PersistentSessionsStore {
 
   /**
    * Add a new entry in the PersistentSessionsStore.
-   * @param {Uint8Array}  initData
-   * @param {string|undefined} initDataType
+   * @param {Object}  initData
+   * @param {Array.<Uint8Array>|undefined} keyIds
    * @param {MediaKeySession} session
    */
   public add(
     initData: IProcessedProtectionData,
     keyIds: Uint8Array[] | undefined,
-    session: MediaKeySession | ICustomMediaKeySession,
+    session: IMediaKeySession,
   ): void {
     if (isNullOrUndefined(session) || !isNonEmptyString(session.sessionId)) {
       log.warn("DRM-PSS: Invalid Persisten Session given.");

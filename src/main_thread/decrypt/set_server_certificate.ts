@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeys } from "../../compat/eme";
+import type { IMediaKeys } from "../../compat/browser_compatibility_types";
 import { EncryptedMediaError, isKnownError } from "../../errors";
 import log from "../../log";
 import type { IPlayerError } from "../../public_types";
@@ -35,11 +35,11 @@ import ServerCertificateStore from "./utils/server_certificate_store";
  * @returns {Promise}
  */
 async function setServerCertificate(
-  mediaKeys: ICustomMediaKeys | MediaKeys,
+  mediaKeys: IMediaKeys,
   serverCertificate: BufferSource,
 ): Promise<unknown> {
   try {
-    const res = await (mediaKeys as MediaKeys).setServerCertificate(serverCertificate);
+    const res = await mediaKeys.setServerCertificate(serverCertificate);
     // Note: Even if `setServerCertificate` technically should return a
     // Promise.<boolean>, this is not technically always true.
     // Thus we prefer to return unknown here.
@@ -63,7 +63,7 @@ async function setServerCertificate(
  * @returns {Promise.<Object>}
  */
 export default async function trySettingServerCertificate(
-  mediaKeys: ICustomMediaKeys | MediaKeys,
+  mediaKeys: IMediaKeys,
   serverCertificate: BufferSource,
 ): Promise<
   | { type: "success"; value: unknown }
