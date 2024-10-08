@@ -38,6 +38,11 @@ export interface IProbedMediaConfiguration {
     result?: IResultsFromAPI | undefined;
   }>;
 }
+/**
+ * Value after which we consider the browser API call to have fail it is still hanging.
+ * We have noticed that some devices hangs indefinitly on `navigator.requestMediaKeySystemAccess`.
+ */
+const BROWSER_API_TIMEOUT_MS = 30000;
 
 /**
  * Probe media capabilities, evaluating capabilities with available browsers
@@ -101,7 +106,15 @@ function probeMediaConfiguration(
             log.debug(error.message);
           }
         });
-      promises.push(prom);
+
+      const timeoutPromise = new Promise<void>((_resolve, reject) => {
+        setTimeout(() => {
+          // API take too long to respond
+          log.warn(`MediaCapabilitiesProber: API ${browserAPI} take too long to respond`);
+          reject();
+        }, BROWSER_API_TIMEOUT_MS);
+      });
+      promises.push(Promise.race([prom, timeoutPromise]));
     }
   }
 
