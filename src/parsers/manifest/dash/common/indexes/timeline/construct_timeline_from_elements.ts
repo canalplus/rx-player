@@ -18,29 +18,23 @@ import type { ITNode } from "../../../../../../utils/xml-parser";
 import type { IIndexSegment } from "../../../../utils/index_helpers";
 import convertElementsToIndexSegment from "./convert_element_to_index_segment";
 import type { IParsedS } from "./parse_s_element";
-import { parseSElementNode, parseSHTMLElement } from "./parse_s_element";
+import { parseSElementNode } from "./parse_s_element";
 
 /**
  * Allows to generate the "timeline" for the "Timeline" RepresentationIndex.
  * Call this function when the timeline is unknown.
  * This function was added to only perform that task lazily, i.e. only when
  * first needed.
- * @param {Array.<Object>|HTMLCollection} elements - All S nodes constituting
+ * @param {Array.<Object>} elements - All S nodes constituting
  * the corresponding SegmentTimeline node.
  * @returns {Array.<Object>}
  */
 export default function constructTimelineFromElements(
-  elements: ITNode[] | HTMLCollection,
+  elements: ITNode[],
 ): IIndexSegment[] {
   const initialTimeline: IParsedS[] = [];
-  if (Array.isArray(elements)) {
-    for (let i = 0; i < elements.length; i++) {
-      initialTimeline.push(parseSElementNode(elements[i]));
-    }
-  } else {
-    for (let i = 0; i < elements.length; i++) {
-      initialTimeline.push(parseSHTMLElement(elements[i]));
-    }
+  for (let i = 0; i < elements.length; i++) {
+    initialTimeline.push(parseSElementNode(elements[i]));
   }
   const timeline: IIndexSegment[] = [];
   for (let i = 0; i < initialTimeline.length; i++) {
