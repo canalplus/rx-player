@@ -45,7 +45,7 @@ import type {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
-import generateManifestLoader from "./manifest_loader";
+import generateManifestLoader from "../utils/generate_manifest_loader";
 
 /**
  * Get base - real - content from an offseted metaplaylist content.
@@ -113,9 +113,13 @@ function getMetaPlaylistPrivateInfos(segment: ISegment): IMetaPlaylistPrivateInf
 export default function (options: ITransportOptions): ITransportPipelines {
   const transports: Partial<Record<string, ITransportPipelines>> = {};
 
-  const manifestLoader = generateManifestLoader({
-    customManifestLoader: options.manifestLoader,
-  });
+  const manifestLoader = generateManifestLoader(
+    {
+      customManifestLoader: options.manifestLoader,
+    },
+    "text",
+    null,
+  );
 
   // remove some options that we might not want to apply to the
   // other streaming protocols used here
