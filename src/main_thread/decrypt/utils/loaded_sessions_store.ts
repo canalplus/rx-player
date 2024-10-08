@@ -120,6 +120,17 @@ export default class LoadedSessionsStore {
     return null;
   }
 
+  public hasEntryForRecord(
+    keySessionRecord: KeySessionRecord
+  ): boolean {
+    for (const stored of this._storage) {
+      if (stored.keySessionRecord === keySessionRecord) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Get `LoadedSessionsStore`'s entry for a given MediaKeySession.
    * Returns `null` if the given MediaKeySession is not stored in the
