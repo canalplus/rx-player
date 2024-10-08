@@ -15,7 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
 import type {
   IPeriodsUpdateResult,
