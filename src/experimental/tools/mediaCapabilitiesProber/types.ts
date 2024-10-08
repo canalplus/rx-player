@@ -23,7 +23,7 @@ export interface IMediaKeySystemConfiguration {
   sessionTypes?: string[];
 }
 
-interface IVideoConfiguration {
+export interface IVideoConfiguration {
   contentType?: string;
   width?: number;
   height?: number;
@@ -32,14 +32,14 @@ interface IVideoConfiguration {
   bitsPerComponent?: number;
 }
 
-interface IAudioConfiguration {
+export interface IAudioConfiguration {
   contentType?: string;
   channels?: string;
   bitrate?: number;
   samplerate?: number;
 }
 
-interface IKeySystem {
+export interface IMediaConfigurationKeySystem {
   type?: string;
   configuration?: IMediaKeySystemConfiguration;
 }
@@ -55,21 +55,7 @@ export interface IMediaConfiguration {
   type?: "media-source" | "file" | undefined;
   video?: IVideoConfiguration | undefined;
   audio?: IAudioConfiguration | undefined;
-  keySystem?: IKeySystem;
+  keySystem?: IMediaConfigurationKeySystem;
   hdcp?: string;
   display?: IDisplayConfiguration;
 }
-
-export interface ICompatibleKeySystem {
-  type: string;
-  configuration: MediaKeySystemConfiguration;
-  compatibleConfiguration?: MediaKeySystemConfiguration;
-}
-
-export enum ProberStatus {
-  NotSupported,
-  Unknown,
-  Supported,
-}
-
-export type ICapabilities = Array<string | { [key: string]: ICapabilities }>;

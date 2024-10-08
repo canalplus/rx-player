@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import globalScope from "../../../../../utils/global_scope";
 import type IProbeMediaDisplayInfos from "../../probers/mediaDisplayInfos";
-import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   it("should throw if matchMedia is undefined", async () => {
@@ -14,13 +13,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     const probeMediaDisplayInfos = (
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    expect(probeMediaDisplayInfos({})).rejects.toThrowError(
-      "MediaCapabilitiesProber >>> API_CALL: matchMedia not available",
-    );
-    (
-      globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-    ).matchMedia = origMatchMedia;
+    expect(() => probeMediaDisplayInfos({})).toThrowError("matchMedia API not available");
+    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should throw if no colorSpace in display configuration", async () => {
@@ -36,22 +30,10 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
 
-    expect.assertions(1);
-    return probeMediaDisplayInfos(config)
-      .then(() => {
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      })
-      .catch(({ message }: { message: string }) => {
-        expect(message).toBe(
-          "MediaCapabilitiesProber >>> API_CALL: " +
-            "Not enough arguments for calling matchMedia.",
-        );
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      });
+    expect(() => probeMediaDisplayInfos(config)).toThrowError(
+      "Not enough arguments for calling matchMedia.",
+    );
+    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should throw if no display in configuration", async () => {
@@ -65,22 +47,10 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
 
-    expect.assertions(1);
-    return probeMediaDisplayInfos(config)
-      .then(() => {
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      })
-      .catch(({ message }: { message: string }) => {
-        expect(message).toBe(
-          "MediaCapabilitiesProber >>> API_CALL: " +
-            "Not enough arguments for calling matchMedia.",
-        );
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      });
+    expect(() => probeMediaDisplayInfos(config)).toThrowError(
+      "Not enough arguments for calling matchMedia.",
+    );
+    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should throw if mediaMatch called with bad arguments", async () => {
@@ -100,26 +70,13 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
 
-    expect.assertions(2);
-    return probeMediaDisplayInfos(config)
-      .then(() => {
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      })
-      .catch(({ message }: { message: string }) => {
-        expect(message).toBe(
-          "MediaCapabilitiesProber >>> API_CALL: " +
-            "Bad arguments for calling matchMedia.",
-        );
-        expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      });
+    expect(() => probeMediaDisplayInfos(config)).toThrowError(
+      "Bad arguments for calling matchMedia.",
+    );
+    globalScope.matchMedia = origMatchMedia;
   });
 
-  it("should resolves with `Supported` if color space is supported", async () => {
+  it("should return `Supported` if color space is supported", async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
@@ -136,23 +93,12 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
 
-    expect.assertions(2);
-    return probeMediaDisplayInfos(config)
-      .then(([res]) => {
-        expect(res).toEqual(ProberStatus.Supported);
-        expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      })
-      .catch(() => {
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      });
+    expect(probeMediaDisplayInfos(config)).toEqual("Supported");
+    expect(mockMatchMedia).toHaveBeenCalledTimes(1);
+    globalScope.matchMedia = origMatchMedia;
   });
 
-  it("should resolves with `NotSupported` if color space is not supported", async () => {
+  it("should return `NotSupported` if color space is not supported", async () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
@@ -169,19 +115,8 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
 
-    expect.assertions(2);
-    return probeMediaDisplayInfos(config)
-      .then(([res]) => {
-        expect(res).toEqual(ProberStatus.NotSupported);
-        expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      })
-      .catch(() => {
-        (
-          globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
-        ).matchMedia = origMatchMedia;
-      });
+    expect(probeMediaDisplayInfos(config)).toEqual("NotSupported");
+    expect(mockMatchMedia).toHaveBeenCalledTimes(1);
+    globalScope.matchMedia = origMatchMedia;
   });
 });

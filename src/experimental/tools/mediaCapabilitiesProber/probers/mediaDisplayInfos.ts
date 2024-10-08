@@ -17,44 +17,29 @@
 import globalScope from "../../../../utils/global_scope";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IMediaConfiguration } from "../types";
-import { ProberStatus } from "../types";
 
 /**
  * @param {Object} config
- * @returns {Promise}
+ * @returns {string}
  */
 export default function probeMatchMedia(
   config: IMediaConfiguration,
-): Promise<[ProberStatus]> {
-  return new Promise((resolve) => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    if (typeof globalScope.matchMedia !== "function") {
-      throw new Error(
-        "MediaCapabilitiesProber >>> API_CALL: " + "matchMedia not available",
-      );
-    }
-    if (
-      isNullOrUndefined(config.display) ||
-      config.display.colorSpace === undefined ||
-      config.display.colorSpace.length === 0
-    ) {
-      throw new Error(
-        "MediaCapabilitiesProber >>> API_CALL: " +
-          "Not enough arguments for calling matchMedia.",
-      );
-    }
+): "Supported" | "NotSupported" {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  if (typeof globalScope.matchMedia !== "function") {
+    throw new Error("matchMedia API not available");
+  }
+  if (
+    isNullOrUndefined(config.display) ||
+    config.display.colorSpace === undefined ||
+    config.display.colorSpace.length === 0
+  ) {
+    throw new Error("Not enough arguments for calling matchMedia.");
+  }
 
-    const match = globalScope.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
-    if (match.media === "not all") {
-      throw new Error(
-        "MediaCapabilitiesProber >>> API_CALL: " +
-          "Bad arguments for calling matchMedia.",
-      );
-    }
-
-    const result: [ProberStatus] = [
-      match.matches ? ProberStatus.Supported : ProberStatus.NotSupported,
-    ];
-    resolve(result);
-  });
+  const match = globalScope.matchMedia(`(color-gamut: ${config.display.colorSpace})`);
+  if (match.media === "not all") {
+    throw new Error("Bad arguments for calling matchMedia.");
+  }
+  return match.matches ? "Supported" : "NotSupported";
 }

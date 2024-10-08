@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { ICapabilities, IMediaConfiguration } from "../types";
+import type { IMediaConfiguration } from "../types";
+import type { ICapabilities } from "../utils";
 import { extend, filterConfigurationWithCapabilities } from "../utils";
 
 describe("MediaCapabilitiesProber utils - extends", () => {

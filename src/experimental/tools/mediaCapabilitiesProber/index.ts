@@ -15,6 +15,10 @@
  */
 
 import MediaCapabilitiesProber from "./api";
-import type { ICompatibleKeySystem } from "./types";
-export type { ICompatibleKeySystem };
+export type {
+  IMediaConfiguration,
+  IVideoConfiguration,
+  IAudioConfiguration,
+  IMediaConfigurationKeySystem,
+} from "./types";
 export default MediaCapabilitiesProber;
