@@ -76,7 +76,7 @@ export interface IInitialSeekAndPlayObject {
 export default function performInitialSeekAndPlay(
   mediaElement: HTMLMediaElement,
   playbackObserver: PlaybackObserver,
-  startTime: number | (() => number),
+  startTime: number | (() => number | undefined),
   mustAutoPlay: boolean,
   onWarning: (err: IPlayerError) => void,
   isDirectfile: boolean,
@@ -127,7 +127,47 @@ export default function performInitialSeekAndPlay(
     // a sufficient `readyState` has been reached for directfile contents.
     // So let's divide the two possibilities here.
     const initialTime = typeof startTime === "function" ? startTime() : startTime;
-    if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
+    if (
+      initialTime === undefined &&
+      isDirectfile &&
+      mediaElement.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+      /**
+       * On browser, such as Safari, the HTMLMediaElement.duration
+       * and HTMLMediaElement.buffered may not be initialized at readyState 1, leading
+       * to cases where it can be equal to `Infinity`.
+       * If so, the range in which it is possible to seek is not yet known.
+       * To solve this, the seek should be done after readyState HAVE_CURRENT_DATA (2),
+       * at that time the previously mentioned attributes are correctly initialized and
+       * the range in which it is possible to seek is correctly known.
+       * If the initiallySeekedTime is still `undefined` when the readyState is >= 2,
+       * let assume that the initiallySeekedTime will never be known and continue
+       * the logic without seeking.
+       */
+      playbackObserver.listen((obs, stopListening) => {
+        if (obs.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          const observationInitialTime =
+            typeof startTime === "function" ? startTime() : startTime;
+          if (observationInitialTime === undefined) {
+            initialSeekPerformed.setValue(true);
+            initialSeekPerformed.finish();
+          } else if (isDirectfile && isSafariMobile) {
+            // On safari mobile (version 17.1.2) seeking too early cause the video
+            // to never buffer media data. Using setTimeout 0 defers the seek
+            // to a moment at which safari should be more able to handle a seek.
+            setTimeout(() => {
+              performInitialSeek(observationInitialTime);
+            }, 0);
+          } else {
+            performInitialSeek(observationInitialTime);
+          }
+          stopListening();
+        }
+      });
+    } else if (initialTime === undefined) {
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    } else if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
       initialSeekPerformed.setValue(true);
       initialSeekPerformed.finish();
     } else if (isDirectfile && isSafariMobile) {
