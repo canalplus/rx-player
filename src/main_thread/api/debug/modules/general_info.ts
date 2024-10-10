@@ -65,7 +65,7 @@ export default function constructDebugGeneralInfo(
         valuesLine1.push(["wo", "0"]);
       }
 
-      const valuesLine2: Array<[string, string]> = [];
+      const valuesLine2: Array<[string, string]> = [["v", instance.version]];
       const ks = instance.getKeySystemConfiguration();
       if (ks !== null) {
         valuesLine2.push(["ks", ks.keySystem]);
