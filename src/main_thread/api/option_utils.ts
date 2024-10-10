@@ -65,29 +65,55 @@ export interface IParsedConstructorOptions {
 /**
  * Base type which the types for the parsed options of the RxPlayer's
  * `loadVideo` method exend.
+ * @see ILoadVideoOptions
  */
 interface IParsedLoadVideoOptionsBase {
+  /** @see ILoadVideoOptions.url */
   url: string | undefined;
+  /** @see ILoadVideoOptions.transport */
   transport: string;
+  /** @see ILoadVideoOptions.autoPlay */
   autoPlay: boolean;
+  /** @see ILoadVideoOptions.initialManifest */
   initialManifest: ILoadedManifestFormat | undefined;
+  /** @see ILoadVideoOptions.keySystems */
   keySystems: IKeySystemOption[];
+  /** @see ILoadVideoOptions.lowLatencyMode */
   lowLatencyMode: boolean;
+  /** @see ILoadVideoOptions.minimumManifestUpdateInterval */
   minimumManifestUpdateInterval: number;
+  /** @see ILoadVideoOptions.requestConfig */
   requestConfig: IRequestConfig;
+  /** @see ILoadVideoOptions.startAt */
   startAt: IParsedStartAtOption | undefined;
+  /** @see ILoadVideoOptions.enableFastSwitching */
   enableFastSwitching: boolean;
+  /** @see ILoadVideoOptions.defaultAudioTrackSwitchingMode */
   defaultAudioTrackSwitchingMode: IAudioTrackSwitchingMode | undefined;
+  /** @see ILoadVideoOptions.onCodecSwitch */
   onCodecSwitch: "continue" | "reload";
+  /** @see ILoadVideoOptions.checkMediaSegmentIntegrity */
   checkMediaSegmentIntegrity?: boolean | undefined;
+  /** @see ILoadVideoOptions.checkManifestIntegrity */
   checkManifestIntegrity?: boolean | undefined;
+  /** @see ILoadVideoOptions.manifestLoader */
   manifestLoader?: IManifestLoader | undefined;
+  /** @see ILoadVideoOptions.referenceDateTime */
   referenceDateTime?: number | undefined;
+  /** @see ILoadVideoOptions.representationFilter */
   representationFilter?: IRepresentationFilter | string | undefined;
+  /** @see ILoadVideoOptions.segmentLoader */
   segmentLoader?: ISegmentLoader | undefined;
+  /** @see ILoadVideoOptions.serverSyncInfos */
   serverSyncInfos?: IServerSyncInfos | undefined;
+  /** @see ILoadVideoOptions.mode */
   mode: IRxPlayerMode;
+  /** @see ILoadVideoOptions.cmcd */
   cmcd: ICmcdOptions | undefined;
+  /** @see ILoadVideoOptions.experimentalOptions */
+  experimentalOptions: {
+    enableResolutionChecks: boolean;
+  };
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
@@ -461,6 +487,10 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     mode,
     url,
     cmcd: options.cmcd,
+    experimentalOptions: {
+      enableResolutionChecks:
+        options.experimentalOptions?.enableResolutionChecks === true,
+    },
   };
 }
 

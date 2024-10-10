@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import getMaxSupportedResolution from "../../compat/max_resolution_detection";
 import log from "../../log";
 import type { IRepresentationMetadata } from "../../manifest";
 import type {
@@ -24,10 +25,11 @@ import type {
 import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
-import type codecSupportCache from "./codec_support_cache";
+import type CodecSupportCache from "./codec_support_cache";
 import type { IRepresentationIndex } from "./representation_index";
 
 const generateRepresentationUniqueId = idGenerator();
+const maxResolutionSupported = getMaxSupportedResolution();
 
 /**
  * Normalized Representation structure.
@@ -101,13 +103,21 @@ class Representation implements IRepresentationMetadata {
    */
   public decipherable?: boolean | undefined;
   /**
-   * @see IRepresentationMetadata.isSupported
+   * @see IRepresentationMetadata.isCodecSupported
    *
    * Note that this property should __NEVER__ be updated directly on an
    * instanciated `Representation`, you are supposed to rely on
    * `Manifest` methods for this.
    */
-  public isSupported: boolean | undefined;
+  public isCodecSupported: boolean | undefined;
+
+  /**
+   * @see IRepresentationMetadata.isResolutionSupported
+   *
+   * Note that this property should __NEVER__ be updated directly on an
+   * instanciated `Representation`.
+   */
+  public isResolutionSupported: boolean | undefined;
   /**
    * @see ITrackType
    */
@@ -119,8 +129,15 @@ class Representation implements IRepresentationMetadata {
    */
   constructor(
     args: IParsedRepresentation,
-    trackType: ITrackType,
-    cachedCodecSupport: codecSupportCache,
+    {
+      trackType,
+      codecSupportCache,
+      enableResolutionChecks,
+    }: {
+      trackType: ITrackType;
+      codecSupportCache?: CodecSupportCache | undefined;
+      enableResolutionChecks?: boolean | undefined;
+    },
   ) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
@@ -161,11 +178,14 @@ class Representation implements IRepresentationMetadata {
 
     const isEncrypted = this.contentProtections !== undefined;
 
-    if (trackType === "audio" || trackType === "video") {
+    if (
+      (trackType === "audio" || trackType === "video") &&
+      codecSupportCache !== undefined
+    ) {
       // Supplemental codecs are defined as backwards-compatible codecs enhancing
       // the experience of a base layer codec
       if (args.supplementalCodecs !== undefined) {
-        const isSupplementaryCodecSupported = cachedCodecSupport.isSupported(
+        const isSupplementaryCodecSupported = codecSupportCache.isSupported(
           this.mimeType ?? "",
           args.supplementalCodecs ?? "",
           isEncrypted,
@@ -173,10 +193,10 @@ class Representation implements IRepresentationMetadata {
 
         if (isSupplementaryCodecSupported !== false) {
           this.codecs = [args.supplementalCodecs];
-          this.isSupported = isSupplementaryCodecSupported;
+          this.isCodecSupported = isSupplementaryCodecSupported;
         }
       }
-      if (this.isSupported !== true) {
+      if (this.isCodecSupported !== true) {
         if (this.codecs.length > 0) {
           // We couldn't check for support of another supplemental codec.
           // Just push that codec without testing support yet, we'll check
@@ -184,7 +204,7 @@ class Representation implements IRepresentationMetadata {
           this.codecs.push(args.codecs ?? "");
         } else {
           this.codecs = args.codecs === undefined ? [] : [args.codecs];
-          this.isSupported = cachedCodecSupport.isSupported(
+          this.isCodecSupported = codecSupportCache.isSupported(
             this.mimeType ?? "",
             args.codecs ?? "",
             isEncrypted,
@@ -195,7 +215,23 @@ class Representation implements IRepresentationMetadata {
       if (args.codecs !== undefined) {
         this.codecs.push(args.codecs);
       }
-      this.isSupported = true;
+      this.isCodecSupported = true;
+    }
+
+    if (trackType === "video" && enableResolutionChecks !== true) {
+      if (
+        args.height !== undefined &&
+        maxResolutionSupported.height !== undefined &&
+        args.height > maxResolutionSupported.height
+      ) {
+        this.isResolutionSupported = false;
+      } else if (
+        args.width !== undefined &&
+        maxResolutionSupported.width !== undefined &&
+        args.width > maxResolutionSupported.width
+      ) {
+        this.isResolutionSupported = false;
+      }
     }
   }
 
@@ -207,17 +243,17 @@ class Representation implements IRepresentationMetadata {
    * by the current environnement allows to work-around this issue.
    *
    * If the right mimetype+codec combination is found in the provided object,
-   * this `Representation`'s `isSupported` property will be updated accordingly.
+   * this `Representation`'s `isCodecSupported` property will be updated accordingly.
    *
-   * @param {Array.<Object>} cachedCodecSupport;
+   * @param {Array.<Object>} codecSupportCache;
    */
-  public refreshCodecSupport(cachedCodecSupport: codecSupportCache) {
-    if (this.isSupported !== undefined) {
+  public refreshCodecSupport(codecSupportCache: CodecSupportCache) {
+    if (this.isCodecSupported !== undefined) {
       return;
     }
 
     const isEncrypted = this.contentProtections !== undefined;
-    let isSupported: boolean | undefined = false;
+    let isCodecSupported: boolean | undefined = false;
     const mimeType = this.mimeType ?? "";
     let codecs = this.codecs ?? [];
     if (codecs.length === 0) {
@@ -225,28 +261,28 @@ class Representation implements IRepresentationMetadata {
     }
     let representationHasUnknownCodecs = false;
     for (const codec of codecs) {
-      isSupported = cachedCodecSupport.isSupported(mimeType, codec, isEncrypted);
-      if (isSupported === true) {
+      isCodecSupported = codecSupportCache.isSupported(mimeType, codec, isEncrypted);
+      if (isCodecSupported === true) {
         this.codecs = [codec];
         break;
       }
-      if (isSupported === undefined) {
+      if (isCodecSupported === undefined) {
         representationHasUnknownCodecs = true;
       }
     }
     /** If any codec is supported, the representation is supported */
-    if (isSupported === true) {
-      this.isSupported = true;
+    if (isCodecSupported === true) {
+      this.isCodecSupported = true;
     } else {
       /** If some codecs support are not known it's too early to assume
        *  representation is unsupported */
       if (representationHasUnknownCodecs) {
-        this.isSupported = undefined;
+        this.isCodecSupported = undefined;
       } else {
         /** If all codecs support are known and none are supported,
          * the representation is not supported.
          */
-        this.isSupported = false;
+        this.isCodecSupported = false;
       }
     }
   }
@@ -453,7 +489,8 @@ class Representation implements IRepresentationMetadata {
       width: this.width,
       height: this.height,
       frameRate: this.frameRate,
-      isSupported: this.isSupported,
+      isCodecSupported: this.isCodecSupported,
+      isResolutionSupported: this.isResolutionSupported,
       hdrInfo: this.hdrInfo,
       contentProtections: this.contentProtections,
       decipherable: this.decipherable,

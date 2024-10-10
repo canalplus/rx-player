@@ -30,7 +30,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -89,7 +89,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
     try {
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -109,8 +109,8 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain("No supported audio and video tracks.");
 
     expect(mockAdaptation).toHaveBeenCalledTimes(2);
-    expect(mockAdaptation).toHaveBeenNthCalledWith(1, fooAda1, codecSupportCache, {});
-    expect(mockAdaptation).toHaveBeenNthCalledWith(2, fooAda2, codecSupportCache, {});
+    expect(mockAdaptation).toHaveBeenNthCalledWith(1, fooAda1, { codecSupportCache });
+    expect(mockAdaptation).toHaveBeenNthCalledWith(2, fooAda2, { codecSupportCache });
   });
 
   it("should throw if only empty audio and/or video adaptations is given", async () => {
@@ -137,7 +137,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -230,7 +230,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -330,7 +330,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -428,7 +428,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -521,7 +521,7 @@ describe("Manifest - Period", () => {
     const unsupportedAdaptations: Adaptation[] = [];
     try {
       const codecSupportCache = new CodecSupportCache([]);
-      period = new Period(args, unsupportedAdaptations, codecSupportCache);
+      period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     } catch (e) {
       errorReceived = e;
     }
@@ -583,13 +583,13 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video, video2 }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(1);
 
     expect(mockAdaptation).toHaveBeenCalledTimes(2);
     expect(mockAdaptation).toHaveReturnedTimes(2);
-    expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, codecSupportCache, {});
-    expect(mockAdaptation).toHaveBeenCalledWith(videoAda2, codecSupportCache, {});
+    expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, { codecSupportCache });
+    expect(mockAdaptation).toHaveBeenCalledWith(videoAda2, { codecSupportCache });
     expect(mockAdaptation).toHaveReturnedWith(period.adaptations.video?.[0]);
 
     const [adap] = unsupportedAdaptations;
@@ -629,7 +629,7 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { bar, video }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(period.adaptations).toEqual({
       video: video.map((v) => ({
         ...v,
@@ -643,7 +643,7 @@ describe("Manifest - Period", () => {
     expect(unsupportedAdaptations).toHaveLength(0);
 
     expect(mockAdaptation).toHaveBeenCalledTimes(1);
-    expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, codecSupportCache, {});
+    expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, { codecSupportCache });
   });
 
   it("should give a representationFilter to the adaptation", async () => {
@@ -685,21 +685,22 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(
-      args,
+    const period = new Period(args, {
       unsupportedAdaptations,
       codecSupportCache,
       representationFilter,
-    );
+    });
 
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.adaptations.video).toHaveLength(2);
 
     expect(mockAdaptation).toHaveBeenCalledTimes(2);
-    expect(mockAdaptation).toHaveBeenNthCalledWith(1, videoAda1, codecSupportCache, {
+    expect(mockAdaptation).toHaveBeenNthCalledWith(1, videoAda1, {
+      codecSupportCache,
       representationFilter,
     });
-    expect(mockAdaptation).toHaveBeenNthCalledWith(2, videoAda2, codecSupportCache, {
+    expect(mockAdaptation).toHaveBeenNthCalledWith(2, videoAda2, {
+      codecSupportCache,
       representationFilter,
     });
     expect(representationFilter).not.toHaveBeenCalled();
@@ -749,7 +750,7 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    new Period(args, unsupportedAdaptations, codecSupportCache);
+    new Period(args, { unsupportedAdaptations, codecSupportCache });
 
     expect(unsupportedAdaptations).toHaveLength(2);
     const [adap1, adap2] = unsupportedAdaptations;
@@ -801,7 +802,7 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video, foo }, start: 0 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    new Period(args, unsupportedAdaptations, codecSupportCache);
+    new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
   });
 
@@ -843,7 +844,7 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video }, start: 72 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.start).toEqual(72);
     expect(period.duration).toEqual(undefined);
@@ -888,7 +889,7 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video }, start: 0, duration: 12 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.start).toEqual(0);
     expect(period.duration).toEqual(12);
@@ -933,7 +934,7 @@ describe("Manifest - Period", () => {
     const args = { id: "12", adaptations: { video }, start: 50, duration: 12 };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.start).toEqual(50);
     expect(period.duration).toEqual(12);
@@ -994,7 +995,7 @@ describe("Manifest - Period", () => {
     };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.getAdaptations()).toHaveLength(3);
     expect(period.getAdaptations()).toContain(period.adaptations.video?.[0]);
@@ -1056,7 +1057,7 @@ describe("Manifest - Period", () => {
     };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, unsupportedAdaptations, codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations, codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
 
     expect(period.getAdaptationsForType("video")).toHaveLength(2);
@@ -1135,7 +1136,7 @@ describe("Manifest - Period", () => {
     };
     const unsupportedAdaptations: Adaptation[] = [];
     const codecSupportCache = new CodecSupportCache([]);
-    const period = new Period(args, [], codecSupportCache);
+    const period = new Period(args, { unsupportedAdaptations: [], codecSupportCache });
     expect(unsupportedAdaptations).toHaveLength(0);
     expect(period.getAdaptation("54")).toEqual(period.adaptations.video?.[0]);
     expect(period.getAdaptation("55")).toEqual(period.adaptations.video?.[1]);

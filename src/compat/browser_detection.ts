@@ -64,6 +64,9 @@ let isWebOs2021 = false;
 /** `true` specifically for WebOS 2022 version. */
 let isWebOs2022 = false;
 
+/** `true` specifically for Hisense TVs. */
+let isHisense = false;
+
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
@@ -162,6 +165,11 @@ let isA1KStb40xx = false;
       isWebOs2021 = true;
     }
   } else if (
+    navigator.userAgent.indexOf("Hisense") !== -1 &&
+    navigator.userAgent.indexOf("VIDAA") !== -1
+  ) {
+    isHisense = true;
+  } else if (
     navigator.userAgent.indexOf("NETTV") !== -1 &&
     navigator.userAgent.indexOf("Philips") !== -1
   ) {
@@ -186,6 +194,7 @@ export {
 
   // specific devices
   isA1KStb40xx,
+  isHisense,
   isPanasonic,
   isPhilipsNetTv,
   isPlayStation4,

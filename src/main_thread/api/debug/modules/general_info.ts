@@ -177,15 +177,16 @@ export default function constructDebugGeneralInfo(
         adaptations?.video?.representations.map((r) => {
           return (
             String(r.bitrate ?? "N/A") +
-            (r.isSupported !== false ? "" : " U!") +
-            (r.decipherable !== false ? "" : " E!")
+            (r.isCodecSupported !== false ? "" : " U!") +
+            (r.decipherable !== false ? "" : " E!") +
+            (r.isResolutionSupported !== false ? "" : " R!")
           );
         }) ?? [];
       const audioBitratesStr =
         adaptations?.audio?.representations.map((r) => {
           return (
             String(r.bitrate ?? "N/A") +
-            (r.isSupported !== false ? "" : " U!") +
+            (r.isCodecSupported !== false ? "" : " U!") +
             (r.decipherable !== false ? "" : " E!")
           );
         }) ?? [];

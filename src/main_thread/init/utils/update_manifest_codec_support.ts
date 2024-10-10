@@ -11,7 +11,7 @@ import { ContentDecryptorState } from "../../decrypt";
 /**
  * Returns a list of all codecs that the support is not known yet on the given
  * Manifest.
- * If a representation with (`isSupported`) is undefined, we consider the
+ * If a representation with (`isCodecSupported`) is undefined, we consider the
  * codec support as unknown.
  *
  * This function iterates through all periods, adaptations, and representations,
@@ -36,7 +36,7 @@ export function getCodecsWithUnknownSupport(
         continue;
       }
       for (const representation of adaptation.representations) {
-        if (representation.isSupported === undefined) {
+        if (representation.isCodecSupported === undefined) {
           codecsWithUnknownSupport.push({
             mimeType: representation.mimeType ?? "",
             codec: representation.codecs?.[0] ?? "",
@@ -131,8 +131,8 @@ export function updateManifestCodecSupport(
       let hasSupportedCodec: boolean = false;
       let hasCodecWithUndefinedSupport: boolean = false;
       adaptation.representations.forEach((representation) => {
-        if (representation.isSupported !== undefined) {
-          if (representation.isSupported) {
+        if (representation.isCodecSupported !== undefined) {
+          if (representation.isCodecSupported) {
             hasSupportedCodec = true;
           }
           // We already knew the support for that one, continue to next one
@@ -148,16 +148,16 @@ export function updateManifestCodecSupport(
         for (const codec of codecs) {
           const codecSupportInfo = efficientlyGetCodecSupport(mimeType, codec);
           if (!isEncrypted) {
-            representation.isSupported = codecSupportInfo.isSupportedClear;
+            representation.isCodecSupported = codecSupportInfo.isSupportedClear;
           } else if (
-            representation.isSupported !== codecSupportInfo.isSupportedEncrypted
+            representation.isCodecSupported !== codecSupportInfo.isSupportedEncrypted
           ) {
-            representation.isSupported = codecSupportInfo.isSupportedEncrypted;
+            representation.isCodecSupported = codecSupportInfo.isSupportedEncrypted;
           }
 
-          if (representation.isSupported === undefined) {
+          if (representation.isCodecSupported === undefined) {
             hasCodecWithUndefinedSupport = true;
-          } else if (representation.isSupported) {
+          } else if (representation.isCodecSupported) {
             hasSupportedCodec = true;
             representation.codecs = [codec];
 

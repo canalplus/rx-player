@@ -136,18 +136,14 @@ describe("Manifest - Manifest", () => {
     const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(
-      period1,
-      [],
-      new CodecSupportCache([]),
-      undefined,
-    );
-    expect(fakePeriod).toHaveBeenCalledWith(
-      period2,
-      [],
-      new CodecSupportCache([]),
-      undefined,
-    );
+    expect(fakePeriod).toHaveBeenCalledWith(period1, {
+      unsupportedAdaptations: [],
+      codecSupportCache: new CodecSupportCache([]),
+    });
+    expect(fakePeriod).toHaveBeenCalledWith(period2, {
+      unsupportedAdaptations: [],
+      codecSupportCache: new CodecSupportCache([]),
+    });
 
     expect(manifest.periods).toEqual([
       { id: "foo0", adaptations: period1.adaptations },
@@ -200,18 +196,16 @@ describe("Manifest - Manifest", () => {
     expect(manifest).not.toBe(null);
 
     expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(
-      period1,
-      [],
-      new CodecSupportCache([]),
+    expect(fakePeriod).toHaveBeenCalledWith(period1, {
+      unsupportedAdaptations: [],
+      codecSupportCache: new CodecSupportCache([]),
       representationFilter,
-    );
-    expect(fakePeriod).toHaveBeenCalledWith(
-      period2,
-      [],
-      new CodecSupportCache([]),
+    });
+    expect(fakePeriod).toHaveBeenCalledWith(period2, {
+      unsupportedAdaptations: [],
+      codecSupportCache: new CodecSupportCache([]),
       representationFilter,
-    );
+    });
     expect(fakeIdGenerator).toHaveBeenCalled();
     expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(fakeLogger.info).not.toHaveBeenCalled();
@@ -253,18 +247,14 @@ describe("Manifest - Manifest", () => {
 
     const manifest = new Manifest(simpleFakeManifest, {}, []);
     expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(
-      period1,
-      [],
-      new CodecSupportCache([]),
-      undefined,
-    );
-    expect(fakePeriod).toHaveBeenCalledWith(
-      period2,
-      [],
-      new CodecSupportCache([]),
-      undefined,
-    );
+    expect(fakePeriod).toHaveBeenCalledWith(period1, {
+      unsupportedAdaptations: [],
+      codecSupportCache: new CodecSupportCache([]),
+    });
+    expect(fakePeriod).toHaveBeenCalledWith(period2, {
+      unsupportedAdaptations: [],
+      codecSupportCache: new CodecSupportCache([]),
+    });
 
     expect(manifest.periods).toEqual([
       { id: "foo0", start: 4, adaptations: adapP1 },
@@ -302,7 +292,10 @@ describe("Manifest - Manifest", () => {
     };
 
     const fakePeriod = vi.fn(
-      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+      (
+        period: IParsedPeriod,
+        { unsupportedAdaptations }: { unsupportedAdaptations: IAdaptation[] },
+      ): IPeriod => {
         unsupportedAdaptations.push({
           type: "audio",
           language: "",
@@ -382,7 +375,10 @@ describe("Manifest - Manifest", () => {
     };
 
     const fakePeriod = vi.fn(
-      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+      (
+        period: IParsedPeriod,
+        { unsupportedAdaptations }: { unsupportedAdaptations: IAdaptation[] },
+      ): IPeriod => {
         unsupportedAdaptations.push({
           id: period.adaptations.audio?.[0].id,
           type: "audio",
@@ -425,7 +421,10 @@ describe("Manifest - Manifest", () => {
 
   it("should return all URLs given with `getContentUrls`", async () => {
     const fakePeriod = vi.fn(
-      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+      (
+        period: IParsedPeriod,
+        { unsupportedAdaptations }: { unsupportedAdaptations: IAdaptation[] },
+      ): IPeriod => {
         unsupportedAdaptations.push({
           id: period.adaptations.audio?.[0].id,
           type: "audio",
@@ -500,7 +499,10 @@ describe("Manifest - Manifest", () => {
 
   it("should replace with a new Manifest when calling `replace`", async () => {
     const fakePeriod = vi.fn(
-      (period: IParsedPeriod, unsupportedAdaptations: IAdaptation[]): IPeriod => {
+      (
+        period: IParsedPeriod,
+        { unsupportedAdaptations }: { unsupportedAdaptations: IAdaptation[] },
+      ): IPeriod => {
         unsupportedAdaptations.push({
           id: period.adaptations.audio?.[0].id,
           type: "audio",

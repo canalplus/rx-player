@@ -816,6 +816,15 @@ export interface ITransportOptions {
   representationFilter?: IRepresentationFilter | undefined;
   segmentLoader?: ICustomSegmentLoader | undefined;
   serverSyncInfos?: IServerSyncInfos | undefined;
+  /**
+   * If `true`, we will try to detect what's the highest supported video
+   * resolution on the current device and if found, we will avoid playing
+   * video Representation (i.e. qualities) with an higher resolution.
+   *
+   * An exception is made when the currently-chosen track only has seemlingly
+   * unsupported Representations, in which case we'll still atempt to play them.
+   */
+  enableResolutionChecks?: boolean | undefined;
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }

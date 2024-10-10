@@ -44,11 +44,6 @@ export default class Adaptation implements IAdaptationMetadata {
   /** ID uniquely identifying the Adaptation in the Period. */
   public readonly id: string;
   /**
-   * `true` if this Adaptation was not present in the original Manifest, but was
-   * manually added after through the corresponding APIs.
-   */
-  public manuallyAdded?: boolean;
-  /**
    * @see IAdaptationMetadata.representations
    */
   public readonly representations: Representation[];
@@ -108,14 +103,14 @@ export default class Adaptation implements IAdaptationMetadata {
    */
   constructor(
     parsedAdaptation: IParsedAdaptation,
-    cachedCodecSupport: CodecSupportCache,
     options: {
+      codecSupportCache?: CodecSupportCache | undefined;
+      enableResolutionChecks?: boolean | undefined;
       representationFilter?: IRepresentationFilter | undefined;
-      isManuallyAdded?: boolean | undefined;
     } = {},
   ) {
     const { trickModeTracks } = parsedAdaptation;
-    const { representationFilter, isManuallyAdded } = options;
+    const { representationFilter, enableResolutionChecks, codecSupportCache } = options;
     this.id = parsedAdaptation.id;
     this.type = parsedAdaptation.type;
 
@@ -149,7 +144,7 @@ export default class Adaptation implements IAdaptationMetadata {
 
     if (trickModeTracks !== undefined && trickModeTracks.length > 0) {
       this.trickModeTracks = trickModeTracks.map(
-        (track) => new Adaptation(track, cachedCodecSupport),
+        (track) => new Adaptation(track, { codecSupportCache, enableResolutionChecks }),
       );
     }
 
@@ -160,12 +155,13 @@ export default class Adaptation implements IAdaptationMetadata {
       hasCodecWithUndefinedSupport: false,
       isDecipherable: false,
     };
+    let hasSupportedResolution = false;
     for (let i = 0; i < argsRepresentations.length; i++) {
-      const representation = new Representation(
-        argsRepresentations[i],
-        this.type,
-        cachedCodecSupport,
-      );
+      const representation = new Representation(argsRepresentations[i], {
+        trackType: this.type,
+        codecSupportCache,
+        enableResolutionChecks,
+      });
       let shouldAdd = true;
       if (!isNullOrUndefined(representationFilter)) {
         const reprObject: IRepresentationFilterRepresentation = {
@@ -195,13 +191,16 @@ export default class Adaptation implements IAdaptationMetadata {
         });
       }
       if (shouldAdd) {
+        if (representation.isResolutionSupported !== false) {
+          hasSupportedResolution = true;
+        }
         representations.push(representation);
-        if (representation.isSupported === undefined) {
+        if (representation.isCodecSupported === undefined) {
           this.supportStatus.hasCodecWithUndefinedSupport = true;
           if (this.supportStatus.hasSupportedCodec === false) {
             this.supportStatus.hasSupportedCodec = undefined;
           }
-        } else if (representation.isSupported) {
+        } else if (representation.isCodecSupported) {
           this.supportStatus.hasSupportedCodec = true;
         }
         if (representation.decipherable === undefined) {
@@ -221,11 +220,15 @@ export default class Adaptation implements IAdaptationMetadata {
         );
       }
     }
+    if (representations.length > 0 && !hasSupportedResolution) {
+      for (const representation of representations) {
+        // As resolution checks might not be an exact science, for now if all
+        // seems unsupported, don't consider it.
+        representation.isResolutionSupported = undefined;
+      }
+    }
     representations.sort((a, b) => a.bitrate - b.bitrate);
     this.representations = representations;
-
-    // for manuallyAdded adaptations (not in the manifest)
-    this.manuallyAdded = isManuallyAdded === true;
   }
 
   /**
@@ -237,19 +240,19 @@ export default class Adaptation implements IAdaptationMetadata {
    *
    *
    * If the right mimetype+codec combination is found in the provided object,
-   * this `Adaptation`'s `isSupported` property will be updated accordingly as
-   * well as all of its inner `Representation`'s `isSupported` attributes.
+   * this `Adaptation`'s `supportStatus` property will be updated accordingly as
+   * well as all of its inner `Representation`'s `isCodecSupported` attributes.
    *
-   * @param {Array.<Object>} cachedCodecSupport
+   * @param {Array.<Object>} codecSupportCache
    */
-  refreshCodecSupport(cachedCodecSupport: CodecSupportCache): void {
+  refreshCodecSupport(codecSupportCache: CodecSupportCache): void {
     let hasCodecWithUndefinedSupport = false;
     let hasSupportedRepresentation = false;
     for (const representation of this.representations) {
-      representation.refreshCodecSupport(cachedCodecSupport);
-      if (representation.isSupported === undefined) {
+      representation.refreshCodecSupport(codecSupportCache);
+      if (representation.isCodecSupported === undefined) {
         hasCodecWithUndefinedSupport = true;
-      } else if (representation.isSupported) {
+      } else if (representation.isCodecSupported) {
         hasSupportedRepresentation = true;
       }
     }

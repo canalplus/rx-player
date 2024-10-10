@@ -362,7 +362,17 @@ export interface IRepresentationMetadata {
    * `undefined` for when this is not yet known (we're still in the process of
    * probing for support).
    */
-  isSupported?: boolean | undefined;
+  isCodecSupported?: boolean | undefined;
+  /**
+   * `true` if the resolution of this Representation is known to e supported on
+   * the current device.
+   *
+   * `false` if it is known to be unsupported and should thus not be played.
+   *
+   * `undefined` if we don't know if it is supported or not on the current
+   * device.
+   */
+  isResolutionSupported?: boolean | undefined;
   /**
    * An array of strings describing codecs that Representation relies on.
    *
