@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
+import { canRelyOnRequestMediaKeySystemAccess } from "../../../../compat/can_rely_on_request_media_key_system_access";
 import eme from "../../../../compat/eme";
+import {
+  DUMMY_PLAY_READY_HEADER,
+  generatePlayReadyInitData,
+} from "../../../../compat/generate_init_data";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import log from "../log";
 import type { ICompatibleKeySystem, IMediaConfiguration } from "../types";
@@ -57,13 +62,31 @@ export default function probeDRMInfos(
 
   return eme
     .requestMediaKeySystemAccess(type, [configuration])
-    .then((keySystemAccess) => {
+    .then(async (keySystemAccess) => {
       result.compatibleConfiguration = keySystemAccess.getConfiguration();
       const status: [ProberStatus, ICompatibleKeySystem?] = [
         ProberStatus.Supported,
         result,
       ];
-      return status;
+      if (!canRelyOnRequestMediaKeySystemAccess(type)) {
+        try {
+          const mediaKeys = await keySystemAccess.createMediaKeys();
+          const session = mediaKeys.createSession();
+          const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+          await session.generateRequest("cenc", initData);
+          return status;
+        } catch (err) {
+          log.debug("DRM: KeySystemAccess was granted but it is not usable");
+
+          const statusError: [ProberStatus, ICompatibleKeySystem] = [
+            ProberStatus.NotSupported,
+            result,
+          ];
+          return statusError;
+        }
+      } else {
+        return status;
+      }
     })
     .catch(() => {
       return [ProberStatus.NotSupported, result];
