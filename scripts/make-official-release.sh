@@ -330,7 +330,8 @@ log ""
 log "The legacy-v3 branch has been updated to now point to the v$version release"
 log "and has been pushed to remote."
 log ""
-log 'You may now run "npm publish", check the published package, and then create'
-log "the release on GitHub's interface (don't forget to include builds in it)."
+log 'You may now run "npm publish --tag legacy-v3", check the published package,'
+log "and then create the release on GitHub's interface (don't forget to include"
+log "builds in it)."
 log ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
