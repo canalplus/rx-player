@@ -539,6 +539,9 @@ export async function testKeySystem(
       const session = mediaKeys.createSession();
       const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
       await session.generateRequest("cenc", initData);
+      session.close().catch(() => {
+        log.warn("DRM: Failed to close the dummy session");
+      });
     } catch (err) {
       log.debug("DRM: KeySystemAccess was granted but it is not usable");
       throw err;
