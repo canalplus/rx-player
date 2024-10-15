@@ -111,8 +111,8 @@ The RxPlayer has several types of releases:
 Before publishing an official RxPlayer releases, a list of steps should be performed by
 its maintainers.
 
-First, checkout the branch `legacy-v3` (as I assume you want to produce a `v3` release,
-if not, you're on the wrong base branch here).
+First, checkout the branch `legacy-v3` (as I assume you want to produce a `v3` release, if
+not, you're on the wrong base branch here).
 
-Then, the following steps are mostly automatized by the `releases:official` script,
-which may be run by calling `npm run releases:official`.
+Then, the following steps are mostly automatized by the `releases:official` script, which
+may be run by calling `npm run releases:official`.
