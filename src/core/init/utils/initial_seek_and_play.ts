@@ -76,7 +76,7 @@ export interface IInitialSeekAndPlayObject {
 export default function performInitialSeekAndPlay(
   mediaElement: HTMLMediaElement,
   playbackObserver: PlaybackObserver,
-  startTime: number | (() => number),
+  startTime: number | (() => number | undefined),
   mustAutoPlay: boolean,
   onWarning: (err: IPlayerError) => void,
   isDirectfile: boolean,
@@ -127,7 +127,43 @@ export default function performInitialSeekAndPlay(
     // a sufficient `readyState` has been reached for directfile contents.
     // So let's divide the two possibilities here.
     const initialTime = typeof startTime === "function" ? startTime() : startTime;
-    if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
+    if (
+      initialTime === undefined &&
+      isDirectfile &&
+      mediaElement.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+      /**
+       * The starting position may not be known yet.
+       * Postpone the seek to a moment where the starting position should be known,
+       * assumely it's when readyState is greater or equal to HAVE_CURRENT_DATA (2).
+       * If the initiallySeekedTime is still `undefined` when the readyState is >= 2,
+       * let assume that the initiallySeekedTime will never be known and continue
+       * the logic without seeking.
+       */
+      playbackObserver.listen((obs, stopListening) => {
+        if (obs.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          const observationInitialTime =
+            typeof startTime === "function" ? startTime() : startTime;
+          if (observationInitialTime === undefined) {
+            initialSeekPerformed.setValue(true);
+            initialSeekPerformed.finish();
+          } else if (isDirectfile && isSafariMobile) {
+            // On safari mobile (version 17.1.2) seeking too early cause the video
+            // to never buffer media data. Using setTimeout 0 defers the seek
+            // to a moment at which safari should be more able to handle a seek.
+            setTimeout(() => {
+              performInitialSeek(observationInitialTime);
+            }, 0);
+          } else {
+            performInitialSeek(observationInitialTime);
+          }
+          stopListening();
+        }
+      });
+    } else if (initialTime === undefined) {
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    } else if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
       initialSeekPerformed.setValue(true);
       initialSeekPerformed.finish();
     } else if (isDirectfile && isSafariMobile) {
