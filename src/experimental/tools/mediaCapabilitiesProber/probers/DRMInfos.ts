@@ -69,6 +69,9 @@ export default function probeDRMInfos(
           const session = mediaKeys.createSession();
           const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
           await session.generateRequest("cenc", initData);
+          session.close().catch(() => {
+            log.warn("DRM: Failed to close the dummy session");
+          });
           result.compatibleConfiguration = keySystemAccess.getConfiguration();
           const status: [ProberStatus, ICompatibleKeySystem?] = [
             ProberStatus.Supported,
