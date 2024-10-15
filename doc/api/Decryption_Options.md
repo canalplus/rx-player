@@ -237,17 +237,55 @@ The `maxSessionCacheSize` option allows to configure the maximum number of
 
 _type_: `Boolean | undefined`
 
-If set to `true`, the `MediaKeySession` created for a content will be immediately closed
-when the content stops its playback.
+If set to `true`, all open `MediaKeySession` (JavaScript Objects linked to the keys used
+to decrypt the content) will be closed when the current playback stops.
 
-This might be required by your key system implementation (most often, it is not).
+By default, we keep created `MediaKeySession` from previous contents (up to
+[`maxSessionCacheSize`](#maxsessioncachesize) `MediaKeySession`) to speed-up playback and
+avoid round-trips to the license server if the user ever decide to go back to those
+contents or to other contents relying to the same keys.
 
-If set to `false` or not set, the `MediaKeySession` can be reused if the same content
-needs to be re-decrypted.
+However we found that some devices poorly handle that optimization.
 
-If you want to set this property because the current device has a limited number of
-`MediaKeySession` that can be created at the same time, prefer using `maxSessionCacheSize`
-instead.
+Note that if setting that property to `true` fixes your issue, it may be that it's just
+the [`maxSessionCacheSize`](#maxsessioncachesize) which is for now too high.
+
+However if your problem doesn't disappear after setting `closeSessionsOnStop` to `true`,
+you may try [`reuseMediaKeys`](#renewmediakeys) next.
+
+### reuseMediaKeys
+
+If set to `true` or if not set, the RxPlayer might rely on the previous `MediaKeys` if a
+compatible one is already set on the media element, allowing to potentially speed-up
+content playback.
+
+If set to `false`, the RxPlayer will create a new `MediaKeys` instance (a JavaScript
+object needed to decrypt contents) if needed for that content.
+
+We noticed that reusing a previous `MediaKeys` had led to errors on a few devices. For
+example some smart TVs had shown errors after playing several encrypted contents, errors
+which disappeared if we renewed the `MediaKeys` for each content.
+
+The RxPlayer should already be able to detect most of those cases. However, it is still
+possible that we don't know yet of a device which also has problem with that optimization.
+
+If you have issues appearing only after playing multiple encrypted contents:
+
+- First, try setting the `closeSessionsOnStop` option which is less destructive.
+
+  If it fixes your issue, it may be that it's just the number of `MediaKeySession` cached
+  by the RxPlayer that is here too high.
+
+  In that case you can instead update the `maxSessionCacheSize` option to still profit
+  from a `MediaKeySession` cache (which avoid making license requests for already-played
+  contents).
+
+  If that second option doesn't seem to have an effect, you can just set
+  `closeSessionsOnStop`.
+
+- If none of the precedent work-arounds work however, you can try setting `reuseMediaKeys`
+  to `false`. If it fixes your problem, please open an RxPlayer issue so we can add your
+  device to our list.
 
 ### singleLicensePer
 
