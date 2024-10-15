@@ -30,7 +30,7 @@ export default async function cleanOldLoadedSessions(
   loadedSessionsStore: LoadedSessionsStore,
   limit: number,
 ): Promise<void> {
-  if (limit < 0 || limit > loadedSessionsStore.getLength()) {
+  if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
     return;
   }
   log.info("DRM: LSS cache limit exceeded", limit, loadedSessionsStore.getLength());
