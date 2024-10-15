@@ -2,18 +2,6 @@
 
 ## Current dev build: v4.2.0-dev.2024101500
 
-### Features:
-
-### Bug fixes:
-- MediaCapabilitiesProber checks generateRequest like the RxPlayer DRM selection algorithm [#1575]
-- Fixes a MultiThread debug element memory leak [#1564]
-- Fix the SyncOrAsync util syncValue transfer [#1568]
-
-### Other improvements:
-- Add version of the RxPlayer in the debug element [#1573]
-
-## Previous dev build changelog
-
 ### Features
 
 - Add `cmcd` object to `loadVideo` options to enable CMCD (Common Media Client Data)
@@ -55,6 +43,10 @@
 - MULTI_THREAD: fix wrong Period considered as current in multi-Period DASH contents with
   the multi-thread feature [#1527]
 - MULTI_THREAD: Fix rare occurrences of infinite loading on constrained devices [#1556]
+- MediaCapabilitiesProber checks generateRequest like the RxPlayer DRM selection algorithm
+  [#1575]
+- Fixes a MultiThread debug element memory leak [#1564]
+- Fix the SyncOrAsync util syncValue transfer [#1568]
 
 ### Other improvements
 
@@ -68,6 +60,7 @@
   differences [#1397].
 - Demo: Remove standalone demo as we never relied on it [#1473]
 - Scripts: Automatize official releases and CHANGELOG.md updating through a script [#1524]
+- Add version of the RxPlayer in the debug element [#1573]
 
 ## v4.1.0 (2024-07-08)
 
