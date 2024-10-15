@@ -106,73 +106,13 @@ The RxPlayer has several types of releases:
 
   When published on `npm`, they have the `canal` tag.
 
-## Workflow for an official release
+## To publish an official release
 
-Before each official releases, a list of steps are performed by its maintainers:
+Before publishing an official RxPlayer releases, a list of steps should be performed by
+its maintainers.
 
-1. Checkout the branch that will be the base of the next release: generally it is
-   `legacy-v3` (for v3 releases)
+First, checkout the branch `legacy-v3` (as I assume you want to produce a `v3` release,
+if not, you're on the wrong base branch here).
 
-2. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the semver of
-   the wanted new version.
-
-3. Update `CHANGELOG.md` file to add this new version's changelog and commit it.
-
-4. Call the npm script `update-version` for that release
-   (`npm run update-version XX.XX.XX`, where XX.XX.XX is the wanted new version SEMVER).
-
-5. Check that the modifications it did make sense and create a signed commit (`-S` option
-   when commiting with git) updating the staged built files in step `8`.
-
-6. Open a Pull Request on Github, named after the branch, putting the release's changelog
-   in the Pull Request's comment, and optional additional comments.
-
-7. Check that sonarcloud validated that branch. Resolve every bug and code smells it
-   finds.
-
-8. Ensure that the CI doesn't detect any issue and fix them if that's the case.
-
-9. Run sanity checks on myCanal's repository, by using this new version instead as a
-   dependency.
-
-10. If and only if no problem was seen perform a signed merge without fast-forward of the
-    release branch into legacy-v3 (`git merge -S --no-ff release/vXX.XX.XX legacy-v3`)
-
-11. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
-
-12. Launch script to update the gh-pages doc (`./scripts/update_gh-pages_doc`)
-
-13. Check that both of those worked, perform manual updates and update the concerned
-    scripts in other cases.
-
-14. Check that the new demo and the new doc work as expected
-
-15. If all seems good, push to remote `legacy-v3` your local `legacy-v3` branch.
-
-16. run `npm publish --tag legacy-v3` to publish the new version on npm's registry with
-    the `legacy-v3` tag.
-
-17. Test that importing this new version doesn't cause bundling issues (you may do so
-    through a ad-hoc package, or just myCanal for example).
-
-18. Create the new release through github's interface - don't forget to include the built
-    files on it.
-
-If any of the testing steps failed (after step `3`), run the following steps:
-
-1. Fix the problem (!)
-
-2. Create a commit for the fix with a meaningful message.
-
-3. If (and only if) it make sense, update the changelog and create a commit for it.
-
-4. Call the npm script `update-version` for that release
-   (`npm run update-version XX.XX.XX`, where XX.XX.XX is the wanted new version SEMVER).
-
-5. Check that the modifications of that last step made sense and create a signed commit
-   (`-S` option when commiting with git) updating the staged built files.
-
-6. Depending on the nature of the fix, either create a new branch and add a Pull Request
-   to merge it in the release branch or push it to the release branch directly.
-
-7. Go back to step `8` (sonarcloud + CI) of the previous workflow
+Then, the following steps are mostly automatized by the `releases:official` script, which
+may be run by calling `npm run releases:official`.
