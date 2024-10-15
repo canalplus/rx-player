@@ -1,6 +1,18 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024100200
+## Current dev build: v4.2.0-dev.2024101500
+
+### Features:
+
+### Bug fixes:
+- MediaCapabilitiesProber checks generateRequest like the RxPlayer DRM selection algorithm [#1575]
+- Fixes a MultiThread debug element memory leak [#1564]
+- Fix the SyncOrAsync util syncValue transfer [#1568]
+
+### Other improvements:
+- Add version of the RxPlayer in the debug element [#1573]
+
+## Previous dev build changelog
 
 ### Features
 
