@@ -41,8 +41,8 @@ tmpDemoList=$(mktemp)
 tmpDocList=$(mktemp)
 
 cp -r doc/generated/* $tmpDir
-cp scripts/generate_demo_list.mjs $tmpDemoList -v
-cp scripts/generate_documentation_list.mjs $tmpDocList -v
+cp -v scripts/generate_demo_list.mjs $tmpDemoList 
+cp -v scripts/generate_documentation_list.mjs $tmpDocList 
 
 # update gh-pages
 git checkout gh-pages
