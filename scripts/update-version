@@ -35,7 +35,7 @@ fi
 date_iso=$(date "+%Y-%m-%d")
 
 sed -i.bak -E -e "s/^\#\# Unreleased/\#\# v${version} \(${date_iso}\)/gi" CHANGELOG.md && rm CHANGELOG.md.bak
-sed -i.bak -E -e "s/\/\\* PLAYER_VERSION \\*\/[[:space:]]*\".*\";/\/* PLAYER_VERSION *\/ \"${version}\";/g" src/main_thread/api/public_api.ts && rm src/main_thread/api/public_api.ts.bak
+sed -i.bak -E -e "s/\/\\* PLAYER_VERSION \\*\/[[:space:]]*\".*\";/\/* PLAYER_VERSION *\/ \"${version}\";/g" src/core/api/public_api.ts && rm src/core/api/public_api.ts.bak
 sed -i.bak -E -e "s/\"version\":[[:space:]]*\"[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+[^\"]*\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
 sed -i.bak -E -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
 echo $version >VERSION
