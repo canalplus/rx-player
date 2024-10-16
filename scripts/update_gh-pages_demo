@@ -46,15 +46,15 @@ tmpWorkerFile=$(mktemp)
 tmpMpdWasmFile=$(mktemp)
 tmpDemoList=$(mktemp)
 
-cp -r demo/fonts $tmpFontsDir -v
-cp -r demo/assets $tmpAssetsDir -v
-cp -r demo/styles $tmpStylesDir -v
-cp demo/bundle.js $tmpDemoFile -v
-cp demo/index.html $tmpIndexFile -v
-cp demo/plus.ico $tmpFaviconFile -v
-cp demo/worker.js $tmpWorkerFile -v
-cp demo/mpd-parser.wasm $tmpMpdWasmFile -v
-cp scripts/generate_demo_list.mjs $tmpDemoList -v
+cp -rv demo/fonts $tmpFontsDir
+cp -rv demo/assets $tmpAssetsDir
+cp -rv demo/styles $tmpStylesDir
+cp -v demo/bundle.js $tmpDemoFile
+cp -v demo/index.html $tmpIndexFile
+cp -v demo/plus.ico $tmpFaviconFile
+cp -v demo/worker.js $tmpWorkerFile
+cp -v demo/mpd-parser.wasm $tmpMpdWasmFile
+cp -v scripts/generate_demo_list.mjs $tmpDemoList
 
 # update gh-pages
 git checkout gh-pages

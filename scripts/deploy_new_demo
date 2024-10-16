@@ -28,13 +28,13 @@ deployed_branch=$1
 # But as only people with write access on the gh-pages branch can do harm,
 # that's good enough
 if [ -z "$deployed_branch" ] ||
-   [ "$deployed_branch" == "" ] ||
-   [ "$deployed_branch" == "versions" ] ||
-   [ "$deployed_branch" == "fonts" ] ||
-   [ "$deployed_branch" == "assets" ] ||
-   [ "$deployed_branch" == "styles" ]; then
+  [ "$deployed_branch" == "" ] ||
+  [ "$deployed_branch" == "versions" ] ||
+  [ "$deployed_branch" == "fonts" ] ||
+  [ "$deployed_branch" == "assets" ] ||
+  [ "$deployed_branch" == "styles" ]; then
   echo "ERROR: Invalid branch name"
-  exit 1;
+  exit 1
 fi
 
 # Generate demo
@@ -42,7 +42,7 @@ npm run demo
 
 if [ -n "$(git status --porcelain doc)" ]; then
   echo "ERROR: Please commit your modifications"
-  exit 1;
+  exit 1
 fi
 
 tmpFontsDir=$(mktemp -d)
@@ -53,12 +53,12 @@ tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
 
-cp -r demo/fonts $tmpFontsDir -v
-cp -r demo/assets $tmpAssetsDir -v
-cp -r demo/styles $tmpStylesDir -v
-cp demo/bundle.js $tmpDemoFile -v
-cp demo/index.html $tmpIndexFile -v
-cp demo/plus.ico $tmpFaviconFile -v
+cp -rv demo/fonts $tmpFontsDir
+cp -rv demo/assets $tmpAssetsDir
+cp -rv demo/styles $tmpStylesDir
+cp -v demo/bundle.js $tmpDemoFile
+cp -v demo/index.html $tmpIndexFile
+cp -v demo/plus.ico $tmpFaviconFile
 
 # update gh-pages
 git checkout gh-pages
@@ -78,7 +78,7 @@ if [ -n "$(git status --porcelain $deployed_branch)" ]; then
   echo ""
   git status "$deployed_branch"
 
-  while : ; do
+  while :; do
     echo ""
     echo "We will push the demo to gh-pages."
     REPLY=""
