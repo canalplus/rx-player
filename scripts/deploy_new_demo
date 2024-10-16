@@ -53,12 +53,12 @@ tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
 
-cp -r demo/full/fonts $tmpFontsDir -v
-cp -r demo/full/assets $tmpAssetsDir -v
-cp -r demo/full/styles $tmpStylesDir -v
-cp demo/full/bundle.js $tmpDemoFile -v
-cp demo/full/index.html $tmpIndexFile -v
-cp demo/full/plus.ico $tmpFaviconFile -v
+cp -rv demo/full/fonts $tmpFontsDir 
+cp -rv demo/full/assets $tmpAssetsDir
+cp -rv demo/full/styles $tmpStylesDir
+cp -v demo/full/bundle.js $tmpDemoFile
+cp -v demo/full/index.html $tmpIndexFile
+cp -v demo/full/plus.ico $tmpFaviconFile
 
 # update gh-pages
 git checkout gh-pages
