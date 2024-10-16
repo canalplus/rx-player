@@ -7,7 +7,7 @@
 #
 # To use it:
 #
-#   1. Be sure that you're on the `legacy-v3` branch 
+#   1. Be sure that you're on the `legacy-v3` branch
 #
 #   2. Call this script, you may optionally provide the wanted version as an
 #      argument to this script. If no argument is provided, the script will ask
@@ -75,7 +75,7 @@ check_dependency sleep
 base_branch=$(current_branch)
 
 if ! [ "$base_branch" == "legacy-v3" ]; then
-  err "The base branch for releases should be \"legacy-v3\""
+  err "The base branch for v3 releases should be \"legacy-v3\""
 fi
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -86,7 +86,7 @@ echo "Checking current branch is synchronized with remote..."
 check_branch_synchronized_with_remote
 
 if [ $# -eq 0 ]; then
-  read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  read -r -p "Please enter the wanted version number (example: 3.12.1): " version
   echo ""
   if [ -z "${version}" ]; then
     # TODO SEMVER REGEX?
@@ -327,11 +327,11 @@ done
 echo ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
 log ""
-log "The legacy-v3 branch has been updated to now point to the v$version release and"
-log "has been pushed to remote."
+log "The legacy-v3 branch has been updated to now point to the v$version release"
+log "and has been pushed to remote."
 log ""
-log 'You may now run "npm publish --tag legacy-v3", check the published package, '
-log 'and then create log "the release on GitHub's interface (don't forget to '
-log "include builds in it)."
+log 'You may now run "npm publish --tag legacy-v3", check the published package,'
+log "and then create the release on GitHub's interface (don't forget to include"
+log "builds in it)."
 log ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"

@@ -4,7 +4,7 @@
 # =================
 #
 # This script produces pre-releases on top of the current branch for the
-# `dev` and `canal` versions (as per their npm tags).
+# `dev-v3` and `canal-v3` versions (as per their npm tags).
 #
 # To use it:
 #
@@ -41,7 +41,7 @@ err() {
 }
 
 if [ $# -eq 0 ]; then
-  read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  read -r -p "Please enter the wanted version number (example: 3.12.1): " version
   echo ""
   if [ -z "${version}" ]; then
     # TODO SEMVER REGEX?
@@ -161,7 +161,7 @@ while true; do
   esac
 done
 git push origin ${dev_branch}
-npm publish --tag dev-v4
+npm publish --tag dev-v3
 
 git checkout $current_branch
 
@@ -180,4 +180,5 @@ while true; do
   *) echo "Please answer y or n." ;;
   esac
 done
-npm publish --tag canal
+npm publish --tag canal-v3
+

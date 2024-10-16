@@ -51,3 +51,4 @@ rm -f dist/rx-player.d.ts rx-player.min.d.ts
 echo "${copyright_text}
 import RxPlayer from \"./_esm5.processed/minimal\";
 export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts >/dev/null
+
