@@ -60,6 +60,7 @@ var READY_STATES = {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   A7: function() { return /* binding */ isPlayStation5; },
 /* harmony export */   Fr: function() { return /* binding */ isSafariDesktop; },
+/* harmony export */   NV: function() { return /* binding */ isPhilipsNetTv; },
 /* harmony export */   P5: function() { return /* binding */ isPanasonic; },
 /* harmony export */   Pb: function() { return /* binding */ isSamsungBrowser; },
 /* harmony export */   ZN: function() { return /* binding */ isTizen; },
@@ -69,7 +70,8 @@ var READY_STATES = {
 /* harmony export */   hF: function() { return /* binding */ isWebOs; },
 /* harmony export */   lw: function() { return /* binding */ isIE11; },
 /* harmony export */   op: function() { return /* binding */ isEdgeChromium; },
-/* harmony export */   qe: function() { return /* binding */ isXbox; }
+/* harmony export */   qe: function() { return /* binding */ isXbox; },
+/* harmony export */   x1: function() { return /* binding */ isA1KStb40xx; }
 /* harmony export */ });
 /* unused harmony exports isWebOs2021, isWebOs2022 */
 /* harmony import */ var _is_node__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2186);
@@ -113,10 +115,14 @@ var isWebOs2021 = false;
 var isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 var isPanasonic = false;
+/** `true` we're relying on Philips's NetTv browser. */
+var isPhilipsNetTv = false;
 /** `true` for the PlayStation 5 game console. */
 var isPlayStation5 = false;
 /** `true` for the Xbox game consoles. */
 var isXbox = false;
+/** `true` for specific A1 STB: KSTB 40xx from Kaon Media. */
+var isA1KStb40xx = false;
 (function findCurrentBrowser() {
   var _a, _b, _c;
   if (_is_node__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A) {
@@ -168,10 +174,14 @@ var isXbox = false;
     } else if (/[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) || /[Cc]hr[o0]me\/79/.test(navigator.userAgent)) {
       isWebOs2021 = true;
     }
+  } else if (navigator.userAgent.indexOf("NETTV") !== -1 && navigator.userAgent.indexOf("Philips") !== -1) {
+    isPhilipsNetTv = true;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
     isXbox = true;
+  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx")) {
+    isA1KStb40xx = true;
   }
 })();
 
@@ -338,17 +348,6 @@ function eventPrefixed(eventNames, prefixes) {
     }));
   }, []);
 }
-/**
- * Returns a function allowing to add event listeners for particular event(s)
- * optionally automatically adding browser prefixes if needed.
- * @param {Array.<string>} eventNames - The event(s) to listen to. If multiple
- * events are set, the event listener will be triggered when any of them emits.
- * @param {Array.<string>|undefined} [prefixes] - Optional vendor prefixes with
- * which the event might also be sent. If not defined, default prefixes might be
- * tested.
- * @returns {Function} - Returns function allowing to easily add a callback to
- * be triggered when that event is emitted on a given event target.
- */
 function createCompatibleEventListener(eventNames, prefixes) {
   var mem;
   var prefixedEvents = eventPrefixed(eventNames, prefixes);
@@ -723,6 +722,43 @@ function addEventListener(elt, evt, listener, stopListening) {
  */
 var isNode = typeof window === "undefined";
 /* harmony default export */ __webpack_exports__.A = (isNode);
+
+/***/ }),
+
+/***/ 7913:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _browser_detection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(443);
+/**
+ * Copyright 2015 CANAL+ Group
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * On some devices (right now only seen on Tizen), seeking through the
+ * `currentTime` property can lead to the browser re-seeking once the
+ * segments have been loaded to improve seeking performances (for
+ * example, by seeking right to an intra video frame).
+ *
+ * This can lead to conflicts with the RxPlayer code.
+ *
+ * This boolean is only `true` on the devices where this behavior has been
+ * observed.
+ */
+var isSeekingApproximate = _browser_detection__WEBPACK_IMPORTED_MODULE_0__/* .isTizen */ .ZN;
+/* harmony default export */ __webpack_exports__.A = (isSeekingApproximate);
 
 /***/ }),
 
@@ -1814,7 +1850,7 @@ var DEFAULT_CONFIG = {
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_VIDEO_CODECS: ["video/mp4;codecs=\"avc1.4d401e\"", "video/mp4;codecs=\"avc1.42e01e\"", "video/webm;codecs=\"vp8\""],
+  EME_DEFAULT_VIDEO_CODECS: ['video/mp4;codecs="avc1.4d401e"', 'video/mp4;codecs="avc1.42e01e"', 'video/webm;codecs="vp8"'],
   /**
    * Codecs used in the audioCapabilities of the MediaKeySystemConfiguration
    * (DRM).
@@ -1822,7 +1858,7 @@ var DEFAULT_CONFIG = {
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_AUDIO_CODECS: ["audio/mp4;codecs=\"mp4a.40.2\"", "audio/webm;codecs=opus"],
+  EME_DEFAULT_AUDIO_CODECS: ['audio/mp4;codecs="mp4a.40.2"', "audio/webm;codecs=opus"],
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
    * MediaKeySystemConfiguration (DRM).
@@ -2151,21 +2187,6 @@ function deepMerge(target) {
   return deepMerge.apply(void 0, [target].concat(sources));
 }
 ;// CONCATENATED MODULE: ./src/config.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 
 var ConfigHandler = /*#__PURE__*/function () {
@@ -3124,6 +3145,8 @@ var media_error = __webpack_require__(5575);
 var assert = __webpack_require__(7994);
 // EXTERNAL MODULE: ./src/utils/is_null_or_undefined.ts
 var is_null_or_undefined = __webpack_require__(6787);
+// EXTERNAL MODULE: ./src/utils/object_assign.ts
+var object_assign = __webpack_require__(8935);
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(443);
 // EXTERNAL MODULE: ./src/compat/event_listeners.ts
@@ -3735,9 +3758,7 @@ function getWebKitFairPlayInitData(initDataBytes, serverCertificateBytes) {
   var contentIdStr = skdIndexInInitData > -1 ? initDataUri.substring(skdIndexInInitData + 6) : initDataUri;
   var id = (0,string_parsing/* strToUtf16LE */.kY)(contentIdStr);
   var offset = 0;
-  var res = new Uint8Array(initData.byteLength
-  /* id length */ + 4 + id.byteLength
-  /* certificate length */ + 4 + serverCertificate.byteLength);
+  var res = new Uint8Array(initData.byteLength + /* id length */4 + id.byteLength + /* certificate length */4 + serverCertificate.byteLength);
   res.set(initData);
   offset += initData.length;
   res.set((0,byte_parsing/* itole4 */.Wz)(id.byteLength), offset);
@@ -4003,6 +4024,7 @@ function getWebKitMediaKeysCallbacks() {
 
 
 
+
 /**
  * Automatically detect and set which EME implementation should be used in the
  * current platform.
@@ -4036,8 +4058,8 @@ function getEmeApiImplementation(preferredApiType) {
     var isTypeSupported;
     var createCustomMediaKeys;
     if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== undefined) {
-      onEncrypted = (0,event_listeners/* createCompatibleEventListener */.jf)(["needkey"]);
       var callbacks = getWebKitMediaKeysCallbacks();
+      onEncrypted = createOnEncryptedForWebkit();
       isTypeSupported = callbacks.isTypeSupported;
       createCustomMediaKeys = callbacks.createCustomMediaKeys;
       setMediaKeys = callbacks.setMediaKeys;
@@ -4053,7 +4075,7 @@ function getEmeApiImplementation(preferredApiType) {
         implementation = "older-webkit";
         // This is for WebKit with prefixed EME api
       } else if (WebKitMediaKeysConstructor !== undefined) {
-        onEncrypted = (0,event_listeners/* createCompatibleEventListener */.jf)(["needkey"]);
+        onEncrypted = createOnEncryptedForWebkit();
         var _callbacks2 = getWebKitMediaKeysCallbacks();
         isTypeSupported = _callbacks2.isTypeSupported;
         createCustomMediaKeys = _callbacks2.createCustomMediaKeys;
@@ -4139,6 +4161,22 @@ function getEmeApiImplementation(preferredApiType) {
     setMediaKeys: setMediaKeys,
     implementation: implementation
   };
+}
+/**
+ * Create an event listener for the "webkitneedkey" event
+ * @returns
+ */
+function createOnEncryptedForWebkit() {
+  var compatibleEventListener = (0,event_listeners/* createCompatibleEventListener */.jf)(["needkey"], undefined /* prefixes */);
+  var onEncrypted = function onEncrypted(target, listener, cancelSignal) {
+    compatibleEventListener(target, function (event) {
+      var patchedEvent = (0,object_assign/* default */.A)(event, {
+        forceSessionRecreation: true
+      });
+      listener(patchedEvent);
+    }, cancelSignal);
+  };
+  return onEncrypted;
 }
 /**
  * Set the given MediaKeys on the given HTMLMediaElement.
@@ -4245,6 +4283,7 @@ var PSSH_TO_INTEGER = (0,byte_parsing/* be4toi */.mq)((0,string_parsing/* strToU
 
 
 
+
 /**
  * Take in input initialization data from an encrypted event and generate the
  * corresponding array of initialization data values from it.
@@ -4334,8 +4373,9 @@ function isPSSHAlreadyEncountered(encounteredPSSHs, pssh) {
  */
 function getInitData(encryptedEvent) {
   var initData = encryptedEvent.initData,
-    initDataType = encryptedEvent.initDataType;
-  if (initData == null) {
+    initDataType = encryptedEvent.initDataType,
+    forceSessionRecreation = encryptedEvent.forceSessionRecreation;
+  if ((0,is_null_or_undefined/* default */.A)(initData)) {
     log/* default */.A.warn("Compat: No init data found on media encrypted event.");
     return null;
   }
@@ -4343,7 +4383,8 @@ function getInitData(encryptedEvent) {
   var values = getInitializationDataValues(initDataBytes);
   return {
     type: initDataType,
-    values: values
+    values: values,
+    forceSessionRecreation: forceSessionRecreation
   };
 }
 // EXTERNAL MODULE: ./src/config.ts + 2 modules
@@ -4407,11 +4448,11 @@ function attachMediaKeys(_x, _x2, _x3) {
 }
 function _attachMediaKeys() {
   _attachMediaKeys = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaElement, _ref, cancelSignal) {
-    var emeImplementation, keySystemOptions, loadedSessionsStore, mediaKeySystemAccess, mediaKeys, previousState, closeAllSessions;
+    var emeImplementation, keySystemOptions, askedConfiguration, loadedSessionsStore, mediaKeySystemAccess, mediaKeys, previousState, closeAllSessions;
     return regenerator_default().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          emeImplementation = _ref.emeImplementation, keySystemOptions = _ref.keySystemOptions, loadedSessionsStore = _ref.loadedSessionsStore, mediaKeySystemAccess = _ref.mediaKeySystemAccess, mediaKeys = _ref.mediaKeys;
+          emeImplementation = _ref.emeImplementation, keySystemOptions = _ref.keySystemOptions, askedConfiguration = _ref.askedConfiguration, loadedSessionsStore = _ref.loadedSessionsStore, mediaKeySystemAccess = _ref.mediaKeySystemAccess, mediaKeys = _ref.mediaKeys;
           previousState = media_keys_infos_store/* default */.A.getState(mediaElement);
           closeAllSessions = previousState !== null && previousState.loadedSessionsStore !== loadedSessionsStore ? previousState.loadedSessionsStore.closeAllSessions() : Promise.resolve();
           _context.next = 5;
@@ -4428,7 +4469,8 @@ function _attachMediaKeys() {
             keySystemOptions: keySystemOptions,
             mediaKeySystemAccess: mediaKeySystemAccess,
             mediaKeys: mediaKeys,
-            loadedSessionsStore: loadedSessionsStore
+            loadedSessionsStore: loadedSessionsStore,
+            askedConfiguration: askedConfiguration
           });
           if (!(mediaElement.mediaKeys === mediaKeys)) {
             _context.next = 10;
@@ -4859,7 +4901,10 @@ function _createOrLoadSession() {
           throw cancelSignal.cancellationError;
         case 16:
           _context.next = 18;
-          return cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize);
+          return cleanOldLoadedSessions(loadedSessionsStore,
+          // Account for the next session we will be creating
+          // Note that `maxSessionCacheSize < 0 has special semantic (no limit)`
+          maxSessionCacheSize <= 0 ? maxSessionCacheSize : maxSessionCacheSize - 1);
         case 18:
           if (!(cancelSignal.cancellationError !== null)) {
             _context.next = 20;
@@ -4898,11 +4943,17 @@ function _createOrLoadSession() {
  *   - (2022-11-21): WebOS (LG TVs), for some encrypted contents, just
  *     rebuffered indefinitely when loading a content already-loaded on the
  *     HTMLMediaElement.
+ *   - (2024-08-23): Seen on Philips 2024 and 2023 in:
+ *     https://github.com/canalplus/rx-player/issues/1464
+ *   - (2024-09-04): Another case seen on an "A1" set-top box model made by
+ *     Kaonmedia we will call the KSTB40xx.
+ *     It may share the problematic with other devices, but we have only seen
+ *     the problem on this one for now.
  *
  * @returns {boolean}
  */
 function canReuseMediaKeys() {
-  return !browser_detection/* isWebOs */.hF && !browser_detection/* isPanasonic */.P5;
+  return !browser_detection/* isWebOs */.hF && !browser_detection/* isPhilipsNetTv */.NV && !browser_detection/* isPanasonic */.P5 && !browser_detection/* isA1KStb40xx */.x1;
 }
 ;// CONCATENATED MODULE: ./src/compat/should_renew_media_key_system_access.ts
 /**
@@ -4979,7 +5030,7 @@ function canRelyOnRequestMediaKeySystemAccess(keySystem) {
  * the CDM is capable of creating a session and generating a request.
  */
 var DUMMY_PLAY_READY_HEADER = /* eslint-disable-next-line max-len */
-"<WRMHEADER xmlns=\"http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader\" version=\"4.0.0.0\"><DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>ckB07BNLskeUq0qd83fTbA==</KID><DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID><CUSTOMATTRIBUTES xmlns=\"\"><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES><CHECKSUM>U/tsUYRgMzw=</CHECKSUM></DATA></WRMHEADER>";
+'<WRMHEADER xmlns="http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader" version="4.0.0.0"><DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>ckB07BNLskeUq0qd83fTbA==</KID><DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID><CUSTOMATTRIBUTES xmlns=""><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES><CHECKSUM>U/tsUYRgMzw=</CHECKSUM></DATA></WRMHEADER>';
 /**
  * Generate the "cenc" init data for playready from the PlayreadyHeader string.
  * @param {string} playreadyHeader - String representing the PlayreadyHeader XML.
@@ -5004,8 +5055,7 @@ function generatePlayReadyInitData(playreadyHeader) {
   // 2 bytes for record type
   recordLength,
   // 2 bytes for record length
-  recordValueEncoded // X bytes for record value
-  );
+  recordValueEncoded);
   /**  the systemId is define at https://dashif.org/identifiers/content_protection/ */
   var playreadySystemId = (0,string_parsing/* hexToBytes */.aT)("9a04f07998404286ab92e65be0885f95");
   return generateInitData(playReadyObject, playreadySystemId);
@@ -5032,8 +5082,7 @@ function generateInitData(data, systemId) {
   // 16 bytes for the systemId
   sizeOfData,
   // 4 bytes for the data size
-  data // X bytes for data
-  );
+  data);
 }
 // EXTERNAL MODULE: ./src/utils/flat_map.ts
 var flat_map = __webpack_require__(3262);
@@ -5068,11 +5117,12 @@ var flat_map = __webpack_require__(3262);
 
 /**
  * @param {Array.<Object>} keySystems
+ * @param {Object} askedConfiguration
  * @param {MediaKeySystemAccess} currentKeySystemAccess
  * @param {Object} currentKeySystemOptions
  * @returns {null|Object}
  */
-function checkCachedMediaKeySystemAccess(keySystems, currentKeySystemAccess, currentKeySystemOptions) {
+function checkCachedMediaKeySystemAccess(keySystems, askedConfiguration, currentKeySystemAccess, currentKeySystemOptions) {
   var mksConfiguration = currentKeySystemAccess.getConfiguration();
   if (shouldRenewMediaKeySystemAccess() || mksConfiguration == null) {
     return null;
@@ -5093,7 +5143,8 @@ function checkCachedMediaKeySystemAccess(keySystems, currentKeySystemAccess, cur
   if (firstCompatibleOption != null) {
     return {
       keySystemOptions: firstCompatibleOption,
-      keySystemAccess: currentKeySystemAccess
+      keySystemAccess: currentKeySystemAccess,
+      askedConfiguration: askedConfiguration
     };
   }
   return null;
@@ -5215,6 +5266,10 @@ function buildKeySystemConfigurations(ksName, ksType, keySystem) {
     persistentState: persistentState,
     sessionTypes: sessionTypes
   };
+  if (!(0,is_null_or_undefined/* default */.A)(keySystem.audioRobustnesses) || !(0,is_null_or_undefined/* default */.A)(keySystem.videoRobustnesses)) {
+    // If the user specifically asked for robustnesses, we don't want to try without them
+    return [wantedMediaKeySystemConfiguration];
+  }
   return [wantedMediaKeySystemConfiguration,
   // Some legacy implementations have issues with `audioCapabilities` and
   // `videoCapabilities`, so we're including a supplementary
@@ -5247,13 +5302,14 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
     if (eme.implementation === currentState.emeImplementation.implementation) {
       // Fast way to find a compatible keySystem if the currently loaded
       // one as exactly the same compatibility options.
-      var cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
+      var cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.askedConfiguration, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
       if (cachedKeySystemAccess !== null) {
         log/* default */.A.info("DRM: Found cached compatible keySystem");
         return Promise.resolve({
           type: "reuse-media-key-system-access",
           value: {
             mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+            askedConfiguration: cachedKeySystemAccess.askedConfiguration,
             options: cachedKeySystemAccess.keySystemOptions
           }
         });
@@ -5309,7 +5365,7 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
   }
   function _recursivelyTestKeySystems() {
     _recursivelyTestKeySystems = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee(index) {
-      var _keySystemsType$index, keyName, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess;
+      var _keySystemsType$index, keyName, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess, configIdx, keySystemConfiguration;
       return regenerator_default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -5328,35 +5384,47 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
             _keySystemsType$index = keySystemsType[index], keyName = _keySystemsType$index.keyName, keyType = _keySystemsType$index.keyType, keySystemOptions = _keySystemsType$index.keySystemOptions;
             keySystemConfigurations = buildKeySystemConfigurations(keyName, keyType, keySystemOptions);
             log/* default */.A.debug("DRM: Request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length));
-            _context.prev = 7;
-            _context.next = 10;
-            return testKeySystem(keyType, keySystemConfigurations);
-          case 10:
+            configIdx = 0;
+          case 8:
+            if (!(configIdx < keySystemConfigurations.length)) {
+              _context.next = 26;
+              break;
+            }
+            keySystemConfiguration = keySystemConfigurations[configIdx];
+            _context.prev = 10;
+            _context.next = 13;
+            return testKeySystem(keyType, [keySystemConfiguration]);
+          case 13:
             keySystemAccess = _context.sent;
             log/* default */.A.info("DRM: Found compatible keysystem", keyType, index + 1);
             return _context.abrupt("return", {
               type: "create-media-key-system-access",
               value: {
                 options: keySystemOptions,
+                askedConfiguration: keySystemConfiguration,
                 mediaKeySystemAccess: keySystemAccess
               }
             });
-          case 15:
-            _context.prev = 15;
-            _context.t0 = _context["catch"](7);
-            log/* default */.A.debug("DRM: Rejected access to keysystem", keyType, index + 1);
+          case 18:
+            _context.prev = 18;
+            _context.t0 = _context["catch"](10);
+            log/* default */.A.debug("DRM: Rejected access to keysystem", keyType, index + 1, configIdx);
             if (!(cancelSignal.cancellationError !== null)) {
-              _context.next = 20;
+              _context.next = 23;
               break;
             }
             throw cancelSignal.cancellationError;
-          case 20:
+          case 23:
+            configIdx++;
+            _context.next = 8;
+            break;
+          case 26:
             return _context.abrupt("return", recursivelyTestKeySystems(index + 1));
-          case 21:
+          case 27:
           case "end":
             return _context.stop();
         }
-      }, _callee, null, [[7, 15]]);
+      }, _callee, null, [[10, 18]]);
     }));
     return _recursivelyTestKeySystems.apply(this, arguments);
   }
@@ -5480,7 +5548,7 @@ function patchInitData(initData) {
     }
     var currentPSSH = initData.subarray(offset, offset + len);
     // yep
-    if (initData[offset + 12] === 0x10 && initData[offset + 13] === 0x77 && initData[offset + 14] === 0xEF && initData[offset + 15] === 0xEC && initData[offset + 16] === 0xC0 && initData[offset + 17] === 0xB2 && initData[offset + 18] === 0x4D && initData[offset + 19] === 0x02 && initData[offset + 20] === 0xAC && initData[offset + 21] === 0xE3 && initData[offset + 22] === 0x3C && initData[offset + 23] === 0x1E && initData[offset + 24] === 0x52 && initData[offset + 25] === 0xE2 && initData[offset + 26] === 0xFB && initData[offset + 27] === 0x4B) {
+    if (initData[offset + 12] === 0x10 && initData[offset + 13] === 0x77 && initData[offset + 14] === 0xef && initData[offset + 15] === 0xec && initData[offset + 16] === 0xc0 && initData[offset + 17] === 0xb2 && initData[offset + 18] === 0x4d && initData[offset + 19] === 0x02 && initData[offset + 20] === 0xac && initData[offset + 21] === 0xe3 && initData[offset + 22] === 0x3c && initData[offset + 23] === 0x1e && initData[offset + 24] === 0x52 && initData[offset + 25] === 0xe2 && initData[offset + 26] === 0xfb && initData[offset + 27] === 0x4b) {
       var cencOffsets = (0,get_box/* getNextBoxOffsets */.fP)(currentPSSH);
       var version = cencOffsets === null ? undefined : currentPSSH[cencOffsets[1]];
       log/* default */.A.info("Compat: CENC PSSH found with version", version);
@@ -5535,7 +5603,7 @@ function generateKeyRequest(session, initializationDataType, initializationData)
     // a rejected promise with a TypeError in that case).
     // Retry with a default "cenc" value for initialization data type if
     // we're in that condition.
-    log/* default */.A.warn("Compat: error while calling `generateRequest` with an empty " + "initialization data type. Retrying with a default \"cenc\" value.", error);
+    log/* default */.A.warn("Compat: error while calling `generateRequest` with an empty " + 'initialization data type. Retrying with a default "cenc" value.', error);
     return session.generateRequest("cenc", patchedInit);
   });
 }
@@ -7276,7 +7344,7 @@ function getMediaKeysInfos(_x, _x2, _x3) {
  */
 function _getMediaKeysInfos() {
   _getMediaKeysInfos = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee(mediaElement, keySystemsConfigs, cancelSignal) {
-    var evt, _evt$value, options, mediaKeySystemAccess, currentState, persistentSessionsStore, _mediaKeys, _loadedSessionsStore, mediaKeys, loadedSessionsStore;
+    var evt, _evt$value, options, mediaKeySystemAccess, askedConfiguration, currentState, persistentSessionsStore, _mediaKeys, _loadedSessionsStore, mediaKeys, loadedSessionsStore;
     return regenerator_default().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
@@ -7290,7 +7358,7 @@ function _getMediaKeysInfos() {
           }
           throw cancelSignal.cancellationError;
         case 5:
-          _evt$value = evt.value, options = _evt$value.options, mediaKeySystemAccess = _evt$value.mediaKeySystemAccess;
+          _evt$value = evt.value, options = _evt$value.options, mediaKeySystemAccess = _evt$value.mediaKeySystemAccess, askedConfiguration = _evt$value.askedConfiguration;
           currentState = media_keys_infos_store/* default */.A.getState(mediaElement);
           persistentSessionsStore = createPersistentSessionsStorage(options);
           if (!(canReuseMediaKeys() && currentState !== null && evt.type === "reuse-media-key-system-access")) {
@@ -7307,6 +7375,7 @@ function _getMediaKeysInfos() {
           return _context.abrupt("return", {
             mediaKeys: _mediaKeys,
             mediaKeySystemAccess: mediaKeySystemAccess,
+            askedConfiguration: askedConfiguration,
             stores: {
               loadedSessionsStore: _loadedSessionsStore,
               persistentSessionsStore: persistentSessionsStore
@@ -7323,6 +7392,7 @@ function _getMediaKeysInfos() {
           return _context.abrupt("return", {
             mediaKeys: mediaKeys,
             mediaKeySystemAccess: mediaKeySystemAccess,
+            askedConfiguration: askedConfiguration,
             stores: {
               loadedSessionsStore: loadedSessionsStore,
               persistentSessionsStore: persistentSessionsStore
@@ -7805,6 +7875,7 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
     session.closed.then(function () {
       return manualCanceller.cancel();
     })["catch"](function (err) {
+      // Should never happen
       if (cancelSignal.isCancelled()) {
         return;
       }
@@ -8602,7 +8673,8 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
     var options = mediaKeysInfo.options,
       mediaKeys = mediaKeysInfo.mediaKeys,
       mediaKeySystemAccess = mediaKeysInfo.mediaKeySystemAccess,
-      stores = mediaKeysInfo.stores;
+      stores = mediaKeysInfo.stores,
+      askedConfiguration = mediaKeysInfo.askedConfiguration;
     var shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
     if (shouldDisableLock) {
       this._stateData = {
@@ -8626,6 +8698,7 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
       loadedSessionsStore: stores.loadedSessionsStore,
       mediaKeySystemAccess: mediaKeySystemAccess,
       mediaKeys: mediaKeys,
+      askedConfiguration: askedConfiguration,
       keySystemOptions: options
     };
     log/* default */.A.debug("DRM: Attaching current MediaKeys");
@@ -8869,7 +8942,7 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
             if (options.persistentLicense !== true) {
               wantedSessionType = "temporary";
             } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
-              log/* default */.A.warn("DRM: Cannot create \"persistent-license\" session: not supported");
+              log/* default */.A.warn('DRM: Cannot create "persistent-license" session: not supported');
               wantedSessionType = "temporary";
             } else {
               wantedSessionType = "persistent-license";
@@ -9024,6 +9097,21 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
     if (compatibleSessionInfo === undefined) {
       return false;
     }
+    /**
+     * On Safari using Directfile, the old EME implementation triggers
+     * the "webkitneedkey" event instead of "encrypted". There's an issue in
+     * Safari where "webkitneedkey" fires too early before all tracks are added
+     * from an HLS playlist.
+     * Safari incorrectly assumes some keys are missing for these tracks,
+     * leading to repeated "webkitneedkey" events. Because RxPlayer recognizes
+     * it already has a session for these keys and ignores the events,
+     * the content remains frozen. To resolve this, the session is re-created.
+     */
+    var forceSessionRecreation = initializationData.forceSessionRecreation;
+    if (forceSessionRecreation === true) {
+      this.removeSessionForInitData(initializationData, mediaKeysData);
+      return false;
+    }
     // Check if the compatible session is blacklisted
     var blacklistedSessionError = compatibleSessionInfo.blacklistedSessionError;
     if (!(0,is_null_or_undefined/* default */.A)(blacklistedSessionError)) {
@@ -9094,6 +9182,39 @@ var ContentDecryptor = /*#__PURE__*/function (_EventEmitter) {
       this._currentSessions.splice(indexOf, 1);
     }
     return false;
+  }
+  /**
+   * Remove the session corresponding to the initData provided, and close it.
+   * It does nothing if no session was found for this initData.
+   * @param {Object} initData : The initialization data corresponding to the session
+   * that need to be removed
+   * @param {Object} mediaKeysData : The media keys data
+   */;
+  _proto.removeSessionForInitData = function removeSessionForInitData(initData, mediaKeysData) {
+    var stores = mediaKeysData.stores;
+    /** Remove the session and close it from the loadedSessionStore */
+    var entry = stores.loadedSessionsStore.reuse(initData);
+    if (entry !== null) {
+      stores.loadedSessionsStore.closeSession(entry.mediaKeySession)["catch"](function () {
+        return log/* default */.A.error("DRM: Cannot close the session from the loaded session store");
+      });
+    }
+    /**
+     * If set, a currently-used key session is already compatible to this
+     * initialization data.
+     */
+    var compatibleSessionInfo = (0,array_find/* default */.A)(this._currentSessions, function (x) {
+      return x.record.isCompatibleWith(initData);
+    });
+    if (compatibleSessionInfo === undefined) {
+      return;
+    }
+    /** Remove the session from the currentSessions */
+    var indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
+    if (indexOf !== -1) {
+      log/* default */.A.debug("DRM: A session from a processed init is removed " + "due to forceSessionRecreation policy.");
+      this._currentSessions.splice(indexOf, 1);
+    }
   }
   /**
    * Callback that should be called if an error that made the current
@@ -9609,7 +9730,7 @@ var currentMediaState = new WeakMap();
 /* harmony import */ var _utils_get_loaded_reference__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(5097);
 /* harmony import */ var _utils_initial_seek_and_play__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(107);
 /* harmony import */ var _utils_initialize_content_decryption__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6899);
-/* harmony import */ var _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3108);
+/* harmony import */ var _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3137);
 /* harmony import */ var _utils_throw_on_media_error__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8345);
 
 /**
@@ -9839,21 +9960,27 @@ function getDirectFileInitialTime(mediaElement, startAt) {
   }
   var duration = mediaElement.duration;
   if (typeof startAt.fromLastPosition === "number") {
-    if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A)(duration) || !isFinite(duration)) {
-      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A.warn("startAt.fromLastPosition set but no known duration, " + "beginning at 0.");
-      return 0;
+    if (!(0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A)(duration) && isFinite(duration)) {
+      return Math.max(0, duration + startAt.fromLastPosition);
     }
-    return Math.max(0, duration + startAt.fromLastPosition);
+    if (mediaElement.seekable.length > 0) {
+      var lastSegmentEnd = mediaElement.seekable.end(mediaElement.seekable.length - 1);
+      if (isFinite(lastSegmentEnd)) {
+        return Math.max(0, lastSegmentEnd + startAt.fromLastPosition);
+      }
+    }
+    _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A.warn("Init: startAt.fromLastPosition set but no known duration, " + "it may be too soon to seek");
+    return undefined;
   } else if (typeof startAt.fromLivePosition === "number") {
     var livePosition = mediaElement.seekable.length > 0 ? mediaElement.seekable.end(0) : duration;
     if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A)(livePosition)) {
-      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A.warn("startAt.fromLivePosition set but no known live position, " + "beginning at 0.");
+      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A.warn("Init: startAt.fromLivePosition set but no known live position, " + "beginning at 0.");
       return 0;
     }
     return Math.max(0, livePosition + startAt.fromLivePosition);
   } else if (startAt.percentage != null) {
     if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A)(duration) || !isFinite(duration)) {
-      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A.warn("startAt.percentage set but no known duration, " + "beginning at 0.");
+      _log__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A.warn("Init: startAt.percentage set but no known duration, " + "beginning at 0.");
       return 0;
     }
     var percentage = startAt.percentage;
@@ -12757,9 +12884,9 @@ var ManifestFetcher = /*#__PURE__*/function (_EventEmitter) {
     var externalClockOffset = manifest.clockOffset;
     if (unsafeMode) {
       this._consecutiveUnsafeMode += 1;
-      log/* default */.A.info("Init: Refreshing the Manifest in \"unsafeMode\" for the " + String(this._consecutiveUnsafeMode) + " consecutive time.");
+      log/* default */.A.info('Init: Refreshing the Manifest in "unsafeMode" for the ' + String(this._consecutiveUnsafeMode) + " consecutive time.");
     } else if (this._consecutiveUnsafeMode > 0) {
-      log/* default */.A.info("Init: Not parsing the Manifest in \"unsafeMode\" anymore after " + String(this._consecutiveUnsafeMode) + " consecutive times.");
+      log/* default */.A.info('Init: Not parsing the Manifest in "unsafeMode" anymore after ' + String(this._consecutiveUnsafeMode) + " consecutive times.");
       this._consecutiveUnsafeMode = 0;
     }
     if (this._isRefreshPending) {
@@ -14405,6 +14532,7 @@ function assertDataIsBufferSource(data) {
 
 
 
+
 var POSSIBLE_BUFFER_TYPES = ["audio", "video", "text", "image"];
 /**
  * Allows to easily create and dispose SegmentBuffers, which are interfaces to
@@ -14566,9 +14694,10 @@ var SegmentBuffersStore = /*#__PURE__*/function () {
     }
     this._initializedSegmentBuffers[bufferType] = null;
     if (SegmentBuffersStore.isNative(bufferType)) {
-      this._onNativeBufferAddedOrDisabled.forEach(function (cb) {
+      this._onNativeBufferAddedOrDisabled.slice().forEach(function (cb) {
         return cb();
       });
+      (0,assert/* default */.h)(this._onNativeBufferAddedOrDisabled.length === 0);
     }
   }
   /**
@@ -14601,9 +14730,10 @@ var SegmentBuffersStore = /*#__PURE__*/function () {
       log/* default */.A.info("SB: Adding native SegmentBuffer with codec", codec);
       var nativeSegmentBuffer = new audio_video(bufferType, codec, this._mediaSource);
       this._initializedSegmentBuffers[bufferType] = nativeSegmentBuffer;
-      this._onNativeBufferAddedOrDisabled.forEach(function (cb) {
+      this._onNativeBufferAddedOrDisabled.slice().forEach(function (cb) {
         return cb();
       });
+      (0,assert/* default */.h)(this._onNativeBufferAddedOrDisabled.length === 0);
       return nativeSegmentBuffer;
     }
     if (memorizedSegmentBuffer != null) {
@@ -14779,7 +14909,6 @@ var sorted_list = __webpack_require__(7296);
  * ```
  * @class WeakMapMemory
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
 var WeakMapMemory = /*#__PURE__*/function () {
   /**
    * @param {Function}
@@ -17474,7 +17603,7 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
     var terminatingRepStreamCanceller = new task_canceller/* default */.Ay();
     terminatingRepStreamCanceller.linkToSignal(adapStreamCanceller.signal);
     var bufferGoal = (0,reference/* createMappedReference */.D)(wantedBufferAhead, function (prev) {
-      return prev * getBufferGoalRatio(representation);
+      return getBufferGoal(representation, prev);
     }, terminatingRepStreamCanceller.signal);
     var maxBufferSize = adaptation.type === "video" ? maxVideoBufferSize : new reference/* default */.A(Infinity);
     log/* default */.A.info("Stream: changing representation", adaptation.type, representation.id, representation.bitrate);
@@ -17492,10 +17621,11 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
           var lastBufferGoalRatio = (_a = bufferGoalRatioMap.get(representation.id)) !== null && _a !== void 0 ? _a : 1;
           // 70%, 49%, 34.3%, 24%, 16.81%, 11.76%, 8.24% and 5.76%
           var newBufferGoalRatio = lastBufferGoalRatio * 0.7;
-          if (newBufferGoalRatio <= 0.05 || wba * newBufferGoalRatio <= 2) {
-            throw formattedError;
-          }
           bufferGoalRatioMap.set(representation.id, newBufferGoalRatio);
+          if (newBufferGoalRatio <= 0.05 || getBufferGoal(representation, wba) <= 2) {
+            representationStreamCallbacks.error(formattedError);
+            return;
+          }
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
           (0,cancellable_sleep/* default */.A)(4000, adapStreamCanceller.signal).then(function () {
@@ -17528,16 +17658,26 @@ function AdaptationStream(_ref, callbacks, parentCancelSignal) {
     }, updatedCallbacks, adapStreamCanceller.signal);
   }
   /**
-   * @param {Object} representation
+   * Returns how much media data should be pre-buffered for this
+   * `Representation`, according to the `wantedBufferAhead` setting and previous
+   * issues encountered with that `Representation`.
+   * @param {Object} representation - The `Representation` you want to buffer.
+   * @param {number} wba - The value of `wantedBufferAhead` set by the user.
    * @returns {number}
    */
-  function getBufferGoalRatio(representation) {
+  function getBufferGoal(representation, wba) {
     var oldBufferGoalRatio = bufferGoalRatioMap.get(representation.id);
     var bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio : 1;
     if (oldBufferGoalRatio === undefined) {
       bufferGoalRatioMap.set(representation.id, bufferGoalRatio);
     }
-    return bufferGoalRatio;
+    if (bufferGoalRatio < 1 && wba === Infinity) {
+      // When `wba` is equal to `Infinity`, dividing it will still make it equal
+      // to `Infinity`. To make the `bufferGoalRatio` still have an effect, we
+      // just starts from a `wba` set to the high value of 5 minutes.
+      return 5 * 60 * 1000 * bufferGoalRatio;
+    }
+    return wba * bufferGoalRatio;
   }
 }
 ;// CONCATENATED MODULE: ./src/core/stream/adaptation/index.ts
@@ -17608,7 +17748,11 @@ function areCodecsCompatible(a, b) {
   }
   var codecA = codecsA.substring(7);
   var codecB = codecsB.substring(7);
-  if (codecA.split(".")[0] !== codecB.split(".")[0]) {
+  var initialPartA = codecA.split(".")[0];
+  initialPartA = initialPartA === "hev1" ? "hvc1" : initialPartA;
+  var initialPartB = codecB.split(".")[0];
+  initialPartB = initialPartB === "hev1" ? "hvc1" : initialPartB;
+  if (initialPartA !== initialPartB) {
     return false;
   }
   return true;
@@ -17722,16 +17866,15 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   // Period (which overlap a little with this one)
   /** Last segment before one for the current period. */
   var lastSegmentBefore = getLastSegmentBeforePeriod(inventory, period);
-  if (lastSegmentBefore !== null && (lastSegmentBefore.bufferedEnd === undefined || period.start - lastSegmentBefore.bufferedEnd < 1))
+  if (lastSegmentBefore !== null && (lastSegmentBefore.bufferedEnd === undefined || period.start - lastSegmentBefore.bufferedEnd < 1)) {
     // Close to Period's start
-    {
-      // Exclude data close to the period's start to avoid cleaning
-      // to much
-      rangesToExclude.push({
-        start: 0,
-        end: period.start + 1
-      });
-    }
+    // Exclude data close to the period's start to avoid cleaning
+    // to much
+    rangesToExclude.push({
+      start: 0,
+      end: period.start + 1
+    });
+  }
   // Next, exclude data around current position to avoid decoding issues
   var bufferType = adaptation.type;
   var _config$getCurrent = config/* default */.A.getCurrent(),
@@ -17756,14 +17899,13 @@ function getAdaptationSwitchStrategy(segmentBuffer, period, adaptation, playback
   if (period.end !== undefined) {
     /** first segment after for the current period. */
     var firstSegmentAfter = getFirstSegmentAfterPeriod(inventory, period);
-    if (firstSegmentAfter !== null && (firstSegmentAfter.bufferedStart === undefined || firstSegmentAfter.bufferedStart - period.end < 1))
+    if (firstSegmentAfter !== null && (firstSegmentAfter.bufferedStart === undefined || firstSegmentAfter.bufferedStart - period.end < 1)) {
       // Close to Period's end
-      {
-        rangesToExclude.push({
-          start: period.end - 1,
-          end: Number.MAX_VALUE
-        });
-      }
+      rangesToExclude.push({
+        start: period.end - 1,
+        end: Number.MAX_VALUE
+      });
+    }
   }
   var toRemove = (0,ranges/* excludeFromRanges */.bo)(unwantedRange, rangesToExclude);
   if (toRemove.length === 0) {
@@ -18300,7 +18442,7 @@ function createEmptyAdaptationStream(playbackObserver, wantedBufferAhead, buffer
     var wba = wantedBufferAhead.getValue();
     var position = observation.position.last;
     if (period.end !== undefined && position + wba >= period.end) {
-      log/* default */.A.debug("Stream: full \"empty\" AdaptationStream", bufferType);
+      log/* default */.A.debug('Stream: full "empty" AdaptationStream', bufferType);
       hasFinishedLoading = true;
     }
     callbacks.streamStatusUpdate({
@@ -20132,8 +20274,8 @@ function getMaximumLiveSeekablePosition(contentLastPosition) {
   // authorize exceptionally going over it.
   return Math.max(Math.pow(2, 32), contentLastPosition + YEAR_IN_SECONDS);
 }
-// EXTERNAL MODULE: ./src/core/init/utils/rebuffering_controller.ts + 1 modules
-var rebuffering_controller = __webpack_require__(3108);
+// EXTERNAL MODULE: ./src/core/init/utils/rebuffering_controller.ts
+var rebuffering_controller = __webpack_require__(3137);
 ;// CONCATENATED MODULE: ./src/core/init/utils/stream_events_emitter/are_same_stream_events.ts
 /**
  * Copyright 2015 CANAL+ Group
@@ -20846,6 +20988,7 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
       startTime: initialTime
     }, cancelSignal);
     var rebufferingController = this._createRebufferingController(playbackObserver, manifest, speed, cancelSignal);
+    var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     if (may_media_element_fail_on_undecipherable_data) {
       // On some devices, just reload immediately when data become undecipherable
       manifest.addEventListener("decipherabilityUpdate", function (elts) {
@@ -20856,7 +20999,6 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
         }
       }, cancelSignal);
     }
-    var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     /**
      * Emit a "loaded" events once the initial play has been performed and the
      * media can begin playback.
@@ -21371,6 +21513,8 @@ var should_validate_metadata = __webpack_require__(2097);
 var browser_compatibility_types = __webpack_require__(9770);
 // EXTERNAL MODULE: ./src/compat/browser_detection.ts
 var browser_detection = __webpack_require__(443);
+// EXTERNAL MODULE: ./src/compat/is_seeking_approximate.ts
+var is_seeking_approximate = __webpack_require__(7913);
 ;// CONCATENATED MODULE: ./src/compat/should_prevent_seeking_at_0_initially.ts
 
 /**
@@ -21411,6 +21555,7 @@ var reference = __webpack_require__(8315);
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -21472,7 +21617,38 @@ function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mu
     // a sufficient `readyState` has been reached for directfile contents.
     // So let's divide the two possibilities here.
     var initialTime = typeof startTime === "function" ? startTime() : startTime;
-    if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
+    if (initialTime === undefined && isDirectfile && mediaElement.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      /**
+       * The starting position may not be known yet.
+       * Postpone the seek to a moment where the starting position should be known,
+       * assumely it's when readyState is greater or equal to HAVE_CURRENT_DATA (2).
+       * If the initiallySeekedTime is still `undefined` when the readyState is >= 2,
+       * let assume that the initiallySeekedTime will never be known and continue
+       * the logic without seeking.
+       */
+      playbackObserver.listen(function (obs, stopListening) {
+        if (obs.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+          var observationInitialTime = typeof startTime === "function" ? startTime() : startTime;
+          if (observationInitialTime === undefined) {
+            initialSeekPerformed.setValue(true);
+            initialSeekPerformed.finish();
+          } else if (isDirectfile && browser_detection/* isSafariMobile */.dX) {
+            // On safari mobile (version 17.1.2) seeking too early cause the video
+            // to never buffer media data. Using setTimeout 0 defers the seek
+            // to a moment at which safari should be more able to handle a seek.
+            setTimeout(function () {
+              performInitialSeek(observationInitialTime);
+            }, 0);
+          } else {
+            performInitialSeek(observationInitialTime);
+          }
+          stopListening();
+        }
+      });
+    } else if (initialTime === undefined) {
+      initialSeekPerformed.setValue(true);
+      initialSeekPerformed.finish();
+    } else if (shouldPreventSeekingAt0Initially() && initialTime === 0) {
       initialSeekPerformed.setValue(true);
       initialSeekPerformed.finish();
     } else if (isDirectfile && browser_detection/* isSafariMobile */.dX) {
@@ -21503,7 +21679,7 @@ function performInitialSeekAndPlay(mediaElement, playbackObserver, startTime, mu
         isAwaitingSeek = false;
         return;
       }
-      if (!isAwaitingSeek && !observation.seeking && observation.rebuffering === null && observation.readyState >= 1) {
+      if (!isAwaitingSeek && !observation.seeking && (is_seeking_approximate/* default */.A && observation.readyState >= 3 || observation.rebuffering === null) && observation.readyState >= 1) {
         stopListening();
         onPlayable();
       }
@@ -21720,63 +21896,21 @@ function initializeContentDecryption(mediaElement, keySystems, protectionRef, ca
 
 /***/ }),
 
-/***/ 3108:
+/***/ 3137:
 /***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  A: function() { return /* binding */ RebufferingController; }
-});
-
-// EXTERNAL MODULE: ./node_modules/@babel/runtime/helpers/esm/inheritsLoose.js
-var inheritsLoose = __webpack_require__(7387);
-// EXTERNAL MODULE: ./src/compat/browser_detection.ts
-var browser_detection = __webpack_require__(443);
-;// CONCATENATED MODULE: ./src/compat/is_seeking_approximate.ts
-/**
- * Copyright 2015 CANAL+ Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * On some devices (right now only seen on Tizen), seeking through the
- * `currentTime` property can lead to the browser re-seeking once the
- * segments have been loaded to improve seeking performances (for
- * example, by seeking right to an intra video frame).
- *
- * This can lead to conflicts with the RxPlayer code.
- *
- * This boolean is only `true` on the devices where this behavior has been
- * observed.
- */
-var isSeekingApproximate = browser_detection/* isTizen */.ZN;
-/* harmony default export */ var is_seeking_approximate = (isSeekingApproximate);
-// EXTERNAL MODULE: ./src/config.ts + 2 modules
-var config = __webpack_require__(5151);
-// EXTERNAL MODULE: ./src/errors/media_error.ts
-var media_error = __webpack_require__(5575);
-// EXTERNAL MODULE: ./src/log.ts + 1 modules
-var log = __webpack_require__(9477);
-// EXTERNAL MODULE: ./src/utils/event_emitter.ts
-var event_emitter = __webpack_require__(79);
-// EXTERNAL MODULE: ./src/utils/ranges.ts
-var ranges = __webpack_require__(3650);
-// EXTERNAL MODULE: ./src/utils/task_canceller.ts
-var task_canceller = __webpack_require__(2507);
-;// CONCATENATED MODULE: ./src/core/init/utils/rebuffering_controller.ts
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   A: function() { return /* binding */ RebufferingController; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7387);
+/* harmony import */ var _compat_is_seeking_approximate__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7913);
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5151);
+/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(5575);
+/* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9477);
+/* harmony import */ var _utils_event_emitter__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(79);
+/* harmony import */ var _utils_ranges__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3650);
+/* harmony import */ var _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
 
 /**
  * Copyright 2015 CANAL+ Group
@@ -21827,10 +21961,10 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
     _this._speed = speed;
     _this._discontinuitiesStore = [];
     _this._isStarted = false;
-    _this._canceller = new task_canceller/* default */.Ay();
+    _this._canceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
     return _this;
   }
-  (0,inheritsLoose/* default */.A)(RebufferingController, _EventEmitter);
+  (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(RebufferingController, _EventEmitter);
   var _proto = RebufferingController.prototype;
   _proto.start = function start() {
     var _this2 = this;
@@ -21876,14 +22010,14 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         readyState = observation.readyState,
         rebuffering = observation.rebuffering,
         freezing = observation.freezing;
-      var _config$getCurrent = config/* default */.A.getCurrent(),
+      var _config$getCurrent = _config__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.getCurrent(),
         BUFFER_DISCONTINUITY_THRESHOLD = _config$getCurrent.BUFFER_DISCONTINUITY_THRESHOLD,
         FORCE_DISCONTINUITY_SEEK_DELAY = _config$getCurrent.FORCE_DISCONTINUITY_SEEK_DELAY,
         FREEZING_STALLED_DELAY = _config$getCurrent.FREEZING_STALLED_DELAY,
         UNFREEZING_SEEK_DELAY = _config$getCurrent.UNFREEZING_SEEK_DELAY,
         UNFREEZING_DELTA_POSITION = _config$getCurrent.UNFREEZING_DELTA_POSITION;
-      if (!observation.seeking && is_seeking_approximate && ignoredStallTimeStamp === null && lastSeekingPosition !== null && observation.position < lastSeekingPosition) {
-        log/* default */.A.debug("Init: the device appeared to have seeked back by itself.");
+      if (!observation.seeking && _compat_is_seeking_approximate__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A && ignoredStallTimeStamp === null && lastSeekingPosition !== null && observation.position < lastSeekingPosition) {
+        _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.debug("Init: the device appeared to have seeked back by itself.");
         var now = performance.now();
         ignoredStallTimeStamp = now;
       }
@@ -21892,7 +22026,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         var _now = performance.now();
         var referenceTimestamp = prevFreezingState === null ? freezing.timestamp : prevFreezingState.attemptTimestamp;
         if (_now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
-          log/* default */.A.warn("Init: trying to seek to un-freeze player");
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: trying to seek to un-freeze player");
           _this2._playbackObserver.setCurrentTime(_this2._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION);
           prevFreezingState = {
             attemptTimestamp: _now
@@ -21934,11 +22068,11 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         var _now2 = performance.now();
         if (_now2 - ignoredStallTimeStamp < FORCE_DISCONTINUITY_SEEK_DELAY) {
           playbackRateUpdater.stopRebuffering();
-          log/* default */.A.debug("Init: letting the device get out of a stall by itself");
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.debug("Init: letting the device get out of a stall by itself");
           _this2.trigger("stalled", stalledReason);
           return;
         } else {
-          log/* default */.A.warn("Init: ignored stall for too long, checking discontinuity", _now2 - ignoredStallTimeStamp);
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: ignored stall for too long, checking discontinuity", _now2 - ignoredStallTimeStamp);
         }
       }
       ignoredStallTimeStamp = null;
@@ -21954,9 +22088,9 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         if (skippableDiscontinuity !== null) {
           var realSeekTime = skippableDiscontinuity + 0.001;
           if (realSeekTime <= _this2._playbackObserver.getCurrentTime()) {
-            log/* default */.A.info("Init: position to seek already reached, no seeking", _this2._playbackObserver.getCurrentTime(), realSeekTime);
+            _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: position to seek already reached, no seeking", _this2._playbackObserver.getCurrentTime(), realSeekTime);
           } else {
-            log/* default */.A.warn("SA: skippable discontinuity found in the stream", position, realSeekTime);
+            _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("SA: skippable discontinuity found in the stream", position, realSeekTime);
             _this2._playbackObserver.setCurrentTime(realSeekTime);
             _this2.trigger("warning", generateDiscontinuityError(stalledPosition, realSeekTime));
             return;
@@ -21971,11 +22105,11 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
       // calculate a stalled state. This is useful for some
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
-      var nextBufferRangeGap = (0,ranges/* getNextRangeGap */.Td)(buffered, freezePosition);
+      var nextBufferRangeGap = (0,_utils_ranges__WEBPACK_IMPORTED_MODULE_5__/* .getNextRangeGap */ .Td)(buffered, freezePosition);
       if (_this2._speed.getValue() > 0 && nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
         var seekTo = freezePosition + nextBufferRangeGap + EPSILON;
         if (_this2._playbackObserver.getCurrentTime() < seekTo) {
-          log/* default */.A.warn("Init: discontinuity encountered inferior to the threshold", freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: discontinuity encountered inferior to the threshold", freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
           _this2._playbackObserver.setCurrentTime(seekTo);
           _this2.trigger("warning", generateDiscontinuityError(freezePosition, seekTo));
           return;
@@ -22035,7 +22169,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
     var rebufferingPos = (_a = observation.rebuffering.position) !== null && _a !== void 0 ? _a : currPos;
     var lockedPeriodStart = period.start;
     if (currPos < lockedPeriodStart && Math.abs(rebufferingPos - lockedPeriodStart) < 1) {
-      log/* default */.A.warn("Init: rebuffering because of a future locked stream.\n" + "Trying to unlock by seeking to the next Period");
+      _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: rebuffering because of a future locked stream.\n" + "Trying to unlock by seeking to the next Period");
       this._playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
     }
   }
@@ -22047,7 +22181,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
     this._canceller.cancel();
   };
   return RebufferingController;
-}(event_emitter/* default */.A);
+}(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A);
 /**
  * @param {Array.<Object>} discontinuitiesStore
  * @param {Object} manifest
@@ -22079,14 +22213,14 @@ function findSeekableDiscontinuity(discontinuitiesStore, manifest, stalledPositi
           if (nextPeriod !== null) {
             discontinuityEnd = nextPeriod.start + EPSILON;
           } else {
-            log/* default */.A.warn("Init: discontinuity at Period's end but no next Period");
+            _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: discontinuity at Period's end but no next Period");
           }
         } else if (stalledPosition < end + EPSILON) {
           discontinuityEnd = end + EPSILON;
         }
       }
       if (discontinuityEnd !== undefined) {
-        log/* default */.A.info("Init: discontinuity found", stalledPosition, discontinuityEnd);
+        _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: discontinuity found", stalledPosition, discontinuityEnd);
         maxDiscontinuityEnd = maxDiscontinuityEnd !== null && maxDiscontinuityEnd > discontinuityEnd ? maxDiscontinuityEnd : discontinuityEnd;
       }
     }
@@ -22155,7 +22289,7 @@ function updateDiscontinuitiesStore(discontinuitiesStore, evt, observation) {
  * @returns {Error}
  */
 function generateDiscontinuityError(stalledPosition, seekTo) {
-  return new media_error/* default */.A("DISCONTINUITY_ENCOUNTERED", "A discontinuity has been encountered at position " + String(stalledPosition) + ", seeked at position " + String(seekTo));
+  return new _errors__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .A("DISCONTINUITY_ENCOUNTERED", "A discontinuity has been encountered at position " + String(stalledPosition) + ", seeked at position " + String(seekTo));
 }
 /**
  * Manage playback speed, allowing to force a playback rate of `0` when
@@ -22174,7 +22308,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
    * @param {Object} speed
    */
   function PlaybackRateUpdater(playbackObserver, speed) {
-    this._speedUpdateCanceller = new task_canceller/* default */.Ay();
+    this._speedUpdateCanceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
     this._isRebuffering = false;
     this._playbackObserver = playbackObserver;
     this._isDisposed = false;
@@ -22193,7 +22327,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
     }
     this._isRebuffering = true;
     this._speedUpdateCanceller.cancel();
-    log/* default */.A.info("Init: Pause playback to build buffer");
+    _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: Pause playback to build buffer");
     this._playbackObserver.setPlaybackRate(0);
   }
   /**
@@ -22207,7 +22341,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
       return;
     }
     this._isRebuffering = false;
-    this._speedUpdateCanceller = new task_canceller/* default */.Ay();
+    this._speedUpdateCanceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
     this._updateSpeed();
   }
   /**
@@ -22224,7 +22358,7 @@ var PlaybackRateUpdater = /*#__PURE__*/function () {
   _proto2._updateSpeed = function _updateSpeed() {
     var _this3 = this;
     this._speed.onUpdate(function (lastSpeed) {
-      log/* default */.A.info("Init: Resume playback speed", lastSpeed);
+      _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.info("Init: Resume playback speed", lastSpeed);
       _this3._playbackObserver.setPlaybackRate(lastSpeed);
     }, {
       clearSignal: this._speedUpdateCanceller.signal,
@@ -22969,14 +23103,13 @@ var TextTrackCuesStore = /*#__PURE__*/function () {
       var nextCue = cuesBuffer[indexOfNextCue];
       if (nextCue === undefined ||
       // no cue
-      areNearlyEqual(cuesInfosToInsert.end, nextCue.end, relativeDelta))
+      areNearlyEqual(cuesInfosToInsert.end, nextCue.end, relativeDelta)) {
         // samey end
-        {
-          //   ours:            |AAAAA|
-          //   the current one: |BBBBB|
-          //   Result:          |AAAAA|
-          cuesBuffer[indexOfNextCue] = cuesInfosToInsert;
-        } else if (nextCue.start >= cuesInfosToInsert.end) {
+        //   ours:            |AAAAA|
+        //   the current one: |BBBBB|
+        //   Result:          |AAAAA|
+        cuesBuffer[indexOfNextCue] = cuesInfosToInsert;
+      } else if (nextCue.start >= cuesInfosToInsert.end) {
         // Either
         //   ours:            |AAAAA|
         //   the current one:         |BBBBBB|
@@ -24301,9 +24434,7 @@ var SegmentInventory = /*#__PURE__*/function () {
       // (Those not in that TimeRange nor in the previous one)
       var numberOfSegmentToDelete = inventoryIndex - indexBefore;
       if (numberOfSegmentToDelete > 0) {
-        var lastDeletedSegment =
-        // last garbage-collected segment
-        inventory[indexBefore + numberOfSegmentToDelete - 1];
+        var lastDeletedSegment = inventory[indexBefore + numberOfSegmentToDelete - 1]; // last garbage-collected segment
         lastDeletedSegmentInfos = {
           end: (_b = lastDeletedSegment.bufferedEnd) !== null && _b !== void 0 ? _b : lastDeletedSegment.end,
           precizeEnd: lastDeletedSegment.precizeEnd
@@ -27133,7 +27264,7 @@ function updatePeriodInPlace(oldPeriod, newPeriod, updateType) {
       return a.id === oldAdaptation.id;
     });
     if (newAdaptationIdx === -1) {
-      log/* default */.A.warn("Manifest: Adaptation \"" + oldAdaptations[_j].id + "\" not found when merging.");
+      log/* default */.A.warn('Manifest: Adaptation "' + oldAdaptations[_j].id + '" not found when merging.');
       var _oldAdaptations$splic = oldAdaptations.splice(_j, 1),
         removed = _oldAdaptations$splic[0];
       _j--;
@@ -27740,8 +27871,7 @@ var Manifest = /*#__PURE__*/function (_EventEmitter) {
    * @param {Object|Array.<Object>} textTracks
    */;
   _proto._addSupplementaryTextAdaptations = function _addSupplementaryTextAdaptations( /* eslint-disable import/no-deprecated */
-  textTracks
-  /* eslint-enable import/no-deprecated */) {
+  textTracks) {
     var _this3 = this;
     var _textTracks = Array.isArray(textTracks) ? textTracks : [textTracks];
     var newTextAdaptations = _textTracks.reduce(function (allSubs, _ref3) {
@@ -28263,7 +28393,7 @@ function getNextBoxOffsets(buf) {
  * @returns {Uint8Array|null}
  */
 function getTRAF(buffer) {
-  var moof = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buffer, 0x6D6F6F66 /* moof */);
+  var moof = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buffer, 0x6d6f6f66 /* moof */);
   if (moof === null) {
     return null;
   }
@@ -28278,7 +28408,7 @@ function getTRAF(buffer) {
  * @returns {Array.<Uint8Array>}
  */
 function getTRAFs(buffer) {
-  var moofs = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxesContent */ .fj)(buffer, 0x6D6F6F66 /* moof */);
+  var moofs = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxesContent */ .fj)(buffer, 0x6d6f6f66 /* moof */);
   return moofs.reduce(function (acc, moof) {
     var traf = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(moof, 0x74726166 /* traf */);
     if (traf !== null) {
@@ -28295,7 +28425,7 @@ function getTRAFs(buffer) {
  * @returns {Uint8Array|null}
  */
 function getMDAT(buf) {
-  return (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buf, 0x6D646174 /* "mdat" */);
+  return (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buf, 0x6d646174 /* "mdat" */);
 }
 /**
  * Returns the content of the first "mdia" box encountered in the given ISOBMFF
@@ -28305,15 +28435,15 @@ function getMDAT(buf) {
  * @returns {Uint8Array|null}
  */
 function getMDIA(buf) {
-  var moov = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buf, 0x6D6F6F76 /* moov */);
+  var moov = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buf, 0x6d6f6f76 /* moov */);
   if (moov === null) {
     return null;
   }
-  var trak = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(moov, 0x7472616B /* "trak" */);
+  var trak = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(moov, 0x7472616b /* "trak" */);
   if (trak === null) {
     return null;
   }
-  return (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(trak, 0x6D646961 /* "mdia" */);
+  return (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(trak, 0x6d646961 /* "mdia" */);
 }
 /**
  * Returns the content of the first "emsg" box encountered in the given ISOBMFF
@@ -28326,7 +28456,7 @@ function getEMSG(buffer, offset) {
   if (offset === void 0) {
     offset = 0;
   }
-  return (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buffer.subarray(offset), 0x656D7367 /* emsg */);
+  return (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(buffer.subarray(offset), 0x656d7367 /* emsg */);
 }
 
 
@@ -28421,7 +28551,7 @@ var get_box = __webpack_require__(8797);
  */
 function takePSSHOut(data) {
   var i = 0;
-  var moov = (0,get_box/* getBoxContent */.fZ)(data, 0x6D6F6F76 /* moov */);
+  var moov = (0,get_box/* getBoxContent */.fZ)(data, 0x6d6f6f76 /* moov */);
   if (moov === null) {
     return [];
   }
@@ -28580,7 +28710,7 @@ function getSegmentsFromSidx(buf, sidxOffsetInWholeSegment) {
     var refChunk = (0,_utils_byte_parsing__WEBPACK_IMPORTED_MODULE_1__/* .be4toi */ .mq)(buf, cursor);
     cursor += 4;
     var refType = (refChunk & 0x80000000) >>> 31;
-    var refSize = refChunk & 0x7FFFFFFF;
+    var refSize = refChunk & 0x7fffffff;
     // when set to 1 indicates that the reference is to a sidx, else to media
     if (refType === 1) {
       throw new Error("sidx with reference_type `1` not yet implemented");
@@ -28674,7 +28804,7 @@ function getDurationFromTrun(buffer) {
   var completeDuration = 0;
   for (var _iterator = _createForOfIteratorHelperLoose(trafs), _step; !(_step = _iterator()).done;) {
     var traf = _step.value;
-    var trun = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(traf, 0x7472756E /* trun */);
+    var trun = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(traf, 0x7472756e /* trun */);
     if (trun === null) {
       return undefined;
     }
@@ -28743,7 +28873,7 @@ function getMDHDTimescale(buffer) {
   if (mdia === null) {
     return undefined;
   }
-  var mdhd = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(mdia, 0x6D646864 /* "mdhd" */);
+  var mdhd = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(mdia, 0x6d646864 /* "mdhd" */);
   if (mdhd === null) {
     return undefined;
   }
@@ -28777,7 +28907,7 @@ function patchPssh(buf, psshList) {
   if (psshList == null || psshList.length === 0) {
     return buf;
   }
-  var moovOffsets = getBoxOffsets(buf, 0x6D6F6F76 /* = "moov" */);
+  var moovOffsets = getBoxOffsets(buf, 0x6d6f6f76 /* = "moov" */);
   if (moovOffsets === null) {
     return buf;
   }
@@ -28896,12 +29026,12 @@ function parseEmsgBoxes(buffer) {
  * @returns {Uint8Array|null}
  */
 function getKeyIdFromInitSegment(segment) {
-  var stsd = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getChildBox */ .o$)(segment, [0x6D6F6F76 /* moov */, 0x7472616B /* trak */, 0x6D646961 /* mdia */, 0x6D696E66 /* minf */, 0x7374626C /* stbl */, 0x73747364 /* stsd */]);
+  var stsd = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getChildBox */ .o$)(segment, [0x6d6f6f76 /* moov */, 0x7472616b /* trak */, 0x6d646961 /* mdia */, 0x6d696e66 /* minf */, 0x7374626c /* stbl */, 0x73747364 /* stsd */]);
   if (stsd === null) {
     return null;
   }
   var stsdSubBoxes = stsd.subarray(8);
-  var encBox = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(stsdSubBoxes, 0x656E6376 /* encv */);
+  var encBox = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(stsdSubBoxes, 0x656e6376 /* encv */);
   var encContentOffset = 0;
   if (encBox === null) {
     encContentOffset = 8 +
@@ -28917,7 +29047,7 @@ function getKeyIdFromInitSegment(segment) {
     2 +
     // reserved
     4; // samplerate
-    encBox = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(stsdSubBoxes, 0x656E6361 /* enca */);
+    encBox = (0,_get_box__WEBPACK_IMPORTED_MODULE_0__/* .getBoxContent */ .fZ)(stsdSubBoxes, 0x656e6361 /* enca */);
   } else {
     encContentOffset = 8 +
     // sample entry header
@@ -29043,7 +29173,7 @@ function parseBif(buf) {
       });
       index++;
     }
-    if (currentImageTimestamp === 0xFFFFFFFF) {
+    if (currentImageTimestamp === 0xffffffff) {
       break;
     }
     previousImageInfo = {
@@ -30052,10 +30182,14 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
   /**
    * Estimate a minimum bound for the content from the last set segment time
    * and buffer depth.
-   * Consider that it is only an estimation, not the real value.
+   * Consider that it is only an estimate, not the real value.
+   * @param {number} segmentDuration - In DASH, the buffer depth actually also
+   * depend on a corresponding's segment duration (e.g. a segment become
+   * unavailable once the `timeShiftBufferDepth` + its duration has elapsed).
+   * This argument can thus be set the approximate duration of a segment.
    * @return {number|undefined}
    */;
-  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime() {
+  _proto.getEstimatedMinimumSegmentTime = function getEstimatedMinimumSegmentTime(segmentDuration) {
     var _a;
     if (!this._isDynamic || this._timeShiftBufferDepth === null) {
       return 0;
@@ -30064,7 +30198,7 @@ var ManifestBoundsCalculator = /*#__PURE__*/function () {
     if (maximumBound === undefined) {
       return undefined;
     }
-    var minimumBound = maximumBound - this._timeShiftBufferDepth;
+    var minimumBound = maximumBound - (this._timeShiftBufferDepth + segmentDuration);
     return minimumBound;
   }
   /**
@@ -30864,7 +30998,7 @@ function convertElementsToIndexSegment(item, previousItem, nextItem) {
       repeatCount: repeatCount === undefined ? 0 : repeatCount
     };
   }
-  log/* default */.A.warn("DASH: A \"S\" Element could not have been parsed.");
+  log/* default */.A.warn('DASH: A "S" Element could not have been parsed.');
   return null;
 }
 ;// CONCATENATED MODULE: ./src/parsers/manifest/dash/common/indexes/timeline/parse_s_element.ts
@@ -31124,7 +31258,7 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
   // Find first index in both timeline where a common segment is found.
   var commonStartInfo = findFirstCommonStartTime(prevTimeline, newElements);
   if (commonStartInfo === null) {
-    log/* default */.A.warn("DASH: Cannot perform \"based\" update. Common segment not found.");
+    log/* default */.A.warn('DASH: Cannot perform "based" update. Common segment not found.');
     return constructTimelineFromElements(newElements);
   }
   var prevSegmentsIdx = commonStartInfo.prevSegmentsIdx,
@@ -31135,7 +31269,7 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
   var numberCommonEltGuess = prevTimeline.length - prevSegmentsIdx;
   var lastCommonEltNewEltsIdx = numberCommonEltGuess + newElementsIdx - 1;
   if (lastCommonEltNewEltsIdx >= newElements.length) {
-    log/* default */.A.info("DASH: Cannot perform \"based\" update. New timeline too short");
+    log/* default */.A.info('DASH: Cannot perform "based" update. New timeline too short');
     return constructTimelineFromElements(newElements);
   }
   // Remove elements which are not available anymore
@@ -31146,14 +31280,14 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
     newTimeline[0].repeatCount -= repeatNumberInPrevSegments;
   }
   if (repeatNumberInNewElements > 0 && newElementsIdx !== 0) {
-    log/* default */.A.info("DASH: Cannot perform \"based\" update. " + "The new timeline has a different form.");
+    log/* default */.A.info('DASH: Cannot perform "based" update. ' + "The new timeline has a different form.");
     return constructTimelineFromElements(newElements);
   }
   var prevLastElement = newTimeline[newTimeline.length - 1];
   var newCommonElt = parseSElement(newElements[lastCommonEltNewEltsIdx]);
   var newRepeatCountOffseted = ((_a = newCommonElt.repeatCount) !== null && _a !== void 0 ? _a : 0) - repeatNumberInNewElements;
   if (newCommonElt.duration !== prevLastElement.duration || prevLastElement.repeatCount > newRepeatCountOffseted) {
-    log/* default */.A.info("DASH: Cannot perform \"based\" update. " + "The new timeline has a different form at the beginning.");
+    log/* default */.A.info('DASH: Cannot perform "based" update. ' + "The new timeline has a different form at the beginning.");
     return constructTimelineFromElements(newElements);
   }
   if (newCommonElt.repeatCount !== undefined && newCommonElt.repeatCount > prevLastElement.repeatCount) {
@@ -31191,6 +31325,7 @@ function constructTimelineFromPreviousTimeline(newElements, prevTimeline) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 
 
@@ -31421,9 +31556,8 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
       return false;
     }
     if (this._scaledPeriodEnd === undefined) {
-      return scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart ? undefined :
-      // There may be future segments at this point
-      false; // Before the current Period
+      return scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart ? undefined // There may be future segments at this point
+      : false; // Before the current Period
     }
     // `true` if within the boundaries of this Period. `false` otherwise.
     return scaledWantedStart - segmentTimeRounding < this._scaledPeriodEnd && scaledWantedEnd + segmentTimeRounding > this._scaledPeriodStart;
@@ -31600,14 +31734,15 @@ var TimelineRepresentationIndex = /*#__PURE__*/function () {
    * available due to timeshifting.
    */;
   _proto._refreshTimeline = function _refreshTimeline() {
+    var _a, _b;
     if (this._index.timeline === null) {
       this._index.timeline = this._getTimeline();
     }
     if (!this._isDynamic) {
       return;
     }
-    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
-    if (firstPosition == null) {
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(((_b = (_a = this._index.timeline[0]) === null || _a === void 0 ? void 0 : _a.duration) !== null && _b !== void 0 ? _b : 0) / this._index.timescale);
+    if ((0,is_null_or_undefined/* default */.A)(firstPosition)) {
       return; // we don't know yet
     }
     var scaledFirstPosition = (0,index_helpers/* toIndexTime */.vb)(firstPosition, this._index);
@@ -32171,7 +32306,7 @@ var TemplateRepresentationIndex = /*#__PURE__*/function () {
     var _this$_index = this._index,
       duration = _this$_index.duration,
       timescale = _this$_index.timescale;
-    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime();
+    var firstPosition = this._manifestBoundsCalculator.getEstimatedMinimumSegmentTime(duration / timescale);
     if (firstPosition === undefined) {
       return undefined;
     }
@@ -32995,7 +33130,7 @@ function parseAdaptationSets(adaptationsIR, context) {
           var mergedInto = parsedAdaptations[type][mergedIntoIdx];
           if (mergedInto !== undefined && mergedInto[0].audioDescription === parsedAdaptationSet.audioDescription && mergedInto[0].closedCaption === parsedAdaptationSet.closedCaption && mergedInto[0].language === parsedAdaptationSet.language) {
             var _mergedInto$0$represe;
-            log/* default */.A.info("DASH Parser: merging \"switchable\" AdaptationSets", originalID, id);
+            log/* default */.A.info('DASH Parser: merging "switchable" AdaptationSets', originalID, id);
             (_mergedInto$0$represe = mergedInto[0].representations).push.apply(_mergedInto$0$represe, parsedAdaptationSet.representations);
             mergedInto[1] = {
               priority: Math.max(priority, mergedInto[1].priority),
@@ -33318,7 +33453,7 @@ function generateStreamEvents(baseIr, periodStart, xmlNamespaces) {
           // encountering unknown namespaced attributes or elements in the given
           // `<Event>` xml subset.
           var parentNode = allNamespaces.reduce(function (acc, ns) {
-            return acc + "xmlns:" + ns.key + "=\"" + ns.value + "\" ";
+            return acc + "xmlns:" + ns.key + '="' + ns.value + '" ';
           }, "<toremove ");
           parentNode += ">";
           var elementToString = (0,string_parsing/* utf8ToStr */.Es)(new Uint8Array(eventIr.eventStreamData));
@@ -33493,6 +33628,7 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
   var mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
   var availabilityStartTime = parseAvailabilityStartTime(rootAttributes, args.referenceDateTime);
   var timeShiftBufferDepth = rootAttributes.timeShiftBufferDepth;
+  var maxSegmentDuration = rootAttributes.maxSegmentDuration;
   var clockOffset = args.externalClockOffset,
     unsafelyBaseOnPreviousManifest = args.unsafelyBaseOnPreviousManifest;
   var externalClockOffset = args.externalClockOffset;
@@ -33586,6 +33722,20 @@ function parseCompleteIntermediateRepresentation(mpdIR, args, warnings, xlinkInf
     // can go even lower in terms of depth
     minimumTime = minimumSafePosition;
     timeshiftDepth = timeShiftBufferDepth !== null && timeShiftBufferDepth !== void 0 ? timeShiftBufferDepth : null;
+    if (timeshiftDepth !== null) {
+      // The DASH spec implies that a segment is still available after a given
+      // `timeShiftBufferDepth` for a time equal to its duration
+      // (What I interpret from "ISO/IEC 23009-1 fifth edition 2022-08
+      // A.3.4 Media Segment list restrictions).
+      //
+      // This `timeshiftDepth` property is global for the whole Manifest (and
+      // not per segment), thus we cannot do exactly that, but we can take the
+      // anounced `maxSegmentDuration` by default instead. This may be a little
+      // too optimistic, but would in reality not lead to a lot of issues as
+      // this `timeshiftDepth` property is not the one that should be relied on
+      // to know which segment can or cannot be requested anymore.
+      timeshiftDepth += maxSegmentDuration !== null && maxSegmentDuration !== void 0 ? maxSegmentDuration : 0;
+    }
     if (timeshiftDepth !== null && minimumTime !== undefined && livePosition - minimumTime > timeshiftDepth) {
       timeshiftDepth = livePosition - minimumTime;
     }
@@ -35935,9 +36085,8 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
       }
       var newCurrRepeat = (newIndexStart - currElt.start) / currElt.duration - 1;
       if (newCurrRepeat % 1 === 0 && currElt.duration === newTimeline[0].duration) {
-        var newRepeatCount = newTimeline[0].repeatCount < 0 ? -1 :
-        // === maximum possible repeat
-        newTimeline[0].repeatCount + newCurrRepeat + 1;
+        var newRepeatCount = newTimeline[0].repeatCount < 0 ? -1 // === maximum possible repeat
+        : newTimeline[0].repeatCount + newCurrRepeat + 1;
         // replace that one and those after it
         oldTimeline.splice.apply(oldTimeline, [i, prevTimelineLength - i].concat(newTimeline));
         oldTimeline[i].start = currElt.start;
@@ -35962,7 +36111,7 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
       return false;
     } else {
       // the new has more depth
-      _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
+      _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.warn('RepresentationIndex: The new index is "bigger" than the previous one');
       oldTimeline.splice.apply(oldTimeline, [0, prevTimelineLength].concat(newTimeline));
       return true;
     }
@@ -35974,7 +36123,7 @@ function updateSegmentTimeline(oldTimeline, newTimeline) {
     return false;
   }
   // the new one has more depth. full update
-  _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.warn("RepresentationIndex: The new index is \"bigger\" than the previous one");
+  _log__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.warn('RepresentationIndex: The new index is "bigger" than the previous one');
   oldTimeline.splice.apply(oldTimeline, [0, prevTimelineLength].concat(newTimeline));
   return true;
 }
@@ -36082,8 +36231,8 @@ function decodeEntities(text) {
  * @param {string} lang
  */
 function parseSami(smi, timeOffset, lang) {
-  var syncOpen = /<sync[ >]/ig;
-  var syncClose = /<sync[ >]|<\/body>/ig;
+  var syncOpen = /<sync[ >]/gi;
+  var syncClose = /<sync[ >]|<\/body>/gi;
   var subs = [];
   var styleMatches = STYLE.exec(smi);
   var css = Array.isArray(styleMatches) ? styleMatches[1] : "";
@@ -36197,10 +36346,6 @@ function parseSami(smi, timeOffset, lang) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
 
 
 var HTML_ENTITIES = /&#([0-9]+);/g;
@@ -36281,8 +36426,8 @@ function decodeEntities(text) {
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 function parseSami(smi, timeOffset, lang) {
-  var syncOpen = /<sync[ >]/ig;
-  var syncClose = /<sync[ >]|<\/body>/ig;
+  var syncOpen = /<sync[ >]/gi;
+  var syncClose = /<sync[ >]|<\/body>/gi;
   var subs = [];
   var styleMatches = STYLE.exec(smi);
   var css = styleMatches !== null ? styleMatches[1] : "";
@@ -36632,12 +36777,6 @@ function isNodeFontWithColorProp(node) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
-// srt to VTTCue parser, Done for fun.
-// Heavily inspired from the WebVTT implementation
 
 
 
@@ -37347,7 +37486,7 @@ function applyFontSize(element, fontSize) {
   } else if (firstFontSize[2] === "%") {
     var toNum = Number(firstFontSize[1]);
     if (isNaN(toNum)) {
-      log/* default */.A.warn("TTML Parser: could not parse fontSize value \"" + firstFontSize[1] + "\" into a number");
+      log/* default */.A.warn('TTML Parser: could not parse fontSize value "' + firstFontSize[1] + '" into a number');
     } else {
       element.style.position = "relative";
       addClassName(element, "proportional-style");
@@ -39815,10 +39954,6 @@ function toNativeCue(cueObj) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * /!\ This file is feature-switchable.
- * It always should be imported through the `features` object.
- */
 
 
 
@@ -40407,7 +40542,9 @@ function generateManifestParser(options) {
         return processMpdParserResponse(parsed);
       } else {
         log/* default */.A.debug("DASH: Awaiting WASM initialization before parsing the MPD.");
-        var initProm = parsers.wasm.waitForInitialization()["catch"](function () {});
+        var initProm = parsers.wasm.waitForInitialization()["catch"](function () {
+          /* ignore errors, we will check the status later */
+        });
         return initProm.then(function () {
           if (parsers.wasm === null || parsers.wasm.status !== "initialized") {
             log/* default */.A.warn("DASH: WASM MPD parser initialization failed. " + "Running JS parser instead");
@@ -40607,10 +40744,10 @@ function getManifestAsArrayBuffer(manifestSrc) {
  */
 function doesXmlSeemsUtf8Encoded(xmlData) {
   var dv = new DataView(xmlData);
-  if (dv.getUint16(0) === 0xEFBB && dv.getUint8(2) === 0XBF) {
+  if (dv.getUint16(0) === 0xefbb && dv.getUint8(2) === 0xbf) {
     // (UTF-8 BOM)
     return true;
-  } else if (dv.getUint16(0) === 0xFEFF || dv.getUint16(0) === 0xFFFe) {
+  } else if (dv.getUint16(0) === 0xfeff || dv.getUint16(0) === 0xfffe) {
     // (UTF-16 BOM)
     return false;
   }
@@ -41076,7 +41213,7 @@ function extractCompleteChunks(buffer) {
   var currentBuffer = null;
   while (_position < buffer.length) {
     currentBuffer = buffer.subarray(_position, Infinity);
-    var moofIndex = (0,find_complete_box/* default */.A)(currentBuffer, 0x6D6F6F66 /* moof */);
+    var moofIndex = (0,find_complete_box/* default */.A)(currentBuffer, 0x6d6f6f66 /* moof */);
     if (moofIndex < 0) {
       // no moof, not a segment.
       return [chunks, currentBuffer];
@@ -41087,7 +41224,7 @@ function extractCompleteChunks(buffer) {
       // not a complete moof segment
       return [chunks, currentBuffer];
     }
-    var mdatIndex = (0,find_complete_box/* default */.A)(currentBuffer, 0x6D646174 /* mdat */);
+    var mdatIndex = (0,find_complete_box/* default */.A)(currentBuffer, 0x6d646174 /* mdat */);
     if (mdatIndex < 0) {
       // no mdat, not a segment.
       return [chunks, currentBuffer];
@@ -41392,14 +41529,14 @@ var utils = __webpack_require__(1134);
  */
 
 var SEGMENT_ID = 0x18538067;
-var INFO_ID = 0x1549A966;
-var TIMECODESCALE_ID = 0x2AD7B1;
+var INFO_ID = 0x1549a966;
+var TIMECODESCALE_ID = 0x2ad7b1;
 var DURATION_ID = 0x4489;
-var CUES_ID = 0x1C53BB6B;
-var CUE_POINT_ID = 0xBB;
-var CUE_TIME_ID = 0xB3;
-var CUE_TRACK_POSITIONS_ID = 0xB7;
-var CUE_CLUSTER_POSITIONS_ID = 0xF1;
+var CUES_ID = 0x1c53bb6b;
+var CUE_POINT_ID = 0xbb;
+var CUE_TIME_ID = 0xb3;
+var CUE_TRACK_POSITIONS_ID = 0xb7;
+var CUE_CLUSTER_POSITIONS_ID = 0xf1;
 /**
  * Find the offsets of the value linked to the given element ID.
  * @param {number} elementID - ID for the searched element.
@@ -42074,6 +42211,7 @@ function getISOBMFFTextTrackFormat(representation) {
   }
   switch (codec.toLowerCase()) {
     case "stpp": // stpp === TTML in MP4
+    case "stpp.ttml":
     case "stpp.ttml.im1t":
       return "ttml";
     case "wvtt":
@@ -43254,7 +43392,7 @@ function getAudioCodecs(codecPrivateData, fourCC) {
   if (fourCC === "AACH") {
     mpProfile = 5; // High Efficiency AAC Profile
   } else {
-    mpProfile = (0,is_non_empty_string/* default */.A)(codecPrivateData) ? (parseInt(codecPrivateData.substring(0, 2), 16) & 0xF8) >> 3 : 2;
+    mpProfile = (0,is_non_empty_string/* default */.A)(codecPrivateData) ? (parseInt(codecPrivateData.substring(0, 2), 16) & 0xf8) >> 3 : 2;
   }
   if (mpProfile === 0) {
     // Return default audio codec
@@ -44065,7 +44203,7 @@ var get_box = __webpack_require__(8797);
  * @returns {Array.<Object>}
  */
 function parseTfrf(traf) {
-  var tfrf = (0,get_box/* getUuidContent */.$H)(traf, 0xD4807EF2, 0xCA394695, 0x8E5426CB, 0x9E46A79F);
+  var tfrf = (0,get_box/* getUuidContent */.$H)(traf, 0xd4807ef2, 0xca394695, 0x8e5426cb, 0x9e46a79f);
   if (tfrf === undefined) {
     return [];
   }
@@ -44112,7 +44250,7 @@ function parseTfrf(traf) {
  * @returns {Object|undefined}
  */
 function parseTfxd(traf) {
-  var tfxd = (0,get_box/* getUuidContent */.$H)(traf, 0x6D1D9B05, 0x42D544E6, 0x80E2141D, 0xAFF757B2);
+  var tfxd = (0,get_box/* getUuidContent */.$H)(traf, 0x6d1d9b05, 0x42d544e6, 0x80e2141d, 0xaff757b2);
   if (tfxd === undefined) {
     return undefined;
   }
@@ -44295,10 +44433,9 @@ function createAVC1Box(width, height, hRes, vRes, encName, colorDepth, avcc) {
   // + padding
   (0,byte_parsing/* itobe2 */.ww)(colorDepth),
   // color depth
-  [0xFF, 0xFF],
+  [0xff, 0xff],
   // reserved ones
-  avcc // avcc atom,
-  ));
+  avcc));
 }
 /**
  * @param {Number} width
@@ -44332,7 +44469,7 @@ function createENCVBox(width, height, hRes, vRes, encName, colorDepth, avcc, sin
   // + padding
   (0,byte_parsing/* itobe2 */.ww)(colorDepth),
   // color depth
-  [0xFF, 0xFF],
+  [0xff, 0xff],
   // reserved ones
   avcc,
   // avcc atom,
@@ -44449,7 +44586,7 @@ function createAVCCBox(sps, pps, nalLen) {
   var h264Profile = sps[1];
   var h264CompatibleProfile = sps[2];
   var h264Level = sps[3];
-  return createBox("avcC", (0,byte_parsing/* concat */.xW)([1, h264Profile, h264CompatibleProfile, h264Level, 0x3F << 2 | nal, 0xE0 | 1], (0,byte_parsing/* itobe2 */.ww)(sps.length), sps, [1], (0,byte_parsing/* itobe2 */.ww)(pps.length), pps));
+  return createBox("avcC", (0,byte_parsing/* concat */.xW)([1, h264Profile, h264CompatibleProfile, h264Level, 0x3f << 2 | nal, 0xe0 | 1], (0,byte_parsing/* itobe2 */.ww)(sps.length), sps, [1], (0,byte_parsing/* itobe2 */.ww)(pps.length), pps));
 }
 /**
  * @param {string} type - "video"/"audio"/"hint"
@@ -44472,8 +44609,7 @@ function createHDLRBox(type) {
       handlerName = "";
       break;
   }
-  return createBox("hdlr", (0,byte_parsing/* concat */.xW)(8, (0,string_parsing/* strToUtf8 */.eb)(name), 12, (0,string_parsing/* strToUtf8 */.eb)(handlerName), 1 // handler name is C-style string (0 terminated)
-  ));
+  return createBox("hdlr", (0,byte_parsing/* concat */.xW)(8, (0,string_parsing/* strToUtf8 */.eb)(name), 12, (0,string_parsing/* strToUtf8 */.eb)(handlerName), 1));
 }
 /**
  * @param {number} timescale
@@ -44496,8 +44632,7 @@ function createMVHDBox(timescale, trackId) {
   // default matrix
   [0, 1], 14,
   // default matrix
-  [64, 0, 0, 0], 26, (0,byte_parsing/* itobe2 */.ww)(trackId + 1) // next trackId (=trackId + 1);
-  ));
+  [64, 0, 0, 0], 26, (0,byte_parsing/* itobe2 */.ww)(trackId + 1)));
 }
 /**
  * @param {Uint8Array} mfhd
@@ -44581,8 +44716,7 @@ function createTKHDBox(width, height, trackId) {
   // ??
   (0,byte_parsing/* itobe2 */.ww)(width), 2,
   // width (TODO handle fixed)
-  (0,byte_parsing/* itobe2 */.ww)(height), 2 // height (TODO handle fixed)
-  ));
+  (0,byte_parsing/* itobe2 */.ww)(height), 2));
 }
 /**
  * @param {Number} algId - eg 1
@@ -44648,18 +44782,18 @@ function createTrafBox(tfhd, tfdt, trun, mfhd, senc) {
  * @return {Uint8Array}
  */
 function patchSegment(segment, decodeTime) {
-  var oldMoofOffsets = (0,get_box/* getBoxOffsets */.QL)(segment, 0x6D6F6F66 /* moof */);
+  var oldMoofOffsets = (0,get_box/* getBoxOffsets */.QL)(segment, 0x6d6f6f66 /* moof */);
   if (oldMoofOffsets === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
   var oldMoofContent = segment.subarray(oldMoofOffsets[1], oldMoofOffsets[2]);
-  var mfhdBox = (0,get_box/* getBox */.YH)(oldMoofContent, 0x6D666864 /* mfhd */);
+  var mfhdBox = (0,get_box/* getBox */.YH)(oldMoofContent, 0x6d666864 /* mfhd */);
   var trafContent = (0,get_box/* getBoxContent */.fZ)(oldMoofContent, 0x74726166 /* traf */);
   if (trafContent === null || mfhdBox === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
   var tfhdOffsets = (0,get_box/* getBoxOffsets */.QL)(trafContent, 0x74666864 /* tfhd */);
-  var oldTrunOffsets = (0,get_box/* getBoxOffsets */.QL)(trafContent, 0x7472756E /* trun */);
+  var oldTrunOffsets = (0,get_box/* getBoxOffsets */.QL)(trafContent, 0x7472756e /* trun */);
   if (tfhdOffsets === null || oldTrunOffsets === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
@@ -44669,22 +44803,22 @@ function patchSegment(segment, decodeTime) {
   tfhdBox.set([0, 0, 0, 1], tfhdOffsets[1] - tfhdOffsets[0] + 4 /* version + flags */);
   var tfdtBox = createTfdtBox(decodeTime);
   var newTrunBox = updateTrunDataOffset(oldTrunBox, oldTrunOffsets[1] - oldTrunOffsets[0]);
-  var sencContent = (0,get_box/* getUuidContent */.$H)(trafContent, 0xA2394F52, 0x5A9B4F14, 0xA2446C42, 0x7C648DF4);
+  var sencContent = (0,get_box/* getUuidContent */.$H)(trafContent, 0xa2394f52, 0x5a9b4f14, 0xa2446c42, 0x7c648df4);
   var newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
   var newMoof = createBoxWithChildren("moof", [mfhdBox, newTrafBox]);
-  var newMoofOffsets = (0,get_box/* getBoxOffsets */.QL)(newMoof, 0x6D6F6F66 /* moof */);
+  var newMoofOffsets = (0,get_box/* getBoxOffsets */.QL)(newMoof, 0x6d6f6f66 /* moof */);
   var newTrafOffsets = (0,get_box/* getBoxOffsets */.QL)(newTrafBox, 0x74726166 /* traf */);
-  var newTrunOffsets = (0,get_box/* getBoxOffsets */.QL)(newTrunBox, 0x7472756E /* trun */);
+  var newTrunOffsets = (0,get_box/* getBoxOffsets */.QL)(newTrunBox, 0x7472756e /* trun */);
   if (newMoofOffsets === null || newTrafOffsets === null || newTrunOffsets === null) {
     throw new Error("Smooth: Invalid moof, trun or traf generation");
   }
   /** index of the `data_offset` property from the trun box in the whole "moof". */
   var indexOfTrunDataOffsetInMoof = newMoofOffsets[1] - newMoofOffsets[0] + mfhdBox.length + ( /* new traf size + name */
   newTrafOffsets[1] - newTrafOffsets[0]) + tfhdBox.length + tfdtBox.length + ( /* new trun size + name */
-  newTrunOffsets[1] - newTrunOffsets[0]) + 8 /* trun version + flags + `sample_count` */;
+  newTrunOffsets[1] - newTrunOffsets[0]) + 8; /* trun version + flags + `sample_count` */
   var oldMoofLength = oldMoofOffsets[2] - oldMoofOffsets[0];
   var newMoofSizeDiff = newMoof.length - oldMoofLength;
-  var oldMdatOffset = (0,get_box/* getBoxOffsets */.QL)(segment, 0x6D646174 /* "mdat" */);
+  var oldMdatOffset = (0,get_box/* getBoxOffsets */.QL)(segment, 0x6d646174 /* "mdat" */);
   if (oldMdatOffset === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
   }
@@ -44786,7 +44920,7 @@ function createMOOVBox(mvhd, mvex, trak) {
  * @returns {Uint8Array}
  */
 function createInitSegment(timescale, type, stsd, mhd, width, height) {
-  var stbl = createBoxWithChildren("stbl", [stsd, createBox("stts", new Uint8Array(0x08)), createBox("stsc", new Uint8Array(0x08)), createBox("stsz", new Uint8Array(0x0C)), createBox("stco", new Uint8Array(0x08))]);
+  var stbl = createBoxWithChildren("stbl", [stsd, createBox("stts", new Uint8Array(0x08)), createBox("stsc", new Uint8Array(0x08)), createBox("stsz", new Uint8Array(0x0c)), createBox("stco", new Uint8Array(0x08))]);
   var url = createBox("url ", new Uint8Array([0, 0, 0, 1]));
   var dref = createDREFBox(url);
   var dinf = createBoxWithChildren("dinf", [dref]);
@@ -44900,9 +45034,9 @@ var SAMPLING_FREQUENCIES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 220
 function getAacesHeader(type, frequency, chans) {
   var freq = SAMPLING_FREQUENCIES.indexOf(frequency); // TODO : handle Idx = 15...
   var val;
-  val = (type & 0x3F) << 0x4;
-  val = (val | freq & 0x1F) << 0x4;
-  val = (val | chans & 0x1F) << 0x3;
+  val = (type & 0x3f) << 0x4;
+  val = (val | freq & 0x1f) << 0x4;
+  val = (val | chans & 0x1f) << 0x3;
   return (0,string_parsing/* bytesToHex */.My)((0,byte_parsing/* itobe2 */.ww)(val));
 }
 ;// CONCATENATED MODULE: ./src/transports/smooth/isobmff/create_audio_init_segment.ts
@@ -45582,7 +45716,7 @@ function addNextSegments(adaptation, nextSegments, dlSegment) {
           segmentEnd = chunkInfos.duration !== undefined ? chunkInfos.time + chunkInfos.duration : segment.end;
         }
         var lcCodec = codec.toLowerCase();
-        if (mimeType === "application/ttml+xml+mp4" || lcCodec === "stpp" || lcCodec === "stpp.ttml.im1t") {
+        if (mimeType === "application/ttml+xml+mp4" || lcCodec === "stpp" || lcCodec === "stpp.ttml" || lcCodec === "stpp.ttml.im1t") {
           _sdType = "ttml";
         } else if (lcCodec === "wvtt") {
           _sdType = "vtt";
@@ -45843,16 +45977,16 @@ function checkISOBMFFIntegrity(buffer, isInitSegment) {
     if (ftypIndex < 0) {
       throw new _errors__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A("INTEGRITY_ERROR", "Incomplete `ftyp` box");
     }
-    var moovIndex = (0,_find_complete_box__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(buffer, 0x6D6F6F76 /* moov */);
+    var moovIndex = (0,_find_complete_box__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(buffer, 0x6d6f6f76 /* moov */);
     if (moovIndex < 0) {
       throw new _errors__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A("INTEGRITY_ERROR", "Incomplete `moov` box");
     }
   } else {
-    var moofIndex = (0,_find_complete_box__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(buffer, 0x6D6F6F66 /* moof */);
+    var moofIndex = (0,_find_complete_box__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(buffer, 0x6d6f6f66 /* moof */);
     if (moofIndex < 0) {
       throw new _errors__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A("INTEGRITY_ERROR", "Incomplete `moof` box");
     }
-    var mdatIndex = (0,_find_complete_box__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(buffer, 0x6D646174 /* mdat */);
+    var mdatIndex = (0,_find_complete_box__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A)(buffer, 0x6d646174 /* mdat */);
     if (mdatIndex < 0) {
       throw new _errors__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A("INTEGRITY_ERROR", "Incomplete `mdat` box");
     }
@@ -46592,8 +46726,8 @@ function bytesToBase64(bytes) {
   for (i = 2; i < length; i += 3) {
     result += base64abc[bytes[i - 2] >> 2];
     result += base64abc[(bytes[i - 2] & 0x03) << 4 | bytes[i - 1] >> 4];
-    result += base64abc[(bytes[i - 1] & 0x0F) << 2 | bytes[i] >> 6];
-    result += base64abc[bytes[i] & 0x3F];
+    result += base64abc[(bytes[i - 1] & 0x0f) << 2 | bytes[i] >> 6];
+    result += base64abc[bytes[i] & 0x3f];
   }
   if (i === length + 1) {
     // 1 octet yet to write
@@ -46605,7 +46739,7 @@ function bytesToBase64(bytes) {
     // 2 octets yet to write
     result += base64abc[bytes[i - 2] >> 2];
     result += base64abc[(bytes[i - 2] & 0x03) << 4 | bytes[i - 1] >> 4];
-    result += base64abc[(bytes[i - 1] & 0x0F) << 2];
+    result += base64abc[(bytes[i - 1] & 0x0f) << 2];
     result += "=";
   }
   return result;
@@ -46635,8 +46769,8 @@ function base64ToBytes(str) {
   for (var i = 0, j = 0; i < n; i += 4, j += 3) {
     buffer = getBase64Code(paddedStr.charCodeAt(i)) << 18 | getBase64Code(paddedStr.charCodeAt(i + 1)) << 12 | getBase64Code(paddedStr.charCodeAt(i + 2)) << 6 | getBase64Code(paddedStr.charCodeAt(i + 3));
     result[j] = buffer >> 16;
-    result[j + 1] = buffer >> 8 & 0xFF;
-    result[j + 2] = buffer & 0xFF;
+    result[j + 1] = buffer >> 8 & 0xff;
+    result[j + 2] = buffer & 0xff;
   }
   return result.subarray(0, result.length - missingOctets);
 }
@@ -46750,7 +46884,7 @@ function be8toi(bytes, offset) {
  * @returns {Uint8Array}
  */
 function itobe2(num) {
-  return new Uint8Array([num >>> 8 & 0xFF, num & 0xFF]);
+  return new Uint8Array([num >>> 8 & 0xff, num & 0xff]);
 }
 /**
  * Translate Integer to a Uint8Array of length 4 of the corresponding big-endian
@@ -46759,7 +46893,7 @@ function itobe2(num) {
  * @returns {Uint8Array}
  */
 function itobe4(num) {
-  return new Uint8Array([num >>> 24 & 0xFF, num >>> 16 & 0xFF, num >>> 8 & 0xFF, num & 0xFF]);
+  return new Uint8Array([num >>> 24 & 0xff, num >>> 16 & 0xff, num >>> 8 & 0xff, num & 0xff]);
 }
 /**
  * Translate Integer to a Uint8Array of length 8 of the corresponding big-endian
@@ -46772,7 +46906,7 @@ function itobe4(num) {
 function itobe8(num) {
   var l = num % 0x100000000;
   var h = (num - l) / 0x100000000;
-  return new Uint8Array([h >>> 24 & 0xFF, h >>> 16 & 0xFF, h >>> 8 & 0xFF, h & 0xFF, l >>> 24 & 0xFF, l >>> 16 & 0xFF, l >>> 8 & 0xFF, l & 0xFF]);
+  return new Uint8Array([h >>> 24 & 0xff, h >>> 16 & 0xff, h >>> 8 & 0xff, h & 0xff, l >>> 24 & 0xff, l >>> 16 & 0xff, l >>> 8 & 0xff, l & 0xff]);
 }
 /**
  * Translate groups of 2 little-endian bytes to Integer (from 0 up to 65535).
@@ -46808,7 +46942,7 @@ function le8toi(bytes, offset) {
  * @returns {Uint8Array}
  */
 function itole2(num) {
-  return new Uint8Array([num & 0xFF, num >>> 8 & 0xFF]);
+  return new Uint8Array([num & 0xff, num >>> 8 & 0xff]);
 }
 /**
  * Translate Integer to a Uint8Array of length 4 of the corresponding
@@ -46817,7 +46951,7 @@ function itole2(num) {
  * @returns {Uint8Array}
  */
 function itole4(num) {
-  return new Uint8Array([num & 0xFF, num >>> 8 & 0xFF, num >>> 16 & 0xFF, num >>> 24 & 0xFF]);
+  return new Uint8Array([num & 0xff, num >>> 8 & 0xff, num >>> 16 & 0xff, num >>> 24 & 0xff]);
 }
 /**
  * Check if an ArrayBuffer is equal to the bytes given.
@@ -49568,8 +49702,8 @@ function strToUtf16LE(str) {
   var res = new Uint8Array(buffer);
   for (var i = 0; i < res.length; i += 2) {
     var value = str.charCodeAt(i / 2);
-    res[i] = value & 0xFF;
-    res[i + 1] = value >> 8 & 0xFF;
+    res[i] = value & 0xff;
+    res[i + 1] = value >> 8 & 0xff;
   }
   return res;
 }
@@ -49584,8 +49718,8 @@ function strToBeUtf16(str) {
   var res = new Uint8Array(buffer);
   for (var i = 0; i < res.length; i += 2) {
     var value = str.charCodeAt(i / 2);
-    res[i + 1] = value & 0xFF;
-    res[i] = value >> 8 & 0xFF;
+    res[i + 1] = value & 0xff;
+    res[i] = value >> 8 & 0xff;
   }
   return res;
 }
@@ -49713,7 +49847,7 @@ function strToUtf8(str) {
   // UTF-16 representation
   var res = new Uint8Array(utf8Str.length);
   for (var _i = 0; _i < utf8Str.length; _i++) {
-    res[_i] = utf8Str.charCodeAt(_i) & 0xFF; // first byte should be 0x00 anyway
+    res[_i] = utf8Str.charCodeAt(_i) & 0xff; // first byte should be 0x00 anyway
   }
   return res;
 }
@@ -49770,7 +49904,7 @@ function utf8ToStr(data) {
   }
   var uint8 = data;
   // If present, strip off the UTF-8 BOM.
-  if (uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) {
+  if (uint8[0] === 0xef && uint8[1] === 0xbb && uint8[2] === 0xbf) {
     uint8 = uint8.subarray(3);
   }
   // We're basically doing strToUtf8 in reverse.
@@ -49809,7 +49943,7 @@ function hexToBytes(str) {
   var len = str.length;
   var arr = new Uint8Array(len / 2);
   for (var i = 0, j = 0; i < len; i += 2, j++) {
-    arr[j] = parseInt(str.substring(i, i + 2), 16) & 0xFF;
+    arr[j] = parseInt(str.substring(i, i + 2), 16) & 0xff;
   }
   return arr;
 }
@@ -49827,7 +49961,7 @@ function bytesToHex(bytes, sep) {
   var hex = "";
   for (var i = 0; i < bytes.byteLength; i++) {
     hex += (bytes[i] >>> 4).toString(16);
-    hex += (bytes[i] & 0xF).toString(16);
+    hex += (bytes[i] & 0xf).toString(16);
     if (sep.length > 0 && i < bytes.byteLength - 1) {
       hex += sep;
     }
@@ -51603,7 +51737,7 @@ function parseConstructorOptions(options) {
     if (isNaN(maxVideoBitrate)) {
       throw new Error("Invalid maxVideoBitrate parameter. Should be a number.");
     } else if (minVideoBitrate > maxVideoBitrate) {
-      throw new Error("Invalid maxVideoBitrate parameter. Its value, \"" + (maxVideoBitrate + "\", is inferior to the set minVideoBitrate, \"") + (minVideoBitrate + "\""));
+      throw new Error('Invalid maxVideoBitrate parameter. Its value, "' + (maxVideoBitrate + "\", is inferior to the set minVideoBitrate, \"") + (minVideoBitrate + "\""));
     }
   }
   if ((0,is_null_or_undefined/* default */.A)(options.maxAudioBitrate)) {
@@ -51613,7 +51747,7 @@ function parseConstructorOptions(options) {
     if (isNaN(maxAudioBitrate)) {
       throw new Error("Invalid maxAudioBitrate parameter. Should be a number.");
     } else if (minAudioBitrate > maxAudioBitrate) {
-      throw new Error("Invalid maxAudioBitrate parameter. Its value, \"" + (maxAudioBitrate + "\", is inferior to the set minAudioBitrate, \"") + (minAudioBitrate + "\""));
+      throw new Error('Invalid maxAudioBitrate parameter. Its value, "' + (maxAudioBitrate + "\", is inferior to the set minAudioBitrate, \"") + (minAudioBitrate + "\""));
     }
   }
   var stopAtEnd = (0,is_null_or_undefined/* default */.A)(options.stopAtEnd) ? DEFAULT_STOP_AT_END : !!options.stopAtEnd;
@@ -51801,14 +51935,14 @@ function parseLoadVideoOptions(options) {
   if (textTrackMode === "html") {
     // TODO Better way to express that in TypeScript?
     if ((0,is_null_or_undefined/* default */.A)(options.textTrackElement)) {
-      throw new Error("You have to provide a textTrackElement " + "in \"html\" textTrackMode.");
+      throw new Error("You have to provide a textTrackElement " + 'in "html" textTrackMode.');
     } else if (!(options.textTrackElement instanceof HTMLElement)) {
       throw new Error("textTrackElement should be an HTMLElement.");
     } else {
       textTrackElement = options.textTrackElement;
     }
   } else if (!(0,is_null_or_undefined/* default */.A)(options.textTrackElement)) {
-    src_log/* default */.A.warn("API: You have set a textTrackElement without being in " + "an \"html\" textTrackMode. It will be ignored.");
+    src_log/* default */.A.warn("API: You have set a textTrackElement without being in " + 'an "html" textTrackMode. It will be ignored.');
   }
   if (!(0,is_null_or_undefined/* default */.A)(options.startAt)) {
     if ("wallClockTime" in options.startAt && options.startAt.wallClockTime instanceof Date) {
@@ -54898,7 +55032,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
           positionWanted = timeObj.wallClockTime;
         }
       } else {
-        throw new Error("invalid time object. You must set one of the " + "following properties: \"relative\", \"position\" or " + "\"wallClockTime\"");
+        throw new Error("invalid time object. You must set one of the " + 'following properties: "relative", "position" or ' + '"wallClockTime"');
       }
     }
     if (positionWanted === undefined) {
@@ -56185,6 +56319,7 @@ Player.version = /* PLAYER_VERSION */"3.33.3";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * Selects the features to include.
