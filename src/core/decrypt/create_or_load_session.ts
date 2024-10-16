@@ -82,7 +82,12 @@ export default async function createOrLoadSession(
     }
   }
 
-  await cleanOldLoadedSessions(loadedSessionsStore, maxSessionCacheSize);
+  await cleanOldLoadedSessions(
+    loadedSessionsStore,
+    // Account for the next session we will be creating
+    // Note that `maxSessionCacheSize < 0 has special semantic (no limit)`
+    maxSessionCacheSize <= 0 ? maxSessionCacheSize : maxSessionCacheSize - 1,
+  );
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError; // stop here if cancelled since
   }
