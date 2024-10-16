@@ -19,6 +19,7 @@
 - DRM/Compat: fix content not starting on Safari because key are never considered usable
   [#1535]
 - DASH_WASM: fix `Label` element never being parsed [#1543]
+- Fix an off by one issue when relying on keySystems[].maxSessionCacheSize [#1579]
 
 ### Other improvements
 
