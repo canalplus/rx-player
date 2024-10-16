@@ -1,18 +1,35 @@
 # Changelog
 
-## Current dev build: v3.33.4-dev.2024090600
+## v3.33.4 (2024-10-16)
 
 ### Bug fixes
 
 - Compat: Fix autoPlay on Tizen when the content starts on a discontinuity [#1500]
+- Work-around the "hulu issue" seen on firefox 129 and 130 (`1911283` and `1912238` on
+  bugzilla) which also impacted the RxPlayer [#1544]
+- Fix rare cases where the active Period would not be advertised by the RxPlayer [#1534]
 - DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV and `KSTB40xx`
   set-top boxes [#1519, #1538]
+- Fix some issues that may arise on BUFFER_FULL situations [#1566]
+- Directfile/Compat: Fix `startAt.fromLastPosition` handling on Safari when playing
+  directfile contents [#1574]
+- Consider `stpp.ttml` codec for text format [#1567]
+- DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV, and `KSTB40XX`
+  set-top boxes [#1519, #1538]
+- DRM/Compat: fix content not starting on Safari because key are never considered usable
+  [#1535]
+- DASH_WASM: fix `Label` element never being parsed [#1543]
 
 ### Other improvements
 
 - DASH: provide a more precize calculation for the timeshift buffer depth [#1492]
+- Handle `hev1` codec and `hvc1` codecs as part of the same family of codecs when trying
+  to check for compatibility between the two [#1536]
+- Better handle `QuotaExceededError` issue after `appendBuffer` MSE calls when
+  `wantedBufferAhead` is set to `Infinity` [#1566]
+- Bring prettier to the v3 [#1545]
 
-## v3.33.3
+## v3.33.3 (2024-07-08)
 
 ### Bug fixes
 
