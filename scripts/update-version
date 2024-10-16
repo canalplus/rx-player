@@ -38,7 +38,7 @@ sed -i.bak -E -e "s/^\#\# Unreleased/\#\# v${version} \(${date_iso}\)/gi" CHANGE
 sed -i.bak -E -e "s/\/\\* PLAYER_VERSION \\*\/[[:space:]]*\".*\";/\/* PLAYER_VERSION *\/ \"${version}\";/g" src/main_thread/api/public_api.ts && rm src/main_thread/api/public_api.ts.bak
 sed -i.bak -E -e "s/\"version\":[[:space:]]*\"[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+[^\"]*\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
 sed -i.bak -E -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
-echo $version > VERSION
+echo $version >VERSION
 
 npm install
 npm run build
@@ -50,4 +50,5 @@ echo "creating types for legacy code bases..."
 rm -f dist/rx-player.d.ts rx-player.min.d.ts
 echo "${copyright_text}
 import RxPlayer from \"./_esm5.processed/minimal\";
-export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts > /dev/null
+export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts >/dev/null
+

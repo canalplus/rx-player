@@ -41,7 +41,7 @@ err() {
 }
 
 if [ $# -eq 0 ]; then
-  read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  read -r -p "Please enter the wanted version number (example: 3.12.1): " version
   echo ""
   if [ -z "${version}" ]; then
     # TODO SEMVER REGEX?
@@ -181,3 +181,4 @@ while true; do
   esac
 done
 npm publish --tag canal-v3
+
