@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.2.0-dev.2024101500
+## v4.2.0 (2024-10-17)
 
 ### Features
 
@@ -15,6 +15,7 @@
 - Add `LogFormat` static property to the `RxPlayer` to try improving on bug reports
   [#1469]
 - Experimentally re-export config in v4 (only intended for debugging matters) [#1510]
+- Add `keySystems[].reuseMediaKeys` option to `loadVideo` [#1520]
 
 ### Bug fixes
 
@@ -47,6 +48,8 @@
   [#1575]
 - Fixes a MultiThread debug element memory leak [#1564]
 - Fix the SyncOrAsync util syncValue transfer [#1568]
+- Fix off by one issue in when relying on `keySystems[].maxSessionCacheSize` [#1565]
+
 
 ### Other improvements
 
